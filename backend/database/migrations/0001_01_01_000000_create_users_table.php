@@ -13,12 +13,33 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name');                              // nom complet de l'utilisateur
+
+            // Identifiants de connexion : l'utilisateur peut se connecter par email
+            // OU par téléphone (cf. cahier des charges B1). Les deux sont uniques.
             $table->string('email')->unique();
+            $table->string('phone')->nullable()->unique();       // téléphone (format international conseillé)
+
+            // Horodatages de vérification des canaux (email + SMS).
             $table->timestamp('email_verified_at')->nullable();
+            $table->timestamp('phone_verified_at')->nullable();
+
             $table->string('password');
+
+            // Localisation principale (ville sénégalaise) — sert aux filtres/affichage.
+            $table->string('city')->nullable();
+
+            // Statut du compte (cf. enum App\Modules\Core\Enums\UserStatus).
+            // Par défaut "en_attente_verification" : le compte n'est pleinement actif
+            // qu'après vérification email/téléphone (exigence de sécurité B15).
+            $table->string('status')->default('en_attente_verification')->index();
+
+            // NB : le RÔLE n'est volontairement PAS une colonne ici. Les rôles sont
+            // gérés par Spatie Permission (table model_has_roles), source de vérité
+            // unique, ce qui évite toute incohérence et permet plusieurs rôles.
+
             $table->rememberToken();
-            $table->timestamps();
+            $table->timestamps();                                // created_at = date de création
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

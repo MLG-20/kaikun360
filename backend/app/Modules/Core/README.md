@@ -48,3 +48,40 @@ la logique métier (inscription, login, définition des 8 rôles...) viendra en 
 
 Le modèle `App\Models\User` cumule désormais les traits :
 `HasApiTokens` (Sanctum), `HasRoles` (Permission), `HasFactory`, `Notifiable`.
+
+---
+
+## Couche de données — Utilisateurs & Profils (phase B1.1)
+
+### Tables
+
+| Table | Rôle | Colonnes clés |
+|---|---|---|
+| `users` | Identité & connexion | `name`, `email` (unique), `phone` (unique), `email_verified_at`, `phone_verified_at`, `password`, `city`, `status` |
+| `profiles` | Casquette métier (1–1) | `user_id` (unique), `type`, `verification_status`, `preferences` (JSON) |
+
+> **Connexion email OU téléphone** : `email` et `phone` sont tous deux uniques.
+> **Statut de compte** : `users.status` vaut `en_attente_verification` par défaut
+> (le compte devient `actif` après vérification — cf. B1.4 et B15).
+
+### Modèles & emplacements
+
+- `App\Models\User` — reste à l'emplacement Laravel par défaut (compatibilité
+  `config/auth.php`, Sanctum, factory). Relation `hasOne(Profile)`.
+- `App\Modules\Core\Models\Profile` — dans le module Core. Relation `belongsTo(User)`.
+  Sa factory étant hors de `App\Models`, le modèle déclare explicitement
+  `newFactory()`.
+
+### Enums associés (`app/Modules/Core/Enums/`)
+
+- `UserStatus` : `en_attente_verification`, `actif`, `suspendu`, `desactive`.
+- `ProfileType` : `client`, `proprietaire`, `prestataire`, `entreprise`, `diaspora`.
+
+> ⚠️ **Type de profil ≠ rôle.** Le *type de profil* est la casquette métier
+> choisie à l'inscription ; le *rôle* (Spatie, 8 rôles) porte les droits d'accès.
+> Le lien entre les deux (rôle attribué selon le type) est fait au seeder en B1.2.
+
+### Rôle (pas de colonne)
+
+Le rôle n'est **pas** une colonne de `users` : il est géré par Spatie
+(`model_has_roles`), source de vérité unique. On vérifie via `$user->hasRole(...)`.
