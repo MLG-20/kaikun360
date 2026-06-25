@@ -9,6 +9,7 @@ use App\Modules\Core\Enums\UserRole;
 use App\Modules\Core\Http\Requests\LoginRequest;
 use App\Modules\Core\Http\Requests\RegisterRequest;
 use App\Modules\Core\Http\Resources\UserResource;
+use App\Modules\Core\Services\VerificationService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ use Illuminate\Validation\ValidationException;
  */
 class AuthController extends Controller
 {
+    public function __construct(private readonly VerificationService $verification) {}
+
     /**
      * Inscription d'un nouvel utilisateur. POST /api/v1/auth/register
      *
@@ -65,6 +68,10 @@ class AuthController extends Controller
             ->performedOn($user)
             ->withProperties(['profile_type' => $profileType->value])
             ->log('Inscription');
+
+        // Envoi automatique d'un code de vérification e-mail (le compte reste
+        // en attente de vérification tant que l'utilisateur ne l'a pas saisi).
+        $this->verification->issue($user, VerificationService::PURPOSE_ACCOUNT, VerificationService::CHANNEL_EMAIL);
 
         // Token d'API à renvoyer au frontend.
         $token = $user->createToken('auth')->plainTextToken;

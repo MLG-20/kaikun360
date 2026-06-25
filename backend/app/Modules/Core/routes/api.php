@@ -1,6 +1,8 @@
 <?php
 
 use App\Modules\Core\Http\Controllers\AuthController;
+use App\Modules\Core\Http\Controllers\PasswordResetController;
+use App\Modules\Core\Http\Controllers\VerificationController;
 use App\Support\ApiResponse;
 use Illuminate\Support\Facades\Route;
 
@@ -35,4 +37,14 @@ Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
+    // Vérification de compte (e-mail / téléphone) — utilisateur connecté (phase B1.4).
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/verify/send', [VerificationController::class, 'send']);
+        Route::post('/verify', [VerificationController::class, 'verify']);
+    });
+
+    // Mot de passe oublié — public (phase B1.4).
+    Route::post('/password/forgot', [PasswordResetController::class, 'forgot']);
+    Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 });

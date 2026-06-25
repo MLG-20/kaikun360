@@ -156,3 +156,34 @@ restent connectés).
 
 > 🔒 À durcir en **phase B15** : limitation de débit spécifique sur `login`/`register`
 > (anti brute-force), au-delà du throttle global de 60/min.
+
+---
+
+## Vérification & récupération de compte (phase B1.4)
+
+### Mécanisme de codes
+
+Codes à **6 chiffres**, **usage unique**, **valables 15 min**, stockés **hachés**
+(table `verification_codes`, modèle `VerificationCode`). Toute la logique est dans
+`App\Modules\Core\Services\VerificationService` (génération, envoi, vérification).
+
+Envoi via la **Notification** `VerificationCodeNotification` (canal `mail`).
+En dev (`MAIL_MAILER=log`/`array`), le code n'est pas réellement envoyé.
+
+> 👉 **À FAIRE (phase B16)** : ajouter un canal **SMS** réel (Twilio…) pour les
+> codes envoyés par téléphone. Aujourd'hui tout passe par mail/log (aucun coût).
+
+### Endpoints
+
+| Méthode | URL | Accès | Rôle |
+|---|---|---|---|
+| POST | `/api/v1/auth/verify/send` | `auth:sanctum` | (Re)envoyer un code (`channel`: email/phone) |
+| POST | `/api/v1/auth/verify` | `auth:sanctum` | Vérifier (`channel` + `code`) → active le compte |
+| POST | `/api/v1/auth/password/forgot` | public | Demander un code de reset (`login`) |
+| POST | `/api/v1/auth/password/reset` | public | Réinitialiser (`login` + `code` + `password`) |
+
+- À l'**inscription**, un code de vérification e-mail est envoyé automatiquement.
+- La vérification de l'**e-mail** fait passer le compte de `en_attente_verification`
+  à `actif`.
+- `password/forgot` répond **toujours** de la même manière (anti-énumération de comptes).
+- Après un reset, **tous les tokens** de l'utilisateur sont révoqués (sécurité).
