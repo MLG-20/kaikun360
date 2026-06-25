@@ -1,0 +1,18 @@
+# OS / éditeur
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Dépendances (gérées par les .gitignore de chaque sous-projet)
+node_modules/
+
+# Fichiers temporaires
+*.log
+.cache/
+
+# Secrets — ne jamais committer
+.env
+*.local

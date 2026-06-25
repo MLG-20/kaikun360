@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#03193f">
+  <title>Kaikun 360 — Paiement sécurisé</title>
+  <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body class="checkout-page">
+<header class="checkout-header">
+  <div class="container">
+    <a class="brand" href="index.html"><span class="brand-mark">K</span><span class="brand-text"><strong>KAIKUN</strong><span>360</span></span></a>
+    <span class="secure-pill">🔒 Paiement sécurisé · XOF</span>
+  </div>
+</header>
+<main class="checkout-main">
+  <div class="container checkout-layout">
+    <section class="checkout-box">
+      <div class="stepper">
+        <div class="checkout-step done"><span>Commande</span></div>
+        <div class="checkout-step active"><span>Paiement</span></div>
+        <div class="checkout-step"><span>Confirmation</span></div>
+      </div>
+      <h1>Choisissez votre moyen de paiement</h1>
+      <p style="color:var(--muted)">Le paiement réel devra être traité par le canal sécurisé du prestataire de services de paiement sélectionné.</p>
+      <div class="method-list" id="checkoutMethods">
+        <div class="method-card active" data-method="Wave"><span class="method-logo" style="background:#e8fff5;color:#008f5a">W</span><span><strong>Wave</strong><small>Paiement mobile</small></span></div>
+        <div class="method-card" data-method="Orange Money"><span class="method-logo" style="background:#fff2e7;color:#e46a00">OM</span><span><strong>Orange Money</strong><small>QR code ou validation mobile</small></span></div>
+        <div class="method-card" data-method="Free Money"><span class="method-logo" style="background:#eef3ff;color:#154ac4">FM</span><span><strong>Free Money</strong><small>Selon disponibilité PSP</small></span></div>
+        <div class="method-card" data-method="Carte bancaire"><span class="method-logo">CB</span><span><strong>Carte bancaire</strong><small>Visa / Mastercard · 3-D Secure</small></span></div>
+        <div class="method-card" data-method="Virement bancaire"><span class="method-logo">🏦</span><span><strong>Virement bancaire</strong><small>Pour entreprises et montants élevés</small></span></div>
+        <div class="method-card" data-method="Lien de paiement"><span class="method-logo">↗</span><span><strong>Lien de paiement</strong><small>Envoyé par email ou WhatsApp</small></span></div>
+      </div>
+      <div class="form-grid" style="margin-top:22px">
+        <div class="field"><label for="checkoutName">Nom complet</label><input id="checkoutName" value="Client Kaikun"></div>
+        <div class="field"><label for="checkoutPhone">Téléphone</label><input id="checkoutPhone" value="+221 77 000 00 00"></div>
+        <div class="field"><label for="checkoutEmail">Email</label><input id="checkoutEmail" type="email" value="client@exemple.sn"></div>
+        <div class="field"><label for="checkoutReference">Référence commande</label><input id="checkoutReference" readonly></div>
+      </div>
+      <div class="security-note" style="margin-top:20px"><span>🛡️</span><span>Kaikun 360 ne doit pas confirmer une commande à partir d'une capture d'écran. La confirmation vient du webhook signé ou d'une vérification API du PSP.</span></div>
+      <button class="btn btn-blue" id="checkoutPay" style="width:100%;margin-top:18px">Continuer avec Wave</button>
+      <div class="checkout-alert" id="checkoutAlert"></div>
+    </section>
+    <aside class="checkout-box checkout-summary">
+      <h2>Récapitulatif</h2>
+      <img class="summary-image" src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1000&q=82" alt="Offre réservée" onerror="this.src='assets/img/fallback.svg'">
+      <span class="badge green">Offre vérifiée</span>
+      <h3 id="checkoutTitle" style="font-family:Georgia,serif;font-size:1.55rem;margin:13px 0 5px">Acompte villa Saly</h3>
+      <p style="color:var(--muted);margin-top:0">Réservation ou commande Kaikun 360</p>
+      <div class="line-items">
+        <div class="line-item"><span>Montant du service</span><strong id="serviceAmount">85 000 FCFA</strong></div>
+        <div class="line-item"><span>Frais PSP</span><strong>Calculés par le PSP</strong></div>
+        <div class="line-item"><span>Devise</span><strong>XOF</strong></div>
+        <div class="line-item total"><span>Total à payer</span><strong id="totalAmount">85 000 FCFA</strong></div>
+      </div>
+      <div class="order-summary">
+        <div class="summary-row"><span>Statut initial</span><strong>initiated</strong></div>
+        <div class="summary-row"><span>Après validation PSP</span><strong>confirmed</strong></div>
+        <div class="summary-row"><span>Part prestataire</span><strong>Bloquée jusqu'à éligibilité</strong></div>
+      </div>
+      <a href="index.html#catalogue" class="btn btn-outline dark" style="width:100%;margin-top:16px">Retour au catalogue</a>
+    </aside>
+  </div>
+</main>
+<script src="assets/js/checkout.js"></script>
+</body>
+</html>
