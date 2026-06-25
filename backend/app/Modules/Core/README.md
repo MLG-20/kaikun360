@@ -123,3 +123,36 @@ restriction ne s'applique donc à ce rôle.
 (Le profil *diaspora* est un client résidant à l'étranger.)
 
 > ⚠️ Après toute modification de rôles/permissions : `php artisan permission:cache-reset`.
+
+---
+
+## Endpoints d'authentification (phase B1.3)
+
+| Méthode | URL | Accès | Rôle |
+|---|---|---|---|
+| POST | `/api/v1/auth/register` | public | Inscription |
+| POST | `/api/v1/auth/login` | public | Connexion |
+| POST | `/api/v1/auth/logout` | `auth:sanctum` | Déconnexion |
+
+### `register`
+Corps : `name`, `email`, `phone?`, `city?`, `password` (+ `password_confirmation`),
+`profile_type` (`client`|`proprietaire`|`prestataire`|`entreprise`|`diaspora`).
+Crée **User + Profile + rôle par défaut** dans une **transaction**, journalise
+l'inscription (audit), puis renvoie `{ data: { user, token } }` en **201**.
+Le compte démarre au statut `en_attente_verification`.
+
+### `login`
+Corps : `login` (e-mail **ou** téléphone) + `password`. Détection automatique du
+type d'identifiant. Échec → **422** générique (`Identifiants invalides.`) sans
+révéler quel champ est faux (anti-énumération de comptes). Succès → `{ data: { user, token } }`.
+
+### `logout`
+Révoque **uniquement** le token de la requête courante (les autres appareils
+restent connectés).
+
+### Briques associées
+- Form Requests : `RegisterRequest`, `LoginRequest` (validation stricte, messages FR).
+- API Resources : `UserResource` (sans données sensibles, rôles + profil), `ProfileResource`.
+
+> 🔒 À durcir en **phase B15** : limitation de débit spécifique sur `login`/`register`
+> (anti brute-force), au-delà du throttle global de 60/min.

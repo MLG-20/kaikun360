@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Core\Http\Controllers\AuthController;
 use App\Support\ApiResponse;
 use Illuminate\Support\Facades\Route;
 
@@ -24,4 +25,14 @@ Route::get('/version', function () {
         'api'    => 'v1',
         'status' => 'ok',
     ]);
+});
+
+/*
+| Authentification (phase B1.3).
+| register/login sont publics ; logout exige un token Sanctum valide.
+*/
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
