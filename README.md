@@ -56,23 +56,23 @@
 
 ### Phase B0 — Initialisation et socle technique
 
-- [ ] Initialiser le projet Laravel (dernière version stable).
-- [ ] Configurer l'environnement : `.env` (DB, Redis, mail, queue, filesystem).
-- [ ] Choisir et configurer la base de données (MySQL/MariaDB ou PostgreSQL).
-- [ ] Configurer Redis (cache + sessions + queue).
-- [ ] Configurer le driver de queue (database ou Redis) et un worker supervisé.
-- [ ] Mettre en place la structure de dossiers par domaine métier (Core, Immo, Stay, Manage, Build, Explore, Mobility, Diaspora, TeamBuilding, Pro, Admin).
-- [ ] Configurer le versionnement de l'API (`/api/v1/...`).
-- [ ] Mettre en place le format de réponse JSON standard (enveloppe data/meta/links pour les listes paginées).
-- [ ] Configurer CORS pour autoriser uniquement les domaines Kaikun officiels.
-- [ ] Configurer le rate limiting global de l'API.
-- [ ] Mettre en place les enums Laravel pour tous les statuts métier (bien, demande, réservation, paiement).
-- [ ] Mettre en place le format d'erreur standard (validation 422, autorisation 403, non trouvé 404).
-- [ ] Installer et configurer Laravel Sanctum.
-- [ ] Installer et configurer Spatie Laravel-Permission (rôles et permissions).
-- [ ] Installer et configurer un package d'audit log (ex. Spatie Activitylog).
-- [ ] Mettre en place les tests automatisés de base (Pest ou PHPUnit) et la structure de tests par module.
-- [ ] Initialiser le dépôt Git et la stratégie de branches.
+- [x] Initialiser le projet Laravel (dernière version stable). — Laravel 13.17.0 dans `backend/`.
+- [x] Configurer l'environnement : `.env` (DB, Redis, mail, queue, filesystem).
+- [x] Choisir et configurer la base de données (MySQL/MariaDB ou PostgreSQL). — MySQL 8, base `kaikun360`.
+- [x] Configurer Redis (cache + sessions + queue).
+- [ ] Configurer le driver de queue (database ou Redis) et un worker supervisé. — _Driver Redis configuré ; worker supervisé (Supervisor/systemd) reporté au déploiement._
+- [x] Mettre en place la structure de dossiers par domaine métier (Core, Immo, Stay, Manage, Build, Explore, Mobility, Diaspora, TeamBuilding, Pro, Admin). — `app/Modules/`.
+- [x] Configurer le versionnement de l'API (`/api/v1/...`).
+- [x] Mettre en place le format de réponse JSON standard (enveloppe data/meta/links pour les listes paginées). — `App\Support\ApiResponse`.
+- [x] Configurer CORS pour autoriser uniquement les domaines Kaikun officiels. — `config/cors.php` + `CORS_ALLOWED_ORIGINS`.
+- [x] Configurer le rate limiting global de l'API. — 60 req/min (`throttle:api`).
+- [x] Mettre en place les enums Laravel pour tous les statuts métier (bien, demande, réservation, paiement).
+- [x] Mettre en place le format d'erreur standard (validation 422, autorisation 403, non trouvé 404).
+- [x] Installer et configurer Laravel Sanctum.
+- [x] Installer et configurer Spatie Laravel-Permission (rôles et permissions).
+- [x] Installer et configurer un package d'audit log (ex. Spatie Activitylog).
+- [x] Mettre en place les tests automatisés de base (Pest ou PHPUnit) et la structure de tests par module. — PHPUnit, base `kaikun360_test`.
+- [x] Initialiser le dépôt Git et la stratégie de branches. — Dépôt local sur `main` (GitHub à créer plus tard).
 
 ### Phase B1 — Authentification, utilisateurs et rôles (module Core)
 
