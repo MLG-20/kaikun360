@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Modules\Core\Enums\UserRole;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,6 +25,21 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        $this->configureAuthorization();
+    }
+
+    /**
+     * Règles d'autorisation globales.
+     *
+     * Gate::before s'exécute AVANT toute vérification de permission/policy :
+     * si l'utilisateur est super_admin, on autorise tout (retour true). Sinon,
+     * on retourne null pour laisser la vérification normale suivre son cours.
+     */
+    protected function configureAuthorization(): void
+    {
+        Gate::before(function ($user, string $ability) {
+            return $user->hasRole(UserRole::SUPER_ADMIN->value) ? true : null;
+        });
     }
 
     /**

@@ -85,3 +85,41 @@ Le modèle `App\Models\User` cumule désormais les traits :
 
 Le rôle n'est **pas** une colonne de `users` : il est géré par Spatie
 (`model_has_roles`), source de vérité unique. On vérifie via `$user->hasRole(...)`.
+
+---
+
+## Rôles & permissions (phase B1.2)
+
+### Les 8 rôles — `App\Modules\Core\Enums\UserRole`
+
+`visiteur`, `client`, `proprietaire`, `prestataire`, `entreprise`,
+`agent_kaikun`, `admin`, `super_admin`.
+
+Créés par le **seeder** `Database\Seeders\RolesAndPermissionsSeeder` (idempotent),
+appelé depuis `DatabaseSeeder`. À (re)jouer via `php artisan db:seed`.
+
+### Matrice de permissions initiale
+
+| Rôle | Permissions |
+|---|---|
+| visiteur, client, proprietaire, prestataire, entreprise | *(aucune perm. d'admin — accès via policies de propriété)* |
+| agent_kaikun | `valider:bien/vehicule/experience/prestataire`, `consulter:dashboard-admin`, `moderer:avis` |
+| admin | toutes les permissions back-office |
+| super_admin | **tout** (+ bypass global) |
+
+> Le jeu de permissions est **minimal pour l'instant** et s'enrichira phase par phase.
+
+### Bypass super_admin
+
+`AppServiceProvider::configureAuthorization()` ajoute un `Gate::before` qui
+autorise **toute** capacité si l'utilisateur est `super_admin`. Aucune
+restriction ne s'applique donc à ce rôle.
+
+### Mapping type de profil → rôle par défaut
+
+À l'inscription, `UserRole::defaultForProfileType()` attribue :
+`client`/`diaspora` → **client**, `proprietaire` → **proprietaire**,
+`prestataire` → **prestataire**, `entreprise` → **entreprise**.
+(Le profil *diaspora* est un client résidant à l'étranger.)
+
+> ⚠️ Après toute modification de rôles/permissions : `php artisan permission:cache-reset`.
