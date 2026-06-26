@@ -112,15 +112,15 @@
 
 ### Phase B3 — Module Stay (nuitées / hébergements courte durée)
 
-- [ ] Migration `stays` (property_id, prix_nuit, disponibilité, caution, règles, capacité).
-- [ ] Modèle `Stay` (belongsTo Property, hasMany Booking).
-- [ ] Endpoint `GET /stays` — catalogue des hébergements courte durée.
-- [ ] Endpoint `GET /stays/{id}/availability` — calendrier de disponibilité.
-- [ ] Endpoint `POST /stays/{id}/bookings` — réservation d'une nuitée.
-- [ ] Logique de gestion de caution (montant, statut de retenue/restitution).
-- [ ] Logique de check-in / check-out et statut de ménage (rattachée au back-office, section B13).
-- [ ] Validation des dates (pas de double réservation sur un même créneau).
-- [ ] Tests : impossibilité de réserver un créneau déjà occupé.
+- [x] Migration `stays` (property_id, prix_nuit, disponibilité, caution, règles, capacité).
+- [x] Modèle `Stay` (belongsTo Property, hasMany Booking). — _bookings polymorphes._
+- [x] Endpoint `GET /stays` — catalogue des hébergements courte durée.
+- [x] Endpoint `GET /stays/{id}/availability` — calendrier de disponibilité.
+- [x] Endpoint `POST /stays/{id}/bookings` — réservation d'une nuitée.
+- [x] Logique de gestion de caution (montant, statut de retenue/restitution). — _montant capturé ; retenue/restitution (remboursement PayTech) → B11/B14._
+- [ ] Logique de check-in / check-out et statut de ménage (rattachée au back-office, section B13). — _reporté à B13._
+- [x] Validation des dates (pas de double réservation sur un même créneau).
+- [x] Tests : impossibilité de réserver un créneau déjà occupé.
 
 ### Phase B4 — Module Manage (gestion locative)
 
