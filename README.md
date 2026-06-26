@@ -94,21 +94,21 @@
 
 ### Phase B2 — Module Immo (achat / vente / location mensuelle)
 
-- [ ] Migration `properties` (id, owner_id, type, titre, ville, adresse, prix, statut, vérification + index ville/statut/type/prix).
-- [ ] Migration `property_documents` (property_id, type_document, fichier, statut_validation).
-- [ ] Modèles `Property` et `PropertyDocument` avec relations (belongsTo owner, hasMany documents, morphMany media).
-- [ ] Statut par défaut `en_attente_validation` à la création d'un bien.
-- [ ] Endpoint `GET /properties` — catalogue filtrable (ville, région, département, commune, zone touristique, type, prix, statut de vérification).
-- [ ] Endpoint `POST /properties` — dépôt de bien par un propriétaire.
-- [ ] Endpoint `GET /properties/{id}` — détail d'un bien.
-- [ ] Endpoint `PATCH /properties/{id}` — mise à jour (propriétaire ou admin uniquement).
-- [ ] Endpoint `POST /properties/{id}/documents` — ajout de documents liés au bien.
-- [ ] Policy : un propriétaire ne modifie/voit que ses propres biens en gestion privée ; le catalogue public reste filtré aux biens validés.
-- [ ] Logique de favoris (table pivot ou relation many-to-many user/property).
-- [ ] Logique de comparaison de biens (endpoint ou paramètre de requête multi-ID).
-- [ ] Event `PropertyCreated` → notification agents pour mise en file de validation.
-- [ ] Event `PropertyValidated` → publication effective dans le catalogue.
-- [ ] Tests : un visiteur ne voit jamais un bien non validé ; un propriétaire ne modifie pas le bien d'un autre.
+- [x] Migration `properties` (id, owner_id, type, titre, ville, adresse, prix, statut, vérification + index ville/statut/type/prix). — _localisation via référentiel region/department/commune._
+- [x] Migration `property_documents` (property_id, type_document, fichier, statut_validation).
+- [x] Modèles `Property` et `PropertyDocument` avec relations (belongsTo owner, hasMany documents, morphMany media). — _média (morphMany) en B12._
+- [x] Statut par défaut `en_attente_validation` à la création d'un bien.
+- [x] Endpoint `GET /properties` — catalogue filtrable (ville, région, département, commune, zone touristique, type, prix, statut de vérification).
+- [x] Endpoint `POST /properties` — dépôt de bien par un propriétaire.
+- [x] Endpoint `GET /properties/{id}` — détail d'un bien.
+- [x] Endpoint `PATCH /properties/{id}` — mise à jour (propriétaire ou admin uniquement).
+- [x] Endpoint `POST /properties/{id}/documents` — ajout de documents liés au bien.
+- [x] Policy : un propriétaire ne modifie/voit que ses propres biens en gestion privée ; le catalogue public reste filtré aux biens validés.
+- [x] Logique de favoris (table pivot ou relation many-to-many user/property).
+- [x] Logique de comparaison de biens (endpoint ou paramètre de requête multi-ID).
+- [x] Event `PropertyCreated` → notification agents pour mise en file de validation.
+- [x] Event `PropertyValidated` → publication effective dans le catalogue.
+- [x] Tests : un visiteur ne voit jamais un bien non validé ; un propriétaire ne modifie pas le bien d'un autre.
 
 ### Phase B3 — Module Stay (nuitées / hébergements courte durée)
 
