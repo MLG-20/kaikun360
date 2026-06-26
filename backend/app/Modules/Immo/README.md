@@ -57,3 +57,36 @@ niveaux (`region_id`, `department_id`, `commune_id`).
 
 > 📷 La relation **médias** (galerie photo) sera ajoutée en **phase B12**
 > (table polymorphe `media`).
+
+---
+
+## Catalogue public (phase B2.2)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/properties` | public — liste filtrable & paginée |
+| GET | `/api/v1/properties/{id}` | public — détail d'un bien publié |
+
+> 🔒 **Garantie** : ces endpoints n'exposent QUE les biens publiés
+> (`Property::published()`). Un bien en attente/suspendu/rejeté n'apparaît jamais
+> dans la liste et renvoie **404** au détail.
+
+### Filtres (query string)
+
+`region_id`, `department_id`, `commune_id`, `tourist_zone`, `type`,
+`price_min`, `price_max`, `verification_level`, `q` (recherche titre),
+`sort` (`recent` | `price_asc` | `price_desc`), `per_page` (1–50).
+
+Tous validés (`exists` pour les FK, `Rule::in` pour type/sort). Exemple :
+`/api/v1/properties?region_id=1&type=villa&price_max=80000000&sort=price_asc`
+
+### Réponse
+
+- Liste : enveloppe paginée native `{ data: [...], links: {...}, meta: {...} }`
+  (via `PropertyResource::collection`).
+- Détail : `{ data: {...} }`.
+- `PropertyResource` n'expose du propriétaire que `id` + `name`, et restitue la
+  localisation par les **noms** région/département/commune (référentiel).
+
+> Le détail d'un bien NON publié par son **propriétaire** (gestion privée) sera
+> traité en B2.3 (espace propriétaire + policy).
