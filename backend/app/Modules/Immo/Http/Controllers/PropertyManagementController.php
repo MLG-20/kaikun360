@@ -4,6 +4,7 @@ namespace App\Modules\Immo\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Immo\Enums\PropertyStatus;
+use App\Modules\Immo\Events\PropertyCreated;
 use App\Modules\Immo\Http\Requests\StorePropertyDocumentRequest;
 use App\Modules\Immo\Http\Requests\StorePropertyRequest;
 use App\Modules\Immo\Http\Requests\UpdatePropertyRequest;
@@ -57,7 +58,8 @@ class PropertyManagementController extends Controller
 
         activity()->causedBy($request->user())->performedOn($property)->log('Dépôt de bien');
 
-        // (L'événement PropertyCreated → file de validation sera ajouté en B2.4.)
+        // Met le bien en file de validation (notifie les agents habilités).
+        PropertyCreated::dispatch($property);
 
         return ApiResponse::created([
             'property' => PropertyResource::make($property->load(['region', 'department', 'commune', 'owner'])),

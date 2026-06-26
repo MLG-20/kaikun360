@@ -2,6 +2,7 @@
 
 use App\Modules\Immo\Http\Controllers\PropertyCatalogController;
 use App\Modules\Immo\Http\Controllers\PropertyManagementController;
+use App\Modules\Immo\Http\Controllers\PropertyValidationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -26,6 +27,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/properties/{property}', [PropertyManagementController::class, 'update'])
         ->whereNumber('property');
     Route::post('/properties/{property}/documents', [PropertyManagementController::class, 'storeDocument'])
+        ->whereNumber('property');
+});
+
+// Validation des biens par les agents (phase B2.4) — permission valider:bien.
+Route::middleware(['auth:sanctum', 'can:valider:bien'])->group(function () {
+    Route::patch('/properties/{property}/approve', [PropertyValidationController::class, 'approve'])
+        ->whereNumber('property');
+    Route::patch('/properties/{property}/reject', [PropertyValidationController::class, 'reject'])
         ->whereNumber('property');
 });
 

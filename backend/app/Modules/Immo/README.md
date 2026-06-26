@@ -121,5 +121,29 @@ Tous validés (`exists` pour les FK, `Rule::in` pour type/sort). Exemple :
 - Resources : `PropertyResource`, `PropertyDocumentResource`.
 - Contrôleur : `PropertyManagementController`.
 
-> ⚙️ L'événement **`PropertyCreated`** (mise en file de validation des agents)
-> et **`PropertyValidated`** (publication) seront ajoutés en **phase B2.4**.
+---
+
+## Événements & validation (phase B2.4)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| PATCH | `/api/v1/properties/{property}/approve` | `auth:sanctum` + `can:valider:bien` |
+| PATCH | `/api/v1/properties/{property}/reject` | `auth:sanctum` + `can:valider:bien` |
+
+### Flux
+
+1. **Dépôt** → `PropertyCreated` est émis → listener `NotifyAgentsOfNewProperty`
+   notifie tous les utilisateurs ayant la permission `valider:bien`
+   (agents, admins, super_admin).
+2. **Validation** (`approve`) → statut `publie`, `published_at`/`approved_by`/`approved_at`
+   renseignés, **audit**, puis `PropertyValidated` est émis → listener
+   `NotifyOwnerOfPropertyValidated` informe le propriétaire.
+3. **Rejet** (`reject`) → statut `rejete` (+ motif optionnel, audité).
+
+### Détails techniques
+
+- Permission `valider:bien` appliquée par le middleware `can:valider:bien`.
+- Listeners enregistrés explicitement dans `AppServiceProvider::configureEvents()`
+  (les modules ne sont pas couverts par l'auto-découverte d'événements).
+- Notifications par mail (loggées en dev). **Push/WhatsApp + envoi asynchrone
+  (jobs)** à brancher en **phase B16**.

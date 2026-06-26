@@ -5,10 +5,15 @@ namespace App\Providers;
 use App\Models\User;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Core\Policies\UserPolicy;
+use App\Modules\Immo\Events\PropertyCreated;
+use App\Modules\Immo\Events\PropertyValidated;
+use App\Modules\Immo\Listeners\NotifyAgentsOfNewProperty;
+use App\Modules\Immo\Listeners\NotifyOwnerOfPropertyValidated;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Immo\Policies\PropertyPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -30,6 +35,19 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
         $this->configureAuthorization();
+        $this->configureEvents();
+    }
+
+    /**
+     * Associe les événements métier à leurs listeners.
+     *
+     * Enregistrement explicite car les listeners vivent dans les modules
+     * (hors de app/Listeners), donc non couverts par l'auto-découverte.
+     */
+    protected function configureEvents(): void
+    {
+        Event::listen(PropertyCreated::class, NotifyAgentsOfNewProperty::class);
+        Event::listen(PropertyValidated::class, NotifyOwnerOfPropertyValidated::class);
     }
 
     /**
