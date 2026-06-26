@@ -88,5 +88,38 @@ Tous validés (`exists` pour les FK, `Rule::in` pour type/sort). Exemple :
 - `PropertyResource` n'expose du propriétaire que `id` + `name`, et restitue la
   localisation par les **noms** région/département/commune (référentiel).
 
-> Le détail d'un bien NON publié par son **propriétaire** (gestion privée) sera
-> traité en B2.3 (espace propriétaire + policy).
+> Le détail d'un bien NON publié par son **propriétaire** apparaît dans la
+> gestion privée ci-dessous (B2.3).
+
+---
+
+## Gestion privée par le propriétaire (phase B2.3)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/properties/mine` | `auth:sanctum` — mes biens (tous statuts) |
+| POST | `/api/v1/properties` | `auth:sanctum` — déposer un bien (rôle proprietaire/admin) |
+| PATCH | `/api/v1/properties/{property}` | `auth:sanctum` — modifier (propriétaire/admin) |
+| POST | `/api/v1/properties/{property}/documents` | `auth:sanctum` — ajouter une pièce |
+| GET | `/api/v1/properties/{property}/documents/{document}/download` | **URL signée** |
+
+### Règles
+
+- **`PropertyPolicy`** (`create`/`view`/`update`/`manageDocuments`) : un
+  propriétaire ne gère que **ses** biens ; l'admin gère tout ; super_admin bypass.
+  Enregistrée dans `AppServiceProvider`.
+- Un bien déposé démarre **toujours** en `en_attente_validation` (jamais publié
+  directement). Le statut n'est pas modifiable via `PATCH` (réservé à la
+  validation, phase B2.4).
+- **Cohérence géographique** validée (`StorePropertyRequest`/`UpdatePropertyRequest`) :
+  le département doit appartenir à la région, la commune au département.
+- Documents : disque privé, formats PDF/JPG/PNG ≤ 5 Mo, accès par **URL signée** (10 min).
+
+### Briques
+
+- Form Requests : `StorePropertyRequest`, `UpdatePropertyRequest`, `StorePropertyDocumentRequest`.
+- Resources : `PropertyResource`, `PropertyDocumentResource`.
+- Contrôleur : `PropertyManagementController`.
+
+> ⚙️ L'événement **`PropertyCreated`** (mise en file de validation des agents)
+> et **`PropertyValidated`** (publication) seront ajoutés en **phase B2.4**.

@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Models\User;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Core\Policies\UserPolicy;
+use App\Modules\Immo\Models\Property;
+use App\Modules\Immo\Policies\PropertyPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -43,8 +45,9 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole(UserRole::SUPER_ADMIN->value) ? true : null;
         });
 
-        // Policies du module Core (les modules suivants enregistreront les leurs).
+        // Policies des modules.
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Property::class, PropertyPolicy::class);
     }
 
     /**

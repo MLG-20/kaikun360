@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Immo\Http\Controllers\PropertyCatalogController;
+use App\Modules\Immo\Http\Controllers\PropertyManagementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,5 +16,25 @@ use Illuminate\Support\Facades\Route;
 // Catalogue PUBLIC (phase B2.2) — aucune authentification requise.
 // Seuls les biens publiés sont exposés (cf. PropertyCatalogController).
 Route::get('/properties', [PropertyCatalogController::class, 'index']);
+
+// Gestion privée par le propriétaire (phase B2.3) — auth requise.
+// NB : "/properties/mine" est défini ici ; il ne percute pas "/properties/{id}"
+// car ce dernier est contraint aux identifiants numériques (whereNumber).
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/properties/mine', [PropertyManagementController::class, 'mine']);
+    Route::post('/properties', [PropertyManagementController::class, 'store']);
+    Route::patch('/properties/{property}', [PropertyManagementController::class, 'update'])
+        ->whereNumber('property');
+    Route::post('/properties/{property}/documents', [PropertyManagementController::class, 'storeDocument'])
+        ->whereNumber('property');
+});
+
+// Détail public d'un bien publié (défini APRÈS /properties/mine).
 Route::get('/properties/{id}', [PropertyCatalogController::class, 'show'])
     ->whereNumber('id');
+
+// Téléchargement d'un document de bien : URL signée temporaire uniquement.
+Route::get('/properties/{property}/documents/{document}/download', [PropertyManagementController::class, 'downloadDocument'])
+    ->name('properties.documents.download')
+    ->whereNumber(['property', 'document'])
+    ->middleware('signed');
