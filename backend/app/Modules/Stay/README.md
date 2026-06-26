@@ -29,3 +29,19 @@ Permet de proposer un **bien** (module Immo) en location **à la nuitée**.
 > polymorphe, anti double-réservation) arrivent en **phase B3.3**.
 > La caution est stockée ici ; sa **retenue/restitution** (remboursement PayTech)
 > relève des phases B11/B14.
+
+---
+
+## Catalogue public (phase B3.2)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/stays` | public — liste filtrable & paginée |
+| GET | `/api/v1/stays/{id}` | public — détail d'une nuitée réservable |
+
+> 🔒 Seules les nuitées **réservables** (`Stay::bookable()` = active + bien
+> publié) sont exposées ; sinon **404** au détail.
+
+- Filtres : `region_id`, `department_id`, `commune_id` (portés par le bien),
+  `capacity` (mini), `price_min`/`price_max` (par nuit), `q` (titre du bien), `per_page`.
+- `StayResource` embarque le bien via la `PropertyResource` du module Immo.
