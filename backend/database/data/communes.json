@@ -1,0 +1,28 @@
+{
+  "_comment": "Référentiel des communes du Sénégal (région > département > communes). Fichier AMORCÉ : Dakar et Guédiawaye sont détaillés ; les autres départements ne contiennent que leur chef-lieu. À COMPLÉTER avec la liste officielle ANSD (~557 communes). Importé par Database\\Seeders\\CommunesSeeder.",
+  "Dakar": {
+    "Dakar": [
+      "Dakar-Plateau", "Médina", "Gueule Tapée-Fass-Colobane", "Fann-Point E-Amitié",
+      "Gorée", "Grand Dakar", "Biscuiterie", "Dieuppeul-Derklé", "HLM", "Sicap-Liberté",
+      "Hann Bel-Air", "Grand Yoff", "Patte d'Oie", "Yoff", "Ngor", "Ouakam",
+      "Mermoz-Sacré-Cœur", "Parcelles Assainies", "Cambérène"
+    ],
+    "Guédiawaye": ["Golf Sud", "Sam Notaire", "Ndiarème Limamoulaye", "Wakhinane Nimzatt", "Médina Gounass"],
+    "Pikine": ["Pikine"],
+    "Rufisque": ["Rufisque"],
+    "Keur Massar": ["Keur Massar"]
+  },
+  "Thiès": { "Thiès": ["Thiès"], "Mbour": ["Mbour"], "Tivaouane": ["Tivaouane"] },
+  "Diourbel": { "Diourbel": ["Diourbel"], "Bambey": ["Bambey"], "Mbacké": ["Mbacké"] },
+  "Fatick": { "Fatick": ["Fatick"], "Foundiougne": ["Foundiougne"], "Gossas": ["Gossas"] },
+  "Kaolack": { "Kaolack": ["Kaolack"], "Guinguinéo": ["Guinguinéo"], "Nioro du Rip": ["Nioro du Rip"] },
+  "Kaffrine": { "Kaffrine": ["Kaffrine"], "Birkelane": ["Birkelane"], "Koungheul": ["Koungheul"], "Malem-Hodar": ["Malem-Hodar"] },
+  "Kédougou": { "Kédougou": ["Kédougou"], "Salémata": ["Salémata"], "Saraya": ["Saraya"] },
+  "Kolda": { "Kolda": ["Kolda"], "Médina Yoro Foulah": ["Médina Yoro Foulah"], "Vélingara": ["Vélingara"] },
+  "Louga": { "Louga": ["Louga"], "Kébémer": ["Kébémer"], "Linguère": ["Linguère"] },
+  "Matam": { "Matam": ["Matam"], "Kanel": ["Kanel"], "Ranérou Ferlo": ["Ranérou Ferlo"] },
+  "Saint-Louis": { "Saint-Louis": ["Saint-Louis"], "Dagana": ["Dagana"], "Podor": ["Podor"] },
+  "Sédhiou": { "Sédhiou": ["Sédhiou"], "Bounkiling": ["Bounkiling"], "Goudomp": ["Goudomp"] },
+  "Tambacounda": { "Tambacounda": ["Tambacounda"], "Bakel": ["Bakel"], "Goudiry": ["Goudiry"], "Koumpentoum": ["Koumpentoum"] },
+  "Ziguinchor": { "Ziguinchor": ["Ziguinchor"], "Bignona": ["Bignona"], "Oussouye": ["Oussouye"] }
+}
