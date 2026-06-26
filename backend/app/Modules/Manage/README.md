@@ -24,5 +24,18 @@ Kaikun gère des biens pour le compte de leurs propriétaires : **mandats**,
 - `belongsTo` Property et `belongsTo` owner (User).
 - Enum `MandateStatus` : `en_attente`, `actif`, `suspendu`, `termine`.
 
-> 🔜 À venir : loyers (B4.2), incidents & dépenses (B4.3), reversements (B4.4),
-> tableau de bord & rapport mensuel (B4.5), policy & tests d'isolation (B4.6).
+---
+
+## Loyers (phase B4.2)
+
+### Table `rents`
+
+Échéances de loyer d'un mandat. Champs clés : `mandate_id`, locataire
+(`tenant_id` utilisateur **ou** `tenant_name` libre), `period_label`, `due_date`,
+`amount_xof`, `status` (enum `RentStatus` : `impaye`, `paye`, `en_retard`), `paid_at`.
+
+Modèle `Rent` : `belongsTo` mandate et tenant (User).
+Relation `ManagementMandate::rents()` (hasMany).
+
+> 🔜 À venir : incidents & dépenses (B4.3), reversements (B4.4),
+> tableau de bord & rapport mensuel (B4.5), endpoints CRUD + policy d'isolation (B4.6).

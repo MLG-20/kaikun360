@@ -9,6 +9,7 @@ use Database\Factories\ManagementMandateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Mandat de gestion locative (module Manage).
@@ -54,6 +55,14 @@ class ManagementMandate extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /**
+     * Les échéances de loyer du mandat.
+     */
+    public function rents(): HasMany
+    {
+        return $this->hasMany(Rent::class, 'mandate_id');
     }
 
     protected static function newFactory(): ManagementMandateFactory
