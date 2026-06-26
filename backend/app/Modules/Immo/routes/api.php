@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Immo\Http\Controllers\FavoriteController;
 use App\Modules\Immo\Http\Controllers\PropertyCatalogController;
 use App\Modules\Immo\Http\Controllers\PropertyManagementController;
 use App\Modules\Immo\Http\Controllers\PropertyValidationController;
@@ -17,6 +18,19 @@ use Illuminate\Support\Facades\Route;
 // Catalogue PUBLIC (phase B2.2) — aucune authentification requise.
 // Seuls les biens publiés sont exposés (cf. PropertyCatalogController).
 Route::get('/properties', [PropertyCatalogController::class, 'index']);
+
+// Comparaison de biens (phase B2.5) — public. Défini avant /properties/{id}
+// (de toute façon "compare" n'est pas numérique).
+Route::get('/properties/compare', [PropertyCatalogController::class, 'compare']);
+
+// Favoris de l'utilisateur connecté (phase B2.5).
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/properties/{property}/favorite', [FavoriteController::class, 'store'])
+        ->whereNumber('property');
+    Route::delete('/properties/{property}/favorite', [FavoriteController::class, 'destroy'])
+        ->whereNumber('property');
+});
 
 // Gestion privée par le propriétaire (phase B2.3) — auth requise.
 // NB : "/properties/mine" est défini ici ; il ne percute pas "/properties/{id}"

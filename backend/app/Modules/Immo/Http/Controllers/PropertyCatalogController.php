@@ -72,6 +72,31 @@ class PropertyCatalogController extends Controller
     }
 
     /**
+     * Comparaison de plusieurs biens. GET /api/v1/properties/compare?ids=1,2,3
+     *
+     * Public. Ne renvoie que les biens publiés parmi les ids demandés
+     * (4 maximum, pour garder une comparaison lisible).
+     */
+    public function compare(Request $request): AnonymousResourceCollection
+    {
+        // Parse "ids" (liste séparée par des virgules) → entiers uniques, max 4.
+        $ids = collect(explode(',', (string) $request->query('ids', '')))
+            ->map(fn ($v) => (int) trim($v))
+            ->filter()
+            ->unique()
+            ->take(4)
+            ->values();
+
+        $properties = Property::query()
+            ->published()
+            ->whereIn('id', $ids)
+            ->with(['region', 'department', 'commune', 'owner'])
+            ->get();
+
+        return PropertyResource::collection($properties);
+    }
+
+    /**
      * Détail d'un bien publié. GET /api/v1/properties/{id}
      *
      * Un bien non publié n'est pas accessible publiquement → 404

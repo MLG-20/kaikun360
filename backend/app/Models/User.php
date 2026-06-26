@@ -6,10 +6,12 @@ namespace App\Models;
 use App\Modules\Core\Enums\UserStatus;
 use App\Modules\Core\Models\Profile;
 use App\Modules\Core\Models\UserDocument;
+use App\Modules\Immo\Models\Property;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -65,5 +67,13 @@ class User extends Authenticatable
     public function documents(): HasMany
     {
         return $this->hasMany(UserDocument::class);
+    }
+
+    /**
+     * Relation N–N : les biens immobiliers mis en favori par l'utilisateur.
+     */
+    public function favoriteProperties(): BelongsToMany
+    {
+        return $this->belongsToMany(Property::class, 'favorites')->withTimestamps();
     }
 }

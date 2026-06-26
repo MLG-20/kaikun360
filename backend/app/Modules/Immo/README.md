@@ -147,3 +147,20 @@ Tous validés (`exists` pour les FK, `Rule::in` pour type/sort). Exemple :
   (les modules ne sont pas couverts par l'auto-découverte d'événements).
 - Notifications par mail (loggées en dev). **Push/WhatsApp + envoi asynchrone
   (jobs)** à brancher en **phase B16**.
+
+---
+
+## Favoris & comparaison (phase B2.5)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/favorites` | `auth:sanctum` — mes favoris |
+| POST | `/api/v1/properties/{property}/favorite` | `auth:sanctum` — ajouter |
+| DELETE | `/api/v1/properties/{property}/favorite` | `auth:sanctum` — retirer |
+| GET | `/api/v1/properties/compare?ids=1,2,3` | public — comparer (max 4) |
+
+- **Favoris** : table pivot `favorites` (N–N, unique). Ajout **idempotent**
+  (`syncWithoutDetaching`). On ne peut favoriser qu'un bien **publié** (sinon 404).
+  Relation `User::favoriteProperties()`.
+- **Comparaison** : renvoie les biens **publiés** parmi les `ids` fournis,
+  **4 maximum** pour rester lisible.
