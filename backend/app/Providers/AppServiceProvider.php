@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use App\Modules\Core\Enums\UserRole;
+use App\Modules\Core\Policies\UserPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -40,6 +42,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function ($user, string $ability) {
             return $user->hasRole(UserRole::SUPER_ADMIN->value) ? true : null;
         });
+
+        // Policies du module Core (les modules suivants enregistreront les leurs).
+        Gate::policy(User::class, UserPolicy::class);
     }
 
     /**

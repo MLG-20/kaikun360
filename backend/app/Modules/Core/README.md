@@ -187,3 +187,37 @@ En dev (`MAIL_MAILER=log`/`array`), le code n'est pas réellement envoyé.
   à `actif`.
 - `password/forgot` répond **toujours** de la même manière (anti-énumération de comptes).
 - Après un reset, **tous les tokens** de l'utilisateur sont révoqués (sécurité).
+
+---
+
+## Profil & documents de l'utilisateur connecté (phase B1.5)
+
+### Endpoints
+
+| Méthode | URL | Accès | Rôle |
+|---|---|---|---|
+| GET | `/api/v1/users/me` | `auth:sanctum` | Profil de l'utilisateur connecté |
+| PATCH | `/api/v1/users/me` | `auth:sanctum` | MAJ partielle (`name`, `city`, `preferences`) |
+| GET | `/api/v1/users/me/documents` | `auth:sanctum` | Lister ses pièces |
+| POST | `/api/v1/users/me/documents` | `auth:sanctum` | Déposer une pièce (`type` + `file`) |
+| GET | `/api/v1/users/me/documents/{document}/download` | **URL signée** | Télécharger un fichier |
+
+> `PATCH /users/me` ne modifie **pas** l'e-mail ni le téléphone (un changement
+> nécessitera une re-vérification dédiée, à traiter plus tard).
+
+### Documents (KYC) — stockage sécurisé
+
+- Fichiers stockés sur le disque **privé** `local` (`storage/app/private`),
+  rangés par utilisateur, nom de fichier aléatoire.
+- Formats acceptés : PDF/JPG/PNG, **5 Mo** max (`StoreDocumentRequest`).
+- Table `user_documents` (modèle `UserDocument`), type via enum `DocumentType`,
+  statut de validation `pending` par défaut (validé par un agent en B13).
+- Accès au fichier **uniquement** par **URL signée temporaire** (10 min),
+  générée dans `UserDocumentResource` — le chemin réel n'est jamais exposé.
+
+### Policy `UserPolicy`
+
+`viewProfile` / `updateProfile` / `manageDocuments` : autorisés si l'utilisateur
+agit **sur lui-même** ou s'il est **admin** (le `super_admin` passe via `Gate::before`).
+Enregistrée dans `AppServiceProvider`. Les endpoints `/me` sont déjà auto-restreints ;
+la policy servira surtout aux accès inter-utilisateurs du back-office (B13).

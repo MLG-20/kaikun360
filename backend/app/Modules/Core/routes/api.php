@@ -1,7 +1,9 @@
 <?php
 
 use App\Modules\Core\Http\Controllers\AuthController;
+use App\Modules\Core\Http\Controllers\DocumentController;
 use App\Modules\Core\Http\Controllers\PasswordResetController;
+use App\Modules\Core\Http\Controllers\UserController;
 use App\Modules\Core\Http\Controllers\VerificationController;
 use App\Support\ApiResponse;
 use Illuminate\Support\Facades\Route;
@@ -48,3 +50,21 @@ Route::prefix('auth')->group(function () {
     Route::post('/password/forgot', [PasswordResetController::class, 'forgot']);
     Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 });
+
+/*
+| Compte de l'utilisateur connecté (phase B1.5).
+*/
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/users/me', [UserController::class, 'me']);
+    Route::patch('/users/me', [UserController::class, 'update']);
+
+    Route::get('/users/me/documents', [DocumentController::class, 'index']);
+    Route::post('/users/me/documents', [DocumentController::class, 'store']);
+});
+
+// Téléchargement d'un document : accès via URL signée temporaire uniquement
+// (pas de token requis, la signature fait foi). Le nom de route doit
+// correspondre à celui utilisé dans UserDocumentResource.
+Route::get('/users/me/documents/{document}/download', [DocumentController::class, 'download'])
+    ->name('users.documents.download')
+    ->middleware('signed');
