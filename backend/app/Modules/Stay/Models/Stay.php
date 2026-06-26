@@ -2,6 +2,7 @@
 
 namespace App\Modules\Stay\Models;
 
+use App\Models\Booking;
 use App\Modules\Immo\Enums\PropertyStatus;
 use App\Modules\Immo\Models\Property;
 use Database\Factories\StayFactory;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * Configuration "nuitées" d'un bien (module Stay).
@@ -59,6 +61,14 @@ class Stay extends Model
     public function property(): BelongsTo
     {
         return $this->belongsTo(Property::class);
+    }
+
+    /**
+     * Les réservations de cette nuitée (relation polymorphe).
+     */
+    public function bookings(): MorphMany
+    {
+        return $this->morphMany(Booking::class, 'bookable');
     }
 
     /**

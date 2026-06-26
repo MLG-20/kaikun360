@@ -45,3 +45,30 @@ Permet de proposer un **bien** (module Immo) en location **à la nuitée**.
 - Filtres : `region_id`, `department_id`, `commune_id` (portés par le bien),
   `capacity` (mini), `price_min`/`price_max` (par nuit), `q` (titre du bien), `per_page`.
 - `StayResource` embarque le bien via la `PropertyResource` du module Immo.
+
+---
+
+## Disponibilité & réservation (phase B3.3)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/stays/{id}/availability` | public — créneaux déjà occupés |
+| POST | `/api/v1/stays/{id}/bookings` | `auth:sanctum` — réserver |
+
+### Réservations (`bookings`, polymorphe)
+
+- Table `bookings` **polymorphe** (`bookable`) introduite ici, **enrichie en B11**.
+  Modèle transversal `App\Models\Booking` (statut via `App\Enums\BookingStatus`).
+- Relation `Stay::bookings()` (morphMany).
+
+### Règles vérifiées au moment de réserver
+
+1. **Anti double-réservation** : refus si la période chevauche une réservation
+   non annulée. Convention : `end_date` = jour de **départ exclusif**, donc des
+   créneaux **adjacents** (départ = arrivée suivante) sont autorisés.
+2. Capacité (`guests ≤ capacity`), séjour min/max (`min_nights`/`max_nights`),
+   dates cohérentes (`StoreStayBookingRequest`).
+3. Montant calculé = `nuits × prix/nuit` ; caution reprise depuis la nuitée.
+   Statut initial `en_attente` (le paiement viendra en **B14**).
+
+> 💰 Retenue/restitution de la **caution** (remboursement PayTech) : phases B11/B14.
