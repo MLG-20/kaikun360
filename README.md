@@ -76,21 +76,21 @@
 
 ### Phase B1 — Authentification, utilisateurs et rôles (module Core)
 
-- [ ] Migration `users` (id, nom, téléphone, email, rôle, ville, statut, date_creation).
-- [ ] Migration `profiles` (user_id, type_profil, documents, vérification, préférences).
-- [ ] Modèles Eloquent `User` et `Profile` avec relations (hasOne/belongsTo).
-- [ ] Définir les 8 rôles dans Spatie Permission (Visiteur, Client, Propriétaire, Prestataire, Entreprise, Agent Kaikun, Admin, Super Admin) et leurs permissions.
-- [ ] Endpoint `POST /auth/register` avec choix de profil (client, propriétaire, prestataire, entreprise, diaspora).
-- [ ] Endpoint `POST /auth/login` (email ou téléphone).
-- [ ] Endpoint `POST /auth/verify` (vérification code SMS/email).
-- [ ] Endpoint `POST /auth/logout`.
-- [ ] Endpoint `GET /users/me` (profil utilisateur connecté).
-- [ ] Endpoint `PATCH /users/me` (mise à jour du profil).
-- [ ] Endpoint `POST /users/me/documents` (dépôt de pièce d'identité / documents justificatifs).
-- [ ] Form Requests de validation pour inscription et mise à jour de profil.
-- [ ] Policies de base : un utilisateur ne peut lire/modifier que son propre profil (sauf Admin/Super Admin).
-- [ ] Logique de récupération de compte (mot de passe oublié / téléphone oublié).
-- [ ] Tests d'autorisation : vérifier qu'aucun rôle n'accède aux données d'un autre utilisateur sans permission explicite.
+- [x] Migration `users` (id, nom, téléphone, email, rôle, ville, statut, date_creation). — _rôle géré par Spatie (pas de colonne)._
+- [x] Migration `profiles` (user_id, type_profil, documents, vérification, préférences). — _documents dans table dédiée `user_documents`._
+- [x] Modèles Eloquent `User` et `Profile` avec relations (hasOne/belongsTo).
+- [x] Définir les 8 rôles dans Spatie Permission (Visiteur, Client, Propriétaire, Prestataire, Entreprise, Agent Kaikun, Admin, Super Admin) et leurs permissions. — _seeder + matrice initiale._
+- [x] Endpoint `POST /auth/register` avec choix de profil (client, propriétaire, prestataire, entreprise, diaspora).
+- [x] Endpoint `POST /auth/login` (email ou téléphone).
+- [x] Endpoint `POST /auth/verify` (vérification code SMS/email). — _SMS réel à brancher en B16 ; codes loggés en dev._
+- [x] Endpoint `POST /auth/logout`.
+- [x] Endpoint `GET /users/me` (profil utilisateur connecté).
+- [x] Endpoint `PATCH /users/me` (mise à jour du profil).
+- [x] Endpoint `POST /users/me/documents` (dépôt de pièce d'identité / documents justificatifs). — _disque privé + URL signée temporaire._
+- [x] Form Requests de validation pour inscription et mise à jour de profil.
+- [x] Policies de base : un utilisateur ne peut lire/modifier que son propre profil (sauf Admin/Super Admin).
+- [x] Logique de récupération de compte (mot de passe oublié / téléphone oublié).
+- [x] Tests d'autorisation : vérifier qu'aucun rôle n'accède aux données d'un autre utilisateur sans permission explicite.
 
 ### Phase B2 — Module Immo (achat / vente / location mensuelle)
 
