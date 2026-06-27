@@ -11,6 +11,8 @@ use App\Modules\Immo\Listeners\NotifyAgentsOfNewProperty;
 use App\Modules\Immo\Listeners\NotifyOwnerOfPropertyValidated;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Immo\Policies\PropertyPolicy;
+use App\Modules\Manage\Models\ManagementMandate;
+use App\Modules\Manage\Policies\ManagementMandatePolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -66,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
         // Policies des modules.
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Property::class, PropertyPolicy::class);
+        Gate::policy(ManagementMandate::class, ManagementMandatePolicy::class);
     }
 
     /**

@@ -63,5 +63,22 @@ Relation `ManagementMandate::rents()` (hasMany).
 
 > Distinct des **payouts prestataires / PSP** (ledger, phases B11/B14).
 
-> 🔜 À venir : tableau de bord propriétaire & rapport mensuel (B4.5),
-> endpoints CRUD + policy d'isolation (B4.6).
+---
+
+## Espace propriétaire — lecture & tableau de bord (phase B4.5)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/manage/dashboard` | `auth` — KPIs agrégés du propriétaire |
+| GET | `/api/v1/manage/mandates/mine` | `auth` — mes mandats (avec agrégats) |
+| GET | `/api/v1/manage/mandates/{mandate}` | `auth` + policy `view` |
+
+- **Isolation** : un propriétaire ne voit que ses propres mandats (scoping par
+  `owner_id`). Le détail `{mandate}` passe par `ManagementMandatePolicy::view`
+  (propriétaire **ou** agent/admin ; super_admin via Gate::before).
+- **Agrégats** (sans N+1, via `withSum`/`withCount`) : loyers payés / impayés,
+  dépenses, reversements effectués, incidents ouverts.
+- `MandateResource` expose ces sommes sous `summary`.
+
+> 🔜 À venir (B4.6) : endpoints de **création/gestion** par les agents
+> (loyers, incidents, dépenses, reversements) + **rapport mensuel** + tests.

@@ -73,6 +73,26 @@ class ManagementMandate extends Model
         return $this->hasMany(OwnerPayout::class, 'mandate_id');
     }
 
+    /**
+     * Les incidents du bien géré.
+     *
+     * Incidents et dépenses pointent vers le BIEN (`property_id`), pas vers le
+     * mandat ; comme un mandat ne concerne qu'un bien, on relie via la colonne
+     * partagée `property_id` (clé locale = clé étrangère = property_id).
+     */
+    public function incidents(): HasMany
+    {
+        return $this->hasMany(Incident::class, 'property_id', 'property_id');
+    }
+
+    /**
+     * Les dépenses du bien géré (même principe que les incidents).
+     */
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(Expense::class, 'property_id', 'property_id');
+    }
+
     protected static function newFactory(): ManagementMandateFactory
     {
         return ManagementMandateFactory::new();
