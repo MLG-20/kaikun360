@@ -61,5 +61,30 @@ assure le **suivi de chantier** (rapports photo/vidéo, jalons).
 - Casts : `type` enum, `photos` en tableau, `reported_at` date.
 - Côté Build : `ConstructionRequest::reports()` (`morphMany`).
 
-> 🔜 À venir : jalons de chantier (B5.3), simulateur de budget (B5.4),
-> endpoints + policy client (B5.5).
+---
+
+## Jalons de chantier (phase B5.3)
+
+### Table `construction_milestones`
+
+| Champ | Rôle |
+|---|---|
+| `construction_request_id` | demande rattachée |
+| `name` | libellé de l'étape |
+| `position` | ordre d'exécution |
+| `status` | enum `MilestoneStatus` : `a_venir`, `en_cours`, `termine` |
+| `planned_date` / `actual_date` | dates prévisionnelle et réelle |
+
+### Modèle & relation
+
+- `ConstructionMilestone` : `belongsTo` constructionRequest, casts dates/enum.
+- `ConstructionRequest::milestones()` (`hasMany`, ordonné par `position`).
+
+### Service `ConstructionMilestoneService`
+
+- `defaultStagesFor(objective)` : découpage type (le parcours « neuf »/« extension »
+  comporte fondations + toiture ; la « rénovation » commence par un diagnostic).
+- `seedDefault(request)` : matérialise les jalons par défaut (statut `a_venir`),
+  **idempotent** (ne duplique pas si des jalons existent déjà).
+
+> 🔜 À venir : simulateur de budget (B5.4), endpoints + policy client (B5.5).

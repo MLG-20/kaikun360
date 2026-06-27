@@ -11,6 +11,7 @@ use Database\Factories\ConstructionRequestFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
@@ -65,6 +66,14 @@ class ConstructionRequest extends Model
     public function reports(): MorphMany
     {
         return $this->morphMany(Report::class, 'reportable');
+    }
+
+    /**
+     * Les jalons (étapes) du chantier, ordonnés (B5.3).
+     */
+    public function milestones(): HasMany
+    {
+        return $this->hasMany(ConstructionMilestone::class)->orderBy('position');
     }
 
     protected static function newFactory(): ConstructionRequestFactory
