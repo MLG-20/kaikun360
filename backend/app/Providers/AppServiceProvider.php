@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Modules\Core\Enums\UserRole;
+use App\Modules\Build\Models\ConstructionRequest;
+use App\Modules\Build\Policies\ConstructionRequestPolicy;
 use App\Modules\Core\Policies\UserPolicy;
 use App\Modules\Immo\Events\PropertyCreated;
 use App\Modules\Immo\Events\PropertyValidated;
@@ -69,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Property::class, PropertyPolicy::class);
         Gate::policy(ManagementMandate::class, ManagementMandatePolicy::class);
+        Gate::policy(ConstructionRequest::class, ConstructionRequestPolicy::class);
     }
 
     /**

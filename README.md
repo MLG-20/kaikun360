@@ -136,14 +136,14 @@
 
 ### Phase B5 — Module Build (construction / rénovation / devis)
 
-- [ ] Migration `construction_requests` (client_id, budget, ville, surface, objectif, niveau_finition, statut).
-- [ ] Modèle `ConstructionRequest` (belongsTo client, hasMany Quote, hasMany Report).
-- [ ] Logique de simulateur (calcul indicatif budget/surface/niveau de finition — règles métier dans un Service dédié).
-- [ ] Endpoint `POST /construction-requests` — demande détaillée de devis.
-- [ ] Endpoint `GET /construction-requests/{id}/reports` — rapports photo/vidéo de suivi de chantier.
-- [ ] Migration et modèle `reports` (project_id, type, photos, vidéo, commentaire, date) — relation polymorphique (Construction ou Diaspora).
-- [ ] Logique de jalons de chantier (étapes, statut, date prévisionnelle/réelle).
-- [ ] Policy : un client ne voit que ses propres demandes de construction et leurs rapports.
+- [x] Migration `construction_requests` (client_id, budget, ville, surface, objectif, niveau_finition, statut).
+- [x] Modèle `ConstructionRequest` (belongsTo client, hasMany Report ; hasMany Quote rattaché en B11).
+- [x] Logique de simulateur (calcul indicatif budget/surface/niveau de finition — règles métier dans un Service dédié).
+- [x] Endpoint `POST /construction-requests` — demande détaillée de devis.
+- [x] Endpoint `GET /construction-requests/{id}/reports` — rapports photo/vidéo de suivi de chantier.
+- [x] Migration et modèle `reports` (project_id, type, photos, vidéo, commentaire, date) — relation polymorphique (Construction ou Diaspora).
+- [x] Logique de jalons de chantier (étapes, statut, date prévisionnelle/réelle).
+- [x] Policy : un client ne voit que ses propres demandes de construction et leurs rapports.
 
 ### Phase B6 — Module Explore (tourisme et expériences)
 

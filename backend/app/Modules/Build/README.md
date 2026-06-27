@@ -102,5 +102,31 @@ premium 1,35) × surface, arrondi au pas de 100 000 XOF.
 
 > ⚠️ Estimation **non contractuelle** ; le devis ferme relève des Quotes (B11).
 
-> 🔜 À venir : endpoints (création, mes demandes, rapports, simulation) +
-> policy client (B5.5).
+---
+
+## Endpoints & policy (phase B5.5)
+
+### Espace client (auth)
+
+| Méthode | URL | Effet |
+|---|---|---|
+| POST | `/api/v1/construction-requests` | dépose une demande (estimation auto + jalons par défaut, statut `soumise`) |
+| POST | `/api/v1/construction-requests/simulate` | simulation de budget (sans persistance) |
+| GET | `/api/v1/construction-requests/mine` | mes demandes (paginées, `reports_count`) |
+| GET | `/api/v1/construction-requests/{id}` | détail + jalons (policy `view`) |
+| GET | `/api/v1/construction-requests/{id}/reports` | rapports de suivi (policy `view`) |
+
+### Suivi de chantier (agents, permission `gerer:chantiers`)
+
+| Méthode | URL | Effet |
+|---|---|---|
+| POST | `/api/v1/construction-requests/{id}/reports` | publie un rapport (`created_by` = agent) |
+
+- **Policy** `ConstructionRequestPolicy` : `create` = tout authentifié ; `view` =
+  client propriétaire **ou** agent/admin (super_admin via Gate::before). Enregistrée
+  dans `AppServiceProvider`.
+- **Permission** `gerer:chantiers` ajoutée au rôle agent (+ admin) dans le seeder.
+- Resources : `ConstructionRequestResource` (jalons `whenLoaded`, `reports_count`
+  `whenCounted`), `ConstructionMilestoneResource`, `ReportResource`.
+- À la création : `ConstructionEstimator` renseigne `estimated_cost_xof` et
+  `ConstructionMilestoneService` sème les jalons.

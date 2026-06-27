@@ -35,6 +35,9 @@ class RolesAndPermissionsSeeder extends Seeder
             // Gestion locative (module Manage) : création/suivi des mandats,
             // loyers, incidents, dépenses et reversements par les agents.
             'gerer:gestion-locative',
+            // Suivi de chantier (module Build) : publication des rapports
+            // photo/vidéo de suivi par les agents.
+            'gerer:chantiers',
             // Administration
             'consulter:dashboard-admin',
             'gerer:utilisateurs',
@@ -65,6 +68,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'valider:experience',
                 'valider:prestataire',
                 'gerer:gestion-locative',
+                'gerer:chantiers',
                 'consulter:dashboard-admin',
                 'moderer:avis',
             ],
