@@ -124,15 +124,15 @@
 
 ### Phase B4 — Module Manage (gestion locative)
 
-- [ ] Tables/relations pour contrats de gestion locative (mandat, durée, taux de commission).
-- [ ] Table loyers (échéances, statut payé/impayé, lien au bien et au locataire).
-- [ ] Table incidents (signalement, statut de traitement, lien au bien).
-- [ ] Table dépenses liées à un bien (maintenance, réparations).
-- [ ] Logique de reversement au propriétaire (montant, date, justificatif).
-- [ ] Endpoints CRUD pour mandats, loyers, incidents, dépenses, reversements.
-- [ ] Endpoint de tableau de bord propriétaire (agrégation loyers/incidents/reversements d'un propriétaire).
-- [ ] Génération de rapport mensuel (export PDF ou données structurées consommées par le frontend).
-- [ ] Policy : un propriétaire ne voit que les données de gestion locative de ses propres biens.
+- [x] Tables/relations pour contrats de gestion locative (mandat, durée, taux de commission).
+- [x] Table loyers (échéances, statut payé/impayé, lien au bien et au locataire).
+- [x] Table incidents (signalement, statut de traitement, lien au bien).
+- [x] Table dépenses liées à un bien (maintenance, réparations).
+- [x] Logique de reversement au propriétaire (montant, date, justificatif).
+- [x] Endpoints CRUD pour mandats, loyers, incidents, dépenses, reversements.
+- [x] Endpoint de tableau de bord propriétaire (agrégation loyers/incidents/reversements d'un propriétaire).
+- [x] Génération de rapport mensuel (données structurées consommées par le frontend ; export PDF reporté).
+- [x] Policy : un propriétaire ne voit que les données de gestion locative de ses propres biens.
 
 ### Phase B5 — Module Build (construction / rénovation / devis)
 

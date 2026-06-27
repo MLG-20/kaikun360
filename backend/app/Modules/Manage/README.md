@@ -80,5 +80,39 @@ Relation `ManagementMandate::rents()` (hasMany).
   dépenses, reversements effectués, incidents ouverts.
 - `MandateResource` expose ces sommes sous `summary`.
 
-> 🔜 À venir (B4.6) : endpoints de **création/gestion** par les agents
-> (loyers, incidents, dépenses, reversements) + **rapport mensuel** + tests.
+---
+
+## Gestion par les agents & rapport mensuel (phase B4.6)
+
+### Endpoints de gestion (permission `gerer:gestion-locative`)
+
+Réservés aux **agents** (et admin/super_admin). La permission est portée par le
+middleware `can:gerer:gestion-locative` (ajoutée au rôle `agent` dans le seeder).
+Contrôleur : `MandateManagementController`.
+
+| Méthode | URL | Effet |
+|---|---|---|
+| POST | `/api/v1/manage/mandates` | crée un mandat (`owner_id` **déduit** du bien) |
+| POST | `/api/v1/manage/mandates/{mandate}/rents` | ajoute une échéance de loyer (statut `impaye`) |
+| PATCH | `/api/v1/manage/rents/{rent}/pay` | marque le loyer `paye` (+`paid_at`) |
+| POST | `/api/v1/manage/mandates/{mandate}/incidents` | signale un incident (`property_id` du mandat, `reported_by` = agent) |
+| PATCH | `/api/v1/manage/incidents/{incident}/resolve` | marque l'incident `resolu` (+`resolved_at`) |
+| POST | `/api/v1/manage/mandates/{mandate}/expenses` | enregistre une dépense (incident éventuel **du même bien**) |
+| POST | `/api/v1/manage/mandates/{mandate}/payouts` | crée un reversement `en_attente` (`owner_id` du mandat) |
+| PATCH | `/api/v1/manage/payouts/{payout}/pay` | marque le reversement `effectue` (+`paid_at`, audité) |
+
+Les entrées sont validées par des Form Requests (`Store*Request`) ; les réponses
+utilisent des Resources dédiées (`Rent/Incident/Expense/OwnerPayoutResource`).
+
+### Rapport mensuel (lecture — propriétaire ou agent)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/manage/mandates/{mandate}/report?month=YYYY-MM` | `auth` + policy `view` |
+
+`ManagementReportService::forMandate()` renvoie des **données structurées** (mois
+par défaut = courant) : loyers payés/impayés, dépenses, **commission** (= loyers
+encaissés × taux), **net propriétaire** (= encaissé − commission − dépenses),
+reversements effectués, incidents ouverts/résolus. Bornage par mois calendaire.
+
+> Export **PDF** reporté à une phase ultérieure ; le frontend consomme le JSON.

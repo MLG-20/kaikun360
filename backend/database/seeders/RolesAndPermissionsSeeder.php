@@ -32,6 +32,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'valider:vehicule',
             'valider:experience',
             'valider:prestataire',
+            // Gestion locative (module Manage) : création/suivi des mandats,
+            // loyers, incidents, dépenses et reversements par les agents.
+            'gerer:gestion-locative',
             // Administration
             'consulter:dashboard-admin',
             'gerer:utilisateurs',
@@ -61,6 +64,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'valider:vehicule',
                 'valider:experience',
                 'valider:prestataire',
+                'gerer:gestion-locative',
                 'consulter:dashboard-admin',
                 'moderer:avis',
             ],

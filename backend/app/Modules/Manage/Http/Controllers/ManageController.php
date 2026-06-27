@@ -13,7 +13,9 @@ use App\Modules\Manage\Models\Incident;
 use App\Modules\Manage\Models\ManagementMandate;
 use App\Modules\Manage\Models\OwnerPayout;
 use App\Modules\Manage\Models\Rent;
+use App\Modules\Manage\Services\ManagementReportService;
 use App\Support\ApiResponse;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -79,6 +81,27 @@ class ManageController extends Controller
             'incidents_ouverts' => Incident::whereIn('property_id', $propertyIds)
                 ->where('status', IncidentStatus::OUVERT->value)->count(),
         ]);
+    }
+
+    /**
+     * Rapport mensuel d'un mandat (données structurées). GET .../mandates/{mandate}/report
+     *
+     * Accessible au propriétaire du mandat comme aux agents/admins (policy `view`).
+     * Mois ciblé via `?month=YYYY-MM` (mois courant par défaut).
+     */
+    public function report(Request $request, ManagementMandate $mandate, ManagementReportService $reports): JsonResponse
+    {
+        Gate::authorize('view', $mandate);
+
+        $validated = $request->validate([
+            'month' => ['nullable', 'date_format:Y-m'],
+        ]);
+
+        $month = isset($validated['month'])
+            ? CarbonImmutable::createFromFormat('Y-m', $validated['month'])
+            : CarbonImmutable::now();
+
+        return ApiResponse::success(['report' => $reports->forMandate($mandate, $month)]);
     }
 
     /**
