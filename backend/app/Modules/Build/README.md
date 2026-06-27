@@ -37,5 +37,29 @@ assure le **suivi de chantier** (rapports photo/vidéo, jalons).
 - `ConstructionRequestStatus` : `soumise` → `en_etude` → `devis_envoye` →
   `acceptee` → `en_chantier` → `terminee` (+ `annulee`).
 
-> 🔜 À venir : rapports de suivi polymorphes (B5.2), jalons de chantier (B5.3),
-> simulateur de budget (B5.4), endpoints + policy client (B5.5).
+---
+
+## Rapports de suivi de chantier (phase B5.2)
+
+### Table `reports` (polymorphe)
+
+| Champ | Rôle |
+|---|---|
+| `reference` (unique) | identifiant lisible (`RPT-…`) |
+| `reportable_type` / `reportable_id` | cible polymorphe (Construction ou Diaspora B8) |
+| `created_by` | auteur du rapport (agent de suivi), facultatif |
+| `type` | enum `ReportType` : `photo`, `video`, `mixte` |
+| `photos` (json) | liste de chemins (disque privé) |
+| `video_url` | URL de la vidéo éventuelle |
+| `comment` | commentaire de chantier |
+| `reported_at` | date du constat |
+
+### Modèle transversal `App\Models\Report`
+
+- `morphTo` `reportable` (suit la convention du modèle transversal `Booking`).
+- `belongsTo` author (User, `created_by`).
+- Casts : `type` enum, `photos` en tableau, `reported_at` date.
+- Côté Build : `ConstructionRequest::reports()` (`morphMany`).
+
+> 🔜 À venir : jalons de chantier (B5.3), simulateur de budget (B5.4),
+> endpoints + policy client (B5.5).

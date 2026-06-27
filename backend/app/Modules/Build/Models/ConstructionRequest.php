@@ -2,6 +2,7 @@
 
 namespace App\Modules\Build\Models;
 
+use App\Models\Report;
 use App\Models\User;
 use App\Modules\Build\Enums\ConstructionObjective;
 use App\Modules\Build\Enums\ConstructionRequestStatus;
@@ -10,6 +11,7 @@ use Database\Factories\ConstructionRequestFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * Demande de construction / rénovation (module Build).
@@ -55,6 +57,14 @@ class ConstructionRequest extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_id');
+    }
+
+    /**
+     * Les rapports de suivi de chantier (relation polymorphe, B5.2).
+     */
+    public function reports(): MorphMany
+    {
+        return $this->morphMany(Report::class, 'reportable');
     }
 
     protected static function newFactory(): ConstructionRequestFactory
