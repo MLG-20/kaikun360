@@ -37,5 +37,20 @@ Kaikun gère des biens pour le compte de leurs propriétaires : **mandats**,
 Modèle `Rent` : `belongsTo` mandate et tenant (User).
 Relation `ManagementMandate::rents()` (hasMany).
 
-> 🔜 À venir : incidents & dépenses (B4.3), reversements (B4.4),
-> tableau de bord & rapport mensuel (B4.5), endpoints CRUD + policy d'isolation (B4.6).
+---
+
+## Incidents & dépenses (phase B4.3)
+
+- **`incidents`** : signalements liés à un bien (`property_id`, `reported_by`,
+  `title`, `priority` p1–p4, `status` via enum `IncidentStatus`
+  ouvert/en_cours/resolu/clos, `resolved_at`). Modèle `Incident`.
+- **`expenses`** : dépenses d'un bien (`property_id`, `incident_id` optionnel,
+  `label`, `category` via enum `ExpenseCategory` maintenance/reparation/autre,
+  `amount_xof`, `spent_at`, `receipt_path` sur disque privé). Modèle `Expense`.
+
+> Les relations incidents/dépenses pointent vers le **bien** (`property_id`),
+> ce qui facilitera l'agrégation par propriétaire (dashboard B4.5) sans coupler
+> le module Immo au module Manage.
+
+> 🔜 À venir : reversements (B4.4), tableau de bord & rapport mensuel (B4.5),
+> endpoints CRUD + policy d'isolation (B4.6).
