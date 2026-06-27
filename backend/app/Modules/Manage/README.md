@@ -52,5 +52,16 @@ Relation `ManagementMandate::rents()` (hasMany).
 > ce qui facilitera l'agrégation par propriétaire (dashboard B4.5) sans coupler
 > le module Immo au module Manage.
 
-> 🔜 À venir : reversements (B4.4), tableau de bord & rapport mensuel (B4.5),
+---
+
+## Reversements au propriétaire (phase B4.4)
+
+- **`owner_payouts`** : versement du produit de la gestion locative au
+  propriétaire (`mandate_id`, `owner_id`, `period_label`, `amount_xof`,
+  `status` via enum `OwnerPayoutStatus` en_attente/effectue, `paid_at`,
+  `proof_path`). Modèle `OwnerPayout` ; relation `ManagementMandate::payouts()`.
+
+> Distinct des **payouts prestataires / PSP** (ledger, phases B11/B14).
+
+> 🔜 À venir : tableau de bord propriétaire & rapport mensuel (B4.5),
 > endpoints CRUD + policy d'isolation (B4.6).

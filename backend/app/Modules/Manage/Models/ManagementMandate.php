@@ -65,6 +65,14 @@ class ManagementMandate extends Model
         return $this->hasMany(Rent::class, 'mandate_id');
     }
 
+    /**
+     * Les reversements au propriétaire effectués sous ce mandat.
+     */
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(OwnerPayout::class, 'mandate_id');
+    }
+
     protected static function newFactory(): ManagementMandateFactory
     {
         return ManagementMandateFactory::new();
