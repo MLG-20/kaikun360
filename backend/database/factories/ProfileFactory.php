@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\User;
 use App\Modules\Core\Enums\ProfileType;
+use App\Modules\Core\Enums\ProfileVerificationStatus;
 use App\Modules\Core\Models\Profile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -38,5 +39,21 @@ class ProfileFactory extends Factory
     public function proprietaire(): static
     {
         return $this->state(fn () => ['type' => ProfileType::PROPRIETAIRE->value]);
+    }
+
+    /**
+     * État pratique : un profil prestataire.
+     */
+    public function prestataire(): static
+    {
+        return $this->state(fn () => ['type' => ProfileType::PRESTATAIRE->value]);
+    }
+
+    /**
+     * État pratique : un profil dont le KYC est vérifié.
+     */
+    public function verifie(): static
+    {
+        return $this->state(fn () => ['verification_status' => ProfileVerificationStatus::VERIFIE->value]);
     }
 }

@@ -7,6 +7,8 @@ use App\Modules\Core\Enums\UserRole;
 use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Build\Policies\ConstructionRequestPolicy;
 use App\Modules\Core\Policies\UserPolicy;
+use App\Modules\Explore\Models\TourismExperience;
+use App\Modules\Explore\Policies\ExperiencePolicy;
 use App\Modules\Immo\Events\PropertyCreated;
 use App\Modules\Immo\Events\PropertyValidated;
 use App\Modules\Immo\Listeners\NotifyAgentsOfNewProperty;
@@ -72,6 +74,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Property::class, PropertyPolicy::class);
         Gate::policy(ManagementMandate::class, ManagementMandatePolicy::class);
         Gate::policy(ConstructionRequest::class, ConstructionRequestPolicy::class);
+        Gate::policy(TourismExperience::class, ExperiencePolicy::class);
     }
 
     /**

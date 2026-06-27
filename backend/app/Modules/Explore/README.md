@@ -33,5 +33,27 @@ circuit) via le modèle transversal `Booking`.
 
 `en_attente_validation` → `publie` (+ `suspendu`, `rejete`).
 
-> 🔜 À venir : catalogue public + publication prestataire & validation agent
-> (B6.2), réservation/capacité (B6.3), annulation & remboursement (B6.4).
+---
+
+## Catalogue, publication & validation (phase B6.2)
+
+### Endpoints
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/experiences` | public — catalogue (publiées), filtres destination/prix/durée/q/sort |
+| GET | `/api/v1/experiences/{id}` | public — détail (404 si non publiée) |
+| POST | `/api/v1/experiences` | prestataire **vérifié** (policy `create`) — statut `en_attente_validation` |
+| GET | `/api/v1/experiences/mine` | prestataire — mes expériences (tous statuts) |
+| PATCH | `/api/v1/experiences/{id}/approve` | agent (`can:valider:experience`) → `publie` |
+| PATCH | `/api/v1/experiences/{id}/reject` | agent — `rejete` (motif facultatif, audité) |
+
+- **Policy** `ExperiencePolicy` : `create` = prestataire/entreprise **au profil
+  vérifié** (`verification_status = verifie`) ; `update` = prestataire propriétaire
+  ou admin. Enregistrée dans `AppServiceProvider`.
+- Enum `App\Modules\Core\Enums\ProfileVerificationStatus` (formalise non_verifie/
+  en_cours/verifie/rejete) ; états `ProfileFactory::prestataire()` / `verifie()`.
+- `ExperienceResource` (expose `seats_left` quand calculé). `StoreExperienceRequest`.
+
+> 🔜 À venir : réservation & capacité / places restantes (B6.3), annulation &
+> remboursement (B6.4).
