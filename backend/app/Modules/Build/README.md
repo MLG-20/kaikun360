@@ -87,4 +87,20 @@ assure le **suivi de chantier** (rapports photo/vidéo, jalons).
 - `seedDefault(request)` : matérialise les jalons par défaut (statut `a_venir`),
   **idempotent** (ne duplique pas si des jalons existent déjà).
 
-> 🔜 À venir : simulateur de budget (B5.4), endpoints + policy client (B5.5).
+---
+
+## Simulateur de budget (phase B5.4)
+
+Service `ConstructionEstimator` (logique pure, sans base) :
+
+- `estimate(objective, surfaceM2, finishLevel)` → coût total indicatif (XOF).
+- `breakdown(...)` → détail structuré (prix au m², coefficient, total).
+
+Règles : coût de base au m² selon l'objectif (neuf 250 000 > extension 220 000 >
+rénovation 150 000), × coefficient de finition (éco 0,85 / standard 1,0 /
+premium 1,35) × surface, arrondi au pas de 100 000 XOF.
+
+> ⚠️ Estimation **non contractuelle** ; le devis ferme relève des Quotes (B11).
+
+> 🔜 À venir : endpoints (création, mes demandes, rapports, simulation) +
+> policy client (B5.5).
