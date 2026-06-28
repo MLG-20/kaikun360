@@ -55,5 +55,20 @@ circuit) via le modèle transversal `Booking`.
   en_cours/verifie/rejete) ; états `ProfileFactory::prestataire()` / `verifie()`.
 - `ExperienceResource` (expose `seats_left` quand calculé). `StoreExperienceRequest`.
 
-> 🔜 À venir : réservation & capacité / places restantes (B6.3), annulation &
-> remboursement (B6.4).
+---
+
+## Réservation & capacité (phase B6.3)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/experiences/{id}/availability` | public — capacité & places restantes |
+| POST | `/api/v1/experiences/{id}/bookings` | auth — réservation de groupe |
+
+- `ExperienceBookingService` : `seatsTaken` / `seatsLeft` / `canAccommodate`
+  (places restantes = capacité − participants des réservations **non annulées** ;
+  le `guests` d'un panier groupe occupe plusieurs places).
+- La réservation crée un `Booking` polymorphe (`status` `en_attente`, montant =
+  `guests × price_xof`, fin déduite de `duration_days`) ; refus si dépassement de
+  capacité (422). Une expérience non publiée n'est pas réservable (404).
+
+> 🔜 À venir : annulation & éligibilité au remboursement (B6.4).
