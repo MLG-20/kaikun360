@@ -5,11 +5,14 @@ namespace App\Modules\Explore\Http\Controllers;
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BookingResource;
+use App\Models\Booking;
 use App\Modules\Explore\Http\Requests\StoreExperienceBookingRequest;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Explore\Services\ExperienceBookingService;
+use App\Modules\Explore\Services\ExperienceCancellationService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -74,5 +77,45 @@ class ExperienceBookingController extends Controller
         activity()->causedBy($request->user())->performedOn($booking)->log('Réservation d\'expérience');
 
         return ApiResponse::created(['booking' => BookingResource::make($booking)]);
+    }
+
+    /**
+     * Annulation d'une réservation par le client. PATCH /api/v1/experiences/bookings/{booking}/cancel
+     *
+     * Seul le titulaire peut annuler sa réservation d'expérience. Le service
+     * calcule l'éligibilité au remboursement (délai avant départ) ; le
+     * remboursement effectif via PayTech est déclenché en B14.
+     */
+    public function cancel(Request $request, Booking $booking, ExperienceCancellationService $cancellation): JsonResponse
+    {
+        // Cette route ne concerne que les réservations d'expériences.
+        if ($booking->bookable_type !== TourismExperience::class) {
+            abort(404);
+        }
+
+        // Seul le titulaire de la réservation peut l'annuler.
+        if ($booking->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        // Une réservation déjà annulée ne peut pas l'être à nouveau.
+        if ($booking->status->estAnnulee()) {
+            throw ValidationException::withMessages([
+                'status' => ['Cette réservation est déjà annulée.'],
+            ]);
+        }
+
+        $result = $cancellation->cancelByClient($booking);
+
+        activity()->causedBy($request->user())->performedOn($booking)
+            ->withProperties($result)->log('Annulation de réservation d\'expérience');
+
+        return ApiResponse::success([
+            'booking' => BookingResource::make($booking->fresh()),
+            'refund' => [
+                'eligible' => $result['refund_eligible'],
+                'amount_xof' => $result['refund_amount_xof'],
+            ],
+        ]);
     }
 }

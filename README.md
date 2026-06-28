@@ -147,14 +147,14 @@
 
 ### Phase B6 — Module Explore (tourisme et expériences)
 
-- [ ] Migration `tourism_experiences` (titre, destination, durée, inclusions, prix, capacité, prestataire_id).
-- [ ] Modèle `TourismExperience` (belongsTo provider, hasMany Booking).
-- [ ] Endpoint `GET /experiences` — catalogue de circuits et expériences.
-- [ ] Endpoint `POST /experiences` — publication par un prestataire (statut en attente de validation).
-- [ ] Logique de panier groupe / capacités par circuit (places restantes).
-- [ ] Gestion des inclusions (restauration, guide) en champ structuré.
-- [ ] Logique d'annulation de réservation d'expérience (statut annulé, délai d'éligibilité au remboursement, déclenchement du remboursement via PayTech).
-- [ ] Policy : seuls les prestataires validés peuvent publier une expérience.
+- [x] Migration `tourism_experiences` (titre, destination, durée, inclusions, prix, capacité, prestataire_id).
+- [x] Modèle `TourismExperience` (belongsTo provider, hasMany Booking).
+- [x] Endpoint `GET /experiences` — catalogue de circuits et expériences.
+- [x] Endpoint `POST /experiences` — publication par un prestataire (statut en attente de validation).
+- [x] Logique de panier groupe / capacités par circuit (places restantes).
+- [x] Gestion des inclusions (restauration, guide) en champ structuré.
+- [x] Logique d'annulation de réservation d'expérience (statut annulé, délai d'éligibilité au remboursement ; déclenchement du remboursement via PayTech câblé en B14).
+- [x] Policy : seuls les prestataires validés peuvent publier une expérience.
 
 ### Phase B7 — Module Mobility (transport et mobilité)
 

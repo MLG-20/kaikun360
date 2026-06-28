@@ -71,4 +71,20 @@ circuit) via le modèle transversal `Booking`.
   `guests × price_xof`, fin déduite de `duration_days`) ; refus si dépassement de
   capacité (422). Une expérience non publiée n'est pas réservable (404).
 
-> 🔜 À venir : annulation & éligibilité au remboursement (B6.4).
+---
+
+## Annulation & remboursement (phase B6.4)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| PATCH | `/api/v1/experiences/bookings/{booking}/cancel` | auth — titulaire uniquement |
+
+- `ExperienceCancellationService` : éligibilité au remboursement si l'annulation
+  intervient **au moins `REFUND_DELAY_DAYS` (7) jours avant le départ**. Renvoie
+  `refund_eligible` + `refund_amount_xof` (montant total si éligible, sinon 0).
+- L'annulation met le statut à `annulee_client` (libère les places) ; un tiers
+  est refusé (403), une réservation déjà annulée renvoie 422, une réservation
+  non-expérience renvoie 404.
+
+> 🔗 Le **remboursement effectif via PayTech** est déclenché en **B14** (ici on
+> calcule seulement l'éligibilité et le montant).

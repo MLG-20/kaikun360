@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->prefix('experiences')->group(function () {
     Route::post('/', [ExperienceManagementController::class, 'store']);
     Route::get('/mine', [ExperienceManagementController::class, 'mine']);
     Route::post('/{id}/bookings', [ExperienceBookingController::class, 'store'])->whereNumber('id');
+    Route::patch('/bookings/{booking}/cancel', [ExperienceBookingController::class, 'cancel'])->whereNumber('booking');
 });
 
 // --- Validation par les agents (permission valider:experience) ---------------
