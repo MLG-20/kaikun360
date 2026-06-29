@@ -17,6 +17,12 @@ use App\Modules\Immo\Models\Property;
 use App\Modules\Immo\Policies\PropertyPolicy;
 use App\Modules\Manage\Models\ManagementMandate;
 use App\Modules\Manage\Policies\ManagementMandatePolicy;
+use App\Modules\Mobility\Events\VehicleCreated;
+use App\Modules\Mobility\Events\VehicleValidated;
+use App\Modules\Mobility\Listeners\NotifyAgentsOfNewVehicle;
+use App\Modules\Mobility\Listeners\NotifyProviderOfVehicleValidated;
+use App\Modules\Mobility\Models\Vehicle;
+use App\Modules\Mobility\Policies\VehiclePolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -54,6 +60,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Event::listen(PropertyCreated::class, NotifyAgentsOfNewProperty::class);
         Event::listen(PropertyValidated::class, NotifyOwnerOfPropertyValidated::class);
+        Event::listen(VehicleCreated::class, NotifyAgentsOfNewVehicle::class);
+        Event::listen(VehicleValidated::class, NotifyProviderOfVehicleValidated::class);
     }
 
     /**
@@ -75,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ManagementMandate::class, ManagementMandatePolicy::class);
         Gate::policy(ConstructionRequest::class, ConstructionRequestPolicy::class);
         Gate::policy(TourismExperience::class, ExperiencePolicy::class);
+        Gate::policy(Vehicle::class, VehiclePolicy::class);
     }
 
     /**

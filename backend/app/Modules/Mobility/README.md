@@ -60,5 +60,40 @@ Publiés par des prestataires, validés par un agent, réservables via `Booking`
 - `belongsTo` provider et `vehicle` (nullable), `morphMany` `bookings`.
 - Scope `published()` ; casts enums/dates/int.
 
-> 🔜 À venir : catalogue/publication/validation + events + règles de conformité +
-> policy (B7.3) ; commission & caution (B7.4).
+---
+
+## Catalogue, publication, validation & conformité (phase B7.3)
+
+### Endpoints
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/vehicles` | public — recherche (publiés), filtres type/capacité/prix/chauffeur |
+| GET | `/api/v1/vehicles/{id}` | public — détail (404 si non publié) |
+| POST | `/api/v1/vehicles` | prestataire **vérifié** (policy) → `en_attente_validation` |
+| GET | `/api/v1/vehicles/mine` | prestataire — mes véhicules |
+| PATCH | `/api/v1/vehicles/{vehicle}` | prestataire propriétaire (policy `update`) |
+| PATCH | `/api/v1/vehicles/{vehicle}/approve` | agent (`can:valider:vehicule`) — bloqué si conformité incomplète |
+| PATCH | `/api/v1/vehicles/{vehicle}/reject` | agent — `rejete` (motif facultatif) |
+| GET | `/api/v1/mobility-services` | public — recherche par type/ville/date |
+
+### Events & file de validation
+
+- `VehicleCreated` → `NotifyAgentsOfNewVehicle` (notifie `valider:vehicule`).
+- `VehicleValidated` → `NotifyProviderOfVehicleValidated` (le véhicule apparaît
+  dans la recherche). Enregistrés dans `AppServiceProvider`.
+
+### Conformité (`VehicleComplianceChecker`)
+
+`missingFields()` bloque la validation tant que les champs requis manquent :
+- **Motorisé** : `insurance_ref` (assurance), `capacity`, + `driver_identity` si
+  chauffeur inclus.
+- **Pirogue** : `capacity`, `life_jackets_count` (gilets), `weather_compliant`,
+  `provider_compliant`.
+
+### Policy
+
+`VehiclePolicy` : `create` = prestataire/entreprise **vérifié** ; `update` =
+prestataire propriétaire ou admin (enregistrée dans `AppServiceProvider`).
+
+> 🔜 À venir : commission (`CommissionCalculator`) & caution sur réservation (B7.4).
