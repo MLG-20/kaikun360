@@ -37,5 +37,28 @@ Publiés par des prestataires, validés par un agent, réservables via `Booking`
   (tout sauf la pirogue).
 - `VehicleStatus` : `en_attente_validation` → `publie` (+ `suspendu`, `rejete`).
 
-> 🔜 À venir : services de mobilité (B7.2) ; catalogue/publication/validation +
-> events + règles de conformité + policy (B7.3) ; commission & caution (B7.4).
+---
+
+## Services de mobilité (phase B7.2)
+
+### Table `mobility_services`
+
+| Champ | Rôle |
+|---|---|
+| `reference` (unique) | identifiant lisible (`MOB-…`) |
+| `provider_id` | prestataire |
+| `vehicle_id` | véhicule affecté (facultatif) |
+| `type` | enum `MobilityServiceType` (`navette`, `transfert`, `liaison`, `excursion`) |
+| `departure` / `destination` | itinéraire (villes/lieux) |
+| `departure_at` | départ programmé (facultatif) |
+| `capacity` / `price_xof` | places et tarif par place |
+| `status` | modération — enum `MobilityServiceStatus` |
+| `published_at` / `approved_by` | traçabilité de validation |
+
+### Modèle `MobilityService`
+
+- `belongsTo` provider et `vehicle` (nullable), `morphMany` `bookings`.
+- Scope `published()` ; casts enums/dates/int.
+
+> 🔜 À venir : catalogue/publication/validation + events + règles de conformité +
+> policy (B7.3) ; commission & caution (B7.4).
