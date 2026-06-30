@@ -7,6 +7,8 @@ use App\Modules\Core\Enums\UserRole;
 use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Build\Policies\ConstructionRequestPolicy;
 use App\Modules\Core\Policies\UserPolicy;
+use App\Modules\Diaspora\Models\DiasporaProject;
+use App\Modules\Diaspora\Policies\DiasporaProjectPolicy;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Explore\Policies\ExperiencePolicy;
 use App\Modules\Immo\Events\PropertyCreated;
@@ -84,6 +86,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ConstructionRequest::class, ConstructionRequestPolicy::class);
         Gate::policy(TourismExperience::class, ExperiencePolicy::class);
         Gate::policy(Vehicle::class, VehiclePolicy::class);
+        Gate::policy(DiasporaProject::class, DiasporaProjectPolicy::class);
     }
 
     /**

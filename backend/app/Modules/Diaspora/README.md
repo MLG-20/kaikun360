@@ -27,5 +27,27 @@ sur le modèle transversal `App\Models\Report` (commun au module Build).
 - `belongsTo` client et `agent` (User), `morphMany` `reports` (Report polymorphe).
 - Casts enums/entier ; `DiasporaPriority::weight()` pour le tri back-office.
 
-> 🔜 À venir : endpoints (création/suivi), affectation d'agent, rapports,
-> priorisation back-office et policy (B8.2).
+---
+
+## Endpoints, affectation, rapports & policy (phase B8.2)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| POST | `/api/v1/diaspora-projects` | client — dépôt (statut `nouveau`) |
+| GET | `/api/v1/diaspora-projects/mine` | client — mes projets |
+| GET | `/api/v1/diaspora-projects/{id}` | client propriétaire, agent affecté ou admin (policy `view`) |
+| GET | `/api/v1/diaspora-projects` | back-office (`can:consulter:dashboard-admin`) — **priorisé** |
+| PATCH | `/api/v1/diaspora-projects/{id}/assign` | admin (policy `assign`) — agent explicite ou auto |
+| GET | `/api/v1/diaspora-projects/{id}/reports` | lecture (policy `view`) |
+| POST | `/api/v1/diaspora-projects/{id}/reports` | agent affecté ou admin (policy `update`) |
+
+- **Policy** `DiasporaProjectPolicy` : `view` = client/agent affecté/admin ;
+  `update` (rapports) = agent affecté ou admin ; `assign` = admin. Enregistrée
+  dans `AppServiceProvider`.
+- **Attribution** `AgentAssignmentService` : agent explicite, ou — à défaut —
+  l'agent le **moins chargé** (moins de projets actifs) ; passe le projet
+  `en_cours`. Charge calculée par requête (pas de relation sur `User`).
+- **Priorisation** : `index` back-office trie par priorité (stratégique > haute >
+  normale) puis récence.
+- **Rapports** : réutilisent le modèle transversal `App\Models\Report` et
+  `ReportResource` (partagés avec Build).

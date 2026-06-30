@@ -173,13 +173,13 @@
 
 ### Phase B8 — Module Diaspora
 
-- [ ] Migration `diaspora_projects` (client_id, type_projet, pays_residence, budget, statut, agent_id).
-- [ ] Modèle `DiasporaProject` (belongsTo client, belongsTo agent, hasMany Report — relation polymorphique avec Build).
-- [ ] Endpoint de création et suivi de projet diaspora (achat, construction, gestion locative).
-- [ ] Affectation d'un agent dédié au dossier (champ agent_id + logique d'attribution).
-- [ ] Endpoint d'ajout de rapports (photo/vidéo) liés au projet.
-- [ ] Priorisation des dossiers à forte valeur (champ priorité, visible côté back-office).
-- [ ] Policy : un client diaspora ne voit que ses propres projets ; l'agent assigné y a accès en lecture/écriture.
+- [x] Migration `diaspora_projects` (client_id, type_projet, pays_residence, budget, statut, agent_id).
+- [x] Modèle `DiasporaProject` (belongsTo client, belongsTo agent, hasMany Report — relation polymorphique avec Build).
+- [x] Endpoint de création et suivi de projet diaspora (achat, construction, gestion locative).
+- [x] Affectation d'un agent dédié au dossier (champ agent_id + logique d'attribution).
+- [x] Endpoint d'ajout de rapports (photo/vidéo) liés au projet.
+- [x] Priorisation des dossiers à forte valeur (champ priorité, visible côté back-office).
+- [x] Policy : un client diaspora ne voit que ses propres projets ; l'agent assigné y a accès en lecture/écriture.
 
 ### Phase B9 — Module Team Building
 
