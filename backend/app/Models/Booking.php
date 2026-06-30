@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BookingStatus;
+use App\Enums\CautionStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -27,7 +28,9 @@ class Booking extends Model
         'end_date',
         'guests',
         'amount_xof',
+        'commission_xof',
         'caution_xof',
+        'caution_status',
         'status',
     ];
 
@@ -41,7 +44,9 @@ class Booking extends Model
             'end_date' => 'date',
             'guests' => 'integer',
             'amount_xof' => 'integer',
+            'commission_xof' => 'integer',
             'caution_xof' => 'integer',
+            'caution_status' => CautionStatus::class,
             'status' => BookingStatus::class,
         ];
     }

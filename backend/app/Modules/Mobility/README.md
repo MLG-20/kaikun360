@@ -96,4 +96,22 @@ Publiés par des prestataires, validés par un agent, réservables via `Booking`
 `VehiclePolicy` : `create` = prestataire/entreprise **vérifié** ; `update` =
 prestataire propriétaire ou admin (enregistrée dans `AppServiceProvider`).
 
-> 🔜 À venir : commission (`CommissionCalculator`) & caution sur réservation (B7.4).
+---
+
+## Réservation : commission & caution (phase B7.4)
+
+| Méthode | URL | Effet |
+|---|---|---|
+| POST | `/api/v1/vehicles/{id}/bookings` | location (montant = jours × prix, **commission** figée, **caution retenue**) |
+| PATCH | `/api/v1/vehicles/bookings/{booking}/cancel` | annulation (titulaire) — caution restituée/perdue selon le délai |
+| POST | `/api/v1/mobility-services/{id}/bookings` | réservation de places (capacité + commission) |
+
+- `CommissionCalculator` (`DEFAULT_RATE = 12 %`) : `commissionFor(montant, taux?)`
+  figé sur chaque réservation de mobilité (colonne `bookings.commission_xof`).
+- **Caution** (`bookings.caution_status`, enum `App\Enums\CautionStatus`) :
+  `retenue` à la réservation ; à l'annulation, `restituee` si conforme
+  (≥ `CANCEL_DELAY_DAYS = 2` jours avant le départ) sinon `perdue`.
+- Annulation conforme → `refund.eligible = true` + montant ; **remboursement
+  effectif via PayTech câblé en B14**.
+- Colonnes `commission_xof` / `caution_status` ajoutées à la table transversale
+  `bookings` ; `BookingResource` les expose.

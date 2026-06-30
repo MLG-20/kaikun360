@@ -26,7 +26,9 @@ class BookingResource extends JsonResource
             'end_date' => $this->end_date?->toDateString(),
             'guests' => $this->guests,
             'amount_xof' => $this->amount_xof,
+            'commission_xof' => $this->commission_xof,
             'caution_xof' => $this->caution_xof,
+            'caution_status' => $this->caution_status?->value,
             'created_at' => $this->created_at,
         ];
     }

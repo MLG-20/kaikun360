@@ -1,6 +1,8 @@
 <?php
 
+use App\Modules\Mobility\Http\Controllers\MobilityServiceBookingController;
 use App\Modules\Mobility\Http\Controllers\MobilityServiceController;
+use App\Modules\Mobility\Http\Controllers\VehicleBookingController;
 use App\Modules\Mobility\Http\Controllers\VehicleCatalogController;
 use App\Modules\Mobility\Http\Controllers\VehicleManagementController;
 use App\Modules\Mobility\Http\Controllers\VehicleValidationController;
@@ -26,6 +28,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('vehicles', [VehicleManagementController::class, 'store']);
     Route::get('vehicles/mine', [VehicleManagementController::class, 'mine']);
     Route::patch('vehicles/{vehicle}', [VehicleManagementController::class, 'update'])->whereNumber('vehicle');
+
+    // Réservations (caution & commission) — B7.4.
+    Route::post('vehicles/{id}/bookings', [VehicleBookingController::class, 'store'])->whereNumber('id');
+    Route::patch('vehicles/bookings/{booking}/cancel', [VehicleBookingController::class, 'cancel'])->whereNumber('booking');
+    Route::post('mobility-services/{id}/bookings', [MobilityServiceBookingController::class, 'store'])->whereNumber('id');
 });
 
 // --- Validation par les agents (permission valider:vehicule) -----------------

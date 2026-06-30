@@ -158,18 +158,18 @@
 
 ### Phase B7 — Module Mobility (transport et mobilité)
 
-- [ ] Migration `vehicles` (provider_id, type, marque, capacité, prix_jour, chauffeur, assurance, statut).
-- [ ] Migration `mobility_services` (type, départ, destination, capacité, prix, prestataire_id, statut).
-- [ ] Modèles `Vehicle` et `MobilityService` avec relations (belongsTo provider, morphMany media, hasMany Booking).
-- [ ] Distinction technique claire entre catégories : voiture particulière, voiture touristique, navette aéroportuaire (AIBD), bus, minibus, 4x4, pirogue, chauffeur.
-- [ ] Endpoint `GET /vehicles`, `POST /vehicles`, `PATCH /vehicles/{id}`.
-- [ ] Endpoint `GET /mobility-services` — recherche par type/ville/dates.
-- [ ] Champs obligatoires de vérification pour les pirogues (capacité, gilets, conditions météo, conformité prestataire) bloquant la validation si absents.
-- [ ] Champs obligatoires pour le transport motorisé (assurance, capacité, identité chauffeur).
-- [ ] Event `VehicleCreated` → file de validation ; `VehicleValidated` → apparition dans la recherche.
-- [ ] Service `CommissionCalculator` déclenché à chaque réservation de mobilité.
-- [ ] Logique de caution sur les réservations de véhicule (montant, statut de retenue/restitution, déclenchement du remboursement via PayTech en cas d'annulation conforme).
-- [ ] Policy : un prestataire ne modifie que ses propres véhicules/services.
+- [x] Migration `vehicles` (provider_id, type, marque, capacité, prix_jour, chauffeur, assurance, statut).
+- [x] Migration `mobility_services` (type, départ, destination, capacité, prix, prestataire_id, statut).
+- [x] Modèles `Vehicle` et `MobilityService` avec relations (belongsTo provider, morphMany Booking ; média en B12).
+- [x] Distinction technique claire entre catégories : voiture particulière, voiture touristique, navette aéroportuaire (AIBD), bus, minibus, 4x4, pirogue, chauffeur.
+- [x] Endpoint `GET /vehicles`, `POST /vehicles`, `PATCH /vehicles/{id}`.
+- [x] Endpoint `GET /mobility-services` — recherche par type/ville/dates.
+- [x] Champs obligatoires de vérification pour les pirogues (capacité, gilets, conditions météo, conformité prestataire) bloquant la validation si absents.
+- [x] Champs obligatoires pour le transport motorisé (assurance, capacité, identité chauffeur).
+- [x] Event `VehicleCreated` → file de validation ; `VehicleValidated` → apparition dans la recherche.
+- [x] Service `CommissionCalculator` déclenché à chaque réservation de mobilité.
+- [x] Logique de caution sur les réservations de véhicule (montant, statut de retenue/restitution ; remboursement via PayTech en cas d'annulation conforme câblé en B14).
+- [x] Policy : un prestataire ne modifie que ses propres véhicules/services.
 
 ### Phase B8 — Module Diaspora
 
