@@ -38,6 +38,9 @@ class RolesAndPermissionsSeeder extends Seeder
             // Suivi de chantier (module Build) : publication des rapports
             // photo/vidéo de suivi par les agents.
             'gerer:chantiers',
+            // Traitement des demandes génériques (couche transversale B11) :
+            // changement de statut (machine à états) par les agents.
+            'traiter:demandes',
             // Administration
             'consulter:dashboard-admin',
             'gerer:utilisateurs',
@@ -69,6 +72,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'valider:prestataire',
                 'gerer:gestion-locative',
                 'gerer:chantiers',
+                'traiter:demandes',
                 'consulter:dashboard-admin',
                 'moderer:avis',
             ],

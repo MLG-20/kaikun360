@@ -24,3 +24,7 @@
 foreach (glob(app_path('Modules/*/routes/api.php')) as $moduleRouteFile) {
     require $moduleRouteFile;
 }
+
+// Routes de la couche transversale (Requests, Quotes, Bookings — B11),
+// qui ne relèvent d'aucun module métier.
+require __DIR__.'/transversal.php';

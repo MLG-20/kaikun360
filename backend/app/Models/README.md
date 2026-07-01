@@ -38,5 +38,22 @@ recu → verification → visite → devis → negociation → cloture
 - Le changement de statut (agents/admin) valide cette machine côté API (B11.2) :
   toute transition invalide est rejetée (422).
 
-> 🔜 À venir : endpoints demandes + events (B11.2) ; quotes + finalisation
-> bookings (B11.3).
+### Endpoints & events (phase B11.2)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| POST | `/api/v1/requests` | auth — créer une demande (event `RequestCreated`) |
+| GET | `/api/v1/requests/my` | auth — mes demandes |
+| PATCH | `/api/v1/requests/{request}/status` | agents/admin (`can:traiter:demandes`) — machine à états |
+
+- **Permission** `traiter:demandes` (agent + admin) ajoutée au seeder.
+- **Events** (enregistrés dans `AppServiceProvider`) :
+  `RequestCreated` → `NotifyAvailableAgentsOfRequest` (agents disponibles) ;
+  `RequestStatusChanged` → `NotifyUserOfRequestStatusChange` (notification **mise
+  en file** → push/WhatsApp/email B16).
+- Le changement de statut applique `canTransitionTo()` : toute transition invalide
+  (saut d'étape, retour arrière, depuis `cloture`) est rejetée en **422**.
+- `ServiceRequestResource` expose `allowed_transitions` (aide au frontend).
+
+> 🔜 À venir : quotes (data + endpoints) + finalisation bookings (cancelled_at,
+> `/bookings/my`) (B11.3).

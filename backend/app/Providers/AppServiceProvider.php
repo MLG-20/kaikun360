@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Events\RequestCreated;
+use App\Events\RequestStatusChanged;
+use App\Listeners\NotifyAvailableAgentsOfRequest;
+use App\Listeners\NotifyUserOfRequestStatusChange;
 use App\Models\User;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Build\Models\ConstructionRequest;
@@ -77,6 +81,8 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(TeamBuildingRequestCreated::class, NotifyAdminsOfTeamBuildingRequest::class);
         Event::listen(QuoteSent::class, NotifyCompanyOfQuoteSent::class);
         Event::listen(QuoteAccepted::class, StartOperationalFollowUp::class);
+        Event::listen(RequestCreated::class, NotifyAvailableAgentsOfRequest::class);
+        Event::listen(RequestStatusChanged::class, NotifyUserOfRequestStatusChange::class);
     }
 
     /**
