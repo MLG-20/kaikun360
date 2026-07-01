@@ -40,5 +40,36 @@ justificatifs fournis à l'inscription.
 - `ProviderCategory` : restauration, animation, guide, transport, événementiel,
   artisanat, autre.
 
-> 🔜 À venir : inscription + validation + charte qualité + policy (B10.2) ;
-> missions & commission (B10.3). Notation → module Reviews (B12).
+---
+
+## Inscription, validation & charte qualité (phase B10.2)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| POST | `/api/v1/providers` | auth — inscription (rôle+profil prestataire, statut `en_attente`) |
+| GET | `/api/v1/providers/mine` | auth — mon profil prestataire |
+| PATCH | `/api/v1/providers/{id}/validate` | agent (`can:valider:prestataire`) → `valide` |
+| PATCH | `/api/v1/providers/{id}/reject` | agent → `refuse` |
+| PATCH | `/api/v1/providers/{id}/suspend` | agent → `suspendu` (motif) |
+| PATCH | `/api/v1/providers/{id}/warn` | agent — avertissement (charte qualité) |
+
+### Synchronisation validation ↔ profil (règle « non validé = pas de publication »)
+
+`ProviderValidationService` pilote le `verification_status` du profil (Core) :
+- `validate` → profil `verifie` → **débloque** la publication (Explore B6, Mobility B7) ;
+- `reject`/`suspend` → profil `rejete`/`non_verifie` → **bloque** la publication.
+
+C'est ainsi que la règle « un prestataire non validé ne publie aucun service
+public » est réalisée de bout en bout (testée par intégration).
+
+### Charte qualité
+
+`warn()` incrémente `warnings_count` ; au-delà de `SUSPENSION_THRESHOLD` (3) le
+prestataire est suspendu d'office. `sanction_note` conserve le motif.
+
+### Policy
+
+`ProviderPolicy` : un utilisateur gère son propre profil ; les admins y ont accès.
+
+> 🔜 À venir : missions affectées & commission par mission (B10.3). Notation →
+> module Reviews (B12).

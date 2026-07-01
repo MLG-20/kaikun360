@@ -25,6 +25,8 @@ use App\Modules\Mobility\Listeners\NotifyAgentsOfNewVehicle;
 use App\Modules\Mobility\Listeners\NotifyProviderOfVehicleValidated;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Modules\Mobility\Policies\VehiclePolicy;
+use App\Modules\Pro\Models\Provider;
+use App\Modules\Pro\Policies\ProviderPolicy;
 use App\Modules\TeamBuilding\Events\QuoteAccepted;
 use App\Modules\TeamBuilding\Events\QuoteSent;
 use App\Modules\TeamBuilding\Events\TeamBuildingRequestCreated;
@@ -99,6 +101,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Vehicle::class, VehiclePolicy::class);
         Gate::policy(DiasporaProject::class, DiasporaProjectPolicy::class);
         Gate::policy(TeamBuildingRequest::class, TeamBuildingRequestPolicy::class);
+        Gate::policy(Provider::class, ProviderPolicy::class);
     }
 
     /**
