@@ -30,5 +30,30 @@ animation) agrégeant plusieurs modules.
 - `belongsTo` company (User), `hasMany` `quotes` (TeamBuildingQuote, B9.2).
 - Casts : `needs` array, dates, `participants`/`budget_xof` entiers, `status` enum.
 
-> 🔜 À venir : devis composés multi-prestataires (B9.2) ; endpoints + events
-> (TeamBuildingRequestCreated, QuoteSent, QuoteAccepted) + policy (B9.3).
+---
+
+## Devis composés multi-prestataires (phase B9.2)
+
+### Table `team_building_quotes`
+
+| Champ | Rôle |
+|---|---|
+| `reference` (unique) | identifiant lisible (`TBQ-…`) |
+| `request_id` | demande rattachée |
+| `lines` (json) | lignes (catégorie, libellé, module, quantité, prix unitaire, montant) |
+| `subtotal_xof` / `margin_rate` / `margin_xof` / `total_xof` | totaux figés |
+| `status` | enum `TeamBuildingQuoteStatus` (`brouillon` → `envoye` → `accepte`/`refuse`) |
+| `sent_at` / `accepted_at` | horodatages métier |
+
+### Service `TeamBuildingQuoteComposer`
+
+- `buildLines(components)` : normalise chaque composant en ligne (montant =
+  quantité × prix unitaire). Catégories via enum `QuoteLineCategory` (lieu,
+  hébergement, restauration, activité, mobilité, animation) → agrège plusieurs
+  modules (Stay/Manage, Explore, Mobility, animation).
+- `totals(lines, marginRate)` : sous-total + **marge** (`DEFAULT_MARGIN_RATE`
+  15 %) + total.
+- `composeFor(request, components, marginRate?)` : persiste un devis `brouillon`.
+
+> 🔜 À venir : endpoints + events (TeamBuildingRequestCreated, QuoteSent,
+> QuoteAccepted) + policy (B9.3).
