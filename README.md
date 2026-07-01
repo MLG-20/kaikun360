@@ -183,13 +183,13 @@
 
 ### Phase B9 — Module Team Building
 
-- [ ] Migration `team_building_requests` (entreprise, participants, ville, dates, budget, besoins).
-- [ ] Modèle `TeamBuildingRequest` (belongsTo User entreprise, hasMany Quote).
-- [ ] Endpoint `POST /team-building-requests` — demande de pack groupe (participants, lieu, durée, budget, activités, transport, hébergement).
-- [ ] Logique de composition de devis multi-prestataires (lieu + hébergement + restauration + activité + mobilité + animation), agrégeant plusieurs modules (Manage/Stay, Explore, Mobility).
-- [ ] Event `TeamBuildingRequestCreated` → file d'attente admin dédiée.
-- [ ] Event `QuoteSent` / `QuoteAccepted` → déclenchement du suivi opérationnel multi-prestataires.
-- [ ] Policy : une entreprise ne voit que ses propres demandes et devis.
+- [x] Migration `team_building_requests` (entreprise, participants, ville, dates, budget, besoins).
+- [x] Modèle `TeamBuildingRequest` (belongsTo User entreprise, hasMany Quote — devis scopé module, généralisé en B11).
+- [x] Endpoint `POST /team-building-requests` — demande de pack groupe (participants, lieu, durée, budget, activités, transport, hébergement).
+- [x] Logique de composition de devis multi-prestataires (lieu + hébergement + restauration + activité + mobilité + animation), agrégeant plusieurs modules (Manage/Stay, Explore, Mobility).
+- [x] Event `TeamBuildingRequestCreated` → file d'attente admin dédiée.
+- [x] Event `QuoteSent` / `QuoteAccepted` → déclenchement du suivi opérationnel multi-prestataires.
+- [x] Policy : une entreprise ne voit que ses propres demandes et devis.
 
 ### Phase B10 — Module Pro (marketplace prestataires)
 

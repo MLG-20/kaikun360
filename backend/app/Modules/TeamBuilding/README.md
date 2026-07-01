@@ -55,5 +55,30 @@ animation) agrégeant plusieurs modules.
   15 %) + total.
 - `composeFor(request, components, marginRate?)` : persiste un devis `brouillon`.
 
-> 🔜 À venir : endpoints + events (TeamBuildingRequestCreated, QuoteSent,
-> QuoteAccepted) + policy (B9.3).
+---
+
+## Endpoints, events & policy (phase B9.3)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| POST | `/api/v1/team-building-requests` | entreprise — dépôt (event `TeamBuildingRequestCreated`) |
+| GET | `/api/v1/team-building-requests/mine` | entreprise — mes demandes |
+| GET | `/api/v1/team-building-requests` | back-office (`can:consulter:dashboard-admin`) — file d'attente |
+| GET | `/api/v1/team-building-requests/{id}` | entreprise propriétaire ou admin (policy `view`) |
+| GET | `/api/v1/team-building-requests/{id}/quotes` | policy `view` |
+| POST | `/api/v1/team-building-requests/{id}/quotes` | admin (policy `manage`) — compose un devis |
+| PATCH | `/api/v1/team-building-quotes/{quote}/send` | admin — envoie (event `QuoteSent`) |
+| PATCH | `/api/v1/team-building-quotes/{quote}/accept` | entreprise (policy `accept`) — accepte (event `QuoteAccepted`) |
+
+### Events & listeners (enregistrés dans `AppServiceProvider`)
+
+- `TeamBuildingRequestCreated` → `NotifyAdminsOfTeamBuildingRequest` (file
+  d'attente admin : permission `consulter:dashboard-admin`).
+- `QuoteSent` → `NotifyCompanyOfQuoteSent` (notifie l'entreprise).
+- `QuoteAccepted` → `StartOperationalFollowUp` (amorce le suivi opérationnel
+  multi-prestataires ; orchestration concrète via Bookings/Quotes B11).
+
+### Policy `TeamBuildingRequestPolicy`
+
+`view` = entreprise propriétaire ou admin ; `manage` (composer/envoyer) = admin ;
+`accept` = entreprise propriétaire. Un devis n'est acceptable que s'il est `envoye`.

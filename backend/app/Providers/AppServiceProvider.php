@@ -25,6 +25,14 @@ use App\Modules\Mobility\Listeners\NotifyAgentsOfNewVehicle;
 use App\Modules\Mobility\Listeners\NotifyProviderOfVehicleValidated;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Modules\Mobility\Policies\VehiclePolicy;
+use App\Modules\TeamBuilding\Events\QuoteAccepted;
+use App\Modules\TeamBuilding\Events\QuoteSent;
+use App\Modules\TeamBuilding\Events\TeamBuildingRequestCreated;
+use App\Modules\TeamBuilding\Listeners\NotifyAdminsOfTeamBuildingRequest;
+use App\Modules\TeamBuilding\Listeners\NotifyCompanyOfQuoteSent;
+use App\Modules\TeamBuilding\Listeners\StartOperationalFollowUp;
+use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
+use App\Modules\TeamBuilding\Policies\TeamBuildingRequestPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -64,6 +72,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(PropertyValidated::class, NotifyOwnerOfPropertyValidated::class);
         Event::listen(VehicleCreated::class, NotifyAgentsOfNewVehicle::class);
         Event::listen(VehicleValidated::class, NotifyProviderOfVehicleValidated::class);
+        Event::listen(TeamBuildingRequestCreated::class, NotifyAdminsOfTeamBuildingRequest::class);
+        Event::listen(QuoteSent::class, NotifyCompanyOfQuoteSent::class);
+        Event::listen(QuoteAccepted::class, StartOperationalFollowUp::class);
     }
 
     /**
@@ -87,6 +98,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(TourismExperience::class, ExperiencePolicy::class);
         Gate::policy(Vehicle::class, VehiclePolicy::class);
         Gate::policy(DiasporaProject::class, DiasporaProjectPolicy::class);
+        Gate::policy(TeamBuildingRequest::class, TeamBuildingRequestPolicy::class);
     }
 
     /**
