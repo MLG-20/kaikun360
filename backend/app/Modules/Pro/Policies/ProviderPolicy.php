@@ -30,4 +30,12 @@ class ProviderPolicy
         return $user->id === $provider->user_id
             || $user->hasRole(UserRole::ADMIN->value);
     }
+
+    /**
+     * Affecter une mission à un prestataire : back-office (admin).
+     */
+    public function assignMission(User $user, Provider $provider): bool
+    {
+        return $user->hasRole(UserRole::ADMIN->value);
+    }
 }

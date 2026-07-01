@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Pro\Http\Controllers\ProviderMissionController;
 use App\Modules\Pro\Http\Controllers\ProviderRegistrationController;
 use App\Modules\Pro\Http\Controllers\ProviderValidationController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,16 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->prefix('providers')->group(function () {
     Route::post('/', [ProviderRegistrationController::class, 'store']);
     Route::get('/mine', [ProviderRegistrationController::class, 'mine']);
+    // Affectation d'une mission (policy assignMission = admin).
+    Route::post('/{provider}/missions', [ProviderMissionController::class, 'store'])->whereNumber('provider');
+});
+
+// --- Missions côté prestataire (auth) ----------------------------------------
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('provider-missions/mine', [ProviderMissionController::class, 'mine']);
+    Route::patch('provider-missions/{mission}/{action}', [ProviderMissionController::class, 'transition'])
+        ->whereNumber('mission')
+        ->whereIn('action', ['accept', 'refuse', 'start', 'complete']);
 });
 
 // --- Validation & charte qualité (permission valider:prestataire) ------------

@@ -193,13 +193,13 @@
 
 ### Phase B10 — Module Pro (marketplace prestataires)
 
-- [ ] Logique d'inscription prestataire avec documents de certification.
-- [ ] Statuts de validation prestataire (en attente, validé, refusé, suspendu).
-- [ ] Endpoint de gestion des missions affectées à un prestataire.
-- [ ] Système de notation/avis spécifique aux prestataires (lié au module reviews, section B12).
-- [ ] Logique de calcul de commission par mission/prestataire (réutilise `CommissionCalculator`).
-- [ ] Charte qualité : champs de sanction/avertissement liés au profil prestataire.
-- [ ] Policy : un prestataire non validé ne peut publier aucun service en public.
+- [x] Logique d'inscription prestataire avec documents de certification.
+- [x] Statuts de validation prestataire (en attente, validé, refusé, suspendu).
+- [x] Endpoint de gestion des missions affectées à un prestataire.
+- [~] Système de notation/avis spécifique aux prestataires (champs `rating_avg`/`rating_count` prêts ; remplissage par le module reviews en B12).
+- [x] Logique de calcul de commission par mission/prestataire (réutilise `CommissionCalculator`).
+- [x] Charte qualité : champs de sanction/avertissement liés au profil prestataire.
+- [x] Policy : un prestataire non validé ne peut publier aucun service en public.
 
 ### Phase B11 — Requests, Quotes, Bookings (couche transversale)
 

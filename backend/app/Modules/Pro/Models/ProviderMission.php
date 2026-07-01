@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Modules\Pro\Models;
+
+use App\Models\User;
+use App\Modules\Pro\Enums\MissionStatus;
+use Database\Factories\ProviderMissionFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+/**
+ * Mission affectée à un prestataire (module Pro).
+ */
+class ProviderMission extends Model
+{
+    use HasFactory;
+
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'reference',
+        'provider_id',
+        'client_id',
+        'title',
+        'description',
+        'amount_xof',
+        'commission_xof',
+        'status',
+        'scheduled_at',
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'amount_xof' => 'integer',
+            'commission_xof' => 'integer',
+            'status' => MissionStatus::class,
+            'scheduled_at' => 'datetime',
+        ];
+    }
+
+    public function provider(): BelongsTo
+    {
+        return $this->belongsTo(Provider::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'client_id');
+    }
+
+    protected static function newFactory(): ProviderMissionFactory
+    {
+        return ProviderMissionFactory::new();
+    }
+}

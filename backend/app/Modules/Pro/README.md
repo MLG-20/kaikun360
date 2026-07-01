@@ -71,5 +71,26 @@ prestataire est suspendu d'office. `sanction_note` conserve le motif.
 
 `ProviderPolicy` : un utilisateur gère son propre profil ; les admins y ont accès.
 
-> 🔜 À venir : missions affectées & commission par mission (B10.3). Notation →
-> module Reviews (B12).
+---
+
+## Missions & commission (phase B10.3)
+
+### Table `provider_missions`
+
+`provider_id`, `client_id?`, `title`, `description`, `amount_xof`,
+`commission_xof`, `status` (enum `MissionStatus`), `scheduled_at`.
+
+| Méthode | URL | Accès |
+|---|---|---|
+| POST | `/api/v1/providers/{provider}/missions` | admin (policy `assignMission`) — prestataire **validé** requis |
+| GET | `/api/v1/provider-missions/mine` | prestataire — mes missions |
+| PATCH | `/api/v1/provider-missions/{mission}/{action}` | prestataire affecté — `accept`/`refuse`/`start`/`complete` |
+
+- **Commission** figée à l'affectation via `CommissionCalculator` (réutilisé du
+  module Mobility, B7).
+- Affectation refusée (422) si le prestataire n'est pas validé.
+- Transitions contrôlées : `affectee → acceptee → en_cours → terminee`
+  (`refuse` depuis `affectee`) ; toute transition invalide renvoie 422.
+
+> Notation prestataire : colonnes `rating_avg`/`rating_count` prêtes, remplies
+> par le module **Reviews (B12)**.
