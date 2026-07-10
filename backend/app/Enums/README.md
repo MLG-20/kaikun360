@@ -19,6 +19,7 @@ Chaque enum de statut expose :
 |---|---|---|
 | Bien immobilier | `PropertyStatus` | `app/Modules/Immo/Enums/` (spécifique au module) |
 | Demande client | `App\Enums\RequestStatus` | `app/Enums/` (transversal, cf. B11) |
+| Devis | `App\Enums\QuoteStatus` | `app/Enums/` (transversal, cf. B11) |
 | Réservation | `App\Enums\BookingStatus` | `app/Enums/` (transversal, cf. B11) |
 | Paiement | `App\Enums\PaymentStatus` | `app/Enums/` (transversal, cf. B14) |
 

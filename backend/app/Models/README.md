@@ -55,5 +55,38 @@ recu → verification → visite → devis → negociation → cloture
   (saut d'étape, retour arrière, depuis `cloture`) est rejetée en **422**.
 - `ServiceRequestResource` expose `allowed_transitions` (aide au frontend).
 
-> 🔜 À venir : quotes (data + endpoints) + finalisation bookings (cancelled_at,
-> `/bookings/my`) (B11.3).
+---
+
+## Devis (phase B11.3)
+
+### Table `quotes`
+
+| Champ | Rôle |
+|---|---|
+| `reference` (unique) | identifiant lisible (`QTE-…`) |
+| `request_id` | demande rattachée (`ServiceRequest`, cascade) |
+| `amount_xof` | montant proposé |
+| `details` (json) | lignes/conditions structurées (facultatif) |
+| `valid_until` | date de validité (facultatif) |
+| `status` | enum `App\Enums\QuoteStatus` (`brouillon`/`envoye`/`accepte`/`refuse`) |
+
+### Endpoints & règles
+
+| Méthode | URL | Accès |
+|---|---|---|
+| POST | `/api/v1/requests/{request}/quotes` | agents/admin (`can:traiter:demandes`) — crée un devis `envoye` |
+| GET | `/api/v1/quotes/{quote}` | `QuotePolicy@view` — demandeur / agent / admin |
+| PATCH | `/api/v1/quotes/{quote}` | `QuotePolicy@respond` — le **demandeur** accepte/refuse |
+
+- Le demandeur ne peut répondre qu'à un devis **`envoye`** (ni brouillon, ni déjà
+  tranché) : sinon rejet **422** sur le champ `status`.
+- `QuotePolicy` enregistrée dans `AppServiceProvider`.
+
+## Finalisation des réservations (phase B11.3)
+
+- **Horodatage d'annulation** : le hook `Booking::booted()` (`saving`) fige
+  automatiquement `cancelled_at` dès qu'un statut d'annulation (`estAnnulee()` :
+  `annulee_client`/`annulee_prestataire`/`annulee_admin`) est posé. Distinct du
+  statut de paiement. `BookingResource` expose `cancelled_at`.
+- **`GET /api/v1/bookings/my`** (`BookingController@my`) : liste les réservations
+  de l'utilisateur connecté.

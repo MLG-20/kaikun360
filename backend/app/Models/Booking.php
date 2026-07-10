@@ -32,6 +32,7 @@ class Booking extends Model
         'caution_xof',
         'caution_status',
         'status',
+        'cancelled_at',
     ];
 
     /**
@@ -48,7 +49,24 @@ class Booking extends Model
             'caution_xof' => 'integer',
             'caution_status' => CautionStatus::class,
             'status' => BookingStatus::class,
+            'cancelled_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Horodatage automatique de l'annulation : dès qu'une réservation passe à un
+     * statut d'annulation (quelle qu'en soit l'origine), on fige `cancelled_at`.
+     * Distinct du statut de paiement (cf. cahier des charges B11).
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Booking $booking): void {
+            if ($booking->status instanceof BookingStatus
+                && $booking->status->estAnnulee()
+                && $booking->cancelled_at === null) {
+                $booking->cancelled_at = now();
+            }
+        });
     }
 
     /**

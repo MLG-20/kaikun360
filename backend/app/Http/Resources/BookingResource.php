@@ -29,6 +29,7 @@ class BookingResource extends JsonResource
             'commission_xof' => $this->commission_xof,
             'caution_xof' => $this->caution_xof,
             'caution_status' => $this->caution_status?->value,
+            'cancelled_at' => $this->cancelled_at,
             'created_at' => $this->created_at,
         ];
     }

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RequestController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,4 +25,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('requests/{serviceRequest}/status', [RequestController::class, 'updateStatus'])
         ->whereNumber('serviceRequest')
         ->middleware('can:traiter:demandes');
+
+    // --- Devis (B11.3) -------------------------------------------------------
+    // Proposition d'un devis par les agents/admin.
+    Route::post('requests/{serviceRequest}/quotes', [QuoteController::class, 'store'])
+        ->whereNumber('serviceRequest')
+        ->middleware('can:traiter:demandes');
+    // Consultation & réponse (policy view/respond côté contrôleur).
+    Route::get('quotes/{quote}', [QuoteController::class, 'show'])->whereNumber('quote');
+    Route::patch('quotes/{quote}', [QuoteController::class, 'respond'])->whereNumber('quote');
+
+    // --- Réservations (B11.3) ------------------------------------------------
+    Route::get('bookings/my', [BookingController::class, 'my']);
 });

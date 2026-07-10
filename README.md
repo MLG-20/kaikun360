@@ -203,20 +203,20 @@
 
 ### Phase B11 — Requests, Quotes, Bookings (couche transversale)
 
-- [ ] Migration `requests` (user_id, type_service, message, budget, ville, statut, priorité).
-- [ ] Migration `quotes` (request_id, montant, détails, validité, statut).
-- [ ] Migration `bookings` (user_id, item_type, item_id, dates, montant, statut) — relation polymorphique vers Property/Stay/Vehicle/Experience.
-- [ ] Modèles `Request`, `Quote`, `Booking` avec relations complètes.
-- [ ] Statut d'annulation sur `bookings` (annulé_client, annulé_prestataire, annulé_admin) avec horodatage, distinct du statut de paiement.
-- [ ] State machine stricte des statuts de demande : reçu → vérification → visite → devis → négociation → clôturé (transitions validées côté backend uniquement).
-- [ ] Endpoint `POST /requests` — création d'une demande générique.
-- [ ] Endpoint `GET /requests/my` — suivi des demandes de l'utilisateur connecté.
-- [ ] Endpoint `PATCH /requests/{id}/status` — changement de statut (réservé agents/admin).
-- [ ] Endpoint `GET /bookings/my` — réservations de l'utilisateur connecté.
-- [ ] Endpoint `GET /quotes/{id}` et `PATCH /quotes/{id}` — consultation/validation d'un devis.
-- [ ] Event `RequestCreated` → notification des agents disponibles.
-- [ ] Event `RequestStatusChanged` → Job de notification (push/WhatsApp/email).
-- [ ] Tests : aucune transition de statut invalide n'est acceptée par l'API.
+- [x] Migration `requests` (user_id, type_service, message, budget, ville, statut, priorité).
+- [x] Migration `quotes` (request_id, montant, détails, validité, statut).
+- [x] Migration `bookings` (user_id, item_type, item_id, dates, montant, statut) — relation polymorphique vers Property/Stay/Vehicle/Experience.
+- [x] Modèles `Request`, `Quote`, `Booking` avec relations complètes.
+- [x] Statut d'annulation sur `bookings` (annulé_client, annulé_prestataire, annulé_admin) avec horodatage, distinct du statut de paiement.
+- [x] State machine stricte des statuts de demande : reçu → vérification → visite → devis → négociation → clôturé (transitions validées côté backend uniquement).
+- [x] Endpoint `POST /requests` — création d'une demande générique.
+- [x] Endpoint `GET /requests/my` — suivi des demandes de l'utilisateur connecté.
+- [x] Endpoint `PATCH /requests/{id}/status` — changement de statut (réservé agents/admin).
+- [x] Endpoint `GET /bookings/my` — réservations de l'utilisateur connecté.
+- [x] Endpoint `GET /quotes/{id}` et `PATCH /quotes/{id}` — consultation/validation d'un devis.
+- [x] Event `RequestCreated` → notification des agents disponibles.
+- [x] Event `RequestStatusChanged` → Job de notification (push/WhatsApp/email).
+- [x] Tests : aucune transition de statut invalide n'est acceptée par l'API.
 
 ### Phase B12 — Médias, avis et qualité
 

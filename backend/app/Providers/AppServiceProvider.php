@@ -6,7 +6,9 @@ use App\Events\RequestCreated;
 use App\Events\RequestStatusChanged;
 use App\Listeners\NotifyAvailableAgentsOfRequest;
 use App\Listeners\NotifyUserOfRequestStatusChange;
+use App\Models\Quote;
 use App\Models\User;
+use App\Policies\QuotePolicy;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Build\Policies\ConstructionRequestPolicy;
@@ -108,6 +110,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(DiasporaProject::class, DiasporaProjectPolicy::class);
         Gate::policy(TeamBuildingRequest::class, TeamBuildingRequestPolicy::class);
         Gate::policy(Provider::class, ProviderPolicy::class);
+        Gate::policy(Quote::class, QuotePolicy::class);
     }
 
     /**
