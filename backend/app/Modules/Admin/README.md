@@ -15,7 +15,7 @@ pour les actions sensibles (`gerer:utilisateurs`, `gerer:parametres`,
 | Sous-phase | Contenu | État |
 |---|---|---|
 | B13.1 | Tableau de bord (`GET /admin/dashboard`) | ✅ |
-| B13.2 | File de validation + validation générique par type | à venir |
+| B13.2 | File de validation + validation générique par type | ✅ |
 | B13.3 | Gestion des utilisateurs (rôles, statut, désactivation) | à venir |
 | B13.4 | Paramétrage (commissions, tarifs, FAQ, contenu, catégories) | à venir |
 | B13.5 | Export comptable / reporting | à venir |
@@ -60,3 +60,31 @@ photographie agrégée, calculée par `Services\DashboardAggregator::snapshot()`
 Chaque indicateur est une agrégation `COUNT`/`SUM` (aucune collection chargée) :
 le dashboard reste léger à volume élevé. Les revenus **excluent** les
 réservations annulées (statuts `BookingStatus::estAnnulee()`).
+
+## B13.2 — File de validation & décision générique
+
+Un **unique point d'entrée** pilote la validation de tous les types de
+ressources soumis à approbation, sans dupliquer la logique métier. Chaque type
+fournit un `Validation\ResourceValidator` (enregistré dans `ValidatorRegistry`)
+qui **réutilise** les événements et services de son module :
+
+| Type (`{type}`) | Ressource | Permission fine | Effets de bord réutilisés |
+|---|---|---|---|
+| `property`   | Bien (Immo)          | `valider:bien`        | événement `PropertyValidated` |
+| `vehicle`    | Véhicule (Mobility)  | `valider:vehicule`    | `VehicleComplianceChecker` (blocage 422) + `VehicleValidated` |
+| `experience` | Circuit (Explore)    | `valider:experience`  | publication + traçabilité |
+| `provider`   | Prestataire (Pro)    | `valider:prestataire` | `ProviderValidationService` (synchro profil) |
+
+**`GET /api/v1/admin/queue`** (`can:consulter:dashboard-admin`) :
+- sans paramètre → vue d'ensemble `{ queue: { <type>: { count, items[] } }, total_pending }`
+  (aperçu de 15 éléments par type) ;
+- `?type=vehicle&per_page=20` → liste paginée normalisée d'un seul type.
+
+Entrée de file normalisée : `{ type, id, reference, label, owner_id, submitted_at }`.
+
+**`PATCH /api/v1/admin/validate/{type}/{id}`** — corps
+`{ "decision": "approve"|"reject", "reason"?: string }`.
+Autorisation en deux temps : accès back-office (`consulter:dashboard-admin` sur
+la route) **puis** permission fine selon le `{type}` (vérifiée dans le
+contrôleur). Garde-fous : type inconnu → **404** ; élément déjà validé/refusé →
+**422** (`decision`) ; conformité véhicule incomplète → **422** (`compliance`).
