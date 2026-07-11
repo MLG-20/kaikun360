@@ -231,7 +231,7 @@
 
 ### Phase B13 — Back-office / Admin (API)
 
-- [ ] Endpoint `GET /admin/dashboard` — demandes du jour, revenus estimés, biens en attente, prestataires à valider, alertes, KPI.
+- [x] Endpoint `GET /admin/dashboard` — demandes du jour, revenus estimés, biens en attente, prestataires à valider, alertes, KPI.
 - [ ] Endpoint `GET /admin/queue` — file de validation (biens, véhicules, circuits, prestataires).
 - [ ] Endpoint `PATCH /admin/validate/{type}/{id}` — validation ou refus générique par type de ressource.
 - [ ] Endpoint `GET /admin/users` et `PATCH /admin/users/{id}` — gestion des comptes, rôles, statut, désactivation.
