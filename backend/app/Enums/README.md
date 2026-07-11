@@ -21,6 +21,8 @@ Chaque enum de statut expose :
 | Demande client | `App\Enums\RequestStatus` | `app/Enums/` (transversal, cf. B11) |
 | Devis | `App\Enums\QuoteStatus` | `app/Enums/` (transversal, cf. B11) |
 | Réservation | `App\Enums\BookingStatus` | `app/Enums/` (transversal, cf. B11) |
+| Média (type) | `App\Enums\MediaType` | `app/Enums/` (transversal, cf. B12 — `image`/`video`) |
+| Média (statut) | `App\Enums\MediaStatus` | `app/Enums/` (transversal, cf. B12 — `actif`/`masque`) |
 | Paiement | `App\Enums\PaymentStatus` | `app/Enums/` (transversal, cf. B14) |
 
 > **Règle de placement :** un enum propre à un seul module vit dans

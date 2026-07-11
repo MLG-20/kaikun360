@@ -220,11 +220,11 @@
 
 ### Phase B12 — Médias, avis et qualité
 
-- [ ] Migration `media` (item_type, item_id, url, type, ordre, statut) — relation polymorphique (properties, vehicles, experiences, etc.).
+- [x] Migration `media` (item_type, item_id, url, type, ordre, statut) — relation polymorphique (properties, vehicles, experiences, etc.).
 - [ ] Migration `reviews` (user_id, item_type, item_id, note, commentaire, statut) — relation polymorphique.
-- [ ] Endpoint `POST /media/upload` et `DELETE /media/{id}`.
-- [ ] Logique de compression et validation des images uploadées.
-- [ ] Gestion de l'image principale vs galerie secondaire.
+- [x] Endpoint `POST /media/upload` et `DELETE /media/{id}`.
+- [x] Logique de compression et validation des images uploadées.
+- [x] Gestion de l'image principale vs galerie secondaire.
 - [ ] Endpoint de création d'avis, avec statut de modération (en attente / publié / rejeté).
 - [ ] Endpoint admin de modération des avis (lié au back-office, section B13).
 - [ ] Policy : un avis ne peut être laissé que par un utilisateur ayant effectivement consommé le service/bien concerné.

@@ -9,6 +9,8 @@ unifient trois notions transverses :
 - **`Booking`** (table `bookings`) — réservation polymorphe (introduite en B3.3,
   enrichie ici). `bookable` = Stay, Vehicle, TourismExperience, MobilityService…
 - **`Report`** — rapport de suivi polymorphe (introduit en B5.2, partagé Build/Diaspora).
+- **`Media`** — média polymorphe (image compressée ou vidéo par URL) rattaché à une
+  ressource illustrée (Property, Vehicle, TourismExperience…) (B12.1).
 
 ---
 
@@ -90,3 +92,48 @@ recu → verification → visite → devis → negociation → cloture
   statut de paiement. `BookingResource` expose `cancelled_at`.
 - **`GET /api/v1/bookings/my`** (`BookingController@my`) : liste les réservations
   de l'utilisateur connecté.
+
+---
+
+## Médias (phase B12.1)
+
+### Table `media`
+
+| Champ | Rôle |
+|---|---|
+| `reference` (unique) | identifiant lisible (`MED-…`) |
+| `mediable_type` / `mediable_id` | ressource illustrée (polymorphe) |
+| `uploaded_by` | auteur du dépôt |
+| `type` | enum `App\Enums\MediaType` (`image`/`video`) |
+| `disk` / `path` | disque + chemin du fichier (image) |
+| `url` | URL externe (vidéo) |
+| `original_name` / `mime_type` / `size_bytes` | métadonnées |
+| `is_primary` | image « de une » (une seule par ressource) |
+| `position` | ordre d'affichage dans la galerie |
+| `status` | enum `App\Enums\MediaStatus` (`actif`/`masque`) |
+
+### Ressources autorisées & autorisation
+
+- Seules les ressources listées dans **`Media::TYPES`** peuvent porter un média
+  (clé courte exposée à l'API → FQCN) : `property`, `vehicle`, `experience`. On
+  n'accepte jamais une classe arbitraire du client.
+- **L'autorisation réutilise la policy `update` du module concerné** :
+  `Gate::authorize('update', $mediable)` (PropertyPolicy / VehiclePolicy /
+  ExperiencePolicy). Aucune logique de propriété dupliquée.
+
+### Endpoints (B12.1)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| POST | `/api/v1/media/upload` | propriétaire de la ressource (policy `update`) |
+| DELETE | `/api/v1/media/{media}` | idem ; média orphelin → admin uniquement |
+
+- **Compression** : à l'upload, les images sont redimensionnées (largeur max
+  1600 px) et recompressées en **JPEG q80** par `App\Services\ImageProcessor`
+  (isolé pour un futur passage en Job de queue, B16), puis stockées sur le disque
+  `public`. Les vidéos sont référencées par URL externe.
+- **Image principale** : passer `is_primary=true` retire l'ancienne image de une
+  de la même ressource (unicité garantie).
+
+> ℹ️ Disque `public` : penser à `php artisan storage:link` en environnement réel
+> pour exposer les fichiers (les tests utilisent `Storage::fake`).

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\MediaController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RequestController;
 use Illuminate\Support\Facades\Route;
@@ -37,4 +38,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- Réservations (B11.3) ------------------------------------------------
     Route::get('bookings/my', [BookingController::class, 'my']);
+
+    // --- Médias (B12.1) ------------------------------------------------------
+    // Dépôt (image compressée ou vidéo par URL) et suppression. L'autorisation
+    // « propriétaire de la ressource » est déléguée à la policy `update` du
+    // module concerné, côté contrôleur.
+    Route::post('media/upload', [MediaController::class, 'store']);
+    Route::delete('media/{media}', [MediaController::class, 'destroy'])->whereNumber('media');
 });
