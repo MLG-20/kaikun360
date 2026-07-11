@@ -11,6 +11,8 @@ unifient trois notions transverses :
 - **`Report`** — rapport de suivi polymorphe (introduit en B5.2, partagé Build/Diaspora).
 - **`Media`** — média polymorphe (image compressée ou vidéo par URL) rattaché à une
   ressource illustrée (Property, Vehicle, TourismExperience…) (B12.1).
+- **`Review`** — avis polymorphe (note 1–5 + commentaire, modéré) déposable
+  uniquement par un consommateur avéré de la ressource (B12.2).
 
 ---
 
@@ -137,3 +139,40 @@ recu → verification → visite → devis → negociation → cloture
 
 > ℹ️ Disque `public` : penser à `php artisan storage:link` en environnement réel
 > pour exposer les fichiers (les tests utilisent `Storage::fake`).
+
+---
+
+## Avis (phase B12.2)
+
+### Table `reviews`
+
+| Champ | Rôle |
+|---|---|
+| `reference` (unique) | identifiant lisible (`REV-…`) |
+| `user_id` | auteur de l'avis |
+| `reviewable_type` / `reviewable_id` | ressource notée (polymorphe) |
+| `rating` | note 1–5 |
+| `comment` | commentaire (facultatif) |
+| `status` | enum `App\Enums\ReviewStatus` (`en_attente`/`publie`/`rejete`) |
+| `moderated_by` / `moderated_at` | traçabilité de la modération (B12.3) |
+
+- Contrainte d'unicité `(user_id, reviewable_type, reviewable_id)` : **un seul
+  avis par utilisateur et par ressource**.
+
+### Règle « avis réservé au consommateur »
+
+- Ressources notables : **`Review::TYPES`** (`stay`, `vehicle`, `experience`) —
+  ce sont des ressources **réservables** (`Booking` polymorphe).
+- `ReviewPolicy@create` délègue à **`Review::hasConsumed($user, $reviewable)`** :
+  vrai s'il existe une réservation `terminee` de l'utilisateur sur cette
+  ressource. Une seule requête sur `bookings` couvre tous les types (polymorphe).
+
+### Endpoints (B12.2)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/api/v1/reviews?reviewable_type=&reviewable_id=` | public — avis **publiés** + note agrégée (`average`, `count`) |
+| POST | `/api/v1/reviews` | auth + policy `create` (consommateur) — avis `en_attente` |
+
+> 🔜 B12.3 : modération (publier/rejeter) + report de la note agrégée sur la
+> notation prestataire (`providers.rating_avg`/`rating_count`).

@@ -4,6 +4,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RequestController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,6 +17,9 @@ use Illuminate\Support\Facades\Route;
 | routes/api.php sous le préfixe /api/v1.
 |
 */
+
+// --- Avis publiés : consultation publique (B12.2) ----------------------------
+Route::get('reviews', [ReviewController::class, 'index']);
 
 // --- Demandes génériques (B11.2) ---------------------------------------------
 Route::middleware('auth:sanctum')->group(function () {
@@ -45,4 +49,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // module concerné, côté contrôleur.
     Route::post('media/upload', [MediaController::class, 'store']);
     Route::delete('media/{media}', [MediaController::class, 'destroy'])->whereNumber('media');
+
+    // --- Avis (B12.2) --------------------------------------------------------
+    // Dépôt réservé à qui a consommé la ressource (policy create côté contrôleur).
+    Route::post('reviews', [ReviewController::class, 'store']);
 });
