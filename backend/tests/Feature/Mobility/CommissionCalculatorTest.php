@@ -3,17 +3,24 @@
 namespace Tests\Feature\Mobility;
 
 use App\Modules\Mobility\Services\CommissionCalculator;
-use PHPUnit\Framework\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 /**
- * Tests unitaires du calcul de commission (phase B7.4).
+ * Tests du calcul de commission (phase B7.4).
+ *
+ * Depuis B13.4, le taux par défaut est lu via `Settings` (paramétrable au
+ * back-office) : ce test s'appuie donc sur l'application (cache + table
+ * `settings`) et vérifie le comportement en l'absence de surcharge.
  */
 class CommissionCalculatorTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_commission_au_taux_par_defaut(): void
     {
         $calc = new CommissionCalculator();
-        // 12 % de 100 000 = 12 000.
+        // Aucun réglage saisi → taux de repli 12 % ; 12 % de 100 000 = 12 000.
         $this->assertSame(12_000, $calc->commissionFor(100_000));
     }
 

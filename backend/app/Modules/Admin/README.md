@@ -17,7 +17,7 @@ pour les actions sensibles (`gerer:utilisateurs`, `gerer:parametres`,
 | B13.1 | Tableau de bord (`GET /admin/dashboard`) | ✅ |
 | B13.2 | File de validation + validation générique par type | ✅ |
 | B13.3 | Gestion des utilisateurs (rôles, statut, désactivation) | ✅ |
-| B13.4 | Paramétrage (commissions, tarifs, FAQ, contenu, catégories) | à venir |
+| B13.4 | Paramétrage : settings (✅) + FAQ + Pages (à venir) | 🚧 |
 | B13.5 | Export comptable / reporting | à venir |
 | B13.6 | Nuitées back-office + consolidation des policies | à venir |
 
@@ -107,3 +107,29 @@ pilote actif / suspendu / désactivé / en attente. Deux garde-fous de hiérarch
   l'auto-verrouillage / l'auto-rétrogradation) → **403**.
 
 Toute mise à jour est tracée dans le journal d'activité (Spatie Activitylog).
+
+## B13.4 — Paramétrage global & référence
+
+Permission `gerer:parametres` (settings) / `consulter:dashboard-admin` (référence).
+
+**Réglages** — stockage clé-valeur typé (`App\Models\Setting`) piloté par
+`App\Support\SettingsRepository` et exposé via la façade statique
+`App\Support\Settings`. Les clés connues ont une valeur par défaut en code
+(`SettingsRepository::DEFAULTS`) ; une ligne en base = une surcharge. Lectures
+mises en cache, invalidées à l'écriture.
+
+Réglages livrés : `commission.default_rate` (12), `teambuilding.margin_rate`
+(15), `platform.currency`, `support.email`, `support.phone`. Les deux premiers
+sont **effectivement lus** par `CommissionCalculator` et `TeamBuildingQuoteComposer`
+(constante conservée en repli).
+
+- **`GET /admin/settings`** → liste `[{ key, value, type, group, overridden }]`
+  (défauts fusionnés avec les surcharges).
+- **`PATCH /admin/settings`** — corps `{ "settings": { "<clé>": <valeur> } }`.
+  Seules les clés connues sont acceptées (sinon **422**) ; les taux doivent être
+  numériques (sinon **422**).
+
+**Référence (lecture seule)** — **`GET /admin/reference`** renvoie les
+nomenclatures définies en dur (`categories` : provider / property_type /
+service_type / vehicle_type, issues des enums) et le référentiel géographique
+(`geography.regions`), pour alimenter les listes déroulantes du back-office.

@@ -6,6 +6,7 @@ use App\Modules\TeamBuilding\Enums\QuoteLineCategory;
 use App\Modules\TeamBuilding\Enums\TeamBuildingQuoteStatus;
 use App\Modules\TeamBuilding\Models\TeamBuildingQuote;
 use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
+use App\Support\Settings;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -81,7 +82,7 @@ class TeamBuildingQuoteComposer
         array $components,
         ?float $marginRate = null
     ): TeamBuildingQuote {
-        $marginRate ??= self::DEFAULT_MARGIN_RATE;
+        $marginRate ??= (float) Settings::get('teambuilding.margin_rate', self::DEFAULT_MARGIN_RATE);
 
         $lines = $this->buildLines($components);
         $totals = $this->totals($lines, $marginRate);

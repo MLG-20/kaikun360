@@ -1,7 +1,9 @@
 <?php
 
 use App\Modules\Admin\Http\Controllers\AdminDashboardController;
+use App\Modules\Admin\Http\Controllers\AdminSettingsController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
+use App\Modules\Admin\Http\Controllers\ReferenceController;
 use App\Modules\Admin\Http\Controllers\ValidationQueueController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,4 +44,14 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::patch('/users/{user}', [AdminUserController::class, 'update'])
         ->whereNumber('user')
         ->middleware('can:gerer:utilisateurs');
+
+    // B13.4 — Paramétrage global (commissions, tarifs, coordonnées).
+    Route::get('/settings', [AdminSettingsController::class, 'index'])
+        ->middleware('can:gerer:parametres');
+    Route::patch('/settings', [AdminSettingsController::class, 'update'])
+        ->middleware('can:gerer:parametres');
+
+    // B13.4 — Nomenclatures de référence en lecture seule (catégories, régions).
+    Route::get('/reference', [ReferenceController::class, 'index'])
+        ->middleware('can:consulter:dashboard-admin');
 });
