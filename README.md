@@ -118,7 +118,7 @@
 - [x] Endpoint `GET /stays/{id}/availability` — calendrier de disponibilité.
 - [x] Endpoint `POST /stays/{id}/bookings` — réservation d'une nuitée.
 - [x] Logique de gestion de caution (montant, statut de retenue/restitution). — _montant capturé ; retenue/restitution (remboursement PayTech) → B11/B14._
-- [ ] Logique de check-in / check-out et statut de ménage (rattachée au back-office, section B13). — _reporté à B13._
+- [x] Logique de check-in / check-out et statut de ménage (rattachée au back-office, section B13). — _livré en B13.6._
 - [x] Validation des dates (pas de double réservation sur un même créneau).
 - [x] Tests : impossibilité de réserver un créneau déjà occupé.
 
@@ -238,14 +238,14 @@
 - [x] Endpoint `GET /admin/reports/export` — export comptable et reporting.
 - [x] Endpoints de paramétrage : villes, catégories, tarifs, commissions, FAQ, contenu des pages.
 - [ ] Endpoints de gestion documentaire transverse (mandats, contrats, preuves, pièces prestataires).
-- [ ] Endpoints spécifiques nuitées (calendrier global, caution, statut ménage/check-in/check-out) pour vue back-office.
+- [x] Endpoints spécifiques nuitées (calendrier global, caution, statut ménage/check-in/check-out) pour vue back-office.
 - [ ] Endpoints spécifiques gestion locative (contrats, loyers, incidents, dépenses, reversements) pour vue back-office.
 - [ ] Endpoints spécifiques construction (devis, prestataires BTP, jalons, rapports) pour vue back-office.
 - [ ] Endpoints spécifiques mobilité (véhicules, chauffeurs, disponibilités, assurances) pour vue back-office.
 - [ ] Endpoints spécifiques tourisme (circuits, destinations, guides, capacités groupe) pour vue back-office.
 - [ ] Endpoints spécifiques team building (demandes, packages, devis, affectation prestataires) pour vue back-office.
 - [ ] Endpoints spécifiques diaspora (dossiers à forte valeur, vérification, reporting, priorités) pour vue back-office.
-- [ ] Policies différenciées Agent / Admin / Super Admin selon le tableau de rôles du cahier des charges.
+- [x] Policies différenciées Agent / Admin / Super Admin selon le tableau de rôles du cahier des charges.
 
 ### Phase B14 — Paiement avec PayTech
 

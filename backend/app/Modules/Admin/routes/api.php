@@ -7,6 +7,7 @@ use App\Modules\Admin\Http\Controllers\FaqController;
 use App\Modules\Admin\Http\Controllers\PageController;
 use App\Modules\Admin\Http\Controllers\ReferenceController;
 use App\Modules\Admin\Http\Controllers\ReportExportController;
+use App\Modules\Admin\Http\Controllers\StayOperationsController;
 use App\Modules\Admin\Http\Controllers\ValidationQueueController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,6 +62,14 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // B13.5 — Export comptable & reporting consolidé (financier).
     Route::get('/reports/export', [ReportExportController::class, 'export'])
         ->middleware('can:gerer:paiements');
+
+    // B13.6 — Exploitation des nuitées : calendrier + check-in/out + ménage.
+    Route::middleware('can:gerer:nuitees')->group(function () {
+        Route::get('/stays/calendar', [StayOperationsController::class, 'calendar']);
+        Route::patch('/stay-bookings/{booking}/check-in', [StayOperationsController::class, 'checkIn'])->whereNumber('booking');
+        Route::patch('/stay-bookings/{booking}/check-out', [StayOperationsController::class, 'checkOut'])->whereNumber('booking');
+        Route::patch('/stay-bookings/{booking}/housekeeping', [StayOperationsController::class, 'housekeeping'])->whereNumber('booking');
+    });
 
     // B13.4 — Contenu éditorial : FAQ & pages (édition). Lecture publique
     // exposée dans routes/transversal.php.

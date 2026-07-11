@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\BookingStatus;
 use App\Enums\CautionStatus;
+use App\Enums\HousekeepingStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -33,6 +34,9 @@ class Booking extends Model
         'caution_status',
         'status',
         'cancelled_at',
+        'checked_in_at',
+        'checked_out_at',
+        'housekeeping_status',
     ];
 
     /**
@@ -50,6 +54,9 @@ class Booking extends Model
             'caution_status' => CautionStatus::class,
             'status' => BookingStatus::class,
             'cancelled_at' => 'datetime',
+            'checked_in_at' => 'datetime',
+            'checked_out_at' => 'datetime',
+            'housekeeping_status' => HousekeepingStatus::class,
         ];
     }
 

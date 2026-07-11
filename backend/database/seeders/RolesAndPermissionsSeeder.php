@@ -38,6 +38,9 @@ class RolesAndPermissionsSeeder extends Seeder
             // Suivi de chantier (module Build) : publication des rapports
             // photo/vidéo de suivi par les agents.
             'gerer:chantiers',
+            // Exploitation des nuitées (back-office B13.6) : calendrier global,
+            // check-in / check-out et statut de ménage par les agents.
+            'gerer:nuitees',
             // Traitement des demandes génériques (couche transversale B11) :
             // changement de statut (machine à états) par les agents.
             'traiter:demandes',
@@ -72,6 +75,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'valider:prestataire',
                 'gerer:gestion-locative',
                 'gerer:chantiers',
+                'gerer:nuitees',
                 'traiter:demandes',
                 'consulter:dashboard-admin',
                 'moderer:avis',

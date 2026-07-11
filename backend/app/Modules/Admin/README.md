@@ -19,7 +19,7 @@ pour les actions sensibles (`gerer:utilisateurs`, `gerer:parametres`,
 | B13.3 | Gestion des utilisateurs (rôles, statut, désactivation) | ✅ |
 | B13.4 | Paramétrage (settings) + contenu éditorial (FAQ, Pages) | ✅ |
 | B13.5 | Export comptable / reporting | ✅ |
-| B13.6 | Nuitées back-office + consolidation des policies | à venir |
+| B13.6 | Nuitées back-office + consolidation des policies | ✅ |
 
 ## B13.1 — Tableau de bord
 
@@ -160,3 +160,26 @@ annulées**) et reversements propriétaires **effectués** (module Manage).
 
 L'encaissement réel relèvera de PayTech (B14) ; ici les montants sont ceux figés
 à la réservation.
+
+## B13.6 — Exploitation des nuitées & matrice de rôles
+
+**Nuitées** (permission `gerer:nuitees`, agents + admin). Données d'exploitation
+portées par `bookings` (`checked_in_at`, `checked_out_at`, `housekeeping_status`
+= enum `App\Enums\HousekeepingStatus` a_faire/en_cours/fait). Opérations
+réservées aux réservations de type Stay (sinon **422**).
+
+- `GET /admin/stays/calendar` — calendrier global paginé (filtres `from`/`to`
+  sur la date d'arrivée ; titre du bien pré-chargé).
+- `PATCH /admin/stay-bookings/{booking}/check-in` — arrivée (double → 422).
+- `PATCH /admin/stay-bookings/{booking}/check-out` — départ (exige une arrivée,
+  double → 422) ; bascule le ménage sur `a_faire`.
+- `PATCH /admin/stay-bookings/{booking}/housekeeping` — statut de ménage.
+
+**Matrice de rôles (policies différenciées)** — verrouillée par test
+(`BackOfficeRoleMatrixTest`) :
+
+| Rôle | Périmètre |
+|---|---|
+| **agent_kaikun** | opérationnel : validation, modération, gestion locative/chantiers/nuitées, traitement des demandes, dashboard. **Pas** de comptes / paiements / paramètres. |
+| **admin** | l'ensemble du back-office. |
+| **super_admin** | court-circuite toute autorisation (`Gate::before`) ; seul à pouvoir attribuer les rôles d'administration. |
