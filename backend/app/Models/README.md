@@ -174,5 +174,19 @@ recu → verification → visite → devis → negociation → cloture
 | GET | `/api/v1/reviews?reviewable_type=&reviewable_id=` | public — avis **publiés** + note agrégée (`average`, `count`) |
 | POST | `/api/v1/reviews` | auth + policy `create` (consommateur) — avis `en_attente` |
 
-> 🔜 B12.3 : modération (publier/rejeter) + report de la note agrégée sur la
-> notation prestataire (`providers.rating_avg`/`rating_count`).
+### Modération & notation prestataire (phase B12.3)
+
+| Méthode | URL | Accès |
+|---|---|---|
+| PATCH | `/api/v1/reviews/{review}/moderate` | agents/admin (`ReviewPolicy@moderate`) — `publie`/`rejete` |
+
+- On ne modère qu'un avis **`en_attente`** (pas de re-modération) : sinon 422.
+  La modération trace `moderated_by` / `moderated_at`.
+- **Report de la note** : à la publication, `App\Services\RatingAggregator`
+  recalcule `providers.rating_avg` / `rating_count` du prestataire concerné, sur
+  ses **avis publiés** uniquement.
+- **Périmètre de l'agrégation** : seules les ressources détenues par un
+  prestataire alimentent la note — **véhicules** (Mobility) et **expériences**
+  (Explore), dont `provider_id` = utilisateur prestataire. Les **nuitées**
+  (Stay), détenues par un propriétaire et non un prestataire au sens du module
+  Pro, sont notables mais **hors agrégation** (aucune note prestataire associée).

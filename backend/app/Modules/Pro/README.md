@@ -92,5 +92,6 @@ prestataire est suspendu d'office. `sanction_note` conserve le motif.
 - Transitions contrôlées : `affectee → acceptee → en_cours → terminee`
   (`refuse` depuis `affectee`) ; toute transition invalide renvoie 422.
 
-> Notation prestataire : colonnes `rating_avg`/`rating_count` prêtes, remplies
-> par le module **Reviews (B12)**.
+> Notation prestataire : colonnes `rating_avg`/`rating_count` **remplies en B12.3**
+> par `App\Services\RatingAggregator` à la publication d'un avis (agrégation des
+> avis publiés sur les véhicules et expériences du prestataire).

@@ -226,7 +226,7 @@
 - [x] Logique de compression et validation des images uploadées.
 - [x] Gestion de l'image principale vs galerie secondaire.
 - [x] Endpoint de création d'avis, avec statut de modération (en attente / publié / rejeté).
-- [ ] Endpoint admin de modération des avis (lié au back-office, section B13).
+- [x] Endpoint admin de modération des avis (lié au back-office, section B13).
 - [x] Policy : un avis ne peut être laissé que par un utilisateur ayant effectivement consommé le service/bien concerné.
 
 ### Phase B13 — Back-office / Admin (API)

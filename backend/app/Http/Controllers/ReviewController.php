@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ReviewStatus;
+use App\Http\Requests\ModerateReviewRequest;
 use App\Http\Requests\StoreReviewRequest;
 use App\Http\Resources\ReviewResource;
 use App\Models\Review;
+use App\Services\RatingAggregator;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -85,5 +87,35 @@ class ReviewController extends Controller
             'reviews' => ReviewResource::collection($query->latest()->get()),
             'summary' => $summary,
         ]);
+    }
+
+    /**
+     * Modère un avis en attente (agents/admin). Publie ou rejette, puis
+     * répercute la note sur le prestataire concerné le cas échéant.
+     * PATCH /api/v1/reviews/{review}/moderate
+     */
+    public function moderate(ModerateReviewRequest $request, Review $review, RatingAggregator $aggregator): JsonResponse
+    {
+        Gate::authorize('moderate', $review);
+
+        // On ne modère qu'un avis encore en attente (pas de re-modération).
+        if ($review->status !== ReviewStatus::EN_ATTENTE) {
+            throw ValidationException::withMessages([
+                'status' => ['Cet avis a déjà été modéré.'],
+            ]);
+        }
+
+        $review->update([
+            'status' => $request->validated()['status'],
+            'moderated_by' => $request->user()->id,
+            'moderated_at' => now(),
+        ]);
+
+        // Un avis nouvellement publié met à jour la note agrégée du prestataire.
+        if ($review->status === ReviewStatus::PUBLIE) {
+            $aggregator->syncFromReviewable($review->reviewable);
+        }
+
+        return ApiResponse::success(['review' => ReviewResource::make($review->fresh())]);
     }
 }

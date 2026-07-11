@@ -28,7 +28,7 @@ class ReviewPolicy
     /**
      * Modérer un avis (publier/rejeter) : agents/admin (B12.3).
      */
-    public function moderate(User $user): bool
+    public function moderate(User $user, Review $review): bool
     {
         return $user->hasAnyRole([UserRole::AGENT_KAIKUN->value, UserRole::ADMIN->value]);
     }

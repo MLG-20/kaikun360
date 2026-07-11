@@ -53,4 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // --- Avis (B12.2) --------------------------------------------------------
     // Dépôt réservé à qui a consommé la ressource (policy create côté contrôleur).
     Route::post('reviews', [ReviewController::class, 'store']);
+
+    // --- Modération des avis (B12.3) -----------------------------------------
+    // Publier/rejeter (agents/admin via policy moderate) ; la publication
+    // répercute la note sur le prestataire concerné.
+    Route::patch('reviews/{review}/moderate', [ReviewController::class, 'moderate'])
+        ->whereNumber('review');
 });
