@@ -2,6 +2,7 @@
 
 use App\Modules\Admin\Http\Controllers\AdminCatalogController;
 use App\Modules\Admin\Http\Controllers\AdminDashboardController;
+use App\Modules\Admin\Http\Controllers\AdminDossierController;
 use App\Modules\Admin\Http\Controllers\AdminSettingsController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
 use App\Modules\Admin\Http\Controllers\FaqController;
@@ -65,10 +66,14 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         ->middleware('can:gerer:paiements');
 
     // B13.7.1 — Navigateur des catalogues (tous statuts, supervision).
+    // B13.7.2 — Dossiers de suivi (construction, gestion locative).
     Route::middleware('can:consulter:dashboard-admin')->group(function () {
         Route::get('/properties', [AdminCatalogController::class, 'properties']);
         Route::get('/vehicles', [AdminCatalogController::class, 'vehicles']);
         Route::get('/experiences', [AdminCatalogController::class, 'experiences']);
+
+        Route::get('/construction-requests', [AdminDossierController::class, 'constructionRequests']);
+        Route::get('/mandates', [AdminDossierController::class, 'mandates']);
     });
 
     // B13.6 — Exploitation des nuitées : calendrier + check-in/out + ménage.
