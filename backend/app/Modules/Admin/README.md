@@ -16,7 +16,7 @@ pour les actions sensibles (`gerer:utilisateurs`, `gerer:parametres`,
 |---|---|---|
 | B13.1 | Tableau de bord (`GET /admin/dashboard`) | ✅ |
 | B13.2 | File de validation + validation générique par type | ✅ |
-| B13.3 | Gestion des utilisateurs (rôles, statut, désactivation) | à venir |
+| B13.3 | Gestion des utilisateurs (rôles, statut, désactivation) | ✅ |
 | B13.4 | Paramétrage (commissions, tarifs, FAQ, contenu, catégories) | à venir |
 | B13.5 | Export comptable / reporting | à venir |
 | B13.6 | Nuitées back-office + consolidation des policies | à venir |
@@ -88,3 +88,22 @@ Autorisation en deux temps : accès back-office (`consulter:dashboard-admin` sur
 la route) **puis** permission fine selon le `{type}` (vérifiée dans le
 contrôleur). Garde-fous : type inconnu → **404** ; élément déjà validé/refusé →
 **422** (`decision`) ; conformité véhicule incomplète → **422** (`compliance`).
+
+## B13.3 — Gestion des comptes utilisateurs
+
+Niveau **admin** : permission `gerer:utilisateurs` (admin + super_admin ; les
+agents en sont exclus).
+
+**`GET /api/v1/admin/users`** — liste paginée (profil chargé), filtres `role`,
+`status`, `q` (nom / email / téléphone). Utilise le scope Spatie `role()`.
+
+**`PATCH /api/v1/admin/users/{user}`** — corps `{ role?, status? }` (au moins un,
+`required_without`). `role` remplace le rôle principal (`syncRoles`), `status`
+pilote actif / suspendu / désactivé / en attente. Deux garde-fous de hiérarchie :
+
+- **escalade de privilèges** : attribuer `admin`/`super_admin` exige d'être
+  super_admin ; un compte super_admin n'est modifiable que par un super_admin ;
+- **auto-modification** : on ne modifie pas son propre compte ici (évite
+  l'auto-verrouillage / l'auto-rétrogradation) → **403**.
+
+Toute mise à jour est tracée dans le journal d'activité (Spatie Activitylog).

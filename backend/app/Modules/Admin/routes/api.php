@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Admin\Http\Controllers\AdminDashboardController;
+use App\Modules\Admin\Http\Controllers\AdminUserController;
 use App\Modules\Admin\Http\Controllers\ValidationQueueController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,4 +34,12 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         ->where('type', '[a-z]+')
         ->whereNumber('id')
         ->middleware('can:consulter:dashboard-admin');
+
+    // B13.3 — Gestion des comptes (rôles, statut, désactivation). Niveau admin.
+    Route::get('/users', [AdminUserController::class, 'index'])
+        ->middleware('can:gerer:utilisateurs');
+
+    Route::patch('/users/{user}', [AdminUserController::class, 'update'])
+        ->whereNumber('user')
+        ->middleware('can:gerer:utilisateurs');
 });
