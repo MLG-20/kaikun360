@@ -17,7 +17,7 @@ pour les actions sensibles (`gerer:utilisateurs`, `gerer:parametres`,
 | B13.1 | Tableau de bord (`GET /admin/dashboard`) | ✅ |
 | B13.2 | File de validation + validation générique par type | ✅ |
 | B13.3 | Gestion des utilisateurs (rôles, statut, désactivation) | ✅ |
-| B13.4 | Paramétrage : settings (✅) + FAQ + Pages (à venir) | 🚧 |
+| B13.4 | Paramétrage (settings) + contenu éditorial (FAQ, Pages) | ✅ |
 | B13.5 | Export comptable / reporting | à venir |
 | B13.6 | Nuitées back-office + consolidation des policies | à venir |
 
@@ -133,3 +133,12 @@ sont **effectivement lus** par `CommissionCalculator` et `TeamBuildingQuoteCompo
 nomenclatures définies en dur (`categories` : provider / property_type /
 service_type / vehicle_type, issues des enums) et le référentiel géographique
 (`geography.regions`), pour alimenter les listes déroulantes du back-office.
+
+**Contenu éditorial (FAQ & Pages)** — modèles transversaux `App\Models\Faq` et
+`App\Models\Page`. Lecture **publique**, édition réservée à `gerer:parametres` :
+
+- FAQ : `GET /faqs` (public, publiées triées par `position`) ;
+  `GET|POST /admin/faqs`, `PATCH|DELETE /admin/faqs/{faq}` (back-office, voit tout).
+- Pages : `GET /pages/{slug}` (public, publiées seules → 404 sinon, résolues par
+  slug) ; `GET|POST /admin/pages`, `PATCH|DELETE /admin/pages/{page}`. Slug unique
+  (`regex [a-z0-9-]`), duplication → **422**.

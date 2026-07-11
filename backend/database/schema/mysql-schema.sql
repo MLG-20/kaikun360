@@ -213,6 +213,24 @@ CREATE TABLE `failed_jobs` (
   KEY `failed_jobs_connection_queue_failed_at_index` (`connection`,`queue`,`failed_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `faqs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `faqs` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `question` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `answer` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `position` int unsigned NOT NULL DEFAULT '0',
+  `is_published` tinyint(1) NOT NULL DEFAULT '1',
+  `updated_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `faqs_updated_by_foreign` (`updated_by`),
+  CONSTRAINT `faqs_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `favorites`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -428,6 +446,24 @@ CREATE TABLE `owner_payouts` (
   KEY `owner_payouts_status_index` (`status`),
   CONSTRAINT `owner_payouts_mandate_id_foreign` FOREIGN KEY (`mandate_id`) REFERENCES `management_mandates` (`id`) ON DELETE CASCADE,
   CONSTRAINT `owner_payouts_owner_id_foreign` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `pages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `pages` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `slug` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_published` tinyint(1) NOT NULL DEFAULT '1',
+  `updated_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `pages_slug_unique` (`slug`),
+  KEY `pages_updated_by_foreign` (`updated_by`),
+  CONSTRAINT `pages_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `password_reset_tokens`;
@@ -797,10 +833,10 @@ DROP TABLE IF EXISTS `settings`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `settings` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `value` text COLLATE utf8mb4_unicode_ci,
-  `type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'string',
-  `group` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `key` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `value` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'string',
+  `group` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `updated_by` bigint unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -1053,3 +1089,5 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (36,'2026_07_01_130
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (37,'2026_07_01_140000_create_media_table',1);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (38,'2026_07_01_150000_create_reviews_table',1);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (39,'2026_07_11_160000_create_settings_table',2);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (40,'2026_07_11_161000_create_faqs_table',3);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (41,'2026_07_11_162000_create_pages_table',3);

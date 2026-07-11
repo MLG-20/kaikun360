@@ -3,6 +3,8 @@
 use App\Modules\Admin\Http\Controllers\AdminDashboardController;
 use App\Modules\Admin\Http\Controllers\AdminSettingsController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
+use App\Modules\Admin\Http\Controllers\FaqController;
+use App\Modules\Admin\Http\Controllers\PageController;
 use App\Modules\Admin\Http\Controllers\ReferenceController;
 use App\Modules\Admin\Http\Controllers\ValidationQueueController;
 use Illuminate\Support\Facades\Route;
@@ -54,4 +56,18 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // B13.4 — Nomenclatures de référence en lecture seule (catégories, régions).
     Route::get('/reference', [ReferenceController::class, 'index'])
         ->middleware('can:consulter:dashboard-admin');
+
+    // B13.4 — Contenu éditorial : FAQ & pages (édition). Lecture publique
+    // exposée dans routes/transversal.php.
+    Route::middleware('can:gerer:parametres')->group(function () {
+        Route::get('/faqs', [FaqController::class, 'index']);
+        Route::post('/faqs', [FaqController::class, 'store']);
+        Route::patch('/faqs/{faq}', [FaqController::class, 'update'])->whereNumber('faq');
+        Route::delete('/faqs/{faq}', [FaqController::class, 'destroy'])->whereNumber('faq');
+
+        Route::get('/pages', [PageController::class, 'index']);
+        Route::post('/pages', [PageController::class, 'store']);
+        Route::patch('/pages/{page}', [PageController::class, 'update']);
+        Route::delete('/pages/{page}', [PageController::class, 'destroy']);
+    });
 });

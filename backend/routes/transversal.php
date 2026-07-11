@@ -5,6 +5,8 @@ use App\Http\Controllers\MediaController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ReviewController;
+use App\Modules\Admin\Http\Controllers\FaqController;
+use App\Modules\Admin\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,6 +22,11 @@ use Illuminate\Support\Facades\Route;
 
 // --- Avis publiés : consultation publique (B12.2) ----------------------------
 Route::get('reviews', [ReviewController::class, 'index']);
+
+// --- Contenu éditorial public (B13.4) ----------------------------------------
+// FAQ publiée et pages de contenu (adressées par slug). Édition = back-office.
+Route::get('faqs', [FaqController::class, 'published']);
+Route::get('pages/{page}', [PageController::class, 'show']);
 
 // --- Demandes génériques (B11.2) ---------------------------------------------
 Route::middleware('auth:sanctum')->group(function () {
