@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Admin\Http\Controllers\AdminCatalogController;
 use App\Modules\Admin\Http\Controllers\AdminDashboardController;
 use App\Modules\Admin\Http\Controllers\AdminSettingsController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
@@ -62,6 +63,13 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // B13.5 — Export comptable & reporting consolidé (financier).
     Route::get('/reports/export', [ReportExportController::class, 'export'])
         ->middleware('can:gerer:paiements');
+
+    // B13.7.1 — Navigateur des catalogues (tous statuts, supervision).
+    Route::middleware('can:consulter:dashboard-admin')->group(function () {
+        Route::get('/properties', [AdminCatalogController::class, 'properties']);
+        Route::get('/vehicles', [AdminCatalogController::class, 'vehicles']);
+        Route::get('/experiences', [AdminCatalogController::class, 'experiences']);
+    });
 
     // B13.6 — Exploitation des nuitées : calendrier + check-in/out + ménage.
     Route::middleware('can:gerer:nuitees')->group(function () {
