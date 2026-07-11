@@ -18,7 +18,7 @@ pour les actions sensibles (`gerer:utilisateurs`, `gerer:parametres`,
 | B13.2 | File de validation + validation générique par type | ✅ |
 | B13.3 | Gestion des utilisateurs (rôles, statut, désactivation) | ✅ |
 | B13.4 | Paramétrage (settings) + contenu éditorial (FAQ, Pages) | ✅ |
-| B13.5 | Export comptable / reporting | à venir |
+| B13.5 | Export comptable / reporting | ✅ |
 | B13.6 | Nuitées back-office + consolidation des policies | à venir |
 
 ## B13.1 — Tableau de bord
@@ -142,3 +142,21 @@ service_type / vehicle_type, issues des enums) et le référentiel géographique
 - Pages : `GET /pages/{slug}` (public, publiées seules → 404 sinon, résolues par
   slug) ; `GET|POST /admin/pages`, `PATCH|DELETE /admin/pages/{page}`. Slug unique
   (`regex [a-z0-9-]`), duplication → **422**.
+
+## B13.5 — Export comptable & reporting
+
+Permission `gerer:paiements`. `Services\AccountingReporter::report(from, to)`
+consolide sur une période : réservations (volume + commission, **hors
+annulées**) et reversements propriétaires **effectués** (module Manage).
+
+**`GET /admin/reports/export`** — paramètres `from`, `to` (dates, `to` ≥ `from`),
+`format` (`json` défaut | `csv`).
+
+- JSON : `{ period, summary { bookings_count, active_bookings_count,
+  gross_volume_xof, commission_xof, payouts_count, payouts_total_xof },
+  bookings[], payouts[] }`.
+- CSV : téléchargement du grand livre des réservations (`streamDownload`,
+  `fputcsv`), colonnes `reference,date,type,amount_xof,commission_xof,status`.
+
+L'encaissement réel relèvera de PayTech (B14) ; ici les montants sont ceux figés
+à la réservation.

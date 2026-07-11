@@ -235,7 +235,7 @@
 - [x] Endpoint `GET /admin/queue` — file de validation (biens, véhicules, circuits, prestataires).
 - [x] Endpoint `PATCH /admin/validate/{type}/{id}` — validation ou refus générique par type de ressource.
 - [x] Endpoint `GET /admin/users` et `PATCH /admin/users/{id}` — gestion des comptes, rôles, statut, désactivation.
-- [ ] Endpoint `GET /admin/reports/export` — export comptable et reporting.
+- [x] Endpoint `GET /admin/reports/export` — export comptable et reporting.
 - [x] Endpoints de paramétrage : villes, catégories, tarifs, commissions, FAQ, contenu des pages.
 - [ ] Endpoints de gestion documentaire transverse (mandats, contrats, preuves, pièces prestataires).
 - [ ] Endpoints spécifiques nuitées (calendrier global, caution, statut ménage/check-in/check-out) pour vue back-office.

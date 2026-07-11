@@ -6,6 +6,7 @@ use App\Modules\Admin\Http\Controllers\AdminUserController;
 use App\Modules\Admin\Http\Controllers\FaqController;
 use App\Modules\Admin\Http\Controllers\PageController;
 use App\Modules\Admin\Http\Controllers\ReferenceController;
+use App\Modules\Admin\Http\Controllers\ReportExportController;
 use App\Modules\Admin\Http\Controllers\ValidationQueueController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +57,10 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // B13.4 — Nomenclatures de référence en lecture seule (catégories, régions).
     Route::get('/reference', [ReferenceController::class, 'index'])
         ->middleware('can:consulter:dashboard-admin');
+
+    // B13.5 — Export comptable & reporting consolidé (financier).
+    Route::get('/reports/export', [ReportExportController::class, 'export'])
+        ->middleware('can:gerer:paiements');
 
     // B13.4 — Contenu éditorial : FAQ & pages (édition). Lecture publique
     // exposée dans routes/transversal.php.
