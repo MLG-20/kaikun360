@@ -1,58 +1,289 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Kaikun 360 — Backend (API Laravel)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> Plateforme tout-en-un de l'immobilier, du tourisme et des services au Sénégal :
+> achat/vente & location, nuitées, gestion locative, construction, tourisme &
+> expériences, mobilité, diaspora, team building, marketplace de prestataires —
+> le tout servi par une **API REST modulaire** en Laravel.
 
-## About Laravel
+API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
+(Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **140 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **11 modules** métier isolés
+- **52 tables**, référentiel géographique du Sénégal inclus
+- **392 tests** automatisés (1075 assertions), tous verts ✅
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Sommaire
 
-## Learning Laravel
+- [Stack technique](#stack-technique)
+- [Architecture modulaire](#architecture-modulaire)
+- [Domaines fonctionnels](#domaines-fonctionnels)
+- [Structure du projet](#structure-du-projet)
+- [Conventions d'API](#conventions-dapi)
+- [Sécurité, rôles & RGPD](#sécurité-rôles--rgpd)
+- [Performance](#performance)
+- [Installation & démarrage](#installation--démarrage)
+- [Configuration (.env)](#configuration-env)
+- [Tests](#tests)
+- [Documentation](#documentation)
+- [État d'avancement](#état-davancement)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Stack technique
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+| Composant | Choix |
+| --- | --- |
+| Langage | PHP **8.3+** (développé sous 8.4) |
+| Framework | **Laravel 13** |
+| Authentification | **Laravel Sanctum 4** (jetons Bearer) |
+| Rôles & permissions | **spatie/laravel-permission 8** |
+| Journalisation d'audit | **spatie/laravel-activitylog 5** |
+| Traitement d'images | **intervention/image 4** (pilote GD) |
+| Base de données | **MySQL 8** |
+| Cache / sessions / files | **Redis 7** |
+| Paiement | **PayTech** (abstraction + webhook signé HMAC) |
+| Tests | **PHPUnit 12** |
 
-## Agentic Development
+---
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Architecture modulaire
 
-```bash
-composer require laravel/boost --dev
+Le code métier est découpé en **modules autonomes** sous `app/Modules/<Module>/`,
+chacun avec ses propres `Models/`, `Http/` (Controllers, Requests, Resources),
+`Services/`, `Policies/`, `Enums/`, `Events/` et `routes/`. Les routes de chaque
+module sont chargées automatiquement par un glob depuis `routes/api.php`.
 
-php artisan boost:install
+Les briques réellement transverses (Booking, Review, Media, Report polymorphes,
+enums de statut, `ApiResponse`, `Settings`, `CatalogCache`) vivent dans
+`app/Models`, `app/Enums`, `app/Http` et `app/Support`.
+
+```
+app/
+├── Enums/            # Enums transverses (statuts booking/paiement/requête…)
+├── Models/           # Modèles transverses (Booking, Review, Media, Report, géo…)
+├── Http/             # Controllers & Resources transverses
+├── Support/          # ApiResponse, Settings, CatalogCache, Payments/…
+└── Modules/
+    ├── Core/         # Utilisateurs, auth, rôles, profils, KYC
+    ├── Immo/         # Biens immobiliers (achat/vente/location mensuelle)
+    ├── Stay/         # Nuitées (location courte durée)
+    ├── Manage/       # Gestion locative (mandats, loyers, incidents, reversements)
+    ├── Build/        # Construction / rénovation (estimation, jalons, rapports)
+    ├── Explore/      # Tourisme & expériences
+    ├── Mobility/     # Transport & mobilité (véhicules, services)
+    ├── Diaspora/     # Projets diaspora (affectation d'agents)
+    ├── TeamBuilding/ # Séminaires d'entreprise (devis composés)
+    ├── Pro/          # Marketplace de prestataires (validation, missions, notation)
+    └── Admin/        # Back-office (dashboard, files de validation, supervision)
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Chaque module possède son propre `README.md` documentant sa logique métier.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Domaines fonctionnels
 
-## Code of Conduct
+- **Core** — inscription (5 profils : client, propriétaire, prestataire, diaspora,
+  entreprise), connexion e-mail/téléphone, vérification par code, récupération de
+  compte, profils, documents KYC sur disque privé (téléchargement par URL signée),
+  8 rôles / permissions fines.
+- **Immo** — catalogue public filtrable, dépôt de biens, validation par un agent,
+  documents, favoris, comparaison.
+- **Stay** — catalogue de nuitées, disponibilité, réservation anti-double-booking,
+  caution ; check-in/out & ménage côté back-office.
+- **Manage** — mandats de gestion, loyers, incidents, dépenses, reversements
+  propriétaires, rapport mensuel.
+- **Build** — simulateur de coût de construction, jalons de chantier, rapports
+  photo/vidéo polymorphes.
+- **Explore** — expériences touristiques, capacité, réservation, annulation/
+  remboursement.
+- **Mobility** — véhicules (avec contrôle de conformité assurance/pirogue),
+  services de mobilité, commission & caution.
+- **Diaspora** — projets pilotés par un agent (affectation auto au moins chargé),
+  rapports d'avancement.
+- **TeamBuilding** — demandes d'entreprise, devis composés multi-prestataires
+  avec marge.
+- **Pro** — inscription prestataire, charte qualité, validation, missions &
+  commission, notation agrégée à partir des avis.
+- **Admin** — tableau de bord KPI, file de validation générique, gestion des
+  comptes, paramétrage (commissions/tarifs/FAQ/pages), export comptable JSON/CSV,
+  supervision des paiements & remboursements.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Couches **transversales** : demandes de service (machine à états stricte), devis
+génériques, réservations polymorphes, médias (compression d'images), avis (réservés
+au consommateur ayant consommé), notifications (e-mail/SMS asynchrones, WhatsApp
+click-to-chat), paiement PayTech.
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Structure du projet
 
-## License
+```
+backend/
+├── app/                 # Code applicatif (voir Architecture modulaire)
+├── bootstrap/           # Amorçage, mapping des exceptions API
+├── config/              # Configuration (services, cache, cors…)
+├── database/
+│   ├── factories/       # Factories de test
+│   ├── migrations/      # 44 migrations (52 tables)
+│   ├── schema/          # Dump de schéma MySQL (accélère les tests)
+│   └── seeders/         # Rôles/permissions, référentiel géographique
+├── routes/              # api.php (glob des modules) + transversal.php
+├── tests/               # Feature/<Module> (PHPUnit)
+├── API.md               # Référence des 140 endpoints
+├── PERFORMANCE.md       # Durcissement & performance
+└── CONFIDENTIALITE.md   # RGPD & rétention des données
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## Conventions d'API
+
+- **Préfixe** : toutes les routes sont sous `/api/v1`.
+- **Format** : JSON (`Accept: application/json`).
+- **Authentification** : jeton Bearer Sanctum (`Authorization: Bearer <token>`).
+- **Enveloppe de succès** : `{ "data": … }` ou enveloppe paginée native
+  (`{ data, links, meta }`).
+- **Erreurs** : `{ "message": …, "errors": { champ: [messages] } }`. Codes
+  `401 / 403 / 404 / 422 / 429 / 502`.
+- **Limitation de débit** : 60 req/min par défaut ; renforcée sur l'auth
+  (10/min/IP) et le paiement (15/min/utilisateur).
+- **Permissions** : `super_admin` contourne tout (`Gate::before`) ; sinon
+  permissions fines Spatie (`can:*`).
+
+Détail complet : [`app/Support/README.md`](app/Support/README.md) et
+[`API.md`](API.md).
+
+---
+
+## Sécurité, rôles & RGPD
+
+- **8 rôles** (visiteur → super_admin) et **permissions fines** (Spatie),
+  matrice de rôles verrouillée par des tests.
+- **Garde « compte vérifié »** sur les actions sensibles (réservation, paiement,
+  publication).
+- **Audit** (Activitylog) sur les modifications de prix, validations de paiement,
+  suppressions.
+- **Documents privés** (KYC, documents de biens) sur disque `local`, accès par
+  **URL signée temporaire**.
+- **Webhook PayTech** vérifié par **signature HMAC-SHA256** (avec réconciliation
+  de montant).
+- **RGPD** : anonymisation du compte sur demande (`DELETE /users/me`) — voir
+  [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md).
+
+---
+
+## Performance
+
+- **Index** de base de données sur les colonnes de filtrage/tri des catalogues.
+- **Cache Redis** des résultats de catalogue/recherche, avec invalidation
+  automatique (versioning) sur écriture des modèles.
+- **Eager loading** systématique (chasse aux N+1, garde-fous testés).
+- **Benchmark** local reproductible : `php artisan catalog:benchmark`.
+
+Détail : [`PERFORMANCE.md`](PERFORMANCE.md).
+
+---
+
+## Installation & démarrage
+
+### Prérequis
+
+- PHP **8.3+** (extensions courantes Laravel + GD)
+- Composer 2
+- MySQL 8
+- Redis 7
+
+### Étapes
+
+```bash
+# 1. Dépendances
+composer install
+
+# 2. Environnement
+cp .env.example .env
+php artisan key:generate
+# → renseigner DB_*, REDIS_*, PAYTECH_* dans .env
+
+# 3. Base de données
+php artisan migrate --seed        # tables + rôles/permissions + référentiel géo
+php artisan db:seed --class=CommunesSeeder   # (optionnel) communes officielles ANSD
+
+# 4. Stockage privé (documents/médias)
+php artisan storage:link
+
+# 5. Lancer l'API
+php artisan serve                 # http://127.0.0.1:8000
+```
+
+> Un **worker de queue** est nécessaire en production pour les notifications
+> asynchrones (`php artisan queue:work`), supervisé (Supervisor/systemd).
+
+---
+
+## Configuration (.env)
+
+Clés principales (voir `.env.example` pour la liste exhaustive) :
+
+| Clé | Rôle |
+| --- | --- |
+| `DB_*` | Connexion MySQL |
+| `REDIS_*` | Cache, sessions, files d'attente |
+| `CACHE_STORE=redis` | Cache des catalogues |
+| `QUEUE_CONNECTION=redis` | Notifications asynchrones |
+| `SMS_PROVIDER` | Canal SMS (`log` par défaut, `twilio` en prod) |
+| `PAYTECH_BASE_URL` / `PAYTECH_API_KEY` / `PAYTECH_SIGNING_KEY` | Paiement PayTech |
+| `CORS_ALLOWED_ORIGINS` | Origines autorisées (front Angular) |
+
+> **Aucun secret n'est versionné** : `.env` est ignoré par git ; seuls les
+> `.env.example` (valeurs factices) sont suivis.
+
+---
+
+## Tests
+
+Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent un
+**dump de schéma** (`database/schema/mysql-schema.sql`) pour accélérer le démarrage.
+
+```bash
+php artisan test
+# 392 tests, 1075 assertions — verts
+```
+
+> Après toute nouvelle migration : régénérer le dump
+> (`php artisan schema:dump`) pour garder les tests rapides.
+
+---
+
+## Documentation
+
+| Document | Contenu |
+| --- | --- |
+| [`API.md`](API.md) | Référence des 140 endpoints (accès, contrôleurs) |
+| [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
+| [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
+| [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |
+| `app/Modules/<Module>/README.md` | Logique métier de chaque module |
+| [`app/Enums/README.md`](app/Enums/README.md) · [`app/Models/README.md`](app/Models/README.md) | Enums & modèles transverses |
+
+Le code est **abondamment commenté en français**.
+
+---
+
+## État d'avancement
+
+- ✅ **Backend (B0 → B17) : code-complet.** Authentification, 11 modules métier,
+  couches transversales, paiement, sécurité/RGPD, notifications, durcissement &
+  performance, documentation.
+- ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
+  tests sandbox, worker de queue supervisé.
+- 🔜 **Frontend Angular** (chantier séparé).
+
+---
+
+## Licence
+
+Projet propriétaire — Kaikun 360. Tous droits réservés.
