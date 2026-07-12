@@ -10,6 +10,7 @@ use App\Models\Quote;
 use App\Models\ServiceRequest;
 use App\Notifications\QuoteReceivedNotification;
 use App\Support\ApiResponse;
+use App\Support\Webhooks\WebhookDispatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -33,6 +34,17 @@ class QuoteController extends Controller
 
         // Informe le demandeur qu'un devis lui est proposé (async, B16.2).
         $serviceRequest->user?->notify(new QuoteReceivedNotification($quote));
+
+        // Émet l'événement vers n8n (automatisation WhatsApp…) — B18.1.
+        WebhookDispatcher::emit(WebhookDispatcher::QUOTE_RECEIVED, [
+            'quote_reference' => $quote->reference,
+            'request_reference' => $serviceRequest->reference,
+            'amount_xof' => $quote->amount_xof,
+            'user' => [
+                'name' => $serviceRequest->user?->name,
+                'phone' => $serviceRequest->user?->phone,
+            ],
+        ]);
 
         return ApiResponse::created(['quote' => QuoteResource::make($quote)]);
     }

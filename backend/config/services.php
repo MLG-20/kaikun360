@@ -54,4 +54,13 @@ return [
         'webhook_url' => env('PAYTECH_WEBHOOK_URL'),
     ],
 
+    // Webhooks sortants vers n8n (B18.1) : le backend POSTe un événement signé
+    // (HMAC-SHA256) vers n8n, qui orchestre l'automatisation (WhatsApp, etc.).
+    // Désactivé tant que l'URL n'est pas fournie → aucun envoi en dev/test.
+    'n8n' => [
+        'enabled' => env('N8N_WEBHOOK_ENABLED', false),
+        'webhook_url' => env('N8N_WEBHOOK_URL'),
+        'signing_secret' => env('N8N_WEBHOOK_SECRET'),
+    ],
+
 ];

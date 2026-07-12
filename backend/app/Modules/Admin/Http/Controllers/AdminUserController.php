@@ -9,6 +9,7 @@ use App\Modules\Core\Http\Resources\UserResource;
 use App\Models\User;
 use App\Notifications\DocumentRequiredNotification;
 use App\Support\ApiResponse;
+use App\Support\Webhooks\WebhookDispatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -105,6 +106,16 @@ class AdminUserController extends Controller
         ]);
 
         $user->notify(new DocumentRequiredNotification($data['document_type'], $data['note'] ?? null));
+
+        // Émet l'événement vers n8n (automatisation WhatsApp…) — B18.1.
+        WebhookDispatcher::emit(WebhookDispatcher::DOCUMENT_REQUIRED, [
+            'document_type' => $data['document_type'],
+            'note' => $data['note'] ?? null,
+            'user' => [
+                'name' => $user->name,
+                'phone' => $user->phone,
+            ],
+        ]);
 
         return ApiResponse::success(['message' => 'Demande de document envoyée.']);
     }

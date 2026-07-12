@@ -291,6 +291,12 @@
 - [x] Revue complète des Form Requests (aucune donnée non validée ne doit atteindre la couche métier).
 - [x] Documentation technique des endpoints (a minima OpenAPI ou commentaires structurés).
 
+### Phase B18 — Intégrations & automatisation (n8n, SMS Orange)
+
+- [x] Socle de webhooks sortants signés (HMAC) vers n8n + catalogue d'événements documenté (`WEBHOOKS.md`) + commande de test.
+- [ ] `OrangeSmsProvider` (canal SMS via l'API SMS d'Orange/Sonatel) — _en attente des accès client._
+- [ ] (Optionnel) Network APIs Orange : vérification de numéro / SIM Swap sur le paiement.
+
 ---
 
 ## FRONTEND — Angular

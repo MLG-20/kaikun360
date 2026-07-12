@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Payment;
 use App\Notifications\BookingConfirmedNotification;
+use App\Support\Webhooks\WebhookDispatcher;
 use App\Support\ApiResponse;
 use App\Support\Payments\PaytechWebhookVerifier;
 use Illuminate\Http\JsonResponse;
@@ -113,6 +114,17 @@ class PaymentWebhookController extends Controller
 
                 // Confirme au client (async, e-mail + SMS) — B16.2.
                 $payment->booking->user?->notify(new BookingConfirmedNotification($payment->booking));
+
+                // Émet l'événement vers n8n (automatisation WhatsApp…) — B18.1.
+                WebhookDispatcher::emit(WebhookDispatcher::BOOKING_CONFIRMED, [
+                    'booking_reference' => $payment->booking->reference,
+                    'bookable_type' => class_basename((string) $payment->booking->bookable_type),
+                    'amount_xof' => $payment->amount_xof,
+                    'user' => [
+                        'name' => $payment->booking->user?->name,
+                        'phone' => $payment->booking->user?->phone,
+                    ],
+                ]);
             }
         }
 

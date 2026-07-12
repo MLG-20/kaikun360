@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateRequestStatusRequest;
 use App\Http\Resources\ServiceRequestResource;
 use App\Models\ServiceRequest;
 use App\Support\ApiResponse;
+use App\Support\Webhooks\WebhookDispatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -74,6 +75,17 @@ class RequestController extends Controller
             ->log('Changement de statut de demande');
 
         RequestStatusChanged::dispatch($serviceRequest, $from, $to);
+
+        // Émet l'événement vers n8n (automatisation WhatsApp…) — B18.1.
+        WebhookDispatcher::emit(WebhookDispatcher::REQUEST_STATUS_CHANGED, [
+            'request_reference' => $serviceRequest->reference,
+            'from' => $from->value,
+            'to' => $to->value,
+            'user' => [
+                'name' => $serviceRequest->user?->name,
+                'phone' => $serviceRequest->user?->phone,
+            ],
+        ]);
 
         return ApiResponse::success(['request' => ServiceRequestResource::make($serviceRequest->fresh())]);
     }
