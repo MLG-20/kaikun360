@@ -37,7 +37,8 @@ class ManageController extends Controller
     {
         $mandates = $this->withAggregates(
             ManagementMandate::query()->where('owner_id', $request->user()->id)
-        )->with('property')->latest()->paginate(15);
+        )->with(['property.region', 'property.department', 'property.commune', 'property.owner'])
+            ->latest()->paginate(15);
 
         return MandateResource::collection($mandates);
     }
@@ -52,7 +53,8 @@ class ManageController extends Controller
 
         $mandate = $this->withAggregates(
             ManagementMandate::query()->whereKey($mandate->id)
-        )->with('property')->firstOrFail();
+        )->with(['property.region', 'property.department', 'property.commune', 'property.owner'])
+            ->firstOrFail();
 
         return ApiResponse::success(['mandate' => MandateResource::make($mandate)]);
     }

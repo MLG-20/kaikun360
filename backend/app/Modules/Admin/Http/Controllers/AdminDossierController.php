@@ -46,7 +46,7 @@ class AdminDossierController extends Controller
     public function mandates(Request $request): AnonymousResourceCollection
     {
         $mandates = ManagementMandate::query()
-            ->with(['property', 'owner'])
+            ->with(['property.region', 'property.department', 'property.commune', 'property.owner', 'owner'])
             ->withCount(['rents', 'incidents', 'expenses', 'payouts'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->when($request->filled('owner_id'), fn ($q) => $q->where('owner_id', $request->integer('owner_id')))
