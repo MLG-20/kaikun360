@@ -7,25 +7,59 @@
   min-height: 60vh;
 }
 
-// Aperçu provisoire du design system (retiré quand les vraies pages arrivent).
-.ds-preview {
-  padding: 72px 24px;
+// --- Hero d'aperçu (provisoire) -------------------------------------------
+.hero {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 54px;
+  align-items: center;
+  padding: 64px 24px 40px;
 }
 
-.ds-preview h1 {
-  font-size: clamp(34px, 5vw, 56px);
-  margin: 14px 0 16px;
-  max-width: 14ch;
+.hero-text h1 {
+  font-size: clamp(34px, 4.8vw, 58px);
+  margin: 16px 0 16px;
+  max-width: 15ch;
 }
 
-.ds-preview p {
+.hero-text .hl {
+  color: var(--k-brand);
+  position: relative;
+  white-space: nowrap;
+}
+
+.hero-text .hl::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.08em;
+  height: 0.32em;
+  background: var(--k-gold);
+  opacity: 0.35;
+  z-index: -1;
+  border-radius: 3px;
+}
+
+.lead {
   font-size: 18px;
-  max-width: 40ch;
+  max-width: 38ch;
   margin-bottom: 26px;
 }
 
-.ds-actions {
+.hero-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .hero-visual {
+    order: -1;
+  }
 }

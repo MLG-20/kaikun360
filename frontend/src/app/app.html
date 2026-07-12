@@ -4,18 +4,24 @@
 <main class="app-main">
   <router-outlet />
 
-  <!-- Aperçu provisoire du design system (sera remplacé par les pages en F1+). -->
-  <section class="k-wrap ds-preview">
-    <span class="k-eyebrow">Design system</span>
-    <h1>Tout votre projet sénégalais, d'un seul endroit.</h1>
-    <p class="k-muted">
-      Immobilier, nuitées, tourisme, mobilité, construction — biens vérifiés et
-      suivi jusqu'au bout.
-    </p>
-    <div class="ds-actions">
-      <a class="k-btn k-btn--primary" href="#">Commencer</a>
-      <a class="k-btn k-btn--green" href="#">Demander un devis</a>
-      <a class="k-btn k-btn--ghost" href="#">Explorer le catalogue</a>
+  <!-- Aperçu provisoire (design system + signature orbitale, remplacé en F1+). -->
+  <section class="k-wrap hero">
+    <div class="hero-text">
+      <span class="k-eyebrow">Kaikun 360</span>
+      <h1>Tout votre projet sénégalais, <span class="hl">d'un seul endroit</span>.</h1>
+      <p class="k-muted lead">
+        Immobilier, nuitées, tourisme, mobilité, construction — biens vérifiés et
+        suivi jusqu'au bout.
+      </p>
+      <div class="hero-actions">
+        <a class="k-btn k-btn--primary" href="#">Commencer</a>
+        <a class="k-btn k-btn--green" href="#">Demander un devis</a>
+        <a class="k-btn k-btn--ghost" href="#">Explorer le catalogue</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <app-orbit-hero />
     </div>
   </section>
 </main>
