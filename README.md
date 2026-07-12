@@ -294,7 +294,7 @@
 ### Phase B18 — Intégrations & automatisation (n8n, SMS Orange)
 
 - [x] Socle de webhooks sortants signés (HMAC) vers n8n + catalogue d'événements documenté (`WEBHOOKS.md`) + commande de test.
-- [ ] `OrangeSmsProvider` (canal SMS via l'API SMS d'Orange/Sonatel) — _en attente des accès client._
+- [x] `OrangeSmsProvider` (canal SMS via l'API SMS d'Orange/Sonatel), testé via `Http::fake`. — _Reste action client : souscrire la SMS API sur developer.orange.com + essai sandbox réel._
 - [ ] (Optionnel) Network APIs Orange : vérification de numéro / SIM Swap sur le paiement.
 
 ---

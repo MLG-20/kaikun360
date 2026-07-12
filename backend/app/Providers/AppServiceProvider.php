@@ -13,6 +13,7 @@ use App\Policies\QuotePolicy;
 use App\Policies\ReviewPolicy;
 use Illuminate\Support\Facades\Notification;
 use App\Support\Notifications\LogSmsProvider;
+use App\Support\Notifications\OrangeSmsProvider;
 use App\Support\Notifications\SmsChannel;
 use App\Support\Notifications\SmsProviderInterface;
 use App\Support\Notifications\TwilioSmsProvider;
@@ -82,12 +83,27 @@ class AppServiceProvider extends ServiceProvider
             return new PaytechWebhookVerifier(config('services.paytech.signing_key'));
         });
 
-        // Fournisseur SMS (B16.1) : Twilio si configuré, sinon journalisation.
+        // Fournisseur SMS (B16.1/B18.2) : Twilio, Orange, sinon journalisation.
         $this->app->singleton(SmsProviderInterface::class, function () {
-            if (config('services.sms.provider') === 'twilio') {
+            $provider = config('services.sms.provider');
+
+            if ($provider === 'twilio') {
                 $twilio = config('services.sms.twilio');
 
                 return new TwilioSmsProvider($twilio['sid'] ?? null, $twilio['token'] ?? null, $twilio['from'] ?? null);
+            }
+
+            if ($provider === 'orange') {
+                $orange = config('services.sms.orange');
+
+                return new OrangeSmsProvider(
+                    $orange['client_id'] ?? null,
+                    $orange['client_secret'] ?? null,
+                    $orange['base_url'] ?? 'https://api.orange.com',
+                    $orange['token_url'] ?? 'https://api.orange.com/oauth/v3/token',
+                    $orange['sender_address'] ?? null,
+                    $orange['sender_name'] ?? null,
+                );
             }
 
             return new LogSmsProvider();

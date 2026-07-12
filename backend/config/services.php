@@ -35,13 +35,22 @@ return [
         ],
     ],
 
-    // SMS (B16). Fournisseur `log` par défaut (dev) ou `twilio` (prod).
+    // SMS (B16/B18). Fournisseur `log` par défaut (dev), `twilio` ou `orange` (prod).
     'sms' => [
         'provider' => env('SMS_PROVIDER', 'log'),
         'twilio' => [
             'sid' => env('TWILIO_SID'),
             'token' => env('TWILIO_TOKEN'),
             'from' => env('TWILIO_FROM'),
+        ],
+        // Orange / Sonatel (B18.2) — identifiants via developer.orange.com.
+        'orange' => [
+            'client_id' => env('ORANGE_SMS_CLIENT_ID'),
+            'client_secret' => env('ORANGE_SMS_CLIENT_SECRET'),
+            'base_url' => env('ORANGE_SMS_BASE_URL', 'https://api.orange.com'),
+            'token_url' => env('ORANGE_SMS_TOKEN_URL', 'https://api.orange.com/oauth/v3/token'),
+            'sender_address' => env('ORANGE_SMS_SENDER_ADDRESS'), // ex : +221XXXXXXXXX
+            'sender_name' => env('ORANGE_SMS_SENDER_NAME'),       // ex : KAIKUN360 (optionnel)
         ],
     ],
 
