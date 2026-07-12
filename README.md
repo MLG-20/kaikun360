@@ -255,12 +255,12 @@
 - [x] Stocker en configuration (jamais en dur dans le code) : clé API PayTech, clé de signature webhook (Signing Key), URL de webhook.
 - [x] Migration `payments` (booking_id, provider, montant, statut, reference, mode) — statut aligné sur les états PayTech (`AUTHORIZED`, `COMPLETED`, `DECLINED`, `CANCELLED`).
 - [x] Endpoint `POST /payments/initiate` — crée l'intention de paiement côté PayTech et retourne l'URL/redirection au frontend.
-- [ ] Endpoint `POST /payments/webhook` — réception des notifications PayTech.
-- [ ] **Validation obligatoire de la signature du webhook** : vérifier l'en-tête `Signature` (HMAC-SHA256 du corps JSON avec la Signing Key) avant de traiter toute notification — ne jamais faire confiance à un webhook non vérifié.
-- [ ] Mapper les statuts PayTech vers les statuts internes `payments`/`bookings` (ex. `COMPLETED` → booking confirmé, `DECLINED`/`CANCELLED` → booking non confirmé).
+- [x] Endpoint `POST /payments/webhook` — réception des notifications PayTech.
+- [x] **Validation obligatoire de la signature du webhook** : vérifier l'en-tête `Signature` (HMAC-SHA256 du corps JSON avec la Signing Key) avant de traiter toute notification — ne jamais faire confiance à un webhook non vérifié.
+- [x] Mapper les statuts PayTech vers les statuts internes `payments`/`bookings` (ex. `COMPLETED` → booking confirmé, `DECLINED`/`CANCELLED` → booking non confirmé).
 - [ ] Implémenter le remboursement (`refund`) via PayTech pour les cas de caution à restituer ou d'annulation éligible (Mobility, Explore, Stay).
-- [ ] Logique de calcul et d'enregistrement des commissions Kaikun par transaction réussie.
-- [ ] Gérer le cas où le montant débité diffère du montant demandé (certains moyens PayTech) : réconciliation explicite, jamais de confirmation automatique sur une simple différence de montant non vérifiée.
+- [x] Logique de calcul et d'enregistrement des commissions Kaikun par transaction réussie.
+- [x] Gérer le cas où le montant débité diffère du montant demandé (certains moyens PayTech) : réconciliation explicite, jamais de confirmation automatique sur une simple différence de montant non vérifiée.
 - [ ] Endpoint admin de supervision des paiements (liste, statut, recherche par référence) — lié à B13.
 - [ ] Tests en environnement sandbox PayTech avant toute bascule en production.
 - [ ] Tests : aucun module métier (Bookings, Quotes, Mobility, Explore) ne dépend directement de PayTech, uniquement de `PaymentProviderInterface`.

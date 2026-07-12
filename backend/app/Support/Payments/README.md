@@ -39,10 +39,24 @@ commission figés depuis la réservation), demande l'intention au PSP puis passe
 Panne du PSP → **502**. La confirmation n'arrive QUE par webhook vérifié (B14.3).
 `Booking::payments()` / `Booking::estPayee()` ajoutés.
 
+## B14.3 — Webhook (sécurité)
+
+**`POST /api/v1/payments/webhook`** (public, signé). `PaytechWebhookVerifier`
+recalcule le HMAC-SHA256 du **corps brut** avec la Signing Key et compare en
+temps constant (`hash_equals`). Ordre strict dans `PaymentWebhookController` :
+
+1. **signature d'abord** — invalide/absente → **401**, aucun effet ;
+2. transaction retrouvée par `provider_reference`/`reference` (sinon 404) ;
+   `signature_verified` passe à vrai ;
+3. **idempotence** — déjà `complete` → 200 sans retraitement ;
+4. mapping `PaymentStatus::fromPaytech` — statut inconnu → **422** ;
+5. **réconciliation de montant** — si `COMPLETED` mais montant débité ≠ attendu :
+   pas de confirmation, `meta.amount_mismatch`, **202** ;
+6. application du statut ; `COMPLETE` → réservation `confirmee` (sauf annulée).
+   La commission encaissée est celle figée sur la `Payment`.
+
 ## À venir
 
-- B14.3 : `POST /payments/webhook` avec **vérification de signature HMAC-SHA256
-  obligatoire**, mapping → Payment/Booking, commission, réconciliation de montant.
 - B14.4 : remboursements (caution / annulation) + supervision admin
   `GET /admin/payments`.
 

@@ -3,6 +3,7 @@
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ReviewController;
@@ -23,6 +24,9 @@ use Illuminate\Support\Facades\Route;
 
 // --- Avis publiés : consultation publique (B12.2) ----------------------------
 Route::get('reviews', [ReviewController::class, 'index']);
+
+// --- Webhook PayTech (B14.3) : public mais signé (HMAC vérifié en interne) ----
+Route::post('payments/webhook', [PaymentWebhookController::class, 'handle']);
 
 // --- Contenu éditorial public (B13.4) ----------------------------------------
 // FAQ publiée et pages de contenu (adressées par slug). Édition = back-office.

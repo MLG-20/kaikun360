@@ -13,6 +13,7 @@ use App\Policies\QuotePolicy;
 use App\Policies\ReviewPolicy;
 use App\Support\Payments\PaymentProviderInterface;
 use App\Support\Payments\PaytechProvider;
+use App\Support\Payments\PaytechWebhookVerifier;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Build\Policies\ConstructionRequestPolicy;
@@ -69,6 +70,11 @@ class AppServiceProvider extends ServiceProvider
                 apiKey: $config['api_key'] ?? null,
                 webhookUrl: $config['webhook_url'] ?? null,
             );
+        });
+
+        // Vérificateur de signature des webhooks PayTech (B14.3).
+        $this->app->singleton(PaytechWebhookVerifier::class, function () {
+            return new PaytechWebhookVerifier(config('services.paytech.signing_key'));
         });
     }
 
