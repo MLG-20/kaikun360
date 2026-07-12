@@ -12,6 +12,8 @@ use App\Models\User;
 use App\Policies\QuotePolicy;
 use App\Policies\ReviewPolicy;
 use Illuminate\Support\Facades\Notification;
+use App\Support\Auth\GoogleIdTokenVerifier;
+use App\Support\Auth\GoogleTokenVerifier;
 use App\Support\Notifications\LogSmsProvider;
 use App\Support\Notifications\OrangeSmsProvider;
 use App\Support\Notifications\SmsChannel;
@@ -107,6 +109,11 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return new LogSmsProvider();
+        });
+
+        // Vérificateur d'ID token Google (B19).
+        $this->app->bind(GoogleTokenVerifier::class, function () {
+            return new GoogleIdTokenVerifier(config('services.google.client_id'));
         });
     }
 

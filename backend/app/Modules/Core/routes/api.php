@@ -40,6 +40,7 @@ Route::get('/version', function () {
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/google', [AuthController::class, 'google']); // connexion Google (B19)
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
     // Vérification de compte (e-mail / téléphone) — utilisateur connecté (phase B1.4).

@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **140 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **141 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **52 tables**, référentiel géographique du Sénégal inclus
-- **392 tests** automatisés (1075 assertions), tous verts ✅
+- **404 tests** automatisés (1110 assertions), tous verts ✅
 
 ---
 
@@ -133,7 +133,7 @@ backend/
 │   └── seeders/         # Rôles/permissions, référentiel géographique
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 140 endpoints
+├── API.md               # Référence des 141 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -250,7 +250,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 392 tests, 1075 assertions — verts
+# 404 tests, 1110 assertions — verts
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -262,7 +262,7 @@ php artisan test
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 140 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 141 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |

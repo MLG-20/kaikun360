@@ -1006,10 +1006,11 @@ CREATE TABLE `users` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `google_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `phone` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `email_verified_at` timestamp NULL DEFAULT NULL,
   `phone_verified_at` timestamp NULL DEFAULT NULL,
-  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `city` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_attente_verification',
   `remember_token` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -1018,6 +1019,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_email_unique` (`email`),
   UNIQUE KEY `users_phone_unique` (`phone`),
+  UNIQUE KEY `users_google_id_unique` (`google_id`),
   KEY `users_status_index` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1127,3 +1129,4 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (41,'2026_07_11_162
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (42,'2026_07_11_170000_add_stay_operations_to_bookings_table',4);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (43,'2026_07_12_100000_create_payments_table',5);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (44,'2026_07_12_180000_add_catalog_search_indexes',6);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (45,'2026_07_12_190000_add_google_id_to_users_table',7);

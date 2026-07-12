@@ -298,6 +298,11 @@
 
 _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été écartées : non retenues pour l'application.)_
 
+### Phase B19 — Connexion Google (OAuth)
+
+- [x] Endpoint `POST /auth/google` : vérification de l'ID token Google (audience contrôlée) + find-or-create ; nouveau compte = profil **client** (e-mail vérifié par Google → compte actif). Testé via `Http::fake`. — _Reste action client : créer les identifiants OAuth (Google Cloud Console) → `GOOGLE_CLIENT_ID`._
+- [x] Hook frontend `AuthService.loginWithGoogle()` (le bouton Google s'ajoutera à l'écran de connexion en F1).
+
 ---
 
 ## FRONTEND — Angular

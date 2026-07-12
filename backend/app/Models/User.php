@@ -28,7 +28,7 @@ use Spatie\Permission\Traits\HasRoles;
  * module Core (app/Modules/Core).
  */
 // Champs autorisés à l'assignation de masse (create/update).
-#[Fillable(['name', 'email', 'phone', 'password', 'city', 'status'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'city', 'status', 'google_id', 'email_verified_at'])]
 // Champs masqués dans les sérialisations JSON (jamais renvoyés au client).
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable

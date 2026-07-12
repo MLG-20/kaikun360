@@ -63,6 +63,12 @@ return [
         'webhook_url' => env('PAYTECH_WEBHOOK_URL'),
     ],
 
+    // Connexion Google (B19) : Client ID OAuth (Google Cloud Console). Sert à
+    // vérifier l'audience des ID tokens reçus du frontend.
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+    ],
+
     // Webhooks sortants vers n8n (B18.1) : le backend POSTe un événement signé
     // (HMAC-SHA256) vers n8n, qui orchestre l'automatisation (WhatsApp, etc.).
     // Désactivé tant que l'URL n'est pas fournie → aucun envoi en dev/test.

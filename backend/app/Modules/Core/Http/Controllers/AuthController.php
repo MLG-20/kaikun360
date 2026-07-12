@@ -6,15 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Core\Enums\ProfileType;
 use App\Modules\Core\Enums\UserRole;
+use App\Modules\Core\Enums\UserStatus;
 use App\Modules\Core\Http\Requests\LoginRequest;
 use App\Modules\Core\Http\Requests\RegisterRequest;
 use App\Modules\Core\Http\Resources\UserResource;
 use App\Modules\Core\Services\VerificationService;
 use App\Support\ApiResponse;
+use App\Support\Auth\GoogleTokenVerifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -77,6 +80,68 @@ class AuthController extends Controller
         $token = $user->createToken('auth')->plainTextToken;
 
         return ApiResponse::created([
+            'user' => UserResource::make($user->load('profile')),
+            'token' => $token,
+        ]);
+    }
+
+    /**
+     * Connexion via Google. POST /api/v1/auth/google
+     *
+     * Le frontend obtient un ID token via Google Identity Services et l'envoie
+     * ici. On le vérifie (signature + audience via {@see GoogleTokenVerifier}),
+     * puis on retrouve l'utilisateur par `google_id` ou e-mail — sinon on le crée
+     * en compte **client** (décision produit), e-mail déjà vérifié par Google donc
+     * compte directement actif. Renvoie le même `{ user, token }` que le login.
+     */
+    public function google(Request $request, GoogleTokenVerifier $verifier): JsonResponse
+    {
+        $data = $request->validate(['id_token' => ['required', 'string']]);
+
+        $googleUser = $verifier->verify($data['id_token']);
+        if ($googleUser === null) {
+            return ApiResponse::error('Jeton Google invalide.', 401);
+        }
+
+        $user = User::where('google_id', $googleUser->sub)
+            ->orWhere('email', $googleUser->email)
+            ->first();
+
+        if ($user !== null) {
+            // Compte existant (créé par e-mail auparavant) : on le lie à Google.
+            if ($user->google_id === null) {
+                $user->update(['google_id' => $googleUser->sub]);
+            }
+        } else {
+            // Nouveau compte Google → profil client, actif (e-mail vérifié par Google).
+            $user = DB::transaction(function () use ($googleUser) {
+                $user = User::create([
+                    'name' => $googleUser->name,
+                    'email' => $googleUser->email,
+                    'google_id' => $googleUser->sub,
+                    'password' => Str::password(32), // aléatoire, jamais utilisé (login Google)
+                    'status' => UserStatus::ACTIF->value,
+                    'email_verified_at' => now(),
+                ]);
+
+                $user->profile()->create([
+                    'type' => ProfileType::CLIENT->value,
+                    'verification_status' => 'non_verifie',
+                ]);
+
+                $user->assignRole(UserRole::defaultForProfileType(ProfileType::CLIENT)->value);
+
+                return $user;
+            });
+
+            activity()->causedBy($user)->performedOn($user)
+                ->withProperties(['via' => 'google'])
+                ->log('Inscription');
+        }
+
+        $token = $user->createToken('auth')->plainTextToken;
+
+        return ApiResponse::success([
             'user' => UserResource::make($user->load('profile')),
             'token' => $token,
         ]);
