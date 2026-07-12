@@ -24,7 +24,7 @@ Route::get('/stays/{id}/availability', [StayBookingController::class, 'availabil
 // Réservation d'une nuitée — utilisateur connecté (phase B3.3).
 Route::post('/stays/{id}/bookings', [StayBookingController::class, 'store'])
     ->whereNumber('id')
-    ->middleware('auth:sanctum');
+    ->middleware(['auth:sanctum', 'verified.account']);
 
 Route::get('/stays/{id}', [StayCatalogController::class, 'show'])
     ->whereNumber('id');

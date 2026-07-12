@@ -25,14 +25,14 @@ Route::get('mobility-services', [MobilityServiceController::class, 'index']);
 
 // --- Espace prestataire (auth + policy) --------------------------------------
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('vehicles', [VehicleManagementController::class, 'store']);
+    Route::post('vehicles', [VehicleManagementController::class, 'store'])->middleware('verified.account');
     Route::get('vehicles/mine', [VehicleManagementController::class, 'mine']);
     Route::patch('vehicles/{vehicle}', [VehicleManagementController::class, 'update'])->whereNumber('vehicle');
 
     // Réservations (caution & commission) — B7.4.
-    Route::post('vehicles/{id}/bookings', [VehicleBookingController::class, 'store'])->whereNumber('id');
+    Route::post('vehicles/{id}/bookings', [VehicleBookingController::class, 'store'])->whereNumber('id')->middleware('verified.account');
     Route::patch('vehicles/bookings/{booking}/cancel', [VehicleBookingController::class, 'cancel'])->whereNumber('booking');
-    Route::post('mobility-services/{id}/bookings', [MobilityServiceBookingController::class, 'store'])->whereNumber('id');
+    Route::post('mobility-services/{id}/bookings', [MobilityServiceBookingController::class, 'store'])->whereNumber('id')->middleware('verified.account');
 });
 
 // --- Validation par les agents (permission valider:vehicule) -----------------

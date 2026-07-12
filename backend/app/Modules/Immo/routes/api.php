@@ -37,7 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // car ce dernier est contraint aux identifiants numériques (whereNumber).
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/properties/mine', [PropertyManagementController::class, 'mine']);
-    Route::post('/properties', [PropertyManagementController::class, 'store']);
+    Route::post('/properties', [PropertyManagementController::class, 'store'])->middleware('verified.account');
     Route::patch('/properties/{property}', [PropertyManagementController::class, 'update'])
         ->whereNumber('property');
     Route::post('/properties/{property}/documents', [PropertyManagementController::class, 'storeDocument'])

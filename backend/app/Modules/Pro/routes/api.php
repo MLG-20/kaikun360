@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 
 // --- Espace prestataire (auth) -----------------------------------------------
 Route::middleware('auth:sanctum')->prefix('providers')->group(function () {
-    Route::post('/', [ProviderRegistrationController::class, 'store']);
+    Route::post('/', [ProviderRegistrationController::class, 'store'])->middleware('verified.account');
     Route::get('/mine', [ProviderRegistrationController::class, 'mine']);
     // Affectation d'une mission (policy assignMission = admin).
     Route::post('/{provider}/missions', [ProviderMissionController::class, 'store'])->whereNumber('provider');

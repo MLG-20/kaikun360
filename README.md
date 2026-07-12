@@ -267,7 +267,7 @@
 
 ### Phase B15 — Sécurité, conformité et journalisation
 
-- [ ] Vérification email/téléphone obligatoire avant activation complète d'un compte.
+- [x] Vérification email/téléphone obligatoire avant activation complète d’un compte.
 - [ ] Policies sur chaque ressource sensible + scopes Eloquent systématiques par propriétaire.
 - [ ] Audit log sur : validation de bien, modification de prix, validation de paiement, suppression de ressource.
 - [ ] Stockage des documents sur disque non public + URLs signées temporaires.

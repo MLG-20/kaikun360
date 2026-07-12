@@ -25,9 +25,9 @@ Route::prefix('experiences')->group(function () {
 
 // --- Espace prestataire & réservation (auth) ---------------------------------
 Route::middleware('auth:sanctum')->prefix('experiences')->group(function () {
-    Route::post('/', [ExperienceManagementController::class, 'store']);
+    Route::post('/', [ExperienceManagementController::class, 'store'])->middleware('verified.account');
     Route::get('/mine', [ExperienceManagementController::class, 'mine']);
-    Route::post('/{id}/bookings', [ExperienceBookingController::class, 'store'])->whereNumber('id');
+    Route::post('/{id}/bookings', [ExperienceBookingController::class, 'store'])->whereNumber('id')->middleware('verified.account');
     Route::patch('/bookings/{booking}/cancel', [ExperienceBookingController::class, 'cancel'])->whereNumber('booking');
 });
 

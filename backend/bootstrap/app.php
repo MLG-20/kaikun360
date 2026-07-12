@@ -26,6 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(append: [
             'throttle:api',
         ]);
+
+        // Alias du garde « compte vérifié » (B15.2), appliqué aux actions
+        // sensibles (réservation, paiement, publication).
+        $middleware->alias([
+            'verified.account' => \App\Http\Middleware\EnsureAccountVerified::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Toute erreur survenant sur l'API (/api/*) est renvoyée en JSON.
