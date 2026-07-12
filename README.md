@@ -269,7 +269,7 @@
 
 - [x] Vérification email/téléphone obligatoire avant activation complète d’un compte.
 - [ ] Policies sur chaque ressource sensible + scopes Eloquent systématiques par propriétaire.
-- [ ] Audit log sur : validation de bien, modification de prix, validation de paiement, suppression de ressource.
+- [x] Audit log sur : validation de bien, modification de prix, validation de paiement, suppression de ressource.
 - [ ] Stockage des documents sur disque non public + URLs signées temporaires.
 - [ ] Statut `en_attente_validation` par défaut sur biens, véhicules, circuits, prestataires.
 - [x] Rate limiting sur les endpoints sensibles (auth, paiement).

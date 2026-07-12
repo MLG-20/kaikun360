@@ -61,6 +61,8 @@ class PageController extends Controller
      */
     public function destroy(Page $page): JsonResponse
     {
+        activity()->causedBy(request()->user())->performedOn($page)->log('Suppression de page');
+
         $page->delete();
 
         return ApiResponse::noContent();

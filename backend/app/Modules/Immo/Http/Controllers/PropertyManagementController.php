@@ -72,9 +72,18 @@ class PropertyManagementController extends Controller
      */
     public function update(UpdatePropertyRequest $request, Property $property): JsonResponse
     {
+        $previousPrice = $property->price_xof;
         $property->update($request->validated());
 
-        activity()->causedBy($request->user())->performedOn($property)->log('Modification de bien');
+        // Audit renforcé (B15.3) : toute modification de PRIX est tracée à part,
+        // avec l'ancienne et la nouvelle valeur.
+        if ($property->wasChanged('price_xof')) {
+            activity()->causedBy($request->user())->performedOn($property)
+                ->withProperties(['from_xof' => $previousPrice, 'to_xof' => $property->price_xof])
+                ->log('Modification de prix');
+        } else {
+            activity()->causedBy($request->user())->performedOn($property)->log('Modification de bien');
+        }
 
         return ApiResponse::success([
             'property' => PropertyResource::make($property->fresh()->load(['region', 'department', 'commune', 'owner'])),

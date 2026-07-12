@@ -101,6 +101,8 @@ class MediaController extends Controller
             Storage::disk($media->disk)->delete($media->path);
         }
 
+        activity()->causedBy(request()->user())->performedOn($media)->log('Suppression de média');
+
         $media->delete();
 
         return ApiResponse::success(['deleted' => true]);

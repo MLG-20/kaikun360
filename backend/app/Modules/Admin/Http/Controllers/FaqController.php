@@ -59,6 +59,8 @@ class FaqController extends Controller
      */
     public function destroy(Faq $faq): JsonResponse
     {
+        activity()->causedBy(request()->user())->performedOn($faq)->log('Suppression de FAQ');
+
         $faq->delete();
 
         return ApiResponse::noContent();

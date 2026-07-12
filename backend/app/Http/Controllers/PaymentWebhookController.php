@@ -100,10 +100,15 @@ class PaymentWebhookController extends Controller
         }
         $payment->save();
 
-        if ($internal === PaymentStatus::COMPLETE && $payment->booking !== null) {
-            $booking = $payment->booking;
-            if (! $booking->status->estAnnulee()) {
-                $booking->update(['status' => BookingStatus::CONFIRMEE->value]);
+        if ($internal === PaymentStatus::COMPLETE) {
+            // Audit d'une action sensible (validation de paiement, B15.3). Pas de
+            // causer : la source est le PSP via un webhook authentifié.
+            activity()->performedOn($payment)
+                ->withProperties(['amount_xof' => $payment->amount_xof, 'commission_xof' => $payment->commission_xof])
+                ->log('Validation de paiement');
+
+            if ($payment->booking !== null && ! $payment->booking->status->estAnnulee()) {
+                $payment->booking->update(['status' => BookingStatus::CONFIRMEE->value]);
             }
         }
 
