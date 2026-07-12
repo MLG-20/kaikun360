@@ -18,7 +18,12 @@ export interface RegisterPayload {
   profile_type: string;
 }
 
-/** Données renvoyées par login/register (dans l'enveloppe `data`). */
+/** Corps envoyé à POST /auth/google (ID token Google Identity Services). */
+export interface GooglePayload {
+  id_token: string;
+}
+
+/** Données renvoyées par login/register/google (dans l'enveloppe `data`). */
 export interface AuthResult {
   user: User;
   token: string;

@@ -5,7 +5,7 @@ import { Observable, finalize, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { User } from '../../models/user.model';
 import { ApiEnvelope } from '../api/api-response.model';
-import { AuthResult, LoginPayload, RegisterPayload } from './auth.types';
+import { AuthResult, GooglePayload, LoginPayload, RegisterPayload } from './auth.types';
 
 /**
  * Service de session (F0.2).
@@ -46,6 +46,15 @@ export class AuthService {
     return this.authenticate(`${this.api}/auth/register`, payload);
   }
 
+  /**
+   * Connexion via Google : `idToken` est l'ID token obtenu côté client par
+   * Google Identity Services. Le backend le vérifie et renvoie un jeton Sanctum.
+   * (Le bouton Google sera branché sur l'écran de connexion en F1.)
+   */
+  loginWithGoogle(idToken: string): Observable<User> {
+    return this.authenticate(`${this.api}/auth/google`, { id_token: idToken });
+  }
+
   /** Déconnexion : révoque le jeton côté serveur puis vide la session locale. */
   logout(): Observable<void> {
     return this.http.post<unknown>(`${this.api}/auth/logout`, {}).pipe(
@@ -71,8 +80,11 @@ export class AuthService {
     return roles.some((role) => this.hasRole(role));
   }
 
-  /** Appel commun login/register : POST, puis stockage jeton + utilisateur. */
-  private authenticate(url: string, body: LoginPayload | RegisterPayload): Observable<User> {
+  /** Appel commun login/register/google : POST, puis stockage jeton + utilisateur. */
+  private authenticate(
+    url: string,
+    body: LoginPayload | RegisterPayload | GooglePayload,
+  ): Observable<User> {
     return this.http.post<ApiEnvelope<AuthResult>>(url, body).pipe(
       map((response) => response.data),
       tap((result) => {
