@@ -7,6 +7,7 @@ use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\WhatsAppLinkController;
 use App\Modules\Admin\Http\Controllers\FaqController;
 use App\Modules\Admin\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,9 @@ Route::get('reviews', [ReviewController::class, 'index']);
 
 // --- Webhook PayTech (B14.3) : public mais signé (HMAC vérifié en interne) ----
 Route::post('payments/webhook', [PaymentWebhookController::class, 'handle']);
+
+// --- Lien WhatsApp click-to-chat contextuel (B16.3) : public --------------------
+Route::get('whatsapp/link', [WhatsAppLinkController::class, 'generate']);
 
 // --- Contenu éditorial public (B13.4) ----------------------------------------
 // FAQ publiée et pages de contenu (adressées par slug). Édition = back-office.
