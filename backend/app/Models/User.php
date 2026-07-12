@@ -56,6 +56,14 @@ class User extends Authenticatable
     /**
      * Relation 1–1 : un utilisateur possède un profil métier.
      */
+    /**
+     * Numéro destinataire pour le canal de notification « sms » (B16.1).
+     */
+    public function routeNotificationForSms(): ?string
+    {
+        return $this->phone;
+    }
+
     public function profile(): HasOne
     {
         return $this->hasOne(Profile::class);

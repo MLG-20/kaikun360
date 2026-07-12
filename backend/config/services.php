@@ -35,6 +35,16 @@ return [
         ],
     ],
 
+    // SMS (B16). Fournisseur `log` par défaut (dev) ou `twilio` (prod).
+    'sms' => [
+        'provider' => env('SMS_PROVIDER', 'log'),
+        'twilio' => [
+            'sid' => env('TWILIO_SID'),
+            'token' => env('TWILIO_TOKEN'),
+            'from' => env('TWILIO_FROM'),
+        ],
+    ],
+
     // PSP PayTech (B14). Aucune valeur en dur : tout vient de l'environnement.
     // base_url : engine-sandbox.pay.tech (test) puis engine.pay.tech (prod).
     'paytech' => [

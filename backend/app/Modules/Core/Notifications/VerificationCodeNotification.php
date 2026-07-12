@@ -3,19 +3,19 @@
 namespace App\Modules\Core\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
  * Notification d'envoi d'un code (vérification de compte ou reset mot de passe).
  *
- * Pour l'instant le seul canal est "mail" : en développement, MAIL_MAILER=log,
- * donc le code apparaît dans storage/logs/laravel.log (aucun coût, aucun envoi réel).
- *
- * 👉 À FAIRE plus tard (phase B16) : ajouter un canal SMS réel (Twilio, etc.)
- *    pour les codes envoyés par téléphone.
+ * Multi-canal (B16.1) : SMS quand le code est destiné au TÉLÉPHONE, e-mail
+ * sinon. L'envoi est asynchrone (ShouldQueue) pour ne jamais bloquer la requête.
+ * En dev, MAIL_MAILER=log et le fournisseur SMS `log` écrivent dans les logs
+ * (aucun envoi réel). Le SMS réel (Twilio) s'active via `SMS_PROVIDER=twilio`.
  */
-class VerificationCodeNotification extends Notification
+class VerificationCodeNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -32,7 +32,16 @@ class VerificationCodeNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // Code destiné au téléphone → SMS ; sinon e-mail.
+        return $this->channel === 'phone' ? ['sms'] : ['mail'];
+    }
+
+    /**
+     * Contenu du SMS (canal `sms`, B16.1).
+     */
+    public function toSms(object $notifiable): string
+    {
+        return "Kaikun 360 : votre code est {$this->code}. Valable 15 min, ne le partagez pas.";
     }
 
     /**

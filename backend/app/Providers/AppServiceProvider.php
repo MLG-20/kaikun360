@@ -11,6 +11,11 @@ use App\Models\Review;
 use App\Models\User;
 use App\Policies\QuotePolicy;
 use App\Policies\ReviewPolicy;
+use Illuminate\Support\Facades\Notification;
+use App\Support\Notifications\LogSmsProvider;
+use App\Support\Notifications\SmsChannel;
+use App\Support\Notifications\SmsProviderInterface;
+use App\Support\Notifications\TwilioSmsProvider;
 use App\Support\Payments\PaymentProviderInterface;
 use App\Support\Payments\PaytechProvider;
 use App\Support\Payments\PaytechWebhookVerifier;
@@ -76,6 +81,17 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaytechWebhookVerifier::class, function () {
             return new PaytechWebhookVerifier(config('services.paytech.signing_key'));
         });
+
+        // Fournisseur SMS (B16.1) : Twilio si configuré, sinon journalisation.
+        $this->app->singleton(SmsProviderInterface::class, function () {
+            if (config('services.sms.provider') === 'twilio') {
+                $twilio = config('services.sms.twilio');
+
+                return new TwilioSmsProvider($twilio['sid'] ?? null, $twilio['token'] ?? null, $twilio['from'] ?? null);
+            }
+
+            return new LogSmsProvider();
+        });
     }
 
     /**
@@ -86,6 +102,11 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
         $this->configureAuthorization();
         $this->configureEvents();
+
+        // Canal de notification « sms » (B16.1) branché sur le SmsProviderInterface.
+        Notification::resolved(function ($service) {
+            $service->extend('sms', fn ($app) => $app->make(SmsChannel::class));
+        });
     }
 
     /**
