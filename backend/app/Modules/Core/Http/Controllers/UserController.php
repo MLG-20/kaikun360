@@ -5,6 +5,7 @@ namespace App\Modules\Core\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Core\Http\Requests\UpdateProfileRequest;
 use App\Modules\Core\Http\Resources\UserResource;
+use App\Modules\Core\Services\AccountAnonymizer;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -57,5 +58,19 @@ class UserController extends Controller
         return ApiResponse::success([
             'user' => UserResource::make($user->fresh()->load('profile')),
         ]);
+    }
+
+    /**
+     * Suppression du compte sur demande (RGPD, B15.4). DELETE /api/v1/users/me
+     *
+     * Le compte est ANONYMISÉ (données personnelles scrubées, accès coupés) et
+     * non effacé physiquement : réservations et paiements sont conservés pour la
+     * durée de rétention comptable/légale.
+     */
+    public function destroy(Request $request, AccountAnonymizer $anonymizer): JsonResponse
+    {
+        $anonymizer->anonymize($request->user());
+
+        return ApiResponse::success(['message' => 'Compte anonymisé et désactivé.']);
     }
 }
