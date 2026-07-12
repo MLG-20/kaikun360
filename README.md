@@ -295,7 +295,8 @@
 
 - [x] Socle de webhooks sortants signés (HMAC) vers n8n + catalogue d'événements documenté (`WEBHOOKS.md`) + commande de test.
 - [x] `OrangeSmsProvider` (canal SMS via l'API SMS d'Orange/Sonatel), testé via `Http::fake`. — _Reste action client : souscrire la SMS API sur developer.orange.com + essai sandbox réel._
-- [ ] (Optionnel) Network APIs Orange : vérification de numéro / SIM Swap sur le paiement.
+
+_(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été écartées : non retenues pour l'application.)_
 
 ---
 

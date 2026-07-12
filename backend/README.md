@@ -278,8 +278,12 @@ Le code est **abondamment commenté en français**.
 - ✅ **Backend (B0 → B17) : code-complet.** Authentification, 11 modules métier,
   couches transversales, paiement, sécurité/RGPD, notifications, durcissement &
   performance, documentation.
+- ✅ **Intégrations (B18) :** webhooks sortants signés vers **n8n** (automatisation
+  WhatsApp — voir [`WEBHOOKS.md`](WEBHOOKS.md)) et canal **SMS Orange/Sonatel**
+  (`OrangeSmsProvider`), testés via `Http::fake`.
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
-  tests sandbox, worker de queue supervisé.
+  sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
+  worker de queue supervisé.
 - 🔜 **Frontend Angular** (chantier séparé).
 
 ---
