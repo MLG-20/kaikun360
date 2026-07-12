@@ -1,0 +1,57 @@
+// =============================================================================
+// Design system Kaikun 360 — Jetons (F0.3)
+//
+// Charte = mélange décidé : couleurs officielles du README (#0348FB / #38A774)
+// + navy/or du prototype consolidé, avec une typographie moderne (grotesque).
+// Exposés en variables CSS pour être disponibles partout (global + composants).
+// =============================================================================
+
+:root {
+  // --- Couleurs de marque ---
+  --k-brand: #0348fb;        // bleu principal (CTA, liens d'action)
+  --k-brand-600: #0335c4;    // survol / états pressés
+  --k-brand-050: #eaf0ff;    // fonds bleutés discrets
+
+  --k-green: #38a774;        // vert (validation, succès, confiance)
+  --k-green-600: #2c855c;
+
+  --k-navy: #03193f;         // fonds foncés (hero, footer)
+  --k-navy-2: #08265b;
+
+  --k-gold: #d3ae52;         // accent premium
+  --k-gold-2: #f0d27e;
+
+  // --- Neutres ---
+  --k-cream: #f7f4eb;        // fond clair de l'app
+  --k-sand: #efe8d8;         // fond secondaire
+  --k-white: #ffffff;
+  --k-card: #ffffff;
+  --k-ink: #11213c;          // texte principal
+  --k-muted: #66738b;        // texte secondaire
+  --k-line: #dfe5ee;         // bordures
+  --k-line-strong: #c7d0de;
+
+  // --- États ---
+  --k-danger: #c73b4d;
+  --k-warning: #d88718;
+  --k-success: #198754;
+
+  // --- Typographie ---
+  --k-font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --k-font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --k-font-mono: 'Space Mono', ui-monospace, monospace;
+
+  // --- Rayons ---
+  --k-radius-sm: 10px;
+  --k-radius: 14px;
+  --k-radius-lg: 22px;
+  --k-radius-pill: 999px;
+
+  // --- Ombres ---
+  --k-shadow: 0 1px 2px rgba(3, 25, 63, 0.05), 0 10px 30px rgba(3, 25, 63, 0.08);
+  --k-shadow-lg: 0 2px 6px rgba(3, 25, 63, 0.07), 0 24px 60px rgba(3, 25, 63, 0.14);
+
+  // --- Layout ---
+  --k-maxw: 1180px;
+  --k-header-h: 72px;
+}

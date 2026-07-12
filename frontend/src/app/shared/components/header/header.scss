@@ -1,0 +1,143 @@
+:host {
+  display: block;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(247, 244, 235, 0.82);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--k-line);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  height: var(--k-header-h);
+}
+
+// --- Marque ---------------------------------------------------------------
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.logo-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--k-navy);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: var(--k-font-display);
+  font-weight: 800;
+  font-size: 18px;
+  position: relative;
+}
+
+.logo-mark::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 1.5px solid var(--k-gold);
+  border-radius: 15px;
+  opacity: 0.6;
+}
+
+.brand-text b {
+  font-family: var(--k-font-display);
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1;
+  display: block;
+}
+
+.brand-text small {
+  font-size: 11px;
+  color: var(--k-muted);
+  letter-spacing: 0.02em;
+}
+
+// --- Navigation -----------------------------------------------------------
+.nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-link {
+  font-size: 14.5px;
+  font-weight: 500;
+  padding: 9px 13px;
+  border-radius: 9px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-link:hover {
+  background: var(--k-sand);
+  color: var(--k-brand);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+}
+
+// Bouton menu (mobile uniquement)
+.menu-btn {
+  display: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  border: 1px solid var(--k-line);
+  align-items: center;
+  justify-content: center;
+  color: var(--k-ink);
+}
+
+.menu-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+// --- Menu mobile ----------------------------------------------------------
+.mobile-menu {
+  border-top: 1px solid var(--k-line);
+  padding: 14px 0 20px;
+  background: var(--k-cream);
+}
+
+.mobile-link {
+  display: block;
+  padding: 12px 6px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--k-line);
+}
+
+.mobile-menu .k-btn {
+  margin-top: 14px;
+}
+
+// --- Responsive -----------------------------------------------------------
+@media (max-width: 860px) {
+  .nav,
+  .nav-cta {
+    display: none;
+  }
+
+  .actions {
+    margin-left: auto;
+  }
+
+  .menu-btn {
+    display: inline-flex;
+  }
+}

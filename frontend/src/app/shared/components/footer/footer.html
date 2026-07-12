@@ -1,0 +1,30 @@
+<footer class="footer">
+  <div class="k-wrap grid">
+    <div class="about">
+      <div class="brand">
+        <span class="logo-mark" aria-hidden="true">K</span>
+        <b>Kaikun&nbsp;360</b>
+      </div>
+      <p class="k-muted">
+        Habiter, investir, voyager et se déplacer au Sénégal — un seul écosystème,
+        des biens vérifiés et un suivi jusqu'au bout.
+      </p>
+    </div>
+
+    @for (column of columns; track column.title) {
+      <nav class="col" [attr.aria-label]="column.title">
+        <h3>{{ column.title }}</h3>
+        <ul>
+          @for (link of column.links; track link) {
+            <li><a href="#">{{ link }}</a></li>
+          }
+        </ul>
+      </nav>
+    }
+  </div>
+
+  <div class="k-wrap bottom">
+    <span>© {{ year }} Kaikun 360. Tous droits réservés.</span>
+    <span class="k-muted">Fait au Sénégal 🇸🇳</span>
+  </div>
+</footer>

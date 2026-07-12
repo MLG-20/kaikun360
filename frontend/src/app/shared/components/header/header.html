@@ -1,0 +1,46 @@
+<header class="topbar">
+  <div class="k-wrap bar">
+    <!-- Marque -->
+    <a class="brand" href="/" aria-label="Accueil Kaikun 360">
+      <span class="logo-mark" aria-hidden="true">K</span>
+      <span class="brand-text">
+        <b>Kaikun&nbsp;360</b>
+        <small>Sénégal</small>
+      </span>
+    </a>
+
+    <!-- Navigation des univers (desktop) -->
+    <nav class="nav" aria-label="Univers">
+      @for (universe of universes; track universe) {
+        <a class="nav-link" href="#">{{ universe }}</a>
+      }
+    </nav>
+
+    <!-- Actions -->
+    <div class="actions">
+      <a class="k-btn k-btn--primary nav-cta" href="#">Connexion</a>
+      <button
+        class="menu-btn"
+        type="button"
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="menuOpen()"
+        aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menu mobile -->
+  @if (menuOpen()) {
+    <div class="mobile-menu">
+      <div class="k-wrap">
+        @for (universe of universes; track universe) {
+          <a class="mobile-link" href="#">{{ universe }}</a>
+        }
+        <a class="k-btn k-btn--primary k-btn--block" href="#">Connexion</a>
+      </div>
+    </div>
+  }
+</header>

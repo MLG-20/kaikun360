@@ -1,3 +1,23 @@
-<!-- Shell applicatif. La mise en page (en-tête, pied de page, design system)
-     sera introduite en F0.3 ; pour l'instant, simple point de montage du routeur. -->
-<router-outlet />
+<!-- Shell applicatif (F0.3) : en-tête, contenu routé, pied de page. -->
+<app-header />
+
+<main class="app-main">
+  <router-outlet />
+
+  <!-- Aperçu provisoire du design system (sera remplacé par les pages en F1+). -->
+  <section class="k-wrap ds-preview">
+    <span class="k-eyebrow">Design system</span>
+    <h1>Tout votre projet sénégalais, d'un seul endroit.</h1>
+    <p class="k-muted">
+      Immobilier, nuitées, tourisme, mobilité, construction — biens vérifiés et
+      suivi jusqu'au bout.
+    </p>
+    <div class="ds-actions">
+      <a class="k-btn k-btn--primary" href="#">Commencer</a>
+      <a class="k-btn k-btn--green" href="#">Demander un devis</a>
+      <a class="k-btn k-btn--ghost" href="#">Explorer le catalogue</a>
+    </div>
+  </section>
+</main>
+
+<app-footer />

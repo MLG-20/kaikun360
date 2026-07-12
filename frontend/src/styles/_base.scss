@@ -1,0 +1,150 @@
+// =============================================================================
+// Design system Kaikun 360 — Base globale (F0.3)
+// Reset léger, typographie, primitives réutilisables (boutons, cartes, layout).
+// =============================================================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--k-font-body);
+  background: var(--k-cream);
+  color: var(--k-ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--k-font-display);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+// --- Layout ---------------------------------------------------------------
+.k-wrap {
+  max-width: var(--k-maxw);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+// Petit intitulé en capitales (mono) au-dessus des titres de section.
+.k-eyebrow {
+  font-family: var(--k-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--k-green-600);
+  font-weight: 700;
+}
+
+.k-muted {
+  color: var(--k-muted);
+}
+
+// --- Boutons (pilules) ----------------------------------------------------
+.k-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1;
+  padding: 13px 22px;
+  border-radius: var(--k-radius-pill);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease,
+    border-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+}
+
+.k-btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.k-btn--primary {
+  background: var(--k-brand);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(3, 72, 251, 0.24);
+}
+
+.k-btn--primary:hover {
+  background: var(--k-brand-600);
+}
+
+.k-btn--green {
+  background: var(--k-green);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(56, 167, 116, 0.24);
+}
+
+.k-btn--green:hover {
+  background: var(--k-green-600);
+}
+
+.k-btn--gold {
+  background: var(--k-gold);
+  color: var(--k-navy);
+}
+
+.k-btn--gold:hover {
+  background: var(--k-gold-2);
+}
+
+.k-btn--ghost {
+  border: 1.5px solid var(--k-line-strong);
+  color: var(--k-ink);
+}
+
+.k-btn--ghost:hover {
+  border-color: var(--k-brand);
+  color: var(--k-brand);
+}
+
+.k-btn--block {
+  width: 100%;
+}
+
+// --- Cartes ---------------------------------------------------------------
+.k-card {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-lg);
+  box-shadow: var(--k-shadow);
+}
+
+// --- Accessibilité : focus visible cohérent -------------------------------
+:focus-visible {
+  outline: 2px solid var(--k-brand);
+  outline-offset: 2px;
+}
