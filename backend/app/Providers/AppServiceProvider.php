@@ -11,6 +11,8 @@ use App\Models\Review;
 use App\Models\User;
 use App\Policies\QuotePolicy;
 use App\Policies\ReviewPolicy;
+use App\Support\Payments\PaymentProviderInterface;
+use App\Support\Payments\PaytechProvider;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Build\Policies\ConstructionRequestPolicy;
@@ -57,7 +59,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // B14 — Le contrat de paiement est résolu vers PayTech (seule
+        // implémentation active). Les modules ne dépendent que de l'interface.
+        $this->app->singleton(PaymentProviderInterface::class, function () {
+            $config = config('services.paytech');
+
+            return new PaytechProvider(
+                baseUrl: $config['base_url'],
+                apiKey: $config['api_key'] ?? null,
+                webhookUrl: $config['webhook_url'] ?? null,
+            );
+        });
     }
 
     /**

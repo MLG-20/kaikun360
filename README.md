@@ -250,10 +250,10 @@
 ### Phase B14 — Paiement avec PayTech
 
 - [ ] Créer un compte marchand PayTech (env. test/sandbox d'abord, puis demande d'activation production par email à PayTech).
-- [ ] Définir l'interface `PaymentProviderInterface` (méthodes : initiate, confirm, refund, status) — même si PayTech est le seul provider actif, l'interface reste en place pour ne jamais coupler le reste du code à un fournisseur précis.
-- [ ] Implémenter `PaytechProvider` (initiate via `POST /api/v1/payments` sur `engine-sandbox.pay.tech` puis `engine.pay.tech` en prod, en-tête `Bearer` avec la clé API boutique).
-- [ ] Stocker en configuration (jamais en dur dans le code) : clé API PayTech, clé de signature webhook (Signing Key), URL de webhook.
-- [ ] Migration `payments` (booking_id, provider, montant, statut, reference, mode) — statut aligné sur les états PayTech (`AUTHORIZED`, `COMPLETED`, `DECLINED`, `CANCELLED`).
+- [x] Définir l'interface `PaymentProviderInterface` (méthodes : initiate, confirm, refund, status) — même si PayTech est le seul provider actif, l'interface reste en place pour ne jamais coupler le reste du code à un fournisseur précis.
+- [x] Implémenter `PaytechProvider` (initiate via `POST /api/v1/payments` sur `engine-sandbox.pay.tech` puis `engine.pay.tech` en prod, en-tête `Bearer` avec la clé API boutique).
+- [x] Stocker en configuration (jamais en dur dans le code) : clé API PayTech, clé de signature webhook (Signing Key), URL de webhook.
+- [x] Migration `payments` (booking_id, provider, montant, statut, reference, mode) — statut aligné sur les états PayTech (`AUTHORIZED`, `COMPLETED`, `DECLINED`, `CANCELLED`).
 - [ ] Endpoint `POST /payments/initiate` — crée l'intention de paiement côté PayTech et retourne l'URL/redirection au frontend.
 - [ ] Endpoint `POST /payments/webhook` — réception des notifications PayTech.
 - [ ] **Validation obligatoire de la signature du webhook** : vérifier l'en-tête `Signature` (HMAC-SHA256 du corps JSON avec la Signing Key) avant de traiter toute notification — ne jamais faire confiance à un webhook non vérifié.

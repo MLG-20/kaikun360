@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    // PSP PayTech (B14). Aucune valeur en dur : tout vient de l'environnement.
+    // base_url : engine-sandbox.pay.tech (test) puis engine.pay.tech (prod).
+    'paytech' => [
+        'base_url' => env('PAYTECH_BASE_URL', 'https://engine-sandbox.pay.tech'),
+        'api_key' => env('PAYTECH_API_KEY'),
+        'signing_key' => env('PAYTECH_SIGNING_KEY'),
+        'webhook_url' => env('PAYTECH_WEBHOOK_URL'),
+    ],
+
 ];

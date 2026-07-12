@@ -45,7 +45,7 @@ CREATE TABLE `bookings` (
   `status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_attente',
   `checked_in_at` timestamp NULL DEFAULT NULL,
   `checked_out_at` timestamp NULL DEFAULT NULL,
-  `housekeeping_status` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `housekeeping_status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `cancelled_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -477,6 +477,29 @@ CREATE TABLE `password_reset_tokens` (
   `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `payments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `payments` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `reference` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `booking_id` bigint unsigned DEFAULT NULL,
+  `provider` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'paytech',
+  `amount_xof` bigint unsigned NOT NULL,
+  `commission_xof` bigint unsigned NOT NULL DEFAULT '0',
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'initie',
+  `mode` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `provider_reference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `signature_verified` tinyint(1) NOT NULL DEFAULT '0',
+  `meta` json DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `payments_reference_unique` (`reference`),
+  KEY `payments_booking_id_foreign` (`booking_id`),
+  CONSTRAINT `payments_booking_id_foreign` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `permissions`;
@@ -1095,3 +1118,4 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (39,'2026_07_11_160
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (40,'2026_07_11_161000_create_faqs_table',3);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (41,'2026_07_11_162000_create_pages_table',3);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (42,'2026_07_11_170000_add_stay_operations_to_bookings_table',4);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (43,'2026_07_12_100000_create_payments_table',5);

@@ -47,6 +47,26 @@ enum PaymentStatus: string
     }
 
     /**
+     * Traduit un statut brut PayTech vers le statut interne, ou null si l'état
+     * est inconnu (le webhook doit alors être rejeté plutôt qu'interprété).
+     *
+     * États PayTech : AUTHORIZED, COMPLETED, DECLINED, CANCELLED (+ REFUNDED,
+     * PENDING selon les moyens de paiement).
+     */
+    public static function fromPaytech(string $paytechStatus): ?self
+    {
+        return match (strtoupper($paytechStatus)) {
+            'AUTHORIZED' => self::AUTORISE,
+            'COMPLETED' => self::COMPLETE,
+            'DECLINED' => self::REFUSE,
+            'CANCELLED', 'CANCELED' => self::ANNULE,
+            'REFUNDED' => self::REMBOURSE,
+            'PENDING' => self::EN_ATTENTE,
+            default => null,
+        };
+    }
+
+    /**
      * Liste des valeurs brutes (pour la validation).
      *
      * @return array<int, string>
