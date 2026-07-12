@@ -287,7 +287,7 @@
 
 - [x] Index de base de données sur les colonnes de filtrage fréquent (ville, statut, type, prix) sur toutes les tables de catalogue.
 - [x] Mise en cache Redis des résultats de recherche/catalogue les plus consultés.
-- [ ] Tests de charge sur les endpoints de catalogue et de recherche.
+- [x] Tests de charge sur les endpoints de catalogue et de recherche.
 - [x] Revue complète des Form Requests (aucune donnée non validée ne doit atteindre la couche métier).
 - [ ] Documentation technique des endpoints (a minima OpenAPI ou commentaires structurés).
 

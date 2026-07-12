@@ -81,3 +81,40 @@ simplement omises si non chargées, sans N+1.
 Garde-fou : `tests/Feature/Performance/MandateEagerLoadingTest` vérifie que le
 nombre de requêtes de la liste des mandats reste borné et indépendant du nombre
 de lignes.
+
+## B17.4 — Tests de charge
+
+Approche pragmatique, sans infrastructure externe : une commande artisan rejoue
+N requêtes réelles à travers le kernel HTTP complet (middlewares, sérialisation
+Resource, cache) sur un endpoint de catalogue, sous un volume amorcé, et compare
+le régime « à froid » (cache vidé avant chaque appel) au régime « à chaud »
+(cache actif).
+
+```bash
+php artisan catalog:benchmark --rows=500 --requests=100
+# --endpoint=/api/v1/properties par défaut
+```
+
+Le jeu de données est amorcé dans une transaction annulée en fin de test : la
+base n'est pas polluée (à lancer de préférence sur une base de dev).
+
+Résultat typique (200 biens, machine de dev) :
+
+| Régime | Latence moy. | Requêtes SQL / appel |
+| --- | --- | --- |
+| À froid (cache vidé) | ~16 ms | 3 |
+| À chaud (cache actif) | ~1,5 ms | 0 |
+
+→ Le cache sert le catalogue **~10× plus vite et sans toucher la base**. À froid,
+le coût SQL est **constant** (index B17.1 + eager loading), indépendant du volume.
+
+Pour une montée en charge concurrente (si `ab`/`wrk` sont installés), viser un
+serveur lancé (`php artisan serve`) :
+
+```bash
+ab -n 1000 -c 50 http://127.0.0.1:8000/api/v1/properties
+```
+
+Garde-fou CI : `tests/Feature/Performance/CatalogLoadTest` vérifie que le nombre
+de requêtes SQL du catalogue est **indépendant du volume** (à froid) et **nul à
+chaud** (servi du cache).
