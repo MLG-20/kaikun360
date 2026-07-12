@@ -398,6 +398,8 @@ CREATE TABLE `mobility_services` (
   KEY `mobility_services_type_index` (`type`),
   KEY `mobility_services_departure_at_index` (`departure_at`),
   KEY `mobility_services_status_index` (`status`),
+  KEY `mobility_services_departure_index` (`departure`),
+  KEY `mobility_services_destination_index` (`destination`),
   CONSTRAINT `mobility_services_approved_by_foreign` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `mobility_services_provider_id_foreign` FOREIGN KEY (`provider_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `mobility_services_vehicle_id_foreign` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL
@@ -484,14 +486,14 @@ DROP TABLE IF EXISTS `payments`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `payments` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `reference` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reference` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `booking_id` bigint unsigned DEFAULT NULL,
-  `provider` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'paytech',
+  `provider` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'paytech',
   `amount_xof` bigint unsigned NOT NULL,
   `commission_xof` bigint unsigned NOT NULL DEFAULT '0',
-  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'initie',
-  `mode` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `provider_reference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'initie',
+  `mode` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `provider_reference` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `signature_verified` tinyint(1) NOT NULL DEFAULT '0',
   `meta` json DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -499,6 +501,7 @@ CREATE TABLE `payments` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `payments_reference_unique` (`reference`),
   KEY `payments_booking_id_foreign` (`booking_id`),
+  KEY `payments_status_index` (`status`),
   CONSTRAINT `payments_booking_id_foreign` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -893,6 +896,7 @@ CREATE TABLE `stays` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `stays_property_id_unique` (`property_id`),
   KEY `stays_is_active_index` (`is_active`),
+  KEY `stays_price_per_night_xof_index` (`price_per_night_xof`),
   CONSTRAINT `stays_property_id_foreign` FOREIGN KEY (`property_id`) REFERENCES `properties` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -968,6 +972,8 @@ CREATE TABLE `tourism_experiences` (
   KEY `tourism_experiences_provider_id_foreign` (`provider_id`),
   KEY `tourism_experiences_approved_by_foreign` (`approved_by`),
   KEY `tourism_experiences_status_index` (`status`),
+  KEY `tourism_experiences_destination_index` (`destination`),
+  KEY `tourism_experiences_price_xof_index` (`price_xof`),
   CONSTRAINT `tourism_experiences_approved_by_foreign` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tourism_experiences_provider_id_foreign` FOREIGN KEY (`provider_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1046,6 +1052,7 @@ CREATE TABLE `vehicles` (
   KEY `vehicles_approved_by_foreign` (`approved_by`),
   KEY `vehicles_type_index` (`type`),
   KEY `vehicles_status_index` (`status`),
+  KEY `vehicles_price_per_day_xof_index` (`price_per_day_xof`),
   CONSTRAINT `vehicles_approved_by_foreign` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `vehicles_provider_id_foreign` FOREIGN KEY (`provider_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1119,3 +1126,4 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (40,'2026_07_11_161
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (41,'2026_07_11_162000_create_pages_table',3);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (42,'2026_07_11_170000_add_stay_operations_to_bookings_table',4);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (43,'2026_07_12_100000_create_payments_table',5);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (44,'2026_07_12_180000_add_catalog_search_indexes',6);
