@@ -1,0 +1,25 @@
+@if (current(); as main) {
+  <figure class="gallery">
+    <div class="main">
+      <img [src]="main" [alt]="alt()" />
+    </div>
+
+    @if (images().length > 1) {
+      <div class="thumbs" role="listbox" [attr.aria-label]="alt()">
+        @for (image of images(); track image; let i = $index) {
+          <button
+            type="button"
+            class="thumb"
+            [class.active]="selected() === i"
+            role="option"
+            [attr.aria-selected]="selected() === i"
+            (click)="select(i)">
+            <img [src]="image" [alt]="alt() + ' ' + (i + 1)" loading="lazy" />
+          </button>
+        }
+      </div>
+    }
+  </figure>
+} @else {
+  <div class="gallery gallery--empty">Aucune photo disponible.</div>
+}
