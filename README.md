@@ -309,15 +309,15 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 ### Phase F0 — Initialisation et socle technique
 
-- [ ] Initialiser le projet Angular (dernière version stable, configuration TypeScript stricte).
-- [ ] Mettre en place le routing principal avec lazy loading par feature module.
-- [ ] Créer le `CoreModule` : `AuthService`, `TokenInterceptor`, `ErrorInterceptor`.
-- [ ] Créer le `SharedModule` : composants UI réutilisables (cartes de bien/service, galerie photo, badges de vérification, boutons CTA).
-- [ ] Mettre en place le design system Kaikun (couleurs #0348FB et #38A774, typographie, composants de base) conforme à la charte.
-- [ ] Définir les modèles TypeScript miroir des API Resources Laravel (Property, Stay, Vehicle, Experience, Request, Quote, Booking, Payment, User, Review, Media).
-- [ ] Mettre en place les guards (`AuthGuard`, `RoleGuard`).
-- [ ] Mettre en place la gestion centralisée des erreurs HTTP (401 → redirection login, 422 → affichage erreurs de formulaire, 500 → page d'erreur générique).
-- [ ] Configurer l'environnement (URLs API par environnement dev/prod).
+- [x] Initialiser le projet Angular (dernière version stable [v22], configuration TypeScript stricte). — _standalone components._
+- [x] Mettre en place le routing principal avec lazy loading par feature module. — _routeur en place (`provideRouter`) ; lazy loading via `loadComponent` appliqué dès F1._
+- [x] Créer le `CoreModule` : `AuthService`, `TokenInterceptor`, `ErrorInterceptor`. — _approche standalone : dossier `core/` (pas de NgModule)._
+- [x] Créer le `SharedModule` : composants UI réutilisables (cartes de bien/service, galerie photo, badges de vérification, boutons CTA). — _dossier `shared/` : `app-listing-card`, `app-gallery`, `app-verification-badge`, `app-orbit-hero`, header/footer._
+- [x] Mettre en place le design system Kaikun (couleurs #0348FB et #38A774, typographie, composants de base) conforme à la charte.
+- [x] Définir les modèles TypeScript miroir des API Resources Laravel (Property, Stay, Vehicle, Experience, Request, Quote, Booking, Payment, User, Review, Media).
+- [x] Mettre en place les guards (`AuthGuard`, `RoleGuard`).
+- [x] Mettre en place la gestion centralisée des erreurs HTTP (401 → redirection login, 422 → affichage erreurs de formulaire, 500 → page d'erreur générique).
+- [x] Configurer l'environnement (URLs API par environnement dev/prod).
 
 ### Phase F1 — Authentification et onboarding
 
