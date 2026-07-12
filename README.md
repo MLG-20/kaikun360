@@ -258,12 +258,12 @@
 - [x] Endpoint `POST /payments/webhook` — réception des notifications PayTech.
 - [x] **Validation obligatoire de la signature du webhook** : vérifier l'en-tête `Signature` (HMAC-SHA256 du corps JSON avec la Signing Key) avant de traiter toute notification — ne jamais faire confiance à un webhook non vérifié.
 - [x] Mapper les statuts PayTech vers les statuts internes `payments`/`bookings` (ex. `COMPLETED` → booking confirmé, `DECLINED`/`CANCELLED` → booking non confirmé).
-- [ ] Implémenter le remboursement (`refund`) via PayTech pour les cas de caution à restituer ou d'annulation éligible (Mobility, Explore, Stay).
+- [x] Implémenter le remboursement (`refund`) via PayTech pour les cas de caution à restituer ou d'annulation éligible (Mobility, Explore, Stay).
 - [x] Logique de calcul et d'enregistrement des commissions Kaikun par transaction réussie.
 - [x] Gérer le cas où le montant débité diffère du montant demandé (certains moyens PayTech) : réconciliation explicite, jamais de confirmation automatique sur une simple différence de montant non vérifiée.
-- [ ] Endpoint admin de supervision des paiements (liste, statut, recherche par référence) — lié à B13.
+- [x] Endpoint admin de supervision des paiements (liste, statut, recherche par référence) — lié à B13.
 - [ ] Tests en environnement sandbox PayTech avant toute bascule en production.
-- [ ] Tests : aucun module métier (Bookings, Quotes, Mobility, Explore) ne dépend directement de PayTech, uniquement de `PaymentProviderInterface`.
+- [x] Tests : aucun module métier (Bookings, Quotes, Mobility, Explore) ne dépend directement de PayTech, uniquement de `PaymentProviderInterface`.
 
 ### Phase B15 — Sécurité, conformité et journalisation
 

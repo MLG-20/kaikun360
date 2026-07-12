@@ -55,10 +55,24 @@ temps constant (`hash_equals`). Ordre strict dans `PaymentWebhookController` :
 6. application du statut ; `COMPLETE` → réservation `confirmee` (sauf annulée).
    La commission encaissée est celle figée sur la `Payment`.
 
-## À venir
+## B14.4 — Remboursement & supervision (back-office)
 
-- B14.4 : remboursements (caution / annulation) + supervision admin
-  `GET /admin/payments`.
+Permission `gerer:paiements`. `AdminPaymentController` (dépend de l'interface) :
+
+- **`GET /admin/payments`** — liste paginée (booking chargé), filtres `status`,
+  `booking_id`, `reference` (interne ou PSP).
+- **`POST /admin/payments/{payment}/refund`** — corps `{ amount_xof? }` (total
+  par défaut). Refuse un paiement non encaissé (**422**) et un montant supérieur
+  au payé (**422**) ; délègue au PSP (`refund`), échec → **502** ; sinon statut
+  `rembourse` + `meta.refunded_amount_xof`, tracé (Activitylog).
+
+## Reste côté client (hors code)
+
+- Créer le compte marchand PayTech (sandbox puis prod) et fournir les clés.
+- Rejouer les tests en sandbox réel avant bascule production.
+
+Tout le code est couvert par des tests via `Http::fake` ; **aucun module métier
+ne référence PayTech**, uniquement `PaymentProviderInterface`.
 
 > Le compte marchand PayTech et les tests sandbox réels requièrent les clés du
 > client (action externe) ; le code est entièrement testé via `Http::fake`.
