@@ -1,0 +1,14 @@
+// Barrel des modèles TypeScript miroir des API Resources (F0.5).
+// Permet `import { Property, Stay, Booking } from '@app/models'` (ou chemin relatif).
+export * from './user.model';
+export * from './property.model';
+export * from './stay.model';
+export * from './vehicle.model';
+export * from './mobility-service.model';
+export * from './experience.model';
+export * from './service-request.model';
+export * from './quote.model';
+export * from './booking.model';
+export * from './payment.model';
+export * from './review.model';
+export * from './media.model';
