@@ -148,5 +148,17 @@ class AppServiceProvider extends ServiceProvider
                 $request->user()?->id ?: $request->ip()
             );
         });
+
+        // Endpoints d'authentification (register, login, vérification, mot de
+        // passe) : plafond serré par IP contre le bourrinage / l'énumération.
+        RateLimiter::for('auth', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
+        // Endpoints de paiement : plafond par utilisateur (ou IP) pour limiter
+        // les tentatives répétées d'initiation / remboursement.
+        RateLimiter::for('payment', function (Request $request) {
+            return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }

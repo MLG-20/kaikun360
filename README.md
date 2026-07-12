@@ -272,7 +272,7 @@
 - [ ] Audit log sur : validation de bien, modification de prix, validation de paiement, suppression de ressource.
 - [ ] Stockage des documents sur disque non public + URLs signées temporaires.
 - [ ] Statut `en_attente_validation` par défaut sur biens, véhicules, circuits, prestataires.
-- [ ] Rate limiting sur les endpoints sensibles (auth, paiement).
+- [x] Rate limiting sur les endpoints sensibles (auth, paiement).
 - [ ] Politique de confidentialité techniquement reflétée (durée de conservation par type de donnée, anonymisation/suppression sur demande).
 - [ ] Revue de sécurité : aucun endpoint ne renvoie de données hors du périmètre autorisé du rôle appelant.
 

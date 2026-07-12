@@ -57,8 +57,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- Paiement : initiation (B14.2) ---------------------------------------
     // Crée l'intention côté PSP et renvoie l'URL de redirection. La confirmation
-    // n'arrive que par webhook vérifié (B14.3).
-    Route::post('payments/initiate', [PaymentController::class, 'initiate']);
+    // n'arrive que par webhook vérifié (B14.3). `throttle:payment` (B15.1).
+    Route::post('payments/initiate', [PaymentController::class, 'initiate'])
+        ->middleware('throttle:payment');
 
     // --- Médias (B12.1) ------------------------------------------------------
     // Dépôt (image compressée ou vidéo par URL) et suppression. L'autorisation

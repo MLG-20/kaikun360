@@ -70,7 +70,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // B14.4 — Supervision & remboursement des paiements.
     Route::middleware('can:gerer:paiements')->group(function () {
         Route::get('/payments', [AdminPaymentController::class, 'index']);
-        Route::post('/payments/{payment}/refund', [AdminPaymentController::class, 'refund'])->whereNumber('payment');
+        Route::post('/payments/{payment}/refund', [AdminPaymentController::class, 'refund'])
+            ->whereNumber('payment')
+            ->middleware('throttle:payment');
     });
 
     // B13.7.3 — Gestion documentaire transverse (KYC, docs biens, certifs,

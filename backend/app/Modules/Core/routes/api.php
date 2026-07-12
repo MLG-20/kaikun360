@@ -35,7 +35,9 @@ Route::get('/version', function () {
 | Authentification (phase B1.3).
 | register/login sont publics ; logout exige un token Sanctum valide.
 */
-Route::prefix('auth')->group(function () {
+// `throttle:auth` (10/min par IP, B15.1) durcit tout le groupe contre le
+// bourrinage et l'énumération, en plus du throttle global.
+Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
