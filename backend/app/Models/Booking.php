@@ -5,8 +5,10 @@ namespace App\Models;
 use App\Enums\BookingStatus;
 use App\Enums\CautionStatus;
 use App\Enums\HousekeepingStatus;
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
@@ -90,5 +92,21 @@ class Booking extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Les paiements rattachés (acompte, solde, remboursement) — B14.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Vrai si la réservation a déjà un paiement encaissé (COMPLETE).
+     */
+    public function estPayee(): bool
+    {
+        return $this->payments()->where('status', PaymentStatus::COMPLETE->value)->exists();
     }
 }

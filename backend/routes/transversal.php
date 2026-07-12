@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ReviewController;
@@ -49,6 +50,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- Réservations (B11.3) ------------------------------------------------
     Route::get('bookings/my', [BookingController::class, 'my']);
+
+    // --- Paiement : initiation (B14.2) ---------------------------------------
+    // Crée l'intention côté PSP et renvoie l'URL de redirection. La confirmation
+    // n'arrive que par webhook vérifié (B14.3).
+    Route::post('payments/initiate', [PaymentController::class, 'initiate']);
 
     // --- Médias (B12.1) ------------------------------------------------------
     // Dépôt (image compressée ou vidéo par URL) et suppression. L'autorisation

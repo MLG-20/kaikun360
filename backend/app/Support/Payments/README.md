@@ -28,9 +28,19 @@ par `PaymentProviderInterface`.
 `webhook_url`, alimentés par l'environnement
 (`PAYTECH_BASE_URL`, `PAYTECH_API_KEY`, `PAYTECH_SIGNING_KEY`, `PAYTECH_WEBHOOK_URL`).
 
+## B14.2 — Initiation
+
+**`POST /api/v1/payments/initiate`** (auth) — corps `{ booking_id }`.
+`PaymentController` (dépend de l'interface, jamais de PayTech) : vérifie que
+l'appelant est le **titulaire** de la réservation (sinon 403), qu'elle n'est ni
+annulée ni déjà payée (sinon 422), crée une `Payment` (`initie`, montant +
+commission figés depuis la réservation), demande l'intention au PSP puis passe à
+`en_attente` avec la `provider_reference`. Renvoie `{ payment, redirect_url }`.
+Panne du PSP → **502**. La confirmation n'arrive QUE par webhook vérifié (B14.3).
+`Booking::payments()` / `Booking::estPayee()` ajoutés.
+
 ## À venir
 
-- B14.2 : `POST /payments/initiate` (intention + redirection).
 - B14.3 : `POST /payments/webhook` avec **vérification de signature HMAC-SHA256
   obligatoire**, mapping → Payment/Booking, commission, réconciliation de montant.
 - B14.4 : remboursements (caution / annulation) + supervision admin

@@ -254,7 +254,7 @@
 - [x] Implémenter `PaytechProvider` (initiate via `POST /api/v1/payments` sur `engine-sandbox.pay.tech` puis `engine.pay.tech` en prod, en-tête `Bearer` avec la clé API boutique).
 - [x] Stocker en configuration (jamais en dur dans le code) : clé API PayTech, clé de signature webhook (Signing Key), URL de webhook.
 - [x] Migration `payments` (booking_id, provider, montant, statut, reference, mode) — statut aligné sur les états PayTech (`AUTHORIZED`, `COMPLETED`, `DECLINED`, `CANCELLED`).
-- [ ] Endpoint `POST /payments/initiate` — crée l'intention de paiement côté PayTech et retourne l'URL/redirection au frontend.
+- [x] Endpoint `POST /payments/initiate` — crée l'intention de paiement côté PayTech et retourne l'URL/redirection au frontend.
 - [ ] Endpoint `POST /payments/webhook` — réception des notifications PayTech.
 - [ ] **Validation obligatoire de la signature du webhook** : vérifier l'en-tête `Signature` (HMAC-SHA256 du corps JSON avec la Signing Key) avant de traiter toute notification — ne jamais faire confiance à un webhook non vérifié.
 - [ ] Mapper les statuts PayTech vers les statuts internes `payments`/`bookings` (ex. `COMPLETED` → booking confirmé, `DECLINED`/`CANCELLED` → booking non confirmé).
