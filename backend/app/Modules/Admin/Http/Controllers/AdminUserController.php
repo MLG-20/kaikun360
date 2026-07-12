@@ -7,6 +7,7 @@ use App\Modules\Admin\Http\Requests\UpdateUserRequest;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Core\Http\Resources\UserResource;
 use App\Models\User;
+use App\Notifications\DocumentRequiredNotification;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -90,5 +91,21 @@ class AdminUserController extends Controller
         return ApiResponse::success([
             'user' => UserResource::make($user->fresh()->load('profile')),
         ]);
+    }
+
+    /**
+     * Demande une pièce à un utilisateur (notification, B16.2).
+     * POST /api/v1/admin/users/{user}/request-document
+     */
+    public function requestDocument(Request $request, User $user): JsonResponse
+    {
+        $data = $request->validate([
+            'document_type' => ['required', 'string', 'max:100'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $user->notify(new DocumentRequiredNotification($data['document_type'], $data['note'] ?? null));
+
+        return ApiResponse::success(['message' => 'Demande de document envoyée.']);
     }
 }

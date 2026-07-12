@@ -280,8 +280,8 @@
 
 - [x] Configurer les canaux de notification Laravel (email, SMS optionnel, push différé pour plus tard avec mobile).
 - [ ] Intégration du module WhatsApp click-to-chat contextuel (génération de message prérempli selon page/service).
-- [ ] Jobs asynchrones pour l'envoi de notifications (ne jamais bloquer la requête HTTP).
-- [ ] Templates de notification par type d'événement (changement de statut, nouveau devis, confirmation de réservation, document à fournir).
+- [x] Jobs asynchrones pour l'envoi de notifications (ne jamais bloquer la requête HTTP).
+- [x] Templates de notification par type d'événement (changement de statut, nouveau devis, confirmation de réservation, document à fournir).
 
 ### Phase B17 — Durcissement et performance
 

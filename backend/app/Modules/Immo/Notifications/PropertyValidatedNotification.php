@@ -5,12 +5,13 @@ namespace App\Modules\Immo\Notifications;
 use App\Modules\Immo\Models\Property;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
 /**
  * Informe le propriétaire que son bien a été validé et publié.
  */
-class PropertyValidatedNotification extends Notification
+class PropertyValidatedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

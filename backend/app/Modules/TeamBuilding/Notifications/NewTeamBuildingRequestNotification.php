@@ -5,6 +5,7 @@ namespace App\Modules\TeamBuilding\Notifications;
 use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
 /**
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notification;
  *
  * Canal mail (loggé en dev). Le push/WhatsApp viendra en phase B16.
  */
-class NewTeamBuildingRequestNotification extends Notification
+class NewTeamBuildingRequestNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

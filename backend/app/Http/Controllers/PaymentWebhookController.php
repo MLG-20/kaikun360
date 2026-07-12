@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Payment;
+use App\Notifications\BookingConfirmedNotification;
 use App\Support\ApiResponse;
 use App\Support\Payments\PaytechWebhookVerifier;
 use Illuminate\Http\JsonResponse;
@@ -109,6 +110,9 @@ class PaymentWebhookController extends Controller
 
             if ($payment->booking !== null && ! $payment->booking->status->estAnnulee()) {
                 $payment->booking->update(['status' => BookingStatus::CONFIRMEE->value]);
+
+                // Confirme au client (async, e-mail + SMS) — B16.2.
+                $payment->booking->user?->notify(new BookingConfirmedNotification($payment->booking));
             }
         }
 

@@ -8,6 +8,7 @@ use App\Http\Requests\StoreQuoteRequest;
 use App\Http\Resources\QuoteResource;
 use App\Models\Quote;
 use App\Models\ServiceRequest;
+use App\Notifications\QuoteReceivedNotification;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
@@ -29,6 +30,9 @@ class QuoteController extends Controller
             'reference' => 'QTE-'.Str::upper(Str::random(8)),
             'status' => QuoteStatus::ENVOYE->value,
         ]);
+
+        // Informe le demandeur qu'un devis lui est proposé (async, B16.2).
+        $serviceRequest->user?->notify(new QuoteReceivedNotification($quote));
 
         return ApiResponse::created(['quote' => QuoteResource::make($quote)]);
     }

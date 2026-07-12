@@ -52,6 +52,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::patch('/users/{user}', [AdminUserController::class, 'update'])
         ->whereNumber('user')
         ->middleware('can:gerer:utilisateurs');
+    Route::post('/users/{user}/request-document', [AdminUserController::class, 'requestDocument'])
+        ->whereNumber('user')
+        ->middleware('can:gerer:utilisateurs');
 
     // B13.4 — Paramétrage global (commissions, tarifs, coordonnées).
     Route::get('/settings', [AdminSettingsController::class, 'index'])
