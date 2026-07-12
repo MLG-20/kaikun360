@@ -5,6 +5,7 @@ namespace App\Modules\Explore\Models;
 use App\Models\Booking;
 use App\Models\User;
 use App\Modules\Explore\Enums\ExperienceStatus;
+use App\Support\Cache\CatalogCache;
 use Database\Factories\TourismExperienceFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,6 +23,17 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class TourismExperience extends Model
 {
     use HasFactory;
+
+    /**
+     * Invalide le cache du catalogue des expériences à chaque écriture (B17.2).
+     */
+    protected static function booted(): void
+    {
+        $flush = fn () => CatalogCache::flush('experiences');
+
+        static::saved($flush);
+        static::deleted($flush);
+    }
 
     /**
      * @var list<string>

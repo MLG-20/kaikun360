@@ -5,9 +5,10 @@ namespace App\Modules\Stay\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Stay\Http\Resources\StayResource;
 use App\Modules\Stay\Models\Stay;
+use App\Support\Cache\CatalogCache;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * Catalogue PUBLIC des nuitées (phase B3.2).
@@ -20,8 +21,11 @@ class StayCatalogController extends Controller
 {
     /**
      * Liste filtrable et paginée. GET /api/v1/stays
+     *
+     * Résultat mis en cache par jeu de filtres + page (B17.2). Invalidé dès
+     * qu'une nuitée OU son bien change (voir Stay::booted() et Property::booted()).
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $filters = $request->validate([
             'region_id' => ['sometimes', 'integer', 'exists:regions,id'],
@@ -34,24 +38,30 @@ class StayCatalogController extends Controller
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $query = Stay::query()
-            ->bookable()
-            ->with(['property.region', 'property.department', 'property.commune', 'property.owner']);
+        $cacheParams = $filters + ['page' => $request->integer('page', 1)];
 
-        // Capacité minimale et fourchette de prix par nuit.
-        $query->when($filters['capacity'] ?? null, fn ($q, $v) => $q->where('capacity', '>=', $v));
-        $query->when($filters['price_min'] ?? null, fn ($q, $v) => $q->where('price_per_night_xof', '>=', $v));
-        $query->when($filters['price_max'] ?? null, fn ($q, $v) => $q->where('price_per_night_xof', '<=', $v));
+        $payload = CatalogCache::remember('stays', $cacheParams, function () use ($filters) {
+            $query = Stay::query()
+                ->bookable()
+                ->with(['property.region', 'property.department', 'property.commune', 'property.owner']);
 
-        // Filtres géographiques et recherche : portés par le bien associé.
-        foreach (['region_id', 'department_id', 'commune_id'] as $geo) {
-            $query->when($filters[$geo] ?? null, fn ($q, $v) => $q->whereHas('property', fn (Builder $p) => $p->where($geo, $v)));
-        }
-        $query->when($filters['q'] ?? null, fn ($q, $v) => $q->whereHas('property', fn (Builder $p) => $p->where('title', 'like', "%{$v}%")));
+            // Capacité minimale et fourchette de prix par nuit.
+            $query->when($filters['capacity'] ?? null, fn ($q, $v) => $q->where('capacity', '>=', $v));
+            $query->when($filters['price_min'] ?? null, fn ($q, $v) => $q->where('price_per_night_xof', '>=', $v));
+            $query->when($filters['price_max'] ?? null, fn ($q, $v) => $q->where('price_per_night_xof', '<=', $v));
 
-        $stays = $query->latest()->paginate($filters['per_page'] ?? 15)->withQueryString();
+            // Filtres géographiques et recherche : portés par le bien associé.
+            foreach (['region_id', 'department_id', 'commune_id'] as $geo) {
+                $query->when($filters[$geo] ?? null, fn ($q, $v) => $q->whereHas('property', fn (Builder $p) => $p->where($geo, $v)));
+            }
+            $query->when($filters['q'] ?? null, fn ($q, $v) => $q->whereHas('property', fn (Builder $p) => $p->where('title', 'like', "%{$v}%")));
 
-        return StayResource::collection($stays);
+            $stays = $query->latest()->paginate($filters['per_page'] ?? 15)->withQueryString();
+
+            return StayResource::collection($stays)->response()->getData(true);
+        });
+
+        return response()->json($payload);
     }
 
     /**

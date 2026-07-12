@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Modules\Mobility\Enums\MobilityServiceType;
 use App\Modules\Mobility\Http\Resources\MobilityServiceResource;
 use App\Modules\Mobility\Models\MobilityService;
+use App\Support\Cache\CatalogCache;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
 
 /**
@@ -20,8 +21,11 @@ class MobilityServiceController extends Controller
 {
     /**
      * Recherche filtrable et paginée. GET /api/v1/mobility-services
+     *
+     * Résultat mis en cache par jeu de filtres + page (B17.2). Invalidé dès
+     * qu'un service change (voir MobilityService::booted()).
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $filters = $request->validate([
             'type' => ['sometimes', Rule::in(MobilityServiceType::values())],
@@ -31,18 +35,24 @@ class MobilityServiceController extends Controller
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $query = MobilityService::query()->published();
+        $cacheParams = $filters + ['page' => $request->integer('page', 1)];
 
-        $query->when($filters['type'] ?? null, fn ($q, $v) => $q->where('type', $v));
-        $query->when($filters['departure'] ?? null, fn ($q, $v) => $q->where('departure', $v));
-        $query->when($filters['destination'] ?? null, fn ($q, $v) => $q->where('destination', $v));
-        // Recherche par date : services dont le départ tombe le jour demandé.
-        $query->when($filters['date'] ?? null, fn ($q, $v) => $q->whereDate('departure_at', $v));
+        $payload = CatalogCache::remember('mobility', $cacheParams, function () use ($filters) {
+            $query = MobilityService::query()->published();
 
-        $query->orderBy('departure_at');
+            $query->when($filters['type'] ?? null, fn ($q, $v) => $q->where('type', $v));
+            $query->when($filters['departure'] ?? null, fn ($q, $v) => $q->where('departure', $v));
+            $query->when($filters['destination'] ?? null, fn ($q, $v) => $q->where('destination', $v));
+            // Recherche par date : services dont le départ tombe le jour demandé.
+            $query->when($filters['date'] ?? null, fn ($q, $v) => $q->whereDate('departure_at', $v));
 
-        return MobilityServiceResource::collection(
-            $query->paginate($filters['per_page'] ?? 15)->withQueryString()
-        );
+            $query->orderBy('departure_at');
+
+            return MobilityServiceResource::collection(
+                $query->paginate($filters['per_page'] ?? 15)->withQueryString()
+            )->response()->getData(true);
+        });
+
+        return response()->json($payload);
     }
 }

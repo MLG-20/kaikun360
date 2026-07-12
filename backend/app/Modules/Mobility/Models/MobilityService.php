@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\User;
 use App\Modules\Mobility\Enums\MobilityServiceStatus;
 use App\Modules\Mobility\Enums\MobilityServiceType;
+use App\Support\Cache\CatalogCache;
 use Database\Factories\MobilityServiceFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,6 +23,17 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class MobilityService extends Model
 {
     use HasFactory;
+
+    /**
+     * Invalide le cache du catalogue des services de mobilité à chaque écriture (B17.2).
+     */
+    protected static function booted(): void
+    {
+        $flush = fn () => CatalogCache::flush('mobility');
+
+        static::saved($flush);
+        static::deleted($flush);
+    }
 
     /**
      * @var list<string>

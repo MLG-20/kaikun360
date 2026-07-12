@@ -286,7 +286,7 @@
 ### Phase B17 — Durcissement et performance
 
 - [x] Index de base de données sur les colonnes de filtrage fréquent (ville, statut, type, prix) sur toutes les tables de catalogue.
-- [ ] Mise en cache Redis des résultats de recherche/catalogue les plus consultés.
+- [x] Mise en cache Redis des résultats de recherche/catalogue les plus consultés.
 - [ ] Tests de charge sur les endpoints de catalogue et de recherche.
 - [ ] Revue complète des Form Requests (aucune donnée non validée ne doit atteindre la couche métier).
 - [ ] Documentation technique des endpoints (a minima OpenAPI ou commentaires structurés).

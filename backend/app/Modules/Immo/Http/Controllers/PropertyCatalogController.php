@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Modules\Immo\Enums\PropertyType;
 use App\Modules\Immo\Http\Resources\PropertyResource;
 use App\Modules\Immo\Models\Property;
+use App\Support\Cache\CatalogCache;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
@@ -21,8 +23,12 @@ class PropertyCatalogController extends Controller
 {
     /**
      * Liste filtrable et paginée. GET /api/v1/properties
+     *
+     * Résultat mis en cache par jeu de filtres + page (B17.2). Le cache est
+     * invalidé automatiquement dès qu'un bien est créé/modifié/validé/supprimé
+     * (voir Property::booted()).
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $filters = $request->validate([
             'region_id' => ['sometimes', 'integer', 'exists:regions,id'],
@@ -38,37 +44,44 @@ class PropertyCatalogController extends Controller
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $query = Property::query()
-            ->published() // <-- garantie : catalogue public = biens validés uniquement
-            ->with(['region', 'department', 'commune', 'owner']);
+        // La page fait partie de l'identité du résultat mis en cache.
+        $cacheParams = $filters + ['page' => $request->integer('page', 1)];
 
-        // Filtres géographiques.
-        $query->when($filters['region_id'] ?? null, fn ($q, $v) => $q->where('region_id', $v));
-        $query->when($filters['department_id'] ?? null, fn ($q, $v) => $q->where('department_id', $v));
-        $query->when($filters['commune_id'] ?? null, fn ($q, $v) => $q->where('commune_id', $v));
-        $query->when($filters['tourist_zone'] ?? null, fn ($q, $v) => $q->where('tourist_zone', $v));
+        $payload = CatalogCache::remember('properties', $cacheParams, function () use ($filters) {
+            $query = Property::query()
+                ->published() // <-- garantie : catalogue public = biens validés uniquement
+                ->with(['region', 'department', 'commune', 'owner']);
 
-        // Filtres type / prix / vérification.
-        $query->when($filters['type'] ?? null, fn ($q, $v) => $q->where('type', $v));
-        $query->when($filters['price_min'] ?? null, fn ($q, $v) => $q->where('price_xof', '>=', $v));
-        $query->when($filters['price_max'] ?? null, fn ($q, $v) => $q->where('price_xof', '<=', $v));
-        $query->when($filters['verification_level'] ?? null, fn ($q, $v) => $q->where('verification_level', $v));
+            // Filtres géographiques.
+            $query->when($filters['region_id'] ?? null, fn ($q, $v) => $q->where('region_id', $v));
+            $query->when($filters['department_id'] ?? null, fn ($q, $v) => $q->where('department_id', $v));
+            $query->when($filters['commune_id'] ?? null, fn ($q, $v) => $q->where('commune_id', $v));
+            $query->when($filters['tourist_zone'] ?? null, fn ($q, $v) => $q->where('tourist_zone', $v));
 
-        // Recherche plein-texte simple sur le titre.
-        $query->when($filters['q'] ?? null, fn ($q, $v) => $q->where('title', 'like', "%{$v}%"));
+            // Filtres type / prix / vérification.
+            $query->when($filters['type'] ?? null, fn ($q, $v) => $q->where('type', $v));
+            $query->when($filters['price_min'] ?? null, fn ($q, $v) => $q->where('price_xof', '>=', $v));
+            $query->when($filters['price_max'] ?? null, fn ($q, $v) => $q->where('price_xof', '<=', $v));
+            $query->when($filters['verification_level'] ?? null, fn ($q, $v) => $q->where('verification_level', $v));
 
-        // Tri.
-        match ($filters['sort'] ?? 'recent') {
-            'price_asc' => $query->orderBy('price_xof'),
-            'price_desc' => $query->orderByDesc('price_xof'),
-            default => $query->latest(),
-        };
+            // Recherche plein-texte simple sur le titre.
+            $query->when($filters['q'] ?? null, fn ($q, $v) => $q->where('title', 'like', "%{$v}%"));
 
-        $properties = $query->paginate($filters['per_page'] ?? 15)->withQueryString();
+            // Tri.
+            match ($filters['sort'] ?? 'recent') {
+                'price_asc' => $query->orderBy('price_xof'),
+                'price_desc' => $query->orderByDesc('price_xof'),
+                default => $query->latest(),
+            };
 
-        // Une collection de Resource paginée produit nativement l'enveloppe
-        // standard { data: [...], links: {...}, meta: {...} }.
-        return PropertyResource::collection($properties);
+            $properties = $query->paginate($filters['per_page'] ?? 15)->withQueryString();
+
+            // On met en cache le payload rendu : enveloppe standard
+            // { data: [...], links: {...}, meta: {...} }.
+            return PropertyResource::collection($properties)->response()->getData(true);
+        });
+
+        return response()->json($payload);
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Models\Region;
 use App\Models\User;
 use App\Modules\Immo\Enums\PropertyStatus;
 use App\Modules\Immo\Enums\PropertyType;
+use App\Support\Cache\CatalogCache;
 use Database\Factories\PropertyFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,6 +25,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Property extends Model
 {
     use HasFactory;
+
+    /**
+     * Invalide le cache des catalogues à chaque écriture (B17.2). Le catalogue
+     * des nuitées est aussi invalidé car chaque nuitée embarque son bien et sa
+     * visibilité dépend de la publication de ce bien.
+     */
+    protected static function booted(): void
+    {
+        $flush = function (): void {
+            CatalogCache::flush('properties');
+            CatalogCache::flush('stays');
+        };
+
+        static::saved($flush);
+        static::deleted($flush);
+    }
 
     /**
      * @var list<string>

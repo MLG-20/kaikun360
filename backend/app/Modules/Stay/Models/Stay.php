@@ -5,6 +5,7 @@ namespace App\Modules\Stay\Models;
 use App\Models\Booking;
 use App\Modules\Immo\Enums\PropertyStatus;
 use App\Modules\Immo\Models\Property;
+use App\Support\Cache\CatalogCache;
 use Database\Factories\StayFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,17 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Stay extends Model
 {
     use HasFactory;
+
+    /**
+     * Invalide le cache du catalogue des nuitées à chaque écriture (B17.2).
+     */
+    protected static function booted(): void
+    {
+        $flush = fn () => CatalogCache::flush('stays');
+
+        static::saved($flush);
+        static::deleted($flush);
+    }
 
     /**
      * @var list<string>

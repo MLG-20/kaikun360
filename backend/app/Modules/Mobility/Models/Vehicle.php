@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\User;
 use App\Modules\Mobility\Enums\VehicleStatus;
 use App\Modules\Mobility\Enums\VehicleType;
+use App\Support\Cache\CatalogCache;
 use Database\Factories\VehicleFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +24,17 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Vehicle extends Model
 {
     use HasFactory;
+
+    /**
+     * Invalide le cache du catalogue des véhicules à chaque écriture (B17.2).
+     */
+    protected static function booted(): void
+    {
+        $flush = fn () => CatalogCache::flush('vehicles');
+
+        static::saved($flush);
+        static::deleted($flush);
+    }
 
     /**
      * @var list<string>

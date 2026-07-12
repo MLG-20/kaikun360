@@ -5,8 +5,9 @@ namespace App\Modules\Explore\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Explore\Http\Resources\ExperienceResource;
 use App\Modules\Explore\Models\TourismExperience;
+use App\Support\Cache\CatalogCache;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
 
 /**
@@ -19,8 +20,11 @@ class ExperienceCatalogController extends Controller
 {
     /**
      * Liste filtrable et paginée. GET /api/v1/experiences
+     *
+     * Résultat mis en cache par jeu de filtres + page (B17.2). Invalidé dès
+     * qu'une expérience change (voir TourismExperience::booted()).
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $filters = $request->validate([
             'destination' => ['sometimes', 'string', 'max:255'],
@@ -32,23 +36,29 @@ class ExperienceCatalogController extends Controller
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $query = TourismExperience::query()->published();
+        $cacheParams = $filters + ['page' => $request->integer('page', 1)];
 
-        $query->when($filters['destination'] ?? null, fn ($q, $v) => $q->where('destination', $v));
-        $query->when($filters['price_min'] ?? null, fn ($q, $v) => $q->where('price_xof', '>=', $v));
-        $query->when($filters['price_max'] ?? null, fn ($q, $v) => $q->where('price_xof', '<=', $v));
-        $query->when($filters['duration_max'] ?? null, fn ($q, $v) => $q->where('duration_days', '<=', $v));
-        $query->when($filters['q'] ?? null, fn ($q, $v) => $q->where('title', 'like', "%{$v}%"));
+        $payload = CatalogCache::remember('experiences', $cacheParams, function () use ($filters) {
+            $query = TourismExperience::query()->published();
 
-        match ($filters['sort'] ?? 'recent') {
-            'price_asc' => $query->orderBy('price_xof'),
-            'price_desc' => $query->orderByDesc('price_xof'),
-            default => $query->latest(),
-        };
+            $query->when($filters['destination'] ?? null, fn ($q, $v) => $q->where('destination', $v));
+            $query->when($filters['price_min'] ?? null, fn ($q, $v) => $q->where('price_xof', '>=', $v));
+            $query->when($filters['price_max'] ?? null, fn ($q, $v) => $q->where('price_xof', '<=', $v));
+            $query->when($filters['duration_max'] ?? null, fn ($q, $v) => $q->where('duration_days', '<=', $v));
+            $query->when($filters['q'] ?? null, fn ($q, $v) => $q->where('title', 'like', "%{$v}%"));
 
-        return ExperienceResource::collection(
-            $query->paginate($filters['per_page'] ?? 15)->withQueryString()
-        );
+            match ($filters['sort'] ?? 'recent') {
+                'price_asc' => $query->orderBy('price_xof'),
+                'price_desc' => $query->orderByDesc('price_xof'),
+                default => $query->latest(),
+            };
+
+            return ExperienceResource::collection(
+                $query->paginate($filters['per_page'] ?? 15)->withQueryString()
+            )->response()->getData(true);
+        });
+
+        return response()->json($payload);
     }
 
     /**

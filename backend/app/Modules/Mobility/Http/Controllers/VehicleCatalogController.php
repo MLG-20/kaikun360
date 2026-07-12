@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Modules\Mobility\Enums\VehicleType;
 use App\Modules\Mobility\Http\Resources\VehicleResource;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Support\Cache\CatalogCache;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
 
 /**
@@ -20,8 +21,11 @@ class VehicleCatalogController extends Controller
 {
     /**
      * Recherche filtrable et paginée. GET /api/v1/vehicles
+     *
+     * Résultat mis en cache par jeu de filtres + page (B17.2). Invalidé dès
+     * qu'un véhicule change (voir Vehicle::booted()).
      */
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $filters = $request->validate([
             'type' => ['sometimes', Rule::in(VehicleType::values())],
@@ -33,23 +37,29 @@ class VehicleCatalogController extends Controller
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $query = Vehicle::query()->published();
+        $cacheParams = $filters + ['page' => $request->integer('page', 1)];
 
-        $query->when($filters['type'] ?? null, fn ($q, $v) => $q->where('type', $v));
-        $query->when($filters['capacity_min'] ?? null, fn ($q, $v) => $q->where('capacity', '>=', $v));
-        $query->when($filters['price_max'] ?? null, fn ($q, $v) => $q->where('price_per_day_xof', '<=', $v));
-        $query->when(array_key_exists('has_driver', $filters), fn ($q) => $q->where('has_driver', $filters['has_driver']));
-        $query->when($filters['q'] ?? null, fn ($q, $v) => $q->where('brand', 'like', "%{$v}%"));
+        $payload = CatalogCache::remember('vehicles', $cacheParams, function () use ($filters) {
+            $query = Vehicle::query()->published();
 
-        match ($filters['sort'] ?? 'recent') {
-            'price_asc' => $query->orderBy('price_per_day_xof'),
-            'price_desc' => $query->orderByDesc('price_per_day_xof'),
-            default => $query->latest(),
-        };
+            $query->when($filters['type'] ?? null, fn ($q, $v) => $q->where('type', $v));
+            $query->when($filters['capacity_min'] ?? null, fn ($q, $v) => $q->where('capacity', '>=', $v));
+            $query->when($filters['price_max'] ?? null, fn ($q, $v) => $q->where('price_per_day_xof', '<=', $v));
+            $query->when(array_key_exists('has_driver', $filters), fn ($q) => $q->where('has_driver', $filters['has_driver']));
+            $query->when($filters['q'] ?? null, fn ($q, $v) => $q->where('brand', 'like', "%{$v}%"));
 
-        return VehicleResource::collection(
-            $query->paginate($filters['per_page'] ?? 15)->withQueryString()
-        );
+            match ($filters['sort'] ?? 'recent') {
+                'price_asc' => $query->orderBy('price_per_day_xof'),
+                'price_desc' => $query->orderByDesc('price_per_day_xof'),
+                default => $query->latest(),
+            };
+
+            return VehicleResource::collection(
+                $query->paginate($filters['per_page'] ?? 15)->withQueryString()
+            )->response()->getData(true);
+        });
+
+        return response()->json($payload);
     }
 
     /**

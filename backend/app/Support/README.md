@@ -76,3 +76,32 @@ Il est appliqué à toute l'API via `bootstrap/app.php` (`throttle:api`).
 
 Chaque réponse renvoie les en-têtes `X-RateLimit-Limit` et `X-RateLimit-Remaining`.
 Au-delà de la limite : **HTTP 429** (Too Many Requests).
+
+## 6. Cache des catalogues (B17.2)
+
+`App\Support\Cache\CatalogCache` met en cache (store `redis` en prod, `array` en
+test) le **résultat rendu** des endpoints de catalogue/recherche les plus
+consultés, qui ne renvoient que du contenu **publié** donc partagé entre tous les
+visiteurs anonymes :
+
+| Catalogue | Endpoint | Modèle source |
+| --- | --- | --- |
+| `properties` | `GET /properties` | `Immo\Property` |
+| `stays` | `GET /stays` | `Stay\Stay` |
+| `vehicles` | `GET /vehicles` | `Mobility\Vehicle` |
+| `experiences` | `GET /experiences` | `Explore\TourismExperience` |
+| `mobility` | `GET /mobility-services` | `Mobility\MobilityService` |
+
+- **Clé** = `catalog:<nom>:<empreinte md5 des filtres+page>:v<jeton de version>`.
+  La page fait partie de l'identité de l'entrée ; l'empreinte est stable quel que
+  soit l'ordre des filtres (`ksort`). TTL = **300 s** (filet de sécurité).
+- **Invalidation par versioning** : chaque catalogue a un jeton de version en
+  cache. `CatalogCache::flush('<nom>')` régénère ce jeton (O(1)) ; les anciennes
+  entrées deviennent inatteignables et expirent seules. Aucun balayage de clés,
+  aucune dépendance aux tags Redis.
+- **Déclenchement automatique** : chaque modèle de catalogue appelle `flush()`
+  dans son `booted()` sur les événements `saved`/`deleted`. Ainsi toute écriture
+  (création, modification de prix, validation, suppression) rafraîchit le
+  catalogue. Cas particulier : `Property::booted()` invalide **`properties` ET
+  `stays`**, car une nuitée embarque son bien et sa visibilité dépend de la
+  publication de ce bien.
