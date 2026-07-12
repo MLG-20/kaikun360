@@ -2,6 +2,7 @@
 
 use App\Modules\Admin\Http\Controllers\AdminCatalogController;
 use App\Modules\Admin\Http\Controllers\AdminDashboardController;
+use App\Modules\Admin\Http\Controllers\AdminDocumentController;
 use App\Modules\Admin\Http\Controllers\AdminDossierController;
 use App\Modules\Admin\Http\Controllers\AdminSettingsController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
@@ -64,6 +65,11 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // B13.5 — Export comptable & reporting consolidé (financier).
     Route::get('/reports/export', [ReportExportController::class, 'export'])
         ->middleware('can:gerer:paiements');
+
+    // B13.7.3 — Gestion documentaire transverse (KYC, docs biens, certifs,
+    // preuves). Sensible → niveau administrateur.
+    Route::get('/documents', [AdminDocumentController::class, 'index'])
+        ->middleware('can:gerer:utilisateurs');
 
     // B13.7.1 — Navigateur des catalogues (tous statuts, supervision).
     // B13.7.2 — Dossiers de suivi (construction, gestion locative).

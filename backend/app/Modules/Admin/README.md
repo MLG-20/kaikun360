@@ -20,6 +20,7 @@ pour les actions sensibles (`gerer:utilisateurs`, `gerer:parametres`,
 | B13.4 | Paramétrage (settings) + contenu éditorial (FAQ, Pages) | ✅ |
 | B13.5 | Export comptable / reporting | ✅ |
 | B13.6 | Nuitées back-office + consolidation des policies | ✅ |
+| B13.7 | Vues back-office par module + gestion documentaire | ✅ |
 
 ## B13.1 — Tableau de bord
 
@@ -183,3 +184,25 @@ réservées aux réservations de type Stay (sinon **422**).
 | **agent_kaikun** | opérationnel : validation, modération, gestion locative/chantiers/nuitées, traitement des demandes, dashboard. **Pas** de comptes / paiements / paramètres. |
 | **admin** | l'ensemble du back-office. |
 | **super_admin** | court-circuite toute autorisation (`Gate::before`) ; seul à pouvoir attribuer les rôles d'administration. |
+
+## B13.7 — Vues back-office par module & gestion documentaire
+
+Couche de supervision unifiée sous `/admin`, réutilisant les Resources des
+modules pour un format identique.
+
+**Catalogues (tous statuts)** — `consulter:dashboard-admin`, contrairement aux
+catalogues publics limités aux publiés :
+`GET /admin/properties`, `GET /admin/vehicles`, `GET /admin/experiences`
+(filtres `status`, `type`, `owner_id`/`provider_id`, `q`).
+
+**Dossiers de suivi** — `consulter:dashboard-admin` :
+`GET /admin/construction-requests` (toutes, +counts) et `GET /admin/mandates`
+(tous, property/owner + counts rents/incidents/expenses/payouts). Team building
+(`GET /team-building-requests`) et diaspora (`GET /diaspora-projects`) exposent
+déjà leur file back-office dans leurs modules.
+
+**Gestion documentaire transverse** — sensible (KYC, contrats) → niveau
+administrateur `gerer:utilisateurs`. `GET /admin/documents` : vue d'ensemble
+(compteurs `kyc` / `property` / `certification` / `payout_proof`) ou liste
+normalisée paginée `?type=` (`{ doc_type, id, subject_type, subject_id, label,
+original_name, status, created_at }`) ; type inconnu → **404**.

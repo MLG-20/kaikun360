@@ -237,14 +237,14 @@
 - [x] Endpoint `GET /admin/users` et `PATCH /admin/users/{id}` — gestion des comptes, rôles, statut, désactivation.
 - [x] Endpoint `GET /admin/reports/export` — export comptable et reporting.
 - [x] Endpoints de paramétrage : villes, catégories, tarifs, commissions, FAQ, contenu des pages.
-- [ ] Endpoints de gestion documentaire transverse (mandats, contrats, preuves, pièces prestataires).
+- [x] Endpoints de gestion documentaire transverse (mandats, contrats, preuves, pièces prestataires).
 - [x] Endpoints spécifiques nuitées (calendrier global, caution, statut ménage/check-in/check-out) pour vue back-office.
-- [ ] Endpoints spécifiques gestion locative (contrats, loyers, incidents, dépenses, reversements) pour vue back-office.
-- [ ] Endpoints spécifiques construction (devis, prestataires BTP, jalons, rapports) pour vue back-office.
-- [ ] Endpoints spécifiques mobilité (véhicules, chauffeurs, disponibilités, assurances) pour vue back-office.
-- [ ] Endpoints spécifiques tourisme (circuits, destinations, guides, capacités groupe) pour vue back-office.
-- [ ] Endpoints spécifiques team building (demandes, packages, devis, affectation prestataires) pour vue back-office.
-- [ ] Endpoints spécifiques diaspora (dossiers à forte valeur, vérification, reporting, priorités) pour vue back-office.
+- [x] Endpoints spécifiques gestion locative (contrats, loyers, incidents, dépenses, reversements) pour vue back-office.
+- [x] Endpoints spécifiques construction (devis, prestataires BTP, jalons, rapports) pour vue back-office.
+- [x] Endpoints spécifiques mobilité (véhicules, chauffeurs, disponibilités, assurances) pour vue back-office.
+- [x] Endpoints spécifiques tourisme (circuits, destinations, guides, capacités groupe) pour vue back-office.
+- [x] Endpoints spécifiques team building (demandes, packages, devis, affectation prestataires) pour vue back-office. — _file back-office exposée dans le module Team Building (`GET /team-building-requests`)._
+- [x] Endpoints spécifiques diaspora (dossiers à forte valeur, vérification, reporting, priorités) pour vue back-office. — _vue priorisée exposée dans le module Diaspora (`GET /diaspora-projects`)._
 - [x] Policies différenciées Agent / Admin / Super Admin selon le tableau de rôles du cahier des charges.
 
 ### Phase B14 — Paiement avec PayTech
