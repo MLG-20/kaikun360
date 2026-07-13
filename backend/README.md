@@ -15,6 +15,48 @@ API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 
 ---
 
+## À quoi sert ce dépôt (expliqué simplement)
+
+Ce dépôt, c'est le **moteur** de Kaikun 360 — le « cerveau » de la plateforme.
+Il n'a **aucun écran visible** : on ne le « regarde » pas, il travaille en
+coulisses. Son rôle :
+
+- **Ranger et conserver toutes les données** (comptes, biens, réservations,
+  paiements, documents…) dans une base de données.
+- **Faire respecter les règles du métier** — par exemple : « un bien doit être
+  vérifié par un agent avant d'être publié », « seul le titulaire d'une
+  réservation peut la payer », « un prestataire non validé ne peut pas publier ».
+- **Protéger l'accès** : chaque personne ne voit que ce qu'elle a le droit de voir.
+
+Pour communiquer avec le monde extérieur, le moteur expose une **API**. Une API,
+c'est comme le **guichet standardisé** du moteur : le site web (et demain
+l'application mobile) lui adressent des demandes normalisées (« connecte cet
+utilisateur », « donne la liste des villas à Saly », « enregistre cette
+réservation ») et reçoivent des réponses. Comme ce guichet est standard,
+**plusieurs écrans différents peuvent utiliser le même moteur** sans le modifier.
+
+### Comment le moteur est organisé
+
+Le code est découpé en **11 modules** indépendants, qui correspondent aux univers
+et aux espaces de la plateforme :
+
+- **Core** = les comptes, la connexion, les rôles (la porte d'entrée) ;
+- **Immo, Stay, Manage, Build, Explore, Mobility, Diaspora, TeamBuilding, Pro** =
+  les 9 univers métier (voir [Domaines fonctionnels](#domaines-fonctionnels)) ;
+- **Admin** = le back-office, les coulisses de l'équipe Kaikun.
+
+Chaque module a son propre `README.md` qui explique sa logique. Chaque fichier de
+code est **abondamment commenté en français**.
+
+### Où en est le moteur ?
+
+**Il est terminé** (tous les univers, la sécurité, les paiements, les
+notifications) et **vérifié par 409 tests automatiques** — des petits programmes
+qui rejouent les scénarios importants à chaque modification pour garantir que rien
+ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
+
+---
+
 ## Sommaire
 
 - [Stack technique](#stack-technique)
