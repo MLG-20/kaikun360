@@ -1,0 +1,32 @@
+<div class="auth">
+  <!-- Panneau de marque (signature Kaikun) -->
+  <aside class="auth-brand">
+    <a class="auth-logo" routerLink="/">
+      <span class="auth-logo-mark">K</span>
+      <span class="auth-logo-word">Kaikun&nbsp;360</span>
+    </a>
+
+    <div class="auth-brand-body">
+      <h2 class="auth-brand-title">
+        Tout votre projet sénégalais,<br />d'un seul endroit.
+      </h2>
+      <ul class="auth-proofs">
+        @for (proof of proofs; track proof) {
+          <li class="auth-proof">
+            <span class="auth-proof-check" aria-hidden="true">✓</span>
+            {{ proof }}
+          </li>
+        }
+      </ul>
+    </div>
+
+    <p class="auth-brand-foot">Immobilier · Tourisme · Transport · Construction · Services</p>
+  </aside>
+
+  <!-- Zone de formulaire routée (connexion, inscription, …) -->
+  <main class="auth-panel">
+    <div class="auth-card k-card">
+      <router-outlet />
+    </div>
+  </main>
+</div>

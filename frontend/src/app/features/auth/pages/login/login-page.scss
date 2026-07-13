@@ -1,0 +1,49 @@
+.auth-head {
+  margin-bottom: 24px;
+}
+
+.auth-title {
+  font-family: var(--k-font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--k-ink);
+}
+
+.auth-sub {
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-link {
+  color: var(--k-brand);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+.auth-form .k-btn {
+  margin-top: 4px;
+}
+
+.auth-alt {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--k-muted);
+}

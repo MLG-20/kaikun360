@@ -1,0 +1,53 @@
+<header class="auth-head">
+  <h1 class="auth-title">Connexion</h1>
+  <p class="auth-sub k-muted">Accédez à votre espace Kaikun&nbsp;360.</p>
+</header>
+
+<form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (formError()) {
+    <p class="k-form-error" role="alert">{{ formError() }}</p>
+  }
+
+  <div class="k-field">
+    <label class="k-label" for="login">E-mail ou téléphone</label>
+    <input
+      id="login"
+      type="text"
+      class="k-input"
+      [class.k-input--error]="invalid('login')"
+      formControlName="login"
+      autocomplete="username"
+      placeholder="vous@exemple.sn"
+      autofocus />
+    @if (invalid('login')) {
+      <span class="k-error">Identifiant requis.</span>
+    }
+  </div>
+
+  <div class="k-field">
+    <div class="auth-label-row">
+      <label class="k-label" for="password">Mot de passe</label>
+      <a class="auth-link" routerLink="/auth/mot-de-passe-oublie">Oublié&nbsp;?</a>
+    </div>
+    <input
+      id="password"
+      type="password"
+      class="k-input"
+      [class.k-input--error]="invalid('password')"
+      formControlName="password"
+      autocomplete="current-password"
+      placeholder="••••••••" />
+    @if (invalid('password')) {
+      <span class="k-error">Mot de passe requis.</span>
+    }
+  </div>
+
+  <button type="submit" class="k-btn k-btn--primary k-btn--block" [disabled]="submitting()">
+    {{ submitting() ? 'Connexion…' : 'Se connecter' }}
+  </button>
+</form>
+
+<p class="auth-alt">
+  Pas encore de compte ?
+  <a class="auth-link" routerLink="/auth/inscription">Créer un compte</a>
+</p>

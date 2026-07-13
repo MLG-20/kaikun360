@@ -143,6 +143,64 @@ h3 {
   box-shadow: var(--k-shadow);
 }
 
+// --- Formulaires (primitives réutilisées par toutes les pages F1+) ---------
+.k-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.k-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.k-input {
+  width: 100%;
+  font: inherit;
+  font-size: 15px;
+  color: var(--k-ink);
+  background: var(--k-white);
+  border: 1.5px solid var(--k-line-strong);
+  border-radius: var(--k-radius-sm);
+  padding: 12px 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.k-input::placeholder {
+  color: var(--k-muted);
+}
+
+.k-input:focus {
+  outline: none;
+  border-color: var(--k-brand);
+  box-shadow: 0 0 0 3px rgba(3, 72, 251, 0.14);
+}
+
+// État d'erreur (validation) : bordure et halo rouges.
+.k-input--error,
+.k-input--error:focus {
+  border-color: var(--k-danger);
+  box-shadow: 0 0 0 3px rgba(199, 59, 77, 0.16);
+}
+
+// Message d'erreur sous un champ.
+.k-error {
+  font-size: 13px;
+  color: var(--k-danger);
+}
+
+// Bandeau d'erreur global d'un formulaire (ex. identifiants invalides).
+.k-form-error {
+  font-size: 14px;
+  color: var(--k-danger);
+  background: rgba(199, 59, 77, 0.08);
+  border: 1px solid rgba(199, 59, 77, 0.25);
+  border-radius: var(--k-radius-sm);
+  padding: 11px 14px;
+}
+
 // --- Accessibilité : focus visible cohérent -------------------------------
 :focus-visible {
   outline: 2px solid var(--k-brand);
