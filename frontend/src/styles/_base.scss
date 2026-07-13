@@ -201,6 +201,16 @@ h3 {
   padding: 11px 14px;
 }
 
+// Bandeau d'information (ex. « un code vous a été envoyé »).
+.k-form-info {
+  font-size: 14px;
+  color: var(--k-green-600);
+  background: rgba(56, 167, 116, 0.1);
+  border: 1px solid rgba(56, 167, 116, 0.28);
+  border-radius: var(--k-radius-sm);
+  padding: 11px 14px;
+}
+
 // --- Accessibilité : focus visible cohérent -------------------------------
 :focus-visible {
   outline: 2px solid var(--k-brand);

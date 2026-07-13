@@ -5,7 +5,14 @@ import { Observable, finalize, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { User } from '../../models/user.model';
 import { ApiEnvelope } from '../api/api-response.model';
-import { AuthResult, GooglePayload, LoginPayload, RegisterPayload } from './auth.types';
+import {
+  AuthResult,
+  GooglePayload,
+  LoginPayload,
+  RegisterPayload,
+  ResetPasswordPayload,
+  VerificationChannel,
+} from './auth.types';
 
 /**
  * Service de session (F0.2).
@@ -53,6 +60,44 @@ export class AuthService {
    */
   loginWithGoogle(idToken: string): Observable<User> {
     return this.authenticate(`${this.api}/auth/google`, { id_token: idToken });
+  }
+
+  /**
+   * (Re)envoie un code de vérification sur le canal choisi (F1.3).
+   * Nécessite une session active (le compte est déjà identifié).
+   */
+  sendVerificationCode(channel: VerificationChannel): Observable<void> {
+    return this.http
+      .post<ApiEnvelope<{ message: string }>>(`${this.api}/auth/verify/send`, { channel })
+      .pipe(map(() => void 0));
+  }
+
+  /**
+   * Vérifie le code saisi et met à jour l'utilisateur en session (statut ACTIF,
+   * canal marqué vérifié). Le backend renvoie l'utilisateur mis à jour.
+   */
+  verify(channel: VerificationChannel, code: string): Observable<User> {
+    return this.http.post<ApiEnvelope<{ user: User }>>(`${this.api}/auth/verify`, { channel, code }).pipe(
+      map((response) => response.data.user),
+      tap((user) => this.userSignal.set(user)),
+    );
+  }
+
+  /**
+   * Demande un code de réinitialisation de mot de passe (F1.3). Endpoint public.
+   * La réponse est identique que le compte existe ou non (anti-énumération).
+   */
+  forgotPassword(login: string): Observable<void> {
+    return this.http
+      .post<ApiEnvelope<{ message: string }>>(`${this.api}/auth/password/forgot`, { login })
+      .pipe(map(() => void 0));
+  }
+
+  /** Réinitialise le mot de passe avec le code reçu (F1.3). Endpoint public. */
+  resetPassword(payload: ResetPasswordPayload): Observable<void> {
+    return this.http
+      .post<ApiEnvelope<{ message: string }>>(`${this.api}/auth/password/reset`, payload)
+      .pipe(map(() => void 0));
   }
 
   /** Déconnexion : révoque le jeton côté serveur puis vide la session locale. */

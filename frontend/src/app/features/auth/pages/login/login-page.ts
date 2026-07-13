@@ -32,6 +32,10 @@ export class LoginPageComponent {
   protected readonly submitting = signal(false);
   /** Message d'erreur global (identifiants invalides, panne…). */
   protected readonly formError = signal<string | null>(null);
+  /** Message de succès (ex. retour depuis la réinitialisation de mot de passe). */
+  protected readonly info = this.route.snapshot.queryParamMap.has('reset')
+    ? 'Mot de passe réinitialisé. Vous pouvez vous connecter.'
+    : null;
 
   protected readonly form = this.fb.nonNullable.group({
     login: ['', [Validators.required]],

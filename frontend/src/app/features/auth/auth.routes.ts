@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { authGuard } from '../../core/guards/auth.guard';
 import { AuthLayoutComponent } from './auth-layout/auth-layout';
 
 /**
@@ -22,6 +23,20 @@ export const AUTH_ROUTES: Routes = [
         path: 'inscription',
         loadComponent: () => import('./pages/register/register-page').then((m) => m.RegisterPageComponent),
         title: 'Créer un compte — Kaikun 360',
+      },
+      {
+        // Vérification : l'utilisateur doit être connecté (jeton d'inscription).
+        path: 'verification',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./pages/verification/verification-page').then((m) => m.VerificationPageComponent),
+        title: 'Vérifier mon compte — Kaikun 360',
+      },
+      {
+        path: 'mot-de-passe-oublie',
+        loadComponent: () =>
+          import('./pages/forgot-password/forgot-password-page').then((m) => m.ForgotPasswordPageComponent),
+        title: 'Mot de passe oublié — Kaikun 360',
       },
       { path: '', redirectTo: 'connexion', pathMatch: 'full' },
     ],

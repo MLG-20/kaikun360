@@ -4,6 +4,9 @@
 </header>
 
 <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (info) {
+    <p class="k-form-info" role="status">{{ info }}</p>
+  }
   @if (formError()) {
     <p class="k-form-error" role="alert">{{ formError() }}</p>
   }

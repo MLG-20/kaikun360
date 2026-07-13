@@ -1,0 +1,81 @@
+<header class="auth-head">
+  <h1 class="auth-title">Vérifier votre compte</h1>
+  <p class="auth-sub k-muted">
+    Confirmez votre identité pour activer toutes les fonctionnalités.
+  </p>
+</header>
+
+<div class="auth-form">
+  @if (formError()) {
+    <p class="k-form-error" role="alert">{{ formError() }}</p>
+  }
+  @if (info()) {
+    <p class="k-form-info" role="status">{{ info() }}</p>
+  }
+
+  <!-- Choix du canal -->
+  <div class="k-field">
+    <span class="k-label">Recevoir le code par&nbsp;:</span>
+    <div class="channel-row" role="radiogroup" aria-label="Canal de vérification">
+      <button
+        type="button"
+        class="channel-btn"
+        role="radio"
+        [attr.aria-checked]="channel() === 'email'"
+        [class.is-selected]="channel() === 'email'"
+        (click)="chooseChannel('email')">
+        ✉️ E-mail
+        @if (user()?.email) {
+          <span class="channel-hint">{{ user()?.email }}</span>
+        }
+      </button>
+
+      @if (hasPhone()) {
+        <button
+          type="button"
+          class="channel-btn"
+          role="radio"
+          [attr.aria-checked]="channel() === 'phone'"
+          [class.is-selected]="channel() === 'phone'"
+          (click)="chooseChannel('phone')">
+          📱 SMS
+          <span class="channel-hint">{{ user()?.phone }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Étape 1 : envoyer le code -->
+  @if (!codeSent()) {
+    <button type="button" class="k-btn k-btn--primary k-btn--block" [disabled]="sending()" (click)="sendCode()">
+      {{ sending() ? 'Envoi…' : 'Envoyer le code' }}
+    </button>
+  } @else {
+    <!-- Étape 2 : saisir et vérifier le code -->
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="k-field">
+        <label class="k-label" for="code">Code de vérification</label>
+        <input
+          id="code"
+          type="text"
+          inputmode="numeric"
+          class="k-input"
+          [class.k-input--error]="form.controls.code.invalid && form.controls.code.touched"
+          formControlName="code"
+          autocomplete="one-time-code"
+          placeholder="Code reçu" />
+        @if (form.controls.code.invalid && form.controls.code.touched) {
+          <span class="k-error">Le code est requis.</span>
+        }
+      </div>
+
+      <button type="submit" class="k-btn k-btn--primary k-btn--block" [disabled]="verifying()">
+        {{ verifying() ? 'Vérification…' : 'Vérifier' }}
+      </button>
+
+      <button type="button" class="auth-link auth-resend" [disabled]="sending()" (click)="sendCode()">
+        Renvoyer un code
+      </button>
+    </form>
+  }
+</div>

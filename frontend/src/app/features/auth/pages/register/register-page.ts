@@ -96,9 +96,9 @@ export class RegisterPageComponent {
 
     this.auth.register(this.form.getRawValue() as RegisterPayload).subscribe({
       next: () => {
-        // Le compte est « en attente de vérification » ; l'étape de vérification
-        // sera insérée en F1.3. Pour l'instant, retour à l'accueil connecté.
-        void this.router.navigateByUrl('/');
+        // Le compte est « en attente de vérification » : on enchaîne directement
+        // sur l'étape de vérification (F1.3).
+        void this.router.navigateByUrl('/auth/verification');
       },
       error: (error: HttpErrorResponse) => {
         this.submitting.set(false);
