@@ -1,7 +1,7 @@
 <header class="topbar">
   <div class="k-wrap bar">
     <!-- Marque -->
-    <a class="brand" href="/" aria-label="Accueil Kaikun 360">
+    <a class="brand" routerLink="/" aria-label="Accueil Kaikun 360">
       <span class="logo-mark" aria-hidden="true">K</span>
       <span class="brand-text">
         <b>Kaikun&nbsp;360</b>
@@ -18,7 +18,7 @@
 
     <!-- Actions -->
     <div class="actions">
-      <a class="k-btn k-btn--primary nav-cta" href="#">Connexion</a>
+      <a class="k-btn k-btn--primary nav-cta" routerLink="/auth/connexion">Connexion</a>
       <button
         class="menu-btn"
         type="button"
@@ -39,7 +39,7 @@
         @for (universe of universes; track universe) {
           <a class="mobile-link" href="#">{{ universe }}</a>
         }
-        <a class="k-btn k-btn--primary k-btn--block" href="#">Connexion</a>
+        <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/connexion" (click)="toggleMenu()">Connexion</a>
       </div>
     </div>
   }
