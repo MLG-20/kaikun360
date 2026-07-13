@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { CatalogService } from '../../core/api/catalog.service';
+import { CatalogCard, UNIVERSES } from '../../shared/components/catalog/catalog.config';
+import { ListingCardComponent } from '../../shared/components/listing-card/listing-card';
 import { OrbitHeroComponent } from '../../shared/components/orbit-hero/orbit-hero';
 import { SearchEngineComponent } from '../../shared/components/search-engine/search-engine';
 
@@ -37,6 +40,15 @@ interface Guarantee {
   desc: string;
 }
 
+/** Petite carte de service complémentaire (section « Aller plus loin »). */
+interface ServiceItem {
+  /** Ancre HTML éventuelle (ciblée par une tuile d'univers). */
+  anchor?: string;
+  icon: string;
+  title: string;
+  desc: string;
+}
+
 /**
  * Page d'accueil publique (F2.2).
  *
@@ -56,12 +68,18 @@ interface Guarantee {
  */
 @Component({
   selector: 'app-home-page',
-  imports: [OrbitHeroComponent, SearchEngineComponent, RouterLink],
+  imports: [OrbitHeroComponent, SearchEngineComponent, ListingCardComponent, RouterLink],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomePageComponent {
+export class HomePageComponent implements OnInit {
+  private readonly catalog = inject(CatalogService);
+
+  /** État de chargement de la vitrine : « loading » | « ready » | « failed ». */
+  protected readonly featuredState = signal<'loading' | 'ready' | 'failed'>('loading');
+  /** Biens vérifiés mis en avant dans la vitrine (données réelles de l'API). */
+  protected readonly featured = signal<CatalogCard[]>([]);
   /**
    * Bandeau de confiance affiché sous l'accroche : quelques repères chiffrés qui
    * rassurent immédiatement le visiteur (surtout la diaspora, méfiante des
@@ -175,4 +193,66 @@ export class HomePageComponent {
       desc: 'Chaque projet a sa référence : un reporting clair, accessible où que vous soyez.',
     },
   ];
+
+  /**
+   * Arguments clés de l'offre diaspora, affichés en liste à côté du bandeau
+   * dédié. Ils traduisent le protocole de confiance en bénéfices concrets pour
+   * quelqu'un qui pilote un projet depuis l'étranger.
+   */
+  protected readonly diasporaPoints = [
+    'Un référent unique qui coordonne tout sur place',
+    'Reporting photo/vidéo horodaté à chaque étape',
+    'Paiements sécurisés en FCFA (Wave, Orange Money, virement)',
+  ];
+
+  /**
+   * Services complémentaires (« aller plus loin ») : team building, gestion
+   * locative et services du quotidien. Certaines cartes portent une ancre
+   * ciblée par les tuiles d'univers du haut de page.
+   */
+  protected readonly services: ServiceItem[] = [
+    {
+      anchor: 'team-building',
+      icon: 'team',
+      title: 'Team building & séminaires',
+      desc: 'Organisez la cohésion de vos équipes : lieux, activités et logistique clés en main.',
+    },
+    {
+      icon: 'key',
+      title: 'Gestion locative',
+      desc: 'Nous gérons vos biens (locataires, loyers, entretien) et vous suivez tout à distance.',
+    },
+    {
+      icon: 'box',
+      title: 'Delivery & conciergerie',
+      desc: 'Courses, livraisons et services du quotidien pour vous ou vos proches au pays.',
+    },
+    {
+      icon: 'sun',
+      title: 'Colonies & séjours groupes',
+      desc: 'Séjours encadrés pour enfants et groupes, avec le même niveau de vérification.',
+    },
+  ];
+
+  ngOnInit(): void {
+    this.loadFeatured();
+  }
+
+  /**
+   * Charge quelques biens immobiliers publiés pour la vitrine « en vedette ».
+   * On réutilise le convertisseur du registre du catalogue (`toCard`) pour un
+   * affichage strictement identique à la page de résultats. En cas d'échec
+   * réseau (API indisponible), on bascule sur l'état « failed » et la vitrine
+   * se replie proprement — le reste de la page reste intact.
+   */
+  private loadFeatured(): void {
+    this.featuredState.set('loading');
+    this.catalog.properties({ per_page: 6, sort: 'recent' }).subscribe({
+      next: (page) => {
+        this.featured.set(page.data.map((item) => UNIVERSES['immobilier'].toCard(item)));
+        this.featuredState.set('ready');
+      },
+      error: () => this.featuredState.set('failed'),
+    });
+  }
 }

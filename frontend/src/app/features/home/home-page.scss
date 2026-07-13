@@ -264,6 +264,235 @@
   color: rgba(255, 255, 255, 0.72);
 }
 
+// --- Section 4 : Vitrine du catalogue --------------------------------------
+.featured {
+  padding: 68px 24px 24px;
+}
+
+// En-tête « titre à gauche, bouton à droite » (variante de section-head).
+.section-head-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.section-head-row h2 {
+  font-size: clamp(24px, 3vw, 36px);
+  margin-top: 8px;
+}
+
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.featured-msg {
+  font-size: 16px;
+}
+
+.featured-msg a {
+  color: var(--k-brand);
+  text-decoration: underline;
+}
+
+// Squelette de chargement : bloc gris qui « pulse ».
+.featured-skeleton {
+  height: 280px;
+  background: linear-gradient(100deg, var(--k-sand) 30%, #f3eee1 50%, var(--k-sand) 70%);
+  background-size: 200% 100%;
+  animation: featured-shimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes featured-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featured-skeleton {
+    animation: none;
+  }
+}
+
+// --- Section 5 : Diaspora --------------------------------------------------
+.diaspora {
+  margin-top: 40px;
+  padding: 64px 0;
+}
+
+.diaspora-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.diaspora-text h2 {
+  font-size: clamp(26px, 3.4vw, 40px);
+  margin: 12px 0 14px;
+  max-width: 18ch;
+}
+
+.diaspora-lead {
+  font-size: 17px;
+  max-width: 46ch;
+  margin-bottom: 22px;
+}
+
+.diaspora-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.diaspora-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 15.5px;
+  color: var(--k-ink);
+}
+
+.diaspora-check {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--k-radius-pill);
+  background: rgba(56, 167, 116, 0.14);
+  color: var(--k-green-600);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.diaspora-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+// Panneau visuel : « carte de suivi » stylisée sur dégradé navy→bleu.
+.diaspora-visual {
+  position: relative;
+  padding: 32px;
+  min-height: 260px;
+  border-radius: var(--k-radius-lg);
+  background: linear-gradient(150deg, var(--k-navy), var(--k-brand));
+  color: #fff;
+  box-shadow: var(--k-shadow-lg);
+  overflow: hidden;
+}
+
+.diaspora-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--k-radius-pill);
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.diaspora-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--k-gold-2);
+  box-shadow: 0 0 0 4px rgba(240, 210, 126, 0.25);
+}
+
+.diaspora-ref {
+  margin-top: 28px;
+  font-family: var(--k-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.diaspora-code {
+  font-family: var(--k-font-display);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.diaspora-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 26px;
+}
+
+.diaspora-step {
+  padding: 6px 12px;
+  border-radius: var(--k-radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.diaspora-step--done {
+  background: var(--k-green);
+  border-color: transparent;
+  color: #fff;
+}
+
+// --- Section 6 : Services complémentaires ----------------------------------
+.services {
+  padding: 40px 24px 72px;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.services-card {
+  padding: 24px 20px;
+  // Décalage d'ancre pour ne pas coller sous l'en-tête fixe lors du scroll.
+  scroll-margin-top: 90px;
+}
+
+.services-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 14px;
+  border-radius: var(--k-radius);
+  background: rgba(56, 167, 116, 0.12);
+  color: var(--k-green-600);
+}
+
+.services-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.services-card-title {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.services-card-desc {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 // --- Responsive ------------------------------------------------------------
 @media (max-width: 960px) {
   .hero-grid {
@@ -282,14 +511,31 @@
   }
 
   .univers-grid,
-  .protocol-grid {
+  .protocol-grid,
+  .featured-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .diaspora-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
   }
 }
 
 @media (max-width: 620px) {
   .univers-grid,
-  .protocol-grid {
+  .protocol-grid,
+  .featured-grid,
+  .services-grid {
     grid-template-columns: 1fr;
+  }
+
+  .section-head-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
