@@ -1,48 +1,59 @@
-# `features/` — Fonctionnalités (chargées à la demande)
+# `features/` — Les grandes fonctionnalités du site
 
-Chaque fonctionnalité est un dossier autonome avec ses composants et ses routes,
-**chargé en lazy loading** via `loadComponent` / `loadChildren` depuis
-`app.routes.ts`. Exemples à venir : `public/` (pages publiques & catalogues),
-`account/`, `back-office/`.
+> **En une phrase :** ce dossier contient les **écrans que voit l'utilisateur**,
+> regroupés par grande fonctionnalité (se connecter, l'accueil, et plus tard les
+> catalogues, l'espace personnel, le back-office…).
 
-Une fonctionnalité peut consommer le [`../core`](../core) (services, guards) et le
-[`../shared`](../shared) (composants d'UI), mais **ne dépend pas** d'une autre
-fonctionnalité.
+---
 
-## Layouts (route-level)
+## 1. Expliqué simplement
 
-Les pages sont rendues dans un **layout** (composant de route), jamais dans la
-racine `App` (réduite à un `<router-outlet>`) :
+Une **fonctionnalité** = un ensemble de pages qui vont ensemble et qui rendent un
+service précis. Par exemple « tout ce qui concerne la connexion » est une
+fonctionnalité, « l'accueil » en est une autre.
 
-- [`../layouts/main-layout`](../layouts/main-layout) — site public : en-tête
-  global + contenu routé + pied de page.
-- [`auth/auth-layout`](auth/auth-layout) — authentification : écran scindé
-  (signature de marque + carte de formulaire), sans le méga-header.
+Chaque fonctionnalité n'est **téléchargée par le navigateur que lorsqu'on en a
+besoin** (on parle de « chargement à la demande »). Résultat : le site s'ouvre
+plus vite, car on ne charge pas tout d'un coup.
 
-## `home/` (F1.1)
+### Les « cadres » autour des pages (layouts)
 
-Page d'accueil provisoire (vitrine du design system : hero orbital, cartes,
-galerie, données de démonstration). Rendue dans le layout principal à `''`.
-Sera remplacée par la vraie page d'accueil branchée sur l'API en F2+.
+Une page ne s'affiche jamais toute seule : elle est posée dans un **cadre** qui
+fournit le décor commun. Il y en a deux :
 
-## `auth/` (F1)
+- **Cadre principal du site** ([`../layouts/main-layout`](../layouts/main-layout)) —
+  l'en-tête (logo + menu) en haut, le pied de page en bas, et la page au milieu.
+  C'est le cadre de l'accueil et, plus tard, des catalogues.
+- **Cadre d'authentification** ([`auth/auth-layout`](auth/auth-layout)) — l'écran
+  scindé « signature de marque + formulaire », **sans le grand menu**, pour que la
+  personne se concentre sur sa connexion.
 
-Authentification & onboarding, rendue dans `auth-layout`. Routes déclarées dans
-[`auth/auth.routes.ts`](auth/auth.routes.ts) (`loadChildren` depuis la racine).
+La toute première brique de l'application (`App`) ne fait qu'une chose : afficher
+« la bonne page dans le bon cadre » selon l'adresse visitée.
 
-| Page | Route | Statut | Endpoint |
-| --- | --- | --- | --- |
-| Connexion | `/auth/connexion` | ✅ F1.1 | `POST /auth/login` |
-| Inscription + onboarding | `/auth/inscription` | ✅ F1.2 | `POST /auth/register` |
-| Vérification (code) | `/auth/verification` | ✅ F1.3 _(authGuard)_ | `/auth/verify`, `/auth/verify/send` |
-| Mot de passe oublié / réinitialisation | `/auth/mot-de-passe-oublie` | ✅ F1.3 | `/auth/password/forgot`, `/auth/password/reset` |
-| Bouton « Connexion Google » | (sur `/auth/connexion`) | 🔜 F1.4 | `POST /auth/google` |
+### Ce qui existe aujourd'hui
 
-La session (jeton en mémoire) et `hasRole` sont fournis par
-[`../core/auth/auth.service`](../core/auth/auth.service.ts) ; la redirection
-post-connexion suit le `?redirect=` posé par l'`authGuard`.
+- **`home/`** — la page d'**accueil** (pour l'instant une vitrine de démonstration
+  du style graphique : grand visuel, cartes de biens, galerie). Elle sera remplacée
+  par la vraie page d'accueil connectée aux données réelles en F2.
+- **`auth/`** — **créer un compte et se connecter** (connexion, inscription,
+  vérification, mot de passe oublié). 👉 Voir le README détaillé :
+  [`auth/README.md`](auth/README.md).
 
-Les styles de mise en page communs aux pages auth (`.auth-head`, `.auth-form`,
-`.auth-link`, `.auth-row`…) sont **globaux** dans `src/styles/_auth.scss` (une
-classe scopée à un composant ne serait pas partageable entre pages) ; chaque page
-ne garde en local que son style spécifique (ex. le sélecteur de profil).
+À venir : les pages publiques et catalogues, l'espace personnel, le back-office.
+
+---
+
+## 2. Détails techniques
+
+- Chaque fonctionnalité est un dossier autonome (ses composants + ses routes),
+  **chargé en lazy loading** via `loadComponent` / `loadChildren` depuis
+  [`../app.routes.ts`](../app.routes.ts).
+- Une fonctionnalité peut consommer le [`../core`](../core) (services, guards,
+  intercepteurs) et le [`../shared`](../shared) (composants d'interface
+  réutilisables), mais **ne dépend jamais d'une autre fonctionnalité**.
+- Les layouts sont des **composants de route** : `App` est réduit à un
+  `<router-outlet>`, et chaque branche de route choisit son layout.
+- Styles partagés des pages d'authentification :
+  [`../../styles/_auth.scss`](../../styles/_auth.scss) (globaux car réutilisés par
+  plusieurs pages ; l'encapsulation Angular empêcherait le partage sinon).
