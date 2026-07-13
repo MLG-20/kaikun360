@@ -1,18 +1,31 @@
-// --- Hero d'aperçu (provisoire) -------------------------------------------
+// =============================================================================
+// Page d'accueil Kaikun 360 (F2.2) — styles de sections.
+// Chaque section de la landing a son bloc ci-dessous, dans l'ordre de la page.
+// =============================================================================
+
+// --- Section 1 : Hero ------------------------------------------------------
+// Fond crème dégradé + accroche à gauche, signature orbitale à droite.
 .hero {
+  background:
+    radial-gradient(1100px 520px at 85% -10%, var(--k-brand-050), transparent 60%),
+    linear-gradient(180deg, var(--k-cream), var(--k-white));
+  padding: 40px 0 56px;
+}
+
+.hero-grid {
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 54px;
+  grid-template-columns: 1.08fr 0.92fr;
+  gap: 48px;
   align-items: center;
-  padding: 64px 24px 40px;
 }
 
 .hero-text h1 {
-  font-size: clamp(34px, 4.8vw, 58px);
-  margin: 16px 0 16px;
-  max-width: 15ch;
+  font-size: clamp(34px, 4.8vw, 56px);
+  margin: 16px 0 18px;
+  max-width: 16ch;
 }
 
+// Mot-clé surligné d'un trait doré discret (raffinement éditorial).
 .hero-text .hl {
   color: var(--k-brand);
   position: relative;
@@ -34,66 +47,65 @@
 
 .lead {
   font-size: 18px;
-  max-width: 38ch;
-  margin-bottom: 26px;
+  max-width: 44ch;
+  margin-bottom: 22px;
 }
 
-.hero-actions {
+// Bandeau de confiance : 3 repères chiffrés séparés par un filet.
+.trust-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 26px;
+  list-style: none;
+  margin: 0 0 28px;
+  padding: 0;
 }
 
-@media (max-width: 900px) {
-  .hero {
+.trust-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 16px;
+  border-left: 3px solid var(--k-gold);
+}
+
+.trust-value {
+  font-family: var(--k-font-display);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--k-navy);
+  line-height: 1;
+}
+
+.trust-label {
+  font-size: 13px;
+  color: var(--k-muted);
+}
+
+.hero-search {
+  max-width: 640px;
+}
+
+// La signature orbitale respire un peu à droite.
+.hero-visual {
+  display: flex;
+  justify-content: center;
+}
+
+// --- Responsive ------------------------------------------------------------
+@media (max-width: 960px) {
+  .hero-grid {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 36px;
   }
 
+  // Sur mobile, l'orbite passe sous le texte (secondaire) pour prioriser
+  // l'accroche et la recherche.
   .hero-visual {
-    order: -1;
+    order: 1;
   }
-}
 
-// --- Aperçu des composants ------------------------------------------------
-.ds-section {
-  padding: 48px 24px 8px;
-}
-
-.ds-section h2 {
-  font-size: clamp(24px, 3vw, 34px);
-  margin: 10px 0 22px;
-}
-
-.ds-section h2.mt {
-  margin-top: 44px;
-}
-
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-.badges-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 22px;
-}
-
-.gallery-demo {
-  max-width: 620px;
-}
-
-@media (max-width: 820px) {
-  .cards-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 560px) {
-  .cards-grid {
-    grid-template-columns: 1fr;
+  .hero-search {
+    max-width: 100%;
   }
 }
