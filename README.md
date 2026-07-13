@@ -1,8 +1,84 @@
-# Kaikun 360 — Plan de développement (Backend Laravel + Frontend Angular)
+# Kaikun 360
 
-> Document de suivi de développement, dérivé du cahier des charges technique Kaikun 360 v2.0.
-> Périmètre de ce document : **API Laravel** et **Frontend web Angular** uniquement. L'application mobile Android est volontairement exclue et sera traitée dans un document séparé.
-> Chaque phase liste l'ensemble des tâches à réaliser pour fermer le périmètre fonctionnel correspondant du cahier des charges. Aucune tâche n'est codée ici — ce fichier sert de feuille de route à cocher au fur et à mesure du développement avec Claude dans VS Code.
+> **En une phrase :** une plateforme unique — site web et application — pour
+> **acheter, louer, construire, voyager, se déplacer et confier son bien** au
+> Sénégal, en toute confiance.
+
+---
+
+## Kaikun 360, c'est quoi ?
+
+Aujourd'hui, une personne qui veut acheter un terrain, louer une maison pour le
+week-end, faire construire, réserver une excursion ou louer une voiture avec
+chauffeur doit passer par des dizaines d'interlocuteurs différents, sans garantie
+de sérieux. **Kaikun 360 rassemble tout ça au même endroit**, avec un principe
+central : la **confiance** (biens et prestataires vérifiés, suivi des demandes de
+bout en bout, paiement encadré).
+
+### À qui ça s'adresse
+
+La plateforme sépare clairement **cinq types d'utilisateurs**, chacun avec son
+espace :
+
+| Utilisateur | Ce qu'il vient faire |
+| --- | --- |
+| **Client** | Chercher et demander un service : acheter, louer, réserver une nuitée, une voiture, une excursion… |
+| **Propriétaire** | Déposer ses biens, les mettre en location, confier leur gestion. |
+| **Prestataire** | Proposer ses services (voiture, pirogue, circuit touristique, construction, guide…). |
+| **Entreprise** | Organiser des demandes groupées : séminaires, team building, sorties. |
+| **Équipe Kaikun** | Piloter la plateforme depuis les coulisses : valider, suivre, encadrer, gérer les paiements. |
+
+### Ce que la plateforme permet (les 9 univers)
+
+| Univers | En clair |
+| --- | --- |
+| **Immo** | Achat, vente et location mensuelle de biens immobiliers. |
+| **Stay** | Location courte durée : nuitées, hébergements meublés. |
+| **Manage** | Gestion locative pour propriétaires (loyers, incidents, reversements). |
+| **Build** | Construction et rénovation : simulateur de budget, devis, suivi de chantier. |
+| **Explore** | Tourisme : circuits, excursions, expériences. |
+| **Mobility** | Transport : voiture, navette aéroport, bus, 4×4, pirogue, avec ou sans chauffeur. |
+| **Diaspora** | Accompagnement à distance des Sénégalais de l'étranger (vérification, achat, suivi vidéo). |
+| **Team Building** | Offres groupées pour entreprises et institutions. |
+| **Pro** | Place de marché des prestataires certifiés (inscription, validation, notation). |
+
+---
+
+## Comment c'est construit
+
+Le projet a **deux grandes parties** :
+
+- **Le « moteur » (backend)** — invisible pour l'utilisateur, c'est le cerveau qui
+  stocke les données, applique les règles métier et sécurise tout. Développé avec
+  la technologie **Laravel**. Il expose une **API** : une sorte de standard de
+  communication que n'importe quel écran (site web, application mobile future)
+  peut utiliser.
+- **Le « visible » (frontend)** — le **site web** avec lequel l'utilisateur
+  interagit réellement. Développé avec la technologie **Angular**.
+
+**Et le mobile ?** L'application mobile native (Play Store / App Store) viendra
+plus tard : comme le moteur expose déjà une API standard, elle pourra être ajoutée
+**sans rien refaire côté moteur**. En attendant, le site web sera « installable »
+sur téléphone (technologie PWA).
+
+---
+
+## Où en est le projet ?
+
+- ✅ **Le moteur (backend) est terminé.** Les 9 univers, les 5 espaces, la
+  sécurité, les paiements, les notifications : tout est développé et couvert par
+  des tests automatiques. Voir [`backend/README.md`](backend/README.md).
+- 🚧 **Le site web (frontend) est en cours.** Le socle graphique et
+  l'**authentification** (créer un compte, se connecter, vérifier son compte,
+  mot de passe oublié) sont faits. Voir [`frontend/README.md`](frontend/README.md).
+- ⏳ **Hors code** (à faire par le client / en parallèle) : nom de domaine,
+  hébergement, compte marchand pour les paiements, validation juridique. Détaillé
+  en fin de document.
+
+> **La suite de ce document** est le **journal de bord détaillé** du
+> développement : chaque phase (backend `B0→B17`, frontend `F0→F9`) liste toutes
+> les tâches, cochées au fur et à mesure. C'est un outil de suivi technique — la
+> présentation ci-dessus suffit pour comprendre le projet dans les grandes lignes.
 
 ---
 
