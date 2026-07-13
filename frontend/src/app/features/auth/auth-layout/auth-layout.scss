@@ -6,17 +6,24 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 100vh;
+  // Chaque colonne prend sa propre hauteur : le panneau de marque n'est plus
+  // étiré à la hauteur (parfois grande) du formulaire.
+  align-items: start;
 }
 
 // --- Panneau de marque (gauche) -------------------------------------------
 .auth-brand {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 40px;
+  gap: 34px;
   padding: 44px 48px;
   color: #fff;
   background: linear-gradient(155deg, var(--k-navy), var(--k-navy-2) 60%, var(--k-brand));
+  // Tient sur un seul écran et reste visible pendant qu'on fait défiler le
+  // formulaire. Le contenu est groupé en haut (logo + titre + preuves)…
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
 .auth-logo {
@@ -75,6 +82,8 @@
 }
 
 .auth-brand-foot {
+  // Poussée tout en bas du panneau (le reste du contenu est groupé en haut).
+  margin-top: auto;
   font-size: 13px;
   letter-spacing: 0.02em;
   color: rgba(255, 255, 255, 0.6);
@@ -85,6 +94,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  // Au moins un écran de haut : la carte reste centrée même pour un formulaire
+  // court (connexion), et le panneau grandit avec un formulaire long (inscription).
+  min-height: 100vh;
   padding: 48px 24px;
   background: var(--k-cream);
 }
@@ -104,6 +116,9 @@
   .auth-brand {
     padding: 26px 24px;
     gap: 22px;
+    // Empilé au-dessus du formulaire : plus de panneau collé/pleine hauteur.
+    position: static;
+    height: auto;
   }
 
   // Sur mobile, on garde le logo et les preuves, on masque le gros titre.
