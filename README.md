@@ -406,7 +406,9 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 ### Phase F2 — Pages publiques (PublicModule)
 
-- [ ] Page Accueil : hero, recherche rapide, présentation des espaces, services prioritaires, éléments de confiance.
+- [x] Page Accueil : hero, recherche rapide, présentation des espaces, services prioritaires, éléments de confiance. <!-- F2.2 : hero éditorial + recherche intégrée, grille des 9 univers, protocole de confiance, vitrine catalogue (API réelle), diaspora, services complémentaires, simulateur (teaser), statistiques, appel final -->
+- [~] Page Diaspora : bandeau d'accroche livré sur l'accueil (F2.2.3) ; page dédiée complète = F2.5.
+- [~] Composant simulateur : teaser d'appel livré sur l'accueil (F2.2.4) ; simulateur calculant en direct = page Construction (F2.5).
 - [ ] Page Immobilier : filtres biens (villes, type, prix), vérification, demande de visite.
 - [ ] Page Nuitées : calendrier, photos, équipements, prix/nuit, disponibilité.
 - [ ] Page Gestion locative : mandats, taux, reporting, maintenance, reversements (page de conversion propriétaire).

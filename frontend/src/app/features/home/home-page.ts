@@ -234,6 +234,28 @@ export class HomePageComponent implements OnInit {
     },
   ];
 
+  /**
+   * Étapes du simulateur de construction, présentées en 1-2-3 dans le bandeau
+   * dédié. Le simulateur complet (calcul en direct) arrive avec la page
+   * Construction en F2.5 ; ici, c'est une invitation à le lancer.
+   */
+  protected readonly simulatorSteps = [
+    { num: '1', label: 'Type de projet', hint: 'Maison, immeuble, extension…' },
+    { num: '2', label: 'Surface & standing', hint: 'Nombre de m² et niveau de finition' },
+    { num: '3', label: 'Estimation immédiate', hint: 'Une fourchette de budget en FCFA' },
+  ];
+
+  /**
+   * Chiffres de preuve affichés dans le bandeau de crédibilité (statistiques de
+   * présentation, à ajuster quand des données consolidées seront disponibles).
+   */
+  protected readonly stats = [
+    { value: '14', label: 'régions couvertes' },
+    { value: '9', label: 'univers de services' },
+    { value: '5', label: 'moyens de paiement locaux' },
+    { value: '100 %', label: 'projets tracés et archivés' },
+  ];
+
   ngOnInit(): void {
     this.loadFeatured();
   }

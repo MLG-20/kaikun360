@@ -33,9 +33,11 @@ La toute première brique de l'application (`App`) ne fait qu'une chose : affich
 
 ### Ce qui existe aujourd'hui
 
-- **`home/`** — la page d'**accueil** (pour l'instant une vitrine de démonstration
-  du style graphique : grand visuel, cartes de biens, galerie). Elle sera remplacée
-  par la vraie page d'accueil connectée aux données réelles en F2.
+- **`home/`** — la **page d'accueil complète** (F2.2) : accroche + moteur de
+  recherche, grille des 9 univers, protocole de confiance, **vitrine de biens
+  vérifiés connectée aux données réelles**, bandeau diaspora, services, teaser
+  du simulateur, statistiques et appel à l'action final. 👉 README détaillé :
+  [`home/README.md`](home/README.md).
 - **`auth/`** — **créer un compte et se connecter** (connexion, inscription,
   vérification, mot de passe oublié). 👉 Voir le README détaillé :
   [`auth/README.md`](auth/README.md).

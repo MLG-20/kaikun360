@@ -278,3 +278,66 @@
     }
   </div>
 </section>
+
+<!-- =========================================================================
+     Section 7 — Simulateur de construction « en 30 s ».
+     Teaser d'appel : le calcul complet arrive avec la page Construction (F2.5).
+     Porte l'ancre #simulateur ciblée par la tuile d'univers « Kaikun Build ».
+     ========================================================================= -->
+<section id="simulateur" class="simulator" aria-labelledby="simulator-title">
+  <div class="k-wrap simulator-card">
+    <div class="simulator-text">
+      <span class="k-eyebrow">Kaikun Build</span>
+      <h2 id="simulator-title">Estimez votre construction en 30 secondes</h2>
+      <p class="simulator-lead">
+        Une idée de projet ? Obtenez une première fourchette de budget en trois
+        étapes, puis lancez-vous avec un suivi de chantier filmé et daté.
+      </p>
+      <a class="k-btn k-btn--gold" [routerLink]="['/auth/inscription']">Lancer mon estimation</a>
+    </div>
+
+    <ol class="simulator-steps">
+      @for (step of simulatorSteps; track step.num) {
+        <li class="simulator-step">
+          <span class="simulator-num" aria-hidden="true">{{ step.num }}</span>
+          <span class="simulator-step-body">
+            <span class="simulator-step-label">{{ step.label }}</span>
+            <span class="simulator-step-hint">{{ step.hint }}</span>
+          </span>
+        </li>
+      }
+    </ol>
+  </div>
+</section>
+
+<!-- =========================================================================
+     Section 8 — Preuve : bandeau de statistiques de crédibilité.
+     ========================================================================= -->
+<section class="stats" aria-label="Kaikun 360 en chiffres">
+  <div class="k-wrap stats-grid">
+    @for (stat of stats; track stat.label) {
+      <div class="stat">
+        <span class="stat-value">{{ stat.value }}</span>
+        <span class="stat-label">{{ stat.label }}</span>
+      </div>
+    }
+  </div>
+</section>
+
+<!-- =========================================================================
+     Section 9 — Appel final : invitation à créer un compte / explorer.
+     ========================================================================= -->
+<section class="cta-final" aria-labelledby="cta-title">
+  <div class="k-wrap cta-final-inner">
+    <div>
+      <h2 id="cta-title">Prêt à démarrer votre projet au Sénégal&nbsp;?</h2>
+      <p class="cta-final-lead">
+        Créez votre compte gratuitement et gardez le contrôle, où que vous soyez.
+      </p>
+    </div>
+    <div class="cta-final-actions">
+      <a class="k-btn k-btn--primary" [routerLink]="['/auth/inscription']">Créer mon compte</a>
+      <a class="k-btn k-btn--ghost cta-final-ghost" [routerLink]="['/recherche']">Explorer le catalogue</a>
+    </div>
+  </div>
+</section>
