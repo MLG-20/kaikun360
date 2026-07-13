@@ -16,6 +16,33 @@ fonctionnalités. Tous sont « présentiels » : pilotés par leurs `input()` /
 | `VerificationBadgeComponent` | `app-verification-badge` | Pastille de vérification (« Vérifié », « Vérifié notaire »…), tons `default` / `gold`. |
 | `GalleryComponent` | `app-gallery` | Galerie photo : image principale + miniatures cliquables (alimentée par l'API Médias). |
 
+## Catalogue & recherche (F2.1)
+
+| Composant | Sélecteur | Rôle |
+| --- | --- | --- |
+| `CatalogComponent` | `app-catalog` | **Catalogue filtrable, triable et paginé**, réutilisé sur toutes les pages d'univers. Générique : l'univers vient d'un `input()` ; filtres/tri/page vivent dans l'URL (recherches partageables). |
+| `SearchEngineComponent` | `app-search-engine` | **Moteur de recherche global** : onglets d'univers + ville/mots-clés + budget. Navigue vers `/recherche` avec des paramètres alignés sur les filtres du backend. |
+
+**Comment ça marche, en clair :** l'utilisateur choisit un univers (Immobilier,
+Nuitées, Transport, Tourisme, Mobilité), tape une ville et un budget, puis lance
+la recherche. Il arrive sur une page de résultats où il peut affiner (type, prix,
+tri…). Toute la recherche est dans l'adresse de la page → on peut la partager ou
+la remettre en favori.
+
+**Côté technique :**
+- `app-catalog` prend `[universe]` (une des clés de [`catalog.config.ts`](components/catalog/catalog.config.ts))
+  et lit ses filtres dans les query params. Le **registre `UNIVERSES`** décrit,
+  pour chaque univers, comment charger les données (`CatalogService`), quels
+  filtres afficher et comment mapper un élément d'API vers une `app-listing-card`.
+  **Ajouter un univers = ajouter une entrée** dans ce registre, sans toucher au
+  composant.
+- La couche de données est [`core/api/catalog.service.ts`](../core/api/catalog.service.ts)
+  (5 index publics `/properties`, `/stays`, `/vehicles`, `/experiences`,
+  `/mobility-services`), enveloppe paginée typée [`Paginated<T>`](../core/api/pagination.model.ts).
+- `app-search-engine` mappe pour l'instant la « ville » sur la recherche
+  plein-texte `q` ; le filtrage géographique par identifiant (et les dates de
+  disponibilité) arriveront avec les pages d'univers (F2.3).
+
 ### Entrées principales
 
 - **`app-listing-card`** : `title` (requis), `location`, `price`, `priceUnit`,
@@ -23,6 +50,8 @@ fonctionnalités. Tous sont « présentiels » : pilotés par leurs `input()` /
 - **`app-verification-badge`** : `label`, `tone` (`default` | `gold`).
 - **`app-gallery`** : `images` (requis, `string[]`), `alt`.
 - **`app-orbit-hero`** : aucune entrée (données internes des univers).
+- **`app-catalog`** : `universe` (requis) — clé d'univers du registre.
+- **`app-search-engine`** : aucune entrée (navigue lui-même vers `/recherche`).
 
 ## Directives (F1)
 

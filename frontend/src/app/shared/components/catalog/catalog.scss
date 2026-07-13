@@ -1,0 +1,85 @@
+/* Catalogue générique (F2.1). Utilise les jetons du design system (--k-*). */
+
+.catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* --- Barre de filtres --- */
+.catalog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+  padding: 1rem 1.1rem;
+  background: var(--k-white);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.catalog-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 8.5rem;
+  flex: 1 1 8.5rem;
+}
+
+.catalog-filter-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--k-muted);
+}
+
+/* La case à cocher garde une hauteur alignée sur les inputs voisins. */
+.catalog-check {
+  width: 1.15rem;
+  height: 1.15rem;
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  accent-color: var(--k-brand);
+}
+
+.catalog-reset {
+  flex: 0 0 auto;
+}
+
+/* --- États --- */
+.catalog-status {
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--k-muted);
+}
+
+.catalog-status--error {
+  color: var(--k-danger);
+}
+
+.catalog-count {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+/* --- Grille de résultats --- */
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.25rem;
+}
+
+/* --- Pagination --- */
+.catalog-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.catalog-pager-info {
+  font-size: 0.9rem;
+  color: var(--k-muted);
+}

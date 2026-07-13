@@ -1,0 +1,21 @@
+/* Page de résultats /recherche (F2.1). */
+
+.catalog-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+.catalog-page-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.catalog-page-title {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  color: var(--k-ink);
+}

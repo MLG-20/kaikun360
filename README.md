@@ -420,8 +420,9 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [ ] Page FAQ : paiement, vérification, litiges, caution, diaspora, transport.
 - [ ] Page Contact : formulaire, WhatsApp, téléphone, email, localisation.
 - [ ] Pages légales : CGU, CGV, confidentialité, cookies, conditions de mandat, politique de remboursement.
-- [ ] Composant moteur de recherche global (service + ville + budget + dates + profil utilisateur).
-- [ ] Composant catalogue filtrable et triable, réutilisé sur toutes les pages d'univers.
+- [x] Composant moteur de recherche global (service + ville + budget + dates + profil utilisateur). <!-- F2.1 : univers + ville/mots-clés + budget ; dates & profil affinés en F2.3 -->
+- [x] Composant catalogue filtrable et triable, réutilisé sur toutes les pages d'univers. <!-- F2.1 -->
+
 - [ ] Composant fiche détaillée (photos, description, localisation, prix, disponibilité, règles, preuves, avis, CTA).
 - [ ] Composants de formulaires intelligents : demande client, dépôt de bien, inscription prestataire, demande diaspora, devis team building.
 - [ ] Composant simulateur immobilier/construction (budget, ville, surface, objectif, niveau de finition).

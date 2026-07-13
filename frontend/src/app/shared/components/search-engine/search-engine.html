@@ -1,0 +1,48 @@
+<!-- Moteur de recherche global (F2.1) : onglets d'univers + ville + budget + CTA. -->
+<form class="search" (submit)="$event.preventDefault(); submit()">
+  <p class="search-eyebrow">Que cherchez-vous aujourd'hui&nbsp;?</p>
+
+  <!-- Onglets d'univers. -->
+  <div class="search-tabs" role="tablist" aria-label="Univers">
+    @for (u of universes; track u.key) {
+      <button
+        type="button"
+        role="tab"
+        class="search-tab"
+        [class.search-tab--active]="selected() === u.key"
+        [attr.aria-selected]="selected() === u.key"
+        (click)="select(u.key)"
+      >
+        {{ u.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Champs de recherche. -->
+  <div class="search-fields">
+    <label class="search-field">
+      <span class="search-label">Ville ou mots-clés</span>
+      <input
+        type="text"
+        class="k-input"
+        placeholder="Dakar, Saly, villa…"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+      />
+    </label>
+
+    <label class="search-field search-field--budget">
+      <span class="search-label">Budget max (FCFA)</span>
+      <input
+        type="number"
+        class="k-input"
+        min="0"
+        placeholder="Ex. 500 000"
+        [value]="budget()"
+        (input)="budget.set($any($event.target).value)"
+      />
+    </label>
+
+    <button type="submit" class="k-btn k-btn--primary search-submit">Rechercher</button>
+  </div>
+</form>

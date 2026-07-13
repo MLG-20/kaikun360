@@ -26,6 +26,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home-page').then((m) => m.HomePageComponent),
         title: 'Kaikun 360 — Immobilier, tourisme & services au Sénégal',
       },
+      {
+        // Page de résultats du moteur de recherche (F2.1). L'univers et les
+        // filtres sont portés par les query params (ex. /recherche?univers=nuitees).
+        path: 'recherche',
+        loadComponent: () =>
+          import('./features/catalog/catalog-page').then((m) => m.CatalogPageComponent),
+        title: 'Recherche — Kaikun 360',
+      },
     ],
   },
 ];

@@ -1,0 +1,134 @@
+<!-- Catalogue générique (F2.1) : barre de filtres + grille de résultats + pagination. -->
+<section class="catalog">
+  <!-- Barre de filtres, dérivée de la configuration de l'univers courant. -->
+  <form class="catalog-filters" (submit)="$event.preventDefault()">
+    @for (field of config().filters; track field.key) {
+      <label class="catalog-filter">
+        <span class="catalog-filter-label">{{ field.label }}</span>
+
+        @switch (field.kind) {
+          @case ('select') {
+            <select
+              class="k-input"
+              [value]="currentValue(field.key)"
+              (change)="onFilterChange(field.key, $any($event.target).value)"
+            >
+              <option value="">Tous</option>
+              @for (opt of field.options; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          }
+          @case ('boolean') {
+            <input
+              type="checkbox"
+              class="catalog-check"
+              [checked]="currentValue(field.key) === 'true'"
+              (change)="onBooleanChange(field.key, $any($event.target).checked)"
+            />
+          }
+          @case ('number') {
+            <input
+              type="number"
+              class="k-input"
+              min="0"
+              [placeholder]="field.placeholder ?? ''"
+              [value]="currentValue(field.key)"
+              (change)="onFilterChange(field.key, $any($event.target).value)"
+            />
+          }
+          @case ('date') {
+            <input
+              type="date"
+              class="k-input"
+              [value]="currentValue(field.key)"
+              (change)="onFilterChange(field.key, $any($event.target).value)"
+            />
+          }
+          @default {
+            <input
+              type="text"
+              class="k-input"
+              [placeholder]="field.placeholder ?? ''"
+              [value]="currentValue(field.key)"
+              (change)="onFilterChange(field.key, $any($event.target).value)"
+            />
+          }
+        }
+      </label>
+    }
+
+    @if (config().hasSort) {
+      <label class="catalog-filter">
+        <span class="catalog-filter-label">Trier par</span>
+        <select
+          class="k-input"
+          [value]="currentSort()"
+          (change)="onSortChange($any($event.target).value)"
+        >
+          @for (opt of sortOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </label>
+    }
+
+    <button type="button" class="k-btn k-btn--ghost catalog-reset" (click)="reset()">
+      Réinitialiser
+    </button>
+  </form>
+
+  <!-- États : chargement, erreur, aucun résultat. -->
+  @if (loading()) {
+    <p class="catalog-status" role="status">Chargement des résultats…</p>
+  } @else if (failed()) {
+    <p class="catalog-status catalog-status--error" role="alert">
+      Impossible de charger le catalogue. Vérifiez votre connexion puis réessayez.
+    </p>
+  } @else if (empty()) {
+    <p class="catalog-status">Aucun résultat ne correspond à votre recherche.</p>
+  } @else {
+    <!-- Compteur + grille de cartes. -->
+    @if (meta(); as m) {
+      <p class="catalog-count">{{ m.total }} résultat{{ m.total > 1 ? 's' : '' }}</p>
+    }
+
+    <div class="catalog-grid">
+      @for (card of cards(); track card.id) {
+        <app-listing-card
+          [title]="card.title"
+          [location]="card.location"
+          [price]="card.price"
+          [priceUnit]="card.priceUnit"
+          [badge]="card.badge"
+          [image]="card.image"
+        />
+      }
+    </div>
+
+    <!-- Pagination. -->
+    @if (meta(); as m) {
+      @if (m.last_page > 1) {
+        <nav class="catalog-pager" aria-label="Pagination">
+          <button
+            type="button"
+            class="k-btn k-btn--ghost"
+            [disabled]="m.current_page <= 1"
+            (click)="goToPage(m.current_page - 1)"
+          >
+            Précédent
+          </button>
+          <span class="catalog-pager-info">Page {{ m.current_page }} / {{ m.last_page }}</span>
+          <button
+            type="button"
+            class="k-btn k-btn--ghost"
+            [disabled]="m.current_page >= m.last_page"
+            (click)="goToPage(m.current_page + 1)"
+          >
+            Suivant
+          </button>
+        </nav>
+      }
+    }
+  }
+</section>

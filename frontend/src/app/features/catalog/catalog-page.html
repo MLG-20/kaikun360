@@ -1,0 +1,12 @@
+<!-- Page de résultats /recherche (F2.1). -->
+<div class="k-wrap catalog-page">
+  <app-search-engine />
+
+  <header class="catalog-page-head">
+    <p class="k-eyebrow">Catalogue</p>
+    <h1 class="catalog-page-title">{{ universeLabel() }}</h1>
+  </header>
+
+  <!-- Le composant catalogue lit ses filtres/tri/page dans l'URL. -->
+  <app-catalog [universe]="universe()" />
+</div>
