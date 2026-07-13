@@ -185,6 +185,37 @@ h3 {
   box-shadow: 0 0 0 3px rgba(199, 59, 77, 0.16);
 }
 
+// Champ mot de passe avec bouton « œil » (voir PasswordRevealDirective).
+.k-input-wrap {
+  position: relative;
+  display: block;
+}
+
+// Réserve la place de l'œil pour que le texte ne passe pas dessous.
+.k-input--with-eye {
+  padding-right: 44px;
+}
+
+.k-input-eye {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  color: var(--k-muted);
+  cursor: pointer;
+  border-radius: var(--k-radius-sm);
+}
+
+.k-input-eye:hover {
+  color: var(--k-brand);
+}
+
 // Message d'erreur sous un champ.
 .k-error {
   font-size: 13px;

@@ -39,7 +39,8 @@
       [class.k-input--error]="invalid('password')"
       formControlName="password"
       autocomplete="current-password"
-      placeholder="••••••••" />
+      placeholder="••••••••"
+      appPasswordReveal />
     @if (invalid('password')) {
       <span class="k-error">Mot de passe requis.</span>
     }

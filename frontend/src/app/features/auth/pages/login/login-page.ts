@@ -15,6 +15,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { GoogleIdentityService } from '../../../../core/auth/google-identity.service';
+import { PasswordRevealDirective } from '../../../../shared/directives/password-reveal.directive';
 
 /**
  * Page de connexion (F1.1).
@@ -27,7 +28,7 @@ import { GoogleIdentityService } from '../../../../core/auth/google-identity.ser
  */
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PasswordRevealDirective],
   templateUrl: './login-page.html',
   styleUrl: './login-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

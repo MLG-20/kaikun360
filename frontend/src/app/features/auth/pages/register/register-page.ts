@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { RegisterPayload } from '../../../../core/auth/auth.types';
+import { PasswordRevealDirective } from '../../../../shared/directives/password-reveal.directive';
 
 /** Un choix de profil proposé à l'inscription (onboarding, CDC §5.2). */
 interface ProfileOption {
@@ -25,7 +26,7 @@ interface ProfileOption {
  */
 @Component({
   selector: 'app-register-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PasswordRevealDirective],
   templateUrl: './register-page.html',
   styleUrl: './register-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

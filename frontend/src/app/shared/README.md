@@ -24,6 +24,22 @@ fonctionnalités. Tous sont « présentiels » : pilotés par leurs `input()` /
 - **`app-gallery`** : `images` (requis, `string[]`), `alt`.
 - **`app-orbit-hero`** : aucune entrée (données internes des univers).
 
+## Directives (F1)
+
+| Directive | Attribut | Rôle |
+| --- | --- | --- |
+| `PasswordRevealDirective` | `appPasswordReveal` | Ajoute un petit **bouton « œil »** à un champ mot de passe pour **afficher/masquer** la saisie. |
+
+**À quoi ça sert, en clair :** quand on tape un mot de passe, on ne voit que des
+points ; l'œil permet de **vérifier ce qu'on a saisi** (utile pour éviter les
+fautes de frappe). Un clic l'affiche en clair, un autre le masque.
+
+**Comment l'utiliser :** ajouter l'attribut `appPasswordReveal` sur un
+`<input type="password">`. La directive se charge de tout (elle glisse le bouton à
+droite du champ) et **ne modifie pas la valeur** : elle fonctionne donc telle
+quelle avec les formulaires réactifs (`formControlName`). Utilisée sur les pages
+connexion, inscription et réinitialisation de mot de passe.
+
 ## Conventions
 
 - **Préfixe de sélecteur** : `app-` (défini dans `angular.json`).

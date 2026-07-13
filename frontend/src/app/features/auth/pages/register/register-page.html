@@ -102,7 +102,8 @@
       [class.k-input--error]="invalid('password') || serverError('password')"
       formControlName="password"
       autocomplete="new-password"
-      placeholder="8 caractères minimum" />
+      placeholder="8 caractères minimum"
+      appPasswordReveal />
     @if (invalid('password')) {
       <span class="k-error">Au moins 8 caractères.</span>
     } @else if (serverError('password'); as msg) {
@@ -119,7 +120,8 @@
       [class.k-input--error]="form.controls.password_confirmation.touched && form.hasError('passwordsMismatch')"
       formControlName="password_confirmation"
       autocomplete="new-password"
-      placeholder="Retapez le mot de passe" />
+      placeholder="Retapez le mot de passe"
+      appPasswordReveal />
     @if (form.controls.password_confirmation.touched && form.hasError('passwordsMismatch')) {
       <span class="k-error">Les deux mots de passe ne correspondent pas.</span>
     }

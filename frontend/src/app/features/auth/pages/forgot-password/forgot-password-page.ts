@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { PasswordRevealDirective } from '../../../../shared/directives/password-reveal.directive';
 
 /**
  * Récupération de mot de passe (F1.3). Page publique en deux étapes sur un écran :
@@ -15,7 +16,7 @@ import { AuthService } from '../../../../core/auth/auth.service';
  */
 @Component({
   selector: 'app-forgot-password-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, PasswordRevealDirective],
   templateUrl: './forgot-password-page.html',
   styleUrl: './forgot-password-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
