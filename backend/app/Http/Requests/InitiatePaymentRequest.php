@@ -21,6 +21,8 @@ class InitiatePaymentRequest extends FormRequest
     {
         return [
             'booking_id' => ['required', 'integer', 'exists:bookings,id'],
+            // `paytech` (défaut) ou `manuel` (Phase 1 du cahier des charges).
+            'mode' => ['sometimes', 'in:paytech,manuel'],
         ];
     }
 }

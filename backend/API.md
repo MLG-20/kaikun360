@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 141 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 142 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -269,6 +269,11 @@ TypeScript miroir côté frontend Angular (phase F0).
 
 > Le webhook PayTech est **public** au sens middleware mais protégé par une
 > **signature HMAC-SHA256** vérifiée en tête de contrôleur (rejet `401` sinon).
+>
+> `POST /payments/initiate` accepte un champ `mode` : `paytech` (défaut, renvoie
+> une URL de redirection PSP) ou `manuel` (Phase 1 du cahier des charges : aucun
+> appel PSP, renvoie les instructions de règlement Wave/Orange Money ; la
+> confirmation se fait ensuite via `POST /admin/payments/{payment}/confirm`).
 
 ### Notifications
 
@@ -294,6 +299,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | DELETE | `/admin/pages/{page}` | auth + `can:gerer:parametres` | `PageController@destroy` |
 | PATCH | `/admin/pages/{page}` | auth + `can:gerer:parametres` | `PageController@update` |
 | GET | `/admin/payments` | auth + `can:gerer:paiements` | `AdminPaymentController@index` |
+| POST | `/admin/payments/{payment}/confirm` | auth + `can:gerer:paiements` | `AdminPaymentController@confirm` |
 | POST | `/admin/payments/{payment}/refund` | auth + `can:gerer:paiements` | `AdminPaymentController@refund` |
 | GET | `/admin/properties` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@properties` |
 | GET | `/admin/queue` | auth + `can:consulter:dashboard-admin` | `ValidationQueueController@index` |

@@ -76,6 +76,10 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         Route::post('/payments/{payment}/refund', [AdminPaymentController::class, 'refund'])
             ->whereNumber('payment')
             ->middleware('throttle:payment');
+        // B20 — Confirmation manuelle d'un paiement Wave/OM (Phase 1 du CDC).
+        Route::post('/payments/{payment}/confirm', [AdminPaymentController::class, 'confirm'])
+            ->whereNumber('payment')
+            ->middleware('throttle:payment');
     });
 
     // B13.7.3 — Gestion documentaire transverse (KYC, docs biens, certifs,

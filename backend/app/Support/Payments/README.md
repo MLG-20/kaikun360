@@ -66,6 +66,28 @@ Permission `gerer:paiements`. `AdminPaymentController` (dépend de l'interface) 
   au payé (**422**) ; délègue au PSP (`refund`), échec → **502** ; sinon statut
   `rembourse` + `meta.refunded_amount_xof`, tracé (Activitylog).
 
+## B20 — Paiement manuel (Phase 1 du cahier des charges)
+
+Avant l'obtention d'un compte marchand, la plateforme peut encaisser en **mode
+manuel** : le client règle par Wave/Orange Money au numéro officiel, un admin
+confirme la réception dans le back-office (cahier des charges §11, Phase 1).
+
+- **`POST /payments/initiate`** accepte `mode` = `paytech` (défaut) ou `manuel`.
+  En `manuel` : `Payment` créé (`provider=manuel`, `mode=manuel`, `en_attente`),
+  **aucun appel PSP**, réponse `{ payment, instructions }` (méthode, numéro
+  officiel lu depuis `Settings::get('support.phone')`, référence à mentionner).
+- **`POST /admin/payments/{payment}/confirm`** (`can:gerer:paiements`) — confirme
+  un paiement manuel. Garde-fous : `mode ≠ manuel` → 422, déjà `complete` → 422.
+  Accepte `provider_reference?` (ID transaction Wave/OM, conservé dans `meta`).
+
+**`PaymentConfirmationService::markCompleted(Payment, ?User $actor)`** est la
+**source de vérité unique** du passage à `complete` : passe la réservation en
+`confirmee` (sauf annulée), notifie le client (`BookingConfirmedNotification`),
+émet l'événement n8n `booking.confirmed`, journalise « Validation de paiement ».
+Appelé par le **webhook PayTech** (sans causer) ET par la **confirmation manuelle**
+(avec le causer admin). Le webhook B14.3 a été refactoré pour l'utiliser — plus
+de duplication de la logique de confirmation.
+
 ## Reste côté client (hors code)
 
 - Créer le compte marchand PayTech (sandbox puis prod) et fournir les clés.

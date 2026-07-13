@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\PaymentResource;
 use App\Models\Payment;
 use App\Support\ApiResponse;
+use App\Support\Payments\PaymentConfirmationService;
 use App\Support\Payments\PaymentProviderInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,8 +23,10 @@ use Illuminate\Validation\ValidationException;
  */
 class AdminPaymentController extends Controller
 {
-    public function __construct(private readonly PaymentProviderInterface $provider)
-    {
+    public function __construct(
+        private readonly PaymentProviderInterface $provider,
+        private readonly PaymentConfirmationService $confirmation,
+    ) {
     }
 
     /**
@@ -85,6 +88,45 @@ class AdminPaymentController extends Controller
         activity()->causedBy($request->user())->performedOn($payment)
             ->withProperties(['amount_xof' => $amount])
             ->log('Remboursement de paiement');
+
+        return ApiResponse::success(['payment' => PaymentResource::make($payment->fresh())]);
+    }
+
+    /**
+     * Confirme manuellement un paiement encaissé hors PSP (Phase 1 du cahier des
+     * charges). POST /api/v1/admin/payments/{payment}/confirm
+     *
+     * Cas d'usage : le client a réglé par Wave/Orange Money au numéro officiel ;
+     * un admin valide la réception. La réservation est alors confirmée via le
+     * service partagé, avec le causer admin (traçabilité, B15.3).
+     */
+    public function confirm(Request $request, Payment $payment): JsonResponse
+    {
+        $data = $request->validate([
+            // Identifiant de la transaction Wave/OM, conservé comme preuve.
+            'provider_reference' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        // Réservé au flux manuel : un paiement PayTech se confirme par webhook.
+        if ($payment->mode !== 'manuel') {
+            throw ValidationException::withMessages([
+                'payment' => ['Seul un paiement en mode manuel peut être confirmé à la main.'],
+            ]);
+        }
+        if ($payment->status === PaymentStatus::COMPLETE) {
+            throw ValidationException::withMessages([
+                'payment' => ['Ce paiement est déjà confirmé.'],
+            ]);
+        }
+
+        if (! empty($data['provider_reference'])) {
+            $payment->provider_reference = $data['provider_reference'];
+            $payment->meta = array_merge($payment->meta ?? [], [
+                'manual_proof_reference' => $data['provider_reference'],
+            ]);
+        }
+
+        $this->confirmation->markCompleted($payment, $request->user());
 
         return ApiResponse::success(['payment' => PaymentResource::make($payment->fresh())]);
     }

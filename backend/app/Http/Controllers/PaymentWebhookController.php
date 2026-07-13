@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Payment;
-use App\Notifications\BookingConfirmedNotification;
-use App\Support\Webhooks\WebhookDispatcher;
 use App\Support\ApiResponse;
+use App\Support\Payments\PaymentConfirmationService;
 use App\Support\Payments\PaytechWebhookVerifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,8 +21,10 @@ use Illuminate\Support\Facades\Log;
  */
 class PaymentWebhookController extends Controller
 {
-    public function __construct(private readonly PaytechWebhookVerifier $verifier)
-    {
+    public function __construct(
+        private readonly PaytechWebhookVerifier $verifier,
+        private readonly PaymentConfirmationService $confirmation,
+    ) {
     }
 
     /**
@@ -96,36 +96,17 @@ class PaymentWebhookController extends Controller
         }
 
         // 6) Appliquer le statut ; confirmer la réservation si encaissé.
-        $payment->status = $internal->value;
         if (isset($payload['mode']) || isset($payload['data']['mode'])) {
             $payment->mode = $payload['mode'] ?? $payload['data']['mode'];
         }
-        $payment->save();
 
         if ($internal === PaymentStatus::COMPLETE) {
-            // Audit d'une action sensible (validation de paiement, B15.3). Pas de
-            // causer : la source est le PSP via un webhook authentifié.
-            activity()->performedOn($payment)
-                ->withProperties(['amount_xof' => $payment->amount_xof, 'commission_xof' => $payment->commission_xof])
-                ->log('Validation de paiement');
-
-            if ($payment->booking !== null && ! $payment->booking->status->estAnnulee()) {
-                $payment->booking->update(['status' => BookingStatus::CONFIRMEE->value]);
-
-                // Confirme au client (async, e-mail + SMS) — B16.2.
-                $payment->booking->user?->notify(new BookingConfirmedNotification($payment->booking));
-
-                // Émet l'événement vers n8n (automatisation WhatsApp…) — B18.1.
-                WebhookDispatcher::emit(WebhookDispatcher::BOOKING_CONFIRMED, [
-                    'booking_reference' => $payment->booking->reference,
-                    'bookable_type' => class_basename((string) $payment->booking->bookable_type),
-                    'amount_xof' => $payment->amount_xof,
-                    'user' => [
-                        'name' => $payment->booking->user?->name,
-                        'phone' => $payment->booking->user?->phone,
-                    ],
-                ]);
-            }
+            // Source automatique (PSP) : pas de causer. Confirmation + notifs +
+            // événement n8n délégués au service partagé (B20).
+            $this->confirmation->markCompleted($payment);
+        } else {
+            $payment->status = $internal->value;
+            $payment->save();
         }
 
         return ApiResponse::success(['status' => $payment->status->value]);

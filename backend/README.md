@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **141 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **142 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **52 tables**, référentiel géographique du Sénégal inclus
-- **404 tests** automatisés (1110 assertions), tous verts ✅
+- **409 tests** automatisés (1125 assertions), tous verts ✅
 
 ---
 
@@ -87,9 +87,9 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
 ## Domaines fonctionnels
 
 - **Core** — inscription (5 profils : client, propriétaire, prestataire, diaspora,
-  entreprise), connexion e-mail/téléphone, vérification par code, récupération de
-  compte, profils, documents KYC sur disque privé (téléchargement par URL signée),
-  8 rôles / permissions fines.
+  entreprise), connexion e-mail/téléphone **ou Google** (flux ID token),
+  vérification par code, récupération de compte, profils, documents KYC sur disque
+  privé (téléchargement par URL signée), 8 rôles / permissions fines.
 - **Immo** — catalogue public filtrable, dépôt de biens, validation par un agent,
   documents, favoris, comparaison.
 - **Stay** — catalogue de nuitées, disponibilité, réservation anti-double-booking,
@@ -110,12 +110,12 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   commission, notation agrégée à partir des avis.
 - **Admin** — tableau de bord KPI, file de validation générique, gestion des
   comptes, paramétrage (commissions/tarifs/FAQ/pages), export comptable JSON/CSV,
-  supervision des paiements & remboursements.
+  supervision des paiements (remboursements + confirmation manuelle Wave/OM).
 
 Couches **transversales** : demandes de service (machine à états stricte), devis
 génériques, réservations polymorphes, médias (compression d'images), avis (réservés
 au consommateur ayant consommé), notifications (e-mail/SMS asynchrones, WhatsApp
-click-to-chat), paiement PayTech.
+click-to-chat), paiement (PayTech ou manuel Wave/Orange Money).
 
 ---
 
@@ -128,12 +128,12 @@ backend/
 ├── config/              # Configuration (services, cache, cors…)
 ├── database/
 │   ├── factories/       # Factories de test
-│   ├── migrations/      # 44 migrations (52 tables)
+│   ├── migrations/      # 45 migrations (52 tables)
 │   ├── schema/          # Dump de schéma MySQL (accélère les tests)
 │   └── seeders/         # Rôles/permissions, référentiel géographique
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 141 endpoints
+├── API.md               # Référence des 142 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -250,7 +250,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 404 tests, 1110 assertions — verts
+# 409 tests, 1125 assertions — verts
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -262,7 +262,7 @@ php artisan test
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 141 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 142 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |
@@ -281,6 +281,10 @@ Le code est **abondamment commenté en français**.
 - ✅ **Intégrations (B18) :** webhooks sortants signés vers **n8n** (automatisation
   WhatsApp — voir [`WEBHOOKS.md`](WEBHOOKS.md)) et canal **SMS Orange/Sonatel**
   (`OrangeSmsProvider`), testés via `Http::fake`.
+- ✅ **Connexion Google (B19) :** `POST /auth/google` (flux ID token, find-or-create).
+- ✅ **Paiement manuel (B20) :** mode `manuel` sur `POST /payments/initiate`
+  (règlement Wave/Orange Money au numéro officiel, sans PSP) + confirmation
+  admin `POST /admin/payments/{payment}/confirm` — Phase 1 du cahier des charges.
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.

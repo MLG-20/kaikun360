@@ -262,6 +262,7 @@
 - [x] Logique de calcul et d'enregistrement des commissions Kaikun par transaction réussie.
 - [x] Gérer le cas où le montant débité diffère du montant demandé (certains moyens PayTech) : réconciliation explicite, jamais de confirmation automatique sur une simple différence de montant non vérifiée.
 - [x] Endpoint admin de supervision des paiements (liste, statut, recherche par référence) — lié à B13.
+- [x] **Mode paiement manuel (Phase 1 du cahier des charges)** : `POST /payments/initiate` accepte `mode=manuel` (aucun appel PSP, renvoie les instructions de règlement Wave/Orange Money au numéro officiel) + `POST /admin/payments/{payment}/confirm` pour validation manuelle par l'admin. Logique de confirmation factorisée dans `PaymentConfirmationService` (source unique partagée avec le webhook PayTech).
 - [ ] Tests en environnement sandbox PayTech avant toute bascule en production.
 - [x] Tests : aucun module métier (Bookings, Quotes, Mobility, Explore) ne dépend directement de PayTech, uniquement de `PaymentProviderInterface`.
 
