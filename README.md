@@ -398,11 +398,11 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 ### Phase F1 — Authentification et onboarding
 
-- [ ] Page d'inscription avec choix de profil (client, propriétaire, prestataire, diaspora, entreprise).
-- [ ] Page de connexion (email ou téléphone).
-- [ ] Écran de vérification (code SMS/email).
-- [ ] Écran de récupération de compte.
-- [ ] Gestion du stockage du token (en mémoire/state, jamais en localStorage non sécurisé) et du rafraîchissement de session.
+- [x] Page d'inscription avec choix de profil (client, propriétaire, prestataire, diaspora, entreprise). — F1.2.
+- [x] Page de connexion (email ou téléphone) + bouton **Connexion Google** (masqué tant que `googleClientId` non fourni). — F1.1 / F1.4.
+- [x] Écran de vérification (code SMS/email). — F1.3.
+- [x] Écran de récupération de compte. — F1.3 (mot de passe oublié → réinitialisation par code).
+- [x] Gestion du stockage du token (en mémoire/state, jamais en localStorage non sécurisé) et du rafraîchissement de session. — Jeton en mémoire (signal `AuthService`) ; reconnexion silencieuse volontairement reportée.
 
 ### Phase F2 — Pages publiques (PublicModule)
 
