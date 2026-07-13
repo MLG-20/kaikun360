@@ -50,6 +50,13 @@
   </button>
 </form>
 
+<!-- Connexion Google : affichée seulement si l'identifiant client est configuré.
+     Google dessine lui-même son bouton officiel dans ce conteneur. -->
+@if (googleEnabled) {
+  <div class="auth-divider"><span>ou</span></div>
+  <div #googleBtn class="google-btn-host"></div>
+}
+
 <p class="auth-alt">
   Pas encore de compte ?
   <a class="auth-link" routerLink="/auth/inscription">Créer un compte</a>

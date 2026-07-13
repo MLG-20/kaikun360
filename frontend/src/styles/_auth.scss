@@ -71,6 +71,24 @@
   font-size: 13px;
 }
 
+// Séparateur « ou » entre la connexion classique et la connexion Google.
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--k-muted);
+  font-size: 13px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--k-line);
+}
+
 @media (max-width: 480px) {
   .auth-row {
     grid-template-columns: 1fr;

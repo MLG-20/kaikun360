@@ -17,7 +17,7 @@ visiteur peut y faire quatre choses (une cinquième arrive bientôt) :
 | **Créer un compte** | `/auth/inscription` | Elle choisit d'abord **qui elle est** (Client, Propriétaire, Prestataire, Entreprise ou Diaspora), puis remplit ses informations. Son compte est créé immédiatement. |
 | **Confirmer son compte** | `/auth/verification` | Juste après l'inscription, on lui envoie un **code** (par e-mail ou SMS). En le saisissant, elle prouve que l'adresse/le numéro est bien le sien : son compte devient **actif**. |
 | **Mot de passe oublié** | `/auth/mot-de-passe-oublie` | Elle indique son e-mail ou téléphone, reçoit un **code**, puis choisit un nouveau mot de passe. |
-| **Connexion Google** *(à venir, F1.4)* | sur la page de connexion | Un bouton « Continuer avec Google » pour se connecter sans créer de mot de passe. |
+| **Connexion Google** | sur la page de connexion | Un bouton « Continuer avec Google » pour se connecter en un clic, sans créer de mot de passe. |
 
 ### Le parcours typique d'un nouvel utilisateur
 
@@ -29,6 +29,12 @@ visiteur peut y faire quatre choses (une cinquième arrive bientôt) :
 
 S'il oublie plus tard son mot de passe, il passe par **Mot de passe oublié** :
 il reçoit un code, en saisit un nouveau, et se reconnecte.
+
+> **À propos du bouton Google** : il est entièrement développé, mais il ne
+> s'affichera que lorsque le client aura créé son **identifiant Google** (une
+> démarche gratuite sur la console Google Cloud) et qu'on l'aura renseigné dans la
+> configuration. Tant que ce n'est pas fait, le bouton reste simplement masqué et
+> la connexion classique fonctionne normalement.
 
 ### Le « décor » des pages
 
@@ -106,3 +112,20 @@ le service unique qui parle au backend et retient qui est connecté (via des
 - **Styles partagés** : la mise en page commune des pages auth vit dans
   [`../../../styles/_auth.scss`](../../../styles/_auth.scss) (classes `.auth-*`),
   réutilisable par toutes les pages ; chaque page ne garde que son style propre.
+
+### Connexion Google (F1.4)
+
+Le bouton « Continuer avec Google » sur la page de connexion s'appuie sur
+[`../../core/auth/google-identity.service.ts`](../../core/auth/google-identity.service.ts) :
+
+- il charge la librairie officielle **Google Identity Services** *à la demande*
+  (uniquement si un identifiant client est configuré) ;
+- Google dessine lui-même son bouton, puis renvoie un **jeton d'identité** que l'on
+  transmet à `AuthService.loginWithGoogle` → le backend le vérifie (`POST
+  /auth/google`) et ouvre la session ;
+- le callback venant d'un script externe (hors « zone » Angular), on repasse dans
+  la zone (`NgZone`) pour que la navigation et l'affichage se rafraîchissent.
+
+L'identifiant client se règle dans `src/environments/environment*.ts`
+(`googleClientId`). **Vide par défaut** → le bouton reste masqué (le client doit
+fournir cet identifiant, cf. la note plus haut).

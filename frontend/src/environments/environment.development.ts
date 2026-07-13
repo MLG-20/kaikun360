@@ -8,4 +8,8 @@
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:8000/api/v1',
+  // Identifiant client Google (OAuth) pour le bouton « Connexion Google ».
+  // Coller ici l'ID de la Google Cloud Console pour tester en local. Vide = le
+  // bouton Google reste masqué.
+  googleClientId: '',
 };

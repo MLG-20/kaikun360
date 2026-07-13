@@ -7,4 +7,8 @@
 export const environment = {
   production: true,
   apiUrl: '/api/v1',
+  // Identifiant client Google (OAuth) pour le bouton « Connexion Google ».
+  // À renseigner par le client via la Google Cloud Console. Tant qu'il est vide,
+  // le bouton Google reste masqué (le reste de la connexion fonctionne).
+  googleClientId: '',
 };
