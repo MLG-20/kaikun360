@@ -41,10 +41,10 @@
   }
 }
 
-// Respect des préférences de mouvement réduit.
-@media (prefers-reduced-motion: reduce) {
-  .orbit-ring {
-    animation: none;
+// Rotation inverse (pour garder les icônes droites malgré le carrousel).
+@keyframes orbit-spin-rev {
+  to {
+    transform: rotate(-360deg);
   }
 }
 
@@ -111,6 +111,22 @@
 }
 
 // --- Nœuds en orbite ------------------------------------------------------
+// Calque qui porte les 8 nœuds et les fait tourner lentement autour du centre.
+// La carte centrale et le libellé, eux, ne bougent pas.
+.orbit-nodes {
+  position: absolute;
+  inset: 0;
+  animation: orbit-spin 48s linear infinite;
+}
+
+// Tout se fige dès que le curseur entre dans la zone : ainsi les nœuds
+// deviennent des cibles stables, faciles à cliquer.
+.orbit-wrap:hover .orbit-nodes,
+.orbit-wrap:hover .orbit-ring,
+.orbit-wrap:hover .orbit-node svg {
+  animation-play-state: paused;
+}
+
 .orbit-node {
   position: absolute;
   width: 62px;
@@ -131,6 +147,8 @@
   height: 26px;
   color: var(--k-navy);
   transition: color 0.2s;
+  // Contre-rotation : annule la rotation du calque pour garder l'icône droite.
+  animation: orbit-spin-rev 48s linear infinite;
 }
 
 .orbit-node:hover,
@@ -165,5 +183,15 @@
     width: 54px;
     height: 54px;
     margin: -27px 0 0 -27px;
+  }
+}
+
+// Accessibilité : si l'utilisateur a demandé des animations réduites, on coupe
+// toute rotation (anneaux, carrousel de nœuds, contre-rotation des icônes).
+@media (prefers-reduced-motion: reduce) {
+  .orbit-ring,
+  .orbit-nodes,
+  .orbit-node svg {
+    animation: none;
   }
 }

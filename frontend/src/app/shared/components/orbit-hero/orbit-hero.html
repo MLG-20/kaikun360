@@ -11,26 +11,30 @@
     <a class="oc-cta" href="#">{{ active().cta }}</a>
   </div>
 
-  <!-- Nœuds en orbite -->
-  @for (node of nodes; track node.title; let i = $index) {
-    <button
-      type="button"
-      class="orbit-node"
-      [class.active]="focused() === i"
-      [style.left.%]="node.left"
-      [style.top.%]="node.top"
-      (mouseenter)="focus(i)"
-      (focus)="focus(i)"
-      (click)="focus(i)"
-      [attr.aria-label]="node.title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        @for (d of node.icon; track $index) {
-          <path [attr.d]="d"></path>
-        }
-      </svg>
-    </button>
-  }
+  <!-- Nœuds en orbite : ce calque tourne lentement (voir .orbit-nodes) et
+       s'arrête dès que le curseur entre dans la zone (.orbit-wrap:hover). -->
+  <div class="orbit-nodes">
+    @for (node of nodes; track node.title; let i = $index) {
+      <button
+        type="button"
+        class="orbit-node"
+        [class.active]="focused() === i"
+        [style.left.%]="node.left"
+        [style.top.%]="node.top"
+        (mouseenter)="focus(i)"
+        (focus)="focus(i)"
+        (click)="focus(i)"
+        [attr.aria-label]="node.title">
+        <!-- L'icône est contre-tournée pour rester droite malgré la rotation. -->
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          @for (d of node.icon; track $index) {
+            <path [attr.d]="d"></path>
+          }
+        </svg>
+      </button>
+    }
+  </div>
 </div>
 
 <p class="orbit-hint">Survolez un univers pour l'explorer.</p>
