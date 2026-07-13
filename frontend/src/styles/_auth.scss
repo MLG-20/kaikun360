@@ -1,0 +1,78 @@
+// =============================================================================
+// Styles partagés des pages d'authentification (F1)
+//
+// Ces classes `.auth-*` décorent les PAGES rendues dans l'auth-layout (connexion,
+// inscription, vérification, récupération). Elles sont globales (et non scopées à
+// un composant) car plusieurs pages enfant les réutilisent — l'encapsulation
+// Angular empêcherait le partage si elles vivaient dans un seul composant.
+// =============================================================================
+
+.auth-head {
+  margin-bottom: 24px;
+}
+
+.auth-title {
+  font-family: var(--k-font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--k-ink);
+}
+
+.auth-sub {
+  margin-top: 6px;
+  font-size: 15px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+// Deux champs côte à côte (téléphone / ville), empilés sur mobile.
+.auth-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.auth-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-link {
+  color: var(--k-brand);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+.auth-form .k-btn {
+  margin-top: 4px;
+}
+
+.auth-alt {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--k-muted);
+}
+
+// Mention « (optionnel) » à côté d'un libellé de champ.
+.k-optional {
+  font-weight: 400;
+  color: var(--k-muted);
+  font-size: 13px;
+}
+
+@media (max-width: 480px) {
+  .auth-row {
+    grid-template-columns: 1fr;
+  }
+}

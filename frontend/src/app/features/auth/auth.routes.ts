@@ -18,6 +18,11 @@ export const AUTH_ROUTES: Routes = [
         loadComponent: () => import('./pages/login/login-page').then((m) => m.LoginPageComponent),
         title: 'Connexion — Kaikun 360',
       },
+      {
+        path: 'inscription',
+        loadComponent: () => import('./pages/register/register-page').then((m) => m.RegisterPageComponent),
+        title: 'Créer un compte — Kaikun 360',
+      },
       { path: '', redirectTo: 'connexion', pathMatch: 'full' },
     ],
   },

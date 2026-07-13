@@ -1,3 +1,5 @@
 // Styles globaux Kaikun 360 — design system (F0.3).
 @use 'styles/tokens';
 @use 'styles/base';
+// Styles partagés des pages d'authentification (F1).
+@use 'styles/auth';

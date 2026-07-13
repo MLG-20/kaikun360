@@ -33,7 +33,7 @@ Authentification & onboarding, rendue dans `auth-layout`. Routes déclarées dan
 | Page | Route | Statut | Endpoint |
 | --- | --- | --- | --- |
 | Connexion | `/auth/connexion` | ✅ F1.1 | `POST /auth/login` |
-| Inscription + onboarding | `/auth/inscription` | 🔜 F1.2 | `POST /auth/register` |
+| Inscription + onboarding | `/auth/inscription` | ✅ F1.2 | `POST /auth/register` |
 | Vérification (code) | `/auth/verification` | 🔜 F1.3 | `/auth/verify`, `/auth/verify/send` |
 | Mot de passe oublié / réinitialisation | `/auth/mot-de-passe-oublie` | 🔜 F1.3 | `/auth/password/forgot`, `/auth/password/reset` |
 | Bouton « Connexion Google » | (sur `/auth/connexion`) | 🔜 F1.4 | `POST /auth/google` |
@@ -41,3 +41,8 @@ Authentification & onboarding, rendue dans `auth-layout`. Routes déclarées dan
 La session (jeton en mémoire) et `hasRole` sont fournis par
 [`../core/auth/auth.service`](../core/auth/auth.service.ts) ; la redirection
 post-connexion suit le `?redirect=` posé par l'`authGuard`.
+
+Les styles de mise en page communs aux pages auth (`.auth-head`, `.auth-form`,
+`.auth-link`, `.auth-row`…) sont **globaux** dans `src/styles/_auth.scss` (une
+classe scopée à un composant ne serait pas partageable entre pages) ; chaque page
+ne garde en local que son style spécifique (ex. le sélecteur de profil).

@@ -1,0 +1,136 @@
+<header class="auth-head">
+  <h1 class="auth-title">Créer un compte</h1>
+  <p class="auth-sub k-muted">Rejoignez Kaikun&nbsp;360 en quelques instants.</p>
+</header>
+
+<form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (formError()) {
+    <p class="k-form-error" role="alert">{{ formError() }}</p>
+  }
+
+  <!-- Onboarding : choix du profil (CDC §5.2) -->
+  <div class="k-field">
+    <span class="k-label">Je suis…</span>
+    <div class="profile-grid" role="radiogroup" aria-label="Type de profil">
+      @for (profile of profiles; track profile.value) {
+        <button
+          type="button"
+          class="profile-card"
+          role="radio"
+          [attr.aria-checked]="form.controls.profile_type.value === profile.value"
+          [class.is-selected]="form.controls.profile_type.value === profile.value"
+          (click)="selectProfile(profile.value)">
+          <span class="profile-icon" aria-hidden="true">{{ profile.icon }}</span>
+          <span class="profile-label">{{ profile.label }}</span>
+          <span class="profile-desc">{{ profile.description }}</span>
+        </button>
+      }
+    </div>
+    @if (invalid('profile_type')) {
+      <span class="k-error">Choisissez un type de profil.</span>
+    }
+  </div>
+
+  <div class="k-field">
+    <label class="k-label" for="name">Nom complet</label>
+    <input
+      id="name"
+      type="text"
+      class="k-input"
+      [class.k-input--error]="invalid('name') || serverError('name')"
+      formControlName="name"
+      autocomplete="name"
+      placeholder="Awa Diop" />
+    @if (invalid('name')) {
+      <span class="k-error">Le nom est obligatoire.</span>
+    } @else if (serverError('name'); as msg) {
+      <span class="k-error">{{ msg }}</span>
+    }
+  </div>
+
+  <div class="k-field">
+    <label class="k-label" for="email">Adresse e-mail</label>
+    <input
+      id="email"
+      type="email"
+      class="k-input"
+      [class.k-input--error]="invalid('email') || serverError('email')"
+      formControlName="email"
+      autocomplete="email"
+      placeholder="vous@exemple.sn" />
+    @if (invalid('email')) {
+      <span class="k-error">Adresse e-mail valide requise.</span>
+    } @else if (serverError('email'); as msg) {
+      <span class="k-error">{{ msg }}</span>
+    }
+  </div>
+
+  <div class="auth-row">
+    <div class="k-field">
+      <label class="k-label" for="phone">Téléphone <span class="k-optional">(optionnel)</span></label>
+      <input
+        id="phone"
+        type="tel"
+        class="k-input"
+        [class.k-input--error]="serverError('phone')"
+        formControlName="phone"
+        autocomplete="tel"
+        placeholder="+221 …" />
+      @if (serverError('phone'); as msg) {
+        <span class="k-error">{{ msg }}</span>
+      }
+    </div>
+
+    <div class="k-field">
+      <label class="k-label" for="city">Ville <span class="k-optional">(optionnel)</span></label>
+      <input
+        id="city"
+        type="text"
+        class="k-input"
+        formControlName="city"
+        autocomplete="address-level2"
+        placeholder="Dakar" />
+    </div>
+  </div>
+
+  <div class="k-field">
+    <label class="k-label" for="password">Mot de passe</label>
+    <input
+      id="password"
+      type="password"
+      class="k-input"
+      [class.k-input--error]="invalid('password') || serverError('password')"
+      formControlName="password"
+      autocomplete="new-password"
+      placeholder="8 caractères minimum" />
+    @if (invalid('password')) {
+      <span class="k-error">Au moins 8 caractères.</span>
+    } @else if (serverError('password'); as msg) {
+      <span class="k-error">{{ msg }}</span>
+    }
+  </div>
+
+  <div class="k-field">
+    <label class="k-label" for="password_confirmation">Confirmer le mot de passe</label>
+    <input
+      id="password_confirmation"
+      type="password"
+      class="k-input"
+      [class.k-input--error]="form.controls.password_confirmation.touched && form.hasError('passwordsMismatch')"
+      formControlName="password_confirmation"
+      autocomplete="new-password"
+      placeholder="Retapez le mot de passe" />
+    @if (form.controls.password_confirmation.touched && form.hasError('passwordsMismatch')) {
+      <span class="k-error">Les deux mots de passe ne correspondent pas.</span>
+    }
+  </div>
+
+  <button type="submit" class="k-btn k-btn--primary k-btn--block" [disabled]="submitting()">
+    {{ submitting() ? 'Création…' : 'Créer mon compte' }}
+  </button>
+</form>
+
+<p class="auth-alt">
+  Déjà inscrit ?
+  <a class="auth-link" routerLink="/auth/connexion">Se connecter</a>
+</p>
