@@ -117,16 +117,18 @@
 }
 
 // Le panneau déroulant : cartes icône + titre + description.
+// Déroulant ÉTROIT à une colonne, ancré sous le bouton (pas un large panneau
+// centré) — comme le prototype éditorial.
 .mega {
   position: absolute;
   top: calc(100% + 10px);
   left: 0;
-  width: min(540px, calc(100vw - 40px));
+  width: min(340px, calc(100vw - 40px));
   background: var(--k-white);
   border: 1px solid var(--k-line);
-  border-radius: 18px;
+  border-radius: 16px;
   box-shadow: var(--k-shadow-lg);
-  padding: 14px;
+  padding: 8px;
   animation: mega-in 0.16s ease;
 }
 
@@ -150,38 +152,38 @@
 
 .mega-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: 1fr;
+  gap: 2px;
 }
 
 .mega-item {
   display: flex;
   gap: 12px;
-  align-items: flex-start;
-  padding: 12px;
-  border: 1px solid var(--k-line);
-  border-radius: 13px;
-  background: var(--k-cream);
-  transition: border-color 0.16s, transform 0.16s, box-shadow 0.16s, background 0.16s;
+  align-items: center;
+  padding: 10px 11px;
+  border-radius: 11px;
+  background: transparent;
+  transition: background 0.14s;
 }
 
 .mega-item:hover {
-  border-color: var(--k-gold);
-  background: var(--k-white);
-  transform: translateY(-2px);
-  box-shadow: var(--k-shadow);
+  background: var(--k-sand);
 }
 
 .mega-ic {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
   background: var(--k-navy);
   color: var(--k-gold);
-  font-size: 18px;
+}
+
+.mega-ic svg {
+  width: 19px;
+  height: 19px;
 }
 
 .mega-text b {

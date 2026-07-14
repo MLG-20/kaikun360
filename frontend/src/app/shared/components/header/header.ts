@@ -10,12 +10,26 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
-/** Une entrée d'un méga-menu : libellé + description + pictogramme + destination. */
+/** Clé d'icône SVG (rendue via un @switch dans le template). */
+type MegaIcon =
+  | 'home'
+  | 'manage'
+  | 'deposit'
+  | 'globe'
+  | 'bed'
+  | 'compass'
+  | 'team'
+  | 'car'
+  | 'route'
+  | 'build'
+  | 'calc';
+
+/** Une entrée d'un méga-menu : libellé + description + icône + destination. */
 interface MegaItem {
   label: string;
   description: string;
-  /** Pictogramme court (glyphe unicode) affiché dans la pastille. */
-  icon: string;
+  /** Icône SVG affichée dans la pastille. */
+  icon: MegaIcon;
   link: string;
   /** Ancre optionnelle sur la page cible (ex. le simulateur de construction). */
   fragment?: string;
@@ -58,35 +72,35 @@ export class HeaderComponent {
       label: 'Immobilier',
       home: '/immobilier',
       items: [
-        { label: 'Acheter ou louer', description: 'Villas, appartements, terrains et locaux vérifiés.', icon: '⌂', link: '/immobilier' },
-        { label: 'Gestion locative', description: 'Loyers, quittances, maintenance et reporting.', icon: '％', link: '/gestion-locative' },
-        { label: 'Déposer un bien', description: 'Propriétaires : mettez votre bien en ligne.', icon: '＋', link: '/deposer-un-bien' },
-        { label: 'Diaspora', description: 'Acheter, construire et gérer à distance.', icon: '◎', link: '/diaspora' },
+        { label: 'Acheter ou louer', description: 'Villas, appartements, terrains et locaux vérifiés.', icon: 'home', link: '/immobilier' },
+        { label: 'Gestion locative', description: 'Loyers, quittances, maintenance et reporting.', icon: 'manage', link: '/gestion-locative' },
+        { label: 'Déposer un bien', description: 'Propriétaires : mettez votre bien en ligne.', icon: 'deposit', link: '/deposer-un-bien' },
+        { label: 'Diaspora', description: 'Acheter, construire et gérer à distance.', icon: 'globe', link: '/diaspora' },
       ],
     },
     {
       label: 'Séjours & Tourisme',
       home: '/tourisme',
       items: [
-        { label: 'Hébergements & nuitées', description: 'Villas, meublés, campements et écolodges.', icon: '☾', link: '/nuitees' },
-        { label: 'Circuits & expériences', description: 'Saloum, Casamance, patrimoine et nature.', icon: '✦', link: '/tourisme' },
-        { label: 'Team building', description: 'Journées de cohésion et séminaires clé en main.', icon: '♟', link: '/team-building' },
+        { label: 'Hébergements & nuitées', description: 'Villas, meublés, campements et écolodges.', icon: 'bed', link: '/nuitees' },
+        { label: 'Circuits & expériences', description: 'Saloum, Casamance, patrimoine et nature.', icon: 'compass', link: '/tourisme' },
+        { label: 'Team building', description: 'Journées de cohésion et séminaires clé en main.', icon: 'team', link: '/team-building' },
       ],
     },
     {
       label: 'Transport',
       home: '/transport',
       items: [
-        { label: 'Location de véhicules', description: 'Berlines, 4×4 et minibus, avec ou sans chauffeur.', icon: '▰', link: '/transport' },
-        { label: 'Mobilité & navettes', description: 'Transferts AIBD, navettes et sorties de groupe.', icon: '✈', link: '/mobilite' },
+        { label: 'Location de véhicules', description: 'Berlines, 4×4 et minibus, avec ou sans chauffeur.', icon: 'car', link: '/transport' },
+        { label: 'Mobilité & navettes', description: 'Transferts AIBD, navettes et sorties de groupe.', icon: 'route', link: '/mobilite' },
       ],
     },
     {
       label: 'Construction',
       home: '/construction',
       items: [
-        { label: 'Construire / rénover', description: 'Études, travaux, suivi filmé et remise des clés.', icon: '▦', link: '/construction' },
-        { label: 'Simulateur de budget', description: 'Estimation par surface, gamme et objectif.', icon: '∑', link: '/construction', fragment: 'simulateur' },
+        { label: 'Construire / rénover', description: 'Études, travaux, suivi filmé et remise des clés.', icon: 'build', link: '/construction' },
+        { label: 'Simulateur de budget', description: 'Estimation par surface, gamme et objectif.', icon: 'calc', link: '/construction', fragment: 'simulateur' },
       ],
     },
   ];
