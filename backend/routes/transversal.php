@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\GeoController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentWebhookController;
@@ -36,6 +37,14 @@ Route::get('whatsapp/link', [WhatsAppLinkController::class, 'generate']);
 // FAQ publiée et pages de contenu (adressées par slug). Édition = back-office.
 Route::get('faqs', [FaqController::class, 'published']);
 Route::get('pages/{page}', [PageController::class, 'show']);
+
+// --- Référentiel géographique public (F2.7.0) --------------------------------
+// Régions / départements / communes du Sénégal, en LECTURE SEULE. Alimente les
+// sélecteurs en cascade du dépôt de bien côté frontend. Départements et communes
+// sont toujours filtrés par leur parent (region_id / department_id obligatoire).
+Route::get('regions', [GeoController::class, 'regions']);
+Route::get('departments', [GeoController::class, 'departments']);
+Route::get('communes', [GeoController::class, 'communes']);
 
 // --- Demandes génériques (B11.2) ---------------------------------------------
 Route::middleware('auth:sanctum')->group(function () {
