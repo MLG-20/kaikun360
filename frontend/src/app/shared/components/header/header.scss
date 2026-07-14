@@ -315,6 +315,11 @@
     display: none;
   }
 
+  // La nav masquée ne pousse plus les actions : on remet le hamburger à droite.
+  .actions {
+    margin-left: auto;
+  }
+
   .menu-btn {
     display: inline-flex;
   }
