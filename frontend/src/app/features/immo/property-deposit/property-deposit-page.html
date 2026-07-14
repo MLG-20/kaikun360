@@ -1,0 +1,164 @@
+<!-- Dépôt de bien par un propriétaire (F2.7). -->
+<section class="deposit k-wrap">
+  <p class="k-eyebrow">Propriétaires</p>
+  <h1 class="deposit-title">Déposer un bien</h1>
+
+  @if (created(); as p) {
+    <!-- Succès : le bien est en file de validation. -->
+    <div class="k-card deposit-card">
+      <p class="k-form-info" role="status">
+        <strong>Bien déposé ✔</strong> — « {{ p.title }} » est enregistré et part en
+        <b>vérification</b>. Il sera publié après validation par nos équipes. Vous
+        pourrez ajouter des photos depuis votre espace.
+      </p>
+      <div class="deposit-success-actions">
+        <a class="k-btn k-btn--ghost" routerLink="/immobilier">Voir le catalogue</a>
+      </div>
+    </div>
+  } @else if (!isAuthenticated()) {
+    <!-- Anonyme : le dépôt exige un compte. -->
+    <div class="k-card deposit-card">
+      <p class="k-muted">Connectez-vous (ou créez un compte) pour déposer votre bien.</p>
+      <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/connexion" [queryParams]="{ redirect: '/deposer-un-bien' }">
+        Se connecter
+      </a>
+      <p class="deposit-alt">
+        Pas encore de compte ? <a routerLink="/auth/inscription">Créer un compte</a>
+      </p>
+    </div>
+  } @else if (!isVerified()) {
+    <!-- Connecté mais non vérifié : l'endpoint exige un compte vérifié. -->
+    <div class="k-card deposit-card">
+      <p class="k-muted">
+        Pour déposer un bien, vérifiez d'abord votre compte (e-mail ou téléphone).
+      </p>
+      <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/verification">
+        Vérifier mon compte
+      </a>
+    </div>
+  } @else {
+    <!-- Éligible : formulaire de dépôt. -->
+    <form class="k-card deposit-card" [formGroup]="form" (ngSubmit)="submit()">
+      @if (formError(); as err) {
+        <p class="k-form-error" role="alert">{{ err }}</p>
+      }
+
+      <div class="deposit-grid">
+        <div class="k-field">
+          <label class="k-label" for="dep-type">Type de bien</label>
+          <select
+            id="dep-type"
+            class="k-input"
+            formControlName="type"
+            [class.k-input--error]="form.controls.type.touched && form.controls.type.invalid"
+          >
+            <option value="" disabled>Choisir…</option>
+            @for (t of types; track t.value) {
+              <option [value]="t.value">{{ t.label }}</option>
+            }
+          </select>
+          @if (form.controls.type.touched && form.controls.type.invalid) {
+            <p class="k-error">Sélectionnez un type.</p>
+          }
+        </div>
+
+        <div class="k-field">
+          <label class="k-label" for="dep-price">Prix (FCFA) <span class="k-optional">(facultatif)</span></label>
+          <input id="dep-price" class="k-input" type="number" min="0" formControlName="price_xof" />
+        </div>
+      </div>
+
+      <div class="k-field">
+        <label class="k-label" for="dep-title">Titre de l'annonce</label>
+        <input
+          id="dep-title"
+          class="k-input"
+          type="text"
+          formControlName="title"
+          [class.k-input--error]="form.controls.title.touched && form.controls.title.invalid"
+        />
+        @if (form.controls.title.touched && form.controls.title.invalid) {
+          <p class="k-error">Le titre est obligatoire.</p>
+        }
+      </div>
+
+      <div class="k-field">
+        <label class="k-label" for="dep-description">Description <span class="k-optional">(facultatif)</span></label>
+        <textarea id="dep-description" class="k-input" rows="4" formControlName="description"></textarea>
+      </div>
+
+      <!-- Localisation en cascade (région → département → commune). -->
+      <fieldset class="deposit-geo">
+        <legend class="k-label">Localisation</legend>
+
+        @if (geoError()) {
+          <p class="k-error">Le référentiel géographique n'a pas pu être chargé. Rechargez la page.</p>
+        }
+
+        <div class="deposit-grid deposit-grid--3">
+          <div class="k-field">
+            <label class="k-label" for="dep-region">Région</label>
+            <select
+              id="dep-region"
+              class="k-input"
+              formControlName="region_id"
+              [class.k-input--error]="form.controls.region_id.touched && form.controls.region_id.invalid"
+            >
+              <option [ngValue]="null" disabled>Choisir…</option>
+              @for (r of regions(); track r.id) {
+                <option [ngValue]="r.id">{{ r.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="k-field">
+            <label class="k-label" for="dep-department">Département</label>
+            <select
+              id="dep-department"
+              class="k-input"
+              formControlName="department_id"
+              [class.k-input--error]="form.controls.department_id.touched && form.controls.department_id.invalid"
+            >
+              <option [ngValue]="null" disabled>
+                {{ form.controls.region_id.value ? 'Choisir…' : 'Choisir une région d’abord' }}
+              </option>
+              @for (d of departments(); track d.id) {
+                <option [ngValue]="d.id">{{ d.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="k-field">
+            <label class="k-label" for="dep-commune">Commune <span class="k-optional">(facultatif)</span></label>
+            <select id="dep-commune" class="k-input" formControlName="commune_id">
+              <option [ngValue]="null">
+                {{ form.controls.department_id.value ? 'Aucune / non précisée' : 'Choisir un département d’abord' }}
+              </option>
+              @for (c of communes(); track c.id) {
+                <option [ngValue]="c.id">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="deposit-grid">
+          <div class="k-field">
+            <label class="k-label" for="dep-address">Adresse <span class="k-optional">(facultatif)</span></label>
+            <input id="dep-address" class="k-input" type="text" formControlName="address" />
+          </div>
+          <div class="k-field">
+            <label class="k-label" for="dep-zone">Zone touristique <span class="k-optional">(facultatif)</span></label>
+            <input id="dep-zone" class="k-input" type="text" formControlName="tourist_zone" />
+          </div>
+        </div>
+      </fieldset>
+
+      <button class="k-btn k-btn--primary k-btn--block" type="submit" [disabled]="submitting()">
+        {{ submitting() ? 'Envoi…' : 'Déposer le bien' }}
+      </button>
+      <p class="deposit-note k-muted">
+        Votre bien sera vérifié avant publication (documents et photos à ajouter ensuite).
+      </p>
+    </form>
+  }
+</section>

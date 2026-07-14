@@ -44,6 +44,17 @@ export const routes: Routes = [
         title: 'Immobilier vérifié — Kaikun 360',
       },
       {
+        // Dépôt de bien par un propriétaire (F2.7) : formulaire + sélecteurs géo.
+        // Déclaré AVANT `immobilier/:id` n'est pas nécessaire (chemin distinct),
+        // mais on le groupe avec l'univers Immobilier.
+        path: 'deposer-un-bien',
+        loadComponent: () =>
+          import('./features/immo/property-deposit/property-deposit-page').then(
+            (m) => m.PropertyDepositPageComponent,
+          ),
+        title: 'Déposer un bien — Kaikun 360',
+      },
+      {
         path: 'immobilier/:id',
         loadComponent: () =>
           import('./features/immo/property-detail/property-detail-page').then(
@@ -153,6 +164,25 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/pro/pro-page/pro-page').then((m) => m.ProPageComponent),
         title: 'Kaikun Pro — devenez prestataire vérifié — Kaikun 360',
+      },
+      {
+        // Inscription prestataire dédiée (F2.7) : formulaire d'adhésion marketplace.
+        path: 'pro/inscription',
+        loadComponent: () =>
+          import('./features/pro/provider-registration/provider-registration-page').then(
+            (m) => m.ProviderRegistrationPageComponent,
+          ),
+        title: 'Devenir prestataire — Kaikun 360',
+      },
+      {
+        // Réponse à un devis (F2.7) : consultation + acceptation/refus.
+        // On y arrive par un lien reçu en notification (auth requise).
+        path: 'devis/:id',
+        loadComponent: () =>
+          import('./features/quote/quote-detail/quote-detail-page').then(
+            (m) => m.QuoteDetailPageComponent,
+          ),
+        title: 'Votre devis — Kaikun 360',
       },
     ],
   },

@@ -1,0 +1,178 @@
+<!-- Inscription prestataire dédiée (F2.7). -->
+<section class="pro-reg k-wrap">
+  <p class="k-eyebrow">Kaikun Pro</p>
+  <h1 class="pro-reg-title">Devenir prestataire vérifié</h1>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="pro-reg-status" role="status">Chargement…</p>
+    }
+
+    @case ('failed') {
+      <div class="k-card pro-reg-card" role="alert">
+        <p class="k-muted">Impossible de charger votre profil prestataire. Réessayez plus tard.</p>
+      </div>
+    }
+
+    @case ('registered') {
+      @if (provider(); as p) {
+        <!-- Profil déjà créé : on rappelle son statut de validation. -->
+        <div class="k-card pro-reg-card">
+          <div class="pro-reg-headline">
+            <div>
+              <h2 class="pro-reg-business">{{ p.business_name }}</h2>
+              @if (p.category_label) {
+                <p class="k-muted">{{ p.category_label }}</p>
+              }
+            </div>
+            @if (p.status_label) {
+              <span class="pro-reg-badge" [attr.data-status]="p.status">{{ p.status_label }}</span>
+            }
+          </div>
+
+          @switch (p.status) {
+            @case ('en_attente') {
+              <p class="k-form-info" role="status">
+                <strong>Inscription reçue ✔</strong> — votre profil est en cours de vérification
+                par nos équipes. Vous serez notifié dès sa validation.
+              </p>
+            }
+            @case ('valide') {
+              <p class="k-form-info" role="status">
+                <strong>Profil validé.</strong> Vous pouvez désormais publier vos services.
+              </p>
+            }
+            @case ('refuse') {
+              <p class="pro-reg-refused">
+                <strong>Profil refusé.</strong>
+                @if (p.sanction_note) {
+                  {{ p.sanction_note }}
+                } @else {
+                  Contactez le support pour en connaître les raisons.
+                }
+              </p>
+            }
+            @case ('suspendu') {
+              <p class="pro-reg-refused">
+                <strong>Profil suspendu.</strong>
+                @if (p.sanction_note) {
+                  {{ p.sanction_note }}
+                }
+              </p>
+            }
+          }
+
+          @if (p.certifications?.length) {
+            <h3 class="pro-reg-section">Certifications déclarées</h3>
+            <ul class="pro-reg-certs">
+              @for (cert of p.certifications; track cert.id) {
+                <li>
+                  <span>{{ cert.name }}</span>
+                  @if (cert.issuer) { <span class="k-muted"> — {{ cert.issuer }}</span> }
+                  @if (cert.verified) { <span class="pro-reg-cert-ok">✓ vérifiée</span> }
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+    }
+
+    @case ('form') {
+      @if (!isAuthenticated()) {
+        <!-- Anonyme : l'inscription exige un compte. -->
+        <div class="k-card pro-reg-card">
+          <p class="k-muted">Connectez-vous (ou créez un compte) pour rejoindre la marketplace.</p>
+          <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/connexion" [queryParams]="{ redirect: '/pro/inscription' }">
+            Se connecter
+          </a>
+          <p class="pro-reg-alt">
+            Pas encore de compte ? <a routerLink="/auth/inscription">Créer un compte</a>
+          </p>
+        </div>
+      } @else if (!isVerified()) {
+        <!-- Connecté mais non vérifié : l'endpoint exige un compte vérifié. -->
+        <div class="k-card pro-reg-card">
+          <p class="k-muted">
+            Pour vous inscrire comme prestataire, vérifiez d'abord votre compte
+            (e-mail ou téléphone).
+          </p>
+          <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/verification">
+            Vérifier mon compte
+          </a>
+        </div>
+      } @else {
+        <!-- Éligible : formulaire d'inscription. -->
+        <form class="k-card pro-reg-card" [formGroup]="form" (ngSubmit)="submit()">
+          @if (formError(); as err) {
+            <p class="k-form-error" role="alert">{{ err }}</p>
+          }
+
+          <div class="k-field">
+            <label class="k-label" for="pro-business">Nom commercial</label>
+            <input
+              id="pro-business"
+              class="k-input"
+              type="text"
+              formControlName="business_name"
+              [class.k-input--error]="form.controls.business_name.touched && form.controls.business_name.invalid"
+            />
+            @if (form.controls.business_name.touched && form.controls.business_name.invalid) {
+              <p class="k-error">Le nom commercial est obligatoire.</p>
+            }
+          </div>
+
+          <div class="k-field">
+            <label class="k-label" for="pro-category">Catégorie</label>
+            <select
+              id="pro-category"
+              class="k-input"
+              formControlName="category"
+              [class.k-input--error]="form.controls.category.touched && form.controls.category.invalid"
+            >
+              <option value="" disabled>Choisir une catégorie…</option>
+              @for (cat of categories; track cat.value) {
+                <option [value]="cat.value">{{ cat.label }}</option>
+              }
+            </select>
+            @if (form.controls.category.touched && form.controls.category.invalid) {
+              <p class="k-error">Sélectionnez une catégorie.</p>
+            }
+          </div>
+
+          <div class="k-field">
+            <label class="k-label" for="pro-bio">Présentation <span class="k-optional">(facultatif)</span></label>
+            <textarea id="pro-bio" class="k-input" rows="4" formControlName="bio"></textarea>
+          </div>
+
+          <!-- Certifications répétables (facultatives). -->
+          <div class="pro-reg-certs-form" formArrayName="certifications">
+            <div class="pro-reg-certs-head">
+              <span class="k-label">Certifications <span class="k-optional">(facultatif)</span></span>
+              <button type="button" class="k-btn k-btn--ghost pro-reg-add" (click)="addCertification()">
+                + Ajouter
+              </button>
+            </div>
+
+            @for (cert of certifications.controls; track $index) {
+              <div class="pro-reg-cert-row" [formGroupName]="$index">
+                <input class="k-input" type="text" placeholder="Intitulé" formControlName="name" />
+                <input class="k-input" type="text" placeholder="Organisme (facultatif)" formControlName="issuer" />
+                <button type="button" class="pro-reg-remove" (click)="removeCertification($index)" aria-label="Retirer">
+                  ✕
+                </button>
+              </div>
+            }
+          </div>
+
+          <button class="k-btn k-btn--primary k-btn--block" type="submit" [disabled]="submitting()">
+            {{ submitting() ? 'Envoi…' : 'Envoyer mon inscription' }}
+          </button>
+          <p class="pro-reg-note k-muted">
+            Votre profil sera vérifié par nos équipes avant activation.
+          </p>
+        </form>
+      }
+    }
+  }
+</section>

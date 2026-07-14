@@ -67,10 +67,26 @@ La toute première brique de l'application (`App`) ne fait qu'une chose : affich
 - **`team-building/`** — l'**univers Team building** (F2.5) : la page de
   conversion `/team-building` (formules, étapes, demande de devis).
 - **`pro/`** — **Kaikun Pro** (F2.5) : la page de recrutement des prestataires
-  `/pro` (atouts, audiences, certification) ; CTA = inscription.
+  `/pro` (atouts, audiences, certification). **F2.7** ajoute l'**inscription
+  prestataire** `/pro/inscription` (formulaire d'adhésion à la marketplace
+  `POST /providers` — nom commercial, catégorie, certifications ; **auth +
+  compte vérifié** ; rappel du statut de validation si déjà inscrit).
 
 Ces cinq pages de conversion partagent le formulaire réutilisable
 [`app-lead-form`](../shared/components/lead-form) (dépôt de demande auth-gated).
+
+Les **formulaires intelligents** de F2.7 (auth-gated, miroirs fidèles des
+FormRequests backend) :
+
+- **`immo/property-deposit/`** — **dépôt de bien** `/deposer-un-bien` : formulaire
+  propriétaire (`POST /properties`) avec **localisation en cascade** région →
+  département → commune (alimentée par `GeoService`). Requiert un **compte
+  vérifié** ; le bien créé part en file de validation (photos/documents = étape
+  ultérieure). Point d'entrée depuis la vitrine `/immobilier`.
+- **`quote/quote-detail/`** — **réponse à un devis** `/devis/:id` : consultation
+  (montant, validité, détail) puis **accepter/refuser** (`GET`/`PATCH
+  /quotes/{id}`), uniquement tant que le devis est au statut « envoyé ». On y
+  arrive par un lien reçu en notification.
 
 Les **composants transverses** (F2.6) sont en place : les 4 fiches d'univers
 partagent désormais la même coquille [`app-detail-layout`](../shared/components/detail-layout),
@@ -78,8 +94,8 @@ le bloc d'avis [`app-reviews`](../shared/components/reviews), le bouton
 [`app-whatsapp-button`](../shared/components/whatsapp-button) et la galerie
 [`app-gallery`](../shared/components/gallery) enrichie.
 
-À venir : les formulaires intelligents restants (dépôt de bien, devis),
-l'espace personnel, le back-office.
+À venir : l'espace personnel (suivi des demandes/devis/réservations), le
+back-office.
 
 ---
 

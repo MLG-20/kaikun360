@@ -20,6 +20,7 @@ HTTP et garantissent la cohérence front/back.
 | `Payment` | `PaymentResource` | Paiement |
 | `Review` (+ `ReviewAuthor`) | `ReviewResource` | transversal |
 | `Media` | `MediaResource` | transversal |
+| `Provider` (+ `ProviderCertification`) | `ProviderResource` | Pro |
 
 Import pratique via le barrel : `import { Property, Stay } from '../models';`
 (voir `index.ts`).

@@ -1,0 +1,122 @@
+<!-- Consultation & réponse à un devis (F2.7). -->
+<section class="quote-page k-wrap">
+  @switch (state()) {
+    @case ('loading') {
+      <p class="quote-status" role="status">Chargement du devis…</p>
+    }
+
+    @case ('notfound') {
+      <div class="quote-status">
+        <h1>Devis introuvable</h1>
+        <p class="k-muted">Ce devis n'existe pas ou n'est plus disponible.</p>
+        <a class="k-btn k-btn--primary" routerLink="/">Retour à l'accueil</a>
+      </div>
+    }
+
+    @case ('forbidden') {
+      <div class="quote-status">
+        <h1>Accès refusé</h1>
+        @if (!isAuthenticated()) {
+          <p class="k-muted">Connectez-vous avec le compte destinataire pour consulter ce devis.</p>
+          <a class="k-btn k-btn--primary" routerLink="/auth/connexion" [queryParams]="loginQueryParams()">
+            Se connecter
+          </a>
+        } @else {
+          <p class="k-muted">Ce devis ne vous est pas destiné.</p>
+          <a class="k-btn k-btn--primary" routerLink="/">Retour à l'accueil</a>
+        }
+      </div>
+    }
+
+    @case ('failed') {
+      <div class="quote-status" role="alert">
+        <h1>Chargement impossible</h1>
+        <p class="k-muted">Une erreur est survenue. Vérifiez votre connexion puis réessayez.</p>
+        <a class="k-btn k-btn--primary" routerLink="/">Retour à l'accueil</a>
+      </div>
+    }
+
+    @case ('ready') {
+      @if (quote(); as q) {
+        <p class="k-eyebrow">Devis</p>
+        <h1 class="quote-title">Devis {{ q.reference }}</h1>
+
+        <div class="k-card quote-card">
+          <!-- En-tête : montant + statut. -->
+          <div class="quote-headline">
+            <div>
+              <span class="quote-amount-label">Montant proposé</span>
+              <p class="quote-amount">{{ amountLabel() }}</p>
+            </div>
+            @if (q.status_label) {
+              <span class="quote-badge" [attr.data-status]="q.status">{{ q.status_label }}</span>
+            }
+          </div>
+
+          @if (q.valid_until) {
+            <p class="quote-validity k-muted">Valable jusqu'au {{ q.valid_until }}.</p>
+          }
+
+          <!-- Détail chiffré, si le conseiller l'a renseigné. -->
+          @if (detailRows().length) {
+            <h2 class="quote-section-title">Détail</h2>
+            <dl class="quote-details">
+              @for (row of detailRows(); track row.label) {
+                <div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+              }
+            </dl>
+          }
+
+          <!-- Zone de décision. -->
+          @if (isSettled()) {
+            <!-- Le client a déjà tranché : rappel de sa décision. -->
+            @if (q.status === 'accepte') {
+              <p class="k-form-info" role="status">
+                <strong>Devis accepté ✔</strong> — un conseiller poursuit votre dossier
+                (réservation et paiement).
+              </p>
+            } @else {
+              <p class="quote-refused" role="status">
+                <strong>Devis refusé.</strong> Vous pouvez contacter votre conseiller pour
+                ajuster votre demande.
+              </p>
+            }
+          } @else if (canRespond()) {
+            @if (!isAuthenticated()) {
+              <p class="k-muted">Connectez-vous pour répondre à ce devis.</p>
+              <a class="k-btn k-btn--primary" routerLink="/auth/connexion" [queryParams]="loginQueryParams()">
+                Se connecter
+              </a>
+            } @else {
+              @if (responseError(); as err) {
+                <p class="k-form-error" role="alert">{{ err }}</p>
+              }
+              <p class="quote-prompt">Souhaitez-vous accepter ce devis ?</p>
+              <div class="quote-actions">
+                <button
+                  type="button"
+                  class="k-btn k-btn--green"
+                  [disabled]="responding()"
+                  (click)="accept()"
+                >
+                  {{ responding() ? 'Envoi…' : 'Accepter le devis' }}
+                </button>
+                <button
+                  type="button"
+                  class="k-btn k-btn--ghost"
+                  [disabled]="responding()"
+                  (click)="refuse()"
+                >
+                  Refuser
+                </button>
+              </div>
+            }
+          } @else {
+            <!-- Devis non répondable (brouillon, expiré côté statut…). -->
+            <p class="k-muted">Ce devis n'est pas en attente de votre réponse.</p>
+          }
+        </div>
+      }
+    }
+  }
+</section>

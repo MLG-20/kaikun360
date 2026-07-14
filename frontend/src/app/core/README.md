@@ -13,6 +13,15 @@ l'application (approche standalone, sans NgModule) :
   - `ReviewService` — avis publiés `GET /reviews` d'une entité notée — F2.3.
   - `WhatsAppService` — lien WhatsApp contextuel `GET /whatsapp/link` (message
     prérempli + numéro de support paramétré côté back-office) — F2.6.
+  - `QuoteService` — consultation & réponse à un devis `GET`/`PATCH /quotes/{id}`
+    (accepter/refuser ; **auth requise**) — F2.7.
+  - `ProviderService` — inscription prestataire `POST /providers` (**auth +
+    compte vérifié**) et suivi `GET /providers/mine` (404 = pas encore
+    inscrit) — F2.7.
+  - `GeoService` — référentiel géographique `GET /regions|departments|communes`
+    pour les sélecteurs en cascade (région → département → commune) — F2.7.
+  - `PropertyManagementService` — dépôt de bien `POST /properties` (**auth +
+    compte vérifié** ; le bien part en file de validation) — F2.7.
 - **interceptors/** — `tokenInterceptor` (ajoute le Bearer), `errorInterceptor`
   (gestion centralisée : 401 → login, 422 → erreurs de formulaire, 500 → page
   d'erreur).

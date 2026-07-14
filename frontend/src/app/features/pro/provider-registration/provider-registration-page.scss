@@ -1,0 +1,145 @@
+// Page d'inscription prestataire (F2.7).
+
+.pro-reg {
+  padding: 2.5rem 1.25rem 4rem;
+  max-width: 640px;
+}
+
+.pro-reg-title {
+  margin: 0.25rem 0 1.5rem;
+  font-family: var(--k-font-display);
+}
+
+.pro-reg-status {
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--k-muted);
+}
+
+.pro-reg-card {
+  padding: 1.75rem;
+}
+
+// En-tête du profil déjà inscrit (nom + statut).
+.pro-reg-headline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pro-reg-business {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+// Pastille de statut, teintée selon l'état de validation.
+.pro-reg-badge {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--k-brand-050);
+  color: var(--k-brand-600);
+  white-space: nowrap;
+
+  &[data-status='valide'] {
+    background: color-mix(in srgb, var(--k-green) 15%, transparent);
+    color: var(--k-green-600);
+  }
+
+  &[data-status='refuse'],
+  &[data-status='suspendu'] {
+    background: color-mix(in srgb, var(--k-danger) 15%, transparent);
+    color: var(--k-danger);
+  }
+}
+
+.pro-reg-refused {
+  margin: 0.5rem 0 0;
+  padding: 0.9rem 1rem;
+  border-radius: var(--k-radius-sm);
+  background: color-mix(in srgb, var(--k-danger) 8%, transparent);
+}
+
+.pro-reg-section {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1rem;
+}
+
+.pro-reg-certs {
+  margin: 0;
+  padding-left: 1.1rem;
+
+  li {
+    margin-bottom: 0.35rem;
+  }
+}
+
+.pro-reg-cert-ok {
+  margin-left: 0.4rem;
+  color: var(--k-green-600);
+  font-size: 0.85rem;
+}
+
+// --- Formulaire ------------------------------------------------------------
+.pro-reg-alt {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.pro-reg-certs-form {
+  margin: 0.5rem 0 1.25rem;
+  padding: 1rem;
+  border: 1px dashed var(--k-line-strong);
+  border-radius: var(--k-radius-sm);
+}
+
+.pro-reg-certs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.pro-reg-add {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+// Une ligne de certification : intitulé + organisme + bouton retirer.
+.pro-reg-cert-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.pro-reg-remove {
+  border: none;
+  background: transparent;
+  color: var(--k-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.4rem;
+
+  &:hover {
+    color: var(--k-danger);
+  }
+}
+
+.pro-reg-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .pro-reg-cert-row {
+    grid-template-columns: 1fr auto;
+  }
+}

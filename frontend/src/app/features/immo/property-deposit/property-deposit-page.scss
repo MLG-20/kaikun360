@@ -1,0 +1,61 @@
+// Page de dépôt de bien (F2.7).
+
+.deposit {
+  padding: 2.5rem 1.25rem 4rem;
+  max-width: 760px;
+}
+
+.deposit-title {
+  margin: 0.25rem 0 1.5rem;
+  font-family: var(--k-font-display);
+}
+
+.deposit-card {
+  padding: 1.75rem;
+}
+
+.deposit-alt {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.deposit-success-actions {
+  margin-top: 1rem;
+}
+
+// Grilles de champs (2 colonnes par défaut, 3 pour la localisation).
+.deposit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.deposit-grid--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+// Bloc localisation en cascade.
+.deposit-geo {
+  margin: 0.5rem 0 1.25rem;
+  padding: 1rem 1.1rem 1.25rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+
+  legend {
+    padding: 0 0.4rem;
+  }
+}
+
+.deposit-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .deposit-grid,
+  .deposit-grid--3 {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,127 @@
+// Page de consultation & réponse à un devis (F2.7).
+
+.quote-page {
+  padding: 2.5rem 1.25rem 4rem;
+  max-width: 720px;
+}
+
+// États transitoires (chargement, introuvable, accès refusé, échec).
+.quote-status {
+  padding: 3rem 0;
+  text-align: center;
+
+  h1 {
+    margin: 0 0 0.5rem;
+  }
+
+  .k-btn {
+    margin-top: 1.25rem;
+  }
+}
+
+.quote-title {
+  margin: 0.25rem 0 1.5rem;
+  font-family: var(--k-font-display);
+}
+
+.quote-card {
+  padding: 1.75rem;
+}
+
+// En-tête : montant à gauche, pastille de statut à droite.
+.quote-headline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.quote-amount-label {
+  font-size: 0.8rem;
+  color: var(--k-muted);
+}
+
+.quote-amount {
+  margin: 0.15rem 0 0;
+  font-family: var(--k-font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--k-ink);
+}
+
+// Pastille de statut, teintée selon l'état du devis.
+.quote-badge {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--k-brand-050);
+  color: var(--k-brand-600);
+  white-space: nowrap;
+
+  &[data-status='accepte'] {
+    background: color-mix(in srgb, var(--k-green) 15%, transparent);
+    color: var(--k-green-600);
+  }
+
+  &[data-status='refuse'] {
+    background: color-mix(in srgb, var(--k-danger) 15%, transparent);
+    color: var(--k-danger);
+  }
+}
+
+.quote-validity {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+}
+
+.quote-section-title {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+// Détail chiffré du devis (poste → valeur).
+.quote-details {
+  margin: 0;
+  border-top: 1px solid var(--k-line);
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--k-line);
+  }
+
+  dt {
+    color: var(--k-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    text-align: right;
+  }
+}
+
+.quote-prompt {
+  margin: 1.5rem 0 0.75rem;
+  font-weight: 600;
+}
+
+// Boutons de décision (accepter / refuser).
+.quote-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+// Rappel discret d'un refus déjà enregistré.
+.quote-refused {
+  margin-top: 1.5rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--k-radius-sm);
+  background: color-mix(in srgb, var(--k-danger) 8%, transparent);
+  color: var(--k-ink);
+}

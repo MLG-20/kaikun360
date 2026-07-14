@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { CatalogComponent } from '../../../shared/components/catalog/catalog';
 
@@ -12,7 +13,7 @@ import { CatalogComponent } from '../../../shared/components/catalog/catalog';
  */
 @Component({
   selector: 'app-property-list-page',
-  imports: [CatalogComponent],
+  imports: [CatalogComponent, RouterLink],
   templateUrl: './property-list-page.html',
   styleUrl: './property-list-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
