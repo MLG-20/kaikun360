@@ -1,19 +1,44 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  HostListener,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
-/** Entrée de la méga-navigation : libellé + route (null = pas encore routé). */
-interface NavUniverse {
+/** Une entrée d'un méga-menu : libellé + description + pictogramme + destination. */
+interface MegaItem {
   label: string;
-  link: string | null;
+  description: string;
+  /** Pictogramme court (glyphe unicode) affiché dans la pastille. */
+  icon: string;
+  link: string;
+  /** Ancre optionnelle sur la page cible (ex. le simulateur de construction). */
+  fragment?: string;
+}
+
+/** Un groupe de navigation à méga-menu déroulant (univers). */
+interface NavGroup {
+  label: string;
+  items: MegaItem[];
 }
 
 /**
- * En-tête global (F0.3, liens câblés en F1 puis F2).
+ * En-tête global (F0.3 → aligné sur le prototype client).
  *
- * La marque et le bouton « Connexion » sont routés (RouterLink). Les univers
- * pointent vers leur page dédiée dès qu'elle existe (`link`) ; les autres
- * restent des placeholders visuels jusqu'à leur phase (F2.4/F2.5). Le menu
- * mobile est piloté par un signal local.
+ * Barre translucide **réellement fixe** (le `sticky` est porté par l'hôte du
+ * composant, pas par un enfant, sinon il ne « voyage » pas). La navigation
+ * desktop est organisée en **méga-menus par univers** (cartes icône + titre +
+ * description) ; le mobile reprend la même structure en accordéons.
+ *
+ * Chaque lien pointe vers une page RÉELLE (aucun lien mort) : les univers
+ * construits en F2.3 → F2.7. Un méga-menu s'ouvre au survol **et** au
+ * clic/clavier (bouton `aria-expanded`) ; il se referme à la navigation, sur
+ * Échap, ou au clic en dehors de l'en-tête.
  */
 @Component({
   selector: 'app-header',
@@ -23,19 +48,96 @@ interface NavUniverse {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {
-  /** Les univers mis en avant dans la méga-nav (Tourisme/Transport routés en F2.4). */
-  protected readonly universes: NavUniverse[] = [
-    { label: 'Immobilier', link: '/immobilier' },
-    { label: 'Nuitées', link: '/nuitees' },
-    { label: 'Tourisme', link: '/tourisme' },
-    { label: 'Transport', link: '/transport' },
-    { label: 'Construction', link: '/construction' },
-    { label: 'Services', link: null },
+  private readonly host = inject(ElementRef<HTMLElement>);
+
+  /** Univers à méga-menu (mappés sur les pages réelles F2.3 → F2.7). */
+  protected readonly groups: NavGroup[] = [
+    {
+      label: 'Immobilier',
+      items: [
+        { label: 'Acheter ou louer', description: 'Villas, appartements, terrains et locaux vérifiés.', icon: '⌂', link: '/immobilier' },
+        { label: 'Gestion locative', description: 'Loyers, quittances, maintenance et reporting.', icon: '％', link: '/gestion-locative' },
+        { label: 'Déposer un bien', description: 'Propriétaires : mettez votre bien en ligne.', icon: '＋', link: '/deposer-un-bien' },
+        { label: 'Diaspora', description: 'Acheter, construire et gérer à distance.', icon: '◎', link: '/diaspora' },
+      ],
+    },
+    {
+      label: 'Séjours & Tourisme',
+      items: [
+        { label: 'Hébergements & nuitées', description: 'Villas, meublés, campements et écolodges.', icon: '☾', link: '/nuitees' },
+        { label: 'Circuits & expériences', description: 'Saloum, Casamance, patrimoine et nature.', icon: '✦', link: '/tourisme' },
+        { label: 'Team building', description: 'Journées de cohésion et séminaires clé en main.', icon: '♟', link: '/team-building' },
+      ],
+    },
+    {
+      label: 'Transport',
+      items: [
+        { label: 'Location de véhicules', description: 'Berlines, 4×4 et minibus, avec ou sans chauffeur.', icon: '▰', link: '/transport' },
+        { label: 'Mobilité & navettes', description: 'Transferts AIBD, navettes et sorties de groupe.', icon: '✈', link: '/mobilite' },
+      ],
+    },
+    {
+      label: 'Construction',
+      items: [
+        { label: 'Construire / rénover', description: 'Études, travaux, suivi filmé et remise des clés.', icon: '▦', link: '/construction' },
+        { label: 'Simulateur de budget', description: 'Estimation par surface, gamme et objectif.', icon: '∑', link: '/construction', fragment: 'simulateur' },
+      ],
+    },
   ];
 
+  /** Lien plat (pas de méga-menu) vers la marketplace prestataires. */
+  protected readonly proLink = '/pro';
+
+  /** Groupe de méga-menu actuellement ouvert (libellé), ou null. */
+  protected readonly openGroup = signal<string | null>(null);
+  /** État du menu mobile. */
   protected readonly menuOpen = signal(false);
 
+  constructor() {
+    // Toute navigation referme les menus (méga-menu desktop + panneau mobile).
+    inject(Router)
+      .events.pipe(
+        filter((e) => e instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => {
+        this.openGroup.set(null);
+        this.menuOpen.set(false);
+      });
+  }
+
+  /** Ouvre le méga-menu d'un groupe (survol desktop). */
+  protected openMega(label: string): void {
+    this.openGroup.set(label);
+  }
+
+  /** Ferme le méga-menu (sortie de survol desktop). */
+  protected closeMega(): void {
+    this.openGroup.set(null);
+  }
+
+  /** Bascule un méga-menu au clic/clavier (tactile & accessibilité). */
+  protected toggleGroup(label: string): void {
+    this.openGroup.update((current) => (current === label ? null : label));
+  }
+
+  /** Bascule le panneau mobile. */
   protected toggleMenu(): void {
     this.menuOpen.update((open) => !open);
+  }
+
+  /** Échap referme tout. */
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    this.openGroup.set(null);
+    this.menuOpen.set(false);
+  }
+
+  /** Un clic en dehors de l'en-tête referme le méga-menu ouvert. */
+  @HostListener('document:click', ['$event'])
+  protected onDocumentClick(event: MouseEvent): void {
+    if (this.openGroup() && !this.host.nativeElement.contains(event.target)) {
+      this.openGroup.set(null);
+    }
   }
 }

@@ -9,7 +9,7 @@ fonctionnalités. Tous sont « présentiels » : pilotés par leurs `input()` /
 
 | Composant | Sélecteur | Rôle |
 | --- | --- | --- |
-| `HeaderComponent` | `app-header` | En-tête global : logo, méga-nav des 5 univers, CTA connexion, menu mobile. |
+| `HeaderComponent` | `app-header` | En-tête global **réellement fixe** (sticky porté par l'hôte) : logo, **méga-menus déroulants par univers** (cartes icône + titre + description, ouverture survol/clavier, fermeture Échap/navigation/clic-dehors), lien Kaikun Pro, CTA connexion, **menu mobile en accordéons**. Aligné sur le prototype client ; chaque lien mène à une page réelle (F2.3 → F2.7). |
 | `FooterComponent` | `app-footer` | Pied de page : marque, colonnes de liens, mention légale. |
 | `OrbitHeroComponent` | `app-orbit-hero` | « Signature orbitale » du hero : anneaux tournants + univers en orbite, carte centrale interactive (repris de la maquette client, charte Kaikun). |
 | `ListingCardComponent` | `app-listing-card` | Carte de bien / service du catalogue (image ou dégradé de repli, badge, titre, localisation, prix, CTA). |

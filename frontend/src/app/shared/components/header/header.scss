@@ -1,11 +1,14 @@
+// L'hôte du composant porte le `sticky` : son bloc conteneur est le main-layout
+// (haut de 100vh), donc la barre « voyage » sur toute la page. Posé sur un
+// enfant, le sticky n'aurait que la hauteur du header pour course (bug).
 :host {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: block;
 }
 
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
   background: rgba(247, 244, 235, 0.82);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--k-line);
@@ -14,7 +17,7 @@
 .bar {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 18px;
   height: var(--k-header-h);
 }
 
@@ -63,32 +66,144 @@
   letter-spacing: 0.02em;
 }
 
-// --- Navigation -----------------------------------------------------------
+// --- Navigation (méga-menus) ----------------------------------------------
+// Nav alignée à gauche après la marque ; les actions sont repoussées à droite
+// (margin-right:auto). Ainsi les méga-menus s'ancrent à gauche sans déborder.
 .nav {
-  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  margin-left: 18px;
+  margin-right: auto;
 }
 
+.nav-group {
+  position: relative;
+}
+
+.nav-trigger,
 .nav-link {
   font-size: 14.5px;
   font-weight: 500;
   padding: 9px 13px;
   border-radius: 9px;
   transition: background 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--k-ink);
 }
 
-.nav-link:hover {
+.nav-trigger {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.nav-trigger:hover,
+.nav-link:hover,
+.nav-trigger.is-open {
   background: var(--k-sand);
   color: var(--k-brand);
+}
+
+.caret {
+  font-size: 12px;
+  transition: transform 0.18s;
+}
+
+.nav-trigger.is-open .caret {
+  transform: rotate(180deg);
+}
+
+// Le panneau déroulant : cartes icône + titre + description.
+.mega {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: min(540px, calc(100vw - 40px));
+  background: var(--k-white);
+  border: 1px solid var(--k-line);
+  border-radius: 18px;
+  box-shadow: var(--k-shadow-lg);
+  padding: 14px;
+  animation: mega-in 0.16s ease;
+}
+
+// Pont invisible comblant l'espace trigger↔menu, pour que le survol ne se coupe
+// pas quand la souris traverse le vide (le pont fait partie du .nav-group).
+.mega::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 0;
+  right: 0;
+  height: 12px;
+}
+
+@keyframes mega-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.mega-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mega-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border: 1px solid var(--k-line);
+  border-radius: 13px;
+  background: var(--k-cream);
+  transition: border-color 0.16s, transform 0.16s, box-shadow 0.16s, background 0.16s;
+}
+
+.mega-item:hover {
+  border-color: var(--k-gold);
+  background: var(--k-white);
+  transform: translateY(-2px);
+  box-shadow: var(--k-shadow);
+}
+
+.mega-ic {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  background: var(--k-navy);
+  color: var(--k-gold);
+  font-size: 18px;
+}
+
+.mega-text b {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 14.5px;
+  display: block;
+  margin-bottom: 2px;
+  color: var(--k-ink);
+}
+
+.mega-text small {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--k-muted);
 }
 
 .actions {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: 8px;
+  flex: 0 0 auto;
 }
 
 // Bouton menu (mobile uniquement)
@@ -98,9 +213,11 @@
   height: 42px;
   border-radius: 11px;
   border: 1px solid var(--k-line);
+  background: transparent;
   align-items: center;
   justify-content: center;
   color: var(--k-ink);
+  cursor: pointer;
 }
 
 .menu-btn svg {
@@ -108,17 +225,57 @@
   height: 22px;
 }
 
-// --- Menu mobile ----------------------------------------------------------
+// --- Menu mobile (accordéons) ---------------------------------------------
 .mobile-menu {
   border-top: 1px solid var(--k-line);
-  padding: 14px 0 20px;
+  padding: 10px 0 20px;
   background: var(--k-cream);
+  max-height: calc(100vh - var(--k-header-h));
+  overflow-y: auto;
+}
+
+.mobile-group {
+  border-bottom: 1px solid var(--k-line);
+}
+
+.mobile-group summary {
+  padding: 13px 6px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobile-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.mobile-group summary::after {
+  content: '⌄';
+  color: var(--k-muted);
+  transition: transform 0.18s;
+}
+
+.mobile-group[open] summary::after {
+  transform: rotate(180deg);
 }
 
 .mobile-link {
   display: block;
-  padding: 12px 6px;
-  font-weight: 600;
+  padding: 10px 6px 10px 18px;
+  color: var(--k-ink);
+  font-size: 14.5px;
+}
+
+.mobile-group .mobile-link {
+  border-top: 1px dashed var(--k-line);
+}
+
+.mobile-link--flat {
+  padding-left: 6px;
+  font-weight: 700;
   border-bottom: 1px solid var(--k-line);
 }
 
@@ -127,14 +284,10 @@
 }
 
 // --- Responsive -----------------------------------------------------------
-@media (max-width: 860px) {
+@media (max-width: 960px) {
   .nav,
   .nav-cta {
     display: none;
-  }
-
-  .actions {
-    margin-left: auto;
   }
 
   .menu-btn {

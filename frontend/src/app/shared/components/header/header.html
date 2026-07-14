@@ -9,15 +9,51 @@
       </span>
     </a>
 
-    <!-- Navigation des univers (desktop) -->
+    <!-- Navigation des univers (desktop) : méga-menus déroulants -->
     <nav class="nav" aria-label="Univers">
-      @for (universe of universes; track universe.label) {
-        @if (universe.link; as link) {
-          <a class="nav-link" [routerLink]="link">{{ universe.label }}</a>
-        } @else {
-          <a class="nav-link" href="#">{{ universe.label }}</a>
-        }
+      @for (group of groups; track group.label) {
+        <div
+          class="nav-group"
+          (mouseenter)="openMega(group.label)"
+          (mouseleave)="closeMega()"
+        >
+          <button
+            class="nav-trigger"
+            type="button"
+            [class.is-open]="openGroup() === group.label"
+            [attr.aria-expanded]="openGroup() === group.label"
+            aria-haspopup="true"
+            (click)="toggleGroup(group.label)"
+          >
+            {{ group.label }}
+            <span class="caret" aria-hidden="true">⌄</span>
+          </button>
+
+          @if (openGroup() === group.label) {
+            <div class="mega" role="menu">
+              <div class="mega-grid">
+                @for (item of group.items; track item.label) {
+                  <a
+                    class="mega-item"
+                    role="menuitem"
+                    [routerLink]="item.link"
+                    [fragment]="item.fragment"
+                  >
+                    <span class="mega-ic" aria-hidden="true">{{ item.icon }}</span>
+                    <span class="mega-text">
+                      <b>{{ item.label }}</b>
+                      <small>{{ item.description }}</small>
+                    </span>
+                  </a>
+                }
+              </div>
+            </div>
+          }
+        </div>
       }
+
+      <!-- Lien plat (pas de sous-menu) -->
+      <a class="nav-link" [routerLink]="proLink">Kaikun Pro</a>
     </nav>
 
     <!-- Actions -->
@@ -28,7 +64,8 @@
         type="button"
         (click)="toggleMenu()"
         [attr.aria-expanded]="menuOpen()"
-        aria-label="Menu">
+        aria-label="Menu"
+      >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 6h16M4 12h16M4 18h16" />
         </svg>
@@ -36,18 +73,32 @@
     </div>
   </div>
 
-  <!-- Menu mobile -->
+  <!-- Menu mobile : accordéons par univers (comme le prototype) -->
   @if (menuOpen()) {
     <div class="mobile-menu">
       <div class="k-wrap">
-        @for (universe of universes; track universe.label) {
-          @if (universe.link; as link) {
-            <a class="mobile-link" [routerLink]="link" (click)="toggleMenu()">{{ universe.label }}</a>
-          } @else {
-            <a class="mobile-link" href="#">{{ universe.label }}</a>
-          }
+        @for (group of groups; track group.label) {
+          <details class="mobile-group">
+            <summary>{{ group.label }}</summary>
+            @for (item of group.items; track item.label) {
+              <a
+                class="mobile-link"
+                [routerLink]="item.link"
+                [fragment]="item.fragment"
+                (click)="toggleMenu()"
+              >
+                {{ item.label }}
+              </a>
+            }
+          </details>
         }
-        <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/connexion" (click)="toggleMenu()">Connexion</a>
+
+        <a class="mobile-link mobile-link--flat" [routerLink]="proLink" (click)="toggleMenu()">
+          Kaikun Pro
+        </a>
+        <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/connexion" (click)="toggleMenu()">
+          Connexion
+        </a>
       </div>
     </div>
   }
