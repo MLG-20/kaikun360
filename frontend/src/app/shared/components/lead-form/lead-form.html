@@ -1,0 +1,73 @@
+<!-- Formulaire de demande réutilisable (F2.5). -->
+<div class="k-card lead-form">
+  <h2 class="lead-form-title">{{ heading() }}</h2>
+
+  @if (intro()) {
+    <p class="lead-form-intro">{{ intro() }}</p>
+  }
+
+  @if (createdReference(); as reference) {
+    <!-- Succès : la demande est déposée, un conseiller recontactera. -->
+    <p class="k-form-info">
+      Demande envoyée ✔ — référence <b>{{ reference }}</b>. Un conseiller Kaikun 360
+      vous recontacte rapidement.
+    </p>
+  } @else if (!isAuthenticated()) {
+    <!-- Le dépôt exige une session : on invite à se connecter. -->
+    <p class="lead-form-authnote">
+      Connectez-vous pour envoyer votre demande et suivre son avancement.
+    </p>
+    <a
+      class="k-btn k-btn--primary k-btn--block"
+      routerLink="/auth/connexion"
+      [queryParams]="{ redirect: redirectPath() }"
+      >Se connecter</a
+    >
+    <p class="lead-form-alt">
+      Pas encore de compte ?
+      <a routerLink="/auth/inscription">Créer un compte</a>
+    </p>
+  } @else {
+    <form class="lead-form-fields" [formGroup]="form" (ngSubmit)="submit()">
+      @if (formError(); as error) {
+        <p class="k-form-error">{{ error }}</p>
+      }
+
+      <div class="k-field">
+        <label class="k-label" for="lead-message">Votre message</label>
+        <textarea
+          id="lead-message"
+          class="k-input"
+          rows="5"
+          formControlName="message"
+          [class.k-input--error]="
+            form.controls.message.touched && form.controls.message.invalid
+          "></textarea>
+        @if (form.controls.message.touched && form.controls.message.invalid) {
+          <p class="k-error">Merci de décrire votre besoin.</p>
+        }
+      </div>
+
+      @if (showCity()) {
+        <div class="k-field">
+          <label class="k-label" for="lead-city">Ville concernée <span class="k-optional">(facultatif)</span></label>
+          <input id="lead-city" class="k-input" type="text" formControlName="city" />
+        </div>
+      }
+
+      @if (showBudget()) {
+        <div class="k-field">
+          <label class="k-label" for="lead-budget">Budget indicatif (FCFA) <span class="k-optional">(facultatif)</span></label>
+          <input id="lead-budget" class="k-input" type="number" min="0" formControlName="budget_xof" />
+        </div>
+      }
+
+      <button
+        class="k-btn k-btn--primary k-btn--block"
+        type="submit"
+        [disabled]="submitting()">
+        {{ submitting() ? 'Envoi…' : ctaLabel() }}
+      </button>
+    </form>
+  }
+</div>

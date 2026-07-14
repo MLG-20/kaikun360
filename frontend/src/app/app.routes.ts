@@ -111,6 +111,49 @@ export const routes: Routes = [
           ),
         title: 'Mobilité, navettes & transferts — Kaikun 360',
       },
+      {
+        // Univers Construction (F2.5) : page de conversion + simulateur de budget.
+        path: 'construction',
+        loadComponent: () =>
+          import('./features/build/construction-page/construction-page').then(
+            (m) => m.ConstructionPageComponent,
+          ),
+        title: 'Construction & simulateur de budget — Kaikun 360',
+      },
+      {
+        // Univers Gestion locative (F2.5) : page de conversion.
+        path: 'gestion-locative',
+        loadComponent: () =>
+          import('./features/manage/manage-page/manage-page').then(
+            (m) => m.ManagePageComponent,
+          ),
+        title: 'Gestion locative — Kaikun 360',
+      },
+      {
+        // Univers Diaspora (F2.5) : page de conversion (protocole de confiance).
+        path: 'diaspora',
+        loadComponent: () =>
+          import('./features/diaspora/diaspora-page/diaspora-page').then(
+            (m) => m.DiasporaPageComponent,
+          ),
+        title: 'Diaspora — projets pilotés à distance — Kaikun 360',
+      },
+      {
+        // Univers Team building (F2.5) : page de conversion.
+        path: 'team-building',
+        loadComponent: () =>
+          import('./features/team-building/team-building-page/team-building-page').then(
+            (m) => m.TeamBuildingPageComponent,
+          ),
+        title: 'Team building & séminaires — Kaikun 360',
+      },
+      {
+        // Kaikun Pro (F2.5) : page de conversion prestataires/entreprises.
+        path: 'pro',
+        loadComponent: () =>
+          import('./features/pro/pro-page/pro-page').then((m) => m.ProPageComponent),
+        title: 'Kaikun Pro — devenez prestataire vérifié — Kaikun 360',
+      },
     ],
   },
 ];

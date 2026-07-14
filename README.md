@@ -407,17 +407,17 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 ### Phase F2 — Pages publiques (PublicModule)
 
 - [x] Page Accueil : hero, recherche rapide, présentation des espaces, services prioritaires, éléments de confiance. <!-- F2.2 : hero éditorial + recherche intégrée, grille des 9 univers, protocole de confiance, vitrine catalogue (API réelle), diaspora, services complémentaires, simulateur (teaser), statistiques, appel final -->
-- [~] Page Diaspora : bandeau d'accroche livré sur l'accueil (F2.2.3) ; page dédiée complète = F2.5.
-- [~] Composant simulateur : teaser d'appel livré sur l'accueil (F2.2.4) ; simulateur calculant en direct = page Construction (F2.5).
+- [x] Page Diaspora : page dédiée `/diaspora` (F2.5) — protocole de confiance + étapes + formulaire de contact (voir plus bas).
+- [x] Composant simulateur : simulateur de budget calculant en direct sur `/construction` (F2.5) — miroir du calcul backend B5.4.
 - [x] Page Immobilier : filtres biens (villes, type, prix), vérification, demande de visite. <!-- F2.3 : page univers /immobilier (bandeau + catalogue filtrable) + fiche /immobilier/:id (description, localisation, carte, vérification, formulaire de demande de visite POST /requests). Filtre géo par ID = affiné avec le sélecteur de villes ultérieur. -->
 - [x] Page Nuitées : calendrier, photos, équipements, prix/nuit, disponibilité. <!-- F2.3 : page univers /nuitees + fiche /nuitees/:id (équipements, règlement, modalités, calendrier de disponibilité GET /stays/:id/availability, avis GET /reviews, demande de réservation). Photos réelles = quand les médias seront exposés dans les Resources (repli dégradé pour l'instant). -->
-- [ ] Page Gestion locative : mandats, taux, reporting, maintenance, reversements (page de conversion propriétaire).
-- [ ] Page Construction : simulateur, niveaux de finition, rénovation, suivi chantier.
+- [x] Page Gestion locative : page de conversion `/gestion-locative` (F2.5) — promesse (mandats, loyers/quittances, reporting, incidents, reversements), étapes, bénéfices, formulaire de mise en relation (POST /requests service_type=manage). La gestion opérationnelle vit dans l'espace connecté/back-office.
+- [x] Page Construction : page de conversion `/construction` (F2.5) — étapes, atouts (artisans vérifiés, suivi filmé/daté, paiements par jalons), **simulateur de budget interactif** (objectif/surface/finition → estimation FCFA en direct) + formulaire de devis pré-rempli par le simulateur (POST /requests service_type=build).
 - [x] Page Tourisme & expériences : destinations, programmes, durée, inclusions, guide, restauration. <!-- F2.4 : page univers /tourisme (bandeau + catalogue filtrable) + fiche /tourisme/:id (programme, inclusions structurées, durée, places restantes GET /experiences/:id/availability, avis GET /reviews, demande de réservation POST /requests service_type=explore). -->
 - [x] Page Transport & mobilité : location voiture particulière, voiture touristique, navette AIBD, bus, minibus, 4x4, pirogue. <!-- F2.4 : univers Transport (véhicules) = /transport + fiche /transport/:id (caractéristiques, chauffeur, caution, avis, demande POST /requests service_type=mobility). Univers Mobilité (navettes/transferts) = vitrine /mobilite (pas d'endpoint de détail backend → vitrine + réservation via conseiller). Header et tuiles d'accueil recâblés. -->
-- [ ] Page Diaspora : vérification, achat, construction, suivi vidéo, gestion locative.
-- [ ] Page Team building : packs, lieux, activités, transport, hébergement, restauration.
-- [ ] Page Kaikun Pro : conditions, certification, documents, avantages, commissions (page de recrutement prestataires).
+- [x] Page Diaspora : page de conversion `/diaspora` (F2.5) — protocole de confiance (vérification documentée, tout filmé/daté, numéro de suivi unique), étapes (référent unique), bénéfices, formulaire de contact (POST /requests service_type=diaspora). Cœur du positionnement anti-arnaque.
+- [x] Page Team building : page de conversion `/team-building` (F2.5) — formules (journée cohésion, séminaire résidentiel, incentive), étapes, formulaire de demande de devis (POST /requests service_type=team_building).
+- [x] Page Kaikun Pro : page de recrutement prestataires `/pro` (F2.5) — atouts, audiences (agences/artisans/transport-tourisme-services), étapes de certification ; CTA = inscription prestataire (`/auth/inscription`), pas de formulaire de demande.
 - [ ] Page À propos : mission, équipe, ancrage territorial, partenaires.
 - [ ] Page FAQ : paiement, vérification, litiges, caution, diaspora, transport.
 - [ ] Page Contact : formulaire, WhatsApp, téléphone, email, localisation.
@@ -427,8 +427,9 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 - [~] Composant fiche détaillée (photos, description, localisation, prix, disponibilité, règles, preuves, avis, CTA). <!-- F2.3 : implémenté comme pages concrètes Immobilier & Nuitées (fiche bien + fiche nuitée avec calendrier/avis). Extraction en composant générique réutilisable + galerie médias = F2.6. -->
 - [x] Composant carte cliquable : `app-listing-card` mène à la fiche détaillée (lien étiré) — F2.3.
-- [ ] Composants de formulaires intelligents : demande client, dépôt de bien, inscription prestataire, demande diaspora, devis team building.
-- [ ] Composant simulateur immobilier/construction (budget, ville, surface, objectif, niveau de finition).
+- [~] Composants de formulaires intelligents : demande client, dépôt de bien, inscription prestataire, demande diaspora, devis team building. <!-- F2.5 : composant réutilisable `app-lead-form` (demande de contact auth-gated, POST /requests) partagé par les pages de conversion Construction/Gestion locative/Diaspora/Team building. Dépôt de bien + inscription prestataire dédiée + devis (quotes) = F2.7. -->
+- [x] Composant simulateur immobilier/construction (budget, ville, surface, objectif, niveau de finition). <!-- F2.5 : simulateur de construction interactif sur /construction (objectif/surface/finition → estimation FCFA en direct), miroir du calcul backend `ConstructionEstimator` (B5.4) dans `features/build/construction-estimator.ts`. Volet immobilier (estimation de prix) non prévu par le backend à ce stade. -->
+
 - [ ] Composant module WhatsApp contextuel (message prérempli selon page/service).
 - [ ] Composant galerie image (image principale, compression côté upload, alt text, statut de validation visible).
 - [ ] Composant témoignages et preuves (labels de vérification, documents visibles selon niveau d'autorisation).

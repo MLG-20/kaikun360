@@ -23,6 +23,21 @@ fonctionnalités. Tous sont « présentiels » : pilotés par leurs `input()` /
 | `CatalogComponent` | `app-catalog` | **Catalogue filtrable, triable et paginé**, réutilisé sur toutes les pages d'univers. Générique : l'univers vient d'un `input()` ; filtres/tri/page vivent dans l'URL (recherches partageables). |
 | `SearchEngineComponent` | `app-search-engine` | **Moteur de recherche global** : onglets d'univers + ville/mots-clés + budget. Navigue vers `/recherche` avec des paramètres alignés sur les filtres du backend. |
 
+## Conversion (F2.5)
+
+| Composant | Sélecteur | Rôle |
+| --- | --- | --- |
+| `LeadFormComponent` | `app-lead-form` | **Formulaire de demande de contact réutilisable** des pages de conversion (Construction, Gestion locative, Diaspora, Team building). Dépose une demande via `POST /requests` avec le bon `service_type`. **Auth requise** : un visiteur non connecté est invité à se connecter (retour sur la page via `redirectPath`) ; un envoi réussi affiche la référence de la demande. |
+
+**Côté technique :** entrées `serviceType` (requis), `redirectPath` (requis),
+`heading`, `intro`, `ctaLabel`, `defaultMessage` (signal — le simulateur de
+construction l'actualise en direct tant que l'utilisateur n'a pas édité le
+champ), `showCity`, `showBudget`. S'appuie sur `AuthService.isAuthenticated`,
+`RequestService.create` et les primitives de formulaire du design system
+(`.k-field`/`.k-input`/`.k-form-info`/`.k-form-error`).
+
+---
+
 **Comment ça marche, en clair :** l'utilisateur choisit un univers (Immobilier,
 Nuitées, Transport, Tourisme, Mobilité), tape une ville et un budget, puis lance
 la recherche. Il arrive sur une page de résultats où il peut affiner (type, prix,

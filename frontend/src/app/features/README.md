@@ -57,9 +57,24 @@ La toute première brique de l'application (`App`) ne fait qu'une chose : affich
   `/transport` + la **fiche d'un véhicule** `/transport/:id` (caractéristiques,
   chauffeur, caution, avis, demande) ; et la vitrine `/mobilite` (navettes/
   transferts — **vitrine seule**, pas de fiche côté backend).
+- **`build/`** — l'**univers Construction** (F2.5) : la page de conversion
+  `/construction` avec un **simulateur de budget interactif** (objectif, surface,
+  finition → estimation FCFA en direct) et un formulaire de devis pré-rempli.
+- **`manage/`** — l'**univers Gestion locative** (F2.5) : la page de conversion
+  `/gestion-locative` (promesse, étapes, bénéfices, mise en relation).
+- **`diaspora/`** — l'**univers Diaspora** (F2.5) : la page de conversion
+  `/diaspora` (protocole de confiance anti-arnaque, référent unique, contact).
+- **`team-building/`** — l'**univers Team building** (F2.5) : la page de
+  conversion `/team-building` (formules, étapes, demande de devis).
+- **`pro/`** — **Kaikun Pro** (F2.5) : la page de recrutement des prestataires
+  `/pro` (atouts, audiences, certification) ; CTA = inscription.
 
-À venir : les pages de conversion (Construction, Gestion locative, Diaspora…),
-l'espace personnel, le back-office.
+Ces cinq pages de conversion partagent le formulaire réutilisable
+[`app-lead-form`](../shared/components/lead-form) (dépôt de demande auth-gated).
+
+À venir : les composants transverses (fiche générique, galerie, avis, WhatsApp),
+les formulaires intelligents (dépôt de bien, devis), l'espace personnel, le
+back-office.
 
 ---
 
@@ -80,6 +95,11 @@ l'espace personnel, le back-office.
   `.uni-detail-*`, chips/avis/disponibilité `.uni-chips`/`.uni-review`/`.uni-avail`) :
   [`../../styles/_universe.scss`](../../styles/_universe.scss), réutilisés par
   `immo/`, `stay/`, `explore/` et `mobility/` (F2.3 → F2.4).
+- Styles partagés des **pages de conversion** (étapes numérotées `.conv-steps`,
+  grilles d'atouts `.conv-features`, bandeau d'appel à l'action `.conv-cta`) :
+  [`../../styles/_conversion.scss`](../../styles/_conversion.scss), réutilisés par
+  `build/`, `manage/`, `diaspora/`, `team-building/` et `pro/` (F2.5). Le
+  simulateur de construction garde ses styles propres (`build-sim-*`).
 - Les **fiches détaillées** consomment `CatalogService`
   (`property`/`stay`/`stayAvailability`, `experience`/`experienceAvailability`,
   `vehicle`), `ReviewService` (avis stay/vehicle/experience) et `RequestService`

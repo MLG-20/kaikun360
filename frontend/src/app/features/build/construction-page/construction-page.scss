@@ -1,0 +1,126 @@
+// Spécifique à la page Construction (F2.5) : le simulateur de budget interactif.
+// Les briques éditoriales communes (étapes, atouts) viennent de `_conversion.scss`.
+
+.build-sim-band {
+  background: var(--k-cream);
+  padding: 3rem 0;
+  margin-top: 2rem;
+}
+
+.build-sim-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .build-sim-grid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(340px, 1fr);
+  }
+}
+
+.build-sim-title {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+  margin-bottom: 1.5rem;
+}
+
+.build-field {
+  margin-bottom: 1.5rem;
+}
+
+.build-field-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
+.build-choices {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.build-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  text-align: left;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.build-choice b {
+  font-size: 0.95rem;
+}
+
+.build-choice small {
+  color: var(--k-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.build-choice:hover {
+  border-color: var(--k-brand);
+}
+
+.build-choice.is-active {
+  border-color: var(--k-brand);
+  box-shadow: 0 0 0 2px rgba(3, 72, 251, 0.18);
+}
+
+.build-range {
+  width: 100%;
+  accent-color: var(--k-brand);
+}
+
+.build-range-scale {
+  display: flex;
+  justify-content: space-between;
+  color: var(--k-muted);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.build-result {
+  margin-top: 1.5rem;
+  padding: 1.4rem;
+  border-radius: var(--k-radius);
+  background: var(--k-navy);
+  color: #fff;
+}
+
+.build-result-label {
+  display: block;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.build-result-value {
+  display: block;
+  font-family: var(--k-font-mono);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 700;
+  color: var(--k-gold);
+  margin: 0.25rem 0 0.5rem;
+}
+
+.build-result-note {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.5;
+}
+
+@media (min-width: 960px) {
+  .build-lead {
+    position: sticky;
+    top: 1.5rem;
+  }
+}

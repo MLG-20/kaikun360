@@ -29,7 +29,7 @@ export class HeaderComponent {
     { label: 'Nuitées', link: '/nuitees' },
     { label: 'Tourisme', link: '/tourisme' },
     { label: 'Transport', link: '/transport' },
-    { label: 'Construction', link: null },
+    { label: 'Construction', link: '/construction' },
     { label: 'Services', link: null },
   ];
 

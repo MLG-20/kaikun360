@@ -1,0 +1,66 @@
+<!-- Page univers Kaikun Pro (F2.5). -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Kaikun Pro</p>
+    <h1 class="uni-hero-title">Développez votre activité avec Kaikun 360</h1>
+    <p class="uni-hero-lead">
+      Rejoignez le réseau des prestataires vérifiés Kaikun 360 : recevez des
+      demandes qualifiées de clients au Sénégal et dans la diaspora, gagnez en
+      visibilité et sécurisez vos paiements.
+    </p>
+
+    <ul class="uni-hero-points">
+      @for (point of highlights; track point.title) {
+        <li class="uni-hero-point">
+          <span class="uni-hero-point-title">{{ point.title }}</span>
+          <span class="uni-hero-point-text">{{ point.text }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+
+<!-- À qui s'adresse Kaikun Pro -->
+<section class="k-wrap conv-features">
+  <h2 class="conv-section-title">À qui s’adresse Kaikun Pro</h2>
+  <ul class="conv-features-grid is-three">
+    @for (audience of audiences; track audience.title) {
+      <li class="conv-feature">
+        <h3 class="conv-feature-title">{{ audience.title }}</h3>
+        <p class="conv-feature-text">{{ audience.text }}</p>
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="k-wrap conv-steps">
+  <h2 class="conv-section-title">Comment devenir prestataire</h2>
+  <ol class="conv-steps-list">
+    @for (step of steps; track step.num) {
+      <li class="conv-step">
+        <span class="conv-step-num">{{ step.num }}</span>
+        <div>
+          <h3 class="conv-step-title">{{ step.title }}</h3>
+          <p class="conv-step-text">{{ step.text }}</p>
+        </div>
+      </li>
+    }
+  </ol>
+</section>
+
+<!-- Appel à l'action : inscription prestataire -->
+<section class="conv-cta">
+  <div class="k-wrap conv-cta-grid">
+    <div>
+      <h2 class="conv-cta-title">Prêt à recevoir vos premières demandes ?</h2>
+      <p class="conv-cta-lead">
+        Créez votre compte professionnel, faites vérifier votre profil et
+        commencez à recevoir des missions qualifiées.
+      </p>
+      <div class="conv-cta-actions">
+        <a class="k-btn k-btn--primary" routerLink="/auth/inscription">Créer mon compte pro</a>
+        <a class="k-btn k-btn--ghost" routerLink="/auth/connexion">J’ai déjà un compte</a>
+      </div>
+    </div>
+  </div>
+</section>

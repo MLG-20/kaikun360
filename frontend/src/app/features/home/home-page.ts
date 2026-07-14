@@ -134,40 +134,40 @@ export class HomePageComponent implements OnInit {
       tag: 'Construction',
       desc: 'Construire à distance, avec un suivi filmé et daté.',
       icon: 'build',
-      commands: ['/'],
-      fragment: 'simulateur',
+      // Page de conversion dédiée + simulateur (F2.5).
+      commands: ['/construction'],
     },
     {
       name: 'Kaikun Manage',
       tag: 'Gestion locative',
       desc: 'Confiez la gestion de vos biens et suivez tout à distance.',
       icon: 'key',
-      commands: ['/'],
-      fragment: 'services',
+      // Page de conversion dédiée (F2.5).
+      commands: ['/gestion-locative'],
     },
     {
       name: 'Kaikun Diaspora',
       tag: 'Diaspora',
       desc: 'Un référent unique et un suivi documenté depuis l’étranger.',
       icon: 'globe',
-      commands: ['/'],
-      fragment: 'diaspora',
+      // Page de conversion dédiée (F2.5).
+      commands: ['/diaspora'],
     },
     {
       name: 'Kaikun Team',
       tag: 'Team building',
       desc: 'Séminaires et activités de cohésion clés en main.',
       icon: 'team',
-      commands: ['/'],
-      fragment: 'team-building',
+      // Page de conversion dédiée (F2.5).
+      commands: ['/team-building'],
     },
     {
       name: 'Kaikun Pro',
       tag: 'Entreprises',
       desc: 'Solutions sur mesure pour les professionnels et institutions.',
       icon: 'pro',
-      commands: ['/'],
-      fragment: 'services',
+      // Page de conversion dédiée (F2.5).
+      commands: ['/pro'],
     },
   ];
 

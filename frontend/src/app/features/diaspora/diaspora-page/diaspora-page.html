@@ -1,0 +1,68 @@
+<!-- Page univers Diaspora (F2.5). -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Univers Diaspora</p>
+    <h1 class="uni-hero-title">Votre projet au pays, piloté de l’étranger</h1>
+    <p class="uni-hero-lead">
+      La confiance n’est pas une promesse, c’est un protocole. Kaikun Diaspora
+      vous donne un référent unique et un suivi documenté — vérifié, filmé, daté
+      et numéroté — pour investir ou construire au Sénégal en toute sérénité.
+    </p>
+  </div>
+</section>
+
+<!-- Protocole de confiance (section navy) -->
+<section class="diaspora-trust">
+  <div class="k-wrap">
+    <h2 class="diaspora-trust-title">Le protocole de confiance</h2>
+    <ul class="diaspora-trust-grid">
+      @for (item of guarantees; track item.title) {
+        <li class="diaspora-trust-card">
+          <h3 class="diaspora-trust-card-title">{{ item.title }}</h3>
+          <p class="diaspora-trust-card-text">{{ item.text }}</p>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+
+<section class="k-wrap conv-steps">
+  <h2 class="conv-section-title">Comment ça marche</h2>
+  <ol class="conv-steps-list">
+    @for (step of steps; track step.num) {
+      <li class="conv-step">
+        <span class="conv-step-num">{{ step.num }}</span>
+        <div>
+          <h3 class="conv-step-title">{{ step.title }}</h3>
+          <p class="conv-step-text">{{ step.text }}</p>
+        </div>
+      </li>
+    }
+  </ol>
+</section>
+
+<section class="conv-cta">
+  <div class="k-wrap conv-cta-grid">
+    <div>
+      <h2 class="conv-cta-title">Parlez à votre référent Kaikun 360</h2>
+      <p class="conv-cta-lead">
+        Où que vous soyez, un interlocuteur unique cadre votre projet et vous
+        rend des comptes, preuves à l’appui.
+      </p>
+      <ul class="conv-checks">
+        @for (benefit of benefits; track benefit) {
+          <li class="conv-check">{{ benefit }}</li>
+        }
+      </ul>
+    </div>
+
+    <app-lead-form
+      serviceType="diaspora"
+      redirectPath="/diaspora"
+      heading="Être accompagné depuis l’étranger"
+      intro="Décrivez votre projet au pays : un référent Kaikun 360 vous recontacte."
+      ctaLabel="Prendre contact"
+      [showCity]="true"
+      defaultMessage="Bonjour, je vis à l’étranger et je souhaite être accompagné pour un projet au Sénégal. Merci de me recontacter." />
+  </div>
+</section>

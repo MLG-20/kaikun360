@@ -1,0 +1,62 @@
+<!-- Page univers Gestion locative (F2.5). -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Univers Gestion locative</p>
+    <h1 class="uni-hero-title">Confiez vos biens, gardez le contrôle</h1>
+    <p class="uni-hero-lead">
+      Kaikun Manage prend en charge la gestion de vos biens — locataires, loyers,
+      entretien, quittances — et vous suivez tout à distance, avec un reporting
+      clair et des décaissements réguliers en FCFA.
+    </p>
+
+    <ul class="uni-hero-points">
+      @for (point of highlights; track point.title) {
+        <li class="uni-hero-point">
+          <span class="uni-hero-point-title">{{ point.title }}</span>
+          <span class="uni-hero-point-text">{{ point.text }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+
+<section class="k-wrap conv-steps">
+  <h2 class="conv-section-title">Comment ça marche</h2>
+  <ol class="conv-steps-list">
+    @for (step of steps; track step.num) {
+      <li class="conv-step">
+        <span class="conv-step-num">{{ step.num }}</span>
+        <div>
+          <h3 class="conv-step-title">{{ step.title }}</h3>
+          <p class="conv-step-text">{{ step.text }}</p>
+        </div>
+      </li>
+    }
+  </ol>
+</section>
+
+<section class="conv-cta">
+  <div class="k-wrap conv-cta-grid">
+    <div>
+      <h2 class="conv-cta-title">Une gestion sereine, même depuis l’étranger</h2>
+      <p class="conv-cta-lead">
+        Idéal pour la diaspora et les propriétaires occupés : un interlocuteur
+        unique s’occupe de tout et vous rend des comptes à chaque étape.
+      </p>
+      <ul class="conv-checks">
+        @for (benefit of benefits; track benefit) {
+          <li class="conv-check">{{ benefit }}</li>
+        }
+      </ul>
+    </div>
+
+    <app-lead-form
+      serviceType="manage"
+      redirectPath="/gestion-locative"
+      heading="Confier la gestion d’un bien"
+      intro="Décrivez votre bien et vos attentes : un gestionnaire vous recontacte pour établir un mandat."
+      ctaLabel="Être recontacté"
+      [showCity]="true"
+      defaultMessage="Bonjour, je souhaite confier la gestion locative de mon bien. Merci de me recontacter pour en discuter." />
+  </div>
+</section>

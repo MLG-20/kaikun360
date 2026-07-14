@@ -1,0 +1,118 @@
+<!-- Page univers Construction (F2.5). -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Univers Construction</p>
+    <h1 class="uni-hero-title">Construisez ou rénovez, même à distance</h1>
+    <p class="uni-hero-lead">
+      Kaikun Build coordonne votre chantier au Sénégal avec des artisans
+      vérifiés, un devis ferme et un suivi filmé et daté à chaque étape.
+      Estimez votre budget en quelques secondes, puis lancez votre demande.
+    </p>
+
+    <ul class="uni-hero-points">
+      @for (point of highlights; track point.title) {
+        <li class="uni-hero-point">
+          <span class="uni-hero-point-title">{{ point.title }}</span>
+          <span class="uni-hero-point-text">{{ point.text }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+
+<!-- Comment ça marche -->
+<section class="k-wrap conv-steps">
+  <h2 class="conv-section-title">Comment ça marche</h2>
+  <ol class="conv-steps-list">
+    @for (step of steps; track step.num) {
+      <li class="conv-step">
+        <span class="conv-step-num">{{ step.num }}</span>
+        <div>
+          <h3 class="conv-step-title">{{ step.title }}</h3>
+          <p class="conv-step-text">{{ step.text }}</p>
+        </div>
+      </li>
+    }
+  </ol>
+</section>
+
+<!-- Simulateur + formulaire de devis -->
+<section id="simulateur" class="build-sim-band">
+  <div class="k-wrap build-sim-grid">
+    <!-- Simulateur interactif -->
+    <div class="build-sim">
+      <p class="k-eyebrow">Simulateur de budget</p>
+      <h2 class="build-sim-title">Une estimation immédiate en FCFA</h2>
+
+      <div class="build-field">
+        <span class="build-field-label">Type de projet</span>
+        <div class="build-choices">
+          @for (choice of objectives; track choice.value) {
+            <button
+              type="button"
+              class="build-choice"
+              [class.is-active]="objective() === choice.value"
+              (click)="objective.set(choice.value)">
+              <b>{{ choice.label }}</b>
+              <small>{{ choice.hint }}</small>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="build-field">
+        <label class="build-field-label" for="sim-surface">
+          Surface : <b>{{ surface() }} m²</b>
+        </label>
+        <input
+          id="sim-surface"
+          class="build-range"
+          type="range"
+          min="20"
+          max="600"
+          step="10"
+          [value]="surface()"
+          (input)="setSurface($any($event.target).value)" />
+        <div class="build-range-scale"><span>20 m²</span><span>600 m²</span></div>
+      </div>
+
+      <div class="build-field">
+        <span class="build-field-label">Niveau de finition</span>
+        <div class="build-choices">
+          @for (choice of finishes; track choice.value) {
+            <button
+              type="button"
+              class="build-choice"
+              [class.is-active]="finish() === choice.value"
+              (click)="finish.set(choice.value)">
+              <b>{{ choice.label }}</b>
+              <small>{{ choice.hint }}</small>
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="build-result">
+        <span class="build-result-label">Estimation indicative</span>
+        <span class="build-result-value">{{ estimateLabel() }}</span>
+        <p class="build-result-note">
+          Fourchette non contractuelle, à titre indicatif. Le devis ferme est
+          établi par un professionnel vérifié après étude de votre projet.
+        </p>
+      </div>
+    </div>
+
+    <!-- Demande de devis (pré-remplie par le simulateur) -->
+    <div class="build-lead">
+      <app-lead-form
+        serviceType="build"
+        redirectPath="/construction"
+        heading="Recevoir un devis de construction"
+        intro="Votre estimation est reprise ci-dessous. Complétez-la et un conducteur de travaux vous recontacte."
+        ctaLabel="Demander mon devis"
+        [defaultMessage]="leadMessage()"
+        [showCity]="true"
+        [showBudget]="true" />
+    </div>
+  </div>
+</section>

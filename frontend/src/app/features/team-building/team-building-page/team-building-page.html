@@ -1,0 +1,70 @@
+<!-- Page univers Team building (F2.5). -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Univers Team building</p>
+    <h1 class="uni-hero-title">Des équipes soudées, un événement sans souci</h1>
+    <p class="uni-hero-lead">
+      Kaikun Team organise vos séminaires et activités de cohésion clés en main
+      partout au Sénégal : lieu, activités, restauration et logistique, avec des
+      prestataires vérifiés et une coordination sur place.
+    </p>
+
+    <ul class="uni-hero-points">
+      @for (point of highlights; track point.title) {
+        <li class="uni-hero-point">
+          <span class="uni-hero-point-title">{{ point.title }}</span>
+          <span class="uni-hero-point-text">{{ point.text }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+
+<!-- Formules -->
+<section class="k-wrap conv-features">
+  <h2 class="conv-section-title">Des formules adaptées</h2>
+  <ul class="conv-features-grid is-three">
+    @for (formula of formulas; track formula.title) {
+      <li class="conv-feature">
+        <h3 class="conv-feature-title">{{ formula.title }}</h3>
+        <p class="conv-feature-text">{{ formula.text }}</p>
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="k-wrap conv-steps">
+  <h2 class="conv-section-title">Comment ça marche</h2>
+  <ol class="conv-steps-list">
+    @for (step of steps; track step.num) {
+      <li class="conv-step">
+        <span class="conv-step-num">{{ step.num }}</span>
+        <div>
+          <h3 class="conv-step-title">{{ step.title }}</h3>
+          <p class="conv-step-text">{{ step.text }}</p>
+        </div>
+      </li>
+    }
+  </ol>
+</section>
+
+<section class="conv-cta">
+  <div class="k-wrap conv-cta-grid">
+    <div>
+      <h2 class="conv-cta-title">Demandez votre devis team building</h2>
+      <p class="conv-cta-lead">
+        Donnez-nous votre effectif, vos dates et vos envies : nous composons une
+        formule sur mesure et un devis détaillé.
+      </p>
+    </div>
+
+    <app-lead-form
+      serviceType="team_building"
+      redirectPath="/team-building"
+      heading="Organiser un team building"
+      intro="Décrivez votre événement : nombre de participants, dates et objectifs."
+      ctaLabel="Demander un devis"
+      [showCity]="true"
+      defaultMessage="Bonjour, je souhaite organiser un team building. Voici quelques informations : nombre de participants, dates envisagées et objectifs. Merci de me recontacter." />
+  </div>
+</section>

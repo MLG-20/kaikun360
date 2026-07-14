@@ -1,0 +1,47 @@
+// Page Diaspora (F2.5). Spécifique : le bandeau « protocole de confiance »
+// sur fond navy (cœur du positionnement anti-arnaque). Le reste est partagé
+// (`_universe.scss`, `_conversion.scss`).
+.diaspora-trust {
+  background: var(--k-navy);
+  color: #fff;
+  padding: clamp(2.4rem, 5vw, 3.5rem) 0;
+}
+
+.diaspora-trust-title {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.diaspora-trust-grid {
+  list-style: none;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 780px) {
+  .diaspora-trust-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.diaspora-trust-card {
+  padding: 1.5rem;
+  border-radius: var(--k-radius);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(211, 174, 82, 0.35);
+}
+
+.diaspora-trust-card-title {
+  font-family: var(--k-font-display);
+  font-size: 1.15rem;
+  color: var(--k-gold);
+  margin-bottom: 0.5rem;
+}
+
+.diaspora-trust-card-text {
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.6;
+}

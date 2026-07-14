@@ -1,0 +1,171 @@
+// Styles partagés des pages de conversion (F2.5) : Construction, Gestion
+// locative, Diaspora, Team building, Kaikun Pro.
+//
+// Ces pages suivent un même gabarit éditorial : bandeau `.uni-hero` (défini dans
+// `_universe.scss`), puis une succession de sections « comment ça marche »,
+// « atouts » et un appel à l'action. On regroupe ici les briques communes
+// (préfixe `conv-`) pour rester cohérent d'une page à l'autre.
+
+.conv-section-title {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+// --- Étapes numérotées « comment ça marche » -------------------------------
+.conv-steps {
+  padding-top: 3rem;
+  padding-bottom: 1rem;
+}
+
+.conv-steps-list {
+  list-style: none;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 780px) {
+  .conv-steps-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.conv-step {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  background: #fff;
+}
+
+.conv-step-num {
+  flex: none;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--k-brand);
+  color: #fff;
+  font-family: var(--k-font-display);
+  font-weight: 700;
+}
+
+.conv-step-title {
+  font-size: 1.05rem;
+  margin-bottom: 0.35rem;
+}
+
+.conv-step-text {
+  color: var(--k-muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+// --- Grille d'atouts / bénéfices -------------------------------------------
+.conv-features {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.conv-features-grid {
+  list-style: none;
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 700px) {
+  .conv-features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1000px) {
+  .conv-features-grid.is-three {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.conv-feature {
+  padding: 1.4rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  background: #fff;
+}
+
+.conv-feature-title {
+  font-family: var(--k-font-display);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.conv-feature-text {
+  color: var(--k-muted);
+  line-height: 1.6;
+}
+
+// --- Liste de bénéfices « à puces cochées » --------------------------------
+.conv-checks {
+  list-style: none;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.conv-check {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+
+.conv-check::before {
+  content: '✓';
+  color: var(--k-green);
+  font-weight: 700;
+  flex: none;
+}
+
+// --- Bandeau d'appel à l'action (avec formulaire ou CTA) --------------------
+.conv-cta {
+  padding: 3rem 0;
+  background: var(--k-cream);
+  margin-top: 2rem;
+}
+
+.conv-cta-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .conv-cta-grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(340px, 1fr);
+  }
+}
+
+.conv-cta-title {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  line-height: 1.15;
+  margin-bottom: 0.75rem;
+}
+
+.conv-cta-lead {
+  color: var(--k-ink);
+  line-height: 1.65;
+  max-width: 52ch;
+}
+
+// Bloc « argumentaire + boutons » (pages sans formulaire, ex. Kaikun Pro).
+.conv-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}

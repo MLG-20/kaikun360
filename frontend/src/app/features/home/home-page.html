@@ -220,7 +220,8 @@
         }
       </ul>
       <div class="diaspora-actions">
-        <a class="k-btn k-btn--primary" [routerLink]="['/auth/inscription']">Créer mon compte</a>
+        <!-- Vers la page de conversion dédiée Diaspora (F2.5). -->
+        <a class="k-btn k-btn--primary" [routerLink]="['/diaspora']">Découvrir Kaikun Diaspora</a>
         <a class="k-btn k-btn--ghost" [routerLink]="['/recherche']" [queryParams]="{ univers: 'immobilier' }">
           Explorer les biens
         </a>
@@ -282,8 +283,8 @@
 
 <!-- =========================================================================
      Section 7 — Simulateur de construction « en 30 s ».
-     Teaser d'appel : le calcul complet arrive avec la page Construction (F2.5).
-     Porte l'ancre #simulateur ciblée par la tuile d'univers « Kaikun Build ».
+     Teaser d'appel : le calcul complet vit sur la page Construction (F2.5), vers
+     laquelle pointe le CTA (ancre #simulateur).
      ========================================================================= -->
 <section id="simulateur" class="simulator" aria-labelledby="simulator-title">
   <div class="k-wrap simulator-card">
@@ -294,7 +295,7 @@
         Une idée de projet ? Obtenez une première fourchette de budget en trois
         étapes, puis lancez-vous avec un suivi de chantier filmé et daté.
       </p>
-      <a class="k-btn k-btn--gold" [routerLink]="['/auth/inscription']">Lancer mon estimation</a>
+      <a class="k-btn k-btn--gold" [routerLink]="['/construction']" [fragment]="'simulateur'">Lancer mon estimation</a>
     </div>
 
     <ol class="simulator-steps">
