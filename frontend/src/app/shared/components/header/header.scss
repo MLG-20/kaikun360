@@ -226,12 +226,35 @@
 }
 
 // --- Menu mobile (accordéons) ---------------------------------------------
+// Panneau FIXE qui descend juste sous la barre et se superpose au contenu (il
+// ne décale pas la page), comme le prototype. Il glisse vers le bas à l'ouverture.
 .mobile-menu {
+  position: fixed;
+  top: var(--k-header-h);
+  left: 0;
+  right: 0;
+  z-index: 40;
   border-top: 1px solid var(--k-line);
+  border-bottom: 1px solid var(--k-line);
+  box-shadow: var(--k-shadow-lg);
   padding: 10px 0 20px;
   background: var(--k-cream);
   max-height: calc(100vh - var(--k-header-h));
   overflow-y: auto;
+  animation: menu-drop 0.2s ease;
+}
+
+@keyframes menu-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu {
+    animation: none;
+  }
 }
 
 .mobile-group {
