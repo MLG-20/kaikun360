@@ -24,6 +24,8 @@ interface MegaItem {
 /** Un groupe de navigation à méga-menu déroulant (univers). */
 interface NavGroup {
   label: string;
+  /** Page principale de l'univers : le libellé y navigue au clic. */
+  home: string;
   items: MegaItem[];
 }
 
@@ -54,6 +56,7 @@ export class HeaderComponent {
   protected readonly groups: NavGroup[] = [
     {
       label: 'Immobilier',
+      home: '/immobilier',
       items: [
         { label: 'Acheter ou louer', description: 'Villas, appartements, terrains et locaux vérifiés.', icon: '⌂', link: '/immobilier' },
         { label: 'Gestion locative', description: 'Loyers, quittances, maintenance et reporting.', icon: '％', link: '/gestion-locative' },
@@ -63,6 +66,7 @@ export class HeaderComponent {
     },
     {
       label: 'Séjours & Tourisme',
+      home: '/tourisme',
       items: [
         { label: 'Hébergements & nuitées', description: 'Villas, meublés, campements et écolodges.', icon: '☾', link: '/nuitees' },
         { label: 'Circuits & expériences', description: 'Saloum, Casamance, patrimoine et nature.', icon: '✦', link: '/tourisme' },
@@ -71,6 +75,7 @@ export class HeaderComponent {
     },
     {
       label: 'Transport',
+      home: '/transport',
       items: [
         { label: 'Location de véhicules', description: 'Berlines, 4×4 et minibus, avec ou sans chauffeur.', icon: '▰', link: '/transport' },
         { label: 'Mobilité & navettes', description: 'Transferts AIBD, navettes et sorties de groupe.', icon: '✈', link: '/mobilite' },
@@ -78,6 +83,7 @@ export class HeaderComponent {
     },
     {
       label: 'Construction',
+      home: '/construction',
       items: [
         { label: 'Construire / rénover', description: 'Études, travaux, suivi filmé et remise des clés.', icon: '▦', link: '/construction' },
         { label: 'Simulateur de budget', description: 'Estimation par surface, gamme et objectif.', icon: '∑', link: '/construction', fragment: 'simulateur' },
@@ -106,7 +112,7 @@ export class HeaderComponent {
       });
   }
 
-  /** Ouvre le méga-menu d'un groupe (survol desktop). */
+  /** Ouvre le méga-menu d'un groupe (survol desktop ou focus clavier). */
   protected openMega(label: string): void {
     this.openGroup.set(label);
   }
@@ -116,9 +122,16 @@ export class HeaderComponent {
     this.openGroup.set(null);
   }
 
-  /** Bascule un méga-menu au clic/clavier (tactile & accessibilité). */
-  protected toggleGroup(label: string): void {
-    this.openGroup.update((current) => (current === label ? null : label));
+  /**
+   * Referme le méga-menu quand le focus quitte réellement le groupe (le libellé
+   * navigue au clic ; le menu, lui, s'ouvre au survol/focus et se referme dès
+   * que le focus sort du groupe — accessibilité clavier).
+   */
+  protected onGroupBlur(event: FocusEvent): void {
+    const group = event.currentTarget as HTMLElement;
+    if (!group.contains(event.relatedTarget as Node)) {
+      this.openGroup.set(null);
+    }
   }
 
   /** Bascule le panneau mobile. */

@@ -16,18 +16,21 @@
           class="nav-group"
           (mouseenter)="openMega(group.label)"
           (mouseleave)="closeMega()"
+          (focusin)="openMega(group.label)"
+          (focusout)="onGroupBlur($event)"
         >
-          <button
+          <!-- Le libellé NAVIGUE vers la page principale de l'univers ; le
+               méga-menu s'ouvre au survol/focus (enrichissement, non bloquant). -->
+          <a
             class="nav-trigger"
-            type="button"
+            [routerLink]="group.home"
             [class.is-open]="openGroup() === group.label"
             [attr.aria-expanded]="openGroup() === group.label"
             aria-haspopup="true"
-            (click)="toggleGroup(group.label)"
           >
             {{ group.label }}
             <span class="caret" aria-hidden="true">⌄</span>
-          </button>
+          </a>
 
           @if (openGroup() === group.label) {
             <div class="mega" role="menu">
