@@ -41,8 +41,18 @@ La toute première brique de l'application (`App`) ne fait qu'une chose : affich
 - **`auth/`** — **créer un compte et se connecter** (connexion, inscription,
   vérification, mot de passe oublié). 👉 Voir le README détaillé :
   [`auth/README.md`](auth/README.md).
+- **`catalog/`** — la **page de résultats de recherche** (`/recherche`, F2.1) :
+  moteur de recherche + catalogue générique piloté par l'URL.
+- **`immo/`** — l'**univers Immobilier** (F2.3) : la page vitrine `/immobilier`
+  (bandeau de confiance + catalogue filtrable) et la **fiche d'un bien**
+  `/immobilier/:id` (description, localisation, vérification, **formulaire de
+  demande de visite**).
+- **`stay/`** — l'**univers Nuitées** (F2.3) : la page vitrine `/nuitees` et la
+  **fiche d'une nuitée** `/nuitees/:id` (équipements, règlement, **calendrier de
+  disponibilité**, avis clients, demande de réservation).
 
-À venir : les pages publiques et catalogues, l'espace personnel, le back-office.
+À venir : les autres univers (Tourisme, Transport…), l'espace personnel, le
+back-office.
 
 ---
 
@@ -59,3 +69,10 @@ La toute première brique de l'application (`App`) ne fait qu'une chose : affich
 - Styles partagés des pages d'authentification :
   [`../../styles/_auth.scss`](../../styles/_auth.scss) (globaux car réutilisés par
   plusieurs pages ; l'encapsulation Angular empêcherait le partage sinon).
+- Styles partagés des **pages d'univers** (bandeau `.uni-hero`, ossature de fiche
+  `.uni-detail-*`) : [`../../styles/_universe.scss`](../../styles/_universe.scss),
+  réutilisés par `immo/` et `stay/` (F2.3).
+- Les **fiches détaillées** consomment `CatalogService.property/stay/stayAvailability`,
+  `ReviewService` (avis) et `RequestService` (dépôt de demande, auth requise).
+  Les cartes de catalogue mènent à la fiche via l'`input [link]` de
+  `app-listing-card` (lien étiré).

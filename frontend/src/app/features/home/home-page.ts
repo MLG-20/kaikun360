@@ -102,16 +102,16 @@ export class HomePageComponent implements OnInit {
       tag: 'Immobilier',
       desc: 'Acheter ou louer un bien vérifié, du studio à la villa.',
       icon: 'home',
-      commands: ['/recherche'],
-      query: { univers: 'immobilier' },
+      // Page d'univers dédiée (F2.3).
+      commands: ['/immobilier'],
     },
     {
       name: 'Kaikun Stay',
       tag: 'Nuitées',
       desc: 'Séjours courts : maisons, lodges et résidences.',
       icon: 'bed',
-      commands: ['/recherche'],
-      query: { univers: 'nuitees' },
+      // Page d'univers dédiée (F2.3).
+      commands: ['/nuitees'],
     },
     {
       name: 'Kaikun Explore',

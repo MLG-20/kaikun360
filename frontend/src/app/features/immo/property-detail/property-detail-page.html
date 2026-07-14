@@ -1,0 +1,146 @@
+<!-- Fiche détaillée d'un bien immobilier (F2.3). -->
+@switch (state()) {
+  @case ('loading') {
+    <div class="k-wrap uni-detail-status" role="status">Chargement du bien…</div>
+  }
+
+  @case ('notfound') {
+    <div class="k-wrap uni-detail-status">
+      <h1>Bien introuvable</h1>
+      <p class="k-muted">Ce bien n'existe pas ou n'est plus publié.</p>
+      <a class="k-btn k-btn--primary" routerLink="/immobilier">Retour au catalogue</a>
+    </div>
+  }
+
+  @case ('failed') {
+    <div class="k-wrap uni-detail-status" role="alert">
+      <h1>Chargement impossible</h1>
+      <p class="k-muted">Une erreur est survenue. Vérifiez votre connexion puis réessayez.</p>
+      <a class="k-btn k-btn--primary" routerLink="/immobilier">Retour au catalogue</a>
+    </div>
+  }
+
+  @case ('ready') {
+    @if (property(); as p) {
+      <!-- Bandeau visuel (dégradé de repli tant que les médias ne sont pas exposés). -->
+      <header class="uni-detail-hero">
+        <div class="k-wrap uni-detail-hero-inner">
+          <nav class="uni-detail-crumbs">
+            <a routerLink="/immobilier">Immobilier</a>
+            <span aria-hidden="true">/</span>
+            <span>{{ p.type_label ?? 'Bien' }}</span>
+          </nav>
+          <h1 class="uni-detail-title">{{ p.title }}</h1>
+          <div class="uni-detail-meta">
+            @if (locationLabel(); as loc) {
+              <span class="uni-detail-loc">{{ loc }}</span>
+            }
+            @if (verified()) {
+              <span class="uni-detail-verified">✓ Vérifié</span>
+            }
+          </div>
+        </div>
+      </header>
+
+      <div class="k-wrap uni-detail-body">
+        <!-- Colonne principale. -->
+        <div class="uni-detail-main">
+          @if (p.description) {
+            <section class="uni-detail-block">
+              <h2>Description</h2>
+              <p class="uni-detail-desc">{{ p.description }}</p>
+            </section>
+          }
+
+          <section class="uni-detail-block">
+            <h2>Caractéristiques</h2>
+            <dl class="uni-detail-facts">
+              @if (p.type_label) {
+                <div><dt>Type</dt><dd>{{ p.type_label }}</dd></div>
+              }
+              @if (priceLabel(); as price) {
+                <div><dt>Prix</dt><dd>{{ price }}</dd></div>
+              }
+              @if (locationLabel(); as loc) {
+                <div><dt>Localisation</dt><dd>{{ loc }}</dd></div>
+              }
+              @if (p.location.address) {
+                <div><dt>Adresse</dt><dd>{{ p.location.address }}</dd></div>
+              }
+              @if (p.location.tourist_zone) {
+                <div><dt>Zone touristique</dt><dd>{{ p.location.tourist_zone }}</dd></div>
+              }
+            </dl>
+
+            @if (mapLink(); as map) {
+              <a class="uni-detail-maplink" [href]="map" target="_blank" rel="noopener">
+                Voir sur la carte ↗
+              </a>
+            }
+          </section>
+        </div>
+
+        <!-- Colonne latérale : prix + demande de visite. -->
+        <aside class="uni-detail-aside">
+          <div class="uni-detail-card k-card">
+            @if (priceLabel(); as price) {
+              <p class="uni-detail-price"><b>{{ price }}</b></p>
+            }
+
+            <h2 class="uni-detail-card-title">Demander une visite</h2>
+
+            @if (createdReference(); as ref) {
+              <!-- Confirmation après dépôt. -->
+              <div class="k-form-info" role="status">
+                <strong>Demande envoyée.</strong>
+                Votre référence de suivi : <b>{{ ref }}</b>. Un conseiller vous
+                recontacte pour organiser la visite.
+              </div>
+            } @else if (!isAuthenticated()) {
+              <!-- Dépôt réservé aux comptes connectés. -->
+              <p class="k-muted uni-detail-authnote">
+                Connectez-vous pour demander une visite et suivre votre dossier.
+              </p>
+              <a
+                class="k-btn k-btn--primary k-btn--block"
+                routerLink="/auth/connexion"
+                [queryParams]="loginQueryParams()"
+              >
+                Se connecter
+              </a>
+            } @else {
+              <form class="uni-detail-form" [formGroup]="form" (ngSubmit)="submit()">
+                @if (formError(); as err) {
+                  <p class="k-form-error" role="alert">{{ err }}</p>
+                }
+
+                <label class="k-field">
+                  <span class="k-label">Votre message</span>
+                  <textarea
+                    class="k-input"
+                    rows="4"
+                    formControlName="message"
+                    [class.k-input--error]="form.controls.message.touched && form.controls.message.invalid"
+                  ></textarea>
+                </label>
+
+                <label class="k-field">
+                  <span class="k-label">Date souhaitée <span class="k-optional">(optionnel)</span></span>
+                  <input type="date" class="k-input" formControlName="preferred_date" />
+                </label>
+
+                <button
+                  type="submit"
+                  class="k-btn k-btn--primary k-btn--block"
+                  [disabled]="submitting()"
+                >
+                  {{ submitting() ? 'Envoi…' : 'Envoyer la demande' }}
+                </button>
+              </form>
+            }
+          </div>
+        </aside>
+      </div>
+    }
+  }
+}

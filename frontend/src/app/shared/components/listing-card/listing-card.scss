@@ -19,6 +19,28 @@
   box-shadow: var(--k-shadow-lg);
 }
 
+// Carte cliquable : lien étiré couvrant toute la surface (F2.3). Le CTA et le
+// titre restent au-dessus (z-index) pour leur propre survol.
+.card--link {
+  position: relative;
+  cursor: pointer;
+}
+
+.card-stretch {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.card--link .body {
+  position: relative;
+}
+
+.card--link .cta {
+  position: relative;
+  z-index: 2;
+}
+
 // --- Vignette -------------------------------------------------------------
 .thumb {
   position: relative;

@@ -409,8 +409,8 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [x] Page Accueil : hero, recherche rapide, présentation des espaces, services prioritaires, éléments de confiance. <!-- F2.2 : hero éditorial + recherche intégrée, grille des 9 univers, protocole de confiance, vitrine catalogue (API réelle), diaspora, services complémentaires, simulateur (teaser), statistiques, appel final -->
 - [~] Page Diaspora : bandeau d'accroche livré sur l'accueil (F2.2.3) ; page dédiée complète = F2.5.
 - [~] Composant simulateur : teaser d'appel livré sur l'accueil (F2.2.4) ; simulateur calculant en direct = page Construction (F2.5).
-- [ ] Page Immobilier : filtres biens (villes, type, prix), vérification, demande de visite.
-- [ ] Page Nuitées : calendrier, photos, équipements, prix/nuit, disponibilité.
+- [x] Page Immobilier : filtres biens (villes, type, prix), vérification, demande de visite. <!-- F2.3 : page univers /immobilier (bandeau + catalogue filtrable) + fiche /immobilier/:id (description, localisation, carte, vérification, formulaire de demande de visite POST /requests). Filtre géo par ID = affiné avec le sélecteur de villes ultérieur. -->
+- [x] Page Nuitées : calendrier, photos, équipements, prix/nuit, disponibilité. <!-- F2.3 : page univers /nuitees + fiche /nuitees/:id (équipements, règlement, modalités, calendrier de disponibilité GET /stays/:id/availability, avis GET /reviews, demande de réservation). Photos réelles = quand les médias seront exposés dans les Resources (repli dégradé pour l'instant). -->
 - [ ] Page Gestion locative : mandats, taux, reporting, maintenance, reversements (page de conversion propriétaire).
 - [ ] Page Construction : simulateur, niveaux de finition, rénovation, suivi chantier.
 - [ ] Page Tourisme & expériences : destinations, programmes, durée, inclusions, guide, restauration.
@@ -425,7 +425,8 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [x] Composant moteur de recherche global (service + ville + budget + dates + profil utilisateur). <!-- F2.1 : univers + ville/mots-clés + budget ; dates & profil affinés en F2.3 -->
 - [x] Composant catalogue filtrable et triable, réutilisé sur toutes les pages d'univers. <!-- F2.1 -->
 
-- [ ] Composant fiche détaillée (photos, description, localisation, prix, disponibilité, règles, preuves, avis, CTA).
+- [~] Composant fiche détaillée (photos, description, localisation, prix, disponibilité, règles, preuves, avis, CTA). <!-- F2.3 : implémenté comme pages concrètes Immobilier & Nuitées (fiche bien + fiche nuitée avec calendrier/avis). Extraction en composant générique réutilisable + galerie médias = F2.6. -->
+- [x] Composant carte cliquable : `app-listing-card` mène à la fiche détaillée (lien étiré) — F2.3.
 - [ ] Composants de formulaires intelligents : demande client, dépôt de bien, inscription prestataire, demande diaspora, devis team building.
 - [ ] Composant simulateur immobilier/construction (budget, ville, surface, objectif, niveau de finition).
 - [ ] Composant module WhatsApp contextuel (message prérempli selon page/service).

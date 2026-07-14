@@ -1,0 +1,260 @@
+<!-- Fiche détaillée d'une nuitée (F2.3). -->
+@switch (state()) {
+  @case ('loading') {
+    <div class="k-wrap uni-detail-status" role="status">Chargement de la nuitée…</div>
+  }
+
+  @case ('notfound') {
+    <div class="k-wrap uni-detail-status">
+      <h1>Nuitée introuvable</h1>
+      <p class="k-muted">Cette nuitée n'existe pas ou n'est plus disponible.</p>
+      <a class="k-btn k-btn--primary" routerLink="/nuitees">Retour au catalogue</a>
+    </div>
+  }
+
+  @case ('failed') {
+    <div class="k-wrap uni-detail-status" role="alert">
+      <h1>Chargement impossible</h1>
+      <p class="k-muted">Une erreur est survenue. Vérifiez votre connexion puis réessayez.</p>
+      <a class="k-btn k-btn--primary" routerLink="/nuitees">Retour au catalogue</a>
+    </div>
+  }
+
+  @case ('ready') {
+    @if (stay(); as s) {
+      <header class="uni-detail-hero">
+        <div class="k-wrap uni-detail-hero-inner">
+          <nav class="uni-detail-crumbs">
+            <a routerLink="/nuitees">Nuitées</a>
+            <span aria-hidden="true">/</span>
+            <span>Séjour</span>
+          </nav>
+          <h1 class="uni-detail-title">{{ property()?.title ?? 'Nuitée' }}</h1>
+          <div class="uni-detail-meta">
+            @if (locationLabel(); as loc) {
+              <span class="uni-detail-loc">{{ loc }}</span>
+            }
+            <span class="uni-detail-loc">Jusqu'à {{ s.capacity }} voyageur{{ s.capacity > 1 ? 's' : '' }}</span>
+            @if (verified()) {
+              <span class="uni-detail-verified">✓ Vérifié</span>
+            }
+          </div>
+        </div>
+      </header>
+
+      <div class="k-wrap uni-detail-body">
+        <div class="uni-detail-main">
+          @if (property()?.description) {
+            <section class="uni-detail-block">
+              <h2>Le logement</h2>
+              <p class="uni-detail-desc">{{ property()?.description }}</p>
+            </section>
+          }
+
+          <!-- Équipements. -->
+          @if (s.amenities?.length) {
+            <section class="uni-detail-block">
+              <h2>Équipements</h2>
+              <ul class="stay-chips">
+                @for (amenity of s.amenities; track amenity) {
+                  <li class="stay-chip">{{ amenity }}</li>
+                }
+              </ul>
+            </section>
+          }
+
+          <!-- Règles de la maison. -->
+          @if (s.rules?.length) {
+            <section class="uni-detail-block">
+              <h2>Règlement intérieur</h2>
+              <ul class="stay-rules">
+                @for (rule of s.rules; track rule) {
+                  <li>{{ rule }}</li>
+                }
+              </ul>
+            </section>
+          }
+
+          <!-- Modalités du séjour. -->
+          <section class="uni-detail-block">
+            <h2>Modalités du séjour</h2>
+            <dl class="uni-detail-facts">
+              <div><dt>Capacité</dt><dd>{{ s.capacity }} voyageur{{ s.capacity > 1 ? 's' : '' }}</dd></div>
+              @if (s.min_nights) {
+                <div><dt>Séjour minimum</dt><dd>{{ s.min_nights }} nuit{{ s.min_nights > 1 ? 's' : '' }}</dd></div>
+              }
+              @if (s.max_nights) {
+                <div><dt>Séjour maximum</dt><dd>{{ s.max_nights }} nuits</dd></div>
+              }
+              @if (s.check_in_time) {
+                <div><dt>Arrivée à partir de</dt><dd>{{ s.check_in_time }}</dd></div>
+              }
+              @if (s.check_out_time) {
+                <div><dt>Départ avant</dt><dd>{{ s.check_out_time }}</dd></div>
+              }
+              @if (cautionLabel(); as caution) {
+                <div><dt>Caution</dt><dd>{{ caution }}</dd></div>
+              }
+            </dl>
+          </section>
+
+          <!-- Calendrier de disponibilité. -->
+          <section class="uni-detail-block">
+            <h2>Disponibilité</h2>
+            <div class="stay-cal">
+              <div class="stay-cal-head">
+                <button
+                  type="button"
+                  class="stay-cal-nav"
+                  (click)="prevMonth()"
+                  [disabled]="!canGoPrev()"
+                  aria-label="Mois précédent"
+                >‹</button>
+                <span class="stay-cal-month">{{ monthLabel() }}</span>
+                <button type="button" class="stay-cal-nav" (click)="nextMonth()" aria-label="Mois suivant">›</button>
+              </div>
+
+              <div class="stay-cal-grid stay-cal-weekdays" aria-hidden="true">
+                @for (wd of weekDays; track wd) {
+                  <span class="stay-cal-weekday">{{ wd }}</span>
+                }
+              </div>
+
+              @for (week of calendar(); track $index) {
+                <div class="stay-cal-grid">
+                  @for (cell of week; track $index) {
+                    @if (cell.day === null) {
+                      <span class="stay-cal-cell stay-cal-cell--empty"></span>
+                    } @else {
+                      <span
+                        class="stay-cal-cell"
+                        [class.stay-cal-cell--booked]="cell.booked"
+                        [class.stay-cal-cell--past]="cell.past"
+                        [attr.aria-label]="cell.booked ? 'Réservé' : 'Disponible'"
+                      >{{ cell.day }}</span>
+                    }
+                  }
+                </div>
+              }
+
+              <div class="stay-cal-legend">
+                <span><i class="dot dot--free"></i> Disponible</span>
+                <span><i class="dot dot--booked"></i> Réservé</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Avis. -->
+          @if (reviews(); as r) {
+            <section class="uni-detail-block">
+              <h2>
+                Avis
+                @if (r.summary.count) {
+                  <span class="stay-rating">
+                    {{ r.summary.average }}/5
+                    <span class="stay-stars" aria-hidden="true">
+                      @for (i of [1, 2, 3, 4, 5]; track i) {
+                        <span [class.on]="i <= averageStars()">★</span>
+                      }
+                    </span>
+                    ({{ r.summary.count }})
+                  </span>
+                }
+              </h2>
+
+              @if (r.reviews.length) {
+                <ul class="stay-reviews">
+                  @for (review of r.reviews; track review.id) {
+                    <li class="stay-review">
+                      <div class="stay-review-head">
+                        <strong>{{ review.author?.name ?? 'Client vérifié' }}</strong>
+                        <span class="stay-stars" aria-hidden="true">
+                          @for (i of [1, 2, 3, 4, 5]; track i) {
+                            <span [class.on]="i <= review.rating">★</span>
+                          }
+                        </span>
+                      </div>
+                      @if (review.comment) {
+                        <p>{{ review.comment }}</p>
+                      }
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="k-muted">Aucun avis pour le moment.</p>
+              }
+            </section>
+          }
+        </div>
+
+        <!-- Colonne latérale : tarif + demande de réservation. -->
+        <aside class="uni-detail-aside">
+          <div class="uni-detail-card k-card">
+            @if (priceLabel(); as price) {
+              <p class="uni-detail-price"><b>{{ price }}</b> <span class="unit">/ nuit</span></p>
+            }
+            @if (cautionLabel(); as caution) {
+              <p class="k-muted stay-caution">Caution : {{ caution }}</p>
+            }
+
+            <h2 class="uni-detail-card-title">Demander une réservation</h2>
+
+            @if (createdReference(); as ref) {
+              <div class="k-form-info" role="status">
+                <strong>Demande envoyée.</strong>
+                Votre référence de suivi : <b>{{ ref }}</b>. Un conseiller confirme
+                la disponibilité et les modalités.
+              </div>
+            } @else if (!isAuthenticated()) {
+              <p class="k-muted uni-detail-authnote">
+                Connectez-vous pour demander une réservation et suivre votre dossier.
+              </p>
+              <a
+                class="k-btn k-btn--primary k-btn--block"
+                routerLink="/auth/connexion"
+                [queryParams]="loginQueryParams()"
+              >
+                Se connecter
+              </a>
+            } @else {
+              <form class="uni-detail-form" [formGroup]="form" (ngSubmit)="submit()">
+                @if (formError(); as err) {
+                  <p class="k-form-error" role="alert">{{ err }}</p>
+                }
+
+                <div class="stay-dates">
+                  <label class="k-field">
+                    <span class="k-label">Arrivée</span>
+                    <input type="date" class="k-input" formControlName="arrival" />
+                  </label>
+                  <label class="k-field">
+                    <span class="k-label">Départ</span>
+                    <input type="date" class="k-input" formControlName="departure" />
+                  </label>
+                </div>
+
+                <label class="k-field">
+                  <span class="k-label">Votre message</span>
+                  <textarea
+                    class="k-input"
+                    rows="4"
+                    formControlName="message"
+                    [class.k-input--error]="form.controls.message.touched && form.controls.message.invalid"
+                  ></textarea>
+                </label>
+
+                <button
+                  type="submit"
+                  class="k-btn k-btn--primary k-btn--block"
+                  [disabled]="submitting()"
+                >
+                  {{ submitting() ? 'Envoi…' : 'Envoyer la demande' }}
+                </button>
+              </form>
+            }
+          </div>
+        </aside>
+      </div>
+    }
+  }
+}

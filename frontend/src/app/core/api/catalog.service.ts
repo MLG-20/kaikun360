@@ -3,10 +3,11 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { ApiEnvelope } from './api-response.model';
 import { Experience } from '../../models/experience.model';
 import { MobilityService } from '../../models/mobility-service.model';
 import { Property } from '../../models/property.model';
-import { Stay } from '../../models/stay.model';
+import { Stay, StayAvailability } from '../../models/stay.model';
 import { Vehicle } from '../../models/vehicle.model';
 import { Paginated } from './pagination.model';
 
@@ -99,6 +100,30 @@ export class CatalogService {
     return this.http.get<Paginated<Stay>>(`${this.api}/stays`, {
       params: this.toParams(filters),
     });
+  }
+
+  /**
+   * GET /properties/{id} — détail d'un bien publié (fiche immobilier, F2.3).
+   * Le backend enveloppe la ressource dans `{ data }` ; on renvoie l'Observable
+   * de l'enveloppe pour que la page décide de son état (chargement/erreur).
+   */
+  property(id: number | string): Observable<ApiEnvelope<Property>> {
+    return this.http.get<ApiEnvelope<Property>>(`${this.api}/properties/${id}`);
+  }
+
+  /** GET /stays/{id} — détail d'une nuitée publiée (fiche nuitée, F2.3). */
+  stay(id: number | string): Observable<ApiEnvelope<Stay>> {
+    return this.http.get<ApiEnvelope<Stay>>(`${this.api}/stays/${id}`);
+  }
+
+  /**
+   * GET /stays/{id}/availability — intervalles déjà réservés d'une nuitée.
+   * Alimente le calendrier de disponibilité de la fiche (F2.3).
+   */
+  stayAvailability(id: number | string): Observable<ApiEnvelope<StayAvailability>> {
+    return this.http.get<ApiEnvelope<StayAvailability>>(
+      `${this.api}/stays/${id}/availability`,
+    );
   }
 
   /** GET /vehicles — véhicules publiés. */

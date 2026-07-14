@@ -11,8 +11,12 @@
 
     <!-- Navigation des univers (desktop) -->
     <nav class="nav" aria-label="Univers">
-      @for (universe of universes; track universe) {
-        <a class="nav-link" href="#">{{ universe }}</a>
+      @for (universe of universes; track universe.label) {
+        @if (universe.link; as link) {
+          <a class="nav-link" [routerLink]="link">{{ universe.label }}</a>
+        } @else {
+          <a class="nav-link" href="#">{{ universe.label }}</a>
+        }
       }
     </nav>
 
@@ -36,8 +40,12 @@
   @if (menuOpen()) {
     <div class="mobile-menu">
       <div class="k-wrap">
-        @for (universe of universes; track universe) {
-          <a class="mobile-link" href="#">{{ universe }}</a>
+        @for (universe of universes; track universe.label) {
+          @if (universe.link; as link) {
+            <a class="mobile-link" [routerLink]="link" (click)="toggleMenu()">{{ universe.label }}</a>
+          } @else {
+            <a class="mobile-link" href="#">{{ universe.label }}</a>
+          }
         }
         <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/connexion" (click)="toggleMenu()">Connexion</a>
       </div>

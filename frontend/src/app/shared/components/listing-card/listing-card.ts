@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { VerificationBadgeComponent } from '../verification-badge/verification-badge';
 
@@ -11,7 +12,7 @@ import { VerificationBadgeComponent } from '../verification-badge/verification-b
  */
 @Component({
   selector: 'app-listing-card',
-  imports: [VerificationBadgeComponent],
+  imports: [VerificationBadgeComponent, RouterLink],
   templateUrl: './listing-card.html',
   styleUrl: './listing-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,4 +29,9 @@ export class ListingCardComponent {
   readonly cta = input('Découvrir');
   /** URL d'image ; si absente, une vignette dégradée est utilisée. */
   readonly image = input<string | null>(null);
+  /**
+   * Cible `routerLink` de la fiche détaillée (ex. `['/immobilier', 12]`).
+   * Si `null`, la carte n'est pas cliquable (CTA neutralisé).
+   */
+  readonly link = input<(string | number)[] | null>(null);
 }

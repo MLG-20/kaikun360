@@ -46,7 +46,9 @@ la remettre en favori.
 ### Entrées principales
 
 - **`app-listing-card`** : `title` (requis), `location`, `price`, `priceUnit`,
-  `badge`, `cta`, `image`.
+  `badge`, `cta`, `image`, `link` (F2.3 : cible `routerLink` de la fiche ;
+  `null` = carte non cliquable). Quand `link` est fourni, un **lien étiré**
+  couvre toute la carte (le titre sert de libellé accessible).
 - **`app-verification-badge`** : `label`, `tone` (`default` | `gold`).
 - **`app-gallery`** : `images` (requis, `string[]`), `alt`.
 - **`app-orbit-hero`** : aucune entrée (données internes des univers).

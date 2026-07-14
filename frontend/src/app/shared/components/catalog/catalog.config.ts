@@ -45,6 +45,11 @@ export interface CatalogCard {
   priceUnit: string | null;
   badge: string | null;
   image: string | null;
+  /**
+   * Cible `routerLink` de la fiche détaillée (ex. `['/immobilier', 12]`).
+   * `null` = carte non cliquable (univers dont la fiche n'existe pas encore).
+   */
+  link: (string | number)[] | null;
 }
 
 /** Contrat d'un univers de catalogue. */
@@ -141,6 +146,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         priceUnit: null,
         badge: verifiedBadge(p.verification_level),
         image: null,
+        link: ['/immobilier', p.id],
       };
     },
   },
@@ -166,6 +172,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         priceUnit: '/ nuit',
         badge: verifiedBadge(s.property?.verification_level),
         image: null,
+        link: ['/nuitees', s.id],
       };
     },
   },
@@ -193,6 +200,8 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         priceUnit: '/ jour',
         badge: v.has_driver ? 'Avec chauffeur' : null,
         image: null,
+        // Fiche véhicule = F2.4 → carte non cliquable pour l'instant.
+        link: null,
       };
     },
   },
@@ -219,6 +228,8 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         priceUnit: '/ pers.',
         badge: null,
         image: null,
+        // Fiche expérience = F2.4 → carte non cliquable pour l'instant.
+        link: null,
       };
     },
   },
@@ -244,6 +255,8 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         priceUnit: '/ trajet',
         badge: null,
         image: null,
+        // Fiche service de mobilité = F2.4 → carte non cliquable pour l'instant.
+        link: null,
       };
     },
   },

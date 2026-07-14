@@ -18,3 +18,18 @@ export interface Stay {
   property?: Property;
   created_at: string | null;
 }
+
+/**
+ * Disponibilité d'une nuitée — miroir de `GET /stays/{id}/availability`.
+ * `booked` liste les intervalles déjà réservés (dates ISO `YYYY-MM-DD`),
+ * consommés par le calendrier de la fiche pour griser les jours indisponibles.
+ */
+export interface StayAvailability {
+  stay_id: number;
+  booked: BookedRange[];
+}
+
+export interface BookedRange {
+  start_date: string;
+  end_date: string;
+}

@@ -1,4 +1,10 @@
-<article class="card">
+<article class="card" [class.card--link]="!!link()">
+  <!-- Lien étiré : couvre toute la carte quand une fiche existe (accessibilité
+       préservée — le libellé provient du titre). -->
+  @if (link(); as target) {
+    <a class="card-stretch" [routerLink]="target" [attr.aria-label]="title()"></a>
+  }
+
   <div class="thumb">
     @if (image()) {
       <img [src]="image()" [alt]="title()" loading="lazy" />
@@ -34,12 +40,14 @@
       </p>
     }
 
-    <a class="cta" href="#">
-      {{ cta() }}
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M5 12h14M13 6l6 6-6 6"></path>
-      </svg>
-    </a>
+    @if (link(); as target) {
+      <a class="cta" [routerLink]="target">
+        {{ cta() }}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"></path>
+        </svg>
+      </a>
+    }
   </div>
 </article>

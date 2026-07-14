@@ -34,6 +34,40 @@ export const routes: Routes = [
           import('./features/catalog/catalog-page').then((m) => m.CatalogPageComponent),
         title: 'Recherche — Kaikun 360',
       },
+      {
+        // Univers Immobilier (F2.3) : page vitrine + fiche détaillée d'un bien.
+        path: 'immobilier',
+        loadComponent: () =>
+          import('./features/immo/property-list/property-list-page').then(
+            (m) => m.PropertyListPageComponent,
+          ),
+        title: 'Immobilier vérifié — Kaikun 360',
+      },
+      {
+        path: 'immobilier/:id',
+        loadComponent: () =>
+          import('./features/immo/property-detail/property-detail-page').then(
+            (m) => m.PropertyDetailPageComponent,
+          ),
+        title: 'Bien immobilier — Kaikun 360',
+      },
+      {
+        // Univers Nuitées (F2.3) : page vitrine + fiche détaillée d'une nuitée.
+        path: 'nuitees',
+        loadComponent: () =>
+          import('./features/stay/stay-list/stay-list-page').then(
+            (m) => m.StayListPageComponent,
+          ),
+        title: 'Nuitées & séjours — Kaikun 360',
+      },
+      {
+        path: 'nuitees/:id',
+        loadComponent: () =>
+          import('./features/stay/stay-detail/stay-detail-page').then(
+            (m) => m.StayDetailPageComponent,
+          ),
+        title: 'Nuitée — Kaikun 360',
+      },
     ],
   },
 ];

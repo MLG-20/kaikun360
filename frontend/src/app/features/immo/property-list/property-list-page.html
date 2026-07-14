@@ -1,0 +1,25 @@
+<!-- Page univers Immobilier (F2.3). -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Univers Immobilier</p>
+    <h1 class="uni-hero-title">Des biens vérifiés, prêts à visiter</h1>
+    <p class="uni-hero-lead">
+      Appartements, villas, terrains et locaux professionnels au Sénégal —
+      chaque annonce est contrôlée avant sa mise en ligne. Filtrez, comparez,
+      puis demandez une visite en toute confiance.
+    </p>
+
+    <ul class="uni-hero-points">
+      @for (point of highlights; track point.title) {
+        <li class="uni-hero-point">
+          <span class="uni-hero-point-title">{{ point.title }}</span>
+          <span class="uni-hero-point-text">{{ point.text }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+
+<div class="k-wrap uni-catalog">
+  <app-catalog universe="immobilier" />
+</div>

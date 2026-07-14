@@ -1,0 +1,233 @@
+// Styles partagés des pages d'univers publiques (F2.3+).
+//
+// Regroupe le bandeau éditorial d'introduction (`.uni-hero`) et l'ossature de
+// détail (`.uni-detail`) réutilisés par les pages Immobilier et Nuitées. Mettre
+// ici tout ce qui doit rester cohérent d'un univers à l'autre.
+
+// --- Bandeau d'introduction d'un univers ----------------------------------
+.uni-hero {
+  background: linear-gradient(160deg, var(--k-navy), var(--k-brand));
+  color: #fff;
+  padding: clamp(2.4rem, 5vw, 4rem) 0;
+}
+
+.uni-hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.uni-hero .k-eyebrow {
+  color: var(--k-gold);
+}
+
+.uni-hero-title {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  line-height: 1.1;
+  max-width: 18ch;
+}
+
+.uni-hero-lead {
+  max-width: 60ch;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.uni-hero-points {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.uni-hero-point {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--k-radius);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.uni-hero-point-title {
+  font-weight: 700;
+}
+
+.uni-hero-point-text {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.uni-catalog {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+// --- Fiche détaillée (bien, nuitée…) --------------------------------------
+.uni-detail-status {
+  padding: 3rem 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.uni-detail-hero {
+  background: linear-gradient(160deg, var(--k-navy), var(--k-brand));
+  color: #fff;
+  padding: clamp(2rem, 4vw, 3.25rem) 0;
+}
+
+.uni-detail-hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.uni-detail-crumbs {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.uni-detail-crumbs a {
+  color: var(--k-gold);
+}
+
+.uni-detail-title {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.7rem, 3.5vw, 2.6rem);
+  line-height: 1.12;
+}
+
+.uni-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.uni-detail-loc {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.uni-detail-verified {
+  background: rgba(211, 174, 82, 0.2);
+  color: var(--k-gold);
+  border: 1px solid rgba(211, 174, 82, 0.5);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.uni-detail-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
+@media (min-width: 900px) {
+  .uni-detail-body {
+    grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+    align-items: start;
+  }
+}
+
+.uni-detail-block {
+  margin-bottom: 2rem;
+}
+
+.uni-detail-block h2 {
+  font-family: var(--k-font-display);
+  font-size: 1.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.uni-detail-desc {
+  line-height: 1.7;
+  color: var(--k-ink);
+  white-space: pre-line;
+}
+
+.uni-detail-facts {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.uni-detail-facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--k-line);
+}
+
+.uni-detail-facts dt {
+  color: var(--k-muted);
+}
+
+.uni-detail-facts dd {
+  font-weight: 600;
+  text-align: right;
+}
+
+.uni-detail-maplink {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--k-brand);
+  font-weight: 600;
+}
+
+// Colonne latérale collante (prix + formulaire de demande).
+.uni-detail-aside {
+  position: static;
+}
+
+@media (min-width: 900px) {
+  .uni-detail-aside {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+.uni-detail-card {
+  padding: 1.5rem;
+}
+
+.uni-detail-price {
+  font-family: var(--k-font-mono);
+  color: var(--k-brand);
+  margin-bottom: 0.75rem;
+}
+
+.uni-detail-price b {
+  font-size: 1.5rem;
+}
+
+.uni-detail-card-title {
+  font-family: var(--k-font-display);
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.uni-detail-authnote {
+  margin-bottom: 1rem;
+  font-size: 0.92rem;
+}
+
+.uni-detail-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
