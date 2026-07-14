@@ -14,7 +14,7 @@ fonctionnalités. Tous sont « présentiels » : pilotés par leurs `input()` /
 | `OrbitHeroComponent` | `app-orbit-hero` | « Signature orbitale » du hero : anneaux tournants + univers en orbite, carte centrale interactive (repris de la maquette client, charte Kaikun). |
 | `ListingCardComponent` | `app-listing-card` | Carte de bien / service du catalogue (image ou dégradé de repli, badge, titre, localisation, prix, CTA). |
 | `VerificationBadgeComponent` | `app-verification-badge` | Pastille de vérification (« Vérifié », « Vérifié notaire »…), tons `default` / `gold`. |
-| `GalleryComponent` | `app-gallery` | Galerie photo : image principale + miniatures cliquables (alimentée par l'API Médias). |
+| `GalleryComponent` | `app-gallery` | Galerie photo : image principale cliquable (→ plein écran), miniatures, navigation clavier, compteur. Enrichie en F2.6 (voir plus bas). |
 
 ## Catalogue & recherche (F2.1)
 
@@ -35,6 +35,55 @@ construction l'actualise en direct tant que l'utilisateur n'a pas édité le
 champ), `showCity`, `showBudget`. S'appuie sur `AuthService.isAuthenticated`,
 `RequestService.create` et les primitives de formulaire du design system
 (`.k-field`/`.k-input`/`.k-form-info`/`.k-form-error`).
+
+## Composants transverses (F2.6)
+
+Ces trois briques sont partagées par **toutes** les fiches d'univers, pour ne
+plus recopier le même code d'une page à l'autre.
+
+| Composant | Sélecteur | Rôle |
+| --- | --- | --- |
+| `DetailLayoutComponent` | `app-detail-layout` | **Coquille de fiche détaillée générique.** Fournit l'ossature commune à toutes les fiches (bandeau titre + fil d'Ariane + informations clés, galerie, corps en 2 colonnes) ; chaque fiche n'a plus qu'à y **glisser son contenu** dans les emplacements prévus. |
+| `ReviewsComponent` | `app-reviews` | **Bloc témoignages / avis.** Affiche la note moyenne en étoiles + la liste des avis publiés. Se masque tout seul si les avis ne sont pas chargés ; affiche « Aucun avis pour le moment » si la liste est vide. |
+| `WhatsAppButtonComponent` | `app-whatsapp-button` | **Bouton WhatsApp contextuel.** Ouvre une conversation vers le support avec un message **déjà prérempli** selon la page. Se masque si aucun numéro de support n'est paramétré. |
+
+**Comment ça marche, en clair :**
+- **La fiche générique** : avant, chaque type de fiche (bien, nuitée, expérience,
+  véhicule) réécrivait la même structure de page. Désormais une seule « coquille »
+  contient cette structure, et chaque fiche lui fournit uniquement ce qui change
+  (son titre, son fil d'Ariane, ses sections, son encart de contact). Résultat :
+  un rendu homogène partout et un seul endroit à maintenir.
+- **Les avis** : où qu'ils soient affichés, ils ont la même présentation (note en
+  étoiles dorées + commentaires). On passe simplement la réponse de l'API des avis
+  au composant.
+- **Le bouton WhatsApp** : quand on le pose sur une page, on lui dit « de quoi il
+  s'agit » (ex. le titre du bien) ; il demande au serveur le bon lien et le bon
+  numéro (jamais écrit en dur dans le code), puis ouvre WhatsApp avec un message
+  tout prêt. Pratique surtout pour la diaspora et la mobilité (réservation via un
+  conseiller).
+
+**Côté technique :**
+- `app-detail-layout` : entrées `title` (requis), `images` (`string[]`, défaut `[]`
+  — la galerie n'apparaît que s'il y a au moins une photo), `galleryAlt`.
+  Projection de contenu par attributs : `[crumbs]` (fil d'Ariane), `[meta]`
+  (informations clés sous le titre), contenu par défaut (sections de la colonne
+  principale), `[aside]` (encart latéral). Réutilise les classes globales
+  `uni-detail-*` de [`_universe.scss`](../../styles/_universe.scss). **Les 4 fiches
+  d'univers** ([`features/immo`](../features/immo), [`stay`](../features/stay),
+  [`explore`](../features/explore), [`mobility`](../features/mobility)) sont bâties
+  dessus.
+- `app-reviews` : entrée `data` (requis, `ReviewList | null` de
+  [`core/api/review.service.ts`](../core/api/review.service.ts)), `heading`.
+- `app-whatsapp-button` : entrées `subject`, `reference`, `label` ; s'appuie sur
+  [`core/api/whatsapp.service.ts`](../core/api/whatsapp.service.ts)
+  (`GET /whatsapp/link`, B16.3). Le message et le numéro sont composés côté
+  backend d'après le paramétrage back-office.
+- **`app-gallery` (enrichie F2.6)** : image principale cliquable ouvrant une vue
+  plein écran (« lightbox ») ; navigation par flèches ‹ › et au clavier (←/→ pour
+  feuilleter, Échap pour fermer) ; compteur « i / n » ; étoile dorée sur la photo
+  mise en avant ; repli « Aucune photo disponible » quand la liste est vide.
+  ⚠️ Tant que les médias ne sont pas exposés par l'API, les fiches ne fournissent
+  pas d'images → la galerie reste masquée (dégradation gracieuse assumée).
 
 ---
 
@@ -66,6 +115,9 @@ la remettre en favori.
   couvre toute la carte (le titre sert de libellé accessible).
 - **`app-verification-badge`** : `label`, `tone` (`default` | `gold`).
 - **`app-gallery`** : `images` (requis, `string[]`), `alt`.
+- **`app-detail-layout`** : `title` (requis), `images`, `galleryAlt` + emplacements de projection `[crumbs]` / `[meta]` / défaut / `[aside]` (F2.6).
+- **`app-reviews`** : `data` (requis, `ReviewList | null`), `heading` (F2.6).
+- **`app-whatsapp-button`** : `subject`, `reference`, `label` (F2.6).
 - **`app-orbit-hero`** : aucune entrée (données internes des univers).
 - **`app-catalog`** : `universe` (requis) — clé d'univers du registre.
 - **`app-search-engine`** : aucune entrée (navigue lui-même vers `/recherche`).

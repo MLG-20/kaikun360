@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { CatalogComponent } from '../../../shared/components/catalog/catalog';
+import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
 
 /**
  * Page univers Mobilité (F2.4) — route `/mobilite`.
@@ -16,7 +17,7 @@ import { CatalogComponent } from '../../../shared/components/catalog/catalog';
  */
 @Component({
   selector: 'app-mobility-list-page',
-  imports: [CatalogComponent, RouterLink],
+  imports: [CatalogComponent, RouterLink, WhatsAppButtonComponent],
   templateUrl: './mobility-list-page.html',
   styleUrl: './mobility-list-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

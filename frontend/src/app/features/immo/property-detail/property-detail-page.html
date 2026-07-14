@@ -22,66 +22,63 @@
 
   @case ('ready') {
     @if (property(); as p) {
-      <!-- Bandeau visuel (dégradé de repli tant que les médias ne sont pas exposés). -->
-      <header class="uni-detail-hero">
-        <div class="k-wrap uni-detail-hero-inner">
-          <nav class="uni-detail-crumbs">
-            <a routerLink="/immobilier">Immobilier</a>
-            <span aria-hidden="true">/</span>
-            <span>{{ p.type_label ?? 'Bien' }}</span>
-          </nav>
-          <h1 class="uni-detail-title">{{ p.title }}</h1>
-          <div class="uni-detail-meta">
-            @if (locationLabel(); as loc) {
-              <span class="uni-detail-loc">{{ loc }}</span>
-            }
-            @if (verified()) {
-              <span class="uni-detail-verified">✓ Vérifié</span>
-            }
-          </div>
-        </div>
-      </header>
+      <!-- Coquille de fiche générique (F2.6) : titre, galerie, corps 2 colonnes.
+           La galerie reste masquée tant que les médias ne sont pas exposés. -->
+      <app-detail-layout [title]="p.title" [galleryAlt]="p.title">
+        <!-- Fil d'Ariane. -->
+        <ng-container crumbs>
+          <a routerLink="/immobilier">Immobilier</a>
+          <span aria-hidden="true">/</span>
+          <span>{{ p.type_label ?? 'Bien' }}</span>
+        </ng-container>
 
-      <div class="k-wrap uni-detail-body">
-        <!-- Colonne principale. -->
-        <div class="uni-detail-main">
-          @if (p.description) {
-            <section class="uni-detail-block">
-              <h2>Description</h2>
-              <p class="uni-detail-desc">{{ p.description }}</p>
-            </section>
+        <!-- Informations clés sous le titre. -->
+        <ng-container meta>
+          @if (locationLabel(); as loc) {
+            <span class="uni-detail-loc">{{ loc }}</span>
           }
+          @if (verified()) {
+            <span class="uni-detail-verified">✓ Vérifié</span>
+          }
+        </ng-container>
 
+        <!-- Colonne principale (emplacement par défaut). -->
+        @if (p.description) {
           <section class="uni-detail-block">
-            <h2>Caractéristiques</h2>
-            <dl class="uni-detail-facts">
-              @if (p.type_label) {
-                <div><dt>Type</dt><dd>{{ p.type_label }}</dd></div>
-              }
-              @if (priceLabel(); as price) {
-                <div><dt>Prix</dt><dd>{{ price }}</dd></div>
-              }
-              @if (locationLabel(); as loc) {
-                <div><dt>Localisation</dt><dd>{{ loc }}</dd></div>
-              }
-              @if (p.location.address) {
-                <div><dt>Adresse</dt><dd>{{ p.location.address }}</dd></div>
-              }
-              @if (p.location.tourist_zone) {
-                <div><dt>Zone touristique</dt><dd>{{ p.location.tourist_zone }}</dd></div>
-              }
-            </dl>
-
-            @if (mapLink(); as map) {
-              <a class="uni-detail-maplink" [href]="map" target="_blank" rel="noopener">
-                Voir sur la carte ↗
-              </a>
-            }
+            <h2>Description</h2>
+            <p class="uni-detail-desc">{{ p.description }}</p>
           </section>
-        </div>
+        }
 
-        <!-- Colonne latérale : prix + demande de visite. -->
-        <aside class="uni-detail-aside">
+        <section class="uni-detail-block">
+          <h2>Caractéristiques</h2>
+          <dl class="uni-detail-facts">
+            @if (p.type_label) {
+              <div><dt>Type</dt><dd>{{ p.type_label }}</dd></div>
+            }
+            @if (priceLabel(); as price) {
+              <div><dt>Prix</dt><dd>{{ price }}</dd></div>
+            }
+            @if (locationLabel(); as loc) {
+              <div><dt>Localisation</dt><dd>{{ loc }}</dd></div>
+            }
+            @if (p.location.address) {
+              <div><dt>Adresse</dt><dd>{{ p.location.address }}</dd></div>
+            }
+            @if (p.location.tourist_zone) {
+              <div><dt>Zone touristique</dt><dd>{{ p.location.tourist_zone }}</dd></div>
+            }
+          </dl>
+
+          @if (mapLink(); as map) {
+            <a class="uni-detail-maplink" [href]="map" target="_blank" rel="noopener">
+              Voir sur la carte ↗
+            </a>
+          }
+        </section>
+
+        <!-- Colonne latérale : prix + demande de visite + WhatsApp. -->
+        <ng-container aside>
           <div class="uni-detail-card k-card">
             @if (priceLabel(); as price) {
               <p class="uni-detail-price"><b>{{ price }}</b></p>
@@ -139,8 +136,14 @@
               </form>
             }
           </div>
-        </aside>
-      </div>
+
+          <!-- Contact direct par WhatsApp, prérempli avec le bien (F2.6). -->
+          <div class="uni-detail-whatsapp">
+            <p class="k-muted">Une question rapide sur ce bien ?</p>
+            <app-whatsapp-button [subject]="p.title" />
+          </div>
+        </ng-container>
+      </app-detail-layout>
     }
   }
 }

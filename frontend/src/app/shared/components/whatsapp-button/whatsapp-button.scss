@@ -1,0 +1,38 @@
+// Bouton WhatsApp contextuel (F2.6). Adopte l'aspect « pilule » de la charte
+// (cf. _base.scss) mais habillé aux couleurs officielles de WhatsApp pour être
+// immédiatement reconnaissable.
+:host {
+  display: inline-flex;
+}
+
+.wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  background: #25d366; // vert officiel WhatsApp
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.wa-btn:hover {
+  background: #1ebe5b;
+  transform: translateY(-1px);
+}
+
+.wa-btn:focus-visible {
+  outline: 2px solid var(--k-brand);
+  outline-offset: 2px;
+}
+
+.wa-btn-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+}

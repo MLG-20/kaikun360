@@ -1,0 +1,42 @@
+<!-- Bloc avis : masqué tant que les avis ne sont pas chargés (data === null). -->
+@if (data(); as r) {
+  <section class="uni-detail-block">
+    <h2>
+      {{ heading() }}
+      @if (r.summary.count) {
+        <!-- Synthèse : note moyenne sur 5 + étoiles pleines + nombre d'avis. -->
+        <span class="uni-rating">
+          {{ r.summary.average }}/5
+          <span class="uni-stars" aria-hidden="true">
+            @for (i of stars; track i) {
+              <span [class.on]="i <= averageStars()">★</span>
+            }
+          </span>
+          ({{ r.summary.count }})
+        </span>
+      }
+    </h2>
+
+    @if (r.reviews.length) {
+      <ul class="uni-reviews">
+        @for (review of r.reviews; track review.id) {
+          <li class="uni-review">
+            <div class="uni-review-head">
+              <strong>{{ review.author?.name ?? 'Client vérifié' }}</strong>
+              <span class="uni-stars" aria-hidden="true">
+                @for (i of stars; track i) {
+                  <span [class.on]="i <= review.rating">★</span>
+                }
+              </span>
+            </div>
+            @if (review.comment) {
+              <p>{{ review.comment }}</p>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="k-muted">Aucun avis pour le moment.</p>
+    }
+  </section>
+}

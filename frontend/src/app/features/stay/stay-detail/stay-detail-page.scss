@@ -142,47 +142,9 @@
   background: rgba(3, 25, 63, 0.25);
 }
 
-// --- Avis -----------------------------------------------------------------
-.stay-rating {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--k-muted);
-  margin-left: 0.5rem;
-}
-
-.stay-stars {
-  color: var(--k-line);
-  letter-spacing: 1px;
-}
-
-.stay-stars .on {
-  color: var(--k-gold);
-}
-
-.stay-reviews {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.stay-review {
-  border: 1px solid var(--k-line);
-  border-radius: var(--k-radius);
-  padding: 1rem;
-}
-
-.stay-review-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-}
-
-.stay-review p {
-  color: var(--k-ink);
-  line-height: 1.6;
-}
+// Les avis sont désormais rendus par le composant transverse `app-reviews`
+// (F2.6), qui réutilise les styles globaux `.uni-rating` / `.uni-stars` /
+// `.uni-reviews` de `src/styles/_universe.scss`.
 
 // --- Dates de la demande --------------------------------------------------
 .stay-dates {

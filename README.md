@@ -389,7 +389,7 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [x] Initialiser le projet Angular (dernière version stable [v22], configuration TypeScript stricte). — _standalone components._
 - [x] Mettre en place le routing principal avec lazy loading par feature module. — _routeur en place (`provideRouter`) ; lazy loading via `loadComponent` appliqué dès F1._
 - [x] Créer le `CoreModule` : `AuthService`, `TokenInterceptor`, `ErrorInterceptor`. — _approche standalone : dossier `core/` (pas de NgModule)._
-- [x] Créer le `SharedModule` : composants UI réutilisables (cartes de bien/service, galerie photo, badges de vérification, boutons CTA). — _dossier `shared/` : `app-listing-card`, `app-gallery`, `app-verification-badge`, `app-orbit-hero`, header/footer._
+- [x] Créer le `SharedModule` : composants UI réutilisables (cartes de bien/service, galerie photo, badges de vérification, boutons CTA). — _dossier `shared/` : `app-listing-card`, `app-gallery`, `app-verification-badge`, `app-orbit-hero`, `app-catalog`, `app-search-engine`, `app-lead-form`, `app-reviews`, `app-whatsapp-button`, `app-detail-layout` (F2.6), header/footer._
 - [x] Mettre en place le design system Kaikun (couleurs #0348FB et #38A774, typographie, composants de base) conforme à la charte.
 - [x] Définir les modèles TypeScript miroir des API Resources Laravel (Property, Stay, Vehicle, Experience, Request, Quote, Booking, Payment, User, Review, Media).
 - [x] Mettre en place les guards (`AuthGuard`, `RoleGuard`).
@@ -425,14 +425,14 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [x] Composant moteur de recherche global (service + ville + budget + dates + profil utilisateur). <!-- F2.1 : univers + ville/mots-clés + budget ; dates & profil affinés en F2.3 -->
 - [x] Composant catalogue filtrable et triable, réutilisé sur toutes les pages d'univers. <!-- F2.1 -->
 
-- [~] Composant fiche détaillée (photos, description, localisation, prix, disponibilité, règles, preuves, avis, CTA). <!-- F2.3 : implémenté comme pages concrètes Immobilier & Nuitées (fiche bien + fiche nuitée avec calendrier/avis). Extraction en composant générique réutilisable + galerie médias = F2.6. -->
+- [x] Composant fiche détaillée (photos, description, localisation, prix, disponibilité, règles, preuves, avis, CTA). <!-- F2.6 : coquille générique `app-detail-layout` (bandeau titre + fil d'Ariane + informations clés + galerie + corps 2 colonnes par projection de contenu). Les 4 fiches d'univers (Immobilier, Nuitées, Tourisme, Transport) sont refactorées dessus. Galerie affichée quand des photos sont fournies (masquée tant que les médias ne sont pas exposés par l'API — dégradation gracieuse). -->
 - [x] Composant carte cliquable : `app-listing-card` mène à la fiche détaillée (lien étiré) — F2.3.
 - [~] Composants de formulaires intelligents : demande client, dépôt de bien, inscription prestataire, demande diaspora, devis team building. <!-- F2.5 : composant réutilisable `app-lead-form` (demande de contact auth-gated, POST /requests) partagé par les pages de conversion Construction/Gestion locative/Diaspora/Team building. Dépôt de bien + inscription prestataire dédiée + devis (quotes) = F2.7. -->
 - [x] Composant simulateur immobilier/construction (budget, ville, surface, objectif, niveau de finition). <!-- F2.5 : simulateur de construction interactif sur /construction (objectif/surface/finition → estimation FCFA en direct), miroir du calcul backend `ConstructionEstimator` (B5.4) dans `features/build/construction-estimator.ts`. Volet immobilier (estimation de prix) non prévu par le backend à ce stade. -->
 
-- [ ] Composant module WhatsApp contextuel (message prérempli selon page/service).
-- [ ] Composant galerie image (image principale, compression côté upload, alt text, statut de validation visible).
-- [ ] Composant témoignages et preuves (labels de vérification, documents visibles selon niveau d'autorisation).
+- [x] Composant module WhatsApp contextuel (message prérempli selon page/service). <!-- F2.6 : `app-whatsapp-button` + `WhatsAppService` (GET /whatsapp/link, B16.3) ; le message est prérempli selon le contexte (`subject`/`reference`), le numéro provient du back-office (jamais codé en dur). Posé sur les 4 fiches, la vitrine Mobilité et la page Diaspora. Le bouton se masque tout seul si aucun numéro de support n'est paramétré. -->
+- [x] Composant galerie image (image principale, alt text). <!-- F2.6 : `app-gallery` enrichie (image principale cliquable → vue plein écran/lightbox, navigation clavier ←/→ et Échap, flèches, compteur i/n, repère « photo principale », repli « Aucune photo disponible »). Reçoit une liste d'URLs ; sera alimentée par de vraies photos quand les médias seront exposés par l'API (compression/statut de validation = côté upload back-office). -->
+- [~] Composant témoignages et preuves (labels de vérification, documents visibles selon niveau d'autorisation). <!-- F2.6 : `app-reviews` (note moyenne + étoiles + liste des avis publiés) mutualisé sur les fiches Nuitées/Tourisme/Transport. Le badge de vérification (`app-verification-badge` / `.uni-detail-verified`) est déjà en place. Documents visibles selon niveau d'autorisation = espace connecté (F3+). -->
 - [ ] Mise en place d'Angular Universal (SSR) sur l'ensemble des pages publiques.
 
 ### Phase F3 — Espace client (ClientSpaceModule)

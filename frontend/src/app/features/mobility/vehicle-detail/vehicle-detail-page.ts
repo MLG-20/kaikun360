@@ -12,6 +12,9 @@ import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Vehicle } from '../../../models/vehicle.model';
+import { ReviewsComponent } from '../../../shared/components/reviews/reviews';
+import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
+import { DetailLayoutComponent } from '../../../shared/components/detail-layout/detail-layout';
 
 /** État de chargement de la fiche. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
@@ -28,7 +31,13 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
  */
 @Component({
   selector: 'app-vehicle-detail-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    ReviewsComponent,
+    WhatsAppButtonComponent,
+    DetailLayoutComponent,
+  ],
   templateUrl: './vehicle-detail-page.html',
   styleUrl: './vehicle-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -105,10 +114,6 @@ export class VehicleDetailPageComponent {
   readonly priceLabel = computed(() => formatFcfa(this.vehicle()?.price_per_day_xof));
   readonly cautionLabel = computed(() => formatFcfa(this.vehicle()?.caution_xof));
 
-  readonly averageStars = computed(() => {
-    const avg = this.reviews()?.summary.average;
-    return avg ? Math.round(avg) : 0;
-  });
 
   // --- Formulaire de demande de réservation ---------------------------------
   readonly form = this.fb.nonNullable.group({

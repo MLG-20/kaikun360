@@ -1,0 +1,32 @@
+<!-- Bandeau de titre : fil d'Ariane + titre + informations clés. -->
+<header class="uni-detail-hero">
+  <div class="k-wrap uni-detail-hero-inner">
+    <nav class="uni-detail-crumbs">
+      <ng-content select="[crumbs]" />
+    </nav>
+    <h1 class="uni-detail-title">{{ title() }}</h1>
+    <div class="uni-detail-meta">
+      <ng-content select="[meta]" />
+    </div>
+  </div>
+</header>
+
+<!-- Galerie photo : affichée seulement s'il y a au moins une image (F2.6). -->
+@if (images().length) {
+  <div class="k-wrap uni-detail-gallery">
+    <app-gallery [images]="images()" [alt]="galleryAlt() || title()" />
+  </div>
+}
+
+<!-- Corps en deux colonnes. -->
+<div class="k-wrap uni-detail-body">
+  <!-- Colonne principale : sections projetées (emplacement par défaut). -->
+  <div class="uni-detail-main">
+    <ng-content />
+  </div>
+
+  <!-- Colonne latérale : encart d'action projeté. -->
+  <aside class="uni-detail-aside">
+    <ng-content select="[aside]" />
+  </aside>
+</div>

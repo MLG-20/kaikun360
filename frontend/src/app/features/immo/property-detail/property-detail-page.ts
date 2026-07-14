@@ -11,6 +11,8 @@ import { RequestService } from '../../../core/api/request.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Property } from '../../../models/property.model';
+import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
+import { DetailLayoutComponent } from '../../../shared/components/detail-layout/detail-layout';
 
 /** État de chargement de la fiche. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
@@ -27,7 +29,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
  */
 @Component({
   selector: 'app-property-detail-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, WhatsAppButtonComponent, DetailLayoutComponent],
   templateUrl: './property-detail-page.html',
   styleUrl: './property-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

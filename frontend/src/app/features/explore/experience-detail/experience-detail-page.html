@@ -22,100 +22,56 @@
 
   @case ('ready') {
     @if (experience(); as e) {
-      <header class="uni-detail-hero">
-        <div class="k-wrap uni-detail-hero-inner">
-          <nav class="uni-detail-crumbs">
-            <a routerLink="/tourisme">Tourisme</a>
-            <span aria-hidden="true">/</span>
-            <span>Expérience</span>
-          </nav>
-          <h1 class="uni-detail-title">{{ e.title }}</h1>
-          <div class="uni-detail-meta">
-            <span class="uni-detail-loc">{{ e.destination }}</span>
-            <span class="uni-detail-loc">{{ e.duration_days }} jour{{ e.duration_days > 1 ? 's' : '' }}</span>
-          </div>
-        </div>
-      </header>
+      <!-- Coquille de fiche générique (F2.6). -->
+      <app-detail-layout [title]="e.title" [galleryAlt]="e.title">
+        <ng-container crumbs>
+          <a routerLink="/tourisme">Tourisme</a>
+          <span aria-hidden="true">/</span>
+          <span>Expérience</span>
+        </ng-container>
 
-      <div class="k-wrap uni-detail-body">
-        <div class="uni-detail-main">
-          @if (e.description) {
-            <section class="uni-detail-block">
-              <h2>Le programme</h2>
-              <p class="uni-detail-desc">{{ e.description }}</p>
-            </section>
-          }
+        <ng-container meta>
+          <span class="uni-detail-loc">{{ e.destination }}</span>
+          <span class="uni-detail-loc">{{ e.duration_days }} jour{{ e.duration_days > 1 ? 's' : '' }}</span>
+        </ng-container>
 
-          <!-- Ce qui est inclus. -->
-          @if (inclusionList().length) {
-            <section class="uni-detail-block">
-              <h2>Ce qui est inclus</h2>
-              <ul class="uni-chips">
-                @for (item of inclusionList(); track item) {
-                  <li class="uni-chip">{{ item }}</li>
-                }
-              </ul>
-            </section>
-          }
-
-          <!-- Détails. -->
+        @if (e.description) {
           <section class="uni-detail-block">
-            <h2>Détails</h2>
-            <dl class="uni-detail-facts">
-              <div><dt>Destination</dt><dd>{{ e.destination }}</dd></div>
-              <div><dt>Durée</dt><dd>{{ e.duration_days }} jour{{ e.duration_days > 1 ? 's' : '' }}</dd></div>
-              <div><dt>Groupe</dt><dd>Jusqu'à {{ e.capacity }} personne{{ e.capacity > 1 ? 's' : '' }}</dd></div>
-              @if (priceLabel(); as price) {
-                <div><dt>Tarif</dt><dd>{{ price }} / pers.</dd></div>
-              }
-            </dl>
+            <h2>Le programme</h2>
+            <p class="uni-detail-desc">{{ e.description }}</p>
           </section>
+        }
 
-          <!-- Avis. -->
-          @if (reviews(); as r) {
-            <section class="uni-detail-block">
-              <h2>
-                Avis
-                @if (r.summary.count) {
-                  <span class="uni-rating">
-                    {{ r.summary.average }}/5
-                    <span class="uni-stars" aria-hidden="true">
-                      @for (i of [1, 2, 3, 4, 5]; track i) {
-                        <span [class.on]="i <= averageStars()">★</span>
-                      }
-                    </span>
-                    ({{ r.summary.count }})
-                  </span>
-                }
-              </h2>
-
-              @if (r.reviews.length) {
-                <ul class="uni-reviews">
-                  @for (review of r.reviews; track review.id) {
-                    <li class="uni-review">
-                      <div class="uni-review-head">
-                        <strong>{{ review.author?.name ?? 'Client vérifié' }}</strong>
-                        <span class="uni-stars" aria-hidden="true">
-                          @for (i of [1, 2, 3, 4, 5]; track i) {
-                            <span [class.on]="i <= review.rating">★</span>
-                          }
-                        </span>
-                      </div>
-                      @if (review.comment) {
-                        <p>{{ review.comment }}</p>
-                      }
-                    </li>
-                  }
-                </ul>
-              } @else {
-                <p class="k-muted">Aucun avis pour le moment.</p>
+        <!-- Ce qui est inclus. -->
+        @if (inclusionList().length) {
+          <section class="uni-detail-block">
+            <h2>Ce qui est inclus</h2>
+            <ul class="uni-chips">
+              @for (item of inclusionList(); track item) {
+                <li class="uni-chip">{{ item }}</li>
               }
-            </section>
-          }
-        </div>
+            </ul>
+          </section>
+        }
+
+        <!-- Détails. -->
+        <section class="uni-detail-block">
+          <h2>Détails</h2>
+          <dl class="uni-detail-facts">
+            <div><dt>Destination</dt><dd>{{ e.destination }}</dd></div>
+            <div><dt>Durée</dt><dd>{{ e.duration_days }} jour{{ e.duration_days > 1 ? 's' : '' }}</dd></div>
+            <div><dt>Groupe</dt><dd>Jusqu'à {{ e.capacity }} personne{{ e.capacity > 1 ? 's' : '' }}</dd></div>
+            @if (priceLabel(); as price) {
+              <div><dt>Tarif</dt><dd>{{ price }} / pers.</dd></div>
+            }
+          </dl>
+        </section>
+
+        <!-- Avis (composant transverse F2.6). -->
+        <app-reviews [data]="reviews()" />
 
         <!-- Colonne latérale : tarif + demande de réservation. -->
-        <aside class="uni-detail-aside">
+        <ng-container aside>
           <div class="uni-detail-card k-card">
             @if (priceLabel(); as price) {
               <p class="uni-detail-price"><b>{{ price }}</b> <span class="unit">/ pers.</span></p>
@@ -190,8 +146,14 @@
               </form>
             }
           </div>
-        </aside>
-      </div>
+
+          <!-- Contact direct par WhatsApp, prérempli avec l'expérience (F2.6). -->
+          <div class="uni-detail-whatsapp">
+            <p class="k-muted">Une question sur cette expérience ?</p>
+            <app-whatsapp-button [subject]="e.title" />
+          </div>
+        </ng-container>
+      </app-detail-layout>
     }
   }
 }

@@ -1,10 +1,25 @@
 @if (current(); as main) {
   <figure class="gallery">
+    <!-- Image principale : cliquable pour ouvrir le plein écran. -->
     <div class="main">
-      <img [src]="main" [alt]="alt()" />
+      <button
+        type="button"
+        class="main-btn"
+        (click)="openLightbox()"
+        [attr.aria-label]="'Agrandir : ' + alt()"
+      >
+        <img [src]="main" [alt]="alt()" />
+      </button>
+
+      @if (hasMany()) {
+        <!-- Flèches de navigation + compteur superposés sur la photo. -->
+        <button type="button" class="nav prev" (click)="prev()" aria-label="Photo précédente">‹</button>
+        <button type="button" class="nav next" (click)="next()" aria-label="Photo suivante">›</button>
+        <span class="counter" aria-hidden="true">{{ selected() + 1 }} / {{ count() }}</span>
+      }
     </div>
 
-    @if (images().length > 1) {
+    @if (hasMany()) {
       <div class="thumbs" role="listbox" [attr.aria-label]="alt()">
         @for (image of images(); track image; let i = $index) {
           <button
@@ -13,13 +28,44 @@
             [class.active]="selected() === i"
             role="option"
             [attr.aria-selected]="selected() === i"
-            (click)="select(i)">
+            (click)="select(i)"
+          >
             <img [src]="image" [alt]="alt() + ' ' + (i + 1)" loading="lazy" />
+            @if (i === 0) {
+              <!-- Repère visuel de la photo mise en avant (image principale). -->
+              <span class="thumb-primary" aria-label="Photo principale">★</span>
+            }
           </button>
         }
       </div>
     }
   </figure>
+
+  @if (lightboxOpen()) {
+    <!-- Vue plein écran : fond assombri, fermeture au clic sur le fond. -->
+    <div class="lightbox" (click)="closeLightbox()">
+      <button type="button" class="lightbox-close" (click)="closeLightbox()" aria-label="Fermer">×</button>
+
+      <!-- stopPropagation : un clic sur l'image ne referme pas l'overlay. -->
+      <img class="lightbox-img" [src]="main" [alt]="alt()" (click)="$event.stopPropagation()" />
+
+      @if (hasMany()) {
+        <button
+          type="button"
+          class="nav prev"
+          (click)="prev(); $event.stopPropagation()"
+          aria-label="Photo précédente"
+        >‹</button>
+        <button
+          type="button"
+          class="nav next"
+          (click)="next(); $event.stopPropagation()"
+          aria-label="Photo suivante"
+        >›</button>
+        <span class="lightbox-counter" aria-hidden="true">{{ selected() + 1 }} / {{ count() }}</span>
+      }
+    </div>
+  }
 } @else {
   <div class="gallery gallery--empty">Aucune photo disponible.</div>
 }

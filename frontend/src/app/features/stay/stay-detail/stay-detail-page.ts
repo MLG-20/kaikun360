@@ -12,6 +12,9 @@ import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Stay, BookedRange } from '../../../models/stay.model';
+import { ReviewsComponent } from '../../../shared/components/reviews/reviews';
+import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
+import { DetailLayoutComponent } from '../../../shared/components/detail-layout/detail-layout';
 
 /** État de chargement de la fiche. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
@@ -36,7 +39,13 @@ interface CalendarCell {
  */
 @Component({
   selector: 'app-stay-detail-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    ReviewsComponent,
+    WhatsAppButtonComponent,
+    DetailLayoutComponent,
+  ],
   templateUrl: './stay-detail-page.html',
   styleUrl: './stay-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -126,11 +135,6 @@ export class StayDetailPageComponent {
       return null;
     }
     return [loc.commune, loc.department, loc.region].filter(Boolean).join(' · ') || null;
-  });
-
-  readonly averageStars = computed(() => {
-    const avg = this.reviews()?.summary.average;
-    return avg ? Math.round(avg) : 0;
   });
 
   // --- Calendrier de disponibilité -----------------------------------------

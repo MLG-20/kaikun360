@@ -140,6 +140,11 @@
   font-weight: 700;
 }
 
+// Bandeau de galerie entre le titre et le corps (coquille générique F2.6).
+.uni-detail-gallery {
+  padding-top: 1.5rem;
+}
+
 .uni-detail-body {
   display: grid;
   grid-template-columns: 1fr;
@@ -319,6 +324,22 @@
 .uni-review p {
   color: var(--k-ink);
   line-height: 1.6;
+}
+
+// Zone d'action sous le bandeau d'un univers (ex. bouton WhatsApp Mobilité).
+.uni-hero-actions {
+  margin-top: 1.25rem;
+}
+
+// Bloc de contact direct WhatsApp sous la carte latérale des fiches (F2.6).
+.uni-detail-whatsapp {
+  margin-top: 1rem;
+  text-align: center;
+
+  p {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
 }
 
 // Pastille de disponibilité (places restantes) sur la fiche Tourisme.

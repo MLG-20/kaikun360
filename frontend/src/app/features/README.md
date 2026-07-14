@@ -72,9 +72,14 @@ La toute première brique de l'application (`App`) ne fait qu'une chose : affich
 Ces cinq pages de conversion partagent le formulaire réutilisable
 [`app-lead-form`](../shared/components/lead-form) (dépôt de demande auth-gated).
 
-À venir : les composants transverses (fiche générique, galerie, avis, WhatsApp),
-les formulaires intelligents (dépôt de bien, devis), l'espace personnel, le
-back-office.
+Les **composants transverses** (F2.6) sont en place : les 4 fiches d'univers
+partagent désormais la même coquille [`app-detail-layout`](../shared/components/detail-layout),
+le bloc d'avis [`app-reviews`](../shared/components/reviews), le bouton
+[`app-whatsapp-button`](../shared/components/whatsapp-button) et la galerie
+[`app-gallery`](../shared/components/gallery) enrichie.
+
+À venir : les formulaires intelligents restants (dépôt de bien, devis),
+l'espace personnel, le back-office.
 
 ---
 
@@ -94,7 +99,9 @@ back-office.
 - Styles partagés des **pages d'univers** (bandeau `.uni-hero`, ossature de fiche
   `.uni-detail-*`, chips/avis/disponibilité `.uni-chips`/`.uni-review`/`.uni-avail`) :
   [`../../styles/_universe.scss`](../../styles/_universe.scss), réutilisés par
-  `immo/`, `stay/`, `explore/` et `mobility/` (F2.3 → F2.4).
+  `immo/`, `stay/`, `explore/` et `mobility/` (F2.3 → F2.4). Depuis F2.6, ces
+  fiches partagent la **coquille générique** [`app-detail-layout`](../shared/components/detail-layout)
+  (bandeau + galerie + corps 2 colonnes par projection de contenu).
 - Styles partagés des **pages de conversion** (étapes numérotées `.conv-steps`,
   grilles d'atouts `.conv-features`, bandeau d'appel à l'action `.conv-cta`) :
   [`../../styles/_conversion.scss`](../../styles/_conversion.scss), réutilisés par

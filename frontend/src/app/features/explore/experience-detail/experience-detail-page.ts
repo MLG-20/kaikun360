@@ -12,6 +12,9 @@ import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Experience, ExperienceAvailability } from '../../../models/experience.model';
+import { ReviewsComponent } from '../../../shared/components/reviews/reviews';
+import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
+import { DetailLayoutComponent } from '../../../shared/components/detail-layout/detail-layout';
 
 /** État de chargement de la fiche. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
@@ -29,7 +32,13 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
  */
 @Component({
   selector: 'app-experience-detail-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    ReviewsComponent,
+    WhatsAppButtonComponent,
+    DetailLayoutComponent,
+  ],
   templateUrl: './experience-detail-page.html',
   styleUrl: './experience-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -136,11 +145,6 @@ export class ExperienceDetailPageComponent {
 
   /** Vrai s'il ne reste plus aucune place (réservation complète). */
   readonly soldOut = computed(() => this.availability()?.seats_left === 0);
-
-  readonly averageStars = computed(() => {
-    const avg = this.reviews()?.summary.average;
-    return avg ? Math.round(avg) : 0;
-  });
 
   // --- Formulaire de demande de réservation ---------------------------------
   readonly form = this.fb.nonNullable.group({
