@@ -1,0 +1,197 @@
+<!-- Fiche détaillée d'une expérience touristique (F2.4). -->
+@switch (state()) {
+  @case ('loading') {
+    <div class="k-wrap uni-detail-status" role="status">Chargement de l'expérience…</div>
+  }
+
+  @case ('notfound') {
+    <div class="k-wrap uni-detail-status">
+      <h1>Expérience introuvable</h1>
+      <p class="k-muted">Cette expérience n'existe pas ou n'est plus proposée.</p>
+      <a class="k-btn k-btn--primary" routerLink="/tourisme">Retour au catalogue</a>
+    </div>
+  }
+
+  @case ('failed') {
+    <div class="k-wrap uni-detail-status" role="alert">
+      <h1>Chargement impossible</h1>
+      <p class="k-muted">Une erreur est survenue. Vérifiez votre connexion puis réessayez.</p>
+      <a class="k-btn k-btn--primary" routerLink="/tourisme">Retour au catalogue</a>
+    </div>
+  }
+
+  @case ('ready') {
+    @if (experience(); as e) {
+      <header class="uni-detail-hero">
+        <div class="k-wrap uni-detail-hero-inner">
+          <nav class="uni-detail-crumbs">
+            <a routerLink="/tourisme">Tourisme</a>
+            <span aria-hidden="true">/</span>
+            <span>Expérience</span>
+          </nav>
+          <h1 class="uni-detail-title">{{ e.title }}</h1>
+          <div class="uni-detail-meta">
+            <span class="uni-detail-loc">{{ e.destination }}</span>
+            <span class="uni-detail-loc">{{ e.duration_days }} jour{{ e.duration_days > 1 ? 's' : '' }}</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="k-wrap uni-detail-body">
+        <div class="uni-detail-main">
+          @if (e.description) {
+            <section class="uni-detail-block">
+              <h2>Le programme</h2>
+              <p class="uni-detail-desc">{{ e.description }}</p>
+            </section>
+          }
+
+          <!-- Ce qui est inclus. -->
+          @if (inclusionList().length) {
+            <section class="uni-detail-block">
+              <h2>Ce qui est inclus</h2>
+              <ul class="uni-chips">
+                @for (item of inclusionList(); track item) {
+                  <li class="uni-chip">{{ item }}</li>
+                }
+              </ul>
+            </section>
+          }
+
+          <!-- Détails. -->
+          <section class="uni-detail-block">
+            <h2>Détails</h2>
+            <dl class="uni-detail-facts">
+              <div><dt>Destination</dt><dd>{{ e.destination }}</dd></div>
+              <div><dt>Durée</dt><dd>{{ e.duration_days }} jour{{ e.duration_days > 1 ? 's' : '' }}</dd></div>
+              <div><dt>Groupe</dt><dd>Jusqu'à {{ e.capacity }} personne{{ e.capacity > 1 ? 's' : '' }}</dd></div>
+              @if (priceLabel(); as price) {
+                <div><dt>Tarif</dt><dd>{{ price }} / pers.</dd></div>
+              }
+            </dl>
+          </section>
+
+          <!-- Avis. -->
+          @if (reviews(); as r) {
+            <section class="uni-detail-block">
+              <h2>
+                Avis
+                @if (r.summary.count) {
+                  <span class="uni-rating">
+                    {{ r.summary.average }}/5
+                    <span class="uni-stars" aria-hidden="true">
+                      @for (i of [1, 2, 3, 4, 5]; track i) {
+                        <span [class.on]="i <= averageStars()">★</span>
+                      }
+                    </span>
+                    ({{ r.summary.count }})
+                  </span>
+                }
+              </h2>
+
+              @if (r.reviews.length) {
+                <ul class="uni-reviews">
+                  @for (review of r.reviews; track review.id) {
+                    <li class="uni-review">
+                      <div class="uni-review-head">
+                        <strong>{{ review.author?.name ?? 'Client vérifié' }}</strong>
+                        <span class="uni-stars" aria-hidden="true">
+                          @for (i of [1, 2, 3, 4, 5]; track i) {
+                            <span [class.on]="i <= review.rating">★</span>
+                          }
+                        </span>
+                      </div>
+                      @if (review.comment) {
+                        <p>{{ review.comment }}</p>
+                      }
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="k-muted">Aucun avis pour le moment.</p>
+              }
+            </section>
+          }
+        </div>
+
+        <!-- Colonne latérale : tarif + demande de réservation. -->
+        <aside class="uni-detail-aside">
+          <div class="uni-detail-card k-card">
+            @if (priceLabel(); as price) {
+              <p class="uni-detail-price"><b>{{ price }}</b> <span class="unit">/ pers.</span></p>
+            }
+
+            <!-- Places restantes (si l'endpoint de disponibilité a répondu). -->
+            @if (availability(); as a) {
+              @if (soldOut()) {
+                <p><span class="uni-avail uni-avail--out">Complet pour l'instant</span></p>
+              } @else {
+                <p>
+                  <span class="uni-avail">
+                    {{ a.seats_left }} place{{ a.seats_left > 1 ? 's' : '' }} restante{{ a.seats_left > 1 ? 's' : '' }}
+                  </span>
+                </p>
+              }
+            }
+
+            <h2 class="uni-detail-card-title">Demander une réservation</h2>
+
+            @if (createdReference(); as ref) {
+              <div class="k-form-info" role="status">
+                <strong>Demande envoyée.</strong>
+                Votre référence de suivi : <b>{{ ref }}</b>. Un conseiller confirme
+                la disponibilité et les modalités.
+              </div>
+            } @else if (!isAuthenticated()) {
+              <p class="k-muted uni-detail-authnote">
+                Connectez-vous pour demander une réservation et suivre votre dossier.
+              </p>
+              <a
+                class="k-btn k-btn--primary k-btn--block"
+                routerLink="/auth/connexion"
+                [queryParams]="loginQueryParams()"
+              >
+                Se connecter
+              </a>
+            } @else {
+              <form class="uni-detail-form" [formGroup]="form" (ngSubmit)="submit()">
+                @if (formError(); as err) {
+                  <p class="k-form-error" role="alert">{{ err }}</p>
+                }
+
+                <div class="uni-detail-row">
+                  <label class="k-field">
+                    <span class="k-label">Participants</span>
+                    <input type="number" min="1" class="k-input" formControlName="seats" />
+                  </label>
+                  <label class="k-field">
+                    <span class="k-label">Date souhaitée <span class="k-optional">(optionnel)</span></span>
+                    <input type="date" class="k-input" formControlName="preferred_date" />
+                  </label>
+                </div>
+
+                <label class="k-field">
+                  <span class="k-label">Votre message</span>
+                  <textarea
+                    class="k-input"
+                    rows="4"
+                    formControlName="message"
+                    [class.k-input--error]="form.controls.message.touched && form.controls.message.invalid"
+                  ></textarea>
+                </label>
+
+                <button
+                  type="submit"
+                  class="k-btn k-btn--primary k-btn--block"
+                  [disabled]="submitting()"
+                >
+                  {{ submitting() ? 'Envoi…' : 'Envoyer la demande' }}
+                </button>
+              </form>
+            }
+          </div>
+        </aside>
+      </div>
+    }
+  }
+}

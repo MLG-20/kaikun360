@@ -200,8 +200,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         priceUnit: '/ jour',
         badge: v.has_driver ? 'Avec chauffeur' : null,
         image: null,
-        // Fiche véhicule = F2.4 → carte non cliquable pour l'instant.
-        link: null,
+        link: ['/transport', v.id],
       };
     },
   },
@@ -228,8 +227,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         priceUnit: '/ pers.',
         badge: null,
         image: null,
-        // Fiche expérience = F2.4 → carte non cliquable pour l'instant.
-        link: null,
+        link: ['/tourisme', e.id],
       };
     },
   },
@@ -255,7 +253,9 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         priceUnit: '/ trajet',
         badge: null,
         image: null,
-        // Fiche service de mobilité = F2.4 → carte non cliquable pour l'instant.
+        // Pas d'endpoint de détail côté backend pour un service de mobilité
+        // (index + réservation seulement) → carte non cliquable, réservation
+        // gérée depuis la vitrine `/mobilite`.
         link: null,
       };
     },

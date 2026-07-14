@@ -1,0 +1,6 @@
+/* Fiche détaillée Transport (F2.4). La structure et les éléments transverses
+   (avis, caution) viennent des styles partagés `.uni-*`
+   (src/styles/_universe.scss) ; rien de spécifique ici pour l'instant. */
+:host {
+  display: block;
+}

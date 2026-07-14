@@ -1,0 +1,25 @@
+<!-- Page univers Tourisme (F2.4). -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Univers Tourisme</p>
+    <h1 class="uni-hero-title">Explorez le Sénégal, en toute confiance</h1>
+    <p class="uni-hero-lead">
+      Excursions, circuits culturels et découvertes nature, portés par des
+      prestataires vérifiés. Comparez les programmes, vérifiez les places
+      restantes, puis demandez votre réservation.
+    </p>
+
+    <ul class="uni-hero-points">
+      @for (point of highlights; track point.title) {
+        <li class="uni-hero-point">
+          <span class="uni-hero-point-title">{{ point.title }}</span>
+          <span class="uni-hero-point-text">{{ point.text }}</span>
+        </li>
+      }
+    </ul>
+  </div>
+</section>
+
+<div class="k-wrap uni-catalog">
+  <app-catalog universe="tourisme" />
+</div>

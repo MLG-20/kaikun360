@@ -67,6 +67,18 @@
   padding-bottom: 3rem;
 }
 
+// Renvoi vers un univers voisin depuis un bandeau (ex. Transport → Mobilité).
+.uni-hero-cross {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.uni-hero-cross a {
+  color: var(--k-gold);
+  font-weight: 600;
+}
+
 // --- Fiche détaillée (bien, nuitée…) --------------------------------------
 .uni-detail-status {
   padding: 3rem 0;
@@ -229,5 +241,101 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+// Rangée de deux champs côte à côte dans un formulaire de demande.
+.uni-detail-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+// --- Éléments transverses des fiches (F2.4) --------------------------------
+// Chips (inclusions, équipements…), étoiles et avis, partagés par les fiches
+// Tourisme et Transport. La fiche Nuitée garde ses propres classes scopées.
+.uni-detail-price .unit {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+  font-family: var(--k-font-body);
+}
+
+.uni-detail-caution {
+  margin-top: -0.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.uni-chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.uni-chip {
+  background: var(--k-cream);
+  border: 1px solid var(--k-line);
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.88rem;
+}
+
+.uni-rating {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  margin-left: 0.5rem;
+}
+
+.uni-stars {
+  color: var(--k-line);
+  letter-spacing: 1px;
+}
+
+.uni-stars .on {
+  color: var(--k-gold);
+}
+
+.uni-reviews {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.uni-review {
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 1rem;
+}
+
+.uni-review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.uni-review p {
+  color: var(--k-ink);
+  line-height: 1.6;
+}
+
+// Pastille de disponibilité (places restantes) sur la fiche Tourisme.
+.uni-avail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(56, 167, 116, 0.14);
+  color: var(--k-green);
+}
+
+.uni-avail--out {
+  background: rgba(3, 25, 63, 0.08);
+  color: var(--k-muted);
 }
 

@@ -68,6 +68,49 @@ export const routes: Routes = [
           ),
         title: 'Nuitée — Kaikun 360',
       },
+      {
+        // Univers Tourisme (F2.4) : page vitrine + fiche détaillée d'une expérience.
+        path: 'tourisme',
+        loadComponent: () =>
+          import('./features/explore/experience-list/experience-list-page').then(
+            (m) => m.ExperienceListPageComponent,
+          ),
+        title: 'Tourisme & expériences — Kaikun 360',
+      },
+      {
+        path: 'tourisme/:id',
+        loadComponent: () =>
+          import('./features/explore/experience-detail/experience-detail-page').then(
+            (m) => m.ExperienceDetailPageComponent,
+          ),
+        title: 'Expérience — Kaikun 360',
+      },
+      {
+        // Univers Transport (F2.4) : page vitrine + fiche détaillée d'un véhicule.
+        path: 'transport',
+        loadComponent: () =>
+          import('./features/mobility/vehicle-list/vehicle-list-page').then(
+            (m) => m.VehicleListPageComponent,
+          ),
+        title: 'Transport & location — Kaikun 360',
+      },
+      {
+        path: 'transport/:id',
+        loadComponent: () =>
+          import('./features/mobility/vehicle-detail/vehicle-detail-page').then(
+            (m) => m.VehicleDetailPageComponent,
+          ),
+        title: 'Véhicule — Kaikun 360',
+      },
+      {
+        // Univers Mobilité (F2.4) : vitrine seule (pas de fiche côté backend).
+        path: 'mobilite',
+        loadComponent: () =>
+          import('./features/mobility/mobility-list/mobility-list-page').then(
+            (m) => m.MobilityListPageComponent,
+          ),
+        title: 'Mobilité, navettes & transferts — Kaikun 360',
+      },
     ],
   },
 ];

@@ -23,12 +23,12 @@ interface NavUniverse {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HeaderComponent {
-  /** Les univers mis en avant dans la méga-nav (Immobilier/Nuitées routés en F2.3). */
+  /** Les univers mis en avant dans la méga-nav (Tourisme/Transport routés en F2.4). */
   protected readonly universes: NavUniverse[] = [
     { label: 'Immobilier', link: '/immobilier' },
     { label: 'Nuitées', link: '/nuitees' },
-    { label: 'Tourisme', link: null },
-    { label: 'Transport', link: null },
+    { label: 'Tourisme', link: '/tourisme' },
+    { label: 'Transport', link: '/transport' },
     { label: 'Construction', link: null },
     { label: 'Services', link: null },
   ];

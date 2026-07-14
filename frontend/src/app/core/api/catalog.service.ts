@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { ApiEnvelope } from './api-response.model';
-import { Experience } from '../../models/experience.model';
+import { Experience, ExperienceAvailability } from '../../models/experience.model';
 import { MobilityService } from '../../models/mobility-service.model';
 import { Property } from '../../models/property.model';
 import { Stay, StayAvailability } from '../../models/stay.model';
@@ -133,11 +133,33 @@ export class CatalogService {
     });
   }
 
+  /** GET /vehicles/{id} — détail d'un véhicule publié (fiche transport, F2.4). */
+  vehicle(id: number | string): Observable<ApiEnvelope<Vehicle>> {
+    return this.http.get<ApiEnvelope<Vehicle>>(`${this.api}/vehicles/${id}`);
+  }
+
   /** GET /experiences — expériences touristiques publiées. */
   experiences(filters: ExperienceFilters = {}): Observable<Paginated<Experience>> {
     return this.http.get<Paginated<Experience>>(`${this.api}/experiences`, {
       params: this.toParams(filters),
     });
+  }
+
+  /** GET /experiences/{id} — détail d'une expérience publiée (fiche tourisme, F2.4). */
+  experience(id: number | string): Observable<ApiEnvelope<Experience>> {
+    return this.http.get<ApiEnvelope<Experience>>(`${this.api}/experiences/${id}`);
+  }
+
+  /**
+   * GET /experiences/{id}/availability — places restantes d'une expérience.
+   * Alimente l'indicateur de disponibilité de la fiche (F2.4).
+   */
+  experienceAvailability(
+    id: number | string,
+  ): Observable<ApiEnvelope<ExperienceAvailability>> {
+    return this.http.get<ApiEnvelope<ExperienceAvailability>>(
+      `${this.api}/experiences/${id}/availability`,
+    );
   }
 
   /** GET /mobility-services — services de mobilité publiés. */

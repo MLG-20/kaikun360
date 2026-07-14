@@ -1,0 +1,30 @@
+<!-- Page univers Mobilité (F2.4). -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Univers Mobilité</p>
+    <h1 class="uni-hero-title">Navettes, transferts et excursions</h1>
+    <p class="uni-hero-lead">
+      Trouvez une liaison aéroport, un transfert interurbain ou une excursion
+      organisée, opérés par des prestataires vérifiés. Indiquez votre départ,
+      votre destination et votre date pour comparer les trajets disponibles.
+    </p>
+
+    <ul class="uni-hero-points">
+      @for (point of highlights; track point.title) {
+        <li class="uni-hero-point">
+          <span class="uni-hero-point-title">{{ point.title }}</span>
+          <span class="uni-hero-point-text">{{ point.text }}</span>
+        </li>
+      }
+    </ul>
+
+    <p class="uni-hero-cross">
+      Vous cherchez plutôt à louer un véhicule ?
+      <a routerLink="/transport">Voir le Transport →</a>
+    </p>
+  </div>
+</section>
+
+<div class="k-wrap uni-catalog">
+  <app-catalog universe="mobilite" />
+</div>

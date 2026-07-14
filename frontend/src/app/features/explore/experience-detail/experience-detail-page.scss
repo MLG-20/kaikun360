@@ -1,0 +1,6 @@
+/* Fiche détaillée Tourisme (F2.4). La structure et les éléments transverses
+   (chips, avis, disponibilité) viennent des styles partagés `.uni-*`
+   (src/styles/_universe.scss) ; rien de spécifique ici pour l'instant. */
+:host {
+  display: block;
+}

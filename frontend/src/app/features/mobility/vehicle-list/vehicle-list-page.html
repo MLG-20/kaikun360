@@ -1,0 +1,30 @@
+<!-- Page univers Transport (F2.4). -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Univers Transport</p>
+    <h1 class="uni-hero-title">Un véhicule adapté à chaque trajet</h1>
+    <p class="uni-hero-lead">
+      Voitures, 4x4, minibus et pirogues, avec ou sans chauffeur, proposés par
+      des prestataires vérifiés. Filtrez selon vos places et votre budget, puis
+      demandez votre réservation.
+    </p>
+
+    <ul class="uni-hero-points">
+      @for (point of highlights; track point.title) {
+        <li class="uni-hero-point">
+          <span class="uni-hero-point-title">{{ point.title }}</span>
+          <span class="uni-hero-point-text">{{ point.text }}</span>
+        </li>
+      }
+    </ul>
+
+    <p class="uni-hero-cross">
+      Besoin d'une navette, d'un transfert aéroport ou d'une excursion organisée ?
+      <a routerLink="/mobilite">Voir la Mobilité →</a>
+    </p>
+  </div>
+</section>
+
+<div class="k-wrap uni-catalog">
+  <app-catalog universe="transport" />
+</div>

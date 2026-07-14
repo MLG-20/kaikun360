@@ -413,8 +413,8 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [x] Page Nuitées : calendrier, photos, équipements, prix/nuit, disponibilité. <!-- F2.3 : page univers /nuitees + fiche /nuitees/:id (équipements, règlement, modalités, calendrier de disponibilité GET /stays/:id/availability, avis GET /reviews, demande de réservation). Photos réelles = quand les médias seront exposés dans les Resources (repli dégradé pour l'instant). -->
 - [ ] Page Gestion locative : mandats, taux, reporting, maintenance, reversements (page de conversion propriétaire).
 - [ ] Page Construction : simulateur, niveaux de finition, rénovation, suivi chantier.
-- [ ] Page Tourisme & expériences : destinations, programmes, durée, inclusions, guide, restauration.
-- [ ] Page Transport & mobilité : location voiture particulière, voiture touristique, navette AIBD, bus, minibus, 4x4, pirogue.
+- [x] Page Tourisme & expériences : destinations, programmes, durée, inclusions, guide, restauration. <!-- F2.4 : page univers /tourisme (bandeau + catalogue filtrable) + fiche /tourisme/:id (programme, inclusions structurées, durée, places restantes GET /experiences/:id/availability, avis GET /reviews, demande de réservation POST /requests service_type=explore). -->
+- [x] Page Transport & mobilité : location voiture particulière, voiture touristique, navette AIBD, bus, minibus, 4x4, pirogue. <!-- F2.4 : univers Transport (véhicules) = /transport + fiche /transport/:id (caractéristiques, chauffeur, caution, avis, demande POST /requests service_type=mobility). Univers Mobilité (navettes/transferts) = vitrine /mobilite (pas d'endpoint de détail backend → vitrine + réservation via conseiller). Header et tuiles d'accueil recâblés. -->
 - [ ] Page Diaspora : vérification, achat, construction, suivi vidéo, gestion locative.
 - [ ] Page Team building : packs, lieux, activités, transport, hébergement, restauration.
 - [ ] Page Kaikun Pro : conditions, certification, documents, avantages, commissions (page de recrutement prestataires).

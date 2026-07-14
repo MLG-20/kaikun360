@@ -118,16 +118,16 @@ export class HomePageComponent implements OnInit {
       tag: 'Tourisme',
       desc: 'Expériences, circuits et découvertes au Sénégal.',
       icon: 'compass',
-      commands: ['/recherche'],
-      query: { univers: 'tourisme' },
+      // Page d'univers dédiée (F2.4).
+      commands: ['/tourisme'],
     },
     {
       name: 'Kaikun Mobility',
       tag: 'Transport & mobilité',
       desc: 'Véhicules avec ou sans chauffeur, navettes et transferts.',
       icon: 'car',
-      commands: ['/recherche'],
-      query: { univers: 'transport' },
+      // Page d'univers dédiée (F2.4). La Mobilité (navettes) y est reliée.
+      commands: ['/transport'],
     },
     {
       name: 'Kaikun Build',

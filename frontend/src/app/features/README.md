@@ -50,9 +50,16 @@ La toute première brique de l'application (`App`) ne fait qu'une chose : affich
 - **`stay/`** — l'**univers Nuitées** (F2.3) : la page vitrine `/nuitees` et la
   **fiche d'une nuitée** `/nuitees/:id` (équipements, règlement, **calendrier de
   disponibilité**, avis clients, demande de réservation).
+- **`explore/`** — l'**univers Tourisme** (F2.4) : la page vitrine `/tourisme`
+  et la **fiche d'une expérience** `/tourisme/:id` (programme, inclusions,
+  **places restantes**, avis, demande de réservation).
+- **`mobility/`** — les **univers Transport & Mobilité** (F2.4) : la vitrine
+  `/transport` + la **fiche d'un véhicule** `/transport/:id` (caractéristiques,
+  chauffeur, caution, avis, demande) ; et la vitrine `/mobilite` (navettes/
+  transferts — **vitrine seule**, pas de fiche côté backend).
 
-À venir : les autres univers (Tourisme, Transport…), l'espace personnel, le
-back-office.
+À venir : les pages de conversion (Construction, Gestion locative, Diaspora…),
+l'espace personnel, le back-office.
 
 ---
 
@@ -70,9 +77,12 @@ back-office.
   [`../../styles/_auth.scss`](../../styles/_auth.scss) (globaux car réutilisés par
   plusieurs pages ; l'encapsulation Angular empêcherait le partage sinon).
 - Styles partagés des **pages d'univers** (bandeau `.uni-hero`, ossature de fiche
-  `.uni-detail-*`) : [`../../styles/_universe.scss`](../../styles/_universe.scss),
-  réutilisés par `immo/` et `stay/` (F2.3).
-- Les **fiches détaillées** consomment `CatalogService.property/stay/stayAvailability`,
-  `ReviewService` (avis) et `RequestService` (dépôt de demande, auth requise).
-  Les cartes de catalogue mènent à la fiche via l'`input [link]` de
-  `app-listing-card` (lien étiré).
+  `.uni-detail-*`, chips/avis/disponibilité `.uni-chips`/`.uni-review`/`.uni-avail`) :
+  [`../../styles/_universe.scss`](../../styles/_universe.scss), réutilisés par
+  `immo/`, `stay/`, `explore/` et `mobility/` (F2.3 → F2.4).
+- Les **fiches détaillées** consomment `CatalogService`
+  (`property`/`stay`/`stayAvailability`, `experience`/`experienceAvailability`,
+  `vehicle`), `ReviewService` (avis stay/vehicle/experience) et `RequestService`
+  (dépôt de demande, auth requise). Les cartes de catalogue mènent à la fiche via
+  l'`input [link]` de `app-listing-card` (lien étiré) ; la mobilité reste non
+  cliquable (pas de fiche backend).
