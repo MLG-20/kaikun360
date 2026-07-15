@@ -144,6 +144,14 @@ service_type / vehicle_type, issues des enums) et le référentiel géographique
   slug) ; `GET|POST /admin/pages`, `PATCH|DELETE /admin/pages/{page}`. Slug unique
   (`regex [a-z0-9-]`), duplication → **422**.
 
+**Messages de contact (F2.8.1)** — modèle transversal `App\Models\ContactMessage`
+(`App\Http\Controllers\ContactController`). Dépôt **public** `POST /contact`
+(throttle 10/min, émetteur non authentifié → `name`/`email` stockés, statut
+`nouveau`, événement n8n `contact.received`). Traitement par l'équipe (permission
+`traiter:demandes`) : `GET /admin/contact-messages` (filtrable `?status=`),
+`PATCH /admin/contact-messages/{contactMessage}` (bascule `nouveau`/`traite`,
+enregistre `handled_by`/`handled_at`).
+
 ## B13.5 — Export comptable & reporting
 
 Permission `gerer:paiements`. `Services\AccountingReporter::report(from, to)`

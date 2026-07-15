@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 145 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 148 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -259,6 +259,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | --- | --- | --- | --- |
 | GET | `/faqs` | public | `FaqController@published` |
 | GET | `/pages/{page}` | public | `PageController@show` |
+| POST | `/contact` | public (throttle 10/min) | `ContactController@store` |
 
 ### Référentiel géographique
 
@@ -301,6 +302,8 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/admin/faqs` | auth + `can:gerer:parametres` | `FaqController@store` |
 | DELETE | `/admin/faqs/{faq}` | auth + `can:gerer:parametres` | `FaqController@destroy` |
 | PATCH | `/admin/faqs/{faq}` | auth + `can:gerer:parametres` | `FaqController@update` |
+| GET | `/admin/contact-messages` | auth + `can:traiter:demandes` | `ContactController@index` |
+| PATCH | `/admin/contact-messages/{contactMessage}` | auth + `can:traiter:demandes` | `ContactController@update` |
 | GET | `/admin/mandates` | auth + `can:consulter:dashboard-admin` | `AdminDossierController@mandates` |
 | GET | `/admin/pages` | auth + `can:gerer:parametres` | `PageController@index` |
 | POST | `/admin/pages` | auth + `can:gerer:parametres` | `PageController@store` |

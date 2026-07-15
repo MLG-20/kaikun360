@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\GeoController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PaymentController;
@@ -37,6 +38,11 @@ Route::get('whatsapp/link', [WhatsAppLinkController::class, 'generate']);
 // FAQ publiée et pages de contenu (adressées par slug). Édition = back-office.
 Route::get('faqs', [FaqController::class, 'published']);
 Route::get('pages/{page}', [PageController::class, 'show']);
+
+// --- Message de contact public (F2.8.1) --------------------------------------
+// Dépôt ouvert à tous (prospect sans compte) ; throttle anti-spam dédié. La
+// consultation/traitement sont réservés à l'équipe (routes admin).
+Route::post('contact', [ContactController::class, 'store'])->middleware('throttle:10,1');
 
 // --- Référentiel géographique public (F2.7.0) --------------------------------
 // Régions / départements / communes du Sénégal, en LECTURE SEULE. Alimente les

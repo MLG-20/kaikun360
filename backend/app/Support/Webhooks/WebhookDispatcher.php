@@ -36,6 +36,8 @@ class WebhookDispatcher
     public const DOCUMENT_REQUIRED = 'document.required';
     public const REQUEST_STATUS_CHANGED = 'request.status_changed';
 
+    public const CONTACT_RECEIVED = 'contact.received';
+
     /**
      * Émet un événement vers n8n (no-op tant que l'intégration n'est pas activée).
      *

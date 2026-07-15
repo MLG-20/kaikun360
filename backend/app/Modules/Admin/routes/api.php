@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ContactController;
 use App\Modules\Admin\Http\Controllers\AdminCatalogController;
 use App\Modules\Admin\Http\Controllers\AdminDashboardController;
 use App\Modules\Admin\Http\Controllers\AdminDocumentController;
@@ -118,5 +119,13 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         Route::post('/pages', [PageController::class, 'store']);
         Route::patch('/pages/{page}', [PageController::class, 'update']);
         Route::delete('/pages/{page}', [PageController::class, 'destroy']);
+    });
+
+    // F2.8.1 — Messages de contact : consultation & traitement par l'équipe.
+    // Le dépôt public est exposé dans routes/transversal.php.
+    Route::middleware('can:traiter:demandes')->group(function () {
+        Route::get('/contact-messages', [ContactController::class, 'index']);
+        Route::patch('/contact-messages/{contactMessage}', [ContactController::class, 'update'])
+            ->whereNumber('contactMessage');
     });
 });
