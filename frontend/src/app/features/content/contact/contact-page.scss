@@ -25,6 +25,18 @@
   margin-bottom: 1.25rem;
 }
 
+// Espace vertical entre les champs (label+input) et avant le bouton, sinon
+// les blocs `.k-field` se collent (ils n'ont pas de marge propre).
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+
+  .k-btn {
+    margin-top: 0.35rem;
+  }
+}
+
 .contact-channels {
   display: grid;
   gap: 1.25rem;
