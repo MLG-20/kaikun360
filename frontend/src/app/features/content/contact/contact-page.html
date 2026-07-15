@@ -4,38 +4,115 @@
     <p class="k-eyebrow">Nous contacter</p>
     <h1 class="uni-hero-title">Parlons de votre projet</h1>
     <p class="uni-hero-lead">
-      Une question sur un bien, une réservation ou votre dossier ? Notre équipe
-      vous répond rapidement, où que vous soyez.
+      Une question sur un bien, une réservation ou votre dossier ? Écrivez-nous
+      ou joignez-nous directement, où que vous soyez.
     </p>
   </div>
 </section>
 
 <section class="k-wrap contact-body">
-  <!-- Canaux de contact directs -->
-  <div class="contact-channels">
-    <div class="contact-card contact-card--primary">
-      <h2 class="contact-card-title">WhatsApp</h2>
-      <p class="contact-card-text">
-        Le plus rapide : échangez directement avec notre support sur WhatsApp.
-      </p>
-      <app-whatsapp-button subject="Contact depuis le site Kaikun 360" />
+  <div class="contact-grid">
+    <!-- Formulaire de contact -->
+    <div class="contact-form-col">
+      <h2 class="contact-form-title">Envoyez-nous un message</h2>
+
+      @if (sent()) {
+        <div class="k-form-info" role="status">
+          <p><strong>Merci, votre message est bien parti&nbsp;!</strong></p>
+          <p>Notre équipe vous répondra dans les meilleurs délais.</p>
+          <button type="button" class="k-btn k-btn--ghost" (click)="reset()">
+            Écrire un autre message
+          </button>
+        </div>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          @if (formError()) {
+            <div class="k-form-error" role="alert">{{ formError() }}</div>
+          }
+
+          <div class="k-field">
+            <label class="k-label" for="contact-name">Nom complet</label>
+            <input
+              id="contact-name"
+              class="k-input"
+              [class.k-input--error]="error('name')"
+              type="text"
+              formControlName="name"
+              autocomplete="name"
+            />
+            @if (error('name')) {
+              <p class="k-error">{{ error('name') }}</p>
+            }
+          </div>
+
+          <div class="k-field">
+            <label class="k-label" for="contact-email">E-mail</label>
+            <input
+              id="contact-email"
+              class="k-input"
+              [class.k-input--error]="error('email')"
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+            />
+            @if (error('email')) {
+              <p class="k-error">{{ error('email') }}</p>
+            }
+          </div>
+
+          <div class="k-field">
+            <label class="k-label" for="contact-subject">
+              Sujet <span class="k-optional">(facultatif)</span>
+            </label>
+            <input
+              id="contact-subject"
+              class="k-input"
+              [class.k-input--error]="error('subject')"
+              type="text"
+              formControlName="subject"
+            />
+            @if (error('subject')) {
+              <p class="k-error">{{ error('subject') }}</p>
+            }
+          </div>
+
+          <div class="k-field">
+            <label class="k-label" for="contact-message">Votre message</label>
+            <textarea
+              id="contact-message"
+              class="k-input"
+              [class.k-input--error]="error('message')"
+              rows="6"
+              formControlName="message"
+            ></textarea>
+            @if (error('message')) {
+              <p class="k-error">{{ error('message') }}</p>
+            }
+          </div>
+
+          <button type="submit" class="k-btn k-btn--primary k-btn--block" [disabled]="submitting()">
+            {{ submitting() ? 'Envoi…' : 'Envoyer le message' }}
+          </button>
+        </form>
+      }
     </div>
 
-    <div class="contact-card">
-      <h2 class="contact-card-title">E-mail</h2>
-      <p class="contact-card-text">
-        Écrivez-nous, nous revenons vers vous dans les meilleurs délais.
-      </p>
-      <a class="k-btn k-btn--ghost" [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
-    </div>
+    <!-- Canaux directs -->
+    <aside class="contact-channels">
+      <div class="contact-card contact-card--primary">
+        <h2 class="contact-card-title">WhatsApp</h2>
+        <p class="contact-card-text">
+          Le plus rapide : échangez directement avec notre support.
+        </p>
+        <app-whatsapp-button subject="Contact depuis le site Kaikun 360" />
+      </div>
 
-    <div class="contact-card">
-      <h2 class="contact-card-title">Depuis nos pages</h2>
-      <p class="contact-card-text">
-        Sur chaque bien, service ou fiche, un bouton WhatsApp contextuel reprend
-        automatiquement la référence consultée.
-      </p>
-    </div>
+      <div class="contact-card">
+        <h2 class="contact-card-title">E-mail</h2>
+        <p class="contact-card-text">Vous préférez l'e-mail ? Écrivez-nous à&nbsp;:</p>
+        <a class="k-btn k-btn--ghost" [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+      </div>
+    </aside>
   </div>
 
   <!-- Orientation vers les parcours métier -->

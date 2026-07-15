@@ -17,7 +17,7 @@ Toutes ces pages sont routées sous le layout principal (en-tête + pied).
 |-------|-----------|-------------------|
 | `/faqs` | `FaqPageComponent` (`faq/`) | `GET /faqs` via `ContentService.faqs()` |
 | `/pages/:slug` | `ContentPageComponent` (`content-page/`) | `GET /pages/{slug}` via `ContentService.page()` |
-| `/contact` | `ContactPageComponent` (`contact/`) | statique + `GET /whatsapp/link` |
+| `/contact` | `ContactPageComponent` (`contact/`) | `POST /contact` + `GET /whatsapp/link` |
 
 ### FAQ (`/faqs`)
 
@@ -42,11 +42,19 @@ l'onglet est mis à jour avec le titre de la page. Slug absent / page non publi�
 
 ### Contact (`/contact`)
 
-Page de **coordonnées, sans formulaire** : le backend n'expose pas d'endpoint de
-contact générique (décision produit). On présente les canaux réels — **WhatsApp**
-(numéro officiel résolu par le backend via `app-whatsapp-button`, jamais codé en
-dur) et **e-mail** — puis on oriente vers les parcours métier existants (déposer
-un bien, devenir prestataire, FAQ). Aucun bouton mort.
+Deux façons de nous joindre :
+
+- **Formulaire public** (F2.8.1) — nom, e-mail, sujet (facultatif), message —
+  envoyé via `ContactService.send()` (`POST /contact`). **Pas d'authentification**
+  (un prospect doit pouvoir écrire) ; le backend limite le débit (anti-spam) et
+  les messages sont **traités par l'équipe** depuis le back-office
+  (`can:traiter:demandes`). Erreurs 422 réparties par champ, bandeau de succès au
+  retour.
+- **Canaux directs** — **WhatsApp** (numéro officiel résolu par le backend via
+  `app-whatsapp-button`, jamais codé en dur) et **e-mail**.
+
+On oriente enfin vers les parcours métier existants (déposer un bien, devenir
+prestataire, FAQ). Aucun bouton mort.
 
 ## Données de démonstration
 

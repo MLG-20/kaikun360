@@ -28,6 +28,8 @@ l'application (approche standalone, sans NgModule) :
   - `ContentService` — contenu éditorial public : FAQ publiée `GET /faqs` et
     pages de contenu par slug `GET /pages/{slug}` (le backend enveloppe la page
     sous `data.page` ; le service l'aplatit) — F2.8.
+  - `ContactService` — envoi d'un message de contact `POST /contact` (**public**,
+    throttlé côté backend) ; les messages sont traités par l'équipe — F2.8.1.
 - **interceptors/** — `tokenInterceptor` (ajoute le Bearer), `errorInterceptor`
   (gestion centralisée : 401 → login, 422 → erreurs de formulaire, 500 → page
   d'erreur).
