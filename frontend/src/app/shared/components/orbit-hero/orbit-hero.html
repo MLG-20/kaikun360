@@ -8,22 +8,23 @@
     <span class="oc-eyebrow">Univers</span>
     <p class="oc-title">{{ active().title }}</p>
     <p class="oc-price">{{ active().price }}</p>
-    <a class="oc-cta" href="#">{{ active().cta }}</a>
+    <a class="oc-cta" [routerLink]="active().link">{{ active().cta }}</a>
   </div>
 
   <!-- Nœuds en orbite : ce calque tourne lentement (voir .orbit-nodes) et
        s'arrête dès que le curseur entre dans la zone (.orbit-wrap:hover). -->
   <div class="orbit-nodes">
     @for (node of nodes; track node.title; let i = $index) {
-      <button
-        type="button"
+      <!-- Chaque nœud MÈNE à la page de son univers ; le survol/focus met à jour
+           la carte centrale (aperçu). -->
+      <a
         class="orbit-node"
+        [routerLink]="node.link"
         [class.active]="focused() === i"
         [style.left.%]="node.left"
         [style.top.%]="node.top"
         (mouseenter)="focus(i)"
         (focus)="focus(i)"
-        (click)="focus(i)"
         [attr.aria-label]="node.title">
         <!-- L'icône est contre-tournée pour rester droite malgré la rotation. -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -32,9 +33,9 @@
             <path [attr.d]="d"></path>
           }
         </svg>
-      </button>
+      </a>
     }
   </div>
 </div>
 
-<p class="orbit-hint">Survolez un univers pour l'explorer.</p>
+<p class="orbit-hint">Survolez pour prévisualiser, cliquez pour ouvrir l'univers.</p>
