@@ -255,6 +255,8 @@ php artisan migrate --seed        # tables + rôles/permissions + référentiel 
 php artisan db:seed --class=CommunesSeeder   # (optionnel) communes officielles ANSD
 php artisan db:seed --class=DemoSeeder       # (optionnel, dev) annonces de démonstration
                                              # → remplit les 5 catalogues publics ; idempotent
+php artisan db:seed --class=ContentSeeder    # (optionnel, dev) contenu éditorial de démo
+                                             # → FAQ publiée + pages À propos/légales (slugs) ; idempotent
 
 # 4. Stockage privé (documents/médias)
 php artisan storage:link
