@@ -5,6 +5,7 @@ namespace App\Modules\Build\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Build\Enums\ConstructionObjective;
 use App\Modules\Build\Enums\ConstructionRequestStatus;
+use App\Modules\Build\Enums\ConstructionZone;
 use App\Modules\Build\Enums\FinishLevel;
 use App\Modules\Build\Http\Requests\SimulateConstructionRequest;
 use App\Modules\Build\Http\Requests\StoreConstructionRequestRequest;
@@ -105,6 +106,10 @@ class ConstructionRequestController extends Controller
 
     /**
      * Simulation de budget (sans persistance). POST /api/v1/construction-requests/simulate
+     *
+     * Endpoint PUBLIC (aucune donnée personnelle, pur calcul) : la page
+     * Construction du site l'appelle sans compte. Renvoie le détail complet
+     * (travaux, frais annexes, foncier, délai, jalons, rentabilité).
      */
     public function simulate(SimulateConstructionRequest $request, ConstructionEstimator $estimator): JsonResponse
     {
@@ -115,6 +120,9 @@ class ConstructionRequestController extends Controller
                 ConstructionObjective::from($data['objective']),
                 (int) $data['surface_m2'],
                 FinishLevel::from($data['finish_level']),
+                (int) ($data['levels'] ?? 1),
+                ConstructionZone::from($data['zone'] ?? ConstructionZone::DAKAR->value),
+                (int) ($data['land_cost_xof'] ?? 0),
             ),
         ]);
     }

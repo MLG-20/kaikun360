@@ -3,16 +3,22 @@
 namespace Tests\Feature\Build;
 
 use App\Modules\Build\Enums\ConstructionObjective;
+use App\Modules\Build\Enums\ConstructionZone;
 use App\Modules\Build\Enums\FinishLevel;
 use App\Modules\Build\Services\ConstructionEstimator;
-use PHPUnit\Framework\TestCase;
+use App\Support\Settings;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 /**
- * Tests unitaires du simulateur de budget (phase B5.4). Pas d'accès base de
- * données : la logique est purement arithmétique.
+ * Tests du simulateur de budget (B5.4, enrichi). Le calcul est arithmétique
+ * mais lit désormais son barème depuis les réglages (`build.pricing`), gérables
+ * au back-office — d'où le besoin du conteneur/base (RefreshDatabase).
  */
 class ConstructionEstimatorTest extends TestCase
 {
+    use RefreshDatabase;
+
     private ConstructionEstimator $estimator;
 
     protected function setUp(): void
@@ -20,6 +26,8 @@ class ConstructionEstimatorTest extends TestCase
         parent::setUp();
         $this->estimator = new ConstructionEstimator();
     }
+
+    // --- Coût des travaux (ancre historique) ---------------------------------
 
     public function test_estimation_neuf_standard(): void
     {
@@ -62,15 +70,97 @@ class ConstructionEstimatorTest extends TestCase
         ));
     }
 
-    public function test_le_detail_expose_les_parametres(): void
+    // --- Niveaux, zone, foncier (enrichissement) -----------------------------
+
+    public function test_les_niveaux_multiplient_la_surface(): void
     {
-        $breakdown = $this->estimator->breakdown(
-            ConstructionObjective::EXTENSION, 90, FinishLevel::STANDARD
+        // R+1 (2 niveaux) = deux fois la surface au sol.
+        $rdc = $this->estimator->breakdown(ConstructionObjective::CONSTRUCTION_NEUVE, 100, FinishLevel::STANDARD, 1);
+        $r1 = $this->estimator->breakdown(ConstructionObjective::CONSTRUCTION_NEUVE, 100, FinishLevel::STANDARD, 2);
+
+        $this->assertSame(200, $r1['inputs']['total_surface_m2']);
+        $this->assertSame($rdc['works']['cost_xof'] * 2, $r1['works']['cost_xof']);
+    }
+
+    public function test_les_zones_eloignees_surencherissent_les_travaux(): void
+    {
+        $dakar = $this->estimator->breakdown(
+            ConstructionObjective::CONSTRUCTION_NEUVE, 120, FinishLevel::STANDARD, 1, ConstructionZone::DAKAR
+        );
+        $loin = $this->estimator->breakdown(
+            ConstructionObjective::CONSTRUCTION_NEUVE, 120, FinishLevel::STANDARD, 1, ConstructionZone::ZONES_ELOIGNEES
         );
 
-        $this->assertSame('extension', $breakdown['objective']);
-        $this->assertSame(220_000, $breakdown['price_per_m2_xof']);
-        $this->assertSame(1.0, $breakdown['finish_coefficient']);
-        $this->assertSame(19_800_000, $breakdown['estimated_cost_xof']);
+        $this->assertGreaterThan($dakar['works']['cost_xof'], $loin['works']['cost_xof']);
+    }
+
+    public function test_le_terrain_ajoute_son_cout_et_ses_frais_d_acquisition(): void
+    {
+        $sansTerrain = $this->estimator->breakdown(
+            ConstructionObjective::CONSTRUCTION_NEUVE, 100, FinishLevel::STANDARD, 1, ConstructionZone::DAKAR, 0
+        );
+        $avecTerrain = $this->estimator->breakdown(
+            ConstructionObjective::CONSTRUCTION_NEUVE, 100, FinishLevel::STANDARD, 1, ConstructionZone::DAKAR, 10_000_000
+        );
+
+        $this->assertTrue($sansTerrain['land']['included']);
+        $this->assertSame(0, $sansTerrain['land']['total_xof']);
+
+        $this->assertFalse($avecTerrain['land']['included']);
+        // Frais d'acquisition = 10 % de 10 000 000 = 1 000 000.
+        $this->assertSame(1_000_000, $avecTerrain['land']['acquisition_fees_xof']);
+        $this->assertSame(11_000_000, $avecTerrain['land']['total_xof']);
+    }
+
+    public function test_le_total_general_somme_travaux_frais_et_foncier(): void
+    {
+        $b = $this->estimator->breakdown(
+            ConstructionObjective::CONSTRUCTION_NEUVE, 100, FinishLevel::STANDARD, 1, ConstructionZone::DAKAR, 5_000_000
+        );
+
+        $expected = $b['works']['cost_xof'] + $b['fees']['total_xof'] + $b['land']['total_xof'];
+        $this->assertSame($expected, $b['grand_total_xof']);
+    }
+
+    public function test_la_repartition_des_travaux_somme_au_cout_des_travaux(): void
+    {
+        $b = $this->estimator->breakdown(ConstructionObjective::CONSTRUCTION_NEUVE, 137, FinishLevel::PREMIUM, 2);
+
+        $sum = array_sum(array_column($b['works']['breakdown'], 'amount_xof'));
+        $this->assertSame($b['works']['cost_xof'], $sum);
+
+        $milestones = array_sum(array_column($b['works']['milestones'], 'amount_xof'));
+        $this->assertSame($b['works']['cost_xof'], $milestones);
+    }
+
+    public function test_la_projection_locative_expose_les_deux_modes(): void
+    {
+        $b = $this->estimator->breakdown(ConstructionObjective::CONSTRUCTION_NEUVE, 100, FinishLevel::STANDARD);
+
+        $this->assertArrayHasKey('longue_duree', $b['rental']);
+        $this->assertArrayHasKey('nuitee', $b['rental']);
+        // La nuitée rapporte davantage que la location longue durée.
+        $this->assertGreaterThan(
+            $b['rental']['longue_duree']['monthly_income_xof'],
+            $b['rental']['nuitee']['monthly_income_xof'],
+        );
+    }
+
+    // --- Pilotage par les réglages (back-office) ------------------------------
+
+    public function test_le_bareme_est_pilote_par_les_reglages(): void
+    {
+        $avant = $this->estimator->estimate(ConstructionObjective::CONSTRUCTION_NEUVE, 100, FinishLevel::STANDARD);
+        $this->assertSame(25_000_000, $avant);
+
+        // L'équipe admin double le prix au m² du neuf via les réglages.
+        Settings::set('build.pricing', ['price_m2' => ['construction_neuve' => 500_000]]);
+
+        $apres = $this->estimator->estimate(ConstructionObjective::CONSTRUCTION_NEUVE, 100, FinishLevel::STANDARD);
+        $this->assertSame(50_000_000, $apres);
+
+        // La surcharge est PARTIELLE : les autres coefficients restent par défaut.
+        $reno = $this->estimator->estimate(ConstructionObjective::RENOVATION, 100, FinishLevel::STANDARD);
+        $this->assertSame(15_000_000, $reno);
     }
 }

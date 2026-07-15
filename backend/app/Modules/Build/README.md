@@ -89,18 +89,43 @@ assure le **suivi de chantier** (rapports photo/vidéo, jalons).
 
 ---
 
-## Simulateur de budget (phase B5.4)
+## Simulateur de budget (phase B5.4, enrichi « réalités sénégalaises »)
 
-Service `ConstructionEstimator` (logique pure, sans base) :
+Service `ConstructionEstimator` :
 
-- `estimate(objective, surfaceM2, finishLevel)` → coût total indicatif (XOF).
-- `breakdown(...)` → détail structuré (prix au m², coefficient, total).
+- `estimate(objective, surfaceM2, finishLevel)` → coût des **travaux** seuls (XOF),
+  au niveau RDC / zone Dakar (signature historique conservée pour le dépôt de
+  demande).
+- `breakdown(objective, surfaceM2, finishLevel, levels = 1, zone = dakar, landCostXof = 0)`
+  → **détail complet** consommé par le frontend :
+  - `works` : coût des travaux + répartition (gros œuvre / second œuvre /
+    finitions) + échéancier par jalons ;
+  - `fees` : frais annexes officiels (études & honoraires, permis, viabilisation) ;
+  - `land` : foncier (le prix du terrain est **saisi**, jamais deviné) + frais
+    d'acquisition (notaire/bornage/enregistrement) ;
+  - `grand_total_xof`, `duration` (délai en mois), `rental` (rendement locatif
+    indicatif longue durée / nuitée).
 
-Règles : coût de base au m² selon l'objectif (neuf 250 000 > extension 220 000 >
-rénovation 150 000), × coefficient de finition (éco 0,85 / standard 1,0 /
-premium 1,35) × surface, arrondi au pas de 100 000 XOF.
+**Formule des travaux** : `prix_m² × (surface au sol × niveaux) × coeff finition ×
+coeff zone`, arrondi au pas.
+
+### 🔑 Barème piloté par les réglages (`build.pricing`)
+
+Tous les **coefficients monétaires** (prix au m², finitions, zones, taux de frais,
+taux d'acquisition foncière, rendements) vivent dans le réglage **`build.pricing`**
+({@see `App\Support\SettingsRepository::DEFAULTS`}, type `json`, groupe
+`construction`). Les valeurs du code sont des **ordres de grandeur par défaut** ;
+l'**équipe admin les remplace par de vrais chiffres d'experts BTP** via le
+back-office (`PATCH /admin/settings`), **sans redéploiement**. Une surcharge
+**partielle** est acceptée (fusion récursive sur les défauts). L'estimateur est
+donc la **source unique** du calcul, alignée en direct sur les réglages.
+
+La répartition des travaux, l'échéancier et le délai sont **structurels**
+(méthodologie) et restent en code.
 
 > ⚠️ Estimation **non contractuelle** ; le devis ferme relève des Quotes (B11).
+> Le endpoint `POST /construction-requests/simulate` est **public** (pur calcul,
+> aucune donnée personnelle) pour alimenter la page Construction du site.
 
 ---
 

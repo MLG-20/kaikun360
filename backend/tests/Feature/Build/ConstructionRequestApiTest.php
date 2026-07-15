@@ -5,6 +5,7 @@ namespace Tests\Feature\Build;
 use App\Models\Report;
 use App\Models\User;
 use App\Modules\Build\Enums\ConstructionObjective;
+use App\Modules\Build\Enums\ConstructionZone;
 use App\Modules\Build\Enums\FinishLevel;
 use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Core\Enums\UserRole;
@@ -154,10 +155,9 @@ class ConstructionRequestApiTest extends TestCase
         ]);
     }
 
-    public function test_la_simulation_renvoie_une_estimation(): void
+    public function test_la_simulation_est_publique_et_renvoie_une_estimation(): void
     {
-        Sanctum::actingAs(User::factory()->create());
-
+        // Aucune authentification : la page Construction est publique.
         $this->postJson('/api/v1/construction-requests/simulate', [
             'objective' => ConstructionObjective::RENOVATION->value,
             'surface_m2' => 80,
@@ -165,6 +165,42 @@ class ConstructionRequestApiTest extends TestCase
         ])
             ->assertOk()
             // 150 000 × 80 × 0.85 = 10 200 000.
-            ->assertJsonPath('data.simulation.estimated_cost_xof', 10_200_000);
+            ->assertJsonPath('data.simulation.estimated_cost_xof', 10_200_000)
+            ->assertJsonPath('data.simulation.works.cost_xof', 10_200_000);
+    }
+
+    public function test_la_simulation_detaille_niveaux_zone_foncier_et_frais(): void
+    {
+        $this->postJson('/api/v1/construction-requests/simulate', [
+            'objective' => ConstructionObjective::CONSTRUCTION_NEUVE->value,
+            'surface_m2' => 100,
+            'finish_level' => FinishLevel::STANDARD->value,
+            'levels' => 2,
+            'zone' => ConstructionZone::DAKAR->value,
+            'land_cost_xof' => 10_000_000,
+        ])
+            ->assertOk()
+            // 250 000 × (100 × 2) × 1.0 × 1.0 = 50 000 000 de travaux.
+            ->assertJsonPath('data.simulation.works.cost_xof', 50_000_000)
+            ->assertJsonPath('data.simulation.inputs.total_surface_m2', 200)
+            ->assertJsonPath('data.simulation.land.acquisition_fees_xof', 1_000_000)
+            ->assertJsonPath('data.simulation.land.total_xof', 11_000_000)
+            ->assertJsonStructure(['data' => ['simulation' => [
+                'grand_total_xof',
+                'works' => ['breakdown', 'milestones'],
+                'fees' => ['items', 'total_xof'],
+                'duration' => ['min_months', 'max_months'],
+                'rental' => ['longue_duree', 'nuitee'],
+            ]]]);
+    }
+
+    public function test_la_simulation_rejette_une_zone_inconnue(): void
+    {
+        $this->postJson('/api/v1/construction-requests/simulate', [
+            'objective' => ConstructionObjective::CONSTRUCTION_NEUVE->value,
+            'surface_m2' => 100,
+            'finish_level' => FinishLevel::STANDARD->value,
+            'zone' => 'lune',
+        ])->assertStatus(422);
     }
 }

@@ -32,6 +32,48 @@ class SettingsRepository
         'platform.currency' => ['value' => 'XOF', 'type' => 'string', 'group' => 'general'],
         'support.email' => ['value' => 'support@kaikun360.sn', 'type' => 'string', 'group' => 'general'],
         'support.phone' => ['value' => '+221 33 000 00 00', 'type' => 'string', 'group' => 'general'],
+
+        // Barème du simulateur de construction (B5.4, enrichi). Ces valeurs sont
+        // des ORDRES DE GRANDEUR par défaut, destinés à être remplacés par
+        // l'équipe (chiffres réels validés par des experts BTP) via le
+        // back-office, SANS redéploiement. Structure consommée par
+        // App\Modules\Build\Services\ConstructionEstimator.
+        'build.pricing' => ['type' => 'json', 'group' => 'construction', 'value' => [
+            // Coût de base au m² (XOF) selon l'objectif des travaux.
+            'price_m2' => [
+                'construction_neuve' => 250_000,
+                'extension' => 220_000,
+                'renovation' => 150_000,
+            ],
+            // Coefficient multiplicateur selon le niveau de finition.
+            'finish_coeff' => [
+                'economique' => 0.85,
+                'standard' => 1.0,
+                'premium' => 1.35,
+            ],
+            // Coefficient de zone géographique (surcoût logistique hors Dakar).
+            'zone_coeff' => [
+                'dakar' => 1.0,
+                'autres_regions' => 1.06,
+                'zones_eloignees' => 1.12,
+            ],
+            // Frais annexes officiels, en part du coût des travaux, par objectif.
+            'fees' => [
+                'construction_neuve' => ['etudes' => 0.08, 'permis' => 0.02, 'viabilisation' => 0.03],
+                'extension' => ['etudes' => 0.08, 'permis' => 0.02, 'viabilisation' => 0.03],
+                'renovation' => ['etudes' => 0.05, 'permis' => 0.01, 'viabilisation' => 0.0],
+            ],
+            // Frais d'acquisition du terrain (notaire, bornage, enregistrement),
+            // en part du prix du terrain saisi par l'utilisateur.
+            'land_acquisition_rate' => 0.10,
+            // Rendement locatif brut annuel indicatif, par mode d'exploitation.
+            'rental_yield' => [
+                'longue_duree' => ['min' => 0.06, 'max' => 0.08],
+                'nuitee' => ['min' => 0.10, 'max' => 0.14],
+            ],
+            // Pas d'arrondi de l'estimation (pour rester indicatif).
+            'rounding_step' => 100_000,
+        ]],
     ];
 
     /**

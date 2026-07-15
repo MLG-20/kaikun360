@@ -144,7 +144,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | --- | --- | --- | --- |
 | POST | `/construction-requests` | auth | `ConstructionRequestController@store` |
 | GET | `/construction-requests/mine` | auth | `ConstructionRequestController@mine` |
-| POST | `/construction-requests/simulate` | auth | `ConstructionRequestController@simulate` |
+| POST | `/construction-requests/simulate` | public | `ConstructionRequestController@simulate` |
 | GET | `/construction-requests/{constructionRequest}` | auth | `ConstructionRequestController@show` |
 | GET | `/construction-requests/{constructionRequest}/reports` | auth | `ConstructionRequestController@reports` |
 | POST | `/construction-requests/{constructionRequest}/reports` | auth + `can:gerer:chantiers` | `ConstructionReportController@store` |
