@@ -288,10 +288,29 @@
 }
 
 .mobile-link {
-  display: block;
-  padding: 10px 6px 10px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 6px 9px 18px;
   color: var(--k-ink);
   font-size: 14.5px;
+}
+
+// Pastille d'icône dans les accordéons (mêmes icônes que le méga-menu desktop).
+.mobile-ic {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  background: var(--k-navy);
+  color: var(--k-gold);
+}
+
+.mobile-ic svg {
+  width: 17px;
+  height: 17px;
 }
 
 .mobile-group .mobile-link {
