@@ -1,4 +1,4 @@
-<!-- Page univers Construction (F2.5). -->
+<!-- Page univers Construction (F2.5, enrichie). Le chiffrage vient du backend. -->
 <section class="uni-hero">
   <div class="k-wrap uni-hero-inner">
     <p class="k-eyebrow">Univers Construction</p>
@@ -6,7 +6,7 @@
     <p class="uni-hero-lead">
       Kaikun Build coordonne votre chantier au Sénégal avec des artisans
       vérifiés, un devis ferme et un suivi filmé et daté à chaque étape.
-      Estimez votre budget en quelques secondes, puis lancez votre demande.
+      Estimez votre budget complet en quelques secondes, puis lancez votre demande.
     </p>
 
     <ul class="uni-hero-points">
@@ -36,69 +36,299 @@
   </ol>
 </section>
 
-<!-- Simulateur + formulaire de devis -->
+<!-- Simulateur : formulaire compact à gauche + panneau de résultat unique à droite -->
 <section id="simulateur" class="build-sim-band">
-  <div class="k-wrap build-sim-grid">
-    <!-- Simulateur interactif -->
-    <div class="build-sim">
+  <div class="k-wrap">
+    <div class="build-sim-head">
       <p class="k-eyebrow">Simulateur de budget</p>
-      <h2 class="build-sim-title">Une estimation immédiate en FCFA</h2>
+      <h2 class="build-sim-title">Un chiffrage complet en FCFA</h2>
+      <p class="build-sim-intro">
+        Renseignez votre projet : le simulateur chiffre tout — travaux, frais
+        officiels, foncier, délai et rentabilité — et vous dit si votre budget suffit.
+      </p>
+    </div>
 
-      <div class="build-field">
-        <span class="build-field-label">Type de projet</span>
-        <div class="build-choices">
-          @for (choice of objectives; track choice.value) {
+    <div class="build-simulator">
+      <!-- FORMULAIRE (gauche) -->
+      <form class="build-sim-form" (submit)="$event.preventDefault()">
+        <div class="build-field">
+          <span class="build-field-label">Type de projet</span>
+          <div class="build-choices">
+            @for (choice of objectives; track choice.value) {
+              <button
+                type="button"
+                class="build-choice"
+                [class.is-active]="objective() === choice.value"
+                (click)="objective.set(choice.value)">
+                <b>{{ choice.label }}</b>
+                <small>{{ choice.hint }}</small>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="build-field">
+          <label class="build-field-label" for="sim-surface">Surface au sol</label>
+          <div class="build-input-unit">
+            <input
+              id="sim-surface"
+              class="build-input"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              step="5"
+              [value]="surface()"
+              (input)="setSurface($any($event.target).value)" />
+            <span class="build-input-suffix">m²</span>
+          </div>
+          <input
+            class="build-range"
+            type="range"
+            min="20"
+            max="600"
+            step="10"
+            [value]="surface()"
+            (input)="setSurface($any($event.target).value)"
+            aria-label="Surface au sol (curseur)" />
+        </div>
+
+        <div class="build-field">
+          <span class="build-field-label">Niveaux</span>
+          <div class="build-choices build-choices--tight">
+            @for (choice of levelChoices; track choice.value) {
+              <button
+                type="button"
+                class="build-choice"
+                [class.is-active]="levels() === choice.value"
+                (click)="levels.set(choice.value)">
+                <b>{{ choice.label }}</b>
+                <small>{{ choice.hint }}</small>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="build-field">
+          <span class="build-field-label">Niveau de finition</span>
+          <div class="build-choices">
+            @for (choice of finishes; track choice.value) {
+              <button
+                type="button"
+                class="build-choice"
+                [class.is-active]="finish() === choice.value"
+                (click)="finish.set(choice.value)">
+                <b>{{ choice.label }}</b>
+                <small>{{ choice.hint }}</small>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="build-field">
+          <label class="build-field-label" for="sim-region">Où souhaitez-vous construire ?</label>
+          <select
+            id="sim-region"
+            class="build-select"
+            [value]="region().name"
+            (change)="setRegion($any($event.target).value)">
+            @for (r of regions; track r.name) {
+              <option [value]="r.name">{{ r.name }}</option>
+            }
+          </select>
+          <p class="build-field-note">Zone de coût : <b>{{ zoneLabels[zone()] }}</b></p>
+        </div>
+
+        <!-- Foncier -->
+        <div class="build-field">
+          <span class="build-field-label">Terrain</span>
+          <div class="build-choices build-choices--tight">
             <button
               type="button"
               class="build-choice"
-              [class.is-active]="objective() === choice.value"
-              (click)="objective.set(choice.value)">
-              <b>{{ choice.label }}</b>
-              <small>{{ choice.hint }}</small>
+              [class.is-active]="landOwned()"
+              (click)="landOwned.set(true)">
+              <b>Je possède le terrain</b>
+              <small>Titre foncier en règle</small>
             </button>
-          }
-        </div>
-      </div>
-
-      <div class="build-field">
-        <label class="build-field-label" for="sim-surface">
-          Surface : <b>{{ surface() }} m²</b>
-        </label>
-        <input
-          id="sim-surface"
-          class="build-range"
-          type="range"
-          min="20"
-          max="600"
-          step="10"
-          [value]="surface()"
-          (input)="setSurface($any($event.target).value)" />
-        <div class="build-range-scale"><span>20 m²</span><span>600 m²</span></div>
-      </div>
-
-      <div class="build-field">
-        <span class="build-field-label">Niveau de finition</span>
-        <div class="build-choices">
-          @for (choice of finishes; track choice.value) {
             <button
               type="button"
               class="build-choice"
-              [class.is-active]="finish() === choice.value"
-              (click)="finish.set(choice.value)">
-              <b>{{ choice.label }}</b>
-              <small>{{ choice.hint }}</small>
+              [class.is-active]="!landOwned()"
+              (click)="landOwned.set(false)">
+              <b>Terrain à acquérir</b>
+              <small>Achat + frais notaire/bornage</small>
             </button>
+          </div>
+          @if (!landOwned()) {
+            <label class="build-field-label build-field-label--sub" for="sim-land">
+              Coût estimé du terrain (FCFA)
+            </label>
+            <input
+              id="sim-land"
+              class="build-input"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              step="500000"
+              placeholder="Ex. 15 000 000"
+              (input)="setLandCost($any($event.target).value)" />
+            <p class="build-hint">
+              ⚠️ Vérifiez toujours le <b>titre foncier</b> avant tout achat — c'est le
+              cœur de notre protocole anti-arnaque, surtout pour la diaspora.
+            </p>
           }
         </div>
-      </div>
 
-      <div class="build-result">
-        <span class="build-result-label">Estimation indicative</span>
-        <span class="build-result-value">{{ estimateLabel() }}</span>
-        <p class="build-result-note">
-          Fourchette non contractuelle, à titre indicatif. Le devis ferme est
-          établi par un professionnel vérifié après étude de votre projet.
-        </p>
+        <!-- Budget / capacité -->
+        <div class="build-field">
+          <label class="build-field-label" for="sim-budget">Votre budget disponible (optionnel)</label>
+          <input
+            id="sim-budget"
+            class="build-input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1000000"
+            placeholder="Ex. 35 000 000"
+            (input)="setBudget($any($event.target).value)" />
+          <p class="build-field-note">On vous dit si votre budget couvre le projet.</p>
+        </div>
+      </form>
+
+      <!-- RÉSULTAT (droite) — panneau unique -->
+      <div class="build-result" [class.is-loading]="loading()">
+        @if (failed()) {
+          <p class="k-eyebrow">Votre projet</p>
+          <h3 class="build-result-title">Estimation indisponible</h3>
+          <p class="build-result-note">
+            Le simulateur est momentanément injoignable. Réessayez, ou envoyez
+            directement votre demande — un conseiller vous chiffrera le projet.
+          </p>
+        } @else if (simulation(); as sim) {
+          <p class="k-eyebrow">Votre projet · {{ region().name }}</p>
+          <span class="build-result-label">Budget total indicatif</span>
+          <span class="build-result-value">{{ fcfa(sim.grand_total_xof) }}</span>
+
+          <!-- Verdict budget -->
+          @if (budgetVerdict(); as v) {
+            <p class="build-verdict" [class.is-ok]="v.covers" [class.is-short]="!v.covers">
+              @if (v.covers) {
+                ✅ Votre budget couvre le projet — marge d'environ {{ fcfa(v.diff) }}.
+              } @else {
+                ⚠️ Il manque environ {{ fcfa(-v.diff) }} pour couvrir ce projet.
+              }
+            </p>
+          }
+
+          <!-- Métriques clés -->
+          <div class="build-metrics">
+            <div class="build-metric">
+              <span>Travaux</span><strong>{{ fcfa(sim.works.cost_xof) }}</strong>
+            </div>
+            <div class="build-metric">
+              <span>Frais annexes</span><strong>{{ fcfa(sim.fees.total_xof) }}</strong>
+            </div>
+            @if (!sim.land.included) {
+              <div class="build-metric">
+                <span>Terrain + acquisition</span><strong>{{ fcfa(sim.land.total_xof) }}</strong>
+              </div>
+            }
+            <div class="build-metric">
+              <span>Délai estimé</span><strong>{{ sim.duration.min_months }}–{{ sim.duration.max_months }} mois</strong>
+            </div>
+            <div class="build-metric">
+              <span>Surface totale</span><strong>{{ sim.inputs.total_surface_m2 }} m²</strong>
+            </div>
+          </div>
+
+          <!-- Détails repliables, DANS le panneau -->
+          <details class="build-acc" open>
+            <summary>Où va le budget travaux</summary>
+            <ul class="build-bars">
+              @for (share of sim.works.breakdown; track share.key) {
+                <li class="build-bar">
+                  <div class="build-bar-head">
+                    <span>{{ share.label }}</span>
+                    <b>{{ fcfa(share.amount_xof) }}</b>
+                  </div>
+                  <div class="build-bar-track">
+                    <span class="build-bar-fill" [style.width.%]="pct(share.ratio)"></span>
+                  </div>
+                </li>
+              }
+            </ul>
+          </details>
+
+          <details class="build-acc">
+            <summary>Frais annexes officiels</summary>
+            <ul class="build-fees">
+              @for (fee of sim.fees.items; track fee.key) {
+                <li class="build-fee">
+                  <span class="build-fee-label">{{ fee.label }}</span>
+                  <span class="build-fee-amount">{{ fcfa(fee.amount_xof) }} <small>({{ pct(fee.ratio) }} %)</small></span>
+                </li>
+              }
+              <li class="build-fee build-fee--total">
+                <span class="build-fee-label">Total frais annexes</span>
+                <span class="build-fee-amount">{{ fcfa(sim.fees.total_xof) }}</span>
+              </li>
+            </ul>
+          </details>
+
+          <details class="build-acc">
+            <summary>Paiement par jalons validés</summary>
+            <ol class="build-steps-pay">
+              @for (milestone of sim.works.milestones; track milestone.key; let i = $index) {
+                <li class="build-step-pay">
+                  <span class="build-step-pay-num">{{ i + 1 }}</span>
+                  <div class="build-step-pay-body">
+                    <span class="build-step-pay-label">{{ milestone.label }}</span>
+                    <span class="build-step-pay-amount">{{ fcfa(milestone.amount_xof) }} <small>({{ pct(milestone.ratio) }} %)</small></span>
+                  </div>
+                </li>
+              }
+            </ol>
+          </details>
+
+          <details class="build-acc">
+            <summary>Et si vous le mettiez en location ?</summary>
+            <div class="build-choices build-choices--compact">
+              @for (mode of rentalModes; track mode.value) {
+                <button
+                  type="button"
+                  class="build-choice"
+                  [class.is-active]="rentalMode() === mode.value"
+                  (click)="rentalMode.set(mode.value)">
+                  <b>{{ mode.label }}</b>
+                  <small>{{ mode.hint }}</small>
+                </button>
+              }
+            </div>
+            <div class="build-yield">
+              <div class="build-yield-item">
+                <span>Revenu estimé</span>
+                <b>{{ fcfa(sim.rental[rentalMode()].monthly_income_xof) }}<small>/mois</small></b>
+              </div>
+              <div class="build-yield-item">
+                <span>Rendement brut</span>
+                <b>{{ sim.rental[rentalMode()].yield_min_pct }}–{{ sim.rental[rentalMode()].yield_max_pct }} %<small>/an</small></b>
+              </div>
+              <div class="build-yield-item">
+                <span>Retour estimé</span>
+                <b>~{{ sim.rental[rentalMode()].payback_years }} ans</b>
+              </div>
+            </div>
+          </details>
+
+          <p class="build-result-note">
+            Fourchette non contractuelle, à titre indicatif. Le devis ferme est
+            établi par un professionnel vérifié après étude de votre projet.
+          </p>
+        } @else {
+          <p class="k-eyebrow">Votre projet</p>
+          <span class="build-result-label">Estimation en cours…</span>
+          <span class="build-result-value build-result-value--skeleton">— — —</span>
+        }
       </div>
     </div>
 

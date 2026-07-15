@@ -22,6 +22,9 @@ l'application (approche standalone, sans NgModule) :
     pour les sélecteurs en cascade (région → département → commune) — F2.7.
   - `PropertyManagementService` — dépôt de bien `POST /properties` (**auth +
     compte vérifié** ; le bien part en file de validation) — F2.7.
+  - `ConstructionService` — simulateur de budget `POST /construction-requests/simulate`
+    (**public**) : chiffrage complet (travaux, frais annexes, foncier, délai,
+    jalons, rentabilité) calculé et barème géré côté backend — F2.5 (enrichi).
 - **interceptors/** — `tokenInterceptor` (ajoute le Bearer), `errorInterceptor`
   (gestion centralisée : 401 → login, 422 → erreurs de formulaire, 500 → page
   d'erreur).

@@ -1,4 +1,5 @@
-// Spécifique à la page Construction (F2.5) : le simulateur de budget interactif.
+// Page Construction (F2.5, enrichie) : simulateur = formulaire compact à gauche
+// + un panneau de résultat UNIQUE à droite (détails repliables à l'intérieur).
 // Les briques éditoriales communes (étapes, atouts) viennent de `_conversion.scss`.
 
 .build-sim-band {
@@ -7,39 +8,89 @@
   margin-top: 2rem;
 }
 
-.build-sim-grid {
-  display: grid;
-  gap: 2rem;
-  grid-template-columns: 1fr;
-  align-items: start;
-}
-
-@media (min-width: 960px) {
-  .build-sim-grid {
-    grid-template-columns: minmax(0, 1.3fr) minmax(340px, 1fr);
-  }
+.build-sim-head {
+  max-width: 660px;
+  margin: 0 auto 2rem;
+  text-align: center;
 }
 
 .build-sim-title {
   font-family: var(--k-font-display);
-  font-size: clamp(1.4rem, 2.5vw, 1.9rem);
-  margin-bottom: 1.5rem;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  margin: 0.3rem 0 0.6rem;
+}
+
+.build-sim-intro {
+  color: var(--k-muted);
+  line-height: 1.6;
+}
+
+// --- Grille : formulaire | résultat -----------------------------------------
+.build-simulator {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .build-simulator {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  }
+}
+
+// --- Formulaire (carte claire) ----------------------------------------------
+.build-sim-form {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 1.6rem;
+  box-shadow: 0 6px 20px rgba(3, 25, 63, 0.05);
 }
 
 .build-field {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.3rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 .build-field-label {
   display: block;
   font-weight: 600;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.55rem;
+
+  &--sub {
+    margin-top: 0.85rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+  }
 }
 
+.build-field-note {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--k-muted);
+
+  b {
+    color: var(--k-ink);
+  }
+}
+
+// Boutons segmentés (objectif, niveaux, finition, terrain).
 .build-choices {
   display: grid;
   gap: 0.6rem;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+
+  &--tight {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  &--compact {
+    grid-template-columns: 1fr;
+  }
 }
 
 .build-choice {
@@ -53,50 +104,97 @@
   background: #fff;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
+
+  b {
+    font-size: 0.95rem;
+  }
+
+  small {
+    color: var(--k-muted);
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  &:hover {
+    border-color: var(--k-brand);
+  }
+
+  &.is-active {
+    border-color: var(--k-brand);
+    box-shadow: 0 0 0 2px rgba(3, 72, 251, 0.18);
+  }
 }
 
-.build-choice b {
-  font-size: 0.95rem;
+// Saisies libres (surface, terrain, budget) + sélecteur de région.
+.build-input,
+.build-select {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  font: inherit;
+  background: #fff;
 }
 
-.build-choice small {
+.build-input-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.build-input-suffix {
+  position: absolute;
+  right: 0.9rem;
   color: var(--k-muted);
-  font-size: 0.8rem;
-  line-height: 1.35;
-}
-
-.build-choice:hover {
-  border-color: var(--k-brand);
-}
-
-.build-choice.is-active {
-  border-color: var(--k-brand);
-  box-shadow: 0 0 0 2px rgba(3, 72, 251, 0.18);
+  font-size: 0.9rem;
+  pointer-events: none;
 }
 
 .build-range {
   width: 100%;
   accent-color: var(--k-brand);
+  margin-top: 0.6rem;
 }
 
-.build-range-scale {
-  display: flex;
-  justify-content: space-between;
-  color: var(--k-muted);
+.build-hint {
+  margin-top: 0.5rem;
   font-size: 0.8rem;
-  margin-top: 0.25rem;
+  line-height: 1.5;
+  color: var(--k-muted);
+
+  b {
+    color: var(--k-ink);
+  }
 }
 
+// --- Panneau de résultat UNIQUE (navy) --------------------------------------
 .build-result {
-  margin-top: 1.5rem;
-  padding: 1.4rem;
-  border-radius: var(--k-radius);
   background: var(--k-navy);
   color: #fff;
+  border-radius: var(--k-radius);
+  padding: 1.8rem;
+
+  &.is-loading {
+    opacity: 0.75;
+  }
+}
+
+@media (min-width: 900px) {
+  .build-result {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+.build-result-title {
+  color: #fff;
+  font-family: var(--k-font-display);
+  margin: 0.3rem 0 0.6rem;
 }
 
 .build-result-label {
   display: block;
+  margin-top: 0.4rem;
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.75);
   text-transform: uppercase;
@@ -106,21 +204,260 @@
 .build-result-value {
   display: block;
   font-family: var(--k-font-mono);
-  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
   font-weight: 700;
   color: var(--k-gold);
-  margin: 0.25rem 0 0.5rem;
+  margin: 0.25rem 0 0.9rem;
+
+  &--skeleton {
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.15em;
+  }
 }
 
 .build-result-note {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.72);
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
 }
 
-@media (min-width: 960px) {
-  .build-lead {
-    position: sticky;
-    top: 1.5rem;
+// Verdict de faisabilité budget.
+.build-verdict {
+  margin-bottom: 1.1rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--k-radius);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.2);
+    color: #bff0d6;
   }
+
+  &.is-short {
+    background: rgba(211, 60, 42, 0.2);
+    color: #f6c9c2;
+  }
+}
+
+// Métriques clés (tuiles).
+.build-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+  margin-bottom: 1.2rem;
+}
+
+.build-metric {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+
+  span {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  strong {
+    font-family: var(--k-font-mono);
+    font-size: 1rem;
+    color: #fff;
+  }
+}
+
+// Accordéons de détail, DANS le panneau.
+.build-acc {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 0;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::after {
+    content: '▾';
+    color: var(--k-gold);
+    transition: transform 0.2s;
+  }
+
+  &[open] summary::after {
+    transform: rotate(180deg);
+  }
+
+  > *:not(summary) {
+    padding-bottom: 1.1rem;
+  }
+}
+
+// Barres de répartition (sur fond navy).
+.build-bars {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.build-bar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.85);
+
+  b {
+    color: #fff;
+    font-family: var(--k-font-mono);
+    white-space: nowrap;
+  }
+}
+
+.build-bar-track {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.build-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--k-gold);
+  transition: width 0.25s ease;
+}
+
+// Frais annexes (sur fond navy).
+.build-fees {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.build-fee {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+
+  &--total {
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    padding-top: 0.6rem;
+    font-weight: 600;
+    color: #fff;
+  }
+}
+
+.build-fee-amount {
+  font-family: var(--k-font-mono);
+  white-space: nowrap;
+
+  small {
+    color: rgba(255, 255, 255, 0.6);
+    font-family: var(--k-font-body);
+  }
+}
+
+// Jalons de paiement (sur fond navy).
+.build-steps-pay {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.build-step-pay {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+}
+
+.build-step-pay-num {
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--k-gold);
+  color: var(--k-navy);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.build-step-pay-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.build-step-pay-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.build-step-pay-amount {
+  font-family: var(--k-font-mono);
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.85);
+
+  small {
+    color: rgba(255, 255, 255, 0.6);
+    font-family: var(--k-font-body);
+  }
+}
+
+// Rentabilité (sur fond navy).
+.build-yield {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.build-yield-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+
+  span {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  b {
+    font-family: var(--k-font-mono);
+    color: var(--k-gold);
+
+    small {
+      color: rgba(255, 255, 255, 0.6);
+      font-family: var(--k-font-body);
+      font-weight: 400;
+    }
+  }
+}
+
+// --- Formulaire de devis (sous le simulateur, centré) -----------------------
+.build-lead {
+  max-width: 720px;
+  margin: 2rem auto 0;
 }
