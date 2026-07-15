@@ -1,0 +1,72 @@
+// Styles propres à la page Contact (F2.8). Le bandeau réutilise `.uni-hero`,
+// la section d'orientation réutilise `.conv-section-title`.
+
+.contact-body {
+  padding: 2.5rem 0 4rem;
+}
+
+.contact-channels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 3.5rem;
+}
+
+.contact-card {
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 1.5rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &--primary {
+    border-color: var(--k-brand);
+    box-shadow: var(--k-shadow);
+  }
+}
+
+.contact-card-title {
+  font-family: var(--k-font-display);
+  font-size: 1.2rem;
+  color: var(--k-navy);
+}
+
+.contact-card-text {
+  color: var(--k-muted);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.contact-shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.contact-shortcut {
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contact-shortcut-title {
+  font-family: var(--k-font-display);
+  font-size: 1.1rem;
+  color: var(--k-navy);
+}
+
+.contact-shortcut-text {
+  color: var(--k-muted);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.contact-shortcut .k-btn {
+  align-self: flex-start;
+}

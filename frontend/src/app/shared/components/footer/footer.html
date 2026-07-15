@@ -15,8 +15,8 @@
       <nav class="col" [attr.aria-label]="column.title">
         <h3>{{ column.title }}</h3>
         <ul>
-          @for (link of column.links; track link) {
-            <li><a href="#">{{ link }}</a></li>
+          @for (link of column.links; track link.link) {
+            <li><a [routerLink]="link.link">{{ link.label }}</a></li>
           }
         </ul>
       </nav>

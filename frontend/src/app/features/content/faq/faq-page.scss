@@ -1,0 +1,75 @@
+// Styles propres à la page FAQ (F2.8). Le bandeau réutilise `.uni-hero`.
+
+.faq-body {
+  padding: 2.5rem 0 4rem;
+  max-width: 820px;
+}
+
+.faq-state {
+  color: var(--k-muted);
+  padding: 2rem 0;
+
+  &--error {
+    color: #b3261e;
+  }
+}
+
+.faq-group {
+  margin-bottom: 2.5rem;
+}
+
+.faq-group-title {
+  font-family: var(--k-font-display);
+  font-size: 1.25rem;
+  color: var(--k-navy);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--k-line);
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.faq-item {
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  background: #fff;
+  overflow: hidden;
+}
+
+.faq-question {
+  cursor: pointer;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  color: var(--k-ink);
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::after {
+    content: '+';
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--k-brand);
+    transition: transform 0.2s ease;
+  }
+}
+
+.faq-item[open] .faq-question::after {
+  content: '−';
+}
+
+.faq-answer {
+  padding: 0 1.25rem 1.25rem;
+  color: var(--k-muted);
+  line-height: 1.6;
+}

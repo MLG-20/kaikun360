@@ -21,6 +21,8 @@ HTTP et garantissent la cohérence front/back.
 | `Review` (+ `ReviewAuthor`) | `ReviewResource` | transversal |
 | `Media` | `MediaResource` | transversal |
 | `Provider` (+ `ProviderCertification`) | `ProviderResource` | Pro |
+| `Faq` | `FaqResource` | Admin (contenu éditorial) |
+| `ContentPage` | `PageResource` | Admin (contenu éditorial) |
 
 Import pratique via le barrel : `import { Property, Stay } from '../models';`
 (voir `index.ts`).

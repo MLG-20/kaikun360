@@ -1,0 +1,46 @@
+<!-- Bandeau -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Aide &amp; support</p>
+    <h1 class="uni-hero-title">Foire aux questions</h1>
+    <p class="uni-hero-lead">
+      Les réponses aux questions les plus fréquentes sur Kaikun 360 : confiance,
+      réservations, paiements, diaspora et prestataires. Vous ne trouvez pas ?
+      <a routerLink="/contact">Contactez-nous</a>.
+    </p>
+  </div>
+</section>
+
+<section class="k-wrap faq-body">
+  @switch (state()) {
+    @case ('loading') {
+      <p class="faq-state">Chargement des questions…</p>
+    }
+    @case ('failed') {
+      <p class="faq-state faq-state--error">
+        Impossible de charger la FAQ pour le moment. Merci de réessayer plus tard.
+      </p>
+    }
+    @case ('empty') {
+      <p class="faq-state">
+        La FAQ sera bientôt disponible. En attendant, notre équipe répond à vos
+        questions depuis la page <a routerLink="/contact">Contact</a>.
+      </p>
+    }
+    @case ('ready') {
+      @for (group of groups(); track group.category) {
+        <div class="faq-group">
+          <h2 class="faq-group-title">{{ group.category }}</h2>
+          <div class="faq-list">
+            @for (item of group.items; track item.id) {
+              <details class="faq-item">
+                <summary class="faq-question">{{ item.question }}</summary>
+                <p class="faq-answer">{{ item.answer }}</p>
+              </details>
+            }
+          </div>
+        </div>
+      }
+    }
+  }
+</section>

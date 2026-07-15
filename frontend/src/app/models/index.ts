@@ -13,3 +13,4 @@ export * from './payment.model';
 export * from './review.model';
 export * from './media.model';
 export * from './provider.model';
+export * from './content.model';

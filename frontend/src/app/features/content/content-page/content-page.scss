@@ -1,0 +1,67 @@
+// Styles de la page de contenu générique (F2.8) : mise en forme « prose » du
+// corps HTML servi par le back-office.
+
+.content-state {
+  max-width: 640px;
+  padding: 4rem 0;
+  text-align: center;
+
+  h1 {
+    font-family: var(--k-font-display);
+    color: var(--k-navy);
+    margin-bottom: 0.75rem;
+  }
+
+  p {
+    color: var(--k-muted);
+    margin-bottom: 1.5rem;
+  }
+}
+
+.content-article {
+  max-width: 760px;
+  padding: 3rem 0 4rem;
+}
+
+.content-title {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  color: var(--k-navy);
+  margin-bottom: 1.75rem;
+}
+
+// Mise en forme du HTML éditorial (titres, paragraphes, listes, liens).
+.content-prose {
+  color: var(--k-ink);
+  line-height: 1.7;
+
+  h2 {
+    font-family: var(--k-font-display);
+    font-size: 1.4rem;
+    color: var(--k-navy);
+    margin: 2rem 0 0.75rem;
+  }
+
+  p {
+    margin-bottom: 1.1rem;
+  }
+
+  ul {
+    margin: 0 0 1.1rem 1.25rem;
+    padding: 0;
+    list-style: disc;
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  a {
+    color: var(--k-brand);
+    text-decoration: underline;
+  }
+
+  strong {
+    color: var(--k-ink);
+  }
+}

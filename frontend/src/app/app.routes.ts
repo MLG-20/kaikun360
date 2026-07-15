@@ -184,6 +184,31 @@ export const routes: Routes = [
           ),
         title: 'Votre devis — Kaikun 360',
       },
+      {
+        // Foire aux questions (F2.8) : contenu éditorial servi par GET /faqs.
+        path: 'faqs',
+        loadComponent: () =>
+          import('./features/content/faq/faq-page').then((m) => m.FaqPageComponent),
+        title: 'Foire aux questions — Kaikun 360',
+      },
+      {
+        // Page Contact (F2.8) : coordonnées + WhatsApp, sans formulaire.
+        path: 'contact',
+        loadComponent: () =>
+          import('./features/content/contact/contact-page').then((m) => m.ContactPageComponent),
+        title: 'Contact — Kaikun 360',
+      },
+      {
+        // Pages de contenu éditorial adressées par slug (F2.8) : À propos,
+        // mentions légales, CGU, politique de confidentialité… Le titre de
+        // l'onglet est affiné par le composant une fois la page chargée.
+        path: 'pages/:slug',
+        loadComponent: () =>
+          import('./features/content/content-page/content-page').then(
+            (m) => m.ContentPageComponent,
+          ),
+        title: 'Kaikun 360',
+      },
     ],
   },
 ];

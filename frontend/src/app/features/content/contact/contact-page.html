@@ -1,0 +1,54 @@
+<!-- Bandeau -->
+<section class="uni-hero">
+  <div class="k-wrap uni-hero-inner">
+    <p class="k-eyebrow">Nous contacter</p>
+    <h1 class="uni-hero-title">Parlons de votre projet</h1>
+    <p class="uni-hero-lead">
+      Une question sur un bien, une réservation ou votre dossier ? Notre équipe
+      vous répond rapidement, où que vous soyez.
+    </p>
+  </div>
+</section>
+
+<section class="k-wrap contact-body">
+  <!-- Canaux de contact directs -->
+  <div class="contact-channels">
+    <div class="contact-card contact-card--primary">
+      <h2 class="contact-card-title">WhatsApp</h2>
+      <p class="contact-card-text">
+        Le plus rapide : échangez directement avec notre support sur WhatsApp.
+      </p>
+      <app-whatsapp-button subject="Contact depuis le site Kaikun 360" />
+    </div>
+
+    <div class="contact-card">
+      <h2 class="contact-card-title">E-mail</h2>
+      <p class="contact-card-text">
+        Écrivez-nous, nous revenons vers vous dans les meilleurs délais.
+      </p>
+      <a class="k-btn k-btn--ghost" [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+    </div>
+
+    <div class="contact-card">
+      <h2 class="contact-card-title">Depuis nos pages</h2>
+      <p class="contact-card-text">
+        Sur chaque bien, service ou fiche, un bouton WhatsApp contextuel reprend
+        automatiquement la référence consultée.
+      </p>
+    </div>
+  </div>
+
+  <!-- Orientation vers les parcours métier -->
+  <div class="contact-shortcuts">
+    <h2 class="conv-section-title">Vous cherchez plutôt à…</h2>
+    <div class="contact-shortcuts-grid">
+      @for (item of shortcuts; track item.link) {
+        <article class="contact-shortcut">
+          <h3 class="contact-shortcut-title">{{ item.title }}</h3>
+          <p class="contact-shortcut-text">{{ item.text }}</p>
+          <a class="k-btn k-btn--primary" [routerLink]="item.link">{{ item.cta }}</a>
+        </article>
+      }
+    </div>
+  </div>
+</section>

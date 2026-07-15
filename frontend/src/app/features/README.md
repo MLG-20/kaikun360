@@ -123,6 +123,12 @@ back-office.
   [`../../styles/_conversion.scss`](../../styles/_conversion.scss), réutilisés par
   `build/`, `manage/`, `diaspora/`, `team-building/` et `pro/` (F2.5). Le
   simulateur de construction garde ses styles propres (`build-sim-*`).
+- **Contenu institutionnel & légal (F2.8)** : dossier [`content/`](content) —
+  page FAQ (`/faqs`), page de contenu générique par slug (`/pages/:slug` : À
+  propos, mentions légales, CGU, confidentialité) et page Contact (`/contact`,
+  coordonnées + WhatsApp, sans formulaire). Les textes viennent du backend
+  (`ContentService`) et sont seedés en démo côté serveur (`ContentSeeder`). Les
+  liens du pied de page (`app-footer`) pointent désormais vers ces pages.
 - Les **fiches détaillées** consomment `CatalogService`
   (`property`/`stay`/`stayAvailability`, `experience`/`experienceAvailability`,
   `vehicle`), `ReviewService` (avis stay/vehicle/experience) et `RequestService`

@@ -418,10 +418,10 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [x] Page Diaspora : page de conversion `/diaspora` (F2.5) — protocole de confiance (vérification documentée, tout filmé/daté, numéro de suivi unique), étapes (référent unique), bénéfices, formulaire de contact (POST /requests service_type=diaspora). Cœur du positionnement anti-arnaque.
 - [x] Page Team building : page de conversion `/team-building` (F2.5) — formules (journée cohésion, séminaire résidentiel, incentive), étapes, formulaire de demande de devis (POST /requests service_type=team_building).
 - [x] Page Kaikun Pro : page de recrutement prestataires `/pro` (F2.5) — atouts, audiences (agences/artisans/transport-tourisme-services), étapes de certification ; CTA = inscription prestataire (`/auth/inscription`), pas de formulaire de demande.
-- [ ] Page À propos : mission, équipe, ancrage territorial, partenaires.
-- [ ] Page FAQ : paiement, vérification, litiges, caution, diaspora, transport.
-- [ ] Page Contact : formulaire, WhatsApp, téléphone, email, localisation.
-- [ ] Pages légales : CGU, CGV, confidentialité, cookies, conditions de mandat, politique de remboursement.
+- [x] Page À propos : page de contenu éditorial `/pages/a-propos` (F2.8) — servie par le backend (GET /pages/{slug}), éditable en back-office ; corps HTML assaini via `[innerHTML]`.
+- [x] Page FAQ : `/faqs` (F2.8) — entrées publiées (GET /faqs) regroupées par catégorie, accordéons natifs `<details>` ; états chargement/vide/échec gracieux.
+- [x] Page Contact : `/contact` (F2.8) — coordonnées + WhatsApp contextuel (numéro réel via GET /whatsapp/link) + e-mail + orientation vers les parcours métier. Pas de formulaire (aucun endpoint contact générique côté backend, décision produit).
+- [x] Pages légales : route générique `/pages/:slug` (F2.8) — mentions légales, CGU, politique de confidentialité (et À propos) servies par slug. Contenu de démonstration seedé côté backend (`ContentSeeder`).
 - [x] Composant moteur de recherche global (service + ville + budget + dates + profil utilisateur). <!-- F2.1 : univers + ville/mots-clés + budget ; dates & profil affinés en F2.3 -->
 - [x] Composant catalogue filtrable et triable, réutilisé sur toutes les pages d'univers. <!-- F2.1 -->
 

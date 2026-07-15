@@ -1,0 +1,28 @@
+@switch (state()) {
+  @case ('loading') {
+    <section class="k-wrap content-state">
+      <p>Chargement…</p>
+    </section>
+  }
+  @case ('failed') {
+    <section class="k-wrap content-state">
+      <h1>Une erreur est survenue</h1>
+      <p>Impossible d'afficher cette page pour le moment. Merci de réessayer plus tard.</p>
+      <a class="k-btn k-btn--primary" routerLink="/">Retour à l'accueil</a>
+    </section>
+  }
+  @case ('notfound') {
+    <section class="k-wrap content-state">
+      <h1>Page introuvable</h1>
+      <p>La page que vous cherchez n'existe pas ou n'est plus disponible.</p>
+      <a class="k-btn k-btn--primary" routerLink="/">Retour à l'accueil</a>
+    </section>
+  }
+  @case ('ready') {
+    <article class="k-wrap content-article">
+      <h1 class="content-title">{{ page()!.title }}</h1>
+      <!-- Corps HTML issu du back-office : Angular assainit le balisage. -->
+      <div class="content-prose" [innerHTML]="page()!.body"></div>
+    </article>
+  }
+}

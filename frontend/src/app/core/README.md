@@ -25,6 +25,9 @@ l'application (approche standalone, sans NgModule) :
   - `ConstructionService` — simulateur de budget `POST /construction-requests/simulate`
     (**public**) : chiffrage complet (travaux, frais annexes, foncier, délai,
     jalons, rentabilité) calculé et barème géré côté backend — F2.5 (enrichi).
+  - `ContentService` — contenu éditorial public : FAQ publiée `GET /faqs` et
+    pages de contenu par slug `GET /pages/{slug}` (le backend enveloppe la page
+    sous `data.page` ; le service l'aplatit) — F2.8.
 - **interceptors/** — `tokenInterceptor` (ajoute le Bearer), `errorInterceptor`
   (gestion centralisée : 401 → login, 422 → erreurs de formulaire, 500 → page
   d'erreur).
