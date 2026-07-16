@@ -1,0 +1,20 @@
+// Styles partagés de l'espace client (F3.1+). Les partiels de composants
+// (layout, pages de sections) gardent leur ossature ; on regroupe ici les
+// briques réutilisées d'un écran de l'espace à l'autre (préfixe `account-`).
+
+// Étiquette « Bientôt » des sections non encore construites — utilisée à la
+// fois par la navigation latérale et par les tuiles de l'accueil de l'espace.
+// Déclarée globalement pour être visible dans les deux composants.
+.account-soon-tag {
+  display: inline-block;
+  font-family: var(--k-font-body);
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--k-muted);
+  background: var(--k-cream);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-pill);
+  padding: 0.05rem 0.5rem;
+  vertical-align: middle;
+}

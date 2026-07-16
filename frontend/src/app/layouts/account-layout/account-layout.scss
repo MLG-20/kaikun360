@@ -1,0 +1,171 @@
+// Layout de l'espace client (F3.1). La mise en forme des sections (tuiles,
+// listes, cartes) vit dans le partiel global `styles/_account.scss` ; on ne
+// garde ici que l'ossature du shell (grille barre latérale + contenu).
+
+:host {
+  display: block;
+  background: var(--k-cream);
+}
+
+.account-shell {
+  display: grid;
+  grid-template-columns: 264px 1fr;
+  gap: 1.75rem;
+  align-items: start;
+  padding-block: 2rem 3.5rem;
+}
+
+// --- Barre latérale -------------------------------------------------------
+.account-side {
+  position: sticky;
+  top: 88px; // sous l'en-tête fixe
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-lg);
+  box-shadow: var(--k-shadow);
+}
+
+.account-side-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.35rem 0.4rem 0.85rem;
+  border-bottom: 1px solid var(--k-line);
+  margin-bottom: 0.5rem;
+}
+
+.account-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--k-brand);
+  color: #fff;
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.account-side-id {
+  min-width: 0;
+
+  strong {
+    display: block;
+    font-family: var(--k-font-display);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.account-side-contact {
+  font-size: 0.8rem;
+  color: var(--k-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.account-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.account-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--k-radius-sm);
+  color: var(--k-ink);
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--k-brand) 8%, transparent);
+    color: var(--k-brand);
+  }
+
+  &.is-active {
+    background: color-mix(in srgb, var(--k-brand) 12%, transparent);
+    color: var(--k-brand);
+    font-weight: 600;
+  }
+
+  // Section pas encore construite : présentée mais non cliquable.
+  &.is-soon {
+    color: var(--k-muted);
+    cursor: default;
+
+    &:hover {
+      background: transparent;
+      color: var(--k-muted);
+    }
+  }
+}
+
+.account-nav-ic {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.account-nav-label {
+  flex: 1 1 auto;
+}
+
+// `.account-soon-tag` est défini globalement dans `styles/_account.scss`
+// (partagé avec les tuiles de l'accueil de l'espace).
+
+.account-logout {
+  margin-top: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  background: transparent;
+  color: var(--k-muted);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: var(--k-line-strong);
+    color: var(--k-ink);
+  }
+}
+
+.account-main {
+  min-width: 0; // laisse le contenu rétrécir dans la grille
+}
+
+// --- Mobile : la barre passe au-dessus du contenu ------------------------
+@media (max-width: 860px) {
+  .account-shell {
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
+  }
+
+  .account-side {
+    position: static;
+  }
+
+  .account-nav {
+    flex-flow: row wrap;
+  }
+
+  .account-nav-link {
+    flex: 1 1 auto;
+  }
+}

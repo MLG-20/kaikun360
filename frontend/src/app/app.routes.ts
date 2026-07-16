@@ -18,6 +18,12 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
   {
+    // Espace client authentifié (F3) : layout à navigation latérale, protégé
+    // par `authGuard`. Déclaré avant la branche `''` (préfixe) comme `auth`.
+    path: 'mon-espace',
+    loadChildren: () => import('./features/account/account.routes').then((m) => m.ACCOUNT_ROUTES),
+  },
+  {
     path: '',
     component: MainLayoutComponent,
     children: [

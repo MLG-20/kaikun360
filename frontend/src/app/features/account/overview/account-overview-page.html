@@ -1,0 +1,44 @@
+<section class="account-head">
+  <p class="account-eyebrow">Mon espace</p>
+  <h1 class="account-title">
+    Bonjour{{ firstName() ? ', ' + firstName() : '' }} 👋
+  </h1>
+  <p class="account-lead">
+    Retrouvez ici vos demandes, réservations, favoris et documents, et suivez
+    leur avancement en toute transparence.
+  </p>
+</section>
+
+<!-- Bandeau de vérification : n'apparaît que si le compte n'est pas vérifié -->
+@if (!isVerified()) {
+  <div class="account-verify">
+    <div>
+      <strong>Vérifiez votre compte</strong>
+      <p>Confirmez votre e-mail ou votre téléphone pour réserver et déposer un bien en toute sécurité.</p>
+    </div>
+    <a class="k-btn k-btn--primary" routerLink="/auth/verification">Vérifier mon compte</a>
+  </div>
+}
+
+<!-- Tuiles vers les sections de l'espace -->
+<section class="account-tiles" aria-label="Sections de l’espace client">
+  @for (item of sections; track item.path) {
+    @if (item.ready) {
+      <a class="account-tile" [routerLink]="['/mon-espace', item.path]">
+        <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
+        <span class="account-tile-body">
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.description }}</span>
+        </span>
+      </a>
+    } @else {
+      <span class="account-tile is-soon" aria-disabled="true">
+        <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
+        <span class="account-tile-body">
+          <strong>{{ item.label }} <em class="account-soon-tag">Bientôt</em></strong>
+          <span>{{ item.description }}</span>
+        </span>
+      </span>
+    }
+  }
+</section>

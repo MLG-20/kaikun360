@@ -208,6 +208,21 @@
   flex: 0 0 auto;
 }
 
+// Bouton texte « Déconnexion » (desktop) affiché à côté de « Mon espace ».
+.nav-logout {
+  border: 0;
+  background: transparent;
+  color: var(--k-muted);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 4px;
+
+  &:hover {
+    color: var(--k-ink);
+  }
+}
+
 // Bouton menu (mobile uniquement)
 .menu-btn {
   display: none;
@@ -330,7 +345,8 @@
 // --- Responsive -----------------------------------------------------------
 @media (max-width: 960px) {
   .nav,
-  .nav-cta {
+  .nav-cta,
+  .nav-logout {
     display: none;
   }
 

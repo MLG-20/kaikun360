@@ -11,6 +11,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
+import { AuthService } from '../../../core/auth/auth.service';
+
 /** Clé d'icône SVG (rendue via un @switch dans le template). */
 type MegaIcon =
   | 'home'
@@ -66,6 +68,11 @@ interface NavGroup {
 })
 export class HeaderComponent {
   private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  /** Session active ? (bascule « Connexion » ↔ « Mon espace »). */
+  protected readonly isAuthenticated = this.auth.isAuthenticated;
 
   /** Univers à méga-menu (mappés sur les pages réelles F2.3 → F2.7). */
   protected readonly groups: NavGroup[] = [
@@ -152,6 +159,15 @@ export class HeaderComponent {
   /** Bascule le panneau mobile. */
   protected toggleMenu(): void {
     this.menuOpen.update((open) => !open);
+  }
+
+  /** Déconnexion depuis l'en-tête : vide la session puis renvoie à l'accueil. */
+  protected logout(): void {
+    this.menuOpen.set(false);
+    this.auth.logout().subscribe({
+      next: () => this.router.navigate(['/']),
+      error: () => this.router.navigate(['/']),
+    });
   }
 
   /** Échap referme tout. */

@@ -135,3 +135,10 @@ back-office.
   (dépôt de demande, auth requise). Les cartes de catalogue mènent à la fiche via
   l'`input [link]` de `app-listing-card` (lien étiré) ; la mobilité reste non
   cliquable (pas de fiche backend).
+- **Espace client (F3)** : dossier [`account/`](account) — l'**espace personnel
+  authentifié** monté sous `/mon-espace`. Il a son propre **cadre** (troisième
+  layout, [`../layouts/account-layout`](../layouts/account-layout)) : en-tête et
+  pied de page du site **plus une navigation latérale** vers les sections
+  (Tableau de bord, Mes demandes, Réservations, Favoris, Notifications, Messages,
+  Profil). Toute la branche est protégée par `authGuard` (redirection connexion
+  si pas de session). 👉 README détaillé : [`account/README.md`](account/README.md).

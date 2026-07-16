@@ -1,0 +1,123 @@
+// Accueil de l'espace client (F3.1). L'étiquette « Bientôt » (.account-soon-tag)
+// est globale (styles/_account.scss) ; le reste est propre à cet écran.
+
+.account-head {
+  margin-bottom: 1.5rem;
+}
+
+.account-eyebrow {
+  font-family: var(--k-font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k-brand);
+  margin-bottom: 0.35rem;
+}
+
+.account-title {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  line-height: 1.15;
+  margin-bottom: 0.5rem;
+}
+
+.account-lead {
+  color: var(--k-muted);
+  max-width: 60ch;
+}
+
+// --- Bandeau de vérification ---------------------------------------------
+.account-verify {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--k-gold) 45%, var(--k-line));
+  background: color-mix(in srgb, var(--k-gold) 12%, var(--k-card));
+  border-radius: var(--k-radius);
+
+  strong {
+    font-family: var(--k-font-display);
+  }
+
+  p {
+    color: var(--k-muted);
+    font-size: 0.92rem;
+    margin-top: 0.15rem;
+  }
+
+  .k-btn {
+    flex: 0 0 auto;
+  }
+}
+
+// --- Tuiles des sections --------------------------------------------------
+.account-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.account-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1.15rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  color: var(--k-ink);
+  text-decoration: none;
+  box-shadow: var(--k-shadow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+
+  // Version cliquable (section prête) : légère élévation au survol.
+  &:not(.is-soon):hover {
+    transform: translateY(-2px);
+    box-shadow: var(--k-shadow-lg);
+    border-color: color-mix(in srgb, var(--k-brand) 35%, var(--k-line));
+  }
+
+  // Section pas encore construite : atténuée, non interactive.
+  &.is-soon {
+    cursor: default;
+    box-shadow: none;
+    background: color-mix(in srgb, var(--k-cream) 60%, var(--k-card));
+
+    .account-tile-ic {
+      color: var(--k-muted);
+      background: var(--k-cream);
+    }
+  }
+}
+
+.account-tile-ic {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  padding: 9px;
+  border-radius: var(--k-radius-sm);
+  color: var(--k-brand);
+  background: color-mix(in srgb, var(--k-brand) 10%, transparent);
+}
+
+.account-tile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+
+  strong {
+    font-family: var(--k-font-display);
+  }
+
+  span {
+    font-size: 0.9rem;
+    color: var(--k-muted);
+  }
+}

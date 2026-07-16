@@ -63,7 +63,12 @@
 
     <!-- Actions -->
     <div class="actions">
-      <a class="k-btn k-btn--primary nav-cta" routerLink="/auth/connexion">Connexion</a>
+      @if (isAuthenticated()) {
+        <a class="k-btn k-btn--ghost nav-cta" routerLink="/mon-espace">Mon espace</a>
+        <button class="nav-logout" type="button" (click)="logout()">Déconnexion</button>
+      } @else {
+        <a class="k-btn k-btn--primary nav-cta" routerLink="/auth/connexion">Connexion</a>
+      }
       <button
         class="menu-btn"
         type="button"
@@ -104,9 +109,18 @@
         <a class="mobile-link mobile-link--flat" [routerLink]="proLink" (click)="toggleMenu()">
           Kaikun Pro
         </a>
-        <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/connexion" (click)="toggleMenu()">
-          Connexion
-        </a>
+        @if (isAuthenticated()) {
+          <a class="k-btn k-btn--primary k-btn--block" routerLink="/mon-espace" (click)="toggleMenu()">
+            Mon espace
+          </a>
+          <button class="k-btn k-btn--ghost k-btn--block" type="button" (click)="logout()">
+            Déconnexion
+          </button>
+        } @else {
+          <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/connexion" (click)="toggleMenu()">
+            Connexion
+          </a>
+        }
       </div>
     </div>
   }
