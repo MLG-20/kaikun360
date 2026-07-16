@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
 
@@ -16,6 +17,19 @@ export interface ContactMessagePayload {
 }
 
 /**
+ * Coordonnées publiques du siège (`GET /contact-info`), issues des réglables
+ * back-office — jamais codées en dur côté frontend. `latitude`/`longitude`
+ * alimentent la carte de la page Contact.
+ */
+export interface ContactInfo {
+  email: string;
+  phone: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+}
+
+/**
  * Envoi d'un message depuis la page Contact (F2.8.1).
  *
  * L'endpoint `POST /contact` est **public** (un prospect sans compte doit
@@ -26,6 +40,13 @@ export interface ContactMessagePayload {
 export class ContactService {
   private readonly http = inject(HttpClient);
   private readonly api = environment.apiUrl;
+
+  /** GET /contact-info — coordonnées publiques du siège (adresse + carte). */
+  info(): Observable<ContactInfo> {
+    return this.http
+      .get<{ data: { contact: ContactInfo } }>(`${this.api}/contact-info`)
+      .pipe(map((res) => res.data.contact));
+  }
 
   /** POST /contact — enregistre un message de contact (public). */
   send(payload: ContactMessagePayload): Observable<unknown> {

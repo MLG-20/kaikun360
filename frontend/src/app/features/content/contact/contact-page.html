@@ -97,8 +97,26 @@
       }
     </div>
 
-    <!-- Canaux directs -->
+    <!-- Siège + canaux directs -->
     <aside class="contact-channels">
+      <!-- Carte du siège (embed Google Maps ; coordonnées venues du back-office). -->
+      @if (mapUrl(); as map) {
+        <div class="contact-card contact-map-card">
+          <h2 class="contact-card-title">Notre siège</h2>
+          @if (address()) {
+            <p class="contact-card-text">{{ address() }}</p>
+          }
+          <div class="contact-map">
+            <iframe
+              [src]="map"
+              title="Localisation du siège de Kaikun 360"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+        </div>
+      }
+
       <div class="contact-card contact-card--primary">
         <h2 class="contact-card-title">WhatsApp</h2>
         <p class="contact-card-text">
@@ -110,7 +128,7 @@
       <div class="contact-card">
         <h2 class="contact-card-title">E-mail</h2>
         <p class="contact-card-text">Vous préférez l'e-mail ? Écrivez-nous à&nbsp;:</p>
-        <a class="k-btn k-btn--ghost" [href]="'mailto:' + supportEmail">{{ supportEmail }}</a>
+        <a class="k-btn k-btn--ghost" [href]="'mailto:' + email()">{{ email() }}</a>
       </div>
     </aside>
   </div>

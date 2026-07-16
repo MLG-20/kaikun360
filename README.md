@@ -420,7 +420,7 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [x] Page Kaikun Pro : page de recrutement prestataires `/pro` (F2.5) — atouts, audiences (agences/artisans/transport-tourisme-services), étapes de certification ; CTA = inscription prestataire (`/auth/inscription`), pas de formulaire de demande.
 - [x] Page À propos : page de contenu éditorial `/pages/a-propos` (F2.8) — servie par le backend (GET /pages/{slug}), éditable en back-office ; corps HTML assaini via `[innerHTML]`.
 - [x] Page FAQ : `/faqs` (F2.8) — entrées publiées (GET /faqs) regroupées par catégorie, accordéons natifs `<details>` ; états chargement/vide/échec gracieux.
-- [x] Page Contact : `/contact` (F2.8) — **formulaire public** (POST /contact, F2.8.1) traité par l'équipe (`can:traiter:demandes`) + coordonnées WhatsApp contextuel (numéro réel via GET /whatsapp/link) + e-mail + orientation vers les parcours métier.
+- [x] Page Contact : `/contact` (F2.8) — **formulaire public** (POST /contact, F2.8.1) traité par l'équipe (`can:traiter:demandes`) + **carte Google Maps du siège** (embed, coordonnées via GET /contact-info, éditables au back-office) + WhatsApp contextuel + e-mail + orientation vers les parcours métier. Adresse/coordonnées/e-mail non codés en dur.
 - [x] Pages légales : route générique `/pages/:slug` (F2.8) — mentions légales, CGU, politique de confidentialité (et À propos) servies par slug. Contenu de démonstration seedé côté backend (`ContentSeeder`).
 - [x] Composant moteur de recherche global (service + ville + budget + dates + profil utilisateur). <!-- F2.1 : univers + ville/mots-clés + budget ; dates & profil affinés en F2.3 -->
 - [x] Composant catalogue filtrable et triable, réutilisé sur toutes les pages d'univers. <!-- F2.1 -->

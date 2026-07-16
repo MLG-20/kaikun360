@@ -17,7 +17,7 @@ Toutes ces pages sont routées sous le layout principal (en-tête + pied).
 |-------|-----------|-------------------|
 | `/faqs` | `FaqPageComponent` (`faq/`) | `GET /faqs` via `ContentService.faqs()` |
 | `/pages/:slug` | `ContentPageComponent` (`content-page/`) | `GET /pages/{slug}` via `ContentService.page()` |
-| `/contact` | `ContactPageComponent` (`contact/`) | `POST /contact` + `GET /whatsapp/link` |
+| `/contact` | `ContactPageComponent` (`contact/`) | `POST /contact` + `GET /contact-info` + `GET /whatsapp/link` |
 
 ### FAQ (`/faqs`)
 
@@ -50,8 +50,14 @@ Deux façons de nous joindre :
   les messages sont **traités par l'équipe** depuis le back-office
   (`can:traiter:demandes`). Erreurs 422 réparties par champ, bandeau de succès au
   retour.
-- **Canaux directs** — **WhatsApp** (numéro officiel résolu par le backend via
-  `app-whatsapp-button`, jamais codé en dur) et **e-mail**.
+- **Siège + canaux directs** — carte **Google Maps** (embed iframe, sans clé
+  API) centrée sur les coordonnées du siège, adresse et **e-mail** : tout vient
+  de `GET /contact-info` (réglages back-office, `ContactService.info()`) — rien
+  n'est codé en dur ; l'admin change l'adresse/les coordonnées via
+  `PATCH /admin/settings`. **WhatsApp** via `app-whatsapp-button` (numéro backend).
+  L'URL de l'iframe est assainie (`bypassSecurityTrustResourceUrl`, construite à
+  partir de coordonnées numériques de confiance) ; la carte se masque si les
+  coordonnées sont absentes.
 
 On oriente enfin vers les parcours métier existants (déposer un bien, devenir
 prestataire, FAQ). Aucun bouton mort.

@@ -1,7 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { ContactService } from '../../../core/api/contact.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
@@ -29,9 +33,41 @@ import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-but
 export class ContactPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly contact = inject(ContactService);
+  private readonly sanitizer = inject(DomSanitizer);
 
-  /** Adresse d'appui affichée (miroir du réglage support.email du backend). */
-  protected readonly supportEmail = 'support@kaikun360.sn';
+  /** Repli si les réglages ne sont pas encore chargés (ou en échec). */
+  private readonly fallbackEmail = 'support@kaikun360.sn';
+
+  /**
+   * Coordonnées publiques du siège (adresse + carte), issues du back-office
+   * (`GET /contact-info`) — jamais codées en dur. `null` tant que non chargées
+   * ou en cas d'échec (la carte se masque alors, dégradation gracieuse).
+   */
+  private readonly siteInfo = toSignal(
+    this.contact.info().pipe(catchError(() => of(null))),
+  );
+
+  /** Adresse lisible du siège (ou null → bloc masqué). */
+  protected readonly address = computed(() => this.siteInfo()?.address ?? null);
+
+  /** E-mail de contact effectif (réglage back-office, sinon repli). */
+  protected readonly email = computed(() => this.siteInfo()?.email ?? this.fallbackEmail);
+
+  /**
+   * URL d'iframe Google Maps centrée sur le siège (embed sans clé API). On
+   * l'assainit explicitement (`bypassSecurityTrustResourceUrl`) car elle est
+   * construite à partir de coordonnées numériques de confiance (backend).
+   */
+  protected readonly mapUrl = computed<SafeResourceUrl | null>(() => {
+    const info = this.siteInfo();
+    if (!info?.latitude || !info?.longitude) {
+      return null;
+    }
+    const url =
+      `https://maps.google.com/maps?q=${info.latitude},${info.longitude}` +
+      '&z=16&hl=fr&output=embed';
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  });
 
   /** Formulaire de contact (miroir de `StoreContactMessageRequest`). */
   protected readonly form = this.fb.nonNullable.group({
