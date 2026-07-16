@@ -42,10 +42,17 @@ class DemoSeeder extends Seeder
 
     private const PROVIDER_EMAIL = 'demo.prestataire@kaikun360.test';
 
+    private const CLIENT_EMAIL = 'demo.client@kaikun360.test';
+
     public function run(): void
     {
         $owner = $this->demoUser(self::OWNER_EMAIL, 'Propriétaire Démo', 'proprietaire');
         $provider = $this->demoUser(self::PROVIDER_EMAIL, 'Prestataire Démo', 'prestataire');
+
+        // Compte client de démonstration : pour se connecter et parcourir
+        // l'espace client (F3). Idempotent (firstOrCreate sur l'e-mail), donc
+        // créé même quand les données de démo existent déjà (garde ci-dessous).
+        $this->demoUser(self::CLIENT_EMAIL, 'Client Démo', 'client');
 
         // Garde d'idempotence : annonces déjà créées → on s'arrête.
         if (Property::query()->where('owner_id', $owner->id)->exists()) {
