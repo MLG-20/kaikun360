@@ -1,58 +1,8 @@
-// Accueil de l'espace client (F3.1). L'étiquette « Bientôt » (.account-soon-tag)
-// est globale (styles/_account.scss) ; le reste est propre à cet écran.
-
-.account-head {
-  margin-bottom: 1.5rem;
-}
-
-.account-eyebrow {
-  font-family: var(--k-font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--k-brand);
-  margin-bottom: 0.35rem;
-}
-
-.account-title {
-  font-family: var(--k-font-display);
-  font-size: clamp(1.6rem, 3vw, 2.1rem);
-  line-height: 1.15;
-  margin-bottom: 0.5rem;
-}
-
-.account-lead {
-  color: var(--k-muted);
-  max-width: 60ch;
-}
-
-// --- Bandeau de vérification ---------------------------------------------
-.account-verify {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.75rem;
-  padding: 1.1rem 1.25rem;
-  border: 1px solid color-mix(in srgb, var(--k-gold) 45%, var(--k-line));
-  background: color-mix(in srgb, var(--k-gold) 12%, var(--k-card));
-  border-radius: var(--k-radius);
-
-  strong {
-    font-family: var(--k-font-display);
-  }
-
-  p {
-    color: var(--k-muted);
-    font-size: 0.92rem;
-    margin-top: 0.15rem;
-  }
-
-  .k-btn {
-    flex: 0 0 auto;
-  }
-}
+// Accueil de l'espace client (F3.1). Les briques partagées entre écrans de
+// l'espace — en-tête (.account-head/.account-eyebrow/.account-title/.account-lead),
+// bandeau de vérification (.account-verify) et étiquette « Bientôt »
+// (.account-soon-tag) — sont globales (styles/_account.scss) ; ici on ne garde
+// que les tuiles, propres à cet écran.
 
 // --- Tuiles des sections --------------------------------------------------
 .account-tiles {

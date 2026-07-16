@@ -24,6 +24,13 @@ export const ACCOUNT_ROUTES: Routes = [
           import('./overview/account-overview-page').then((m) => m.AccountOverviewPageComponent),
         title: 'Mon espace — Kaikun 360',
       },
+      {
+        // F3.2 — Profil : identité, pièces justificatives, suppression du compte.
+        path: 'profil',
+        loadComponent: () =>
+          import('./profile/profile-page').then((m) => m.ProfilePageComponent),
+        title: 'Mon profil — Kaikun 360',
+      },
     ],
   },
 ];

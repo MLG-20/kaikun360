@@ -23,8 +23,8 @@ import { AuthService } from '../../../core/auth/auth.service';
  *
  *   - la **marque** (retour à l'accueil du site),
  *   - un lien discret **« Retour au site »**,
- *   - un **menu utilisateur** (avatar + nom → déconnexion ; « Mon profil »
- *     s'ajoutera avec l'écran Profil en F3.2).
+ *   - un **menu utilisateur** (avatar + nom → « Mon profil » [F3.2] et
+ *     déconnexion).
  *
  * En petit écran, un **bouton hamburger** (à gauche) ouvre le tiroir de
  * navigation latérale géré par le layout : l'état `sidebarOpen` est fourni par

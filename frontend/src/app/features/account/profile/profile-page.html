@@ -1,0 +1,247 @@
+<section class="account-head">
+  <p class="account-eyebrow">Mon espace</p>
+  <h1 class="account-title">Mon profil</h1>
+  <p class="account-lead">
+    Gérez votre identité, vos pièces justificatives et les paramètres de votre
+    compte.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de votre profil…</p>
+} @else if (loadError()) {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger votre profil pour le moment. Merci de réessayer plus tard.
+  </p>
+} @else if (user(); as u) {
+  <!-- ===================== 1. Identité ===================== -->
+  <section class="pf-card" aria-labelledby="pf-identity-title">
+    <header class="pf-card-head">
+      <h2 id="pf-identity-title" class="pf-card-title">Identité</h2>
+      <p class="pf-card-sub">
+        Votre nom et votre ville. L'adresse e-mail et le téléphone ne se modifient
+        pas ici (un changement demandera une nouvelle vérification).
+      </p>
+    </header>
+
+    <form class="pf-form" [formGroup]="form" (ngSubmit)="saveProfile()" novalidate>
+      @if (formError()) {
+        <p class="k-form-error" role="alert">{{ formError() }}</p>
+      }
+      @if (saved()) {
+        <p class="k-form-info" role="status">Vos informations ont été enregistrées.</p>
+      }
+
+      <div class="k-field">
+        <label class="k-label" for="pf-name">Nom complet</label>
+        <input
+          id="pf-name"
+          type="text"
+          class="k-input"
+          [class.k-input--error]="invalid('name') || serverError('name')"
+          formControlName="name"
+          autocomplete="name"
+          placeholder="Awa Diop" />
+        @if (invalid('name')) {
+          <span class="k-error">Le nom est obligatoire.</span>
+        } @else if (serverError('name'); as msg) {
+          <span class="k-error">{{ msg }}</span>
+        }
+      </div>
+
+      <div class="k-field">
+        <label class="k-label" for="pf-city">Ville</label>
+        <input
+          id="pf-city"
+          type="text"
+          class="k-input"
+          [class.k-input--error]="invalid('city') || serverError('city')"
+          formControlName="city"
+          autocomplete="address-level2"
+          placeholder="Dakar" />
+        @if (serverError('city'); as msg) {
+          <span class="k-error">{{ msg }}</span>
+        }
+      </div>
+
+      <button class="k-btn k-btn--primary" type="submit" [disabled]="saving()">
+        {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </form>
+
+    <!-- Champs en lecture seule : coordonnées et méta du compte -->
+    <dl class="pf-facts">
+      <div class="pf-fact">
+        <dt>Adresse e-mail</dt>
+        <dd>
+          {{ u.email || '—' }}
+          @if (u.email) {
+            <span class="pf-badge" [class.is-ok]="!!u.email_verified_at"
+                  [class.is-wait]="!u.email_verified_at">
+              {{ u.email_verified_at ? 'Vérifiée' : 'Non vérifiée' }}
+            </span>
+          }
+        </dd>
+      </div>
+      <div class="pf-fact">
+        <dt>Téléphone</dt>
+        <dd>
+          {{ u.phone || '—' }}
+          @if (u.phone) {
+            <span class="pf-badge" [class.is-ok]="!!u.phone_verified_at"
+                  [class.is-wait]="!u.phone_verified_at">
+              {{ u.phone_verified_at ? 'Vérifié' : 'Non vérifié' }}
+            </span>
+          }
+        </dd>
+      </div>
+      <div class="pf-fact">
+        <dt>Type de compte</dt>
+        <dd>{{ u.profile?.type_label || roleLabel() || '—' }}</dd>
+      </div>
+      <div class="pf-fact">
+        <dt>Statut</dt>
+        <dd>{{ u.status_label || '—' }}</dd>
+      </div>
+      @if (u.created_at) {
+        <div class="pf-fact">
+          <dt>Membre depuis</dt>
+          <dd>{{ u.created_at | date: 'longDate' : '' : 'fr' }}</dd>
+        </div>
+      }
+    </dl>
+
+    @if (!u.email_verified_at && !u.phone_verified_at) {
+      <div class="account-verify pf-verify">
+        <div>
+          <strong>Vérifiez votre compte</strong>
+          <p>Confirmez votre e-mail ou votre téléphone pour réserver et déposer un bien en toute sécurité.</p>
+        </div>
+        <a class="k-btn k-btn--primary" routerLink="/auth/verification">Vérifier mon compte</a>
+      </div>
+    }
+  </section>
+
+  <!-- ===================== 2. Pièces justificatives ===================== -->
+  <section class="pf-card" aria-labelledby="pf-docs-title">
+    <header class="pf-card-head">
+      <h2 id="pf-docs-title" class="pf-card-title">Pièces justificatives</h2>
+      <p class="pf-card-sub">
+        Vos documents d'identité et justificatifs. Ils restent privés et ne sont
+        consultables que par l'équipe Kaikun pour la vérification.
+      </p>
+    </header>
+
+    <!-- Liste des documents -->
+    @if (docsLoading()) {
+      <p class="pf-state" role="status">Chargement de vos documents…</p>
+    } @else if (docsError()) {
+      <p class="pf-state pf-state--error" role="alert">
+        Impossible de charger vos documents pour le moment.
+      </p>
+    } @else if (documents().length === 0) {
+      <p class="pf-empty">Vous n'avez encore déposé aucune pièce.</p>
+    } @else {
+      <ul class="pf-docs">
+        @for (doc of documents(); track doc.id) {
+          <li class="pf-doc">
+            <span class="pf-doc-ic" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 3v5h5" />
+                <path d="M6 3h8l5 5v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+              </svg>
+            </span>
+            <span class="pf-doc-body">
+              <strong>{{ doc.type_label || doc.type }}</strong>
+              <span class="pf-doc-meta">
+                {{ doc.original_name }}
+                @if (fileSize(doc.size); as sz) { · {{ sz }} }
+              </span>
+            </span>
+            <span class="pf-badge" [class]="statusTone(doc.status)">
+              {{ statusLabel(doc.status) }}
+            </span>
+            <a class="pf-doc-dl" [href]="doc.download_url" target="_blank" rel="noopener">
+              Télécharger
+            </a>
+          </li>
+        }
+      </ul>
+    }
+
+    <!-- Dépôt d'une nouvelle pièce -->
+    <div class="pf-upload">
+      <h3 class="pf-upload-title">Déposer une pièce</h3>
+      @if (uploadDone()) {
+        <p class="k-form-info" role="status">Votre document a bien été déposé.</p>
+      }
+      @if (uploadError()) {
+        <p class="k-form-error" role="alert">{{ uploadError() }}</p>
+      }
+      <div class="pf-upload-row">
+        <div class="k-field pf-upload-type">
+          <label class="k-label" for="pf-doc-type">Type de document</label>
+          <select
+            id="pf-doc-type"
+            class="k-input"
+            [value]="uploadType()"
+            (change)="uploadType.set($any($event.target).value)">
+            @for (opt of documentTypes; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="k-field pf-upload-file">
+          <label class="k-label" for="pf-doc-file">Fichier (PDF, JPG ou PNG — 5 Mo max.)</label>
+          <input
+            id="pf-doc-file"
+            type="file"
+            class="k-input"
+            accept=".pdf,.jpg,.jpeg,.png"
+            (change)="onFileSelected($event)" />
+        </div>
+      </div>
+      <button class="k-btn k-btn--primary" type="button" (click)="upload()"
+              [disabled]="uploading() || !selectedFile()">
+        {{ uploading() ? 'Envoi…' : 'Déposer' }}
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== 3. Zone de danger ===================== -->
+  <section class="pf-card pf-danger" aria-labelledby="pf-danger-title">
+    <header class="pf-card-head">
+      <h2 id="pf-danger-title" class="pf-card-title">Supprimer mon compte</h2>
+      <p class="pf-card-sub">
+        Votre compte sera désactivé et vos données personnelles anonymisées. Vos
+        réservations et paiements sont conservés le temps légal. Cette action est
+        <strong>irréversible</strong>.
+      </p>
+    </header>
+
+    @if (deleteError()) {
+      <p class="k-form-error" role="alert">{{ deleteError() }}</p>
+    }
+
+    @if (!confirmingDelete()) {
+      <button class="k-btn pf-btn-danger" type="button" (click)="toggleDeleteConfirm(true)">
+        Supprimer mon compte
+      </button>
+    } @else {
+      <div class="pf-confirm">
+        <p class="pf-confirm-q">Confirmez-vous la suppression définitive de votre compte ?</p>
+        <div class="pf-confirm-actions">
+          <button class="k-btn pf-btn-danger" type="button" (click)="deleteAccount()"
+                  [disabled]="deleting()">
+            {{ deleting() ? 'Suppression…' : 'Oui, supprimer' }}
+          </button>
+          <button class="k-btn k-btn--ghost" type="button" (click)="toggleDeleteConfirm(false)"
+                  [disabled]="deleting()">
+            Annuler
+          </button>
+        </div>
+      </div>
+    }
+  </section>
+}

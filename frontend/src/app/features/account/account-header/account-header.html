@@ -58,7 +58,9 @@
                 <span>{{ user()?.email || user()?.phone }}</span>
               }
             </div>
-            <!-- « Mon profil » s'ajoutera ici avec l'écran Profil (F3.2). -->
+            <a class="acc-user-item" routerLink="/mon-espace/profil" role="menuitem">
+              Mon profil
+            </a>
             <button class="acc-user-item" type="button" role="menuitem" (click)="logout()">
               Se déconnecter
             </button>

@@ -23,6 +23,7 @@ HTTP et garantissent la cohérence front/back.
 | `Provider` (+ `ProviderCertification`) | `ProviderResource` | Pro |
 | `Faq` | `FaqResource` | Admin (contenu éditorial) |
 | `ContentPage` | `PageResource` | Admin (contenu éditorial) |
+| `UserDocument` (+ `DocumentTypeOption`) | `UserDocumentResource` | Core (espace client, F3.2) |
 
 Import pratique via le barrel : `import { Property, Stay } from '../models';`
 (voir `index.ts`).

@@ -2,6 +2,61 @@
 // (layout, pages de sections) gardent leur ossature ; on regroupe ici les
 // briques réutilisées d'un écran de l'espace à l'autre (préfixe `account-`).
 
+// En-tête d'écran de section (titre + accroche) — partagé par tous les écrans
+// de l'espace (accueil, profil, et les sections F3.3→F3.7).
+.account-head {
+  margin-bottom: 1.5rem;
+}
+
+.account-eyebrow {
+  font-family: var(--k-font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--k-brand);
+  margin-bottom: 0.35rem;
+}
+
+.account-title {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  line-height: 1.15;
+  margin-bottom: 0.5rem;
+}
+
+.account-lead {
+  color: var(--k-muted);
+  max-width: 60ch;
+}
+
+// Bandeau « Vérifiez votre compte » — réutilisé par l'accueil et le profil.
+.account-verify {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--k-gold) 45%, var(--k-line));
+  background: color-mix(in srgb, var(--k-gold) 12%, var(--k-card));
+  border-radius: var(--k-radius);
+
+  strong {
+    font-family: var(--k-font-display);
+  }
+
+  p {
+    color: var(--k-muted);
+    font-size: 0.92rem;
+    margin-top: 0.15rem;
+  }
+
+  .k-btn {
+    flex: 0 0 auto;
+  }
+}
+
 // Étiquette « Bientôt » des sections non encore construites — utilisée à la
 // fois par la navigation latérale et par les tuiles de l'accueil de l'espace.
 // Déclarée globalement pour être visible dans les deux composants.

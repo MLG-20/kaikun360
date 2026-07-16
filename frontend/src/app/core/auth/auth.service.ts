@@ -109,6 +109,15 @@ export class AuthService {
     );
   }
 
+  /**
+   * Remplace l'utilisateur courant en session (sans toucher au jeton). Utilisé
+   * après une mise à jour du profil (F3.2) pour que le nom affiché dans l'en-tête
+   * reflète immédiatement le changement.
+   */
+  setCurrentUser(user: User): void {
+    this.userSignal.set(user);
+  }
+
   /** Vide l'état de session (appelé aussi par l'errorInterceptor sur un 401). */
   clearSession(): void {
     this.tokenSignal.set(null);

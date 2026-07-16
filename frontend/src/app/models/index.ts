@@ -14,3 +14,4 @@ export * from './review.model';
 export * from './media.model';
 export * from './provider.model';
 export * from './content.model';
+export * from './document.model';

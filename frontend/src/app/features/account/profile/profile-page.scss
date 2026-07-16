@@ -1,0 +1,243 @@
+// Écran « Mon profil » (F3.2). L'en-tête (.account-head…) et le bandeau de
+// vérification (.account-verify) sont globaux (styles/_account.scss) ; on ne
+// stylise ici que les cartes (identité, documents, zone de danger).
+
+// --- Carte de section -----------------------------------------------------
+.pf-card {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.pf-card-head {
+  margin-bottom: 1.25rem;
+}
+
+.pf-card-title {
+  font-family: var(--k-font-display);
+  font-size: 1.25rem;
+  margin-bottom: 0.3rem;
+}
+
+.pf-card-sub {
+  color: var(--k-muted);
+  font-size: 0.92rem;
+  max-width: 70ch;
+}
+
+// --- États (chargement / erreur / vide) -----------------------------------
+.pf-state {
+  color: var(--k-muted);
+  padding: 0.5rem 0;
+}
+
+.pf-state--error {
+  color: var(--k-danger);
+}
+
+.pf-empty {
+  color: var(--k-muted);
+  font-size: 0.92rem;
+  padding: 0.5rem 0 1rem;
+}
+
+// --- Formulaire d'identité ------------------------------------------------
+.pf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  max-width: 460px;
+  margin-bottom: 1.5rem;
+
+  .k-btn {
+    align-self: flex-start;
+  }
+}
+
+// --- Faits en lecture seule (coordonnées, méta) ---------------------------
+.pf-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--k-line);
+  margin: 0;
+}
+
+.pf-fact {
+  dt {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  dd {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+}
+
+.pf-verify {
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+// --- Pastille de statut ---------------------------------------------------
+.pf-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.1rem 0.55rem;
+  border-radius: var(--k-radius-pill);
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+  background: var(--k-cream);
+  white-space: nowrap;
+
+  &.is-ok {
+    color: color-mix(in srgb, var(--k-green) 80%, black);
+    background: color-mix(in srgb, var(--k-green) 14%, var(--k-card));
+    border-color: color-mix(in srgb, var(--k-green) 45%, var(--k-line));
+  }
+
+  &.is-wait {
+    color: color-mix(in srgb, var(--k-gold) 82%, black);
+    background: color-mix(in srgb, var(--k-gold) 16%, var(--k-card));
+    border-color: color-mix(in srgb, var(--k-gold) 50%, var(--k-line));
+  }
+
+  &.is-ko {
+    color: color-mix(in srgb, var(--k-danger) 85%, black);
+    background: color-mix(in srgb, var(--k-danger) 12%, var(--k-card));
+    border-color: color-mix(in srgb, var(--k-danger) 45%, var(--k-line));
+  }
+}
+
+// --- Liste des documents --------------------------------------------------
+.pf-docs {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pf-doc {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  background: color-mix(in srgb, var(--k-cream) 40%, var(--k-card));
+}
+
+.pf-doc-ic {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: var(--k-brand);
+  background: color-mix(in srgb, var(--k-brand) 10%, transparent);
+  border-radius: var(--k-radius-sm);
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.pf-doc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1 1 auto;
+
+  strong {
+    font-size: 0.95rem;
+  }
+}
+
+.pf-doc-meta {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pf-doc-dl {
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--k-brand);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// --- Dépôt d'une pièce ----------------------------------------------------
+.pf-upload {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--k-line);
+}
+
+.pf-upload-title {
+  font-family: var(--k-font-display);
+  font-size: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.pf-upload-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  .k-field {
+    margin: 0;
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// --- Zone de danger -------------------------------------------------------
+.pf-danger {
+  border-color: color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+}
+
+.pf-btn-danger {
+  color: #fff;
+  background: var(--k-danger);
+  border: 1px solid var(--k-danger);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--k-danger) 85%, black);
+  }
+}
+
+.pf-confirm-q {
+  font-weight: 600;
+  margin-bottom: 0.85rem;
+}
+
+.pf-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}

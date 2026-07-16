@@ -91,6 +91,6 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     description: 'Identité, téléphone, documents, préférences et sécurité.',
     path: 'profil',
     icon: 'user',
-    ready: false, // F3.2
+    ready: true, // F3.2 ✅
   },
 ];

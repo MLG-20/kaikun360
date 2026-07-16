@@ -1,3 +1,5 @@
+import { registerLocaleData } from '@angular/common';
+import localeFr from '@angular/common/locales/fr';
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
@@ -6,6 +8,12 @@ import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { routes } from './app.routes';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { tokenInterceptor } from './core/interceptors/token.interceptor';
+
+// Rend disponibles les données de locale française (noms de mois/jours, formats
+// de date). On n'impose PAS `LOCALE_ID: 'fr'` globalement — pour ne pas modifier
+// le formatage des nombres ailleurs — mais on peut passer `'fr'` en paramètre
+// des pipes (ex. `date: 'longDate' : '' : 'fr'` sur l'écran profil, F3.2).
+registerLocaleData(localeFr);
 
 export const appConfig: ApplicationConfig = {
   providers: [

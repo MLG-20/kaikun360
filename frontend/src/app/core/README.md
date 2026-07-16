@@ -32,6 +32,10 @@ l'application (approche standalone, sans NgModule) :
     throttlé) traité par l'équipe, **et** coordonnées publiques du siège
     `GET /contact-info` (adresse + lat/long pour la carte, issues des réglages
     back-office) — F2.8.1.
+  - `AccountService` — compte de l'utilisateur connecté (espace client, F3.2) :
+    profil frais `GET /users/me`, mise à jour `PATCH /users/me`, suppression
+    (anonymisation RGPD) `DELETE /users/me`, et pièces justificatives
+    `GET`/`POST /users/me/documents` (dépôt **multipart** PDF/JPG/PNG).
 - **interceptors/** — `tokenInterceptor` (ajoute le Bearer), `errorInterceptor`
   (gestion centralisée : 401 → login, 422 → erreurs de formulaire, 500 → page
   d'erreur).
