@@ -60,6 +60,8 @@ Route::prefix('auth')->middleware('throttle:auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/me', [UserController::class, 'me']);
     Route::patch('/users/me', [UserController::class, 'update']);
+    // Changement de mot de passe (F3.2b) : exige le mot de passe actuel.
+    Route::patch('/users/me/password', [UserController::class, 'updatePassword']);
     // Suppression du compte sur demande (RGPD, B15.4) : anonymisation.
     Route::delete('/users/me', [UserController::class, 'destroy']);
 

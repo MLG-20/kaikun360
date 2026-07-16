@@ -11,13 +11,36 @@ import { ApiEnvelope } from './api-response.model';
  * Corps de `PATCH /users/me` — miroir de `UpdateProfileRequest` (backend).
  *
  * Mise à jour **partielle** : on n'envoie que les champs réellement modifiés.
- * L'e-mail et le téléphone ne sont volontairement PAS modifiables ici (leur
- * changement exige une re-vérification dédiée, à traiter plus tard).
+ * Depuis F3.2b, l'e-mail et le téléphone SONT modifiables — mais les changer
+ * déclenche une **re-vérification** du nouveau contact (cf. `ProfileUpdateResult`).
  */
 export interface UpdateProfilePayload {
   name?: string;
+  email?: string;
+  phone?: string | null;
+  address?: string | null;
+  region_id?: number | null;
+  department_id?: number | null;
+  commune_id?: number | null;
   city?: string | null;
   preferences?: Record<string, unknown> | null;
+}
+
+/**
+ * Résultat d'une mise à jour de profil : l'utilisateur à jour + les canaux à
+ * re-vérifier (l'e-mail / le téléphone qui viennent d'être changés).
+ */
+export interface ProfileUpdateResult {
+  user: User;
+  emailVerificationRequired: boolean;
+  phoneVerificationRequired: boolean;
+}
+
+/** Corps de `PATCH /users/me/password` — miroir de `UpdatePasswordRequest`. */
+export interface UpdatePasswordPayload {
+  current_password: string;
+  password: string;
+  password_confirmation: string;
 }
 
 /**
@@ -42,11 +65,31 @@ export class AccountService {
       .pipe(map((res) => res.data.user));
   }
 
-  /** Mise à jour partielle du profil. Renvoie l'utilisateur mis à jour. */
-  updateProfile(payload: UpdateProfilePayload): Observable<User> {
+  /**
+   * Mise à jour partielle du profil. Renvoie l'utilisateur à jour et les canaux
+   * à re-vérifier (si l'e-mail / le téléphone ont changé, le backend a envoyé un
+   * code au nouveau contact).
+   */
+  updateProfile(payload: UpdateProfilePayload): Observable<ProfileUpdateResult> {
     return this.http
-      .patch<ApiEnvelope<{ user: User }>>(`${this.api}/users/me`, payload)
-      .pipe(map((res) => res.data.user));
+      .patch<ApiEnvelope<{ user: User; verification: { email_required: boolean; phone_required: boolean } }>>(
+        `${this.api}/users/me`,
+        payload,
+      )
+      .pipe(
+        map((res) => ({
+          user: res.data.user,
+          emailVerificationRequired: res.data.verification.email_required,
+          phoneVerificationRequired: res.data.verification.phone_required,
+        })),
+      );
+  }
+
+  /** Changement de mot de passe (exige le mot de passe actuel). */
+  updatePassword(payload: UpdatePasswordPayload): Observable<void> {
+    return this.http
+      .patch<ApiEnvelope<{ message: string }>>(`${this.api}/users/me/password`, payload)
+      .pipe(map(() => void 0));
   }
 
   /**

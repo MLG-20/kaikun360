@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 149 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 150 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -73,6 +73,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | DELETE | `/users/me` | auth | `UserController@destroy` |
 | GET | `/users/me` | auth | `UserController@me` |
 | PATCH | `/users/me` | auth | `UserController@update` |
+| PATCH | `/users/me/password` | auth | `UserController@updatePassword` |
 | GET | `/users/me/documents` | auth | `DocumentController@index` |
 | POST | `/users/me/documents` | auth | `DocumentController@store` |
 | GET | `/users/me/documents/{document}/download` | URL signée | `DocumentController@download` |

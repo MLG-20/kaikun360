@@ -2,8 +2,8 @@
   <p class="account-eyebrow">Mon espace</p>
   <h1 class="account-title">Mon profil</h1>
   <p class="account-lead">
-    Gérez votre identité, vos pièces justificatives et les paramètres de votre
-    compte.
+    Gérez votre identité, vos coordonnées, vos pièces justificatives et la
+    sécurité de votre compte.
   </p>
 </section>
 
@@ -14,13 +14,13 @@
     Impossible de charger votre profil pour le moment. Merci de réessayer plus tard.
   </p>
 } @else if (user(); as u) {
-  <!-- ===================== 1. Identité ===================== -->
+  <!-- ===================== 1. Identité & coordonnées ===================== -->
   <section class="pf-card" aria-labelledby="pf-identity-title">
     <header class="pf-card-head">
-      <h2 id="pf-identity-title" class="pf-card-title">Identité</h2>
+      <h2 id="pf-identity-title" class="pf-card-title">Identité & coordonnées</h2>
       <p class="pf-card-sub">
-        Votre nom et votre ville. L'adresse e-mail et le téléphone ne se modifient
-        pas ici (un changement demandera une nouvelle vérification).
+        Vos informations personnelles. Modifier l'e-mail ou le téléphone demande
+        une nouvelle vérification (un code vous sera envoyé).
       </p>
     </header>
 
@@ -34,14 +34,9 @@
 
       <div class="k-field">
         <label class="k-label" for="pf-name">Nom complet</label>
-        <input
-          id="pf-name"
-          type="text"
-          class="k-input"
+        <input id="pf-name" type="text" class="k-input"
           [class.k-input--error]="invalid('name') || serverError('name')"
-          formControlName="name"
-          autocomplete="name"
-          placeholder="Awa Diop" />
+          formControlName="name" autocomplete="name" placeholder="Awa Diop" />
         @if (invalid('name')) {
           <span class="k-error">Le nom est obligatoire.</span>
         } @else if (serverError('name'); as msg) {
@@ -49,19 +44,119 @@
         }
       </div>
 
+      <!-- E-mail (éditable, re-vérification si changé) -->
       <div class="k-field">
-        <label class="k-label" for="pf-city">Ville</label>
-        <input
-          id="pf-city"
-          type="text"
-          class="k-input"
-          [class.k-input--error]="invalid('city') || serverError('city')"
-          formControlName="city"
-          autocomplete="address-level2"
-          placeholder="Dakar" />
-        @if (serverError('city'); as msg) {
+        <label class="k-label" for="pf-email">
+          Adresse e-mail
+          @if (u.email_verified_at) {
+            <span class="pf-badge is-ok">Vérifiée</span>
+          } @else {
+            <span class="pf-badge is-wait">Non vérifiée</span>
+          }
+        </label>
+        <input id="pf-email" type="email" class="k-input"
+          [class.k-input--error]="invalid('email') || serverError('email')"
+          formControlName="email" autocomplete="email" placeholder="vous@exemple.sn" />
+        @if (invalid('email')) {
+          <span class="k-error">Une adresse e-mail valide est obligatoire.</span>
+        } @else if (serverError('email'); as msg) {
           <span class="k-error">{{ msg }}</span>
         }
+      </div>
+
+      <!-- Panneau de re-vérification e-mail -->
+      @if (pendingEmail()) {
+        <div class="pf-verify-panel">
+          <p>Un code a été envoyé à votre nouvelle adresse e-mail. Saisissez-le pour la confirmer.</p>
+          @if (verifyEmailError(); as e) { <p class="pf-verify-msg">{{ e }}</p> }
+          <div class="pf-verify-row">
+            <input type="text" class="k-input" inputmode="numeric" autocomplete="one-time-code"
+              placeholder="Code à 6 chiffres" [value]="emailCode()"
+              (input)="emailCode.set($any($event.target).value)" />
+            <button type="button" class="k-btn k-btn--primary" (click)="confirmVerification('email')"
+              [disabled]="verifyingEmail()">
+              {{ verifyingEmail() ? 'Vérification…' : 'Confirmer' }}
+            </button>
+          </div>
+          <button type="button" class="pf-link" (click)="resendCode('email')">Renvoyer le code</button>
+        </div>
+      }
+
+      <!-- Téléphone (éditable, re-vérification si changé) -->
+      <div class="k-field">
+        <label class="k-label" for="pf-phone">
+          Téléphone
+          @if (u.phone) {
+            @if (u.phone_verified_at) {
+              <span class="pf-badge is-ok">Vérifié</span>
+            } @else {
+              <span class="pf-badge is-wait">Non vérifié</span>
+            }
+          }
+        </label>
+        <input id="pf-phone" type="tel" class="k-input"
+          [class.k-input--error]="serverError('phone')"
+          formControlName="phone" autocomplete="tel" placeholder="+221 77 000 00 00" />
+        @if (serverError('phone'); as msg) {
+          <span class="k-error">{{ msg }}</span>
+        }
+      </div>
+
+      <!-- Panneau de re-vérification téléphone -->
+      @if (pendingPhone()) {
+        <div class="pf-verify-panel">
+          <p>Un code a été envoyé à votre nouveau numéro. Saisissez-le pour le confirmer.</p>
+          @if (verifyPhoneError(); as e) { <p class="pf-verify-msg">{{ e }}</p> }
+          <div class="pf-verify-row">
+            <input type="text" class="k-input" inputmode="numeric" autocomplete="one-time-code"
+              placeholder="Code à 6 chiffres" [value]="phoneCode()"
+              (input)="phoneCode.set($any($event.target).value)" />
+            <button type="button" class="k-btn k-btn--primary" (click)="confirmVerification('phone')"
+              [disabled]="verifyingPhone()">
+              {{ verifyingPhone() ? 'Vérification…' : 'Confirmer' }}
+            </button>
+          </div>
+          <button type="button" class="pf-link" (click)="resendCode('phone')">Renvoyer le code</button>
+        </div>
+      }
+
+      <!-- Localisation en cascade -->
+      <div class="pf-grid-3">
+        <div class="k-field">
+          <label class="k-label" for="pf-region">Région</label>
+          <select id="pf-region" class="k-input" formControlName="region_id">
+            <option [ngValue]="null">—</option>
+            @for (r of regions(); track r.id) {
+              <option [ngValue]="r.id">{{ r.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="k-field">
+          <label class="k-label" for="pf-department">Département</label>
+          <select id="pf-department" class="k-input" formControlName="department_id"
+            [class.k-input--error]="serverError('department_id')">
+            <option [ngValue]="null">—</option>
+            @for (d of departments(); track d.id) {
+              <option [ngValue]="d.id">{{ d.name }}</option>
+            }
+          </select>
+          @if (serverError('department_id'); as msg) { <span class="k-error">{{ msg }}</span> }
+        </div>
+        <div class="k-field">
+          <label class="k-label" for="pf-commune">Commune</label>
+          <select id="pf-commune" class="k-input" formControlName="commune_id">
+            <option [ngValue]="null">—</option>
+            @for (c of communes(); track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="k-field">
+        <label class="k-label" for="pf-address">Adresse (rue, quartier)</label>
+        <input id="pf-address" type="text" class="k-input" formControlName="address"
+          autocomplete="street-address" placeholder="Rue 10 x Avenue Bourguiba" />
       </div>
 
       <button class="k-btn k-btn--primary" type="submit" [disabled]="saving()">
@@ -69,32 +164,8 @@
       </button>
     </form>
 
-    <!-- Champs en lecture seule : coordonnées et méta du compte -->
+    <!-- Méta du compte en lecture seule -->
     <dl class="pf-facts">
-      <div class="pf-fact">
-        <dt>Adresse e-mail</dt>
-        <dd>
-          {{ u.email || '—' }}
-          @if (u.email) {
-            <span class="pf-badge" [class.is-ok]="!!u.email_verified_at"
-                  [class.is-wait]="!u.email_verified_at">
-              {{ u.email_verified_at ? 'Vérifiée' : 'Non vérifiée' }}
-            </span>
-          }
-        </dd>
-      </div>
-      <div class="pf-fact">
-        <dt>Téléphone</dt>
-        <dd>
-          {{ u.phone || '—' }}
-          @if (u.phone) {
-            <span class="pf-badge" [class.is-ok]="!!u.phone_verified_at"
-                  [class.is-wait]="!u.phone_verified_at">
-              {{ u.phone_verified_at ? 'Vérifié' : 'Non vérifié' }}
-            </span>
-          }
-        </dd>
-      </div>
       <div class="pf-fact">
         <dt>Type de compte</dt>
         <dd>{{ u.profile?.type_label || roleLabel() || '—' }}</dd>
@@ -132,13 +203,10 @@
       </p>
     </header>
 
-    <!-- Liste des documents -->
     @if (docsLoading()) {
       <p class="pf-state" role="status">Chargement de vos documents…</p>
     } @else if (docsError()) {
-      <p class="pf-state pf-state--error" role="alert">
-        Impossible de charger vos documents pour le moment.
-      </p>
+      <p class="pf-state pf-state--error" role="alert">Impossible de charger vos documents pour le moment.</p>
     } @else if (documents().length === 0) {
       <p class="pf-empty">Vous n'avez encore déposé aucune pièce.</p>
     } @else {
@@ -159,18 +227,13 @@
                 @if (fileSize(doc.size); as sz) { · {{ sz }} }
               </span>
             </span>
-            <span class="pf-badge" [class]="statusTone(doc.status)">
-              {{ statusLabel(doc.status) }}
-            </span>
-            <a class="pf-doc-dl" [href]="doc.download_url" target="_blank" rel="noopener">
-              Télécharger
-            </a>
+            <span class="pf-badge" [class]="statusTone(doc.status)">{{ statusLabel(doc.status) }}</span>
+            <a class="pf-doc-dl" [href]="doc.download_url" target="_blank" rel="noopener">Télécharger</a>
           </li>
         }
       </ul>
     }
 
-    <!-- Dépôt d'une nouvelle pièce -->
     <div class="pf-upload">
       <h3 class="pf-upload-title">Déposer une pièce</h3>
       @if (uploadDone()) {
@@ -182,10 +245,7 @@
       <div class="pf-upload-row">
         <div class="k-field pf-upload-type">
           <label class="k-label" for="pf-doc-type">Type de document</label>
-          <select
-            id="pf-doc-type"
-            class="k-input"
-            [value]="uploadType()"
+          <select id="pf-doc-type" class="k-input" [value]="uploadType()"
             (change)="uploadType.set($any($event.target).value)">
             @for (opt of documentTypes; track opt.value) {
               <option [value]="opt.value">{{ opt.label }}</option>
@@ -194,11 +254,7 @@
         </div>
         <div class="k-field pf-upload-file">
           <label class="k-label" for="pf-doc-file">Fichier (PDF, JPG ou PNG — 5 Mo max.)</label>
-          <input
-            id="pf-doc-file"
-            type="file"
-            class="k-input"
-            accept=".pdf,.jpg,.jpeg,.png"
+          <input id="pf-doc-file" type="file" class="k-input" accept=".pdf,.jpg,.jpeg,.png"
             (change)="onFileSelected($event)" />
         </div>
       </div>
@@ -209,7 +265,67 @@
     </div>
   </section>
 
-  <!-- ===================== 3. Zone de danger ===================== -->
+  <!-- ===================== 3. Sécurité (mot de passe) ===================== -->
+  <section class="pf-card" aria-labelledby="pf-security-title">
+    <header class="pf-card-head">
+      <h2 id="pf-security-title" class="pf-card-title">Sécurité</h2>
+      <p class="pf-card-sub">
+        Changez votre mot de passe. Pour votre sécurité, vos autres appareils
+        connectés seront déconnectés.
+      </p>
+    </header>
+
+    <form class="pf-form" [formGroup]="passwordForm" (ngSubmit)="changePassword()" novalidate>
+      @if (passwordError()) {
+        <p class="k-form-error" role="alert">{{ passwordError() }}</p>
+      }
+      @if (passwordDone()) {
+        <p class="k-form-info" role="status">Votre mot de passe a été mis à jour.</p>
+      }
+
+      <div class="k-field">
+        <label class="k-label" for="pf-cur-pass">Mot de passe actuel</label>
+        <input id="pf-cur-pass" type="password" class="k-input"
+          [class.k-input--error]="passwordInvalid('current_password') || passwordServerError('current_password')"
+          formControlName="current_password" autocomplete="current-password" appPasswordReveal />
+        @if (passwordInvalid('current_password')) {
+          <span class="k-error">Le mot de passe actuel est obligatoire.</span>
+        } @else if (passwordServerError('current_password'); as msg) {
+          <span class="k-error">{{ msg }}</span>
+        }
+      </div>
+
+      <div class="k-field">
+        <label class="k-label" for="pf-new-pass">Nouveau mot de passe</label>
+        <input id="pf-new-pass" type="password" class="k-input"
+          [class.k-input--error]="passwordInvalid('password') || passwordServerError('password')"
+          formControlName="password" autocomplete="new-password" appPasswordReveal />
+        @if (passwordInvalid('password')) {
+          <span class="k-error">Au moins 8 caractères.</span>
+        } @else if (passwordServerError('password'); as msg) {
+          <span class="k-error">{{ msg }}</span>
+        }
+      </div>
+
+      <div class="k-field">
+        <label class="k-label" for="pf-conf-pass">Confirmer le nouveau mot de passe</label>
+        <input id="pf-conf-pass" type="password" class="k-input"
+          [class.k-input--error]="passwordInvalid('password_confirmation') || passwordServerError('password_confirmation')"
+          formControlName="password_confirmation" autocomplete="new-password" appPasswordReveal />
+        @if (passwordInvalid('password_confirmation')) {
+          <span class="k-error">Confirmez le mot de passe.</span>
+        } @else if (passwordServerError('password_confirmation'); as msg) {
+          <span class="k-error">{{ msg }}</span>
+        }
+      </div>
+
+      <button class="k-btn k-btn--primary" type="submit" [disabled]="changingPassword()">
+        {{ changingPassword() ? 'Mise à jour…' : 'Changer le mot de passe' }}
+      </button>
+    </form>
+  </section>
+
+  <!-- ===================== 4. Zone de danger ===================== -->
   <section class="pf-card pf-danger" aria-labelledby="pf-danger-title">
     <header class="pf-card-head">
       <h2 id="pf-danger-title" class="pf-card-title">Supprimer mon compte</h2>
@@ -232,12 +348,10 @@
       <div class="pf-confirm">
         <p class="pf-confirm-q">Confirmez-vous la suppression définitive de votre compte ?</p>
         <div class="pf-confirm-actions">
-          <button class="k-btn pf-btn-danger" type="button" (click)="deleteAccount()"
-                  [disabled]="deleting()">
+          <button class="k-btn pf-btn-danger" type="button" (click)="deleteAccount()" [disabled]="deleting()">
             {{ deleting() ? 'Suppression…' : 'Oui, supprimer' }}
           </button>
-          <button class="k-btn k-btn--ghost" type="button" (click)="toggleDeleteConfirm(false)"
-                  [disabled]="deleting()">
+          <button class="k-btn k-btn--ghost" type="button" (click)="toggleDeleteConfirm(false)" [disabled]="deleting()">
             Annuler
           </button>
         </div>

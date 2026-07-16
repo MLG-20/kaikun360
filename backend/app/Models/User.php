@@ -11,6 +11,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -28,7 +29,7 @@ use Spatie\Permission\Traits\HasRoles;
  * module Core (app/Modules/Core).
  */
 // Champs autorisés à l'assignation de masse (create/update).
-#[Fillable(['name', 'email', 'phone', 'password', 'city', 'status', 'google_id', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'phone', 'password', 'city', 'address', 'region_id', 'department_id', 'commune_id', 'status', 'google_id', 'email_verified_at'])]
 // Champs masqués dans les sérialisations JSON (jamais renvoyés au client).
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -83,5 +84,24 @@ class User extends Authenticatable
     public function favoriteProperties(): BelongsToMany
     {
         return $this->belongsToMany(Property::class, 'favorites')->withTimestamps();
+    }
+
+    /**
+     * Localisation structurée du compte (F3.2b), en cascade Région → Département
+     * → Commune. Toutes optionnelles (référentiel géo partagé avec les biens).
+     */
+    public function region(): BelongsTo
+    {
+        return $this->belongsTo(Region::class);
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function commune(): BelongsTo
+    {
+        return $this->belongsTo(Commune::class);
     }
 }

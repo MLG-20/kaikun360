@@ -57,6 +57,70 @@
   }
 }
 
+// --- Localisation en cascade (3 colonnes) ---------------------------------
+.pf-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+
+  .k-field {
+    margin: 0;
+  }
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// --- Panneau de re-vérification (e-mail / téléphone changé) ----------------
+.pf-verify-panel {
+  padding: 1rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--k-gold) 45%, var(--k-line));
+  background: color-mix(in srgb, var(--k-gold) 10%, var(--k-card));
+  border-radius: var(--k-radius);
+
+  p {
+    font-size: 0.9rem;
+    margin-bottom: 0.6rem;
+  }
+}
+
+.pf-verify-msg {
+  color: var(--k-danger);
+  font-size: 0.85rem;
+}
+
+.pf-verify-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+
+  .k-input {
+    max-width: 220px;
+  }
+
+  .k-btn {
+    flex: 0 0 auto;
+  }
+}
+
+.pf-link {
+  margin-top: 0.5rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--k-brand);
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 // --- Faits en lecture seule (coordonnées, méta) ---------------------------
 .pf-facts {
   display: grid;

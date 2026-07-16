@@ -27,6 +27,15 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'city' => $this->city,
+            'address' => $this->address,
+            // Localisation structurée (F3.2b) : identifiants pour préremplir les
+            // menus déroulants en cascade + noms lisibles quand chargés.
+            'region_id' => $this->region_id,
+            'department_id' => $this->department_id,
+            'commune_id' => $this->commune_id,
+            'region' => $this->whenLoaded('region', fn () => $this->region?->name),
+            'department' => $this->whenLoaded('department', fn () => $this->department?->name),
+            'commune' => $this->whenLoaded('commune', fn () => $this->commune?->name),
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             // Noms des rôles Spatie (ex. ["client"]).

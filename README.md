@@ -446,7 +446,7 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [ ] Écran Réservations (nuitées, mobilité, expériences).
 - [ ] Écran Messages (conversation avec support Kaikun ou prestataire affecté).
 - [ ] Écran Notifications (mises à jour demande, réservation, document, paiement).
-- [x] **Écran Profil (F3.2)** : identité (nom + ville modifiables via `PATCH /users/me` ; e-mail, téléphone, statut, type et date d'inscription en lecture seule), pièces justificatives (liste + dépôt PDF/JPG/PNG ≤ 5 Mo via `GET`/`POST /users/me/documents`, téléchargement par URL signée), suppression du compte (anonymisation RGPD `DELETE /users/me`, derrière confirmation). Lien « Mon profil » activé dans le menu utilisateur de l'en-tête.
+- [x] **Écran Profil (F3.2 / F3.2b)** : identité & coordonnées **toutes modifiables** via `PATCH /users/me` — nom, **e-mail et téléphone** (changement = **re-vérification** avec saisie du code envoyé au nouveau contact), **adresse** + **localisation en cascade** Région → Département → Commune (référentiel géo) ; **changement de mot de passe** (`PATCH /users/me/password`, exige le mot de passe actuel) ; pièces justificatives (liste + dépôt PDF/JPG/PNG ≤ 5 Mo via `GET`/`POST /users/me/documents`, téléchargement par URL signée) ; suppression du compte (anonymisation RGPD `DELETE /users/me`, derrière confirmation). Lien « Mon profil » activé dans le menu utilisateur de l'en-tête.
 - [ ] Connexion de tous les formulaires de demande aux endpoints `requests`/`bookings` du backend.
 
 ### Phase F4 — Espace propriétaire (OwnerSpaceModule)

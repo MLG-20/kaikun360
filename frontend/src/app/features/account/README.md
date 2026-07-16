@@ -33,11 +33,14 @@ marquées « Bientôt » s'activeront aux étapes suivantes.
   espace, la personne doit se sentir chez elle.
 - **La page d'accueil (F3.1)** — [`overview/`](overview) : salutation, **rappel de
   vérification** du compte si besoin, et des **tuiles** vers chaque rubrique.
-- **La rubrique Profil (F3.2)** — [`profile/`](profile) : **identité** (nom + ville
-  modifiables ; e-mail, téléphone, statut, type et date d'inscription en lecture
-  seule), **pièces justificatives** (liste + dépôt PDF/JPG/PNG ≤ 5 Mo, avec
-  téléchargement par URL signée), et **suppression du compte** (anonymisation
-  RGPD, derrière confirmation).
+- **La rubrique Profil (F3.2 / F3.2b)** — [`profile/`](profile) : **identité &
+  coordonnées** (nom, **e-mail et téléphone modifiables** — un changement
+  déclenche une **re-vérification** avec saisie du code sur place ; **adresse**
+  + **localisation en cascade** Région → Département → Commune), **pièces
+  justificatives** (liste + dépôt PDF/JPG/PNG ≤ 5 Mo, téléchargement par URL
+  signée), **sécurité** (changement de mot de passe, exige le mot de passe
+  actuel), et **suppression du compte** (anonymisation RGPD, derrière
+  confirmation).
 
 Les rubriques Mes demandes, Réservations, Favoris, Notifications et Messages
 arrivent en F3.3 → F3.7.
@@ -65,14 +68,19 @@ arrivent en F3.3 → F3.7.
   porte `canActivate: [authGuard]` ; les sections sont ses routes enfants
   (chargées à la demande). L'accueil est la route enfant `''`.
 - **`overview/`** — `AccountOverviewPageComponent` : accueil du tableau de bord.
-- **`profile/`** — `ProfilePageComponent` (F3.2, route enfant `profil`) : recharge
-  le profil frais (`GET /users/me`) au montage, édite l'identité
-  (`PATCH /users/me`, erreurs 422 par champ), liste et dépose les pièces
-  justificatives (`GET`/`POST /users/me/documents`), et supprime le compte
-  (`DELETE /users/me`). S'appuie sur le nouveau
+- **`profile/`** — `ProfilePageComponent` (F3.2 / F3.2b, route enfant `profil`) :
+  recharge le profil frais (`GET /users/me`) au montage ; édite identité **et
+  coordonnées** (`PATCH /users/me`, erreurs 422 par champ). **E-mail / téléphone
+  (F3.2b)** : un changement renvoie `verification.{email,phone}_required` → un
+  **panneau de saisie de code** apparaît (réutilise `AuthService.verify` /
+  `sendVerificationCode`). **Localisation en cascade** via
+  [`GeoService`](../../core/api/geo.service.ts) (Région → Département → Commune,
+  préremplie sans déclencher les resets grâce à `emitEvent:false`). **Sécurité**
+  : mot de passe via `AccountService.updatePassword` (`PATCH /users/me/password`).
+  Liste/dépôt de pièces (`GET`/`POST /users/me/documents`) et suppression
+  (`DELETE /users/me`). S'appuie sur le
   [`AccountService`](../../core/api/account.service.ts) et sur
-  `AuthService.setCurrentUser()` (synchronise le nom affiché dans l'en-tête
-  après édition, sans recharger la page).
+  `AuthService.setCurrentUser()` (synchronise le nom de l'en-tête sans reload).
 
 ### Points d'intégration
 

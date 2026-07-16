@@ -197,13 +197,22 @@ En dev (`MAIL_MAILER=log`/`array`), le code n'est pas réellement envoyé.
 | Méthode | URL | Accès | Rôle |
 |---|---|---|---|
 | GET | `/api/v1/users/me` | `auth:sanctum` | Profil de l'utilisateur connecté |
-| PATCH | `/api/v1/users/me` | `auth:sanctum` | MAJ partielle (`name`, `city`, `preferences`) |
+| PATCH | `/api/v1/users/me` | `auth:sanctum` | MAJ partielle (`name`, `email`, `phone`, `address`, `region_id`/`department_id`/`commune_id`, `city`, `preferences`) |
+| PATCH | `/api/v1/users/me/password` | `auth:sanctum` | Changer le mot de passe (`current_password` + `password` confirmé) |
 | GET | `/api/v1/users/me/documents` | `auth:sanctum` | Lister ses pièces |
 | POST | `/api/v1/users/me/documents` | `auth:sanctum` | Déposer une pièce (`type` + `file`) |
 | GET | `/api/v1/users/me/documents/{document}/download` | **URL signée** | Télécharger un fichier |
 
-> `PATCH /users/me` ne modifie **pas** l'e-mail ni le téléphone (un changement
-> nécessitera une re-vérification dédiée, à traiter plus tard).
+> **Coordonnées & sécurité (F3.2b).** `PATCH /users/me` accepte désormais
+> l'**e-mail** et le **téléphone** : les changer remet le canal concerné à « non
+> vérifié » et **renvoie un code au nouveau contact** (la réponse porte
+> `data.verification.{email_required,phone_required}` ; l'utilisateur confirme
+> via `POST /auth/verify`). La **localisation** est structurée en cascade
+> Région → Département → Commune (référentiel géo des biens, cohérence validée)
+> + une **adresse** libre ; la `city` texte est dérivée de la commune/du
+> département pour compatibilité. Le **mot de passe** se change via un endpoint
+> dédié exigeant le mot de passe actuel (`current_password:sanctum`) et révoquant
+> les autres jetons d'accès.
 
 ### Documents (KYC) — stockage sécurisé
 

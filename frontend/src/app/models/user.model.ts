@@ -8,6 +8,16 @@ export interface User {
   email: string | null;
   phone: string | null;
   city: string | null;
+  /** Adresse libre (rue/quartier) — F3.2b. */
+  address: string | null;
+  /** Localisation structurée (F3.2b) : identifiants pour préremplir la cascade. */
+  region_id: number | null;
+  department_id: number | null;
+  commune_id: number | null;
+  /** Noms lisibles, présents uniquement quand les relations sont chargées. */
+  region?: string | null;
+  department?: string | null;
+  commune?: string | null;
   status: string | null;
   status_label: string | null;
   /** Noms des rôles Spatie, ex. ["client"]. */
