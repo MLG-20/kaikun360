@@ -2,7 +2,9 @@
 // la section d'orientation réutilise `.conv-section-title`.
 
 .contact-body {
-  padding: 2.5rem 0 4rem;
+  // padding-block seulement : ne pas écraser la marge latérale de `.k-wrap`
+  // (sinon le contenu colle aux bords en mobile).
+  padding-block: 2.5rem 4rem;
 }
 
 // Deux colonnes : formulaire (large) + canaux directs (étroit).

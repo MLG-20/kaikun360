@@ -3,7 +3,8 @@
 
 .content-state {
   max-width: 640px;
-  padding: 4rem 0;
+  // padding-block seulement : garder la marge latérale de `.k-wrap` en mobile.
+  padding-block: 4rem;
   text-align: center;
 
   h1 {
@@ -20,7 +21,8 @@
 
 .content-article {
   max-width: 760px;
-  padding: 3rem 0 4rem;
+  // padding-block seulement : garder la marge latérale de `.k-wrap` en mobile.
+  padding-block: 3rem 4rem;
 }
 
 .content-title {

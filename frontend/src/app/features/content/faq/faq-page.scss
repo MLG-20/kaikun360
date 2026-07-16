@@ -1,7 +1,8 @@
 // Styles propres à la page FAQ (F2.8). Le bandeau réutilise `.uni-hero`.
 
 .faq-body {
-  padding: 2.5rem 0 4rem;
+  // padding-block seulement : conserver la marge latérale de `.k-wrap` en mobile.
+  padding-block: 2.5rem 4rem;
   max-width: 820px;
 }
 
