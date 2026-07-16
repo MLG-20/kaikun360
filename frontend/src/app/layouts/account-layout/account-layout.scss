@@ -11,13 +11,15 @@
   display: grid;
   grid-template-columns: 264px 1fr;
   gap: 1.75rem;
-  // Colonnes de MÊME hauteur (stretch, défaut de la grille) : la barre latérale
-  // s'étire sur toute la hauteur du contenu de droite.
-  align-items: stretch;
+  // La barre latérale garde sa HAUTEUR NATURELLE (elle ne s'étire pas jusqu'au
+  // bas du contenu) : sur une page longue comme le Profil, l'étirement laissait
+  // un grand vide blanc sous les liens. On l'ancre en haut et on la rend sticky
+  // (voir `.account-side`) — patron classique de tableau de bord.
+  align-items: start;
   padding-block: 2rem 3.5rem;
   // Pas de pied de page dans l'espace : on remplit la hauteur sous l'en-tête
-  // fixe (~68px) pour éviter un vide en bas sur les pages courtes.
-  min-height: calc(100vh - 68px);
+  // sticky (~69px) pour éviter un vide en bas sur les pages courtes.
+  min-height: calc(100vh - 69px);
 }
 
 // --- Barre latérale -------------------------------------------------------
@@ -30,9 +32,12 @@
   border: 1px solid var(--k-line);
   border-radius: var(--k-radius-lg);
   box-shadow: var(--k-shadow);
-  // Le panneau s'étire (grille en stretch) ; les liens restent en haut. On
-  // colle le contenu du panneau au sommet même si la carte est très haute.
-  align-self: stretch;
+  // Hauteur naturelle (pas d'étirement) + sticky : la barre suit le défilement
+  // et reste visible sous l'en-tête sticky sur les pages longues, sans laisser
+  // de vide blanc en bas. Le `top` = hauteur de l'en-tête (~69px) + une marge.
+  align-self: start;
+  position: sticky;
+  top: calc(69px + 1rem);
 }
 
 .account-side-title {
