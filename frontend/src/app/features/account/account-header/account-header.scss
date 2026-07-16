@@ -235,8 +235,13 @@
 }
 
 @media (max-width: 560px) {
-  // On garde les NOMS (marque + utilisateur) visibles ; on ne rogne que le
-  // libellé du lien « Retour au site » (l'icône flèche suffit à comprendre).
+  // Sur téléphone, on retire le mot-clé « Kaikun 360 » (la pastille logo « K »
+  // suffit) pour éviter que l'avatar et le lien « Retour au site » ne débordent.
+  // Le NOM D'UTILISATEUR, lui, reste affiché.
+  .acc-brand-text {
+    display: none;
+  }
+
   .acc-back span {
     display: none;
   }

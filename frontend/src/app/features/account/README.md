@@ -74,6 +74,7 @@ Profil arrivent en F3.2 → F3.7.
   « Déconnexion » (desktop et menu mobile).
 - **Vérification du compte** : l'accueil calcule `isVerified` à partir de
   `email_verified_at || phone_verified_at` (même règle que les formulaires
+  
   auth-gated de F2.7) et invite à `/auth/verification` si besoin.
 
 ### Styles
