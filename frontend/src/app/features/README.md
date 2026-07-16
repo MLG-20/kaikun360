@@ -139,8 +139,8 @@ back-office.
   authentifié** monté sous `/mon-espace`. Il a son propre **cadre** (troisième
   layout, [`../layouts/account-layout`](../layouts/account-layout)) avec un
   **en-tête dédié épuré** (`app-account-header` : marque + « Retour au site » +
-  menu utilisateur, **sans les méga-menus marketing** du site) et une
-  **navigation latérale** vers les sections (Tableau de bord, Mes demandes,
+  menu utilisateur, **sans les méga-menus marketing ni le pied de page** du
+  site) et une **navigation latérale** vers les sections (Tableau de bord, Mes demandes,
   Réservations, Favoris, Notifications, Messages, Profil). Toute la branche est
   protégée par `authGuard` (redirection connexion si pas de session). 👉 README
   détaillé : [`account/README.md`](account/README.md).

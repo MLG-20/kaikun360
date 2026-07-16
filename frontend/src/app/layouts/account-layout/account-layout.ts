@@ -4,7 +4,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AccountHeaderComponent } from '../../features/account/account-header/account-header';
 import { AccountIconComponent } from '../../features/account/account-icon';
 import { ACCOUNT_NAV } from '../../features/account/account-nav';
-import { FooterComponent } from '../../shared/components/footer/footer';
 
 /**
  * Layout de l'espace client (F3.1) : coquille des pages authentifiées.
@@ -15,8 +14,11 @@ import { FooterComponent } from '../../shared/components/footer/footer';
  * rendu dans le `router-outlet`. L'identité et la déconnexion vivent dans
  * l'en-tête ; la barre latérale ne fait que la navigation entre rubriques.
  *
- * Toute la branche `/mon-espace` est protégée par `authGuard` (voir
- * `account.routes.ts`) : on n'arrive donc ici qu'avec une session active.
+ * Choix UX de l'utilisateur : **ni méga-menus ni pied de page** dans les espaces
+ * connectés (le pied de page marketing du site est volontairement absent ici),
+ * pour que la personne se sente chez elle. Toute la branche `/mon-espace` est
+ * protégée par `authGuard` (voir `account.routes.ts`) : on n'arrive donc ici
+ * qu'avec une session active.
  */
 @Component({
   selector: 'app-account-layout',
@@ -25,7 +27,6 @@ import { FooterComponent } from '../../shared/components/footer/footer';
     RouterLink,
     RouterLinkActive,
     AccountHeaderComponent,
-    FooterComponent,
     AccountIconComponent,
   ],
   templateUrl: './account-layout.html',

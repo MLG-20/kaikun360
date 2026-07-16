@@ -23,8 +23,9 @@ le **cadre** et la **page d'accueil** sont en place ; les rubriques marquées
 ### Ce qui existe aujourd'hui
 
 - **Le cadre (F3.1)** — [`../../layouts/account-layout`](../../layouts/account-layout) :
-  un **en-tête dédié épuré** (`account-header/`, voir plus bas), une **barre
-  latérale** avec les liens des rubriques, et le pied de page du site.
+  un **en-tête dédié épuré** (`account-header/`, voir plus bas) et une **barre
+  latérale** avec les liens des rubriques. **Ni méga-menus ni pied de page** du
+  site public (choix UX : l'espace doit se sentir « chez soi »).
 - **L'en-tête dédié (F3.1)** — [`account-header/`](account-header) : marque
   (retour à l'accueil), lien discret **« Retour au site »**, et **menu
   utilisateur** (avatar + nom → **Se déconnecter** ; « Mon profil » viendra avec
