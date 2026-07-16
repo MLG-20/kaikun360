@@ -1,4 +1,4 @@
-import { Directive, ElementRef, OnInit, Renderer2, inject } from '@angular/core';
+import { Directive, ElementRef, Renderer2, afterNextRender, inject } from '@angular/core';
 
 /** Icône « œil ouvert » (afficher) — SVG statique de confiance. */
 const EYE = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
@@ -14,20 +14,37 @@ const EYE_OFF = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
  * La directive enveloppe le champ, glisse le bouton à droite et bascule le type
  * `password`/`text` au clic. Elle ne touche pas à la valeur : elle fonctionne donc
  * telle quelle avec les formulaires réactifs (`formControlName`).
+ *
+ * ⚠️ **Compatibilité SSR / hydratation** : le remodelage du DOM (envelopper le
+ * champ dans un `<span>`, insérer le bouton) est fait dans **`afterNextRender`**,
+ * qui ne s'exécute **que dans le navigateur, APRÈS l'hydratation**. Le serveur
+ * rend l'`<input>` nu, le client l'hydrate à l'identique, PUIS on l'améliore.
+ * Le faire dans `ngOnInit` (qui tourne aussi côté serveur) plaçait un `<span>`
+ * là où le template attend un `<input>` → **mismatch d'hydratation `NG0500`**
+ * qui cassait le formulaire de connexion/inscription au 1er rendu SSR.
  */
 @Directive({
   selector: 'input[appPasswordReveal]',
 })
-export class PasswordRevealDirective implements OnInit {
+export class PasswordRevealDirective {
   private readonly host: ElementRef<HTMLInputElement> = inject(ElementRef);
   private readonly renderer = inject(Renderer2);
   private revealed = false;
 
-  ngOnInit(): void {
+  constructor() {
+    // Navigateur uniquement, après l'hydratation : aucune manipulation du DOM
+    // pendant le rendu serveur ni pendant la réconciliation d'hydratation.
+    afterNextRender(() => this.enhance());
+  }
+
+  /** Enveloppe le champ et ajoute le bouton œil (post-hydratation, côté client). */
+  private enhance(): void {
     const input = this.host.nativeElement;
     const parent = this.renderer.parentNode(input);
 
     // On enveloppe le champ dans un conteneur positionné, pour y ancrer l'œil.
+    // Le nœud <input> est DÉPLACÉ (pas recréé) : sa liaison de formulaire reste
+    // intacte.
     const wrap = this.renderer.createElement('span');
     this.renderer.addClass(wrap, 'k-input-wrap');
     this.renderer.insertBefore(parent, wrap, input);
