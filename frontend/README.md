@@ -25,8 +25,15 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
 - ✅ **L'authentification** : créer un compte (avec choix du profil), se connecter,
   vérifier son compte par code, récupérer un mot de passe oublié. 👉 Détail :
   [`src/app/features/auth/README.md`](src/app/features/auth/README.md).
-- 🚧 **À venir** : les pages publiques et catalogues, les espaces personnels
-  (client, propriétaire, prestataire, entreprise), le back-office.
+- ✅ **Les pages publiques** : accueil, univers (immobilier, nuitées, tourisme,
+  transport…), moteur de recherche et catalogue, fiches détaillées, pages de
+  conversion, formulaires intelligents, FAQ, contact et pages légales. 👉 Détail :
+  [`src/app/features/README.md`](src/app/features/README.md).
+- ✅ **Le rendu côté serveur (SSR)** : les pages publiques sont d'abord
+  **assemblées par un serveur** puis envoyées prêtes à afficher (bon pour le
+  référencement Google et pour un premier affichage rapide). Voir « SSR » ci-dessous.
+- 🚧 **À venir** : les espaces personnels (client, propriétaire, prestataire,
+  entreprise) et le back-office.
 
 ---
 
@@ -68,6 +75,36 @@ page déconnecte** — quitte à ajouter plus tard une reconnexion automatique.
   [`src/styles/_tokens.scss`](src/styles/_tokens.scss), primitives (boutons,
   champs de formulaire, cartes…) dans [`src/styles/_base.scss`](src/styles/_base.scss).
 - Adresse de l'API du moteur configurée dans `src/environments/`.
+
+### Rendu côté serveur — SSR (F2.9)
+
+Le site est rendu **côté serveur** (`@angular/ssr`, `outputMode: server`) : à
+chaque visite, un petit serveur **Node/Express** ([`src/server.ts`](src/server.ts))
+assemble le HTML complet de la page **avant** de l'envoyer au navigateur, puis
+Angular « hydrate » ce HTML (le rend interactif sans le reconstruire). Concrètement :
+
+- **Toutes les pages publiques** sont en `RenderMode.Server` (rendu à la demande,
+  voir [`src/app/app.routes.server.ts`](src/app/app.routes.server.ts)) — choix
+  adapté à des pages dynamiques (`/immobilier/:id`, `/pages/:slug`, `/recherche`)
+  et alimentées par le backend.
+- Les données lues pendant le rendu serveur sont **transférées au client**
+  (transfer-cache HTTP, actif via `provideClientHydration`) : le navigateur ne
+  refait pas les mêmes appels API. `withFetch()` est activé pour le HttpClient.
+- Le jeton de session vivant **en mémoire seulement**, le serveur rend toujours la
+  vue « visiteur non connecté » — exactement ce qu'un moteur d'indexation doit voir.
+
+```bash
+# 1. Construire (produit dist/kaikun360/{browser,server})
+npx ng build
+
+# 2. Lancer le serveur SSR → http://localhost:4000/  (port réglable via PORT)
+npm run serve:ssr:kaikun360
+```
+
+> ⚠️ **Sécurité (déploiement)** : `angular.json → build.options.security.allowedHosts`
+> ne contient pour l'instant que `localhost`. **Ajouter le(s) domaine(s) de
+> production** (ex. `kaikun360.sn`) dans cette liste avant la mise en ligne, sinon
+> le serveur SSR renverra `400 Bad Request` (protection anti-SSRF sur l'en-tête Host).
 
 ### Commandes utiles
 

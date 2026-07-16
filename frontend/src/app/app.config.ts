@@ -1,5 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -18,6 +19,13 @@ export const appConfig: ApplicationConfig = {
     ),
     // Client HTTP + interceptors fonctionnels : on ajoute d'abord le jeton
     // (tokenInterceptor), puis on traite les erreurs de la réponse (errorInterceptor).
-    provideHttpClient(withInterceptors([tokenInterceptor, errorInterceptor])),
+    // `withFetch()` : au rendu serveur (SSR, F2.9) le HttpClient s'appuie sur
+    // l'API fetch de Node plutôt que sur un XHR simulé — recommandé pour le SSR.
+    provideHttpClient(withInterceptors([tokenInterceptor, errorInterceptor]), withFetch()),
+    // Hydratation (F2.9) : le client reprend le DOM rendu par le serveur sans le
+    // reconstruire. Le « transfer cache » HTTP est actif par défaut (les GET
+    // faits pendant le rendu serveur sont réutilisés côté client, pas rejoués).
+    // `withEventReplay()` : les clics survenus avant l'hydratation sont rejoués.
+    provideClientHydration(withEventReplay()),
   ],
 };
