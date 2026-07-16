@@ -52,6 +52,18 @@ class ContactMessageTest extends TestCase
         ]);
     }
 
+    public function test_les_coordonnees_du_siege_sont_publiques(): void
+    {
+        $this->getJson('/api/v1/contact-info')
+            ->assertOk()
+            ->assertJsonStructure([
+                'data' => ['contact' => ['email', 'phone', 'address', 'latitude', 'longitude']],
+            ])
+            // Adresse/coordonnées présentes (valeur exacte = réglage, non figée ici).
+            ->assertJsonPath('data.contact.address', fn ($v) => is_string($v) && $v !== '')
+            ->assertJsonPath('data.contact.latitude', fn ($v) => is_string($v) && $v !== '');
+    }
+
     public function test_le_message_de_contact_est_valide(): void
     {
         $this->postJson('/api/v1/contact', ['name' => 'X'])

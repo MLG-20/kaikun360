@@ -152,6 +152,13 @@ service_type / vehicle_type, issues des enums) et le référentiel géographique
 `PATCH /admin/contact-messages/{contactMessage}` (bascule `nouveau`/`traite`,
 enregistre `handled_by`/`handled_at`).
 
+**Coordonnées du siège (F2.8.1)** — réglages `contact.address`,
+`contact.latitude`, `contact.longitude` (groupe `general`, cf.
+`SettingsRepository::DEFAULTS`), **modifiables via `PATCH /admin/settings`**
+(`gerer:parametres`). Exposés en lecture publique par `GET /contact-info`
+(+ `support.email`/`support.phone`) pour alimenter l'adresse et la carte de la
+page Contact — rien n'est codé en dur côté frontend.
+
 ## B13.5 — Export comptable & reporting
 
 Permission `gerer:paiements`. `Services\AccountingReporter::report(from, to)`

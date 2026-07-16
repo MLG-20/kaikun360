@@ -33,6 +33,14 @@ class SettingsRepository
         'support.email' => ['value' => 'support@kaikun360.sn', 'type' => 'string', 'group' => 'general'],
         'support.phone' => ['value' => '+221 33 000 00 00', 'type' => 'string', 'group' => 'general'],
 
+        // Coordonnées du siège (affichées + carte sur la page Contact publique).
+        // Modifiables par l'équipe via le back-office (PATCH /admin/settings) —
+        // jamais codées en dur côté frontend. Latitude/longitude en chaîne pour
+        // préserver la précision décimale.
+        'contact.address' => ['value' => 'Place de France, Thiès, Sénégal', 'type' => 'string', 'group' => 'general'],
+        'contact.latitude' => ['value' => '14.78719077248399', 'type' => 'string', 'group' => 'general'],
+        'contact.longitude' => ['value' => '-16.935049726312236', 'type' => 'string', 'group' => 'general'],
+
         // Barème du simulateur de construction (B5.4, enrichi). Ces valeurs sont
         // des ORDRES DE GRANDEUR par défaut, destinés à être remplacés par
         // l'équipe (chiffres réels validés par des experts BTP) via le

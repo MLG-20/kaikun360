@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateContactMessageRequest;
 use App\Http\Resources\ContactMessageResource;
 use App\Models\ContactMessage;
 use App\Support\ApiResponse;
+use App\Support\Settings;
 use App\Support\Webhooks\WebhookDispatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,24 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
  */
 class ContactController extends Controller
 {
+    /**
+     * Coordonnées publiques du siège. GET /api/v1/contact-info (public).
+     *
+     * Expose le sous-ensemble affichable sur la page Contact (e-mail, téléphone,
+     * adresse, latitude/longitude pour la carte). Les valeurs proviennent des
+     * réglages (back-office) : rien n'est codé en dur côté frontend.
+     */
+    public function info(): JsonResponse
+    {
+        return ApiResponse::success(['contact' => [
+            'email' => Settings::get('support.email'),
+            'phone' => Settings::get('support.phone'),
+            'address' => Settings::get('contact.address'),
+            'latitude' => Settings::get('contact.latitude'),
+            'longitude' => Settings::get('contact.longitude'),
+        ]]);
+    }
+
     /**
      * Enregistre un message de contact. POST /api/v1/contact (public).
      *

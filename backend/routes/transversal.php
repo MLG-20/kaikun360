@@ -39,9 +39,11 @@ Route::get('whatsapp/link', [WhatsAppLinkController::class, 'generate']);
 Route::get('faqs', [FaqController::class, 'published']);
 Route::get('pages/{page}', [PageController::class, 'show']);
 
-// --- Message de contact public (F2.8.1) --------------------------------------
-// Dépôt ouvert à tous (prospect sans compte) ; throttle anti-spam dédié. La
-// consultation/traitement sont réservés à l'équipe (routes admin).
+// --- Contact public (F2.8.1) -------------------------------------------------
+// Coordonnées du siège (lecture, pour affichage + carte) et dépôt de message
+// ouvert à tous (prospect sans compte ; throttle anti-spam dédié). La
+// consultation/traitement des messages sont réservés à l'équipe (routes admin).
+Route::get('contact-info', [ContactController::class, 'info']);
 Route::post('contact', [ContactController::class, 'store'])->middleware('throttle:10,1');
 
 // --- Référentiel géographique public (F2.7.0) --------------------------------
