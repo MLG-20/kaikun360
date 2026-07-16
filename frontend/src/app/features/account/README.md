@@ -23,8 +23,13 @@ le **cadre** et la **page d'accueil** sont en place ; les rubriques marquées
 ### Ce qui existe aujourd'hui
 
 - **Le cadre (F3.1)** — [`../../layouts/account-layout`](../../layouts/account-layout) :
-  en-tête + pied de page du site, plus une **barre latérale** avec l'identité de
-  la personne, les liens des rubriques et un bouton **Se déconnecter**.
+  un **en-tête dédié épuré** (`account-header/`, voir plus bas), une **barre
+  latérale** avec les liens des rubriques, et le pied de page du site.
+- **L'en-tête dédié (F3.1)** — [`account-header/`](account-header) : marque
+  (retour à l'accueil), lien discret **« Retour au site »**, et **menu
+  utilisateur** (avatar + nom → **Se déconnecter** ; « Mon profil » viendra avec
+  F3.2). Volontairement **sans les méga-menus marketing** du site public : dans
+  son espace, la personne doit se sentir chez elle.
 - **La page d'accueil (F3.1)** — [`overview/`](overview) : salutation, **rappel de
   vérification** du compte si besoin, et des **tuiles** vers chaque rubrique.
 
@@ -45,6 +50,11 @@ Profil arrivent en F3.2 → F3.7.
 - **`account-icon.ts`** — petit composant `app-account-icon` rendant une icône
   SVG à partir d'une clé `AccountIcon` (`currentColor`, sans dépendance).
   Mutualisé par la barre latérale et les tuiles.
+- **`account-header/`** — `AccountHeaderComponent` (`app-account-header`) :
+  en-tête dédié de l'espace. Injecte `AuthService` (identité + `logout()`) ;
+  menu utilisateur déroulant (signal `menuOpen`, fermé à la navigation / Échap /
+  clic extérieur, même mécanique que le header public). Utilisé par le layout à
+  la place de `app-header`.
 - **`account.routes.ts`** — `ACCOUNT_ROUTES` : le layout `AccountLayoutComponent`
   porte `canActivate: [authGuard]` ; les sections sont ses routes enfants
   (chargées à la demande). L'accueil est la route enfant `''`.

@@ -1,0 +1,223 @@
+// En-tête dédié de l'espace client (F3.1). Sobre et fixe, sans méga-menus.
+
+:host {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: block;
+}
+
+.acc-topbar {
+  background: color-mix(in srgb, var(--k-card) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(10px);
+  border-bottom: 1px solid var(--k-line);
+}
+
+.acc-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 68px;
+}
+
+// --- Marque ---------------------------------------------------------------
+.acc-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  text-decoration: none;
+  color: inherit;
+}
+
+.acc-logo-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--k-navy);
+  color: #fff;
+  font-family: var(--k-font-display);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.acc-brand-text b {
+  font-family: var(--k-font-display);
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1;
+  display: block;
+}
+
+.acc-brand-text small {
+  font-size: 11px;
+  color: var(--k-brand);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+// --- Actions --------------------------------------------------------------
+.acc-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.acc-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--k-radius-sm);
+  color: var(--k-muted);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.92rem;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: var(--k-ink);
+    background: color-mix(in srgb, var(--k-ink) 5%, transparent);
+  }
+}
+
+// --- Menu utilisateur -----------------------------------------------------
+.acc-user {
+  position: relative;
+}
+
+.acc-user-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.4rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-pill);
+  background: var(--k-card);
+  color: var(--k-ink);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: var(--k-line-strong);
+  }
+
+  &[aria-expanded='true'] {
+    border-color: color-mix(in srgb, var(--k-brand) 45%, var(--k-line));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-brand) 12%, transparent);
+  }
+}
+
+.acc-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--k-brand);
+  color: #fff;
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+.acc-user-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acc-caret {
+  width: 16px;
+  height: 16px;
+  color: var(--k-muted);
+}
+
+.acc-user-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 220px;
+  padding: 0.4rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow-lg);
+}
+
+.acc-user-head {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--k-line);
+  margin-bottom: 0.35rem;
+
+  strong {
+    display: block;
+    font-family: var(--k-font-display);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--k-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.acc-user-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.6rem;
+  border: 0;
+  border-radius: var(--k-radius-sm);
+  background: transparent;
+  color: var(--k-ink);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--k-brand) 8%, transparent);
+    color: var(--k-brand);
+  }
+}
+
+// --- Mobile ---------------------------------------------------------------
+@media (max-width: 560px) {
+  .acc-brand-text {
+    display: none; // on garde la pastille logo seule
+  }
+
+  .acc-back span {
+    display: none; // on garde la flèche seule
+  }
+
+  .acc-user-name {
+    display: none; // avatar seul
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-user-btn {
+    transition: none;
+  }
+}

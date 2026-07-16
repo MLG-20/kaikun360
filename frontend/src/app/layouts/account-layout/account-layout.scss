@@ -29,49 +29,13 @@
   box-shadow: var(--k-shadow);
 }
 
-.account-side-head {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  padding: 0.35rem 0.4rem 0.85rem;
-  border-bottom: 1px solid var(--k-line);
-  margin-bottom: 0.5rem;
-}
-
-.account-avatar {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: var(--k-brand);
-  color: #fff;
-  font-family: var(--k-font-display);
-  font-weight: 700;
+.account-side-title {
+  font-family: var(--k-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.account-side-id {
-  min-width: 0;
-
-  strong {
-    display: block;
-    font-family: var(--k-font-display);
-    line-height: 1.2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-.account-side-contact {
-  font-size: 0.8rem;
   color: var(--k-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  display: block;
+  padding: 0.15rem 0.7rem 0.6rem;
 }
 
 .account-nav {
@@ -126,25 +90,8 @@
 }
 
 // `.account-soon-tag` est défini globalement dans `styles/_account.scss`
-// (partagé avec les tuiles de l'accueil de l'espace).
-
-.account-logout {
-  margin-top: 0.75rem;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid var(--k-line);
-  border-radius: var(--k-radius-sm);
-  background: transparent;
-  color: var(--k-muted);
-  font: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
-
-  &:hover {
-    border-color: var(--k-line-strong);
-    color: var(--k-ink);
-  }
-}
+// (partagé avec les tuiles de l'accueil de l'espace). L'identité et la
+// déconnexion vivent désormais dans `app-account-header`.
 
 .account-main {
   min-width: 0; // laisse le contenu rétrécir dans la grille

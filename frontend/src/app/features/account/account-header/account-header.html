@@ -1,0 +1,56 @@
+<header class="acc-topbar">
+  <div class="k-wrap acc-bar">
+    <!-- Marque : retour à l'accueil du site -->
+    <a class="acc-brand" routerLink="/" aria-label="Accueil Kaikun 360">
+      <span class="acc-logo-mark" aria-hidden="true">K</span>
+      <span class="acc-brand-text">
+        <b>Kaikun&nbsp;360</b>
+        <small>Mon espace</small>
+      </span>
+    </a>
+
+    <div class="acc-actions">
+      <!-- Lien discret de sortie vers le site public -->
+      <a class="acc-back" routerLink="/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+        <span>Retour au site</span>
+      </a>
+
+      <!-- Menu utilisateur -->
+      <div class="acc-user">
+        <button
+          class="acc-user-btn"
+          type="button"
+          (click)="toggleMenu()"
+          [attr.aria-expanded]="menuOpen()"
+          aria-label="Menu du compte"
+        >
+          <span class="acc-avatar" aria-hidden="true">{{ initial() }}</span>
+          <span class="acc-user-name">{{ user()?.name }}</span>
+          <svg class="acc-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+
+        @if (menuOpen()) {
+          <div class="acc-user-menu" role="menu">
+            <div class="acc-user-head">
+              <strong>{{ user()?.name }}</strong>
+              @if (user()?.email || user()?.phone) {
+                <span>{{ user()?.email || user()?.phone }}</span>
+              }
+            </div>
+            <!-- « Mon profil » s'ajoutera ici avec l'écran Profil (F3.2). -->
+            <button class="acc-user-item" type="button" role="menuitem" (click)="logout()">
+              Se déconnecter
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</header>

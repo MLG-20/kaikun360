@@ -1,17 +1,9 @@
-<app-header />
+<app-account-header />
 
 <div class="account-shell k-wrap">
-  <!-- Navigation latérale de l'espace personnel -->
+  <!-- Navigation latérale des rubriques de l'espace personnel -->
   <aside class="account-side" aria-label="Navigation de l’espace client">
-    <div class="account-side-head">
-      <span class="account-avatar" aria-hidden="true">{{ (user()?.name || '?')[0] }}</span>
-      <div class="account-side-id">
-        <strong>{{ user()?.name || 'Mon espace' }}</strong>
-        @if (user()?.email || user()?.phone) {
-          <span class="account-side-contact">{{ user()?.email || user()?.phone }}</span>
-        }
-      </div>
-    </div>
+    <p class="account-side-title">Mon espace</p>
 
     <nav class="account-nav">
       @for (item of nav; track item.path) {
@@ -34,8 +26,6 @@
         }
       }
     </nav>
-
-    <button type="button" class="account-logout" (click)="logout()">Se déconnecter</button>
   </aside>
 
   <!-- Contenu de la section active -->
