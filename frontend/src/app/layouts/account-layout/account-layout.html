@@ -1,8 +1,17 @@
-<app-account-header />
+<app-account-header [sidebarOpen]="sidebarOpen()" (sidebarToggle)="toggleSidebar()" />
 
 <div class="account-shell k-wrap">
-  <!-- Navigation latérale des rubriques de l'espace personnel -->
-  <aside class="account-side" aria-label="Navigation de l’espace client">
+  <!-- Fond assombri (petit écran) : un clic referme le tiroir -->
+  @if (sidebarOpen()) {
+    <div class="account-backdrop" (click)="closeSidebar()" aria-hidden="true"></div>
+  }
+
+  <!-- Navigation latérale des rubriques (tiroir en petit écran) -->
+  <aside
+    class="account-side"
+    [class.is-open]="sidebarOpen()"
+    aria-label="Navigation de l’espace client"
+  >
     <p class="account-side-title">Mon espace</p>
 
     <nav class="account-nav">
@@ -13,6 +22,7 @@
             [routerLink]="item.path ? ['/mon-espace', item.path] : ['/mon-espace']"
             [routerLinkActive]="'is-active'"
             [routerLinkActiveOptions]="{ exact: item.path === '' }"
+            (click)="closeSidebar()"
           >
             <span class="account-nav-ic"><app-account-icon [name]="item.icon" /></span>
             <span class="account-nav-label">{{ item.label }}</span>
@@ -33,4 +43,3 @@
     <router-outlet />
   </main>
 </div>
-

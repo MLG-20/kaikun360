@@ -21,6 +21,31 @@
   min-height: 68px;
 }
 
+// --- Hamburger (petit écran uniquement) -----------------------------------
+.acc-burger {
+  display: none; // masqué en desktop (la barre latérale est toujours visible)
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  margin-right: 0.25rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-card);
+  color: var(--k-ink);
+  cursor: pointer;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  &:hover {
+    border-color: var(--k-line-strong);
+  }
+}
+
 // --- Marque ---------------------------------------------------------------
 .acc-brand {
   display: flex;
@@ -201,18 +226,23 @@
   }
 }
 
-// --- Mobile ---------------------------------------------------------------
-@media (max-width: 560px) {
-  .acc-brand-text {
-    display: none; // on garde la pastille logo seule
+// --- Petit écran ----------------------------------------------------------
+@media (max-width: 860px) {
+  // Le hamburger apparaît (la barre latérale devient un tiroir).
+  .acc-burger {
+    display: inline-flex;
   }
+}
 
+@media (max-width: 560px) {
+  // On garde les NOMS (marque + utilisateur) visibles ; on ne rogne que le
+  // libellé du lien « Retour au site » (l'icône flèche suffit à comprendre).
   .acc-back span {
-    display: none; // on garde la flèche seule
+    display: none;
   }
 
   .acc-user-name {
-    display: none; // avatar seul
+    max-width: 96px; // le nom reste affiché, tronqué si vraiment long
   }
 }
 

@@ -11,7 +11,9 @@
   display: grid;
   grid-template-columns: 264px 1fr;
   gap: 1.75rem;
-  align-items: start;
+  // Colonnes de MÊME hauteur (stretch, défaut de la grille) : la barre latérale
+  // s'étire sur toute la hauteur du contenu de droite.
+  align-items: stretch;
   padding-block: 2rem 3.5rem;
   // Pas de pied de page dans l'espace : on remplit la hauteur sous l'en-tête
   // fixe (~68px) pour éviter un vide en bas sur les pages courtes.
@@ -20,8 +22,6 @@
 
 // --- Barre latérale -------------------------------------------------------
 .account-side {
-  position: sticky;
-  top: 88px; // sous l'en-tête fixe
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -30,6 +30,9 @@
   border: 1px solid var(--k-line);
   border-radius: var(--k-radius-lg);
   box-shadow: var(--k-shadow);
+  // Le panneau s'étire (grille en stretch) ; les liens restent en haut. On
+  // colle le contenu du panneau au sommet même si la carte est très haute.
+  align-self: stretch;
 }
 
 .account-side-title {
@@ -100,22 +103,51 @@
   min-width: 0; // laisse le contenu rétrécir dans la grille
 }
 
-// --- Mobile : la barre passe au-dessus du contenu ------------------------
+// Fond assombri du tiroir : masqué par défaut (n'existe qu'en petit écran).
+.account-backdrop {
+  display: none;
+}
+
+// --- Petit écran : la barre latérale devient un TIROIR qui glisse à gauche -
 @media (max-width: 860px) {
   .account-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr; // le contenu occupe toute la largeur
     gap: 1.1rem;
   }
 
+  // Fond sombre couvrant tout, sous le tiroir mais au-dessus du contenu.
+  .account-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(3, 25, 63, 0.45);
+  }
+
+  // Le tiroir : fixé à gauche, plein hauteur, caché hors écran par défaut.
   .account-side {
-    position: static;
-  }
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 60;
+    width: min(320px, 82%);
+    border-radius: 0 var(--k-radius-lg) var(--k-radius-lg) 0;
+    border-left: 0;
+    box-shadow: var(--k-shadow-lg);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 0.25s ease, visibility 0.25s ease;
 
-  .account-nav {
-    flex-flow: row wrap;
+    &.is-open {
+      transform: translateX(0);
+      visibility: visible;
+    }
   }
+}
 
-  .account-nav-link {
-    flex: 1 1 auto;
+@media (max-width: 860px) and (prefers-reduced-motion: reduce) {
+  .account-side {
+    transition: none;
   }
 }

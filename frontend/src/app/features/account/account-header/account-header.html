@@ -1,5 +1,19 @@
 <header class="acc-topbar">
   <div class="k-wrap acc-bar">
+    <!-- Bouton hamburger (petit écran) : ouvre le tiroir de navigation à gauche -->
+    <button
+      class="acc-burger"
+      type="button"
+      (click)="sidebarToggle.emit()"
+      [attr.aria-expanded]="sidebarOpen()"
+      aria-label="Ouvrir le menu de l’espace"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" aria-hidden="true">
+        <path d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
     <!-- Marque : retour à l'accueil du site -->
     <a class="acc-brand" routerLink="/" aria-label="Accueil Kaikun 360">
       <span class="acc-logo-mark" aria-hidden="true">K</span>
@@ -24,8 +38,8 @@
         <button
           class="acc-user-btn"
           type="button"
-          (click)="toggleMenu()"
-          [attr.aria-expanded]="menuOpen()"
+          (click)="toggleUserMenu()"
+          [attr.aria-expanded]="userMenuOpen()"
           aria-label="Menu du compte"
         >
           <span class="acc-avatar" aria-hidden="true">{{ initial() }}</span>
@@ -36,7 +50,7 @@
           </svg>
         </button>
 
-        @if (menuOpen()) {
+        @if (userMenuOpen()) {
           <div class="acc-user-menu" role="menu">
             <div class="acc-user-head">
               <strong>{{ user()?.name }}</strong>
