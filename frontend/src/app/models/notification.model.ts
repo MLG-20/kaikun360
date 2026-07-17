@@ -13,7 +13,7 @@
  * affichées ; miroir des `category` produites par les `toArray()` backend.
  * `general` est le repli par défaut pour toute catégorie inconnue.
  */
-export type NotificationCategory = 'request' | 'quote' | 'booking' | 'general';
+export type NotificationCategory = 'request' | 'quote' | 'booking' | 'message' | 'general';
 
 export interface AppNotification {
   /** UUID de la notification (identifiant de la ligne `notifications`). */

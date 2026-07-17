@@ -32,7 +32,13 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
 - ✅ **Le rendu côté serveur (SSR)** : les pages publiques sont d'abord
   **assemblées par un serveur** puis envoyées prêtes à afficher (bon pour le
   référencement Google et pour un premier affichage rapide). Voir « SSR » ci-dessous.
-- 🚧 **À venir** : les espaces personnels (client, propriétaire, prestataire,
+- ✅ **L'espace client (F3)** : l'espace personnel de la personne connectée, sous
+  `/mon-espace` (menu latéral sombre, en-tête épuré). Ses **six écrans** sont en
+  place — tableau de bord, **profil** (identité, coordonnées, sécurité, pièces),
+  **mes demandes**, **réservations**, **favoris**, **notifications** et
+  **messagerie** (conversations + fil de discussion avec réponse). 👉 Détail :
+  [`src/app/features/account/README.md`](src/app/features/account/README.md).
+- 🚧 **À venir** : les autres espaces personnels (propriétaire, prestataire,
   entreprise) et le back-office.
 
 ---

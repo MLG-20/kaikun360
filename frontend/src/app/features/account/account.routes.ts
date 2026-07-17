@@ -53,6 +53,20 @@ export const ACCOUNT_ROUTES: Routes = [
         title: 'Mes notifications — Kaikun 360',
       },
       {
+        // F3.7 — Messages : liste des conversations (GET /messages).
+        path: 'messages',
+        loadComponent: () =>
+          import('./messages/messages-page').then((m) => m.MessagesPageComponent),
+        title: 'Mes messages — Kaikun 360',
+      },
+      {
+        // F3.7 — Fil de discussion : messages + réponse (GET /messages/{id}).
+        path: 'messages/:id',
+        loadComponent: () =>
+          import('./messages/message-thread').then((m) => m.MessageThreadComponent),
+        title: 'Conversation — Kaikun 360',
+      },
+      {
         // F3.2 — Profil : identité, pièces justificatives, suppression du compte.
         path: 'profil',
         loadComponent: () =>

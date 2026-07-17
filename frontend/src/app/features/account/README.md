@@ -16,9 +16,10 @@ Cet espace est **privé** : on ne peut y entrer que connecté. Si une personne n
 connectée tente d'ouvrir une adresse en `/mon-espace…`, elle est **renvoyée vers
 la page de connexion**, puis ramenée là où elle voulait aller une fois connectée.
 
-On construit cet espace **rubrique par rubrique**. Aujourd'hui, le **cadre**, la
-**page d'accueil** et la rubrique **Profil** sont en place ; les rubriques
-marquées « Bientôt » s'activeront aux étapes suivantes.
+On a construit cet espace **rubrique par rubrique**. Il est désormais **complet** :
+le **cadre**, la **page d'accueil** et les six rubriques — **Profil**, **Mes
+demandes**, **Réservations**, **Favoris**, **Notifications** et **Messages** — sont
+toutes en place (plus aucune section « Bientôt »).
 
 ### Ce qui existe aujourd'hui
 
@@ -86,7 +87,17 @@ marquées « Bientôt » s'activeront aux étapes suivantes.
   **cloche de l'en-tête** (`account-header`) porte une **pastille** du nombre de
   non-lues, rafraîchie à chaque navigation dans l'espace.
 
-La rubrique Messages arrive en F3.7.
+- **La rubrique Messages (F3.7)** — [`messages/`](messages) : la **messagerie** du
+  client. Un premier écran liste ses **conversations** (`GET /messages`, paginé),
+  chacune montrant le **correspondant** (support Kaikun, propriétaire, prestataire),
+  un **aperçu** du dernier message, la date, et une **pastille** du nombre de
+  messages non lus. En ouvrant une conversation (`GET /messages/{id}`), on voit le
+  **fil** de messages en **bulles** (les siens à droite en bleu, ceux du
+  correspondant à gauche) et on **répond** via un composeur
+  (`POST /messages/{id}/messages`) — le message s'ajoute sans recharger. Ouvrir un
+  fil le **marque comme lu** (la pastille disparaît). Chaque nouveau message reçu
+  génère aussi une **notification** (cloche F3.6). C'est la **dernière** rubrique
+  de l'espace client.
 
 ---
 
@@ -136,6 +147,21 @@ La rubrique Messages arrive en F3.7.
   (`account-header`) appelle `unreadCount` et affiche la pastille, rechargée à
   chaque `NavigationEnd` (donc mise à jour au retour de l'écran) — et seulement
   quand une session est active (pas d'appel voué au 401 côté serveur SSR).
+- **`messages/`** (F3.7) — deux écrans via le
+  [`MessageService`](../../core/api/message.service.ts) (socle backend générique :
+  conversations à participants + messages) :
+  - **`MessagesPageComponent`** (route enfant `messages`) : liste paginée des
+    conversations (`myConversations` renvoie la pagination **enrichie** de
+    `unread_count`). Chaque ligne est un lien vers le fil ; pastille de non-lus,
+    aperçu du dernier message (préfixe « Vous : » si l'on en est l'auteur),
+    étiquette de contexte éventuelle.
+  - **`MessageThreadComponent`** (route enfant `messages/:id`) : ouvre le fil
+    (`conversation` → marque lu côté serveur), affiche les messages en **bulles**
+    alignées via `is_mine`, défile en bas (`ngAfterViewChecked`) et **répond**
+    (`sendMessage`) en ajoutant le message localement (sans reload). Un fil dont
+    on n'est pas participant renvoie 404 → écran d'erreur. Modèles dans
+    [`../../models/message.model.ts`](../../models/message.model.ts). La catégorie
+    de notification `message` (icône `chat`) a été ajoutée au centre F3.6.
 
 ### Points d'intégration
 

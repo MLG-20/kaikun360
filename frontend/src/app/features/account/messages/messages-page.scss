@@ -1,0 +1,200 @@
+// Écran « Messages » de l'espace client (F3.7) — liste des conversations.
+// L'en-tête d'écran (.account-head/.account-title…) vient du partiel global
+// `styles/_account.scss` et les états (.pf-state) du partiel du profil ; on ne
+// définit ici que les briques propres à la liste des fils (préfixe ms-).
+
+// — État vide —
+.ms-empty {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+}
+
+.ms-empty-title {
+  font-family: var(--k-font-display);
+  font-size: 1.25rem;
+  margin-bottom: 0.6rem;
+}
+
+.ms-empty-text {
+  color: var(--k-muted);
+  max-width: 52ch;
+  margin: 0 auto;
+}
+
+// — Barre d'actions (compteur de non-lus) —
+.ms-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.ms-count {
+  margin: 0;
+  color: var(--k-muted);
+
+  strong {
+    color: var(--k-brand-600);
+  }
+}
+
+// — Liste —
+.ms-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ms-item {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  overflow: hidden;
+
+  // Non lu : liseré de marque à gauche + fond légèrement teinté.
+  &.is-unread {
+    border-color: color-mix(in srgb, var(--k-brand) 30%, var(--k-line));
+
+    .ms-link {
+      border-left: 3px solid var(--k-brand);
+      background: var(--k-brand-050);
+    }
+
+    .ms-name {
+      font-weight: 700;
+    }
+  }
+}
+
+// Toute la ligne est un lien vers le fil.
+.ms-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.35rem;
+  border-left: 3px solid transparent;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--k-cream);
+  }
+}
+
+// Pastille d'avatar (icône de conversation).
+.ms-avatar {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 10px;
+  background: var(--k-brand-050);
+  color: var(--k-brand-600);
+}
+
+.ms-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ms-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ms-name {
+  font-weight: 600;
+  color: var(--k-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-time {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  color: var(--k-muted);
+}
+
+.ms-subject {
+  font-size: 0.85rem;
+  color: var(--k-ink);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+// Étiquette du contexte (« Demande », « Réservation »…).
+.ms-tag {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--k-brand-600);
+  background: var(--k-brand-050);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+
+// Aperçu du dernier message (une ligne, tronquée).
+.ms-preview {
+  color: var(--k-muted);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ms-preview-me {
+  color: var(--k-ink);
+  font-weight: 600;
+}
+
+// Pastille du nombre de non-lus.
+.ms-badge {
+  flex: 0 0 auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--k-brand);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+// — Pagination —
+.ms-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.ms-pager-info {
+  font-size: 0.9rem;
+  color: var(--k-muted);
+}

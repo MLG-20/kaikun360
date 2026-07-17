@@ -84,7 +84,7 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     description: 'Échangez avec le support Kaikun ou votre prestataire.',
     path: 'messages',
     icon: 'chat',
-    ready: false, // F3.7
+    ready: true, // F3.7 ✅
   },
   {
     label: 'Profil',

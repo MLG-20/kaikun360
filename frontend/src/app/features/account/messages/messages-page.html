@@ -1,0 +1,95 @@
+<section class="account-head">
+  <p class="account-eyebrow">Mon espace</p>
+  <h1 class="account-title">Messages</h1>
+  <p class="account-lead">
+    Échangez avec le support Kaikun et les propriétaires ou prestataires liés à
+    vos demandes. Ouvrez une conversation pour lire les messages et répondre.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos conversations…</p>
+} @else if (loadError()) {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger vos conversations pour le moment. Merci de réessayer plus tard.
+  </p>
+} @else if (items().length === 0) {
+  <!-- ========================= Aucune conversation ========================= -->
+  <div class="ms-empty">
+    <h2 class="ms-empty-title">Aucune conversation</h2>
+    <p class="ms-empty-text">
+      Vous n'avez pas encore de message. Une conversation s'ouvre lorsque vous
+      contactez le support ou un professionnel depuis une annonce ou une demande.
+    </p>
+  </div>
+} @else {
+  <!-- ===================== Barre d'actions (non-lus) ======================= -->
+  <div class="ms-toolbar">
+    <p class="ms-count" role="status">
+      @if (unreadCount() > 0) {
+        <strong>{{ unreadCount() }}</strong> message{{ unreadCount() > 1 ? 's' : '' }} non lu{{
+          unreadCount() > 1 ? 's' : ''
+        }}
+      } @else {
+        Vous êtes à jour.
+      }
+    </p>
+  </div>
+
+  <!-- ======================= Liste des conversations ======================= -->
+  <ul class="ms-list">
+    @for (conv of items(); track conv.id) {
+      <li class="ms-item" [class.is-unread]="conv.unread_count > 0">
+        <a class="ms-link" [routerLink]="['/mon-espace/messages', conv.id]">
+          <span class="ms-avatar" aria-hidden="true">
+            <app-account-icon name="chat" />
+          </span>
+          <span class="ms-main">
+            <span class="ms-head">
+              <span class="ms-name">{{ counterpartLabel(conv) }}</span>
+              @if (conv.last_message_at) {
+                <span class="ms-time">{{ conv.last_message_at | date: 'shortDate' : '' : 'fr' }}</span>
+              }
+            </span>
+            @if (conv.subject || conv.context_label) {
+              <span class="ms-subject">
+                @if (conv.context_label) {
+                  <span class="ms-tag">{{ conv.context_label }}</span>
+                }
+                {{ conv.subject }}
+              </span>
+            }
+            @if (conv.last_message; as last) {
+              <span class="ms-preview">
+                @if (last.is_mine) {
+                  <span class="ms-preview-me">Vous :</span>
+                }
+                {{ last.body }}
+              </span>
+            }
+          </span>
+          @if (conv.unread_count > 0) {
+            <span class="ms-badge" [attr.aria-label]="conv.unread_count + ' non lus'">
+              {{ conv.unread_count > 9 ? '9+' : conv.unread_count }}
+            </span>
+          }
+        </a>
+      </li>
+    }
+  </ul>
+
+  <!-- Pagination -->
+  @if (meta(); as m) {
+    @if (m.last_page > 1) {
+      <nav class="ms-pager" aria-label="Pagination des conversations">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasPrev()" (click)="prev()">
+          ← Précédent
+        </button>
+        <span class="ms-pager-info">Page {{ m.current_page }} sur {{ m.last_page }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasNext()" (click)="next()">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}

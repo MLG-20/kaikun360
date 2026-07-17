@@ -140,6 +140,8 @@ export class NotificationsPageComponent {
         return 'inbox';
       case 'booking':
         return 'calendar';
+      case 'message':
+        return 'chat';
       default:
         return 'bell';
     }

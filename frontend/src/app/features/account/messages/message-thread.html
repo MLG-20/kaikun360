@@ -1,0 +1,66 @@
+<section class="account-head mt-head">
+  <a class="mt-back" routerLink="/mon-espace/messages">← Messages</a>
+  @if (conversation(); as conv) {
+    <h1 class="account-title mt-title">{{ title() }}</h1>
+    <p class="mt-with">
+      @if (conv.context_label) {
+        <span class="mt-tag">{{ conv.context_label }}</span>
+      }
+      @if (conv.counterparts.length) {
+        Avec {{ conv.counterparts[0].name }}
+      }
+    </p>
+  } @else {
+    <h1 class="account-title mt-title">Conversation</h1>
+  }
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de la conversation…</p>
+} @else if (loadError()) {
+  <p class="pf-state pf-state--error" role="alert">
+    Cette conversation est introuvable ou ne vous appartient pas.
+  </p>
+} @else {
+  <!-- ============================ Fil de messages ========================= -->
+  <div class="mt-thread" #scroller>
+    @for (msg of thread(); track msg.id) {
+      <div class="mt-row" [class.is-mine]="msg.is_mine">
+        <div class="mt-bubble">
+          @if (!msg.is_mine && msg.sender.name) {
+            <span class="mt-sender">{{ msg.sender.name }}</span>
+          }
+          <span class="mt-text">{{ msg.body }}</span>
+          @if (msg.created_at) {
+            <span class="mt-time">{{ msg.created_at | date: 'short' : '' : 'fr' }}</span>
+          }
+        </div>
+      </div>
+    } @empty {
+      <p class="mt-empty">Aucun message dans cette conversation.</p>
+    }
+  </div>
+
+  <!-- ============================== Composeur ============================= -->
+  <form class="mt-composer" (ngSubmit)="send()">
+    @if (sendError()) {
+      <p class="k-form-error" role="alert">
+        Votre message n'a pas pu être envoyé. Merci de réessayer.
+      </p>
+    }
+    <div class="mt-composer-row">
+      <textarea
+        class="mt-input"
+        rows="2"
+        placeholder="Écrivez votre message…"
+        [ngModel]="draft()"
+        (ngModelChange)="draft.set($event)"
+        name="draft"
+        [disabled]="sending()"
+      ></textarea>
+      <button type="submit" class="k-btn k-btn--primary mt-send" [disabled]="!canSend()">
+        {{ sending() ? 'Envoi…' : 'Envoyer' }}
+      </button>
+    </div>
+  </form>
+}
