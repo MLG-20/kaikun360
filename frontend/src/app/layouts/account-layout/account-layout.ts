@@ -22,13 +22,12 @@ import { ACCOUNT_NAV } from '../../features/account/account-nav';
  * rendu dans le `router-outlet`.
  *
  * Choix UX de l'utilisateur : **ni méga-menus ni pied de page** dans les espaces
- * connectés, pour que la personne se sente chez elle. La barre latérale est un
+ * connectés, pour que la personne se sente chez elle. Sur **desktop**, la barre
+ * latérale est un **rail permanent, collé à gauche et pleine hauteur** (pas de
+ * bouton pour le masquer). Sur **petit écran** (< 860px), elle devient un
  * **tiroir qui pousse le contenu** (bouton hamburger de l'en-tête →
- * `sidebarOpen`), collé au bord gauche, sous l'en-tête. Même comportement à
- * toutes les tailles, seul l'**état par défaut** change : **ouvert et épinglé
- * sur desktop** (on a la place), **fermé sur petit écran** (où il glisse par
- * dessus avec un fond assombri). Sur petit écran, il se referme au clic sur le
- * fond, sur un lien ou à la navigation ; sur desktop il reste épinglé.
+ * `sidebarOpen`), et se referme au clic sur le fond, sur un lien, ou à la
+ * navigation.
  *
  * Toute la branche `/mon-espace` est protégée par `authGuard` (voir
  * `account.routes.ts`) : on n'arrive donc ici qu'avec une session active.
@@ -47,53 +46,29 @@ import { ACCOUNT_NAV } from '../../features/account/account-nav';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountLayoutComponent {
-  /** Largeur (px) à partir de laquelle on est en « desktop » (miroir du SCSS). */
-  private static readonly DESKTOP_MIN = 861;
-
   /** Sections de l'espace (prêtes ou « bientôt »), pour la navigation latérale. */
   protected readonly nav = ACCOUNT_NAV;
 
-  /**
-   * Tiroir de navigation ouvert ? **Ouvert par défaut sur desktop** (épinglé,
-   * on a la place), **fermé sur petit écran**. Côté serveur (pas de `window`),
-   * on assume desktop — de toute façon la branche est auth-gated et ne rend pas
-   * réellement en SSR (jeton en mémoire seule).
-   */
-  protected readonly sidebarOpen = signal(this.isDesktop());
+  /** Tiroir de navigation ouvert ? (petit écran uniquement ; rail permanent en desktop). */
+  protected readonly sidebarOpen = signal(false);
 
   constructor() {
-    // Sur PETIT ÉCRAN uniquement, toute navigation referme le tiroir (il glisse
-    // par-dessus le contenu). Sur desktop il est épinglé : on le laisse ouvert.
+    // Toute navigation referme le tiroir (sans effet en desktop, où il est fixe).
     inject(Router)
       .events.pipe(
         filter((e) => e instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(() => {
-        if (!this.isDesktop()) {
-          this.sidebarOpen.set(false);
-        }
-      });
+      .subscribe(() => this.sidebarOpen.set(false));
   }
 
-  /** Ouvre/ferme le tiroir (déclenché par le hamburger de l'en-tête). */
+  /** Ouvre/ferme le tiroir (déclenché par le hamburger de l'en-tête, petit écran). */
   protected toggleSidebar(): void {
     this.sidebarOpen.update((open) => !open);
   }
 
-  /**
-   * Ferme le tiroir au clic sur le fond ou sur un lien — mais **seulement sur
-   * petit écran** : sur desktop le menu est épinglé et ne se referme pas en
-   * naviguant.
-   */
+  /** Ferme le tiroir (clic sur le fond ou sur un lien, petit écran). */
   protected closeSidebar(): void {
-    if (!this.isDesktop()) {
-      this.sidebarOpen.set(false);
-    }
-  }
-
-  /** Sommes-nous en affichage desktop ? (fenêtre large ; vrai par défaut en SSR). */
-  private isDesktop(): boolean {
-    return typeof window === 'undefined' || window.innerWidth >= AccountLayoutComponent.DESKTOP_MIN;
+    this.sidebarOpen.set(false);
   }
 }

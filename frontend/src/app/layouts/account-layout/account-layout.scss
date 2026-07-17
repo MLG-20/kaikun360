@@ -32,12 +32,16 @@
   border: 1px solid var(--k-line);
   border-radius: var(--k-radius-lg);
   box-shadow: var(--k-shadow);
-  // Hauteur naturelle (pas d'étirement) + sticky : la barre suit le défilement
-  // et reste visible sous l'en-tête sticky sur les pages longues, sans laisser
-  // de vide blanc en bas. Le `top` = hauteur de l'en-tête (~69px) + une marge.
+  // Desktop : RAIL PERMANENT collé à gauche, prenant toute la hauteur du côté.
+  // Sticky + hauteur = viewport sous l'en-tête (~69px) avec une petite marge :
+  // le menu reste visible en entier quand on défile (sur les pages longues, le
+  // contenu défile à côté d'un rail toujours plein). `overflow-y:auto` par
+  // sécurité si la navigation venait à dépasser.
   align-self: start;
   position: sticky;
-  top: calc(69px + 1rem);
+  top: calc(69px + 1.5rem);
+  height: calc(100vh - 69px - 3rem);
+  overflow-y: auto;
 }
 
 .account-side-title {
@@ -108,20 +112,6 @@
   min-width: 0; // laisse le contenu rétrécir dans la grille
 }
 
-// --- Desktop : menu ÉPINGLÉ ouvert par défaut, mais REPLIABLE (hamburger) -----
-// Sur desktop on a la place : le menu occupe sa colonne (264px) et pousse le
-// contenu. Le hamburger permet de le REPLIER — il se retire alors et le contenu
-// prend toute la largeur. (Sur petit écran, voir plus bas : tiroir par-dessus.)
-@media (min-width: 861px) {
-  .account-shell:not(.is-open) {
-    grid-template-columns: 1fr;
-  }
-
-  .account-shell:not(.is-open) .account-side {
-    display: none;
-  }
-}
-
 // Fond assombri du tiroir : masqué par défaut (n'existe qu'en petit écran).
 .account-backdrop {
   display: none;
@@ -160,6 +150,7 @@
     top: 69px;
     left: 0;
     bottom: 0;
+    height: auto; // annule la hauteur fixe du rail desktop : top+bottom pilotent
     z-index: 30;
     width: var(--drawer-w);
     border-radius: 0 var(--k-radius-lg) var(--k-radius-lg) 0;

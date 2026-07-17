@@ -21,9 +21,9 @@
   min-height: 68px;
 }
 
-// --- Hamburger : ouvre/replie le menu latéral (toutes tailles) ------------
+// --- Hamburger (petit écran uniquement) -----------------------------------
 .acc-burger {
-  display: inline-flex; // visible partout : sur desktop il replie le menu épinglé
+  display: none; // masqué en desktop : le menu latéral y est un rail permanent
   align-items: center;
   justify-content: center;
   width: 42px;
@@ -271,6 +271,13 @@
 }
 
 // --- Petit écran ----------------------------------------------------------
+@media (max-width: 860px) {
+  // Le hamburger apparaît (la barre latérale devient un tiroir).
+  .acc-burger {
+    display: inline-flex;
+  }
+}
+
 @media (max-width: 560px) {
   // Sur téléphone, on retire le mot-clé « Kaikun 360 » (la pastille logo « K »
   // suffit) et le libellé « Retour au site » (la flèche suffit).

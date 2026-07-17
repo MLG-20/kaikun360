@@ -1,6 +1,6 @@
 <app-account-header [sidebarOpen]="sidebarOpen()" (sidebarToggle)="toggleSidebar()" />
 
-<div class="account-shell k-wrap" [class.is-open]="sidebarOpen()">
+<div class="account-shell k-wrap">
   <!-- Fond assombri (petit écran) : un clic referme le tiroir -->
   @if (sidebarOpen()) {
     <div class="account-backdrop" (click)="closeSidebar()" aria-hidden="true"></div>
