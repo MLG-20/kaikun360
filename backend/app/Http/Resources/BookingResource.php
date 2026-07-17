@@ -8,18 +8,37 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Représentation JSON d'une réservation (transversale).
  *
+ * Enrichie en F3.4 (espace client) pour l'écran « Mes réservations » : au-delà
+ * des attributs bruts, la ressource expose le **type** de la chose réservée
+ * (`bookable` polymorphe : nuitée, véhicule, expérience, trajet), un **libellé
+ * lisible** de cet élément et un drapeau **`cancellable`** indiquant si le
+ * client peut encore annuler lui-même (seuls les véhicules et les expériences
+ * ont un endpoint d'annulation client, et uniquement tant que la réservation
+ * n'est pas déjà annulée). Le libellé de l'élément n'est calculé que si la
+ * relation `bookable` a été chargée en amont (évite les requêtes N+1).
+ *
  * @mixin \App\Models\Booking
  */
 class BookingResource extends JsonResource
 {
+    /** Types de `bookable` dont le client peut déclencher l'annulation lui-même. */
+    private const CANCELLABLE_TYPES = ['vehicle', 'experience'];
+
     /**
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
     {
+        $type = $this->bookableType();
+
         return [
             'id' => $this->id,
             'reference' => $this->reference,
+            // Nature de la réservation (nuitée/véhicule/expérience/trajet).
+            'type' => $type,
+            'type_label' => $this->typeLabel($type),
+            // Libellé de l'élément réservé (si la relation bookable est chargée).
+            'item_label' => $this->whenLoaded('bookable', fn () => $this->itemLabel($type)),
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             'start_date' => $this->start_date?->toDateString(),
@@ -31,6 +50,60 @@ class BookingResource extends JsonResource
             'caution_status' => $this->caution_status?->value,
             'cancelled_at' => $this->cancelled_at,
             'created_at' => $this->created_at,
+            // Le titulaire peut-il encore annuler cette réservation lui-même ?
+            'cancellable' => in_array($type, self::CANCELLABLE_TYPES, true)
+                && ! ($this->status?->estAnnulee() ?? false),
         ];
+    }
+
+    /**
+     * Slug du type de `bookable` déduit du nom court de la classe polymorphe
+     * (sans coupler cette ressource transversale aux modèles des modules).
+     */
+    private function bookableType(): string
+    {
+        return match (class_basename((string) $this->bookable_type)) {
+            'Stay' => 'stay',
+            'Vehicle' => 'vehicle',
+            'TourismExperience' => 'experience',
+            'MobilityService' => 'mobility',
+            default => 'autre',
+        };
+    }
+
+    /** Libellé français du type de réservation. */
+    private function typeLabel(string $type): string
+    {
+        return match ($type) {
+            'stay' => 'Nuitée',
+            'vehicle' => 'Véhicule',
+            'experience' => 'Expérience',
+            'mobility' => 'Trajet',
+            default => 'Réservation',
+        };
+    }
+
+    /**
+     * Libellé lisible de l'élément réservé, calculé selon son type (chaque
+     * bookable a ses propres attributs : une nuitée n'a de nom que via son bien,
+     * un véhicule via marque/modèle, un trajet via son itinéraire…).
+     */
+    private function itemLabel(string $type): ?string
+    {
+        $bookable = $this->bookable;
+
+        if ($bookable === null) {
+            return null;
+        }
+
+        return match ($type) {
+            'stay' => $bookable->property?->title
+                ? 'Nuitée — '.$bookable->property->title
+                : 'Nuitée',
+            'vehicle' => trim(($bookable->brand ?? '').' '.($bookable->model ?? '')) ?: 'Véhicule',
+            'experience' => $bookable->title ?? 'Expérience',
+            'mobility' => trim(($bookable->departure ?? '').' → '.($bookable->destination ?? ''), ' →') ?: 'Trajet',
+            default => null,
+        };
     }
 }

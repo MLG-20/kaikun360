@@ -8,6 +8,7 @@ use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Modules\Stay\Models\Stay;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -137,5 +138,67 @@ class QuoteAndBookingTest extends TestCase
         $this->getJson('/api/v1/bookings/my')
             ->assertOk()
             ->assertJsonCount(2, 'data');
+    }
+
+    public function test_bookings_my_expose_le_type_et_l_annulabilite(): void
+    {
+        $user = User::factory()->create();
+
+        // Une location de véhicule (type annulable côté client).
+        $vehicle = Vehicle::factory()->create(['brand' => 'Toyota', 'model' => 'Hilux']);
+        Booking::create([
+            'reference' => 'BK-VEH',
+            'user_id' => $user->id,
+            'bookable_type' => Vehicle::class,
+            'bookable_id' => $vehicle->id,
+            'start_date' => now()->addWeek()->toDateString(),
+            'end_date' => now()->addWeek()->addDay()->toDateString(),
+            'amount_xof' => 100_000,
+            'status' => 'confirmee',
+        ]);
+
+        // Une nuitée (type SANS endpoint d'annulation client → non annulable).
+        $stay = Stay::factory()->create();
+        Booking::create([
+            'reference' => 'BK-STAY',
+            'user_id' => $user->id,
+            'bookable_type' => Stay::class,
+            'bookable_id' => $stay->id,
+            'start_date' => now()->addWeek()->toDateString(),
+            'end_date' => now()->addWeek()->addDays(2)->toDateString(),
+            'amount_xof' => 150_000,
+            'status' => 'confirmee',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $data = $this->getJson('/api/v1/bookings/my')
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->json('data');
+
+        // Les réservations sont triées par date de création décroissante : la
+        // nuitée (créée en second) arrive donc en premier.
+        $stayRow = collect($data)->firstWhere('type', 'stay');
+        $vehicleRow = collect($data)->firstWhere('type', 'vehicle');
+
+        $this->assertSame('Nuitée', $stayRow['type_label']);
+        $this->assertFalse($stayRow['cancellable']); // pas d'endpoint d'annulation nuitée
+
+        $this->assertSame('Véhicule', $vehicleRow['type_label']);
+        $this->assertSame('Toyota Hilux', $vehicleRow['item_label']);
+        $this->assertTrue($vehicleRow['cancellable']); // véhicule confirmé → annulable
+    }
+
+    public function test_bookings_my_marque_non_annulable_une_reservation_deja_annulee(): void
+    {
+        $user = User::factory()->create();
+        $this->bookingFor($user, 'annulee_client'); // véhicule, mais déjà annulé
+
+        Sanctum::actingAs($user);
+
+        $row = $this->getJson('/api/v1/bookings/my')->assertOk()->json('data.0');
+        $this->assertSame('vehicle', $row['type']);
+        $this->assertFalse($row['cancellable']); // déjà annulée → plus annulable
     }
 }

@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BookingStatus;
 use App\Enums\RequestStatus;
 use App\Enums\ServiceType;
+use App\Models\Booking;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Modules\Explore\Models\TourismExperience;
@@ -15,6 +17,7 @@ use App\Modules\Mobility\Models\Vehicle;
 use App\Modules\Stay\Models\Stay;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -63,13 +66,28 @@ class DemoSeeder extends Seeder
         // déjà, afin que la relance du seeder reste sans doublon.
         $this->seedClientRequests($client);
 
-        // Garde d'idempotence : annonces déjà créées → on s'arrête.
-        if (Property::query()->where('owner_id', $owner->id)->exists()) {
-            $this->command?->info('DemoSeeder : données de démonstration déjà présentes, rien à faire.');
-
-            return;
+        // Catalogues de démonstration : créés une seule fois (garde d'idempotence
+        // sur l'existence d'un bien du propriétaire de démo). On n'utilise plus un
+        // `return` anticipé afin que le seeding des réservations client (tout en
+        // bas) s'exécute AUSSI sur une base où les annonces existent déjà.
+        if (! Property::query()->where('owner_id', $owner->id)->exists()) {
+            $this->seedCatalogues($owner, $provider);
+        } else {
+            $this->command?->info('DemoSeeder : catalogues de démonstration déjà présents.');
         }
 
+        // Quelques réservations pour peupler l'écran « Mes réservations » (F3.4)
+        // de l'espace client. Idempotent (garde propre) ; s'appuie sur les
+        // bookables de démo ci-dessus (nuitées, véhicules, expériences, trajets).
+        $this->seedClientBookings($client);
+    }
+
+    /**
+     * Crée les catalogues publics de démonstration (immobilier, nuitées,
+     * transport, tourisme, mobilité) rattachés aux comptes de démo.
+     */
+    private function seedCatalogues(User $owner, User $provider): void
+    {
         // --- Immobilier : 6 biens publiés, types variés ---
         $properties = collect(PropertyType::cases())
             ->take(6)
@@ -153,6 +171,92 @@ class DemoSeeder extends Seeder
         ]);
 
         $this->command?->info('DemoSeeder : demandes de démonstration créées pour le client.');
+    }
+
+    /**
+     * Peuple l'écran « Mes réservations » (F3.4) du client de démonstration avec
+     * quelques réservations couvrant les différents univers et statuts (nuitée,
+     * véhicule, expérience, trajet). Idempotent : ne fait rien si le client
+     * possède déjà des réservations. S'appuie sur les bookables de démo ; si les
+     * catalogues n'ont pas encore été semés, on s'abstient sans erreur.
+     */
+    private function seedClientBookings(User $client): void
+    {
+        if (Booking::query()->where('user_id', $client->id)->exists()) {
+            return;
+        }
+
+        $stay = Stay::query()->latest('id')->first();
+        $vehicles = Vehicle::query()->latest('id')->take(2)->get();
+        $experience = TourismExperience::query()->latest('id')->first();
+        $trip = MobilityService::query()->latest('id')->first();
+
+        // Sans bookables de démo, rien à réserver (base incomplète) : on sort.
+        if (! $stay || $vehicles->count() < 2 || ! $experience || ! $trip) {
+            return;
+        }
+
+        // Une nuitée confirmée (non annulable côté client : pas d'endpoint dédié).
+        $this->makeBooking($client, $stay, BookingStatus::CONFIRMEE, [
+            'start_date' => now()->addWeeks(2)->toDateString(),
+            'end_date' => now()->addWeeks(2)->addDays(3)->toDateString(),
+            'guests' => 2,
+            'amount_xof' => 180_000,
+            'caution_xof' => 100_000,
+        ]);
+
+        // Une location de véhicule confirmée à venir (annulable côté client).
+        $this->makeBooking($client, $vehicles[0], BookingStatus::CONFIRMEE, [
+            'start_date' => now()->addWeek()->toDateString(),
+            'end_date' => now()->addWeek()->addDays(2)->toDateString(),
+            'guests' => 3,
+            'amount_xof' => 90_000,
+            'caution_xof' => 150_000,
+        ]);
+
+        // Une expérience en attente de confirmation (annulable côté client).
+        $this->makeBooking($client, $experience, BookingStatus::EN_ATTENTE, [
+            'start_date' => now()->addWeeks(3)->toDateString(),
+            'end_date' => now()->addWeeks(3)->toDateString(),
+            'guests' => 4,
+            'amount_xof' => 120_000,
+        ]);
+
+        // Un trajet déjà terminé (historique, non annulable).
+        $this->makeBooking($client, $trip, BookingStatus::TERMINEE, [
+            'start_date' => now()->subWeeks(2)->toDateString(),
+            'end_date' => now()->subWeeks(2)->toDateString(),
+            'guests' => 1,
+            'amount_xof' => 15_000,
+        ]);
+
+        // Une location de véhicule déjà annulée par le client (état terminal).
+        $this->makeBooking($client, $vehicles[1], BookingStatus::ANNULEE_CLIENT, [
+            'start_date' => now()->addWeeks(4)->toDateString(),
+            'end_date' => now()->addWeeks(4)->addDay()->toDateString(),
+            'guests' => 2,
+            'amount_xof' => 60_000,
+        ]);
+
+        $this->command?->info('DemoSeeder : réservations de démonstration créées pour le client.');
+    }
+
+    /**
+     * Crée une réservation de démonstration polymorphe pour le client, rattachée
+     * au bookable donné, avec une référence unique.
+     *
+     * @param  \Illuminate\Database\Eloquent\Model  $bookable
+     * @param  array<string, mixed>  $attributes
+     */
+    private function makeBooking(User $client, $bookable, BookingStatus $status, array $attributes): void
+    {
+        Booking::create(array_merge([
+            'reference' => 'BK-'.strtoupper(Str::random(8)),
+            'user_id' => $client->id,
+            'bookable_type' => $bookable::class,
+            'bookable_id' => $bookable->id,
+            'status' => $status->value,
+        ], $attributes));
     }
 
     /**
