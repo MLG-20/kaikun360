@@ -14,6 +14,8 @@ l'application (approche standalone, sans NgModule) :
   - `BookingService` — réservations du client `GET /bookings/my` (paginé) et
     **annulation** propre à l'univers `PATCH /vehicles|experiences/bookings/{id}/cancel`
     (véhicules et expériences uniquement) — F3.4.
+  - `FavoriteService` — favoris du client `GET /favorites` (paginé) et
+    ajout/retrait `POST`/`DELETE /properties/{id}/favorite` (biens immobiliers) — F3.5.
   - `ReviewService` — avis publiés `GET /reviews` d'une entité notée — F2.3.
   - `WhatsAppService` — lien WhatsApp contextuel `GET /whatsapp/link` (message
     prérempli + numéro de support paramétré côté back-office) — F2.6.

@@ -70,7 +70,7 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     description: 'Les biens et services que vous avez sauvegardés.',
     path: 'favoris',
     icon: 'heart',
-    ready: false, // F3.5
+    ready: true, // F3.5 ✅
   },
   {
     label: 'Notifications',

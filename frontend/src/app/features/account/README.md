@@ -60,7 +60,16 @@ marquées « Bientôt » s'activeront aux étapes suivantes.
   trajets n'ont pas d'annulation client (pas d'endpoint) : ils restent en
   lecture seule.
 
-Les rubriques Favoris, Notifications et Messages arrivent en F3.5 → F3.7.
+- **La rubrique Favoris (F3.5)** — [`favorites/`](favorites) : liste paginée des
+  biens immobiliers que le client a sauvegardés (`GET /favorites`). Chaque favori
+  est rendu avec la **même carte que le catalogue public** (`app-listing-card`,
+  mappage `UNIVERSES.immobilier.toCard`) pour une continuité visuelle : cliquer
+  mène à la fiche du bien. Un bouton **cœur** en surimpression permet de
+  **retirer** le bien des favoris (`DELETE /properties/{id}/favorite`), derrière
+  une confirmation inline ; la carte quitte alors la liste. L'ajout aux favoris
+  se fait depuis les fiches publiques — cet écran ne fait que les regrouper.
+
+Les rubriques Notifications et Messages arrivent en F3.6 → F3.7.
 
 ---
 

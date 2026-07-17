@@ -1,0 +1,130 @@
+// Écran « Mes favoris » de l'espace client (F3.5). L'en-tête d'écran
+// (.account-head…) et les états (.pf-state) viennent des partiels partagés ;
+// on ne définit ici que les briques propres à la grille (préfixe fav-). Les
+// cartes elles-mêmes sont rendues par <app-listing-card> (comme le catalogue
+// public), on ne fait qu'ajouter l'habillage « favoris » autour.
+
+// — État vide —
+.fav-empty {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+}
+
+.fav-empty-title {
+  font-family: var(--k-font-display);
+  font-size: 1.25rem;
+  margin-bottom: 0.6rem;
+}
+
+.fav-empty-text {
+  color: var(--k-muted);
+  max-width: 52ch;
+  margin: 0 auto 1.5rem;
+}
+
+// — Grille de favoris — même respiration que le catalogue public.
+.fav-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+// Conteneur d'une carte : ancre le bouton de retrait et l'overlay de
+// confirmation (positionnés au-dessus du lien étiré de la carte).
+.fav-item {
+  position: relative;
+}
+
+// — Bouton « retirer » (cœur), en surimpression coin haut-droit —
+.fav-remove {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  z-index: 3; // au-dessus du lien étiré de la carte (z-index 1) et du badge (2)
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--k-card) 92%, transparent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(3px);
+  color: var(--k-danger);
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease, color 0.15s ease;
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  // Cœur plein = « sauvegardé » ; au survol on annonce le retrait (fond rouge).
+  &:hover {
+    background: var(--k-danger);
+    color: #fff;
+    transform: scale(1.08);
+  }
+}
+
+// — Confirmation de retrait : overlay couvrant la carte —
+.fav-confirm {
+  position: absolute;
+  inset: 0;
+  z-index: 5; // au-dessus de tout le contenu de la carte
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  text-align: center;
+  background: color-mix(in srgb, var(--k-card) 94%, transparent);
+  backdrop-filter: blur(2px);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+}
+
+.fav-confirm-text {
+  font-weight: 600;
+}
+
+.fav-confirm-btns {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.fav-btn-danger {
+  color: #fff;
+  background: var(--k-danger);
+  border: 1px solid var(--k-danger);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--k-danger) 85%, black);
+  }
+}
+
+// — Pagination —
+.fav-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.fav-pager-info {
+  font-size: 0.9rem;
+  color: var(--k-muted);
+}

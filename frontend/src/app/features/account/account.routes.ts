@@ -39,6 +39,13 @@ export const ACCOUNT_ROUTES: Routes = [
         title: 'Mes réservations — Kaikun 360',
       },
       {
+        // F3.5 — Favoris : biens sauvegardés (GET /favorites, retrait).
+        path: 'favoris',
+        loadComponent: () =>
+          import('./favorites/favorites-page').then((m) => m.FavoritesPageComponent),
+        title: 'Mes favoris — Kaikun 360',
+      },
+      {
         // F3.2 — Profil : identité, pièces justificatives, suppression du compte.
         path: 'profil',
         loadComponent: () =>
