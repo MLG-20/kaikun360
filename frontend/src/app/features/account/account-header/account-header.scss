@@ -77,36 +77,40 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  color: var(--k-muted);
+  color: var(--k-ink);
   text-decoration: none;
 
   svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
   }
 
   &:hover {
-    color: var(--k-ink);
+    color: var(--k-brand);
     background: color-mix(in srgb, var(--k-ink) 5%, transparent);
   }
 }
 
+// Pastille de non-lues : petit badge de COIN posé sur le haut-droit de la cloche
+// (sans la masquer). Centrée sur le coin haut-droit de l'icône (22px dans 40px).
 .acc-bell-badge {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 4px;
+  top: 4px;
+  right: 4px;
+  box-sizing: border-box;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: var(--k-radius-pill);
   background: var(--k-brand);
   color: #fff;
-  font-size: 0.66rem;
+  font-size: 0.62rem;
   font-weight: 700;
   line-height: 1;
+  // Liseré de la couleur du fond de l'en-tête : détache la pastille de l'icône.
   border: 2px solid var(--k-card);
 }
 
