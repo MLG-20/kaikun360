@@ -4,6 +4,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\GeoController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\QuoteController;
@@ -75,6 +76,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- Réservations (B11.3) ------------------------------------------------
     Route::get('bookings/my', [BookingController::class, 'my']);
+
+    // --- Messagerie (F3.7) ---------------------------------------------------
+    // Socle générique (conversations à participants + messages), scopé à
+    // l'utilisateur courant côté contrôleur. La route fixe `unread-count` est
+    // déclarée AVANT la paramétrée `{conversation}` (miroir de F3.6), et la
+    // contrainte `whereNumber` lève toute ambiguïté de matching.
+    Route::get('messages', [MessageController::class, 'index']);
+    Route::post('messages', [MessageController::class, 'start']);
+    Route::get('messages/unread-count', [MessageController::class, 'unreadCount']);
+    Route::get('messages/{conversation}', [MessageController::class, 'show'])
+        ->whereNumber('conversation');
+    Route::post('messages/{conversation}/messages', [MessageController::class, 'store'])
+        ->whereNumber('conversation');
 
     // --- Paiement : initiation (B14.2) ---------------------------------------
     // Crée l'intention côté PSP et renvoie l'URL de redirection. La confirmation

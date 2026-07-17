@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **142 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **159 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
-- **52 tables**, référentiel géographique du Sénégal inclus
-- **409 tests** automatisés (1125 assertions), tous verts ✅
+- **55 tables**, référentiel géographique du Sénégal inclus
+- **419 tests** automatisés (1174 assertions), tous verts ✅
 
 ---
 
@@ -51,7 +51,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 409 tests automatiques** — des petits programmes
+notifications) et **vérifié par 419 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -99,13 +99,14 @@ chacun avec ses propres `Models/`, `Http/` (Controllers, Requests, Resources),
 module sont chargées automatiquement par un glob depuis `routes/api.php`.
 
 Les briques réellement transverses (Booking, Review, Media, Report polymorphes,
-enums de statut, `ApiResponse`, `Settings`, `CatalogCache`) vivent dans
-`app/Models`, `app/Enums`, `app/Http` et `app/Support`.
+**Conversation/Message** [messagerie générique], enums de statut, `ApiResponse`,
+`Settings`, `CatalogCache`) vivent dans `app/Models`, `app/Enums`, `app/Http` et
+`app/Support`.
 
 ```
 app/
 ├── Enums/            # Enums transverses (statuts booking/paiement/requête…)
-├── Models/           # Modèles transverses (Booking, Review, Media, Report, géo…)
+├── Models/           # Modèles transverses (Booking, Review, Media, Conversation/Message, géo…)
 ├── Http/             # Controllers & Resources transverses
 ├── Support/          # ApiResponse, Settings, CatalogCache, Payments/…
 └── Modules/
@@ -155,9 +156,11 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   supervision des paiements (remboursements + confirmation manuelle Wave/OM).
 
 Couches **transversales** : demandes de service (machine à états stricte), devis
-génériques, réservations polymorphes, médias (compression d'images), avis (réservés
-au consommateur ayant consommé), notifications (e-mail/SMS asynchrones, WhatsApp
-click-to-chat), paiement (PayTech ou manuel Wave/Orange Money).
+génériques, réservations polymorphes, **messagerie générique** (conversations à
+participants + messages, réutilisable par tous les espaces), médias (compression
+d'images), avis (réservés au consommateur ayant consommé), notifications
+(e-mail/SMS asynchrones, canal `database` in-app, WhatsApp click-to-chat), paiement
+(PayTech ou manuel Wave/Orange Money).
 
 ---
 
@@ -170,12 +173,12 @@ backend/
 ├── config/              # Configuration (services, cache, cors…)
 ├── database/
 │   ├── factories/       # Factories de test
-│   ├── migrations/      # 45 migrations (52 tables)
+│   ├── migrations/      # 51 migrations (55 tables)
 │   ├── schema/          # Dump de schéma MySQL (accélère les tests)
 │   └── seeders/         # Rôles/permissions, référentiel géographique
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 142 endpoints
+├── API.md               # Référence des 159 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -296,7 +299,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 409 tests, 1125 assertions — verts
+# 419 tests, 1174 assertions — verts
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -308,7 +311,7 @@ php artisan test
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 142 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 159 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |

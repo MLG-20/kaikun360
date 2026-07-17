@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Enums\RequestStatus;
 use App\Enums\ServiceType;
 use App\Models\Booking;
+use App\Models\Conversation;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Modules\Explore\Models\TourismExperience;
@@ -54,10 +55,15 @@ class DemoSeeder extends Seeder
 
     private const CLIENT_EMAIL = 'demo.client@kaikun360.test';
 
+    /** Agent Kaikun de démonstration : correspondant « support » du client (F3.7). */
+    private const AGENT_EMAIL = 'demo.agent@kaikun360.test';
+
     public function run(): void
     {
         $owner = $this->demoUser(self::OWNER_EMAIL, 'Propriétaire Démo', 'proprietaire');
         $provider = $this->demoUser(self::PROVIDER_EMAIL, 'Prestataire Démo', 'prestataire');
+        // Agent Kaikun : joue le « support » dans la messagerie de démo (F3.7).
+        $agent = $this->demoUser(self::AGENT_EMAIL, 'Agent Kaikun', 'agent_kaikun');
 
         // Compte client de démonstration : pour se connecter et parcourir
         // l'espace client (F3). Idempotent (firstOrCreate sur l'e-mail), donc
@@ -93,6 +99,11 @@ class DemoSeeder extends Seeder
         // Quelques notifications « base de données » pour peupler l'écran
         // « Mes notifications » (F3.6) de l'espace client. Idempotent (garde propre).
         $this->seedClientNotifications($client);
+
+        // Deux conversations pour peupler l'écran « Messages » (F3.7) de l'espace
+        // client : une avec le support Kaikun, une avec le propriétaire de démo.
+        // Idempotent (garde propre).
+        $this->seedClientConversations($client, $agent, $owner);
     }
 
     /**
@@ -342,6 +353,98 @@ class DemoSeeder extends Seeder
         }
 
         $this->command?->info('DemoSeeder : notifications de démonstration créées pour le client.');
+    }
+
+    /**
+     * Crée deux conversations de démonstration pour le client (écran « Messages »,
+     * F3.7) : une avec le support Kaikun (agent) et une avec le propriétaire.
+     *
+     * Garde d'idempotence PROPRE : on ne recrée rien si le client a déjà des
+     * conversations, afin que la relance du seeder reste sans doublon. La
+     * première laisse un dernier message NON LU (émis par l'agent) pour illustrer
+     * la pastille de non-lus ; la seconde est entièrement lue par le client.
+     */
+    private function seedClientConversations(User $client, User $agent, User $owner): void
+    {
+        if ($client->conversations()->exists()) {
+            return;
+        }
+
+        // 1) Support Kaikun — dernier message de l'agent NON lu par le client.
+        $this->makeConversation(
+            'Bienvenue sur Kaikun 360',
+            [
+                [$client, 'Bonjour, je découvre la plateforme, pouvez-vous m’aider ?'],
+                [$agent, 'Bien sûr ! Je suis votre conseiller Kaikun, posez-moi vos questions.'],
+                [$agent, 'N’hésitez pas : je reste disponible pour toute demande.'],
+            ],
+            // Le client a lu jusqu'au 1er échange : les 2 messages de l'agent
+            // restants sont « non lus » (2 non-lus attendus sur ce fil).
+            readBy: [$client->id => 0],
+        );
+
+        // 2) Propriétaire — conversation entièrement lue par le client.
+        $this->makeConversation(
+            'Visite de la villa aux Almadies',
+            [
+                [$client, 'Bonjour, la villa est-elle disponible le mois prochain ?'],
+                [$owner, 'Bonjour, oui, elle est libre à partir du 5. Souhaitez-vous la visiter ?'],
+                [$client, 'Parfait, je vous confirme une date très vite. Merci !'],
+            ],
+            // Tout est lu de part et d'autre (aucun non-lu).
+            readBy: 'all',
+        );
+
+        $this->command?->info('DemoSeeder : conversations de démonstration créées pour le client.');
+    }
+
+    /**
+     * Fabrique une conversation avec sa suite de messages, en horodatant chaque
+     * message de façon croissante et en positionnant `last_read_at` par participant.
+     *
+     * @param  array<int, array{0: User, 1: string}>  $messages  couples [auteur, corps]
+     * @param  array<int, int>|string  $readBy  'all' = tout le monde a tout lu ;
+     *         sinon map [user_id => index du dernier message lu] (les messages au-delà
+     *         restent non lus). Les participants absents de la map n'ont rien lu.
+     */
+    private function makeConversation(string $subject, array $messages, array|string $readBy = 'all'): void
+    {
+        $conversation = Conversation::create(['subject' => $subject]);
+
+        // Participants = tous les auteurs distincts des messages.
+        $participants = collect($messages)->map(fn ($m) => $m[0])->unique('id');
+        $conversation->participants()->attach($participants->pluck('id')->all());
+
+        // Horodatage croissant : le 1er message il y a N heures, le dernier récent.
+        $count = count($messages);
+        $createdRows = [];
+        foreach (array_values($messages) as $index => [$author, $body]) {
+            $at = now()->subHours($count - $index);
+            $message = $conversation->messages()->create([
+                'sender_id' => $author->id,
+                'body' => $body,
+            ]);
+            // On force l'horodatage (create() met « maintenant » par défaut).
+            $message->forceFill(['created_at' => $at, 'updated_at' => $at])->save();
+            $createdRows[$index] = $message;
+        }
+
+        $last = end($createdRows);
+        $conversation->update(['last_message_at' => $last->created_at]);
+
+        // Positionne le last_read_at de chaque participant.
+        foreach ($participants as $participant) {
+            if ($readBy === 'all') {
+                $readAt = $last->created_at;
+            } else {
+                $readIndex = $readBy[$participant->id] ?? -1;
+                $readAt = $readIndex >= 0 ? $createdRows[$readIndex]->created_at : null;
+            }
+
+            $conversation->participants()->updateExistingPivot($participant->id, [
+                'last_read_at' => $readAt,
+            ]);
+        }
     }
 
     /**

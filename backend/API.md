@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 154 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 159 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -232,6 +232,24 @@ TypeScript miroir côté frontend Angular (phase F0).
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
 | GET | `/bookings/my` | auth | `BookingController@my` |
+
+### Messagerie (transversal)
+
+| Méthode | URI | Accès | Contrôleur |
+| --- | --- | --- | --- |
+| GET | `/messages` | auth | `MessageController@index` |
+| POST | `/messages` | auth | `MessageController@start` |
+| GET | `/messages/unread-count` | auth | `MessageController@unreadCount` |
+| GET | `/messages/{conversation}` | auth | `MessageController@show` |
+| POST | `/messages/{conversation}/messages` | auth | `MessageController@store` |
+
+> Socle **générique** (conversations à participants + messages), réutilisable par
+> les espaces pro (F4/F5/F6). Accès **scopé** à l'utilisateur courant : un fil dont
+> on n'est pas participant renvoie `404` (aucune fuite). Les non-lus se calculent
+> par participant (`last_read_at` du pivot) ; `GET /messages/{conversation}` marque
+> le fil comme lu. Chaque message notifie les autres participants (canal
+> `database`, cf. Notifications). `POST /messages` dédoublonne les fils directs
+> (mêmes deux participants, sans contexte).
 
 ### Avis
 

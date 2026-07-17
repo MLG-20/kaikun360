@@ -87,6 +87,17 @@ class User extends Authenticatable
     }
 
     /**
+     * Relation N–N : les conversations (messagerie F3.7) auxquelles l'utilisateur
+     * participe. Le pivot porte son `last_read_at` (calcul des messages non lus).
+     */
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class)
+            ->withPivot('last_read_at')
+            ->withTimestamps();
+    }
+
+    /**
      * Localisation structurée du compte (F3.2b), en cascade Région → Département
      * → Commune. Toutes optionnelles (référentiel géo partagé avec les biens).
      */
