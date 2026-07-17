@@ -25,7 +25,9 @@ class RequestStatusChangedNotification extends Notification implements ShouldQue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // `database` alimente l'écran « Mes notifications » de l'espace client (F3.6),
+        // en plus de l'e-mail.
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -33,5 +35,21 @@ class RequestStatusChangedNotification extends Notification implements ShouldQue
         return (new MailMessage)
             ->subject('Votre demande a avancé — Kaikun 360')
             ->line("Votre demande « {$this->request->reference} » est passée au statut : {$this->request->status->label()}.");
+    }
+
+    /**
+     * Charge utile stockée dans la table `notifications` (canal `database`),
+     * lue par NotificationResource pour l'écran client.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'category' => 'request',
+            'title' => 'Votre demande a avancé',
+            'body' => "La demande « {$this->request->reference} » est passée au statut : {$this->request->status->label()}.",
+            'action_url' => '/mon-espace/demandes',
+        ];
     }
 }

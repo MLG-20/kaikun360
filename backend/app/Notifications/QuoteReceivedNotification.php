@@ -25,7 +25,8 @@ class QuoteReceivedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return $notifiable->phone ? ['mail', 'sms'] : ['mail'];
+        // On ajoute `database` (écran « Mes notifications », F3.6) aux canaux existants.
+        return $notifiable->phone ? ['mail', 'sms', 'database'] : ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -41,5 +42,20 @@ class QuoteReceivedNotification extends Notification implements ShouldQueue
     public function toSms(object $notifiable): string
     {
         return "Kaikun 360 : nouveau devis {$this->quote->reference} ({$this->quote->amount_xof} FCFA).";
+    }
+
+    /**
+     * Charge utile du canal `database` (écran client).
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'category' => 'quote',
+            'title' => 'Nouveau devis reçu',
+            'body' => "Un devis « {$this->quote->reference} » de {$this->quote->amount_xof} FCFA vous a été proposé.",
+            'action_url' => '/mon-espace/demandes',
+        ];
     }
 }

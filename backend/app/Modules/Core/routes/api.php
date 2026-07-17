@@ -2,6 +2,7 @@
 
 use App\Modules\Core\Http\Controllers\AuthController;
 use App\Modules\Core\Http\Controllers\DocumentController;
+use App\Modules\Core\Http\Controllers\NotificationController;
 use App\Modules\Core\Http\Controllers\PasswordResetController;
 use App\Modules\Core\Http\Controllers\UserController;
 use App\Modules\Core\Http\Controllers\VerificationController;
@@ -67,6 +68,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/users/me/documents', [DocumentController::class, 'index']);
     Route::post('/users/me/documents', [DocumentController::class, 'store']);
+
+    // Notifications "base de données" de l'espace client (F3.6).
+    // Les routes fixes (unread-count, read-all) sont déclarées AVANT la route
+    // paramétrée {notification}/read pour éviter toute ambiguïté de matching.
+    Route::get('/users/me/notifications', [NotificationController::class, 'index']);
+    Route::get('/users/me/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/users/me/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::patch('/users/me/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
 });
 
 // Téléchargement d'un document : accès via URL signée temporaire uniquement

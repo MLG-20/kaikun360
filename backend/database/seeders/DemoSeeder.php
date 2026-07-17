@@ -16,6 +16,9 @@ use App\Modules\Mobility\Enums\VehicleType;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Modules\Stay\Models\Stay;
+use App\Notifications\BookingConfirmedNotification;
+use App\Notifications\QuoteReceivedNotification;
+use App\Notifications\RequestStatusChangedNotification;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -86,6 +89,10 @@ class DemoSeeder extends Seeder
         // de l'espace client. Idempotent (garde propre) ; s'appuie sur les biens
         // publiés de démo ci-dessus.
         $this->seedClientFavorites($client);
+
+        // Quelques notifications « base de données » pour peupler l'écran
+        // « Mes notifications » (F3.6) de l'espace client. Idempotent (garde propre).
+        $this->seedClientNotifications($client);
     }
 
     /**
@@ -274,6 +281,67 @@ class DemoSeeder extends Seeder
         $client->favoriteProperties()->syncWithoutDetaching($properties->pluck('id')->all());
 
         $this->command?->info('DemoSeeder : favoris de démonstration créés pour le client.');
+    }
+
+    /**
+     * Crée quelques notifications « base de données » de démonstration pour le
+     * client, afin que l'écran « Mes notifications » (F3.6) ne soit pas vide.
+     *
+     * On insère directement dans la table `notifications` via la relation
+     * Notifiable (déterministe, sans déclencher un flux métier réel) ; la charge
+     * utile `data` reproduit exactement ce que produisent les `toArray()` des
+     * notifications concernées, telles que les lit NotificationResource.
+     * Garde d'idempotence PROPRE : rien n'est recréé si le client en a déjà.
+     */
+    private function seedClientNotifications(User $client): void
+    {
+        if ($client->notifications()->exists()) {
+            return;
+        }
+
+        // Trois notifications : deux non lues (demande + devis) et une déjà lue
+        // (réservation), pour illustrer la pastille de non-lues et l'état « lu ».
+        $notifications = [
+            [
+                'type' => RequestStatusChangedNotification::class,
+                'read_at' => null,
+                'data' => [
+                    'category' => 'request',
+                    'title' => 'Votre demande a avancé',
+                    'body' => 'La demande « REQ-DEMO-01 » est passée au statut : Devis.',
+                    'action_url' => '/mon-espace/demandes',
+                ],
+            ],
+            [
+                'type' => QuoteReceivedNotification::class,
+                'read_at' => null,
+                'data' => [
+                    'category' => 'quote',
+                    'title' => 'Vous avez reçu un devis',
+                    'body' => 'Un devis vous a été transmis pour la demande « REQ-DEMO-01 ».',
+                    'action_url' => '/mon-espace/demandes',
+                ],
+            ],
+            [
+                'type' => BookingConfirmedNotification::class,
+                'read_at' => now()->subDay(),
+                'data' => [
+                    'category' => 'booking',
+                    'title' => 'Votre réservation est confirmée',
+                    'body' => 'Votre réservation « BK-DEMO-01 » a bien été confirmée.',
+                    'action_url' => '/mon-espace/reservations',
+                ],
+            ],
+        ];
+
+        foreach ($notifications as $notification) {
+            $client->notifications()->create(array_merge(
+                ['id' => (string) Str::uuid()],
+                $notification,
+            ));
+        }
+
+        $this->command?->info('DemoSeeder : notifications de démonstration créées pour le client.');
     }
 
     /**

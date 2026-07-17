@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 150 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 154 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -290,6 +290,10 @@ TypeScript miroir côté frontend Angular (phase F0).
 
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
+| GET | `/users/me/notifications` | auth | `NotificationController@index` |
+| GET | `/users/me/notifications/unread-count` | auth | `NotificationController@unreadCount` |
+| PATCH | `/users/me/notifications/read-all` | auth | `NotificationController@markAllAsRead` |
+| PATCH | `/users/me/notifications/{notification}/read` | auth | `NotificationController@markAsRead` |
 | GET | `/whatsapp/link` | public | `WhatsAppLinkController@generate` |
 
 ### Back-office (Admin)

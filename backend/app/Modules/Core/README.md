@@ -202,6 +202,10 @@ En dev (`MAIL_MAILER=log`/`array`), le code n'est pas réellement envoyé.
 | GET | `/api/v1/users/me/documents` | `auth:sanctum` | Lister ses pièces |
 | POST | `/api/v1/users/me/documents` | `auth:sanctum` | Déposer une pièce (`type` + `file`) |
 | GET | `/api/v1/users/me/documents/{document}/download` | **URL signée** | Télécharger un fichier |
+| GET | `/api/v1/users/me/notifications` | `auth:sanctum` | Lister ses notifications (paginé) + `unread_count` |
+| GET | `/api/v1/users/me/notifications/unread-count` | `auth:sanctum` | Nombre de non-lues (pastille) |
+| PATCH | `/api/v1/users/me/notifications/read-all` | `auth:sanctum` | Marquer toutes ses non-lues comme lues |
+| PATCH | `/api/v1/users/me/notifications/{notification}/read` | `auth:sanctum` | Marquer une notification comme lue |
 
 > **Coordonnées & sécurité (F3.2b).** `PATCH /users/me` accepte désormais
 > l'**e-mail** et le **téléphone** : les changer remet le canal concerné à « non
@@ -213,6 +217,15 @@ En dev (`MAIL_MAILER=log`/`array`), le code n'est pas réellement envoyé.
 > département pour compatibilité. Le **mot de passe** se change via un endpoint
 > dédié exigeant le mot de passe actuel (`current_password:sanctum`) et révoquant
 > les autres jetons d'accès.
+
+> **Centre de notifications (F3.6).** Le canal `database` de Laravel alimente
+> l'écran « Mes notifications » de l'espace client. Chaque flux métier
+> (avancement d'une demande, devis reçu, réservation confirmée) écrit une ligne
+> dans la table `notifications` via `toArray()` (catégorie, titre, corps,
+> `action_url`). Le `NotificationController` n'agit **que** sur les notifications
+> de l'utilisateur courant (`$request->user()->notifications()`) : une
+> notification inexistante **ou d'autrui** renvoie un 404 (aucune fuite). La
+> liste joint `unread_count` aux métadonnées ; le marquage est idempotent.
 
 ### Documents (KYC) — stockage sécurisé
 

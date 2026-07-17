@@ -25,7 +25,8 @@ class BookingConfirmedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return $notifiable->phone ? ['mail', 'sms'] : ['mail'];
+        // On ajoute `database` (écran « Mes notifications », F3.6) aux canaux existants.
+        return $notifiable->phone ? ['mail', 'sms', 'database'] : ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -41,5 +42,20 @@ class BookingConfirmedNotification extends Notification implements ShouldQueue
     public function toSms(object $notifiable): string
     {
         return "Kaikun 360 : votre reservation {$this->booking->reference} est confirmee.";
+    }
+
+    /**
+     * Charge utile du canal `database` (écran client).
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'category' => 'booking',
+            'title' => 'Réservation confirmée',
+            'body' => "Votre réservation « {$this->booking->reference} » est confirmée.",
+            'action_url' => '/mon-espace/reservations',
+        ];
     }
 }
