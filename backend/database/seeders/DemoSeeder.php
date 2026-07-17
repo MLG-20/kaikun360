@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Modules\Explore\Models\TourismExperience;
+use App\Modules\Immo\Enums\PropertyStatus;
 use App\Modules\Immo\Enums\PropertyType;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Mobility\Enums\VehicleType;
@@ -80,6 +81,11 @@ class DemoSeeder extends Seeder
         // de l'espace client. Idempotent (garde propre) ; s'appuie sur les
         // bookables de démo ci-dessus (nuitées, véhicules, expériences, trajets).
         $this->seedClientBookings($client);
+
+        // Quelques biens en favori pour peupler l'écran « Mes favoris » (F3.5)
+        // de l'espace client. Idempotent (garde propre) ; s'appuie sur les biens
+        // publiés de démo ci-dessus.
+        $this->seedClientFavorites($client);
     }
 
     /**
@@ -239,6 +245,35 @@ class DemoSeeder extends Seeder
         ]);
 
         $this->command?->info('DemoSeeder : réservations de démonstration créées pour le client.');
+    }
+
+    /**
+     * Peuple l'écran « Mes favoris » (F3.5) du client de démonstration avec
+     * quelques biens immobiliers publiés. Idempotent : ne fait rien si le client
+     * possède déjà des favoris. Si aucun bien publié n'existe (base incomplète),
+     * on s'abstient sans erreur.
+     */
+    private function seedClientFavorites(User $client): void
+    {
+        if ($client->favoriteProperties()->exists()) {
+            return;
+        }
+
+        // Trois biens publiés les plus récents (l'ajout aux favoris exige un
+        // bien publié, cf. FavoriteController@store).
+        $properties = Property::query()
+            ->where('status', PropertyStatus::PUBLIE)
+            ->latest('id')
+            ->take(3)
+            ->get();
+
+        if ($properties->isEmpty()) {
+            return;
+        }
+
+        $client->favoriteProperties()->syncWithoutDetaching($properties->pluck('id')->all());
+
+        $this->command?->info('DemoSeeder : favoris de démonstration créés pour le client.');
     }
 
     /**
