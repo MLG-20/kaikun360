@@ -1,4 +1,6 @@
-// En-tête dédié de l'espace client (F3.1). Sobre et fixe, sans méga-menus.
+// Barre supérieure de l'espace client : occupe la colonne contenu (à droite du
+// rail latéral sombre). Titre à gauche (+ hamburger en petit écran), actions à
+// droite (cloche de notifications, menu utilisateur).
 
 :host {
   position: sticky;
@@ -8,8 +10,7 @@
 }
 
 .acc-topbar {
-  background: color-mix(in srgb, var(--k-card) 88%, transparent);
-  backdrop-filter: saturate(180%) blur(10px);
+  background: var(--k-card);
   border-bottom: 1px solid var(--k-line);
 }
 
@@ -18,18 +19,32 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 68px;
+  min-height: 69px;
+  padding: 0 clamp(1rem, 3vw, 2.5rem);
+}
+
+.acc-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.acc-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--k-ink);
 }
 
 // --- Hamburger (petit écran uniquement) -----------------------------------
 .acc-burger {
-  display: none; // masqué en desktop : le menu latéral y est un rail permanent
+  display: none; // le rail est permanent en desktop
   align-items: center;
   justify-content: center;
   width: 42px;
   height: 42px;
   flex: 0 0 auto;
-  margin-right: 0.25rem;
   border: 1px solid var(--k-line);
   border-radius: var(--k-radius-sm);
   background: var(--k-card);
@@ -46,44 +61,6 @@
   }
 }
 
-// --- Marque ---------------------------------------------------------------
-.acc-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 0 0 auto;
-  text-decoration: none;
-  color: inherit;
-}
-
-.acc-logo-mark {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: var(--k-navy);
-  color: #fff;
-  font-family: var(--k-font-display);
-  font-weight: 800;
-  font-size: 20px;
-}
-
-.acc-brand-text b {
-  font-family: var(--k-font-display);
-  font-weight: 800;
-  font-size: 18px;
-  line-height: 1;
-  display: block;
-}
-
-.acc-brand-text small {
-  font-size: 11px;
-  color: var(--k-brand);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
 // --- Actions --------------------------------------------------------------
 .acc-actions {
   display: flex;
@@ -91,7 +68,7 @@
   gap: 0.75rem;
 }
 
-// --- Cloche de notifications (F3.6) --------------------------------------
+// --- Cloche de notifications (F3.6) ---------------------------------------
 .acc-bell {
   position: relative;
   display: inline-flex;
@@ -114,7 +91,6 @@
   }
 }
 
-// Pastille du nombre de non-lues, en surimpression coin haut-droit.
 .acc-bell-badge {
   position: absolute;
   top: 2px;
@@ -132,28 +108,6 @@
   font-weight: 700;
   line-height: 1;
   border: 2px solid var(--k-card);
-}
-
-.acc-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.7rem;
-  border-radius: var(--k-radius-sm);
-  color: var(--k-muted);
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 0.92rem;
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover {
-    color: var(--k-ink);
-    background: color-mix(in srgb, var(--k-ink) 5%, transparent);
-  }
 }
 
 // --- Menu utilisateur -----------------------------------------------------
@@ -272,27 +226,15 @@
 
 // --- Petit écran ----------------------------------------------------------
 @media (max-width: 860px) {
-  // Le hamburger apparaît (la barre latérale devient un tiroir).
+  // Le hamburger apparaît (le rail devient un tiroir).
   .acc-burger {
     display: inline-flex;
   }
 }
 
 @media (max-width: 560px) {
-  // Sur téléphone, on retire le mot-clé « Kaikun 360 » (la pastille logo « K »
-  // suffit) et le libellé « Retour au site » (la flèche suffit).
-  .acc-brand-text {
-    display: none;
-  }
-
-  .acc-back span {
-    display: none;
-  }
-
-  // Menu utilisateur réduit à l'AVATAR SEUL : avec la cloche (F3.6) en plus, le
-  // nom d'utilisateur faisait déborder la barre et cassait le comportement de
-  // l'en-tête au défilement. On masque donc le nom (et le chevron) ; l'avatar
-  // reste cliquable et ouvre le même menu (le nom complet y figure en tête).
+  // Sur téléphone, l'espace est compté : on masque le nom (l'avatar suffit) et
+  // on réduit le menu utilisateur à un rond.
   .acc-user-name,
   .acc-caret {
     display: none;

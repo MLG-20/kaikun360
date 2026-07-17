@@ -9,6 +9,7 @@ import {
 } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
+import { AuthService } from '../../core/auth/auth.service';
 import { AccountHeaderComponent } from '../../features/account/account-header/account-header';
 import { AccountIconComponent } from '../../features/account/account-icon';
 import { ACCOUNT_NAV } from '../../features/account/account-nav';
@@ -46,16 +47,22 @@ import { ACCOUNT_NAV } from '../../features/account/account-nav';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountLayoutComponent {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
   /** Sections de l'espace (prêtes ou « bientôt »), pour la navigation latérale. */
   protected readonly nav = ACCOUNT_NAV;
+
+  /** Utilisateur connecté (nom + initiale, affiché en pied de menu). */
+  protected readonly user = this.auth.user;
 
   /** Tiroir de navigation ouvert ? (petit écran uniquement ; rail permanent en desktop). */
   protected readonly sidebarOpen = signal(false);
 
   constructor() {
     // Toute navigation referme le tiroir (sans effet en desktop, où il est fixe).
-    inject(Router)
-      .events.pipe(
+    this.router.events
+      .pipe(
         filter((e) => e instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
@@ -70,5 +77,13 @@ export class AccountLayoutComponent {
   /** Ferme le tiroir (clic sur le fond ou sur un lien, petit écran). */
   protected closeSidebar(): void {
     this.sidebarOpen.set(false);
+  }
+
+  /** Déconnexion depuis le pied du menu latéral : vide la session, retour à l'accueil. */
+  protected logout(): void {
+    this.auth.logout().subscribe({
+      next: () => this.router.navigate(['/']),
+      error: () => this.router.navigate(['/']),
+    });
   }
 }

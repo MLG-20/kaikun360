@@ -1,94 +1,147 @@
-// Layout de l'espace client (F3.1). La mise en forme des sections (tuiles,
-// listes, cartes) vit dans le partiel global `styles/_account.scss` ; on ne
-// garde ici que l'ossature du shell (grille barre latérale + contenu).
+// App-shell de l'espace client (F3.6, sur demande utilisateur : menu latéral
+// SOMBRE, pleine hauteur, collé à gauche — comme un tableau de bord classique).
+// Le rail contient la marque (haut), la navigation, et le pied (retour au site +
+// déconnexion). La colonne de droite porte l'en-tête puis le contenu.
 
 :host {
   display: block;
+}
+
+.account-app {
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
   background: var(--k-cream);
 }
 
-.account-shell {
-  display: grid;
-  grid-template-columns: 264px 1fr;
-  gap: 1.75rem;
-  // La barre latérale garde sa HAUTEUR NATURELLE (elle ne s'étire pas jusqu'au
-  // bas du contenu) : sur une page longue comme le Profil, l'étirement laissait
-  // un grand vide blanc sous les liens. On l'ancre en haut et on la rend sticky
-  // (voir `.account-side`) — patron classique de tableau de bord.
-  align-items: start;
-  padding-block: 2rem 3.5rem;
-  // Pas de pied de page dans l'espace : on remplit la hauteur sous l'en-tête
-  // sticky (~69px) pour éviter un vide en bas sur les pages courtes.
-  min-height: calc(100vh - 69px);
-}
-
-// --- Barre latérale -------------------------------------------------------
+// --- Rail latéral sombre ---------------------------------------------------
 .account-side {
+  flex: 0 0 264px;
+  width: 264px;
+  // Collé à gauche, pleine hauteur, il reste en place au défilement.
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  align-self: flex-start;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: 1rem;
-  background: var(--k-card);
-  border: 1px solid var(--k-line);
-  border-radius: var(--k-radius-lg);
-  box-shadow: var(--k-shadow);
-  // Desktop : RAIL PERMANENT collé à gauche, prenant toute la hauteur du côté.
-  // Sticky + hauteur = viewport sous l'en-tête (~69px) avec une petite marge :
-  // le menu reste visible en entier quand on défile (sur les pages longues, le
-  // contenu défile à côté d'un rail toujours plein). `overflow-y:auto` par
-  // sécurité si la navigation venait à dépasser.
-  align-self: start;
-  position: sticky;
-  top: calc(69px + 1.5rem);
-  height: calc(100vh - 69px - 3rem);
-  overflow-y: auto;
+  background: var(--k-navy);
+  color: rgba(255, 255, 255, 0.86);
 }
 
-.account-side-title {
-  font-family: var(--k-font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--k-muted);
-  padding: 0.15rem 0.7rem 0.6rem;
+// Marque en haut du rail (hauteur alignée sur l'en-tête, séparateur discret).
+.account-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 69px;
+  padding: 0 1.1rem;
+  text-decoration: none;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.account-logo {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  background: var(--k-brand);
+  color: #fff;
+  font-family: var(--k-font-display);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+.account-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+
+  b {
+    font-family: var(--k-font-display);
+    font-weight: 800;
+    font-size: 16px;
+  }
+
+  small {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+    letter-spacing: 0.02em;
+  }
+}
+
+// Navigation : occupe l'espace disponible (le pied est poussé en bas).
 .account-nav {
+  flex: 1 1 auto;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  padding: 0.9rem 0.7rem;
 }
 
+.account-side-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+// Lien / entrée de navigation (clair sur fond sombre).
 .account-nav-link {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.6rem 0.7rem;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.62rem 0.75rem;
+  border: 0;
   border-radius: var(--k-radius-sm);
-  color: var(--k-ink);
-  text-decoration: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font: inherit;
   font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 
   &:hover {
-    background: color-mix(in srgb, var(--k-brand) 8%, transparent);
-    color: var(--k-brand);
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
   }
 
+  // Rubrique active : fond un peu plus clair + barre d'accent bleue à gauche.
   &.is-active {
-    background: color-mix(in srgb, var(--k-brand) 12%, transparent);
-    color: var(--k-brand);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
     font-weight: 600;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 22px;
+      border-radius: 0 3px 3px 0;
+      background: var(--k-brand);
+    }
   }
 
-  // Section pas encore construite : présentée mais non cliquable.
+  // Rubrique pas encore construite : présentée mais non cliquable.
   &.is-soon {
-    color: var(--k-muted);
+    color: rgba(255, 255, 255, 0.4);
     cursor: default;
 
     &:hover {
       background: transparent;
-      color: var(--k-muted);
+      color: rgba(255, 255, 255, 0.4);
     }
   }
 }
@@ -98,18 +151,43 @@
   width: 20px;
   height: 20px;
   flex: 0 0 auto;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .account-nav-label {
   flex: 1 1 auto;
 }
 
-// `.account-soon-tag` est défini globalement dans `styles/_account.scss`
-// (partagé avec les tuiles de l'accueil de l'espace). L'identité et la
-// déconnexion vivent désormais dans `app-account-header`.
+// Étiquette « Bientôt » adaptée au fond sombre (le style global est clair).
+.account-side .account-soon-tag {
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  border-color: transparent;
+}
+
+// Déconnexion : légère teinte pour la distinguer, sans crier.
+.account-side-logout:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+// --- Colonne contenu -------------------------------------------------------
+.account-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
 
 .account-main {
-  min-width: 0; // laisse le contenu rétrécir dans la grille
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2rem clamp(1rem, 3vw, 2.5rem) 3.5rem;
 }
 
 // Fond assombri du tiroir : masqué par défaut (n'existe qu'en petit écran).
@@ -117,44 +195,16 @@
   display: none;
 }
 
-// --- Petit écran : la barre latérale devient un TIROIR à gauche qui POUSSE ----
-// Le menu prend franchement le côté gauche, SOUS l'en-tête (qui reste visible et
-// utilisable), et pousse le contenu vers la droite au lieu de le recouvrir.
+// --- Petit écran : le rail devient un TIROIR qui glisse depuis la gauche ----
 @media (max-width: 860px) {
-  .account-shell {
-    grid-template-columns: 1fr; // le contenu occupe toute la largeur
-    gap: 1.1rem;
-    // Le contenu poussé hors écran à droite ne doit pas créer de scroll horizontal.
-    overflow-x: clip;
-    // Largeur du tiroir, réutilisée pour la poussée du contenu (une seule source).
-    --drawer-w: min(300px, 80vw);
-  }
-
-  // Fond assombri sur la partie visible du contenu (sous l'en-tête) : un clic ferme.
-  // Reste SOUS l'en-tête (69px) et sous le tiroir, mais au-dessus du contenu.
-  .account-backdrop {
-    display: block;
-    position: fixed;
-    top: 69px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 25;
-    background: rgba(3, 25, 63, 0.35);
-  }
-
-  // Le tiroir : collé au bord gauche, plein hauteur SOUS l'en-tête, caché à gauche.
-  // z-index sous l'en-tête (40) pour qu'il garde la main, au-dessus du contenu.
   .account-side {
     position: fixed;
-    top: 69px;
+    top: 0;
     left: 0;
     bottom: 0;
-    height: auto; // annule la hauteur fixe du rail desktop : top+bottom pilotent
-    z-index: 30;
-    width: var(--drawer-w);
-    border-radius: 0 var(--k-radius-lg) var(--k-radius-lg) 0;
-    border-left: 0;
+    height: 100vh; // tiroir plein écran (la hauteur 100vh du rail convient déjà)
+    z-index: 60;
+    width: min(280px, 82vw);
     box-shadow: var(--k-shadow-lg);
     transform: translateX(-100%);
     visibility: hidden;
@@ -166,20 +216,22 @@
     }
   }
 
-  // POUSSE le contenu vers la droite quand le tiroir est ouvert (frère suivant du
-  // tiroir dans le DOM) — il glisse au lieu d'être recouvert.
-  .account-main {
-    transition: transform 0.25s ease;
+  // Fond sombre couvrant tout, sous le tiroir mais au-dessus du contenu.
+  .account-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(3, 25, 63, 0.5);
   }
 
-  .account-side.is-open ~ .account-main {
-    transform: translateX(var(--drawer-w));
+  .account-main {
+    padding: 1.25rem 1.1rem 3rem;
   }
 }
 
 @media (max-width: 860px) and (prefers-reduced-motion: reduce) {
-  .account-side,
-  .account-main {
+  .account-side {
     transition: none;
   }
 }

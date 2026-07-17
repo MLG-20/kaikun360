@@ -22,15 +22,21 @@ marquées « Bientôt » s'activeront aux étapes suivantes.
 
 ### Ce qui existe aujourd'hui
 
-- **Le cadre (F3.1)** — [`../../layouts/account-layout`](../../layouts/account-layout) :
-  un **en-tête dédié épuré** (`account-header/`, voir plus bas) et une **barre
-  latérale** avec les liens des rubriques. **Ni méga-menus ni pied de page** du
-  site public (choix UX : l'espace doit se sentir « chez soi »).
-- **L'en-tête dédié (F3.1)** — [`account-header/`](account-header) : marque
-  (retour à l'accueil), lien discret **« Retour au site »**, et **menu
-  utilisateur** (avatar + nom → **Mon profil** [F3.2] et **Se déconnecter**).
-  Volontairement **sans les méga-menus marketing** du site public : dans son
-  espace, la personne doit se sentir chez elle.
+- **Le cadre — app-shell (F3.1, refondu F3.6)** — [`../../layouts/account-layout`](../../layouts/account-layout) :
+  un **menu latéral SOMBRE, collé à gauche et pleine hauteur** (rail de tableau
+  de bord), et une **colonne contenu** (en-tête + section). Le rail porte la
+  **marque** (en haut), la **navigation** des rubriques (item actif = fond clair
+  + barre d'accent bleue) et un **pied** « Retour au site » + « Se déconnecter ».
+  **Ni méga-menus ni pied de page** du site public (choix UX : l'espace doit se
+  sentir « chez soi »). En **petit écran** (< 860px), le rail devient un
+  **tiroir plein écran** qui glisse depuis la gauche (hamburger de l'en-tête +
+  fond assombri).
+- **L'en-tête (F3.1, refondu F3.6)** — [`account-header/`](account-header) :
+  barre supérieure de la **colonne contenu** (à droite du rail, ne le recouvre
+  pas). Contient un **titre** (« Espace client »), la **cloche de notifications**
+  (F3.6, pastille de non-lues) et le **menu utilisateur** (avatar + nom → **Mon
+  profil** [F3.2] et **Se déconnecter**). La marque et le lien « Retour au
+  site » vivent désormais dans le rail.
 - **La page d'accueil (F3.1)** — [`overview/`](overview) : salutation, **rappel de
   vérification** du compte si besoin, et des **tuiles** vers chaque rubrique.
 - **La rubrique Profil (F3.2 / F3.2b)** — [`profile/`](profile) : **identité &
@@ -97,10 +103,13 @@ La rubrique Messages arrive en F3.7.
   SVG à partir d'une clé `AccountIcon` (`currentColor`, sans dépendance).
   Mutualisé par la barre latérale et les tuiles.
 - **`account-header/`** — `AccountHeaderComponent` (`app-account-header`) :
-  en-tête dédié de l'espace. Injecte `AuthService` (identité + `logout()`) ;
-  menu utilisateur déroulant (signal `menuOpen`, fermé à la navigation / Échap /
-  clic extérieur, même mécanique que le header public). Utilisé par le layout à
-  la place de `app-header`.
+  **barre supérieure** de la colonne contenu (titre + cloche de notifications +
+  menu utilisateur). Injecte `AuthService` (identité) et `NotificationService`
+  (compteur de non-lues, rechargé à chaque `NavigationEnd`) ; menu utilisateur
+  déroulant (signal `userMenuOpen`, fermé à la navigation / Échap / clic
+  extérieur). Émet `sidebarToggle` (hamburger, petit écran). La **marque**, le
+  **retour au site** et la **déconnexion en pied** vivent dans le **rail** du
+  `account-layout` (app-shell), pas ici.
 - **`account.routes.ts`** — `ACCOUNT_ROUTES` : le layout `AccountLayoutComponent`
   porte `canActivate: [authGuard]` ; les sections sont ses routes enfants
   (chargées à la demande). L'accueil est la route enfant `''`.

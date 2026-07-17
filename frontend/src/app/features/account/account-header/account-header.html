@@ -1,27 +1,22 @@
 <header class="acc-topbar">
-  <div class="k-wrap acc-bar">
-    <!-- Bouton hamburger (petit écran) : ouvre le tiroir de navigation à gauche -->
-    <button
-      class="acc-burger"
-      type="button"
-      (click)="sidebarToggle.emit()"
-      [attr.aria-expanded]="sidebarOpen()"
-      aria-label="Ouvrir le menu de l’espace"
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-           stroke-linecap="round" aria-hidden="true">
-        <path d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-    </button>
+  <div class="acc-bar">
+    <div class="acc-left">
+      <!-- Bouton hamburger (petit écran) : ouvre le tiroir de navigation à gauche -->
+      <button
+        class="acc-burger"
+        type="button"
+        (click)="sidebarToggle.emit()"
+        [attr.aria-expanded]="sidebarOpen()"
+        aria-label="Ouvrir le menu de l’espace"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
 
-    <!-- Marque : retour à l'accueil du site -->
-    <a class="acc-brand" routerLink="/" aria-label="Accueil Kaikun 360">
-      <span class="acc-logo-mark" aria-hidden="true">K</span>
-      <span class="acc-brand-text">
-        <b>Kaikun&nbsp;360</b>
-        <small>Mon espace</small>
-      </span>
-    </a>
+      <span class="acc-title">Espace client</span>
+    </div>
 
     <div class="acc-actions">
       <!-- Cloche : accès direct au centre de notifications + pastille non-lues (F3.6) -->
@@ -44,15 +39,6 @@
             {{ unreadCount() > 9 ? '9+' : unreadCount() }}
           </span>
         }
-      </a>
-
-      <!-- Lien discret de sortie vers le site public -->
-      <a class="acc-back" routerLink="/">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-        <span>Retour au site</span>
       </a>
 
       <!-- Menu utilisateur -->

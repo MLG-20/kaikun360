@@ -17,13 +17,12 @@ import { NotificationService } from '../../../core/api/notification.service';
 import { AuthService } from '../../../core/auth/auth.service';
 
 /**
- * En-tête dédié de l'espace client (F3.1, choix UX de l'utilisateur).
+ * Barre supérieure de l'espace client : occupe la colonne contenu, à droite du
+ * rail latéral sombre (la marque et la déconnexion vivent dans le rail, géré par
+ * `account-layout`). Volontairement **épurée** :
  *
- * Volontairement **épuré** — pas les méga-menus « marketing » du site public :
- * dans son espace, la personne doit se sentir chez elle. On garde donc juste
- *
- *   - la **marque** (retour à l'accueil du site),
- *   - un lien discret **« Retour au site »**,
+ *   - un **titre** (« Espace client »),
+ *   - la **cloche de notifications** (F3.6) avec sa pastille de non-lues,
  *   - un **menu utilisateur** (avatar + nom → « Mon profil » [F3.2] et
  *     déconnexion).
  *
@@ -32,7 +31,7 @@ import { AuthService } from '../../../core/auth/auth.service';
  * le parent et le bouton émet `sidebarToggle`.
  *
  * Le menu utilisateur se referme à la navigation, sur Échap, ou au clic en
- * dehors de l'en-tête (même mécanique que le header public).
+ * dehors de l'en-tête.
  */
 @Component({
   selector: 'app-account-header',
