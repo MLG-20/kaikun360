@@ -38,8 +38,14 @@ toutes en place (plus aucune section « Bientôt »).
   (F3.6, pastille de non-lues) et le **menu utilisateur** (avatar + nom → **Mon
   profil** [F3.2] et **Se déconnecter**). La marque et le lien « Retour au
   site » vivent désormais dans le rail.
-- **La page d'accueil (F3.1)** — [`overview/`](overview) : salutation, **rappel de
-  vérification** du compte si besoin, et des **tuiles** vers chaque rubrique.
+- **La page d'accueil (F3.1, enrichie « comprendre son espace »)** —
+  [`overview/`](overview) : salutation, un **mot de bienvenue** qui explique en
+  clair à quoi sert l'espace et comment y naviguer (**masquable**, mémorisé ;
+  lien « Besoin d'aide ? » pour le rouvrir), une checklist **« Pour bien
+  démarrer »** dont les étapes (vérifier le compte, compléter le profil) se
+  **cochent automatiquement** et qui **disparaît** une fois tout fait, et des
+  **tuiles** vers chaque rubrique. Le rappel de vérification autrefois séparé est
+  désormais **l'étape 1 de la checklist** (plus de double nudge).
 - **La rubrique Profil (F3.2 / F3.2b)** — [`profile/`](profile) : **identité &
   coordonnées** (nom, **e-mail et téléphone modifiables** — un changement
   déclenche une **re-vérification** avec saisie du code sur place ; **adresse**
@@ -125,6 +131,14 @@ toutes en place (plus aucune section « Bientôt »).
   porte `canActivate: [authGuard]` ; les sections sont ses routes enfants
   (chargées à la demande). L'accueil est la route enfant `''`.
 - **`overview/`** — `AccountOverviewPageComponent` : accueil du tableau de bord.
+  **Mot de bienvenue** masquable (préférence en `localStorage`, clé
+  `kaikun.account.welcomeDismissed`, lecture/écriture **SSR-safe** via garde
+  `typeof window`) + lien « Besoin d'aide ? » pour le rouvrir. Checklist **« Pour
+  bien démarrer »** = `steps` (computed) dont les `done` sont **dérivés de
+  `AuthService.user()`** (aucun appel réseau) : `isVerified`
+  (email/phone_verified_at) et `profileComplete` (téléphone + une localisation) ;
+  la section se retire quand `allStepsDone`. Le bandeau `.account-verify` n'est
+  plus utilisé ici (fondu dans l'étape 1).
 - **`profile/`** — `ProfilePageComponent` (F3.2 / F3.2b, route enfant `profil`) :
   recharge le profil frais (`GET /users/me`) au montage ; édite identité **et
   coordonnées** (`PATCH /users/me`, erreurs 422 par champ). **E-mail / téléphone

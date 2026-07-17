@@ -1,8 +1,202 @@
-// Accueil de l'espace client (F3.1). Les briques partagées entre écrans de
-// l'espace — en-tête (.account-head/.account-eyebrow/.account-title/.account-lead),
-// bandeau de vérification (.account-verify) et étiquette « Bientôt »
-// (.account-soon-tag) — sont globales (styles/_account.scss) ; ici on ne garde
-// que les tuiles, propres à cet écran.
+// Accueil de l'espace client (F3.1, enrichi F3.7+). Les briques partagées entre
+// écrans de l'espace — en-tête (.account-head/.account-eyebrow/.account-title/
+// .account-lead) et étiquette « Bientôt » (.account-soon-tag) — sont globales
+// (styles/_account.scss) ; ici : mot de bienvenue, checklist d'accueil et tuiles.
+
+// --- Lien « Besoin d'aide ? » (rouvre le mot de bienvenue) ----------------
+.ov-help-link {
+  margin-top: 0.85rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--k-brand-600);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// --- Mot de bienvenue (masquable) -----------------------------------------
+.ov-welcome {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding: 1.35rem 1.5rem;
+  background: var(--k-brand-050);
+  border: 1px solid color-mix(in srgb, var(--k-brand) 25%, var(--k-line));
+  border-radius: var(--k-radius);
+}
+
+.ov-welcome-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.65rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  color: var(--k-muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--k-brand) 12%, transparent);
+    color: var(--k-ink);
+  }
+}
+
+.ov-welcome-title {
+  font-family: var(--k-font-display);
+  font-size: 1.15rem;
+  margin: 0 0 0.4rem;
+  padding-right: 2rem; // laisse la place au bouton de fermeture
+}
+
+.ov-welcome-text {
+  margin: 0;
+  color: var(--k-ink);
+  line-height: 1.6;
+  max-width: 68ch;
+
+  strong {
+    color: var(--k-brand-600);
+    font-weight: 600;
+  }
+}
+
+// --- Checklist « Pour bien démarrer » -------------------------------------
+.ov-onboarding {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.4rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.ov-onboarding-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.ov-onboarding-title {
+  font-family: var(--k-font-display);
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.ov-onboarding-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--k-brand-600);
+}
+
+.ov-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.ov-step {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.6rem 0;
+
+  & + & {
+    border-top: 1px solid var(--k-line);
+    padding-top: 0.85rem;
+  }
+}
+
+// Pastille d'état : cercle vide → coché (fond de marque + coche blanche).
+.ov-step-check {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--k-line);
+  color: #fff;
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .ov-step.is-done & {
+    background: var(--k-green, var(--k-brand));
+    border-color: var(--k-green, var(--k-brand));
+  }
+}
+
+.ov-step-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  strong {
+    color: var(--k-ink);
+    font-weight: 600;
+  }
+
+  span {
+    font-size: 0.88rem;
+    color: var(--k-muted);
+    line-height: 1.45;
+  }
+
+  // Étape faite : intitulé atténué (la personne n'a plus rien à y faire).
+  .ov-step.is-done & strong {
+    color: var(--k-muted);
+  }
+}
+
+.ov-step-cta {
+  flex: 0 0 auto;
+}
+
+// Badge « Fait » (étape accomplie).
+.ov-step-badge {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--k-green-600, var(--k-brand-600));
+  background: color-mix(in srgb, var(--k-green, var(--k-brand)) 14%, var(--k-card));
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+@media (max-width: 560px) {
+  .ov-step {
+    flex-wrap: wrap;
+  }
+
+  .ov-step-body {
+    flex-basis: calc(100% - 26px - 0.85rem);
+  }
+
+  .ov-step-cta,
+  .ov-step-badge {
+    margin-left: calc(26px + 0.85rem);
+  }
+}
 
 // --- Tuiles des sections --------------------------------------------------
 .account-tiles {

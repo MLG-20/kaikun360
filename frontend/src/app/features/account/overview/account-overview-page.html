@@ -4,20 +4,74 @@
     Bonjour{{ firstName() ? ', ' + firstName() : '' }} 👋
   </h1>
   <p class="account-lead">
-    Retrouvez ici vos demandes, réservations, favoris et documents, et suivez
-    leur avancement en toute transparence.
+    Retrouvez ici vos demandes, réservations, favoris, messages et documents, et
+    suivez leur avancement en toute transparence.
   </p>
+
+  <!-- Réouverture du mot de bienvenue une fois qu'il a été masqué -->
+  @if (welcomeDismissed()) {
+    <button type="button" class="ov-help-link" (click)="reopenWelcome()">
+      Besoin d'aide ? Revoir la présentation de l'espace
+    </button>
+  }
 </section>
 
-<!-- Bandeau de vérification : n'apparaît que si le compte n'est pas vérifié -->
-@if (!isVerified()) {
-  <div class="account-verify">
-    <div>
-      <strong>Vérifiez votre compte</strong>
-      <p>Confirmez votre e-mail ou votre téléphone pour réserver et déposer un bien en toute sécurité.</p>
+<!-- ============================ Mot de bienvenue =========================== -->
+@if (!welcomeDismissed()) {
+  <section class="ov-welcome" aria-label="Présentation de l'espace">
+    <button
+      type="button"
+      class="ov-welcome-close"
+      aria-label="Masquer la présentation"
+      (click)="dismissWelcome()"
+    >
+      ×
+    </button>
+    <h2 class="ov-welcome-title">Bienvenue dans votre espace</h2>
+    <p class="ov-welcome-text">
+      C'est votre <strong>tableau de bord personnel</strong>. Tout est réuni ici :
+      suivez vos <strong>demandes</strong> et vos <strong>réservations</strong>,
+      gardez vos biens en <strong>favoris</strong>, échangez par
+      <strong>messagerie</strong> avec le support ou un professionnel, et recevez
+      vos <strong>notifications</strong>. Utilisez le <strong>menu de gauche</strong>
+      pour passer d'une rubrique à l'autre.
+    </p>
+  </section>
+}
+
+<!-- ========================= Pour bien démarrer =========================== -->
+@if (!allStepsDone()) {
+  <section class="ov-onboarding" aria-label="Pour bien démarrer">
+    <div class="ov-onboarding-head">
+      <h2 class="ov-onboarding-title">Pour bien démarrer</h2>
+      <span class="ov-onboarding-count">{{ doneCount() }} / {{ steps().length }}</span>
     </div>
-    <a class="k-btn k-btn--primary" routerLink="/auth/verification">Vérifier mon compte</a>
-  </div>
+    <ul class="ov-steps">
+      @for (step of steps(); track step.title) {
+        <li class="ov-step" [class.is-done]="step.done">
+          <span class="ov-step-check" aria-hidden="true">
+            @if (step.done) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+            }
+          </span>
+          <span class="ov-step-body">
+            <strong>{{ step.title }}</strong>
+            <span>{{ step.hint }}</span>
+          </span>
+          @if (step.done) {
+            <span class="ov-step-badge" aria-label="Fait">Fait</span>
+          } @else {
+            <a class="k-btn k-btn--ghost ov-step-cta" [routerLink]="step.ctaLink">
+              {{ step.ctaLabel }}
+            </a>
+          }
+        </li>
+      }
+    </ul>
+  </section>
 }
 
 <!-- Tuiles vers les sections de l'espace -->
