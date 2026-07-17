@@ -113,30 +113,41 @@
   display: none;
 }
 
-// --- Petit écran : la barre latérale devient un TIROIR qui glisse à gauche -
+// --- Petit écran : la barre latérale devient un TIROIR à gauche qui POUSSE ----
+// Le menu prend franchement le côté gauche, SOUS l'en-tête (qui reste visible et
+// utilisable), et pousse le contenu vers la droite au lieu de le recouvrir.
 @media (max-width: 860px) {
   .account-shell {
     grid-template-columns: 1fr; // le contenu occupe toute la largeur
     gap: 1.1rem;
+    // Le contenu poussé hors écran à droite ne doit pas créer de scroll horizontal.
+    overflow-x: clip;
+    // Largeur du tiroir, réutilisée pour la poussée du contenu (une seule source).
+    --drawer-w: min(300px, 80vw);
   }
 
-  // Fond sombre couvrant tout, sous le tiroir mais au-dessus du contenu.
+  // Fond assombri sur la partie visible du contenu (sous l'en-tête) : un clic ferme.
+  // Reste SOUS l'en-tête (69px) et sous le tiroir, mais au-dessus du contenu.
   .account-backdrop {
     display: block;
     position: fixed;
-    inset: 0;
-    z-index: 50;
-    background: rgba(3, 25, 63, 0.45);
+    top: 69px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 25;
+    background: rgba(3, 25, 63, 0.35);
   }
 
-  // Le tiroir : fixé à gauche, plein hauteur, caché hors écran par défaut.
+  // Le tiroir : collé au bord gauche, plein hauteur SOUS l'en-tête, caché à gauche.
+  // z-index sous l'en-tête (40) pour qu'il garde la main, au-dessus du contenu.
   .account-side {
     position: fixed;
-    top: 0;
+    top: 69px;
     left: 0;
     bottom: 0;
-    z-index: 60;
-    width: min(320px, 82%);
+    z-index: 30;
+    width: var(--drawer-w);
     border-radius: 0 var(--k-radius-lg) var(--k-radius-lg) 0;
     border-left: 0;
     box-shadow: var(--k-shadow-lg);
@@ -149,10 +160,21 @@
       visibility: visible;
     }
   }
+
+  // POUSSE le contenu vers la droite quand le tiroir est ouvert (frère suivant du
+  // tiroir dans le DOM) — il glisse au lieu d'être recouvert.
+  .account-main {
+    transition: transform 0.25s ease;
+  }
+
+  .account-side.is-open ~ .account-main {
+    transform: translateX(var(--drawer-w));
+  }
 }
 
 @media (max-width: 860px) and (prefers-reduced-motion: reduce) {
-  .account-side {
+  .account-side,
+  .account-main {
     transition: none;
   }
 }
