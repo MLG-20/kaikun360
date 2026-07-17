@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\RequestStatus;
+use App\Enums\ServiceType;
+use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Immo\Enums\PropertyType;
@@ -52,7 +55,13 @@ class DemoSeeder extends Seeder
         // Compte client de démonstration : pour se connecter et parcourir
         // l'espace client (F3). Idempotent (firstOrCreate sur l'e-mail), donc
         // créé même quand les données de démo existent déjà (garde ci-dessous).
-        $this->demoUser(self::CLIENT_EMAIL, 'Client Démo', 'client');
+        $client = $this->demoUser(self::CLIENT_EMAIL, 'Client Démo', 'client');
+
+        // Quelques demandes de service pour peupler l'écran « Mes demandes »
+        // (F3.3) de l'espace client. Garde d'idempotence PROPRE (indépendante de
+        // celle des annonces ci-dessous) : on ne recrée rien si le client en a
+        // déjà, afin que la relance du seeder reste sans doublon.
+        $this->seedClientRequests($client);
 
         // Garde d'idempotence : annonces déjà créées → on s'arrête.
         if (Property::query()->where('owner_id', $owner->id)->exists()) {
@@ -105,6 +114,45 @@ class DemoSeeder extends Seeder
         ]);
 
         $this->command?->info('DemoSeeder : données de démonstration créées (biens, nuitées, véhicules, expériences, trajets).');
+    }
+
+    /**
+     * Peuple l'écran « Mes demandes » (F3.3) du client de démonstration avec
+     * trois demandes à des statuts variés (pour illustrer la chronologie de
+     * suivi). Idempotent : ne fait rien si le client possède déjà des demandes.
+     */
+    private function seedClientRequests(User $client): void
+    {
+        if (ServiceRequest::query()->where('user_id', $client->id)->exists()) {
+            return;
+        }
+
+        // Une demande par étape marquante de la machine à états, univers variés.
+        ServiceRequest::factory()->status(RequestStatus::VISITE)->create([
+            'user_id' => $client->id,
+            'service_type' => ServiceType::IMMO->value,
+            'message' => 'Je souhaite visiter la villa aux Almadies ce week-end.',
+            'budget_xof' => 45_000_000,
+            'city' => 'Dakar',
+        ]);
+
+        ServiceRequest::factory()->status(RequestStatus::RECU)->create([
+            'user_id' => $client->id,
+            'service_type' => ServiceType::STAY->value,
+            'message' => 'Réservation d’une nuitée pour deux personnes à Saly.',
+            'budget_xof' => 60_000,
+            'city' => 'Saly',
+        ]);
+
+        ServiceRequest::factory()->status(RequestStatus::CLOTURE)->create([
+            'user_id' => $client->id,
+            'service_type' => ServiceType::BUILD->value,
+            'message' => 'Devis pour la construction d’un mur de clôture.',
+            'budget_xof' => null,
+            'city' => 'Thiès',
+        ]);
+
+        $this->command?->info('DemoSeeder : demandes de démonstration créées pour le client.');
     }
 
     /**
