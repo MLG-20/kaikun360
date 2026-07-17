@@ -15,3 +15,4 @@ export * from './media.model';
 export * from './provider.model';
 export * from './content.model';
 export * from './document.model';
+export * from './notification.model';

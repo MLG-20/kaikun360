@@ -24,6 +24,28 @@
     </a>
 
     <div class="acc-actions">
+      <!-- Cloche : accès direct au centre de notifications + pastille non-lues (F3.6) -->
+      <a
+        class="acc-bell"
+        routerLink="/mon-espace/notifications"
+        [attr.aria-label]="
+          unreadCount() > 0
+            ? 'Mes notifications, ' + unreadCount() + ' non lues'
+            : 'Mes notifications'
+        "
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M10.5 21a1.8 1.8 0 0 0 3 0" />
+        </svg>
+        @if (unreadCount() > 0) {
+          <span class="acc-bell-badge" aria-hidden="true">
+            {{ unreadCount() > 9 ? '9+' : unreadCount() }}
+          </span>
+        }
+      </a>
+
       <!-- Lien discret de sortie vers le site public -->
       <a class="acc-back" routerLink="/">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"

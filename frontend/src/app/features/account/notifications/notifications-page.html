@@ -1,0 +1,91 @@
+<section class="account-head">
+  <p class="account-eyebrow">Mon espace</p>
+  <h1 class="account-title">Mes notifications</h1>
+  <p class="account-lead">
+    Retrouvez ici les mises à jour de vos demandes, devis et réservations.
+    Cliquez sur une notification pour la marquer comme lue et accéder à l'écran
+    concerné.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos notifications…</p>
+} @else if (loadError()) {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger vos notifications pour le moment. Merci de réessayer plus tard.
+  </p>
+} @else if (items().length === 0) {
+  <!-- ========================= Aucune notification ========================= -->
+  <div class="nt-empty">
+    <h2 class="nt-empty-title">Aucune notification</h2>
+    <p class="nt-empty-text">
+      Vous n'avez pas encore de notification. Dès qu'une de vos demandes ou
+      réservations évoluera, vous serez prévenu ici.
+    </p>
+  </div>
+} @else {
+  <!-- ===================== Barre d'actions (non-lues) ====================== -->
+  <div class="nt-toolbar">
+    <p class="nt-count" role="status">
+      @if (unreadCount() > 0) {
+        <strong>{{ unreadCount() }}</strong> non lue{{ unreadCount() > 1 ? 's' : '' }}
+      } @else {
+        Tout est à jour.
+      }
+    </p>
+    @if (unreadCount() > 0) {
+      <button type="button" class="k-btn k-btn--ghost" (click)="markAll()">
+        Tout marquer comme lu
+      </button>
+    }
+  </div>
+
+  <!-- ======================= Liste des notifications ======================= -->
+  <ul class="nt-list">
+    @for (item of items(); track item.id) {
+      <li
+        class="nt-card"
+        [class.is-unread]="!item.read"
+        [attr.data-category]="item.category"
+      >
+        <button
+          type="button"
+          class="nt-card-btn"
+          [disabled]="busyId() === item.id"
+          (click)="open(item)"
+        >
+          <span class="nt-icon" aria-hidden="true">
+            <app-account-icon [name]="icon(item.category)" />
+          </span>
+          <span class="nt-body">
+            <span class="nt-card-head">
+              <span class="nt-title">{{ item.title }}</span>
+              @if (!item.read) {
+                <span class="nt-dot" aria-label="Non lue"></span>
+              }
+            </span>
+            <span class="nt-text">{{ item.body }}</span>
+            @if (item.created_at) {
+              <span class="nt-date">{{ item.created_at | date: 'longDate' : '' : 'fr' }}</span>
+            }
+          </span>
+        </button>
+      </li>
+    }
+  </ul>
+
+  <!-- Pagination -->
+  @if (meta(); as m) {
+    @if (m.last_page > 1) {
+      <nav class="nt-pager" aria-label="Pagination des notifications">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasPrev()" (click)="prev()">
+          ← Précédent
+        </button>
+        <span class="nt-pager-info">Page {{ m.current_page }} sur {{ m.last_page }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasNext()" (click)="next()">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}

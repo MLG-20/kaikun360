@@ -1,0 +1,178 @@
+// Écran « Mes notifications » de l'espace client (F3.6). L'en-tête d'écran
+// (.account-head/.account-title…) vient du partiel global `styles/_account.scss`
+// et les états (.pf-state) du partiel du profil ; on ne définit ici que les
+// briques propres à la liste de notifications (préfixe nt-).
+
+// — État vide —
+.nt-empty {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+}
+
+.nt-empty-title {
+  font-family: var(--k-font-display);
+  font-size: 1.25rem;
+  margin-bottom: 0.6rem;
+}
+
+.nt-empty-text {
+  color: var(--k-muted);
+  max-width: 52ch;
+  margin: 0 auto;
+}
+
+// — Barre d'actions (compteur de non-lues + tout marquer) —
+.nt-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.nt-count {
+  margin: 0;
+  color: var(--k-muted);
+
+  strong {
+    color: var(--k-brand-600);
+  }
+}
+
+// — Liste —
+.nt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.nt-card {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  overflow: hidden;
+
+  // Non lue : liseré de marque à gauche + fond légèrement teinté.
+  &.is-unread {
+    border-color: color-mix(in srgb, var(--k-brand) 30%, var(--k-line));
+
+    .nt-card-btn {
+      border-left: 3px solid var(--k-brand);
+      background: var(--k-brand-050);
+    }
+
+    .nt-title {
+      font-weight: 700;
+    }
+  }
+}
+
+// Toute la carte est un bouton (cliquable → marque lu + navigue).
+.nt-card-btn {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.15rem 1.35rem;
+  border: 0;
+  border-left: 3px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--k-cream);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+// Pastille d'icône, teintée par catégorie.
+.nt-icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 9px;
+  background: var(--k-brand-050);
+  color: var(--k-brand-600);
+
+  .nt-card[data-category='booking'] & {
+    background: color-mix(in srgb, var(--k-green) 14%, var(--k-card));
+    color: var(--k-green-600);
+  }
+
+  .nt-card[data-category='quote'] & {
+    background: color-mix(in srgb, var(--k-gold) 16%, var(--k-card));
+    color: color-mix(in srgb, var(--k-gold) 70%, #6b4e00);
+  }
+}
+
+.nt-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.nt-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nt-title {
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+// Point « non lue » à côté du titre.
+.nt-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--k-brand);
+}
+
+.nt-text {
+  color: var(--k-muted);
+  line-height: 1.5;
+}
+
+.nt-date {
+  font-size: 0.78rem;
+  color: var(--k-muted);
+  margin-top: 0.15rem;
+}
+
+// — Pagination —
+.nt-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.nt-pager-info {
+  font-size: 0.9rem;
+  color: var(--k-muted);
+}

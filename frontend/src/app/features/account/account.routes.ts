@@ -46,6 +46,13 @@ export const ACCOUNT_ROUTES: Routes = [
         title: 'Mes favoris — Kaikun 360',
       },
       {
+        // F3.6 — Notifications : centre de notifications (GET /users/me/notifications).
+        path: 'notifications',
+        loadComponent: () =>
+          import('./notifications/notifications-page').then((m) => m.NotificationsPageComponent),
+        title: 'Mes notifications — Kaikun 360',
+      },
+      {
         // F3.2 — Profil : identité, pièces justificatives, suppression du compte.
         path: 'profil',
         loadComponent: () =>

@@ -91,6 +91,49 @@
   gap: 0.75rem;
 }
 
+// --- Cloche de notifications (F3.6) --------------------------------------
+.acc-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--k-muted);
+  text-decoration: none;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    color: var(--k-ink);
+    background: color-mix(in srgb, var(--k-ink) 5%, transparent);
+  }
+}
+
+// Pastille du nombre de non-lues, en surimpression coin haut-droit.
+.acc-bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-brand);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+  border: 2px solid var(--k-card);
+}
+
 .acc-back {
   display: inline-flex;
   align-items: center;

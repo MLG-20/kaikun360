@@ -69,7 +69,18 @@ marquées « Bientôt » s'activeront aux étapes suivantes.
   une confirmation inline ; la carte quitte alors la liste. L'ajout aux favoris
   se fait depuis les fiches publiques — cet écran ne fait que les regrouper.
 
-Les rubriques Notifications et Messages arrivent en F3.6 → F3.7.
+- **La rubrique Notifications (F3.6)** — [`notifications/`](notifications) : centre
+  de notifications du client (`GET /users/me/notifications`, paginé), avec le
+  nombre de non-lues joint aux métadonnées. Chaque notification est une **carte
+  cliquable** (icône teintée par catégorie, titre, message, date) : au clic on la
+  **marque comme lue** (`PATCH …/{id}/read`) puis, si elle porte un `action_url`,
+  on **navigue** vers l'écran concerné (demande, réservation…). Un bouton **« Tout
+  marquer comme lu »** (`PATCH …/read-all`) apparaît dès qu'il reste des non-lues.
+  Les notifications non lues sont mises en avant (liseré de marque, point). La
+  **cloche de l'en-tête** (`account-header`) porte une **pastille** du nombre de
+  non-lues, rafraîchie à chaque navigation dans l'espace.
+
+La rubrique Messages arrive en F3.7.
 
 ---
 
@@ -107,6 +118,15 @@ Les rubriques Notifications et Messages arrivent en F3.6 → F3.7.
   (`DELETE /users/me`). S'appuie sur le
   [`AccountService`](../../core/api/account.service.ts) et sur
   `AuthService.setCurrentUser()` (synchronise le nom de l'en-tête sans reload).
+- **`notifications/`** — `NotificationsPageComponent` (F3.6, route enfant
+  `notifications`) : liste paginée via
+  [`NotificationService`](../../core/api/notification.service.ts)
+  (`myNotifications` renvoie la pagination **enrichie** de `unread_count`). Au
+  clic sur une carte, `markAsRead` puis navigation vers `action_url` ;
+  `markAllAsRead` remet toutes les non-lues à lu. La **cloche de l'en-tête**
+  (`account-header`) appelle `unreadCount` et affiche la pastille, rechargée à
+  chaque `NavigationEnd` (donc mise à jour au retour de l'écran) — et seulement
+  quand une session est active (pas d'appel voué au 401 côté serveur SSR).
 
 ### Points d'intégration
 

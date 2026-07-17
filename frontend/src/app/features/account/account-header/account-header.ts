@@ -13,6 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
+import { NotificationService } from '../../../core/api/notification.service';
 import { AuthService } from '../../../core/auth/auth.service';
 
 /**
@@ -44,6 +45,7 @@ export class AccountHeaderComponent {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationService);
 
   /** État du tiroir de navigation (fourni par le layout, pour l'aria du bouton). */
   readonly sidebarOpen = input(false);
@@ -59,14 +61,43 @@ export class AccountHeaderComponent {
   /** État du menu utilisateur déroulant (distinct du tiroir latéral). */
   protected readonly userMenuOpen = signal(false);
 
+  /**
+   * Nombre de notifications non lues (pastille sur la cloche, F3.6). Rafraîchi
+   * à chaque navigation dans l'espace : une visite de l'écran « Mes
+   * notifications » (où l'on marque des notifications comme lues) met ainsi la
+   * pastille à jour au retour, sans état partagé complexe.
+   */
+  protected readonly unreadCount = signal(0);
+
   constructor() {
-    // Toute navigation referme le menu utilisateur.
     this.router.events
       .pipe(
         filter((e) => e instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(() => this.userMenuOpen.set(false));
+      .subscribe(() => {
+        // Toute navigation referme le menu utilisateur…
+        this.userMenuOpen.set(false);
+        // …et rafraîchit la pastille de non-lues.
+        this.refreshUnread();
+      });
+
+    this.refreshUnread();
+  }
+
+  /**
+   * Recharge le compteur de non-lues (seulement si une session est active :
+   * inutile — et voué au 401 — côté serveur où le jeton en mémoire est absent).
+   */
+  private refreshUnread(): void {
+    if (!this.user()) {
+      return;
+    }
+    this.notifications.unreadCount().subscribe({
+      next: (res) => this.unreadCount.set(res.data.unread_count),
+      // Silencieux : la pastille est un confort, pas un contenu critique.
+      error: () => {},
+    });
   }
 
   /** Ouvre/ferme le menu utilisateur. */

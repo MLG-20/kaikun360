@@ -77,7 +77,7 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     description: 'Mises à jour de vos demandes, réservations et documents.',
     path: 'notifications',
     icon: 'bell',
-    ready: false, // F3.6
+    ready: true, // F3.6 ✅
   },
   {
     label: 'Messages',
