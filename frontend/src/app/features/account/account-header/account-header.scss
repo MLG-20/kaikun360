@@ -280,8 +280,7 @@
 
 @media (max-width: 560px) {
   // Sur téléphone, on retire le mot-clé « Kaikun 360 » (la pastille logo « K »
-  // suffit) pour éviter que l'avatar et le lien « Retour au site » ne débordent.
-  // Le NOM D'UTILISATEUR, lui, reste affiché.
+  // suffit) et le libellé « Retour au site » (la flèche suffit).
   .acc-brand-text {
     display: none;
   }
@@ -290,8 +289,18 @@
     display: none;
   }
 
-  .acc-user-name {
-    max-width: 96px; // le nom reste affiché, tronqué si vraiment long
+  // Menu utilisateur réduit à l'AVATAR SEUL : avec la cloche (F3.6) en plus, le
+  // nom d'utilisateur faisait déborder la barre et cassait le comportement de
+  // l'en-tête au défilement. On masque donc le nom (et le chevron) ; l'avatar
+  // reste cliquable et ouvre le même menu (le nom complet y figure en tête).
+  .acc-user-name,
+  .acc-caret {
+    display: none;
+  }
+
+  .acc-user-btn {
+    padding: 0.3rem;
+    border-radius: 50%;
   }
 }
 
