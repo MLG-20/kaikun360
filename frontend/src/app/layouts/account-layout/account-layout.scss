@@ -108,6 +108,20 @@
   min-width: 0; // laisse le contenu rétrécir dans la grille
 }
 
+// --- Desktop : menu ÉPINGLÉ ouvert par défaut, mais REPLIABLE (hamburger) -----
+// Sur desktop on a la place : le menu occupe sa colonne (264px) et pousse le
+// contenu. Le hamburger permet de le REPLIER — il se retire alors et le contenu
+// prend toute la largeur. (Sur petit écran, voir plus bas : tiroir par-dessus.)
+@media (min-width: 861px) {
+  .account-shell:not(.is-open) {
+    grid-template-columns: 1fr;
+  }
+
+  .account-shell:not(.is-open) .account-side {
+    display: none;
+  }
+}
+
 // Fond assombri du tiroir : masqué par défaut (n'existe qu'en petit écran).
 .account-backdrop {
   display: none;
