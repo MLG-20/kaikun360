@@ -63,7 +63,7 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     description: 'Vos nuitées, locations de véhicules et expériences.',
     path: 'reservations',
     icon: 'calendar',
-    ready: false, // F3.4
+    ready: true, // F3.4 ✅
   },
   {
     label: 'Favoris',

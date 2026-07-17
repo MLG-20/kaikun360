@@ -11,6 +11,9 @@ l'application (approche standalone, sans NgModule) :
   - `RequestService` — dépôt de demandes contextuelles `POST /requests`
     (demande de visite/réservation ; **auth requise**) — F2.3 ; **et suivi** des
     demandes du client connecté `GET /requests/my` (paginé) — F3.3.
+  - `BookingService` — réservations du client `GET /bookings/my` (paginé) et
+    **annulation** propre à l'univers `PATCH /vehicles|experiences/bookings/{id}/cancel`
+    (véhicules et expériences uniquement) — F3.4.
   - `ReviewService` — avis publiés `GET /reviews` d'une entité notée — F2.3.
   - `WhatsAppService` — lien WhatsApp contextuel `GET /whatsapp/link` (message
     prérempli + numéro de support paramétré côté back-office) — F2.6.

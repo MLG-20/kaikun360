@@ -50,8 +50,17 @@ marquées « Bientôt » s'activeront aux étapes suivantes.
   **dépôt** de demande reste sur les pages publiques (fiches de biens/services) —
   cet écran ne fait qu'en **suivre l'avancement**.
 
-Les rubriques Réservations, Favoris, Notifications et Messages arrivent en
-F3.4 → F3.7.
+- **La rubrique Réservations (F3.4)** — [`bookings/`](bookings) : liste paginée
+  des réservations du client, tous univers confondus (`GET /bookings/my`).
+  Chaque réservation est une **carte** (univers, élément réservé, dates,
+  voyageurs, montant, caution, statut teinté). Le client peut **annuler** une
+  réservation lorsque le backend le permet (`cancellable` — véhicules et
+  expériences non encore annulés) : la confirmation inline déclenche l'endpoint
+  propre à l'univers et affiche l'éligibilité au remboursement. Les nuitées et
+  trajets n'ont pas d'annulation client (pas d'endpoint) : ils restent en
+  lecture seule.
+
+Les rubriques Favoris, Notifications et Messages arrivent en F3.5 → F3.7.
 
 ---
 

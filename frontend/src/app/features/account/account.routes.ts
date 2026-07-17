@@ -32,6 +32,13 @@ export const ACCOUNT_ROUTES: Routes = [
         title: 'Mes demandes — Kaikun 360',
       },
       {
+        // F3.4 — Réservations : suivi + annulation (GET /bookings/my).
+        path: 'reservations',
+        loadComponent: () =>
+          import('./bookings/bookings-page').then((m) => m.BookingsPageComponent),
+        title: 'Mes réservations — Kaikun 360',
+      },
+      {
         // F3.2 — Profil : identité, pièces justificatives, suppression du compte.
         path: 'profil',
         loadComponent: () =>

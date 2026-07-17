@@ -1,0 +1,199 @@
+// Écran « Mes réservations » de l'espace client (F3.4). L'en-tête d'écran
+// (.account-head…) et les états (.pf-state) viennent des partiels partagés ;
+// on ne définit ici que les briques propres à la liste (préfixe bk-).
+
+// — État vide —
+.bk-empty {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+}
+
+.bk-empty-title {
+  font-family: var(--k-font-display);
+  font-size: 1.25rem;
+  margin-bottom: 0.6rem;
+}
+
+.bk-empty-text {
+  color: var(--k-muted);
+  max-width: 52ch;
+  margin: 0 auto 1.5rem;
+}
+
+// — Liste —
+.bk-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.bk-card {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 1.5rem;
+}
+
+.bk-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+
+.bk-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.bk-universe {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--k-brand);
+  background: var(--k-brand-050);
+  border-radius: var(--k-radius-pill);
+  padding: 0.15rem 0.6rem;
+}
+
+.bk-ref {
+  font-family: var(--k-font-mono);
+  font-size: 0.82rem;
+  color: var(--k-muted);
+}
+
+// Pastille de statut — teinte par tonalité (data-tone).
+.bk-status {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--k-radius-pill);
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--k-line);
+  background: var(--k-cream);
+  color: var(--k-muted);
+
+  &[data-tone='pending'] {
+    color: color-mix(in srgb, var(--k-gold) 70%, #6b4e00);
+    background: color-mix(in srgb, var(--k-gold) 16%, var(--k-card));
+    border-color: color-mix(in srgb, var(--k-gold) 45%, var(--k-line));
+  }
+
+  &[data-tone='ok'] {
+    color: var(--k-brand-600);
+    background: var(--k-brand-050);
+    border-color: color-mix(in srgb, var(--k-brand) 30%, var(--k-line));
+  }
+
+  &[data-tone='active'] {
+    color: var(--k-green-600);
+    background: color-mix(in srgb, var(--k-green) 14%, var(--k-card));
+    border-color: color-mix(in srgb, var(--k-green) 35%, var(--k-line));
+  }
+
+  &[data-tone='done'] {
+    color: var(--k-muted);
+    background: var(--k-cream);
+    border-color: var(--k-line);
+  }
+
+  &[data-tone='cancelled'] {
+    color: color-mix(in srgb, var(--k-danger) 85%, black);
+    background: color-mix(in srgb, var(--k-danger) 10%, var(--k-card));
+    border-color: color-mix(in srgb, var(--k-danger) 40%, var(--k-line));
+  }
+}
+
+.bk-item {
+  font-family: var(--k-font-display);
+  font-size: 1.05rem;
+  margin-bottom: 1rem;
+}
+
+// — Faits (dates / voyageurs / montant / caution) —
+.bk-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 2rem;
+  margin: 0 0 1.1rem;
+}
+
+.bk-fact {
+  dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-muted);
+    margin-bottom: 0.15rem;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
+// — Annulation —
+.bk-actions {
+  border-top: 1px solid var(--k-line);
+  padding-top: 1rem;
+}
+
+.bk-cancel-btn {
+  font-size: 0.9rem;
+}
+
+.bk-confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.bk-confirm-text {
+  font-weight: 600;
+}
+
+.bk-confirm-btns {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.bk-btn-danger {
+  color: #fff;
+  background: var(--k-danger);
+  border: 1px solid var(--k-danger);
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--k-danger) 85%, black);
+  }
+}
+
+// — Pagination —
+.bk-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.bk-pager-info {
+  font-size: 0.9rem;
+  color: var(--k-muted);
+}
