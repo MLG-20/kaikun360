@@ -25,6 +25,13 @@ export const ACCOUNT_ROUTES: Routes = [
         title: 'Mon espace — Kaikun 360',
       },
       {
+        // F3.3 — Mes demandes : suivi des demandes de service (GET /requests/my).
+        path: 'demandes',
+        loadComponent: () =>
+          import('./requests/requests-page').then((m) => m.RequestsPageComponent),
+        title: 'Mes demandes — Kaikun 360',
+      },
+      {
         // F3.2 — Profil : identité, pièces justificatives, suppression du compte.
         path: 'profil',
         loadComponent: () =>

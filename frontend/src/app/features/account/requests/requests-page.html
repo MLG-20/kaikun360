@@ -1,0 +1,96 @@
+<section class="account-head">
+  <p class="account-eyebrow">Mon espace</p>
+  <h1 class="account-title">Mes demandes</h1>
+  <p class="account-lead">
+    Suivez l'avancement de toutes vos demandes (visite d'un bien, réservation,
+    accompagnement…), de leur réception jusqu'à leur clôture.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos demandes…</p>
+} @else if (loadError()) {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger vos demandes pour le moment. Merci de réessayer plus tard.
+  </p>
+} @else if (items().length === 0) {
+  <!-- ============================ Aucune demande =========================== -->
+  <div class="rq-empty">
+    <h2 class="rq-empty-title">Aucune demande pour l'instant</h2>
+    <p class="rq-empty-text">
+      Vous n'avez pas encore déposé de demande. Parcourez nos univers et
+      contactez-nous depuis la fiche d'un bien ou d'un service : votre demande
+      apparaîtra ici, avec son suivi.
+    </p>
+    <a class="k-btn k-btn--primary" routerLink="/immobilier">Explorer l'immobilier</a>
+  </div>
+} @else {
+  <!-- ============================ Liste des demandes ======================= -->
+  <ul class="rq-list">
+    @for (req of items(); track req.id) {
+      <li class="rq-card">
+        <header class="rq-card-head">
+          <div class="rq-card-heading">
+            <span class="rq-ref">{{ req.reference }}</span>
+            @if (req.service_type_label) {
+              <span class="rq-universe">{{ req.service_type_label }}</span>
+            }
+          </div>
+          @if (req.status_label) {
+            <span class="rq-status" [attr.data-status]="req.status">{{ req.status_label }}</span>
+          }
+        </header>
+
+        @if (req.message) {
+          <p class="rq-message">{{ req.message }}</p>
+        }
+
+        <dl class="rq-facts">
+          @if (req.city) {
+            <div class="rq-fact">
+              <dt>Localité</dt>
+              <dd>{{ req.city }}</dd>
+            </div>
+          }
+          @if (budget(req); as amount) {
+            <div class="rq-fact">
+              <dt>Budget indicatif</dt>
+              <dd>{{ amount }}</dd>
+            </div>
+          }
+          @if (req.created_at) {
+            <div class="rq-fact">
+              <dt>Déposée le</dt>
+              <dd>{{ req.created_at | date: 'longDate' : '' : 'fr' }}</dd>
+            </div>
+          }
+        </dl>
+
+        <!-- Chronologie de statut (machine à états backend) -->
+        <ol class="rq-timeline" aria-label="Avancement de la demande">
+          @for (step of steps; track step.value) {
+            <li class="rq-step" [attr.data-state]="stepState(req, $index)">
+              <span class="rq-step-dot" aria-hidden="true"></span>
+              <span class="rq-step-label">{{ step.label }}</span>
+            </li>
+          }
+        </ol>
+      </li>
+    }
+  </ul>
+
+  <!-- Pagination -->
+  @if (meta(); as m) {
+    @if (m.last_page > 1) {
+      <nav class="rq-pager" aria-label="Pagination des demandes">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasPrev()" (click)="prev()">
+          ← Précédent
+        </button>
+        <span class="rq-pager-info">Page {{ m.current_page }} sur {{ m.last_page }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasNext()" (click)="next()">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}

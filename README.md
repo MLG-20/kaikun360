@@ -442,7 +442,7 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 - [x] **Socle de l'espace (F3.1)** : layout authentifié `/mon-espace` à navigation latérale (guard d'accès + redirection connexion), page d'accueil (tableau de bord) avec carte des sections, en-tête conscient de la session (« Mon espace » / « Déconnexion »). <!-- Les 6 écrans ci-dessous se branchent sur ce socle en F3.2 → F3.7. -->
 - [ ] Écran Favoris (biens et services sauvegardés).
-- [ ] Écran Mes demandes (suivi visuel du statut : reçu, en vérification, devis, confirmé, clôturé).
+- [x] **Écran Mes demandes (F3.3)** : liste des demandes de service du client connecté (`GET /requests/my`, paginée), chaque demande présentée en carte (référence, univers, budget indicatif, localité, message) avec une **chronologie visuelle du statut** matérialisant la machine à états backend (reçu → vérification → visite → devis → négociation → clôturé) — étapes franchies / étape courante / à venir.
 - [ ] Écran Réservations (nuitées, mobilité, expériences).
 - [ ] Écran Messages (conversation avec support Kaikun ou prestataire affecté).
 - [ ] Écran Notifications (mises à jour demande, réservation, document, paiement).

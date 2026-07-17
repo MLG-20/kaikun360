@@ -41,9 +41,17 @@ marquées « Bientôt » s'activeront aux étapes suivantes.
   signée), **sécurité** (changement de mot de passe, exige le mot de passe
   actuel), et **suppression du compte** (anonymisation RGPD, derrière
   confirmation).
+- **La rubrique Mes demandes (F3.3)** — [`requests/`](requests) : liste **en
+  lecture seule** des demandes de service du client (`GET /requests/my`, paginée
+  15/page). Chaque demande est une **carte** (référence, univers, budget
+  indicatif, localité, message) surmontée d'une **chronologie de statut** qui
+  matérialise la machine à états backend (reçu → vérification → visite → devis →
+  négociation → clôturé) : étapes franchies, étape courante, étapes à venir. Le
+  **dépôt** de demande reste sur les pages publiques (fiches de biens/services) —
+  cet écran ne fait qu'en **suivre l'avancement**.
 
-Les rubriques Mes demandes, Réservations, Favoris, Notifications et Messages
-arrivent en F3.3 → F3.7.
+Les rubriques Réservations, Favoris, Notifications et Messages arrivent en
+F3.4 → F3.7.
 
 ---
 

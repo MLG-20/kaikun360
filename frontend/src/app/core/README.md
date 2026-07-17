@@ -9,7 +9,8 @@ l'application (approche standalone, sans NgModule) :
     (`property`, `stay`, `stayAvailability` — F2.1/F2.3 ; `experience`,
     `experienceAvailability`, `vehicle` — F2.4).
   - `RequestService` — dépôt de demandes contextuelles `POST /requests`
-    (demande de visite/réservation ; **auth requise**) — F2.3.
+    (demande de visite/réservation ; **auth requise**) — F2.3 ; **et suivi** des
+    demandes du client connecté `GET /requests/my` (paginé) — F3.3.
   - `ReviewService` — avis publiés `GET /reviews` d'une entité notée — F2.3.
   - `WhatsAppService` — lien WhatsApp contextuel `GET /whatsapp/link` (message
     prérempli + numéro de support paramétré côté back-office) — F2.6.

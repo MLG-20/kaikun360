@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ServiceRequest } from '../../models/service-request.model';
 import { ApiEnvelope } from './api-response.model';
+import { Paginated } from './pagination.model';
 
 /**
  * Univers visé par une demande générique — miroir de l'enum `ServiceType`
@@ -61,6 +62,20 @@ export class RequestService {
       `${this.api}/requests`,
       body,
     );
+  }
+
+  /**
+   * GET /requests/my — les demandes de l'utilisateur connecté (F3.3).
+   *
+   * Renvoie une liste **paginée** (15 par page, plus récentes d'abord) sous la
+   * forme standard Laravel `{ data, links, meta }`. Alimente l'écran « Mes
+   * demandes » de l'espace client. Auth requise (Bearer posé par
+   * l'intercepteur ; un appel anonyme est détourné vers la connexion).
+   */
+  myRequests(page = 1): Observable<Paginated<ServiceRequest>> {
+    return this.http.get<Paginated<ServiceRequest>>(`${this.api}/requests/my`, {
+      params: { page: String(page) },
+    });
   }
 
   /**

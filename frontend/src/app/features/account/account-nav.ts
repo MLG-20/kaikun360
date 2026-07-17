@@ -56,7 +56,7 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     description: 'Suivez le statut de vos demandes (reçu, devis, confirmé…).',
     path: 'demandes',
     icon: 'inbox',
-    ready: false, // F3.3
+    ready: true, // F3.3 ✅
   },
   {
     label: 'Réservations',
