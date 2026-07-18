@@ -112,7 +112,12 @@ la remettre en favori.
 - **`app-listing-card`** : `title` (requis), `location`, `price`, `priceUnit`,
   `badge`, `cta`, `image`, `link` (F2.3 : cible `routerLink` de la fiche ;
   `null` = carte non cliquable). Quand `link` est fourni, un **lien étiré**
-  couvre toute la carte (le titre sert de libellé accessible).
+  couvre toute la carte (le titre sert de libellé accessible). **Favoris (tous
+  univers)** : si `favoritable` (`{ type, id }`) est fourni, un **cœur** s'affiche
+  en surimpression (au-dessus du lien étiré) ; la carte reste présentielle et émet
+  `favoriteToggle` — la page hôte (via [`FavoriteStore`](../core/state/favorite-store.ts))
+  appelle le service, gère `favorited`/`favoriteBusy` et redirige l'anonyme vers
+  la connexion. `app-catalog` et l'accueil câblent ce cœur automatiquement.
 - **`app-verification-badge`** : `label`, `tone` (`default` | `gold`).
 - **`app-gallery`** : `images` (requis, `string[]`), `alt`.
 - **`app-detail-layout`** : `title` (requis), `images`, `galleryAlt` + emplacements de projection `[crumbs]` / `[meta]` / défaut / `[aside]` (F2.6).

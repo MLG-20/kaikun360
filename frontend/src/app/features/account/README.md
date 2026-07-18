@@ -74,14 +74,17 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   trajets n'ont pas d'annulation client (pas d'endpoint) : ils restent en
   lecture seule.
 
-- **La rubrique Favoris (F3.5)** — [`favorites/`](favorites) : liste paginée des
-  biens immobiliers que le client a sauvegardés (`GET /favorites`). Chaque favori
-  est rendu avec la **même carte que le catalogue public** (`app-listing-card`,
-  mappage `UNIVERSES.immobilier.toCard`) pour une continuité visuelle : cliquer
-  mène à la fiche du bien. Un bouton **cœur** en surimpression permet de
-  **retirer** le bien des favoris (`DELETE /properties/{id}/favorite`), derrière
-  une confirmation inline ; la carte quitte alors la liste. L'ajout aux favoris
-  se fait depuis les fiches publiques — cet écran ne fait que les regrouper.
+- **La rubrique Favoris (F3.5, généralisée tous univers)** —
+  [`favorites/`](favorites) : liste paginée des favoris du client — désormais
+  **tous univers confondus** (biens, nuitées, véhicules, expériences, mobilité),
+  car les favoris sont devenus **polymorphes** côté backend (`GET /favorites`,
+  élément embarqué). Chaque favori est rendu avec la **même carte que le catalogue
+  de son univers** (`app-listing-card`, mappage `UNIVERSES[…].toCard` via
+  `UNIVERSE_FOR_FAVORITABLE[type]`) : cliquer mène à la fiche. Un bouton **cœur**
+  en surimpression permet de **retirer** l'élément (`DELETE /favorites/{type}/{id}`)
+  derrière une confirmation inline ; la carte quitte alors la liste et l'état
+  partagé ([`FavoriteStore`](../../core/state/favorite-store.ts)) est resynchronisé.
+  L'**ajout** se fait via le **cœur des cartes du catalogue et de l'accueil**.
 
 - **La rubrique Notifications (F3.6)** — [`notifications/`](notifications) : centre
   de notifications du client (`GET /users/me/notifications`, paginé), avec le

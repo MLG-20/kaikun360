@@ -27,16 +27,19 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   [`src/app/features/auth/README.md`](src/app/features/auth/README.md).
 - ✅ **Les pages publiques** : accueil, univers (immobilier, nuitées, tourisme,
   transport…), moteur de recherche et catalogue, fiches détaillées, pages de
-  conversion, formulaires intelligents, FAQ, contact et pages légales. 👉 Détail :
-  [`src/app/features/README.md`](src/app/features/README.md).
+  conversion, formulaires intelligents, FAQ, contact et pages légales. Les cartes
+  du catalogue et de l'accueil portent un **cœur de favori** (tous univers) :
+  le client connecté ajoute/retire d'un clic ; un visiteur anonyme est invité à
+  se connecter. 👉 Détail : [`src/app/features/README.md`](src/app/features/README.md).
 - ✅ **Le rendu côté serveur (SSR)** : les pages publiques sont d'abord
   **assemblées par un serveur** puis envoyées prêtes à afficher (bon pour le
   référencement Google et pour un premier affichage rapide). Voir « SSR » ci-dessous.
 - ✅ **L'espace client (F3)** : l'espace personnel de la personne connectée, sous
   `/mon-espace` (menu latéral sombre, en-tête épuré). Ses **six écrans** sont en
   place — tableau de bord, **profil** (identité, coordonnées, sécurité, pièces),
-  **mes demandes**, **réservations**, **favoris**, **notifications** et
-  **messagerie** (conversations + fil de discussion avec réponse). 👉 Détail :
+  **mes demandes**, **réservations**, **favoris** (tous univers, avec le cœur du
+  catalogue pour les ajouter), **notifications** et **messagerie** (conversations
+  + fil de discussion avec réponse). 👉 Détail :
   [`src/app/features/account/README.md`](src/app/features/account/README.md).
 - 🚧 **À venir** : les autres espaces personnels (propriétaire, prestataire,
   entreprise) et le back-office.

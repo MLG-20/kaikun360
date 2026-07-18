@@ -23,6 +23,25 @@
         <app-verification-badge [label]="badgeLabel" />
       </span>
     }
+
+    <!-- Cœur de favori (au-dessus du lien étiré). Affiché seulement si la carte
+         est favorisable. -->
+    @if (favoritable()) {
+      <button
+        type="button"
+        class="fav-heart"
+        [class.is-on]="favorited()"
+        [disabled]="favoriteBusy()"
+        [attr.aria-pressed]="favorited()"
+        [attr.aria-label]="favorited() ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+        (click)="onFavoriteClick($event)"
+      >
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 20s-7-4.35-9.5-8.5C1 8 3 4.5 6.5 4.5c2 0 3.5 1.5 5.5 3.5 2-2 3.5-3.5 5.5-3.5C21 4.5 23 8 21.5 11.5 19 15.65 12 20 12 20z" />
+        </svg>
+      </button>
+    }
   </div>
 
   <div class="body">

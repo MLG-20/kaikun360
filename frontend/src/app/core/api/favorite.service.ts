@@ -3,46 +3,48 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Property } from '../../models/property.model';
+import { FavoritableType, FavoriteIds, FavoriteItem } from '../../models/favorite.model';
 import { ApiEnvelope } from './api-response.model';
 import { Paginated } from './pagination.model';
 
 /**
- * Accès aux favoris du client connecté (F3.5).
+ * Accès aux favoris POLYMORPHES du client connecté (tous univers).
  *
- * Les favoris portent sur des **biens immobiliers** publiés : un utilisateur
- * sauvegarde un bien pour le retrouver plus tard. `myFavorites` liste ses
- * favoris (`GET /favorites`, paginé 15/page, plus récents d'abord) ; `add` et
- * `remove` posent/retirent un bien (`POST/DELETE /properties/{id}/favorite`).
+ * Les favoris portent sur n'importe quel élément favorisable (bien, nuitée,
+ * véhicule, expérience, service de mobilité) :
+ *   - `myFavorites` liste les favoris (paginé, éléments embarqués) ;
+ *   - `ids` renvoie les ids favoris regroupés par type, pour marquer d'un cœur
+ *     plein les éléments déjà favorisés dans le catalogue (une requête, pas une
+ *     par carte) ;
+ *   - `add` / `remove` posent/retirent un favori par `{ type, id }`.
  *
- * Auth requise (Bearer posé par l'intercepteur ; un appel anonyme est détourné
- * vers la connexion). L'ajout est idempotent côté serveur (favoriser deux fois
- * ne crée pas de doublon).
+ * Auth requise (Bearer posé par l'intercepteur). L'ajout est idempotent côté
+ * serveur ; on ne peut favoriser qu'un élément publié / réservable.
  */
 @Injectable({ providedIn: 'root' })
 export class FavoriteService {
   private readonly http = inject(HttpClient);
   private readonly api = environment.apiUrl;
 
-  /** GET /favorites — les biens mis en favori par l'utilisateur (paginé). */
-  myFavorites(page = 1): Observable<Paginated<Property>> {
-    return this.http.get<Paginated<Property>>(`${this.api}/favorites`, {
+  /** GET /favorites — mes favoris, tous univers confondus (paginé). */
+  myFavorites(page = 1): Observable<Paginated<FavoriteItem>> {
+    return this.http.get<Paginated<FavoriteItem>>(`${this.api}/favorites`, {
       params: { page: String(page) },
     });
   }
 
-  /** POST /properties/{id}/favorite — ajoute un bien aux favoris (idempotent). */
-  add(propertyId: number): Observable<ApiEnvelope<{ message: string }>> {
-    return this.http.post<ApiEnvelope<{ message: string }>>(
-      `${this.api}/properties/${propertyId}/favorite`,
-      {},
-    );
+  /** GET /favorites/ids — ids favoris regroupés par type (marquage des cœurs). */
+  ids(): Observable<ApiEnvelope<FavoriteIds>> {
+    return this.http.get<ApiEnvelope<FavoriteIds>>(`${this.api}/favorites/ids`);
   }
 
-  /** DELETE /properties/{id}/favorite — retire un bien des favoris. */
-  remove(propertyId: number): Observable<ApiEnvelope<{ message: string }>> {
-    return this.http.delete<ApiEnvelope<{ message: string }>>(
-      `${this.api}/properties/${propertyId}/favorite`,
-    );
+  /** POST /favorites — ajoute un élément aux favoris (idempotent). */
+  add(type: FavoritableType, id: number): Observable<ApiEnvelope<{ message: string }>> {
+    return this.http.post<ApiEnvelope<{ message: string }>>(`${this.api}/favorites`, { type, id });
+  }
+
+  /** DELETE /favorites/{type}/{id} — retire un élément des favoris. */
+  remove(type: FavoritableType, id: number): Observable<ApiEnvelope<{ message: string }>> {
+    return this.http.delete<ApiEnvelope<{ message: string }>>(`${this.api}/favorites/${type}/${id}`);
   }
 }

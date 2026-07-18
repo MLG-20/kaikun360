@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { RouterLink } from '@angular/router';
 
 import { CatalogService } from '../../core/api/catalog.service';
+import { FavoriteStore } from '../../core/state/favorite-store';
 import { CatalogCard, UNIVERSES } from '../../shared/components/catalog/catalog.config';
 import { ListingCardComponent } from '../../shared/components/listing-card/listing-card';
 import { OrbitHeroComponent } from '../../shared/components/orbit-hero/orbit-hero';
@@ -75,6 +76,8 @@ interface ServiceItem {
 })
 export class HomePageComponent implements OnInit {
   private readonly catalog = inject(CatalogService);
+  /** État partagé des favoris (cœurs sur les biens en vedette). */
+  protected readonly favorites = inject(FavoriteStore);
 
   /** État de chargement de la vitrine : « loading » | « ready » | « failed ». */
   protected readonly featuredState = signal<'loading' | 'ready' | 'failed'>('loading');

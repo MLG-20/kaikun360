@@ -103,6 +103,10 @@
           [badge]="card.badge"
           [image]="card.image"
           [link]="card.link"
+          [favoritable]="card.favoritable"
+          [favorited]="card.favoritable ? favorites.isFavorited(card.favoritable) : false"
+          [favoriteBusy]="card.favoritable ? favorites.isBusy(card.favoritable) : false"
+          (favoriteToggle)="favorites.toggle(card.favoritable)"
         />
       }
     </div>

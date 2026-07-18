@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { Paginated } from '../../../core/api/pagination.model';
 import { CatalogService } from '../../../core/api/catalog.service';
 import { Experience } from '../../../models/experience.model';
+import { FavoritableRef, FavoritableType } from '../../../models/favorite.model';
 import { MobilityService } from '../../../models/mobility-service.model';
 import { Property } from '../../../models/property.model';
 import { Stay } from '../../../models/stay.model';
@@ -50,7 +51,21 @@ export interface CatalogCard {
    * `null` = carte non cliquable (univers dont la fiche n'existe pas encore).
    */
   link: (string | number)[] | null;
+  /**
+   * Référence favorisable ({ type, id }) : active le cœur de favori sur la carte.
+   * `null` = pas de favori possible pour cet élément.
+   */
+  favoritable: FavoritableRef | null;
 }
+
+/** Correspondance type favorisable → univers de catalogue (réutilise `toCard`). */
+export const UNIVERSE_FOR_FAVORITABLE: Record<FavoritableType, Universe> = {
+  property: 'immobilier',
+  stay: 'nuitees',
+  vehicle: 'transport',
+  experience: 'tourisme',
+  mobility: 'mobilite',
+};
 
 /** Contrat d'un univers de catalogue. */
 export interface UniverseConfig {
@@ -147,6 +162,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         badge: verifiedBadge(p.verification_level),
         image: null,
         link: ['/immobilier', p.id],
+        favoritable: { type: 'property', id: p.id },
       };
     },
   },
@@ -173,6 +189,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         badge: verifiedBadge(s.property?.verification_level),
         image: null,
         link: ['/nuitees', s.id],
+        favoritable: { type: 'stay', id: s.id },
       };
     },
   },
@@ -201,6 +218,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         badge: v.has_driver ? 'Avec chauffeur' : null,
         image: null,
         link: ['/transport', v.id],
+        favoritable: { type: 'vehicle', id: v.id },
       };
     },
   },
@@ -228,6 +246,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         badge: null,
         image: null,
         link: ['/tourisme', e.id],
+        favoritable: { type: 'experience', id: e.id },
       };
     },
   },
@@ -257,6 +276,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         // (index + réservation seulement) → carte non cliquable, réservation
         // gérée depuis la vitrine `/mobilite`.
         link: null,
+        favoritable: { type: 'mobility', id: m.id },
       };
     },
   },

@@ -2,8 +2,9 @@
   <p class="account-eyebrow">Mon espace</p>
   <h1 class="account-title">Mes favoris</h1>
   <p class="account-lead">
-    Retrouvez les biens immobiliers que vous avez sauvegardés. Cliquez sur une
-    carte pour revenir à la fiche, ou retirez un bien de vos favoris.
+    Retrouvez tout ce que vous avez sauvegardé — biens, nuitées, véhicules et
+    expériences. Cliquez sur une carte pour revenir à la fiche, ou retirez un
+    élément de vos favoris.
   </p>
 </section>
 
@@ -18,16 +19,16 @@
   <div class="fav-empty">
     <h2 class="fav-empty-title">Aucun favori pour l'instant</h2>
     <p class="fav-empty-text">
-      Vous n'avez pas encore sauvegardé de bien. Parcourez le catalogue
-      immobilier et ajoutez à vos favoris les biens qui vous intéressent : ils
-      apparaîtront ici.
+      Vous n'avez encore rien sauvegardé. Parcourez les univers et touchez le
+      cœur sur les éléments qui vous intéressent (biens, nuitées, véhicules,
+      expériences) : ils apparaîtront ici.
     </p>
-    <a class="k-btn k-btn--primary" routerLink="/immobilier">Explorer l'immobilier</a>
+    <a class="k-btn k-btn--primary" routerLink="/">Explorer les univers</a>
   </div>
 } @else {
   <!-- ============================ Grille des favoris ====================== -->
   <ul class="fav-grid">
-    @for (entry of cards(); track entry.property.id) {
+    @for (entry of cards(); track entry.key) {
       <li class="fav-item">
         <app-listing-card
           [title]="entry.view.title"
@@ -40,16 +41,16 @@
         />
 
         <!-- Retrait : confirmation inline (au-dessus du lien étiré de la carte) -->
-        @if (confirmId() === entry.property.id) {
+        @if (confirmKey() === entry.key) {
           <div class="fav-confirm">
-            <span class="fav-confirm-text">Retirer ce bien de vos favoris ?</span>
+            <span class="fav-confirm-text">Retirer cet élément de vos favoris ?</span>
             <div class="fav-confirm-btns">
               <button type="button" class="k-btn fav-btn-danger"
-                [disabled]="busyId() === entry.property.id" (click)="confirmRemove(entry.property)">
-                {{ busyId() === entry.property.id ? 'Retrait…' : 'Oui, retirer' }}
+                [disabled]="busyKey() === entry.key" (click)="confirmRemove(entry)">
+                {{ busyKey() === entry.key ? 'Retrait…' : 'Oui, retirer' }}
               </button>
               <button type="button" class="k-btn k-btn--ghost"
-                [disabled]="busyId() === entry.property.id" (click)="dismissRemove()">
+                [disabled]="busyKey() === entry.key" (click)="dismissRemove()">
                 Non, garder
               </button>
             </div>
@@ -58,7 +59,7 @@
             }
           </div>
         } @else {
-          <button type="button" class="fav-remove" (click)="askRemove(entry.property)"
+          <button type="button" class="fav-remove" (click)="askRemove(entry)"
             aria-label="Retirer des favoris" title="Retirer des favoris">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M12 20s-7-4.35-9.5-8.5C1 8 3 4.5 6.5 4.5c2 0 3.5 1.5 5.5 3.5 2-2 3.5-3.5 5.5-3.5C21 4.5 23 8 21.5 11.5 19 15.65 12 20 12 20z" />

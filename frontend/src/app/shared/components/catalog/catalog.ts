@@ -6,6 +6,7 @@ import { catchError, switchMap, tap } from 'rxjs/operators';
 
 import { Paginated } from '../../../core/api/pagination.model';
 import { CatalogService } from '../../../core/api/catalog.service';
+import { FavoriteStore } from '../../../core/state/favorite-store';
 import { ListingCardComponent } from '../listing-card/listing-card';
 import {
   CatalogCard,
@@ -37,6 +38,8 @@ export class CatalogComponent {
   private readonly catalog = inject(CatalogService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  /** État partagé des favoris (cœurs), commun à toutes les surfaces catalogue. */
+  protected readonly favorites = inject(FavoriteStore);
 
   /** Univers à afficher (fourni par la page hôte). */
   readonly universe = input.required<Universe>();
