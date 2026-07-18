@@ -37,7 +37,7 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
 - ✅ **L'espace client (F3)** : l'espace personnel de la personne connectée, sous
   `/mon-espace` (menu latéral sombre, en-tête épuré). Ses **six écrans** sont en
   place — tableau de bord, **profil** (identité, coordonnées, sécurité, pièces),
-  **mes demandes**, **réservations**, **favoris** (tous univers, avec le cœur du
+  **mes demandes** (liste + détail cliquable), **réservations** (liste + détail cliquable), **favoris** (tous univers, avec le cœur du
   catalogue pour les ajouter), **notifications** et **messagerie** (conversations
   + fil de discussion avec réponse). 👉 Détail :
   [`src/app/features/account/README.md`](src/app/features/account/README.md).

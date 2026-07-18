@@ -1,0 +1,9 @@
+// Écran de DÉTAIL d'une demande (F3.3), sous `/mon-espace/demandes/:id`.
+// Les briques de la demande (.rq-card, .rq-status, .rq-facts, .rq-timeline…),
+// l'en-tête d'écran (.account-*) et le bouton retour (`app-back-link` +
+// `.account-back`) viennent du partiel global `styles/_account.scss` — partagés
+// avec la liste. Rien de spécifique à styler ici pour l'instant.
+
+.rd-head {
+  margin-bottom: 1.25rem;
+}

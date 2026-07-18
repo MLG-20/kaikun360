@@ -1,0 +1,92 @@
+<section class="account-head rd-head">
+  <!-- Retour à la page précédente (liste, notifications…) : toujours présent. -->
+  <app-back-link class="account-back" fallback="/mon-espace/demandes" />
+  <p class="account-eyebrow">Ma demande</p>
+  @if (request(); as req) {
+    <h1 class="account-title rd-title">{{ req.reference }}</h1>
+  } @else {
+    <h1 class="account-title rd-title">Détail de la demande</h1>
+  }
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="pf-state" role="status">Chargement de votre demande…</p>
+  }
+
+  @case ('notfound') {
+    <p class="pf-state pf-state--error" role="alert">
+      Cette demande est introuvable ou n'existe plus.
+    </p>
+  }
+
+  @case ('forbidden') {
+    <p class="pf-state pf-state--error" role="alert">
+      Cette demande ne vous appartient pas.
+    </p>
+  }
+
+  @case ('failed') {
+    <p class="pf-state pf-state--error" role="alert">
+      Impossible de charger cette demande pour le moment. Merci de réessayer plus tard.
+    </p>
+  }
+
+  @case ('ready') {
+    @if (request(); as req) {
+      <article class="rq-card rd-card">
+        <header class="rq-card-head">
+          <div class="rq-card-heading">
+            @if (req.service_type_label) {
+              <span class="rq-universe">{{ req.service_type_label }}</span>
+            }
+          </div>
+          @if (req.status_label) {
+            <span class="rq-status" [attr.data-status]="req.status">{{ req.status_label }}</span>
+          }
+        </header>
+
+        @if (req.message) {
+          <p class="rq-message">{{ req.message }}</p>
+        }
+
+        <dl class="rq-facts">
+          @if (req.city) {
+            <div class="rq-fact">
+              <dt>Localité</dt>
+              <dd>{{ req.city }}</dd>
+            </div>
+          }
+          @if (budgetLabel(); as amount) {
+            <div class="rq-fact">
+              <dt>Budget indicatif</dt>
+              <dd>{{ amount }}</dd>
+            </div>
+          }
+          @if (req.priority) {
+            <div class="rq-fact">
+              <dt>Priorité</dt>
+              <dd>{{ req.priority }}</dd>
+            </div>
+          }
+          @if (req.created_at) {
+            <div class="rq-fact">
+              <dt>Déposée le</dt>
+              <dd>{{ req.created_at | date: 'longDate' : '' : 'fr' }}</dd>
+            </div>
+          }
+        </dl>
+
+        <!-- Chronologie de statut (machine à états backend) -->
+        <ol class="rq-timeline" aria-label="Avancement de la demande">
+          @for (step of steps; track step.value) {
+            <li class="rq-step" [attr.data-state]="stepState(req, $index)">
+              <span class="rq-step-dot" aria-hidden="true"></span>
+              <span class="rq-step-label">{{ step.label }}</span>
+            </li>
+          }
+        </ol>
+      </article>
+    }
+  }
+}

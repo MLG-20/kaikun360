@@ -44,6 +44,19 @@ export class BookingService {
   }
 
   /**
+   * GET /bookings/{id} — détail d'UNE de mes réservations (F3.4).
+   *
+   * Réservé au titulaire (403 sinon, détourné par l'`errorInterceptor`).
+   * Alimente l'écran de détail atteint en cliquant une carte depuis « Mes
+   * réservations ». Auth requise (Bearer posé par l'intercepteur).
+   */
+  get(id: number | string): Observable<ApiEnvelope<{ booking: Booking }>> {
+    return this.http.get<ApiEnvelope<{ booking: Booking }>>(
+      `${this.api}/bookings/${id}`,
+    );
+  }
+
+  /**
    * Annule une réservation. L'URL dépend du type : véhicule ou expérience
    * uniquement (les autres n'ont pas d'annulation client — le composant ne
    * propose le bouton que si `booking.cancellable`). Lève une erreur pour un

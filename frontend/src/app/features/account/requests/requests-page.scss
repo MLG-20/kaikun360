@@ -1,7 +1,8 @@
 // Écran « Mes demandes » de l'espace client (F3.3). L'en-tête d'écran
-// (.account-head/.account-title…) et les états (.pf-state) sont fournis par le
-// partiel global `styles/_account.scss` et le partiel du profil respectivement ;
-// on ne définit ici que les briques propres à la liste de demandes (préfixe rq-).
+// (.account-head/.account-title…), les états (.pf-state) ET les briques d'une
+// demande (.rq-card, .rq-status, .rq-facts, .rq-timeline…) sont fournis par le
+// partiel global `styles/_account.scss` — partagés avec l'écran de détail. On ne
+// définit ici que ce qui est PROPRE à la liste (état vide, lien de carte, pager).
 
 // — État vide —
 .rq-empty {
@@ -35,189 +36,26 @@
   gap: 1.25rem;
 }
 
+// Survol : la carte cliquable se souligne d'un liseré de marque.
 .rq-card {
-  background: var(--k-card);
-  border: 1px solid var(--k-line);
-  border-radius: var(--k-radius);
-  box-shadow: var(--k-shadow);
-  padding: 1.5rem;
-}
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
-.rq-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.85rem;
-}
-
-.rq-card-heading {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-}
-
-.rq-ref {
-  font-family: var(--k-font-mono);
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--k-ink);
-}
-
-.rq-universe {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--k-brand);
-  background: var(--k-brand-050);
-  border-radius: var(--k-radius-pill);
-  padding: 0.15rem 0.6rem;
-}
-
-// Pastille de statut — teinte par statut via l'attribut data-status.
-.rq-status {
-  flex: 0 0 auto;
-  font-size: 0.78rem;
-  font-weight: 600;
-  border-radius: var(--k-radius-pill);
-  padding: 0.25rem 0.7rem;
-  border: 1px solid var(--k-line);
-  background: var(--k-cream);
-  color: var(--k-muted);
-
-  &[data-status='recu'],
-  &[data-status='verification'] {
-    color: var(--k-brand-600);
-    background: var(--k-brand-050);
-    border-color: color-mix(in srgb, var(--k-brand) 30%, var(--k-line));
-  }
-
-  &[data-status='visite'],
-  &[data-status='devis'],
-  &[data-status='negociation'] {
-    color: color-mix(in srgb, var(--k-gold) 70%, #6b4e00);
-    background: color-mix(in srgb, var(--k-gold) 16%, var(--k-card));
-    border-color: color-mix(in srgb, var(--k-gold) 45%, var(--k-line));
-  }
-
-  &[data-status='cloture'] {
-    color: var(--k-green-600);
-    background: color-mix(in srgb, var(--k-green) 14%, var(--k-card));
-    border-color: color-mix(in srgb, var(--k-green) 35%, var(--k-line));
+  &:has(.rq-card-link:hover) {
+    border-color: color-mix(in srgb, var(--k-brand) 35%, var(--k-line));
+    box-shadow: 0 6px 18px rgb(3 72 251 / 0.08);
   }
 }
 
-.rq-message {
-  color: var(--k-ink);
-  margin-bottom: 1rem;
-  line-height: 1.5;
-}
+// Corps cliquable de la carte : neutralise le style d'ancre par défaut.
+.rq-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
 
-// — Faits (localité / budget / date) —
-.rq-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem 2rem;
-  margin: 0 0 1.25rem;
-}
-
-.rq-fact {
-  dt {
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--k-muted);
-    margin-bottom: 0.15rem;
-  }
-
-  dd {
-    margin: 0;
-    font-weight: 600;
-  }
-}
-
-// — Chronologie de statut —
-.rq-timeline {
-  list-style: none;
-  margin: 0;
-  padding: 1.1rem 0 0;
-  border-top: 1px solid var(--k-line);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.rq-step {
-  flex: 1 1 0;
-  min-width: 80px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  position: relative;
-  text-align: center;
-
-  // Trait de liaison entre les pastilles (masqué sur la dernière étape).
-  &::before {
-    content: '';
-    position: absolute;
-    top: 6px;
-    left: calc(-50% + 6px);
-    width: calc(100% - 12px);
-    height: 2px;
-    background: var(--k-line);
-  }
-
-  &:first-child::before {
-    display: none;
-  }
-}
-
-.rq-step-dot {
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  border: 2px solid var(--k-line);
-  background: var(--k-card);
-  z-index: 1;
-}
-
-.rq-step-label {
-  font-size: 0.72rem;
-  color: var(--k-muted);
-  line-height: 1.2;
-}
-
-// Étapes franchies : trait + pastille verts.
-.rq-step[data-state='done'] {
-  &::before {
-    background: var(--k-green);
-  }
-
-  .rq-step-dot {
-    background: var(--k-green);
-    border-color: var(--k-green);
-  }
-}
-
-// Étape courante : pastille pleine bleue + libellé accentué.
-.rq-step[data-state='current'] {
-  &::before {
-    background: var(--k-green);
-  }
-
-  .rq-step-dot {
-    background: var(--k-brand);
-    border-color: var(--k-brand);
-    box-shadow: 0 0 0 4px var(--k-brand-050);
-  }
-
-  .rq-step-label {
-    color: var(--k-brand-600);
-    font-weight: 600;
+  &:focus-visible {
+    outline: 2px solid var(--k-brand);
+    outline-offset: 4px;
+    border-radius: var(--k-radius-sm, 6px);
   }
 }
 

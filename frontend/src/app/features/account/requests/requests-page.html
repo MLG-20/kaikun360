@@ -1,4 +1,5 @@
 <section class="account-head">
+  <app-back-link class="account-back" fallback="/mon-espace" />
   <p class="account-eyebrow">Mon espace</p>
   <h1 class="account-title">Mes demandes</h1>
   <p class="account-lead">
@@ -29,42 +30,49 @@
   <ul class="rq-list">
     @for (req of items(); track req.id) {
       <li class="rq-card">
-        <header class="rq-card-head">
-          <div class="rq-card-heading">
-            <span class="rq-ref">{{ req.reference }}</span>
-            @if (req.service_type_label) {
-              <span class="rq-universe">{{ req.service_type_label }}</span>
+        <!-- Le corps de la carte est un lien vers le détail de la demande. -->
+        <a
+          class="rq-card-link"
+          [routerLink]="['/mon-espace/demandes', req.id]"
+          [attr.aria-label]="'Voir le détail de la demande ' + req.reference"
+        >
+          <header class="rq-card-head">
+            <div class="rq-card-heading">
+              <span class="rq-ref">{{ req.reference }}</span>
+              @if (req.service_type_label) {
+                <span class="rq-universe">{{ req.service_type_label }}</span>
+              }
+            </div>
+            @if (req.status_label) {
+              <span class="rq-status" [attr.data-status]="req.status">{{ req.status_label }}</span>
             }
-          </div>
-          @if (req.status_label) {
-            <span class="rq-status" [attr.data-status]="req.status">{{ req.status_label }}</span>
-          }
-        </header>
+          </header>
 
-        @if (req.message) {
-          <p class="rq-message">{{ req.message }}</p>
-        }
+          @if (req.message) {
+            <p class="rq-message">{{ req.message }}</p>
+          }
 
-        <dl class="rq-facts">
-          @if (req.city) {
-            <div class="rq-fact">
-              <dt>Localité</dt>
-              <dd>{{ req.city }}</dd>
-            </div>
-          }
-          @if (budget(req); as amount) {
-            <div class="rq-fact">
-              <dt>Budget indicatif</dt>
-              <dd>{{ amount }}</dd>
-            </div>
-          }
-          @if (req.created_at) {
-            <div class="rq-fact">
-              <dt>Déposée le</dt>
-              <dd>{{ req.created_at | date: 'longDate' : '' : 'fr' }}</dd>
-            </div>
-          }
-        </dl>
+          <dl class="rq-facts">
+            @if (req.city) {
+              <div class="rq-fact">
+                <dt>Localité</dt>
+                <dd>{{ req.city }}</dd>
+              </div>
+            }
+            @if (budget(req); as amount) {
+              <div class="rq-fact">
+                <dt>Budget indicatif</dt>
+                <dd>{{ amount }}</dd>
+              </div>
+            }
+            @if (req.created_at) {
+              <div class="rq-fact">
+                <dt>Déposée le</dt>
+                <dd>{{ req.created_at | date: 'longDate' : '' : 'fr' }}</dd>
+              </div>
+            }
+          </dl>
+        </a>
 
         <!-- Chronologie de statut (machine à états backend) -->
         <ol class="rq-timeline" aria-label="Avancement de la demande">

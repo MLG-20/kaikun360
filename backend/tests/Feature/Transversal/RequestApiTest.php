@@ -67,6 +67,29 @@ class RequestApiTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
+    public function test_je_consulte_le_detail_de_ma_demande(): void
+    {
+        $user = User::factory()->create();
+        $request = ServiceRequest::factory()->create(['user_id' => $user->id]);
+
+        Sanctum::actingAs($user);
+
+        $this->getJson("/api/v1/requests/{$request->id}")
+            ->assertOk()
+            ->assertJsonPath('data.request.id', $request->id)
+            ->assertJsonPath('data.request.reference', $request->reference);
+    }
+
+    public function test_je_ne_peux_pas_consulter_la_demande_d_un_autre(): void
+    {
+        $request = ServiceRequest::factory()->create(); // appartient à un autre
+
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->getJson("/api/v1/requests/{$request->id}")
+            ->assertStatus(403);
+    }
+
     public function test_un_agent_fait_avancer_le_statut_et_notifie_le_demandeur(): void
     {
         Notification::fake();

@@ -1,4 +1,5 @@
 <section class="account-head">
+  <app-back-link class="account-back" fallback="/mon-espace" />
   <p class="account-eyebrow">Mon espace</p>
   <h1 class="account-title">Mes réservations</h1>
   <p class="account-lead">
@@ -29,51 +30,58 @@
   <ul class="bk-list">
     @for (bk of items(); track bk.id) {
       <li class="bk-card">
-        <header class="bk-card-head">
-          <div class="bk-card-heading">
-            <span class="bk-universe">{{ bk.type_label }}</span>
-            <span class="bk-ref">{{ bk.reference }}</span>
-          </div>
-          <span class="bk-status" [attr.data-tone]="tone(bk.status)">{{ bk.status_label }}</span>
-        </header>
+        <!-- Le corps de la carte est un lien vers le détail de la réservation. -->
+        <a
+          class="bk-card-link"
+          [routerLink]="['/mon-espace/reservations', bk.id]"
+          [attr.aria-label]="'Voir le détail de la réservation ' + bk.reference"
+        >
+          <header class="bk-card-head">
+            <div class="bk-card-heading">
+              <span class="bk-universe">{{ bk.type_label }}</span>
+              <span class="bk-ref">{{ bk.reference }}</span>
+            </div>
+            <span class="bk-status" [attr.data-tone]="tone(bk.status)">{{ bk.status_label }}</span>
+          </header>
 
-        @if (bk.item_label) {
-          <p class="bk-item">{{ bk.item_label }}</p>
-        }
+          @if (bk.item_label) {
+            <p class="bk-item">{{ bk.item_label }}</p>
+          }
 
-        <dl class="bk-facts">
-          <div class="bk-fact">
-            <dt>Dates</dt>
-            <dd>
-              @if (bk.start_date && bk.end_date && bk.start_date !== bk.end_date) {
-                du {{ bk.start_date | date: 'longDate' : '' : 'fr' }}
-                au {{ bk.end_date | date: 'longDate' : '' : 'fr' }}
-              } @else if (bk.start_date) {
-                le {{ bk.start_date | date: 'longDate' : '' : 'fr' }}
-              } @else {
-                —
-              }
-            </dd>
-          </div>
-          @if (bk.guests) {
+          <dl class="bk-facts">
             <div class="bk-fact">
-              <dt>Voyageurs</dt>
-              <dd>{{ bk.guests }}</dd>
+              <dt>Dates</dt>
+              <dd>
+                @if (bk.start_date && bk.end_date && bk.start_date !== bk.end_date) {
+                  du {{ bk.start_date | date: 'longDate' : '' : 'fr' }}
+                  au {{ bk.end_date | date: 'longDate' : '' : 'fr' }}
+                } @else if (bk.start_date) {
+                  le {{ bk.start_date | date: 'longDate' : '' : 'fr' }}
+                } @else {
+                  —
+                }
+              </dd>
             </div>
-          }
-          @if (amount(bk.amount_xof); as a) {
-            <div class="bk-fact">
-              <dt>Montant</dt>
-              <dd>{{ a }}</dd>
-            </div>
-          }
-          @if (bk.caution_xof) {
-            <div class="bk-fact">
-              <dt>Caution</dt>
-              <dd>{{ amount(bk.caution_xof) }}</dd>
-            </div>
-          }
-        </dl>
+            @if (bk.guests) {
+              <div class="bk-fact">
+                <dt>Voyageurs</dt>
+                <dd>{{ bk.guests }}</dd>
+              </div>
+            }
+            @if (amount(bk.amount_xof); as a) {
+              <div class="bk-fact">
+                <dt>Montant</dt>
+                <dd>{{ a }}</dd>
+              </div>
+            }
+            @if (bk.caution_xof) {
+              <div class="bk-fact">
+                <dt>Caution</dt>
+                <dd>{{ amount(bk.caution_xof) }}</dd>
+              </div>
+            }
+          </dl>
+        </a>
 
         <!-- Résultat de remboursement après une annulation réussie -->
         @if (refund(); as r) {

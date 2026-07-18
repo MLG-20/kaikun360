@@ -6,8 +6,10 @@ use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Modules\Stay\Models\Stay;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use App\Support\ApiResponse;
 
 /**
  * Réservations de l'utilisateur — couche transversale (phase B11.3).
@@ -30,5 +32,25 @@ class BookingController extends Controller
             ->paginate(15);
 
         return BookingResource::collection($bookings);
+    }
+
+    /**
+     * Détail d'une de MES réservations. GET /api/v1/bookings/{booking}
+     *
+     * Réservé au titulaire de la réservation : une réservation qui n'appartient
+     * pas à l'utilisateur connecté renvoie 403. Charge la chose réservée (comme
+     * `my`) pour exposer le libellé de l'élément. Alimente l'écran « détail
+     * d'une réservation » de l'espace client (F3.4).
+     */
+    public function show(Request $request, Booking $booking): JsonResponse
+    {
+        abort_unless($booking->user_id === $request->user()->id, 403);
+
+        // Charge le bookable (et le bien d'une nuitée) pour le libellé lisible.
+        $booking->load(['bookable' => fn (MorphTo $morphTo) => $morphTo->morphWith([
+            Stay::class => ['property'],
+        ])]);
+
+        return ApiResponse::success(['booking' => BookingResource::make($booking)]);
     }
 }

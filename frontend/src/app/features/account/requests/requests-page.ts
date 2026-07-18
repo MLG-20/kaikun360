@@ -6,20 +6,12 @@ import { RequestService } from '../../../core/api/request.service';
 import { PageMeta } from '../../../core/api/pagination.model';
 import { ServiceRequest } from '../../../models/service-request.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
-
-/**
- * Une étape de la chronologie d'une demande (miroir de l'enum `RequestStatus`
- * backend, machine à états STRICTE : recu → verification → visite → devis →
- * negociation → cloture). L'ordre de ce tableau EST l'ordre des étapes.
- */
-interface RequestStep {
-  value: string;
-  label: string;
-}
+import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { REQUEST_STEPS, RequestStep, stepState } from './request-timeline';
 
 @Component({
   selector: 'app-requests-page',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, BackLinkComponent],
   templateUrl: './requests-page.html',
   styleUrl: './requests-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,15 +30,8 @@ interface RequestStep {
 export class RequestsPageComponent {
   private readonly requests = inject(RequestService);
 
-  /** Étapes de la chronologie, dans l'ordre de la machine à états stricte. */
-  protected readonly steps: readonly RequestStep[] = [
-    { value: 'recu', label: 'Reçu' },
-    { value: 'verification', label: 'Vérification' },
-    { value: 'visite', label: 'Visite' },
-    { value: 'devis', label: 'Devis' },
-    { value: 'negociation', label: 'Négociation' },
-    { value: 'cloture', label: 'Clôturé' },
-  ];
+  /** Étapes de la chronologie (partagées avec l'écran de détail). */
+  protected readonly steps: readonly RequestStep[] = REQUEST_STEPS;
 
   // — État de l'écran —
   protected readonly loading = signal(true);
@@ -104,23 +89,8 @@ export class RequestsPageComponent {
     return formatFcfa(req.budget_xof);
   }
 
-  /**
-   * Indice de l'étape correspondant au statut d'une demande dans `steps`
-   * (−1 si statut inconnu). Sert à teinter la chronologie.
-   */
-  protected stepIndex(status: string | null): number {
-    return this.steps.findIndex((s) => s.value === status);
-  }
-
   /** État d'une étape par rapport au statut courant de la demande. */
   protected stepState(req: ServiceRequest, i: number): 'done' | 'current' | 'todo' {
-    const current = this.stepIndex(req.status);
-    if (i < current) {
-      return 'done';
-    }
-    if (i === current) {
-      return 'current';
-    }
-    return 'todo';
+    return stepState(req, i);
   }
 }

@@ -52,6 +52,20 @@ class RequestController extends Controller
     }
 
     /**
+     * Détail d'une de MES demandes. GET /api/v1/requests/{request}
+     *
+     * Réservé au propriétaire de la demande (le demandeur) : une demande qui
+     * n'appartient pas à l'utilisateur connecté renvoie 403. Alimente l'écran
+     * « détail d'une demande » de l'espace client (F3.3).
+     */
+    public function show(Request $request, ServiceRequest $serviceRequest): JsonResponse
+    {
+        abort_unless($serviceRequest->user_id === $request->user()->id, 403);
+
+        return ApiResponse::success(['request' => ServiceRequestResource::make($serviceRequest)]);
+    }
+
+    /**
      * Change le statut (agents/admin). PATCH /api/v1/requests/{request}/status
      *
      * Applique la machine à états STRICTE : toute transition invalide est

@@ -1,0 +1,105 @@
+<section class="account-head bd-head">
+  <!-- Retour à la page précédente (liste, notifications…) : toujours présent. -->
+  <app-back-link class="account-back" fallback="/mon-espace/reservations" />
+  <p class="account-eyebrow">Ma réservation</p>
+  @if (booking(); as bk) {
+    <h1 class="account-title bd-title">{{ bk.reference }}</h1>
+  } @else {
+    <h1 class="account-title bd-title">Détail de la réservation</h1>
+  }
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="pf-state" role="status">Chargement de votre réservation…</p>
+  }
+
+  @case ('notfound') {
+    <p class="pf-state pf-state--error" role="alert">
+      Cette réservation est introuvable ou n'existe plus.
+    </p>
+  }
+
+  @case ('forbidden') {
+    <p class="pf-state pf-state--error" role="alert">
+      Cette réservation ne vous appartient pas.
+    </p>
+  }
+
+  @case ('failed') {
+    <p class="pf-state pf-state--error" role="alert">
+      Impossible de charger cette réservation pour le moment. Merci de réessayer plus tard.
+    </p>
+  }
+
+  @case ('ready') {
+    @if (booking(); as bk) {
+      <article class="bk-card bd-card">
+        <header class="bk-card-head">
+          <div class="bk-card-heading">
+            <span class="bk-universe">{{ bk.type_label }}</span>
+          </div>
+          <span class="bk-status" [attr.data-tone]="tone(bk.status)">{{ bk.status_label }}</span>
+        </header>
+
+        @if (bk.item_label) {
+          <p class="bk-item">{{ bk.item_label }}</p>
+        }
+
+        <dl class="bk-facts">
+          <div class="bk-fact">
+            <dt>Dates</dt>
+            <dd>
+              @if (bk.start_date && bk.end_date && bk.start_date !== bk.end_date) {
+                du {{ bk.start_date | date: 'longDate' : '' : 'fr' }}
+                au {{ bk.end_date | date: 'longDate' : '' : 'fr' }}
+              } @else if (bk.start_date) {
+                le {{ bk.start_date | date: 'longDate' : '' : 'fr' }}
+              } @else {
+                —
+              }
+            </dd>
+          </div>
+          @if (bk.guests) {
+            <div class="bk-fact">
+              <dt>Voyageurs</dt>
+              <dd>{{ bk.guests }}</dd>
+            </div>
+          }
+          @if (amount(bk.amount_xof); as a) {
+            <div class="bk-fact">
+              <dt>Montant</dt>
+              <dd>{{ a }}</dd>
+            </div>
+          }
+          @if (bk.caution_xof) {
+            <div class="bk-fact">
+              <dt>Caution</dt>
+              <dd>{{ amount(bk.caution_xof) }}</dd>
+            </div>
+          }
+          @if (bk.created_at) {
+            <div class="bk-fact">
+              <dt>Réservée le</dt>
+              <dd>{{ bk.created_at | date: 'longDate' : '' : 'fr' }}</dd>
+            </div>
+          }
+          @if (bk.cancelled_at) {
+            <div class="bk-fact">
+              <dt>Annulée le</dt>
+              <dd>{{ bk.cancelled_at | date: 'longDate' : '' : 'fr' }}</dd>
+            </div>
+          }
+        </dl>
+
+        <!-- L'annulation se fait depuis la liste « Mes réservations ». -->
+        @if (bk.cancellable) {
+          <p class="bd-hint k-muted">
+            Pour annuler cette réservation, utilisez le bouton « Annuler » sur
+            <a routerLink="/mon-espace/reservations">Mes réservations</a>.
+          </p>
+        }
+      </article>
+    }
+  }
+}

@@ -6,6 +6,8 @@ import { BookingService } from '../../../core/api/booking.service';
 import { PageMeta } from '../../../core/api/pagination.model';
 import { Booking } from '../../../models/booking.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
+import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { BookingTone, bookingTone } from './booking-display';
 
 /** Notice de remboursement affichée après une annulation réussie. */
 interface RefundNotice {
@@ -16,7 +18,7 @@ interface RefundNotice {
 
 @Component({
   selector: 'app-bookings-page',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, BackLinkComponent],
   templateUrl: './bookings-page.html',
   styleUrl: './bookings-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -142,22 +144,8 @@ export class BookingsPageComponent {
     return formatFcfa(value);
   }
 
-  /**
-   * Tonalité d'affichage du statut (regroupe les variantes d'annulation) pour
-   * teinter la pastille via `data-tone`.
-   */
-  protected tone(status: string | null): 'pending' | 'ok' | 'active' | 'done' | 'cancelled' {
-    switch (status) {
-      case 'en_attente':
-        return 'pending';
-      case 'confirmee':
-        return 'ok';
-      case 'en_cours':
-        return 'active';
-      case 'terminee':
-        return 'done';
-      default:
-        return 'cancelled'; // annulee_client / annulee_prestataire / annulee_admin
-    }
+  /** Tonalité d'affichage du statut (partagée avec l'écran de détail). */
+  protected tone(status: string | null): BookingTone {
+    return bookingTone(status);
   }
 }

@@ -190,6 +190,39 @@ class QuoteAndBookingTest extends TestCase
         $this->assertTrue($vehicleRow['cancellable']); // véhicule confirmé → annulable
     }
 
+    public function test_je_consulte_le_detail_de_ma_reservation(): void
+    {
+        $user = User::factory()->create();
+        $vehicle = Vehicle::factory()->create(['brand' => 'Toyota', 'model' => 'Hilux']);
+        $booking = Booking::create([
+            'reference' => 'BK-DETAIL',
+            'user_id' => $user->id,
+            'bookable_type' => Vehicle::class,
+            'bookable_id' => $vehicle->id,
+            'start_date' => now()->addWeek()->toDateString(),
+            'end_date' => now()->addWeek()->addDay()->toDateString(),
+            'amount_xof' => 100_000,
+            'status' => 'confirmee',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->getJson("/api/v1/bookings/{$booking->id}")
+            ->assertOk()
+            ->assertJsonPath('data.booking.id', $booking->id)
+            ->assertJsonPath('data.booking.item_label', 'Toyota Hilux')
+            ->assertJsonPath('data.booking.cancellable', true);
+    }
+
+    public function test_je_ne_peux_pas_consulter_la_reservation_d_un_autre(): void
+    {
+        $booking = $this->bookingFor(User::factory()->create()); // appartient à un autre
+
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->getJson("/api/v1/bookings/{$booking->id}")->assertStatus(403);
+    }
+
     public function test_bookings_my_marque_non_annulable_une_reservation_deja_annulee(): void
     {
         $user = User::factory()->create();

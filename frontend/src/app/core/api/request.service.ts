@@ -79,6 +79,19 @@ export class RequestService {
   }
 
   /**
+   * GET /requests/{id} — détail d'UNE de mes demandes (F3.3).
+   *
+   * Réservé au propriétaire de la demande (403 sinon, détourné par
+   * l'`errorInterceptor`). Alimente l'écran de détail atteint en cliquant une
+   * carte depuis « Mes demandes ». Auth requise (Bearer posé par l'intercepteur).
+   */
+  get(id: number | string): Observable<ApiEnvelope<{ request: ServiceRequest }>> {
+    return this.http.get<ApiEnvelope<{ request: ServiceRequest }>>(
+      `${this.api}/requests/${id}`,
+    );
+  }
+
+  /**
    * Retire les clés optionnelles vides (null/undefined/chaîne vide) pour ne
    * transmettre que ce que l'utilisateur a réellement renseigné.
    */

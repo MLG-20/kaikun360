@@ -60,9 +60,15 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   15/page). Chaque demande est une **carte** (référence, univers, budget
   indicatif, localité, message) surmontée d'une **chronologie de statut** qui
   matérialise la machine à états backend (reçu → vérification → visite → devis →
-  négociation → clôturé) : étapes franchies, étape courante, étapes à venir. Le
-  **dépôt** de demande reste sur les pages publiques (fiches de biens/services) —
-  cet écran ne fait qu'en **suivre l'avancement**.
+  négociation → clôturé) : étapes franchies, étape courante, étapes à venir.
+  **Cliquer une carte ouvre le détail** de la demande
+  (`/mon-espace/demandes/:id`, `GET /requests/{id}` réservé au propriétaire) :
+  même récapitulatif en plein écran. Un bouton **« ← Retour »** (composant
+  partagé `app-back-link`) est présent **sur la liste comme sur le détail** : il
+  revient à la **page précédente** — donc aux **notifications** quand on arrive
+  par une notification, à la liste depuis le détail, au tableau de bord depuis le
+  menu. Le **dépôt** de demande reste sur les pages publiques (fiches de
+  biens/services) — cet écran ne fait qu'en **suivre l'avancement**.
 
 - **La rubrique Réservations (F3.4)** — [`bookings/`](bookings) : liste paginée
   des réservations du client, tous univers confondus (`GET /bookings/my`).
@@ -72,7 +78,13 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   expériences non encore annulés) : la confirmation inline déclenche l'endpoint
   propre à l'univers et affiche l'éligibilité au remboursement. Les nuitées et
   trajets n'ont pas d'annulation client (pas d'endpoint) : ils restent en
-  lecture seule.
+  lecture seule. **Cliquer une carte ouvre le détail** de la réservation
+  (`/mon-espace/reservations/:id`, `GET /bookings/{id}` réservé au titulaire),
+  en lecture seule (l'annulation reste sur la liste où l'action inline est
+  câblée). Un bouton **« ← Retour »** (composant partagé `app-back-link`) est
+  présent **sur la liste comme sur le détail** : il revient à la **page
+  précédente** — aux **notifications** quand on arrive par une notification, à la
+  liste depuis le détail, au tableau de bord depuis le menu.
 
 - **La rubrique Favoris (F3.5, généralisée tous univers)** —
   [`favorites/`](favorites) : liste paginée des favoris du client — désormais
@@ -163,6 +175,35 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   (`DELETE /users/me`). S'appuie sur le
   [`AccountService`](../../core/api/account.service.ts) et sur
   `AuthService.setCurrentUser()` (synchronise le nom de l'en-tête sans reload).
+- **`requests/`** (F3.3) — deux écrans via le
+  [`RequestService`](../../core/api/request.service.ts) :
+  - **`RequestsPageComponent`** (route enfant `demandes`) : liste paginée
+    (`myRequests`). Chaque carte est un **lien** (`.rq-card-link`) vers le
+    détail (`['/mon-espace/demandes', req.id]`) ; la **chronologie** reste hors
+    du lien.
+  - **`RequestDetailPageComponent`** (route enfant `demandes/:id`) : charge la
+    demande (`get(id)` → `GET /requests/{id}`) dans un `switchMap` sur
+    `paramMap`, avec états `loading/ready/notfound/forbidden/failed` (403 = pas
+    la mienne). Bouton retour **historique** (`app-back-link`) — présent aussi en
+    tête de la **liste** — pour revenir à la page précédente (notifications,
+    liste, tableau de bord…).
+  - **`request-timeline.ts`** — **source unique** des étapes (`REQUEST_STEPS`,
+    miroir de `RequestStatus`) et du calcul d'état d'étape (`stepState`),
+    partagée par les deux écrans (plus de duplication).
+- **`bookings/`** (F3.4) — deux écrans via le
+  [`BookingService`](../../core/api/booking.service.ts) :
+  - **`BookingsPageComponent`** (route enfant `reservations`) : liste paginée
+    (`myBookings`). Chaque carte est un **lien** (`.bk-card-link`) vers le
+    détail (`['/mon-espace/reservations', bk.id]`) ; la **notice de
+    remboursement** et le **bloc d'annulation** restent hors du lien pour rester
+    cliquables. **Annulation** propre à l'univers via `cancel(type, id)`.
+  - **`BookingDetailPageComponent`** (route enfant `reservations/:id`) : charge
+    la réservation (`get(id)` → `GET /bookings/{id}`) dans un `switchMap` sur
+    `paramMap`, avec états `loading/ready/notfound/forbidden/failed` (403 = pas
+    la mienne). **Lecture seule** (l'annulation vit sur la liste), bouton retour
+    **historique** (`app-back-link`) — présent aussi en tête de la **liste**.
+  - **`booking-display.ts`** — **source unique** de la tonalité de statut
+    (`bookingTone`), partagée par les deux écrans (plus de duplication).
 - **`notifications/`** — `NotificationsPageComponent` (F3.6, route enfant
   `notifications`) : liste paginée via
   [`NotificationService`](../../core/api/notification.service.ts)
@@ -218,11 +259,16 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
 - Ossature du cadre (grille barre latérale + contenu) : dans le `.scss` du
   layout. Briques partagées entre écrans de l'espace — **en-tête d'écran**
   (`.account-head/.account-eyebrow/.account-title/.account-lead`), **bandeau de
-  vérification** (`.account-verify`) et étiquette « Bientôt »
-  (`.account-soon-tag`) — dans le partiel global
-  [`styles/_account.scss`](../../../styles/_account.scss) (`@use` dans
-  `styles.scss`). L'accueil garde ses tuiles, et le Profil ses cartes (`.pf-*`),
-  en styles propres.
+  vérification** (`.account-verify`), étiquette « Bientôt »
+  (`.account-soon-tag`), **espacement du bouton retour** (`.account-back`, pour
+  `app-back-link`), **briques d'une demande** (`.rq-card`, `.rq-status`,
+  `.rq-facts`, `.rq-timeline`…) et **briques d'une réservation** (`.bk-card`,
+  `.bk-status`, `.bk-facts`…) — toutes **partagées par la liste et le détail** —
+  dans le partiel global [`styles/_account.scss`](../../../styles/_account.scss)
+  (`@use` dans `styles.scss`). Chaque liste garde ses styles propres (`.rq-empty`
+  / `.bk-empty`, `.rq-card-link` / `.bk-card-link`, pager, annulation). Le bouton
+  retour porte ses propres styles (composant `app-back-link`). L'accueil garde
+  ses tuiles, et le Profil ses cartes (`.pf-*`), en styles propres.
 
 ### À savoir
 

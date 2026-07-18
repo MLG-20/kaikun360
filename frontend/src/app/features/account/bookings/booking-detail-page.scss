@@ -1,0 +1,17 @@
+// Écran de DÉTAIL d'une réservation (F3.4), sous `/mon-espace/reservations/:id`.
+// Les briques de la réservation (.bk-card, .bk-status, .bk-facts…) et l'en-tête
+// d'écran (.account-*) viennent du partiel global `styles/_account.scss` —
+// partagés avec la liste (le bouton retour = `app-back-link` + `.account-back`).
+// On ne définit ici que l'espacement d'en-tête et l'astuce d'annulation.
+
+.bd-head {
+  margin-bottom: 1.25rem;
+}
+
+// Astuce « où annuler » (l'action vit sur la liste).
+.bd-hint {
+  border-top: 1px solid var(--k-line);
+  padding-top: 1rem;
+  margin: 0;
+  font-size: 0.92rem;
+}

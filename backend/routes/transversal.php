@@ -61,6 +61,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('requests', [RequestController::class, 'store']);
     Route::get('requests/my', [RequestController::class, 'my']);
 
+    // Détail d'une de mes demandes (propriétaire uniquement — 403 sinon).
+    Route::get('requests/{serviceRequest}', [RequestController::class, 'show'])
+        ->whereNumber('serviceRequest');
+
     // Changement de statut réservé aux agents/admin (machine à états).
     Route::patch('requests/{serviceRequest}/status', [RequestController::class, 'updateStatus'])
         ->whereNumber('serviceRequest')
@@ -77,6 +81,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- Réservations (B11.3) ------------------------------------------------
     Route::get('bookings/my', [BookingController::class, 'my']);
+
+    // Détail d'une de mes réservations (titulaire uniquement — 403 sinon).
+    Route::get('bookings/{booking}', [BookingController::class, 'show'])
+        ->whereNumber('booking');
 
     // --- Messagerie (F3.7) ---------------------------------------------------
     // Socle générique (conversations à participants + messages), scopé à
