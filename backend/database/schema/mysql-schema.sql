@@ -293,13 +293,13 @@ DROP TABLE IF EXISTS `favorites`;
 CREATE TABLE `favorites` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint unsigned NOT NULL,
-  `property_id` bigint unsigned NOT NULL,
+  `favoritable_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `favoritable_id` bigint unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `favorites_user_id_property_id_unique` (`user_id`,`property_id`),
-  KEY `favorites_property_id_foreign` (`property_id`),
-  CONSTRAINT `favorites_property_id_foreign` FOREIGN KEY (`property_id`) REFERENCES `properties` (`id`) ON DELETE CASCADE,
+  UNIQUE KEY `favorites_user_favoritable_unique` (`user_id`,`favoritable_type`,`favoritable_id`),
+  KEY `favorites_favoritable_type_favoritable_id_index` (`favoritable_type`,`favoritable_id`),
   CONSTRAINT `favorites_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1232,3 +1232,4 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (48,'2026_07_17_171
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (49,'2026_07_17_100000_create_conversations_table',6);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (50,'2026_07_17_100100_create_conversation_user_table',6);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (51,'2026_07_17_100200_create_messages_table',6);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (52,'2026_07_18_100000_make_favorites_polymorphic',7);

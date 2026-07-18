@@ -1,6 +1,5 @@
 <?php
 
-use App\Modules\Immo\Http\Controllers\FavoriteController;
 use App\Modules\Immo\Http\Controllers\PropertyCatalogController;
 use App\Modules\Immo\Http\Controllers\PropertyManagementController;
 use App\Modules\Immo\Http\Controllers\PropertyValidationController;
@@ -23,14 +22,8 @@ Route::get('/properties', [PropertyCatalogController::class, 'index']);
 // (de toute façon "compare" n'est pas numérique).
 Route::get('/properties/compare', [PropertyCatalogController::class, 'compare']);
 
-// Favoris de l'utilisateur connecté (phase B2.5).
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/favorites', [FavoriteController::class, 'index']);
-    Route::post('/properties/{property}/favorite', [FavoriteController::class, 'store'])
-        ->whereNumber('property');
-    Route::delete('/properties/{property}/favorite', [FavoriteController::class, 'destroy'])
-        ->whereNumber('property');
-});
+// Favoris : généralisés à tous les univers → routes transversales POLYMORPHES
+// (`/favorites`), voir routes/transversal.php et App\Http\Controllers\FavoriteController.
 
 // Gestion privée par le propriétaire (phase B2.3) — auth requise.
 // NB : "/properties/mine" est défini ici ; il ne percute pas "/properties/{id}"

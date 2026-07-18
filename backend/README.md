@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **159 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **160 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **55 tables**, référentiel géographique du Sénégal inclus
-- **419 tests** automatisés (1174 assertions), tous verts ✅
+- **424 tests** automatisés (1198 assertions), tous verts ✅
 
 ---
 
@@ -51,7 +51,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 419 tests automatiques** — des petits programmes
+notifications) et **vérifié par 424 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -106,7 +106,7 @@ Les briques réellement transverses (Booking, Review, Media, Report polymorphes,
 ```
 app/
 ├── Enums/            # Enums transverses (statuts booking/paiement/requête…)
-├── Models/           # Modèles transverses (Booking, Review, Media, Conversation/Message, géo…)
+├── Models/           # Modèles transverses (Booking, Review, Media, Conversation/Message, Favorite, géo…)
 ├── Http/             # Controllers & Resources transverses
 ├── Support/          # ApiResponse, Settings, CatalogCache, Payments/…
 └── Modules/
@@ -134,7 +134,7 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   vérification par code, récupération de compte, profils, documents KYC sur disque
   privé (téléchargement par URL signée), 8 rôles / permissions fines.
 - **Immo** — catalogue public filtrable, dépôt de biens, validation par un agent,
-  documents, favoris, comparaison.
+  documents, comparaison (les favoris sont devenus transversaux, tous univers).
 - **Stay** — catalogue de nuitées, disponibilité, réservation anti-double-booking,
   caution ; check-in/out & ménage côté back-office.
 - **Manage** — mandats de gestion, loyers, incidents, dépenses, reversements
@@ -157,10 +157,12 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
 
 Couches **transversales** : demandes de service (machine à états stricte), devis
 génériques, réservations polymorphes, **messagerie générique** (conversations à
-participants + messages, réutilisable par tous les espaces), médias (compression
-d'images), avis (réservés au consommateur ayant consommé), notifications
-(e-mail/SMS asynchrones, canal `database` in-app, WhatsApp click-to-chat), paiement
-(PayTech ou manuel Wave/Orange Money).
+participants + messages, réutilisable par tous les espaces), **favoris polymorphes**
+(tous univers : bien, nuitée, véhicule, expérience, mobilité — voir
+`App\Support\Favoritables`), médias (compression d'images), avis (réservés au
+consommateur ayant consommé), notifications (e-mail/SMS asynchrones, canal
+`database` in-app, WhatsApp click-to-chat), paiement (PayTech ou manuel Wave/Orange
+Money).
 
 ---
 
@@ -173,12 +175,12 @@ backend/
 ├── config/              # Configuration (services, cache, cors…)
 ├── database/
 │   ├── factories/       # Factories de test
-│   ├── migrations/      # 51 migrations (55 tables)
+│   ├── migrations/      # 52 migrations (55 tables)
 │   ├── schema/          # Dump de schéma MySQL (accélère les tests)
 │   └── seeders/         # Rôles/permissions, référentiel géographique
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 159 endpoints
+├── API.md               # Référence des 160 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -299,7 +301,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 419 tests, 1174 assertions — verts
+# 424 tests, 1198 assertions — verts
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -311,7 +313,7 @@ php artisan test
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 159 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 160 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GeoController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MessageController;
@@ -89,6 +90,16 @@ Route::middleware('auth:sanctum')->group(function () {
         ->whereNumber('conversation');
     Route::post('messages/{conversation}/messages', [MessageController::class, 'store'])
         ->whereNumber('conversation');
+
+    // --- Favoris POLYMORPHES (tous univers) ----------------------------------
+    // Généralisation des favoris (autrefois immobilier seul) : bien, nuitée,
+    // véhicule, expérience, service de mobilité. `/ids` (fixe) est déclarée AVANT
+    // toute route paramétrée pour lever l'ambiguïté de matching.
+    Route::get('favorites', [FavoriteController::class, 'index']);
+    Route::get('favorites/ids', [FavoriteController::class, 'ids']);
+    Route::post('favorites', [FavoriteController::class, 'store']);
+    Route::delete('favorites/{type}/{id}', [FavoriteController::class, 'destroy'])
+        ->whereNumber('id');
 
     // --- Paiement : initiation (B14.2) ---------------------------------------
     // Crée l'intention côté PSP et renvoie l'URL de redirection. La confirmation

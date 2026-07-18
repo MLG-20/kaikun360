@@ -10,7 +10,6 @@ use App\Models\Conversation;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Modules\Explore\Models\TourismExperience;
-use App\Modules\Immo\Enums\PropertyStatus;
 use App\Modules\Immo\Enums\PropertyType;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Mobility\Enums\VehicleType;
@@ -266,32 +265,39 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * Peuple l'écran « Mes favoris » (F3.5) du client de démonstration avec
-     * quelques biens immobiliers publiés. Idempotent : ne fait rien si le client
-     * possède déjà des favoris. Si aucun bien publié n'existe (base incomplète),
-     * on s'abstient sans erreur.
+     * Peuple l'écran « Mes favoris » du client de démonstration avec des favoris
+     * de PLUSIEURS univers (favoris polymorphes) : deux biens, une nuitée, un
+     * véhicule et une expérience — pour illustrer un espace favoris multi-univers.
+     * Idempotent : ne fait rien si le client possède déjà des favoris. Chaque
+     * cible n'est prise que si elle existe et est visible (publiée / réservable).
      */
     private function seedClientFavorites(User $client): void
     {
-        if ($client->favoriteProperties()->exists()) {
+        if ($client->favorites()->exists()) {
             return;
         }
 
-        // Trois biens publiés les plus récents (l'ajout aux favoris exige un
-        // bien publié, cf. FavoriteController@store).
-        $properties = Property::query()
-            ->where('status', PropertyStatus::PUBLIE)
-            ->latest('id')
-            ->take(3)
-            ->get();
+        // Une cible par univers (les deux biens les plus récents + une nuitée, un
+        // véhicule, une expérience), en ne gardant que ce qui existe réellement.
+        $targets = collect()
+            ->concat(Property::published()->latest('id')->take(2)->get())
+            ->push(Stay::bookable()->latest('id')->first())
+            ->push(Vehicle::published()->latest('id')->first())
+            ->push(TourismExperience::published()->latest('id')->first())
+            ->filter();
 
-        if ($properties->isEmpty()) {
+        if ($targets->isEmpty()) {
             return;
         }
 
-        $client->favoriteProperties()->syncWithoutDetaching($properties->pluck('id')->all());
+        foreach ($targets as $target) {
+            $client->favorites()->firstOrCreate([
+                'favoritable_type' => $target::class,
+                'favoritable_id' => $target->getKey(),
+            ]);
+        }
 
-        $this->command?->info('DemoSeeder : favoris de démonstration créés pour le client.');
+        $this->command?->info('DemoSeeder : favoris de démonstration (multi-univers) créés pour le client.');
     }
 
     /**

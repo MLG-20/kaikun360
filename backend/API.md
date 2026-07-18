@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 159 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 160 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -91,8 +91,6 @@ TypeScript miroir côté frontend Angular (phase F0).
 | PATCH | `/properties/{property}/approve` | auth + `can:valider:bien` | `PropertyValidationController@approve` |
 | POST | `/properties/{property}/documents` | auth | `PropertyManagementController@storeDocument` |
 | GET | `/properties/{property}/documents/{document}/download` | URL signée | `PropertyManagementController@downloadDocument` |
-| DELETE | `/properties/{property}/favorite` | auth | `FavoriteController@destroy` |
-| POST | `/properties/{property}/favorite` | auth | `FavoriteController@store` |
 | PATCH | `/properties/{property}/reject` | auth + `can:valider:bien` | `PropertyValidationController@reject` |
 
 ### Stay — nuitées
@@ -266,11 +264,22 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/media/upload` | auth | `MediaController@store` |
 | DELETE | `/media/{media}` | auth | `MediaController@destroy` |
 
-### Favoris
+### Favoris (transversal, polymorphe)
 
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
 | GET | `/favorites` | auth | `FavoriteController@index` |
+| GET | `/favorites/ids` | auth | `FavoriteController@ids` |
+| POST | `/favorites` | auth | `FavoriteController@store` |
+| DELETE | `/favorites/{type}/{id}` | auth | `FavoriteController@destroy` |
+
+> Favoris **polymorphes** (tous univers) : `type` ∈ {property, stay, vehicle,
+> experience, mobility} (voir `App\Support\Favoritables`). `POST /favorites`
+> `{ type, id }` n'accepte qu'un élément **publié / réservable** (404 sinon),
+> idempotent ; `GET /favorites` liste tous univers confondus (élément embarqué,
+> même forme que le catalogue) ; `GET /favorites/ids` renvoie les ids favoris
+> regroupés par type (marquage des cœurs du catalogue sans requête par carte).
+> Remplace les anciennes routes `/properties/{id}/favorite` du module Immo.
 
 ### Contenu éditorial
 

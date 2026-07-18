@@ -6,7 +6,6 @@ namespace App\Models;
 use App\Modules\Core\Enums\UserStatus;
 use App\Modules\Core\Models\Profile;
 use App\Modules\Core\Models\UserDocument;
-use App\Modules\Immo\Models\Property;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -79,11 +78,13 @@ class User extends Authenticatable
     }
 
     /**
-     * Relation N–N : les biens immobiliers mis en favori par l'utilisateur.
+     * Relation 1–N : les favoris POLYMORPHES de l'utilisateur (tous univers).
+     * Chaque favori pointe vers un élément favorisable (bien, nuitée, véhicule,
+     * expérience, service de mobilité) via `App\Support\Favoritables`.
      */
-    public function favoriteProperties(): BelongsToMany
+    public function favorites(): HasMany
     {
-        return $this->belongsToMany(Property::class, 'favorites')->withTimestamps();
+        return $this->hasMany(Favorite::class);
     }
 
     /**
