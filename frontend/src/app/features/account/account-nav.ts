@@ -22,7 +22,8 @@ export type AccountIcon =
   | 'heart' // favoris
   | 'bell' // notifications
   | 'chat' // messages
-  | 'user'; // profil
+  | 'user' // profil
+  | 'help'; // aide (mode d'emploi de l'espace)
 
 /** Une entrée de navigation de l'espace client. */
 export interface AccountNavItem {
@@ -93,4 +94,8 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     icon: 'user',
     ready: true, // F3.2 ✅
   },
+  // NB : la rubrique « Aide » (mode d'emploi) n'est PAS listée ici : c'est un
+  // utilitaire, rendu dans le PIED du rail (account-layout) à côté de « Retour au
+  // site » / « Se déconnecter », pour garder la navigation principale courte (pas
+  // de défilement du menu) et ne pas l'ajouter aux tuiles de l'accueil.
 ];

@@ -1,0 +1,140 @@
+// Page d'aide de l'espace client — « Comment utiliser votre espace ».
+// L'en-tête d'écran (.account-head/.account-title…) vient du partiel global
+// `styles/_account.scss` ; ici, l'accordéon des sujets (préfixe hp-).
+
+.hp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+// Un sujet = un <details> repliable.
+.hp-item {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  overflow: hidden;
+}
+
+// L'en-tête cliquable du sujet.
+.hp-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.05rem 1.25rem;
+  cursor: pointer;
+  list-style: none; // masque le marqueur natif (triangle)
+  user-select: none;
+
+  // Retire le marqueur natif sur WebKit.
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &:hover {
+    background: var(--k-cream);
+  }
+
+  // Anneau de focus clavier (accessibilité).
+  &:focus-visible {
+    outline: 2px solid var(--k-brand);
+    outline-offset: -2px;
+  }
+}
+
+// Pastille d'icône du sujet.
+.hp-ic {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 9px;
+  border-radius: 50%;
+  color: var(--k-brand-600);
+  background: var(--k-brand-050);
+}
+
+.hp-summary-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--k-font-display);
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+// Chevron : pivote quand le sujet est ouvert.
+.hp-chevron {
+  flex: 0 0 auto;
+  display: inline-flex;
+  color: var(--k-muted);
+  transition: transform 0.2s ease;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hp-item[open] & {
+    transform: rotate(180deg);
+  }
+}
+
+// Corps du sujet (visible une fois déplié).
+.hp-body {
+  padding: 0 1.25rem 1.25rem;
+  // Aligne le texte sous le titre (largeur icône + gap).
+  padding-left: calc(1.25rem + 40px + 0.85rem);
+
+  p {
+    margin: 0 0 0.6rem;
+    color: var(--k-muted);
+    line-height: 1.6;
+  }
+
+  p:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.hp-open {
+  margin-top: 0.9rem;
+}
+
+@media (max-width: 560px) {
+  // Sur petit écran, on ramène le corps sous l'icône (pas d'indentation large).
+  .hp-body {
+    padding-left: 1.25rem;
+  }
+}
+
+// — Bloc « une question sans réponse ? » —
+.hp-more {
+  margin-top: 1.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: var(--k-brand-050);
+  border: 1px solid color-mix(in srgb, var(--k-brand) 22%, var(--k-line));
+  border-radius: var(--k-radius);
+}
+
+.hp-more-title {
+  font-family: var(--k-font-display);
+  font-size: 1.15rem;
+  margin: 0 0 0.4rem;
+}
+
+.hp-more-text {
+  margin: 0 auto 1.1rem;
+  max-width: 56ch;
+  color: var(--k-ink);
+  line-height: 1.6;
+}
+
+.hp-more-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}

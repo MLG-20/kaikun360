@@ -73,6 +73,12 @@ export const ACCOUNT_ROUTES: Routes = [
           import('./profile/profile-page').then((m) => m.ProfilePageComponent),
         title: 'Mon profil — Kaikun 360',
       },
+      {
+        // Aide : mode d'emploi de l'espace (à quoi sert chaque rubrique).
+        path: 'aide',
+        loadComponent: () => import('./help/help-page').then((m) => m.HelpPageComponent),
+        title: 'Aide — Kaikun 360',
+      },
     ],
   },
 ];

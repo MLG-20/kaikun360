@@ -45,8 +45,18 @@
       }
     </nav>
 
-    <!-- Pied du rail : retour au site + déconnexion -->
+    <!-- Pied du rail : aide (mode d'emploi) + retour au site + déconnexion -->
     <div class="account-side-foot">
+      <a
+        class="account-nav-link"
+        routerLink="/mon-espace/aide"
+        [routerLinkActive]="'is-active'"
+        (click)="closeSidebar()"
+      >
+        <span class="account-nav-ic"><app-account-icon name="help" /></span>
+        <span class="account-nav-label">Aide</span>
+      </a>
+
       <a class="account-nav-link account-side-back" routerLink="/">
         <span class="account-nav-ic" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"

@@ -1,0 +1,52 @@
+<section class="account-head">
+  <p class="account-eyebrow">Mon espace</p>
+  <h1 class="account-title">Aide — comment utiliser votre espace</h1>
+  <p class="account-lead">
+    Votre espace réunit tout ce qui vous concerne. Voici, rubrique par rubrique,
+    à quoi sert chaque partie et comment vous en servir. Dépliez un sujet pour en
+    savoir plus.
+  </p>
+</section>
+
+<!-- ============================ Sujets d'aide ============================= -->
+<div class="hp-list">
+  @for (topic of topics; track topic.title; let first = $first) {
+    <details class="hp-item" [open]="first">
+      <summary class="hp-summary">
+        <span class="hp-ic" aria-hidden="true">
+          <app-account-icon [name]="topic.icon" />
+        </span>
+        <span class="hp-summary-title">{{ topic.title }}</span>
+        <span class="hp-chevron" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </span>
+      </summary>
+      <div class="hp-body">
+        @for (line of topic.lines; track $index) {
+          <p>{{ line }}</p>
+        }
+        @if (topic.link) {
+          <a class="k-btn k-btn--ghost hp-open" [routerLink]="topic.link">
+            {{ topic.linkLabel ?? 'Ouvrir' }} →
+          </a>
+        }
+      </div>
+    </details>
+  }
+</div>
+
+<!-- ============================ Aide en plus =============================== -->
+<section class="hp-more">
+  <h2 class="hp-more-title">Une question sans réponse ?</h2>
+  <p class="hp-more-text">
+    Notre équipe reste à votre écoute. Écrivez-nous depuis la messagerie ou via la
+    page de contact, et nous vous répondrons au plus vite.
+  </p>
+  <div class="hp-more-actions">
+    <a class="k-btn k-btn--primary" routerLink="/mon-espace/messages">Ouvrir la messagerie</a>
+    <a class="k-btn k-btn--ghost" routerLink="/contact">Nous contacter</a>
+  </div>
+</section>

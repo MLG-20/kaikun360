@@ -19,7 +19,8 @@ la page de connexion**, puis ramenée là où elle voulait aller une fois connec
 On a construit cet espace **rubrique par rubrique**. Il est désormais **complet** :
 le **cadre**, la **page d'accueil** et les six rubriques — **Profil**, **Mes
 demandes**, **Réservations**, **Favoris**, **Notifications** et **Messages** — sont
-toutes en place (plus aucune section « Bientôt »).
+toutes en place (plus aucune section « Bientôt »), complétées d'une rubrique
+**Aide** (mode d'emploi de l'espace).
 
 ### Ce qui existe aujourd'hui
 
@@ -103,7 +104,14 @@ toutes en place (plus aucune section « Bientôt »).
   (`POST /messages/{id}/messages`) — le message s'ajoute sans recharger. Ouvrir un
   fil le **marque comme lu** (la pastille disparaît). Chaque nouveau message reçu
   génère aussi une **notification** (cloche F3.6). C'est la **dernière** rubrique
-  de l'espace client.
+  *de données* de l'espace client.
+- **La rubrique Aide** — [`help/`](help) : le **mode d'emploi** de l'espace,
+  toujours disponible depuis le **pied du menu** latéral. Un **accordéon** explique, rubrique par
+  rubrique, à quoi sert chaque partie et comment s'en servir, avec un lien direct
+  vers chaque écran, et un bloc final « une question sans réponse ? » (messagerie
+  / contact). Le **mot de bienvenue** du tableau de bord y renvoie (« Voir le
+  guide complet »). Contenu **statique** (documentation utilisateur, aucun appel
+  réseau).
 
 ---
 
@@ -176,6 +184,15 @@ toutes en place (plus aucune section « Bientôt »).
     on n'est pas participant renvoie 404 → écran d'erreur. Modèles dans
     [`../../models/message.model.ts`](../../models/message.model.ts). La catégorie
     de notification `message` (icône `chat`) a été ajoutée au centre F3.6.
+- **`help/`** — `HelpPageComponent` (route enfant `aide`) : page d'aide statique.
+  Les sujets sont un tableau typé `HelpTopic[]` (icône, titre, paragraphes, lien),
+  rendus en **accordéon** natif (`<details>`/`<summary>`, accessible clavier,
+  chevron pivotant). Aucun service. **L'entrée « Aide » n'est PAS dans
+  `ACCOUNT_NAV`** : c'est un utilitaire, rendu dans le **pied du rail**
+  (`account-layout.html`, à côté de « Retour au site » / « Se déconnecter »),
+  pour garder la navigation principale courte (**pas de défilement du menu**) et
+  hors des tuiles de l'accueil. Icône `help` ajoutée à `AccountIcon` +
+  `account-icon.ts`. Le tableau de bord y renvoie depuis le mot de bienvenue.
 
 ### Points d'intégration
 

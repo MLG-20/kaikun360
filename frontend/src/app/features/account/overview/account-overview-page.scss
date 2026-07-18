@@ -71,6 +71,19 @@
   }
 }
 
+// Lien vers le guide complet (page d'aide).
+.ov-welcome-guide {
+  display: inline-block;
+  margin-top: 0.85rem;
+  font-weight: 600;
+  color: var(--k-brand-600);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 // --- Checklist « Pour bien démarrer » -------------------------------------
 .ov-onboarding {
   margin-bottom: 1.5rem;
