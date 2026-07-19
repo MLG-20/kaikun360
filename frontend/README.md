@@ -45,10 +45,13 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   réservé au rôle « propriétaire ». Il réutilise **le même habillage** que
   l'espace client (menu latéral sombre + en-tête épuré), désormais **généralisé
   en un shell partagé** (`layouts/space-layout/`, paramétré par espace) pour
-  servir aussi les futurs espaces pro. Premier écran livré (F4.1) : le
-  **tableau de bord de gestion locative** (mandats actifs, loyers encaissés /
-  impayés, dépenses, reversements, incidents ouverts). Les rubriques Mes biens,
-  Gestion locative et Documents arrivent ensuite. 👉 Détail :
+  servir aussi les futurs espaces pro. Écrans livrés : le **tableau de bord de
+  gestion locative** (F4.1 — mandats actifs, loyers encaissés / impayés,
+  dépenses, reversements, incidents ouverts) et **« Mes biens »** (F4.2 — liste
+  de tous ses biens **quel que soit leur statut** avec une pastille de **suivi de
+  validation** — publié / en attente / rejeté — et une fiche détaillée). Les
+  rubriques Gestion locative et Documents arrivent ensuite ; le dépôt/édition
+  d'un bien viendra en F4.3. 👉 Détail :
   [`src/app/features/owner/README.md`](src/app/features/owner/README.md).
 - 🚧 **À venir** : la suite de l'espace propriétaire, puis les espaces
   prestataire et entreprise, et le back-office.

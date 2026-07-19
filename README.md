@@ -460,8 +460,11 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 > futurs espaces pro. **F4.1 livré** : le **tableau de bord de gestion locative**
 > (`GET /manage/dashboard` — mandats actifs, loyers encaissés/impayés, dépenses,
 > reversements, incidents ouverts), avec données de démonstration seedées pour le
-> propriétaire de démo.
+> propriétaire de démo. **F4.2 livré** : l'écran **« Mes biens »** (liste de tous
+> ses biens quel que soit le statut + fiche), qui matérialise le **suivi de
+> validation** de chaque annonce.
 
+- [x] **Écran « Mes biens » (F4.2)** : liste de tous les biens du propriétaire, **tous statuts confondus** (`GET /properties/mine`) — au contraire du catalogue public qui ne montre que les biens publiés. Chaque carte cliquable porte une **pastille de statut de validation** (publié, en attente, rejeté, suspendu/archivé) ; la **fiche** (`GET /properties/mine/{id}`, réservée au propriétaire → 404 sinon) détaille le statut avec une explication, la description, les caractéristiques, la localisation et les dates. Lecture seule (le dépôt/édition arrive en F4.3).
 - [ ] Formulaire de dépôt de bien (photos, localisation, type de location, documents).
 - [ ] Choix du mode de location (mensuelle, nuitées, formule mixte).
 - [ ] Tableau de bord propriétaire : demandes, visites, réservations, loyers, incidents. *(F4.1 : volet gestion locative — loyers, reversements, incidents — livré.)*

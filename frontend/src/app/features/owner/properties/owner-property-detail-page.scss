@@ -1,0 +1,104 @@
+// Fiche d'un bien de l'espace propriétaire (F4.2). L'en-tête (.account-*), les
+// états (.pf-state) et la pastille de statut (.bk-status[data-tone]) proviennent
+// du partiel global `styles/_account.scss`. On ne définit ici que la mise en
+// page propre à la fiche (blocs, listes de caractéristiques, bandeau de statut).
+
+// — En-tête : titre + pastille de statut —
+.opd-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.opd-heading {
+  min-width: 0;
+
+  // L'en-tête d'écran garde ses marges globales ; on les resserre ici.
+  .account-title {
+    margin-bottom: 0.15rem;
+  }
+}
+
+.opd-type {
+  color: var(--k-muted);
+  font-size: 0.95rem;
+}
+
+// — Bandeau explicatif du statut (teinté comme la pastille) —
+.opd-status-hint {
+  border: 1px solid var(--k-line);
+  border-left-width: 4px;
+  border-radius: var(--k-radius-sm, 8px);
+  background: var(--k-cream);
+  color: var(--k-muted);
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.75rem;
+
+  &[data-tone='active'] {
+    border-left-color: var(--k-green);
+  }
+  &[data-tone='pending'] {
+    border-left-color: var(--k-gold);
+  }
+  &[data-tone='cancelled'] {
+    border-left-color: var(--k-danger);
+  }
+  &[data-tone='done'] {
+    border-left-color: var(--k-line);
+  }
+}
+
+// — Blocs de contenu —
+.opd-block {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 1.4rem 1.5rem;
+
+  & + & {
+    margin-top: 1.25rem;
+  }
+}
+
+.opd-block-title {
+  font-family: var(--k-font-display);
+  font-size: 1.05rem;
+  margin: 0 0 1rem;
+}
+
+.opd-description {
+  margin: 0;
+  color: var(--k-ink, inherit);
+  white-space: pre-line;
+}
+
+// — Listes de caractéristiques (localisation, suivi…) —
+.opd-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.1rem 1.5rem;
+  margin: 0;
+}
+
+.opd-fact {
+  dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--k-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  // L'adresse peut être longue : elle occupe toute la largeur de la grille.
+  &--wide {
+    grid-column: 1 / -1;
+  }
+}

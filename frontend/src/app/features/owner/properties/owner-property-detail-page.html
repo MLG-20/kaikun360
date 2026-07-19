@@ -1,0 +1,125 @@
+<section class="account-head">
+  <app-back-link class="account-back" label="Mes biens" fallback="/espace-proprietaire/biens" />
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="pf-state" role="status">Chargement du bien…</p>
+  }
+  @case ('notfound') {
+    <p class="pf-state pf-state--error" role="alert">
+      Ce bien est introuvable ou ne fait pas partie de vos annonces.
+    </p>
+  }
+  @case ('failed') {
+    <p class="pf-state pf-state--error" role="alert">
+      Impossible de charger ce bien pour le moment. Merci de réessayer plus tard.
+    </p>
+  }
+  @case ('ready') {
+    @if (property(); as p) {
+      <!-- En-tête : titre + statut de validation -->
+      <header class="opd-head">
+        <div class="opd-heading">
+          <p class="account-eyebrow">Espace propriétaire</p>
+          <h1 class="account-title">{{ p.title }}</h1>
+          @if (p.type_label) {
+            <p class="opd-type">{{ p.type_label }}</p>
+          }
+        </div>
+        <span class="bk-status" [attr.data-tone]="status().tone">{{ status().label }}</span>
+      </header>
+
+      <!-- Bandeau explicatif du statut -->
+      <p class="opd-status-hint" [attr.data-tone]="status().tone">{{ status().hint }}</p>
+
+      @if (p.description) {
+        <section class="opd-block">
+          <h2 class="opd-block-title">Description</h2>
+          <p class="opd-description">{{ p.description }}</p>
+        </section>
+      }
+
+      <!-- Caractéristiques -->
+      <section class="opd-block">
+        <h2 class="opd-block-title">Caractéristiques</h2>
+        <dl class="opd-facts">
+          @if (p.type_label) {
+            <div class="opd-fact">
+              <dt>Type</dt>
+              <dd>{{ p.type_label }}</dd>
+            </div>
+          }
+          @if (priceLabel(); as price) {
+            <div class="opd-fact">
+              <dt>Prix</dt>
+              <dd>{{ price }}</dd>
+            </div>
+          }
+          @if (verified()) {
+            <div class="opd-fact">
+              <dt>Vérification</dt>
+              <dd>Vérifié</dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      <!-- Localisation -->
+      <section class="opd-block">
+        <h2 class="opd-block-title">Localisation</h2>
+        <dl class="opd-facts">
+          @if (p.location.region) {
+            <div class="opd-fact">
+              <dt>Région</dt>
+              <dd>{{ p.location.region }}</dd>
+            </div>
+          }
+          @if (p.location.department) {
+            <div class="opd-fact">
+              <dt>Département</dt>
+              <dd>{{ p.location.department }}</dd>
+            </div>
+          }
+          @if (p.location.commune) {
+            <div class="opd-fact">
+              <dt>Commune</dt>
+              <dd>{{ p.location.commune }}</dd>
+            </div>
+          }
+          @if (p.location.tourist_zone) {
+            <div class="opd-fact">
+              <dt>Zone touristique</dt>
+              <dd>{{ p.location.tourist_zone }}</dd>
+            </div>
+          }
+          @if (p.location.address) {
+            <div class="opd-fact opd-fact--wide">
+              <dt>Adresse</dt>
+              <dd>{{ p.location.address }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      <!-- Dates -->
+      <section class="opd-block">
+        <h2 class="opd-block-title">Suivi</h2>
+        <dl class="opd-facts">
+          @if (p.created_at) {
+            <div class="opd-fact">
+              <dt>Déposé le</dt>
+              <dd>{{ p.created_at | date: 'longDate' : '' : 'fr' }}</dd>
+            </div>
+          }
+          @if (p.published_at) {
+            <div class="opd-fact">
+              <dt>Publié le</dt>
+              <dd>{{ p.published_at | date: 'longDate' : '' : 'fr' }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+    }
+  }
+}

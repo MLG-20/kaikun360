@@ -1,0 +1,89 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-proprietaire" />
+  <p class="account-eyebrow">Espace propriétaire</p>
+  <h1 class="account-title">Mes biens</h1>
+  <p class="account-lead">
+    Retrouvez tous vos biens et suivez la validation de vos annonces. Un bien
+    déposé est vérifié par un agent Kaikun 360 avant sa mise en ligne.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos biens…</p>
+} @else if (loadError()) {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger vos biens pour le moment. Merci de réessayer plus tard.
+  </p>
+} @else if (items().length === 0) {
+  <!-- ============================== Aucun bien ============================= -->
+  <div class="rq-empty">
+    <h2 class="rq-empty-title">Aucun bien pour l'instant</h2>
+    <p class="rq-empty-text">
+      Vous n'avez pas encore déposé de bien. Le dépôt d'une annonce sera bientôt
+      disponible depuis cet espace ; vos biens et leur statut de validation
+      apparaîtront ici.
+    </p>
+  </div>
+} @else {
+  <!-- =============================== Liste ================================= -->
+  <ul class="op-list">
+    @for (property of items(); track property.id) {
+      <li class="op-card">
+        <!-- Toute la carte est un lien vers la fiche du bien. -->
+        <a
+          class="op-card-link"
+          [routerLink]="['/espace-proprietaire/biens', property.id]"
+          [attr.aria-label]="'Voir la fiche du bien ' + property.title"
+        >
+          <header class="op-card-head">
+            <div class="op-card-heading">
+              <span class="op-title">{{ property.title }}</span>
+              @if (property.type_label) {
+                <span class="op-type">{{ property.type_label }}</span>
+              }
+            </div>
+            @if (statusOf(property.status); as st) {
+              <span class="bk-status" [attr.data-tone]="st.tone">{{ st.label }}</span>
+            }
+          </header>
+
+          <dl class="op-facts">
+            @if (localityOf(property); as locality) {
+              <div class="op-fact">
+                <dt>Localité</dt>
+                <dd>{{ locality }}</dd>
+              </div>
+            }
+            @if (priceOf(property); as price) {
+              <div class="op-fact">
+                <dt>Prix</dt>
+                <dd>{{ price }}</dd>
+              </div>
+            }
+            @if (property.created_at) {
+              <div class="op-fact">
+                <dt>Déposé le</dt>
+                <dd>{{ property.created_at | date: 'longDate' : '' : 'fr' }}</dd>
+              </div>
+            }
+          </dl>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <!-- Pagination -->
+  @if (meta(); as m) {
+    @if (m.last_page > 1) {
+      <nav class="rq-pager" aria-label="Pagination des biens">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasPrev()" (click)="prev()">
+          ← Précédent
+        </button>
+        <span class="rq-pager-info">Page {{ m.current_page }} sur {{ m.last_page }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasNext()" (click)="next()">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}

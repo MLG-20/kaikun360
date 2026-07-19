@@ -13,9 +13,9 @@ import { OWNER_SPACE } from './owner-space';
  * `roleGuard` avec le rôle `proprietaire` : sans session → redirection connexion
  * (avec `redirect`) ; connecté sans le rôle → renvoi à l'accueil.
  *
- * Les rubriques (Mes biens F4.2/F4.3, Gestion locative F4.4, Documents F4.5) se
- * brancheront ici au fil des sous-phases ; seul le tableau de bord existe en
- * F4.1.
+ * Les rubriques se branchent au fil des sous-phases : tableau de bord (F4.1) et
+ * Mes biens (F4.2, liste + fiche) sont en place ; Gestion locative (F4.4) et
+ * Documents (F4.5) suivront. Le dépôt/édition d'un bien viendra en F4.3.
  */
 export const OWNER_ROUTES: Routes = [
   {
@@ -31,6 +31,22 @@ export const OWNER_ROUTES: Routes = [
         loadComponent: () =>
           import('./overview/owner-overview-page').then((m) => m.OwnerOverviewPageComponent),
         title: 'Espace propriétaire — Kaikun 360',
+      },
+      {
+        // F4.2 — Mes biens : liste + statut de validation (GET /properties/mine).
+        path: 'biens',
+        loadComponent: () =>
+          import('./properties/owner-properties-page').then((m) => m.OwnerPropertiesPageComponent),
+        title: 'Mes biens — Kaikun 360',
+      },
+      {
+        // F4.2 — Fiche d'un bien (GET /properties/mine/{id}, propriétaire seul).
+        path: 'biens/:id',
+        loadComponent: () =>
+          import('./properties/owner-property-detail-page').then(
+            (m) => m.OwnerPropertyDetailPageComponent,
+          ),
+        title: 'Mon bien — Kaikun 360',
       },
     ],
   },

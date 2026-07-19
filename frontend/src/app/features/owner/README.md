@@ -23,7 +23,8 @@ introduit en F4 par généralisation du shell de l'espace client (F3). Le shell 
 
 Chaque rubrique du rail porte un drapeau `ready` : les rubriques non encore
 construites sont affichées « Bientôt » (aucun lien mort), et passeront à
-`ready: true` avec leur sous-phase (F4.2 → F4.5).
+`ready: true` avec leur sous-phase. En place : Tableau de bord (F4.1) et Mes
+biens (F4.2). À venir : Gestion locative (F4.4) et Documents (F4.5).
 
 ## Écrans
 
@@ -34,5 +35,17 @@ construites sont affichées « Bientôt » (aucun lien mort), et passeront à
   dépenses, reversements, incidents ouverts. Les indicateurs qui appellent
   l'attention (impayés, incidents) sont teintés en ambre ; les loyers encaissés
   en vert. Suit une grille de **tuiles** vers les rubriques de l'espace.
-- **Mes biens** (F4.2 / F4.3), **Gestion locative** (F4.4), **Documents** (F4.5)
-  — à venir.
+- **Mes biens** (F4.2) — [`properties/owner-properties-page.ts`](properties/owner-properties-page.ts)
+  (liste) + [`properties/owner-property-detail-page.ts`](properties/owner-property-detail-page.ts)
+  (fiche). La liste interroge `GET /properties/mine` (via `PropertyManagementService.mine`)
+  et affiche **tous les biens du propriétaire, quel que soit leur statut** — au
+  contraire du catalogue public qui ne montre que les biens publiés. Chaque carte
+  cliquable porte une **pastille de statut de validation** teintée par tonalité
+  (`propertyStatus` → pastille globale `.bk-status[data-tone]`) : publié (vert),
+  en attente de validation (or), rejeté (rouge), suspendu/archivé (gris). La
+  **fiche** (`GET /properties/mine/{id}`, réservée au propriétaire → 404 sinon)
+  détaille le statut avec une explication, la description, les caractéristiques,
+  la localisation et les dates. **Lecture seule** : le dépôt et l'édition d'un
+  bien viendront en F4.3. Helpers de présentation partagés dans
+  [`properties/property-status.ts`](properties/property-status.ts).
+- **Gestion locative** (F4.4), **Documents** (F4.5) — à venir.
