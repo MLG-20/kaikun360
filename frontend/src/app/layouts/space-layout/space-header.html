@@ -15,18 +15,18 @@
         </svg>
       </button>
 
-      <span class="acc-title">Espace client</span>
+      <span class="acc-title">{{ space.headerTitle }}</span>
     </div>
 
     <div class="acc-actions">
       <!-- Cloche : accès direct au centre de notifications + pastille non-lues (F3.6) -->
       <a
         class="acc-bell"
-        routerLink="/mon-espace/notifications"
+        [routerLink]="space.notificationsPath"
         [attr.aria-label]="
           unreadCount() > 0
-            ? 'Mes notifications, ' + unreadCount() + ' non lues'
-            : 'Mes notifications'
+            ? 'Notifications, ' + unreadCount() + ' non lues'
+            : 'Notifications'
         "
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
@@ -66,7 +66,7 @@
                 <span>{{ user()?.email || user()?.phone }}</span>
               }
             </div>
-            <a class="acc-user-item" routerLink="/mon-espace/profil" role="menuitem">
+            <a class="acc-user-item" [routerLink]="space.profilePath" role="menuitem">
               Mon profil
             </a>
             <button class="acc-user-item" type="button" role="menuitem" (click)="logout()">

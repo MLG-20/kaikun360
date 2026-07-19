@@ -1,7 +1,8 @@
-// App-shell de l'espace client (F3.6, sur demande utilisateur : menu latéral
-// SOMBRE, pleine hauteur, collé à gauche — comme un tableau de bord classique).
-// Le rail contient la marque (haut), la navigation, et le pied (retour au site +
-// déconnexion). La colonne de droite porte l'en-tête puis le contenu.
+// App-shell générique des espaces connectés (F4, généralisation du shell F3.6) :
+// menu latéral SOMBRE, pleine hauteur, collé à gauche — comme un tableau de bord
+// classique. Le rail contient la marque (haut), la navigation, et le pied
+// (aide + retour au site + déconnexion). La colonne de droite porte l'en-tête
+// puis le contenu. Les classes restent préfixées `account-` (chrome partagé).
 
 :host {
   display: block;

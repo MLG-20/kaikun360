@@ -1,0 +1,59 @@
+import { SpaceConfig, SpaceNavItem } from '../../layouts/space-layout/space.config';
+
+/**
+ * Espace **propriétaire** (F4) — navigation et configuration du shell.
+ *
+ * Le propriétaire dépose et gère ses biens, suit sa gestion locative (loyers,
+ * reversements, incidents) et ses documents. Comme pour l'espace client, on
+ * liste dès maintenant toutes les rubriques avec un drapeau `ready` : seules les
+ * rubriques construites sont cliquables (les autres, marquées « Bientôt »,
+ * passeront à `ready: true` avec leur sous-phase F4.2 → F4.5). Aucun lien mort.
+ *
+ * Notifications et profil sont propres à l'utilisateur (pas à l'espace) : la
+ * cloche et « Mon profil » de l'en-tête pointent, pour l'instant, vers les
+ * écrans déjà en place de l'espace client (`/mon-espace/...`).
+ */
+export const OWNER_NAV: readonly SpaceNavItem[] = [
+  {
+    label: 'Tableau de bord',
+    description: 'Vue d’ensemble de votre gestion locative (loyers, reversements, incidents).',
+    path: '',
+    icon: 'grid',
+    ready: true, // F4.1 ✅
+  },
+  {
+    label: 'Mes biens',
+    description: 'Déposez un bien et suivez la validation de vos annonces.',
+    path: 'biens',
+    icon: 'building',
+    ready: false, // F4.2 / F4.3
+  },
+  {
+    label: 'Gestion locative',
+    description: 'Mandats, loyers, reversements et rapports mensuels.',
+    path: 'gestion-locative',
+    icon: 'wallet',
+    ready: false, // F4.4
+  },
+  {
+    label: 'Documents',
+    description: 'Vos pièces et justificatifs de propriétaire.',
+    path: 'documents',
+    icon: 'document',
+    ready: false, // F4.5
+  },
+];
+
+/** Configuration de l'espace propriétaire pour le shell générique (F4). */
+export const OWNER_SPACE: SpaceConfig = {
+  basePath: '/espace-proprietaire',
+  brandSubtitle: 'Espace propriétaire',
+  headerTitle: 'Espace propriétaire',
+  navAriaLabel: 'Navigation de l’espace propriétaire',
+  nav: OWNER_NAV,
+  // Pas encore de page d'aide dédiée à cet espace (F4.5+).
+  helpPath: undefined,
+  // Notifications et profil sont partagés (propres à l'utilisateur).
+  notificationsPath: '/mon-espace/notifications',
+  profilePath: '/mon-espace/profil',
+};

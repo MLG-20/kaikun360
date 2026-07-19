@@ -19,7 +19,7 @@ plus vite, car on ne charge pas tout d'un coup.
 ### Les « cadres » autour des pages (layouts)
 
 Une page ne s'affiche jamais toute seule : elle est posée dans un **cadre** qui
-fournit le décor commun. Il y en a deux :
+fournit le décor commun. Il y en a trois :
 
 - **Cadre principal du site** ([`../layouts/main-layout`](../layouts/main-layout)) —
   l'en-tête (logo + menu) en haut, le pied de page en bas, et la page au milieu.
@@ -27,6 +27,12 @@ fournit le décor commun. Il y en a deux :
 - **Cadre d'authentification** ([`auth/auth-layout`](auth/auth-layout)) — l'écran
   scindé « signature de marque + formulaire », **sans le grand menu**, pour que la
   personne se concentre sur sa connexion.
+- **Cadre des espaces connectés** ([`../layouts/space-layout`](../layouts/space-layout))
+  — le décor commun à tous les espaces personnels (client, propriétaire, …) :
+  menu latéral sombre pleine hauteur + en-tête épuré, **sans** les méga-menus ni
+  le pied de page du site. C'est un **shell générique paramétré par espace**
+  (jeton `SPACE_CONFIG`) : chaque espace fournit sa marque, ses rubriques et ses
+  liens (voir `account/` et `owner/`).
 
 La toute première brique de l'application (`App`) ne fait qu'une chose : afficher
 « la bonne page dans le bon cadre » selon l'adresse visitée.
@@ -136,11 +142,17 @@ back-office.
   l'`input [link]` de `app-listing-card` (lien étiré) ; la mobilité reste non
   cliquable (pas de fiche backend).
 - **Espace client (F3)** : dossier [`account/`](account) — l'**espace personnel
-  authentifié** monté sous `/mon-espace`. Il a son propre **cadre** (troisième
-  layout, [`../layouts/account-layout`](../layouts/account-layout)) avec un
-  **en-tête dédié épuré** (`app-account-header` : marque + « Retour au site » +
-  menu utilisateur, **sans les méga-menus marketing ni le pied de page** du
-  site) et une **navigation latérale** vers les sections (Tableau de bord, Mes demandes,
-  Réservations, Favoris, Notifications, Messages, Profil). Toute la branche est
-  protégée par `authGuard` (redirection connexion si pas de session). 👉 README
-  détaillé : [`account/README.md`](account/README.md).
+  authentifié** monté sous `/mon-espace`. Il utilise le **cadre des espaces
+  connectés** ([`../layouts/space-layout`](../layouts/space-layout)) : en-tête
+  dédié épuré (marque + « Retour au site » + menu utilisateur, **sans les
+  méga-menus marketing ni le pied de page** du site) et **navigation latérale**
+  vers les sections (Tableau de bord, Mes demandes, Réservations, Favoris,
+  Notifications, Messages, Profil). Toute la branche est protégée par `authGuard`
+  (redirection connexion si pas de session). 👉 README détaillé :
+  [`account/README.md`](account/README.md).
+- **Espace propriétaire (F4, en cours)** : dossier [`owner/`](owner) — l'espace
+  du **propriétaire de biens** monté sous `/espace-proprietaire`, **réservé au
+  rôle `proprietaire`** (`roleGuard`). Il réutilise le **même cadre partagé**
+  (`space-layout`, paramétré par `SPACE_CONFIG`). Premier écran : le **tableau de
+  bord de gestion locative** (loyers, reversements, incidents). 👉 README
+  détaillé : [`owner/README.md`](owner/README.md).

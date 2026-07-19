@@ -24,7 +24,7 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
 
 ### Ce qui existe aujourd'hui
 
-- **Le cadre — app-shell (F3.1, refondu F3.6)** — [`../../layouts/account-layout`](../../layouts/account-layout) :
+- **Le cadre — app-shell (F3.1, refondu F3.6, généralisé F4)** — [`../../layouts/space-layout`](../../layouts/space-layout) :
   un **menu latéral SOMBRE, collé à gauche et pleine hauteur** (rail de tableau
   de bord), et une **colonne contenu** (en-tête + section). Le rail porte la
   **marque** (en haut), la **navigation** des rubriques (item actif = fond clair
@@ -32,13 +32,16 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   **Ni méga-menus ni pied de page** du site public (choix UX : l'espace doit se
   sentir « chez soi »). En **petit écran** (< 860px), le rail devient un
   **tiroir plein écran** qui glisse depuis la gauche (hamburger de l'en-tête +
-  fond assombri).
-- **L'en-tête (F3.1, refondu F3.6)** — [`account-header/`](account-header) :
+  fond assombri). Depuis F4, ce cadre est un **shell générique paramétré par
+  espace** (jeton `SPACE_CONFIG`) : l'espace client fournit sa config
+  `CLIENT_SPACE` ([`client-space.ts`](client-space.ts)) au layout partagé.
+- **L'en-tête (F3.1, refondu F3.6, généralisé F4)** — [`../../layouts/space-layout/space-header.ts`](../../layouts/space-layout/space-header.ts) :
   barre supérieure de la **colonne contenu** (à droite du rail, ne le recouvre
-  pas). Contient un **titre** (« Espace client »), la **cloche de notifications**
-  (F3.6, pastille de non-lues) et le **menu utilisateur** (avatar + nom → **Mon
-  profil** [F3.2] et **Se déconnecter**). La marque et le lien « Retour au
-  site » vivent désormais dans le rail.
+  pas). Contient le **titre** de l'espace (« Espace client »), la **cloche de
+  notifications** (F3.6, pastille de non-lues) et le **menu utilisateur** (avatar
+  + nom → **Mon profil** [F3.2] et **Se déconnecter**). Titre et cibles des liens
+  proviennent de `SPACE_CONFIG`. La marque et le lien « Retour au site » vivent
+  dans le rail.
 - **La page d'accueil (F3.1, enrichie « comprendre son espace »)** —
   [`overview/`](overview) : salutation, un **mot de bienvenue** qui explique en
   clair à quoi sert l'espace et comment y naviguer (**masquable**, mémorisé ;
@@ -106,7 +109,7 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   on **navigue** vers l'écran concerné (demande, réservation…). Un bouton **« Tout
   marquer comme lu »** (`PATCH …/read-all`) apparaît dès qu'il reste des non-lues.
   Les notifications non lues sont mises en avant (liseré de marque, point). La
-  **cloche de l'en-tête** (`account-header`) porte une **pastille** du nombre de
+  **cloche de l'en-tête** (`space-header`) porte une **pastille** du nombre de
   non-lues, rafraîchie à chaque navigation dans l'espace.
 
 - **La rubrique Messages (F3.7)** — [`messages/`](messages) : la **messagerie** du
@@ -142,17 +145,22 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
 - **`account-icon.ts`** — petit composant `app-account-icon` rendant une icône
   SVG à partir d'une clé `AccountIcon` (`currentColor`, sans dépendance).
   Mutualisé par la barre latérale et les tuiles.
-- **`account-header/`** — `AccountHeaderComponent` (`app-account-header`) :
-  **barre supérieure** de la colonne contenu (titre + cloche de notifications +
-  menu utilisateur). Injecte `AuthService` (identité) et `NotificationService`
-  (compteur de non-lues, rechargé à chaque `NavigationEnd`) ; menu utilisateur
-  déroulant (signal `userMenuOpen`, fermé à la navigation / Échap / clic
-  extérieur). Émet `sidebarToggle` (hamburger, petit écran). La **marque**, le
-  **retour au site** et la **déconnexion en pied** vivent dans le **rail** du
-  `account-layout` (app-shell), pas ici.
-- **`account.routes.ts`** — `ACCOUNT_ROUTES` : le layout `AccountLayoutComponent`
-  porte `canActivate: [authGuard]` ; les sections sont ses routes enfants
-  (chargées à la demande). L'accueil est la route enfant `''`.
+- **En-tête partagé** — `SpaceHeaderComponent` (`app-space-header`, dans
+  [`../../layouts/space-layout`](../../layouts/space-layout)) : **barre
+  supérieure** de la colonne contenu (titre + cloche de notifications + menu
+  utilisateur). Injecte `AuthService` (identité), `NotificationService` (compteur
+  de non-lues, rechargé à chaque `NavigationEnd`) et `SPACE_CONFIG` (titre,
+  cibles des liens) ; menu utilisateur déroulant (signal `userMenuOpen`, fermé à
+  la navigation / Échap / clic extérieur). Émet `sidebarToggle` (hamburger, petit
+  écran). La **marque**, le **retour au site** et la **déconnexion en pied**
+  vivent dans le **rail** du `space-layout`, pas ici.
+- **`client-space.ts`** — `CLIENT_SPACE` (`SpaceConfig`) : la config de l'espace
+  client passée au shell générique (marque « Espace client », rubriques
+  `ACCOUNT_NAV`, aide, cloche/profil sous `/mon-espace`).
+- **`account.routes.ts`** — `ACCOUNT_ROUTES` : le layout partagé
+  `SpaceLayoutComponent` porte `canActivate: [authGuard]` et **fournit**
+  `SPACE_CONFIG = CLIENT_SPACE` (via `providers`) ; les sections sont ses routes
+  enfants (chargées à la demande). L'accueil est la route enfant `''`.
 - **`overview/`** — `AccountOverviewPageComponent` : accueil du tableau de bord.
   **Mot de bienvenue** masquable (préférence en `localStorage`, clé
   `kaikun.account.welcomeDismissed`, lecture/écriture **SSR-safe** via garde
@@ -210,7 +218,7 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   (`myNotifications` renvoie la pagination **enrichie** de `unread_count`). Au
   clic sur une carte, `markAsRead` puis navigation vers `action_url` ;
   `markAllAsRead` remet toutes les non-lues à lu. La **cloche de l'en-tête**
-  (`account-header`) appelle `unreadCount` et affiche la pastille, rechargée à
+  (`space-header`) appelle `unreadCount` et affiche la pastille, rechargée à
   chaque `NavigationEnd` (donc mise à jour au retour de l'écran) — et seulement
   quand une session est active (pas d'appel voué au 401 côté serveur SSR).
 - **`messages/`** (F3.7) — deux écrans via le
@@ -233,7 +241,7 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   rendus en **accordéon** natif (`<details>`/`<summary>`, accessible clavier,
   chevron pivotant). Aucun service. **L'entrée « Aide » n'est PAS dans
   `ACCOUNT_NAV`** : c'est un utilitaire, rendu dans le **pied du rail**
-  (`account-layout.html`, à côté de « Retour au site » / « Se déconnecter »),
+  (`space-layout.html`, à côté de « Retour au site » / « Se déconnecter »),
   pour garder la navigation principale courte (**pas de défilement du menu**) et
   hors des tuiles de l'accueil. Icône `help` ajoutée à `AccountIcon` +
   `account-icon.ts`. Le tableau de bord y renvoie depuis le mot de bienvenue.

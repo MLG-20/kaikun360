@@ -41,8 +41,17 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   catalogue pour les ajouter), **notifications** et **messagerie** (conversations
   + fil de discussion avec réponse). 👉 Détail :
   [`src/app/features/account/README.md`](src/app/features/account/README.md).
-- 🚧 **À venir** : les autres espaces personnels (propriétaire, prestataire,
-  entreprise) et le back-office.
+- 🏗️ **L'espace propriétaire (F4, en cours)** : sous `/espace-proprietaire`,
+  réservé au rôle « propriétaire ». Il réutilise **le même habillage** que
+  l'espace client (menu latéral sombre + en-tête épuré), désormais **généralisé
+  en un shell partagé** (`layouts/space-layout/`, paramétré par espace) pour
+  servir aussi les futurs espaces pro. Premier écran livré (F4.1) : le
+  **tableau de bord de gestion locative** (mandats actifs, loyers encaissés /
+  impayés, dépenses, reversements, incidents ouverts). Les rubriques Mes biens,
+  Gestion locative et Documents arrivent ensuite. 👉 Détail :
+  [`src/app/features/owner/README.md`](src/app/features/owner/README.md).
+- 🚧 **À venir** : la suite de l'espace propriétaire, puis les espaces
+  prestataire et entreprise, et le back-office.
 
 ---
 

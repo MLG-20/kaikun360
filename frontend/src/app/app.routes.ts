@@ -24,6 +24,12 @@ export const routes: Routes = [
     loadChildren: () => import('./features/account/account.routes').then((m) => m.ACCOUNT_ROUTES),
   },
   {
+    // Espace propriétaire authentifié (F4) : même shell app-shell générique,
+    // protégé par `roleGuard` (rôle `proprietaire`). Déclaré avant `''`.
+    path: 'espace-proprietaire',
+    loadChildren: () => import('./features/owner/owner.routes').then((m) => m.OWNER_ROUTES),
+  },
+  {
     path: '',
     component: MainLayoutComponent,
     children: [

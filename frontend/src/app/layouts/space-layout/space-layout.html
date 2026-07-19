@@ -1,5 +1,5 @@
-<!-- App-shell de l'espace client : menu latéral SOMBRE pleine hauteur collé à
-     gauche + colonne contenu (en-tête + section). -->
+<!-- App-shell générique d'un espace connecté : menu latéral SOMBRE pleine
+     hauteur collé à gauche + colonne contenu (en-tête + section). -->
 <div class="account-app">
   <!-- Fond assombri (petit écran) : un clic referme le tiroir -->
   @if (sidebarOpen()) {
@@ -10,24 +10,24 @@
   <aside
     class="account-side"
     [class.is-open]="sidebarOpen()"
-    aria-label="Navigation de l’espace client"
+    [attr.aria-label]="space.navAriaLabel"
   >
     <!-- Marque, en haut du rail : retour à l'accueil du site -->
     <a class="account-brand" routerLink="/" aria-label="Accueil Kaikun 360">
       <span class="account-logo" aria-hidden="true">K</span>
       <span class="account-brand-text">
         <b>Kaikun&nbsp;360</b>
-        <small>Espace client</small>
+        <small>{{ space.brandSubtitle }}</small>
       </span>
     </a>
 
     <!-- Navigation des rubriques -->
     <nav class="account-nav" aria-label="Rubriques">
-      @for (item of nav; track item.path) {
+      @for (item of space.nav; track item.path) {
         @if (item.ready) {
           <a
             class="account-nav-link"
-            [routerLink]="item.path ? ['/mon-espace', item.path] : ['/mon-espace']"
+            [routerLink]="linkFor(item.path)"
             [routerLinkActive]="'is-active'"
             [routerLinkActiveOptions]="{ exact: item.path === '' }"
             (click)="closeSidebar()"
@@ -45,17 +45,19 @@
       }
     </nav>
 
-    <!-- Pied du rail : aide (mode d'emploi) + retour au site + déconnexion -->
+    <!-- Pied du rail : aide (si l'espace en a une) + retour au site + déconnexion -->
     <div class="account-side-foot">
-      <a
-        class="account-nav-link"
-        routerLink="/mon-espace/aide"
-        [routerLinkActive]="'is-active'"
-        (click)="closeSidebar()"
-      >
-        <span class="account-nav-ic"><app-account-icon name="help" /></span>
-        <span class="account-nav-label">Aide</span>
-      </a>
+      @if (space.helpPath !== undefined) {
+        <a
+          class="account-nav-link"
+          [routerLink]="linkFor(space.helpPath)"
+          [routerLinkActive]="'is-active'"
+          (click)="closeSidebar()"
+        >
+          <span class="account-nav-ic"><app-account-icon name="help" /></span>
+          <span class="account-nav-label">Aide</span>
+        </a>
+      }
 
       <a class="account-nav-link account-side-back" routerLink="/">
         <span class="account-nav-ic" aria-hidden="true">
@@ -82,7 +84,7 @@
 
   <!-- ==================== Colonne contenu (en-tête + section) ============== -->
   <div class="account-body">
-    <app-account-header
+    <app-space-header
       [sidebarOpen]="sidebarOpen()"
       (sidebarToggle)="toggleSidebar()"
     />

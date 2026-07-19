@@ -1,0 +1,92 @@
+// Accueil de l'espace propriétaire (F4.1) — tableau de bord. Les briques
+// partagées (en-tête .account-head/.account-title/.account-lead, tuiles
+// .account-tiles/.account-tile*, étiquette .account-soon-tag) sont globales
+// (styles/_account.scss) ; ici : la grille d'indicateurs (KPI) et l'ossature.
+
+// --- États (chargement / erreur) ------------------------------------------
+.owner-state {
+  color: var(--k-muted);
+  padding: 1.25rem 0;
+}
+
+.owner-state-error {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+  background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card));
+  border-radius: var(--k-radius);
+
+  p {
+    margin: 0;
+    color: var(--k-ink);
+  }
+}
+
+// --- Grille d'indicateurs (KPI) -------------------------------------------
+.owner-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.owner-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.2rem 1.25rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-left: 3px solid var(--k-brand);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+
+  // Point d'attention (impayés, incidents ouverts non nuls) : liseré ambre.
+  &[data-tone='warn'] {
+    border-left-color: var(--k-gold);
+  }
+
+  // Valeur positive mise en valeur (loyers encaissés) : liseré vert.
+  &[data-tone='good'] {
+    border-left-color: var(--k-green);
+  }
+}
+
+.owner-kpi-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--k-muted);
+}
+
+.owner-kpi-value {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.35rem, 2.5vw, 1.7rem);
+  line-height: 1.1;
+  color: var(--k-ink);
+
+  .owner-kpi[data-tone='warn'] & {
+    color: color-mix(in srgb, var(--k-gold) 70%, #6b4e00);
+  }
+
+  .owner-kpi[data-tone='good'] & {
+    color: var(--k-green-600);
+  }
+}
+
+// Note d'attente sous la grille.
+.owner-hint {
+  color: var(--k-muted);
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+}
+
+// Titre de la section « Votre espace ».
+.owner-sections-title {
+  font-family: var(--k-font-display);
+  font-size: 1.15rem;
+  margin: 0 0 1rem;
+}

@@ -453,9 +453,18 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 ### Phase F4 — Espace propriétaire (OwnerSpaceModule)
 
+> 🏗️ **En cours.** L'espace propriétaire est monté sous `/espace-proprietaire`
+> (réservé au rôle `proprietaire`). Il réutilise le **shell app-shell généralisé**
+> (menu latéral sombre + en-tête épuré), désormais extrait en un **layout partagé
+> paramétré par espace** (`SPACE_CONFIG`) qui sert aussi l'espace client et les
+> futurs espaces pro. **F4.1 livré** : le **tableau de bord de gestion locative**
+> (`GET /manage/dashboard` — mandats actifs, loyers encaissés/impayés, dépenses,
+> reversements, incidents ouverts), avec données de démonstration seedées pour le
+> propriétaire de démo.
+
 - [ ] Formulaire de dépôt de bien (photos, localisation, type de location, documents).
 - [ ] Choix du mode de location (mensuelle, nuitées, formule mixte).
-- [ ] Tableau de bord propriétaire : demandes, visites, réservations, loyers, incidents.
+- [ ] Tableau de bord propriétaire : demandes, visites, réservations, loyers, incidents. *(F4.1 : volet gestion locative — loyers, reversements, incidents — livré.)*
 - [ ] Écran de suivi des reversements et rapports mensuels de gestion locative.
 - [ ] Écran de gestion des documents propres au propriétaire.
 

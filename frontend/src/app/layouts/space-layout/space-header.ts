@@ -13,38 +13,43 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
-import { NotificationService } from '../../../core/api/notification.service';
-import { AuthService } from '../../../core/auth/auth.service';
+import { NotificationService } from '../../core/api/notification.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { SPACE_CONFIG } from './space.config';
 
 /**
- * Barre supérieure de l'espace client : occupe la colonne contenu, à droite du
- * rail latéral sombre (la marque et la déconnexion vivent dans le rail, géré par
- * `account-layout`). Volontairement **épurée** :
+ * Barre supérieure **générique** d'un espace connecté (F4) : occupe la colonne
+ * contenu, à droite du rail latéral sombre (la marque et la déconnexion vivent
+ * dans le rail, géré par `SpaceLayoutComponent`). Volontairement épurée :
  *
- *   - un **titre** (« Espace client »),
- *   - la **cloche de notifications** (F3.6) avec sa pastille de non-lues,
- *   - un **menu utilisateur** (avatar + nom → « Mon profil » [F3.2] et
- *     déconnexion).
+ *   - le **titre** de l'espace (fourni par `SPACE_CONFIG.headerTitle`) ;
+ *   - la **cloche de notifications** (F3.6) avec sa pastille de non-lues ;
+ *   - un **menu utilisateur** (avatar + nom → « Mon profil » et déconnexion).
  *
- * En petit écran, un **bouton hamburger** (à gauche) ouvre le tiroir de
- * navigation latérale géré par le layout : l'état `sidebarOpen` est fourni par
- * le parent et le bouton émet `sidebarToggle`.
+ * Rien n'est propre à l'espace client : les cibles des liens (cloche, profil)
+ * proviennent de la config. En petit écran, un **bouton hamburger** ouvre le
+ * tiroir de navigation géré par le layout (`sidebarOpen` fourni par le parent,
+ * `sidebarToggle` émis vers lui). Le menu utilisateur se referme à la
+ * navigation, sur Échap, ou au clic en dehors de l'en-tête.
  *
- * Le menu utilisateur se referme à la navigation, sur Échap, ou au clic en
- * dehors de l'en-tête.
+ * Généralise l'ancien `app-account-header` (F3), désormais partagé par tous les
+ * espaces (client, propriétaire, …).
  */
 @Component({
-  selector: 'app-account-header',
+  selector: 'app-space-header',
   imports: [RouterLink],
-  templateUrl: './account-header.html',
-  styleUrl: './account-header.scss',
+  templateUrl: './space-header.html',
+  styleUrl: './space-header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AccountHeaderComponent {
+export class SpaceHeaderComponent {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
+
+  /** Configuration de l'espace courant (titre, cibles des liens transverses). */
+  protected readonly space = inject(SPACE_CONFIG);
 
   /** État du tiroir de navigation (fourni par le layout, pour l'aria du bouton). */
   readonly sidebarOpen = input(false);
@@ -62,9 +67,9 @@ export class AccountHeaderComponent {
 
   /**
    * Nombre de notifications non lues (pastille sur la cloche, F3.6). Rafraîchi
-   * à chaque navigation dans l'espace : une visite de l'écran « Mes
-   * notifications » (où l'on marque des notifications comme lues) met ainsi la
-   * pastille à jour au retour, sans état partagé complexe.
+   * à chaque navigation dans l'espace : une visite de l'écran « Notifications »
+   * (où l'on marque des notifications comme lues) met ainsi la pastille à jour
+   * au retour, sans état partagé complexe.
    */
   protected readonly unreadCount = signal(0);
 

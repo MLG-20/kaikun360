@@ -6,7 +6,7 @@ import { AccountIcon } from './account-nav';
  * Petite icône SVG de l'espace client (F3.1).
  *
  * Mutualise le rendu des pictogrammes entre la navigation latérale
- * (`account-layout`) et les tuiles de l'accueil de l'espace, à partir d'une clé
+ * (`space-layout`) et les tuiles de l'accueil de l'espace, à partir d'une clé
  * `AccountIcon`. Les tracés sont en `currentColor` (héritent de la couleur du
  * texte), sans dépendance externe — cohérent avec l'approche du header.
  */
@@ -49,6 +49,22 @@ import { AccountIcon } from './account-nav';
           <circle cx="12" cy="12" r="9" />
           <path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.3-2.6 4" />
           <path d="M12 17.4h.01" />
+        }
+        @case ('building') {
+          <path d="M3 21h18" />
+          <path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16" />
+          <path d="M15 9h2a2 2 0 0 1 2 2v10" />
+          <path d="M9 7h2M9 11h2M9 15h2" />
+        }
+        @case ('wallet') {
+          <path d="M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v2" />
+          <path d="M3 7v10a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-3" />
+          <path d="M21 11v4h-4a2 2 0 0 1 0-4z" />
+        }
+        @case ('document') {
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+          <path d="M14 3v5h5" />
+          <path d="M9 13h6M9 17h6" />
         }
       }
     </svg>

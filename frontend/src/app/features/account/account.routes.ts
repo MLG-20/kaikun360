@@ -1,22 +1,24 @@
 import { Routes } from '@angular/router';
 
 import { authGuard } from '../../core/guards/auth.guard';
-import { AccountLayoutComponent } from '../../layouts/account-layout/account-layout';
+import { SpaceLayoutComponent } from '../../layouts/space-layout/space-layout';
+import { SPACE_CONFIG } from '../../layouts/space-layout/space.config';
+import { CLIENT_SPACE } from './client-space';
 
 /**
  * Routes de l'espace client (F3.1), montées sous `/mon-espace`.
  *
- * Toute la branche est protégée par `authGuard` (posé au niveau du composant de
- * layout) : sans session active, on est redirigé vers la connexion avec l'URL
- * demandée en `redirect`. Les sections se brancheront ici au fil des sous-phases
- * (F3.2 profil, F3.3 demandes, F3.4 réservations, F3.5 favoris, F3.6
- * notifications, F3.7 messages).
+ * Depuis F4, l'espace utilise le **shell générique** `SpaceLayoutComponent`,
+ * paramétré par `CLIENT_SPACE` (fourni via le jeton `SPACE_CONFIG`). Toute la
+ * branche est protégée par `authGuard` : sans session active, on est redirigé
+ * vers la connexion avec l'URL demandée en `redirect`.
  */
 export const ACCOUNT_ROUTES: Routes = [
   {
     path: '',
-    component: AccountLayoutComponent,
+    component: SpaceLayoutComponent,
     canActivate: [authGuard],
+    providers: [{ provide: SPACE_CONFIG, useValue: CLIENT_SPACE }],
     children: [
       {
         path: '',

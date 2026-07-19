@@ -1,0 +1,59 @@
+<header class="account-head">
+  <p class="account-eyebrow">Espace propriétaire</p>
+  <h1 class="account-title">
+    Bonjour, {{ firstName() || 'cher propriétaire' }}
+  </h1>
+  <p class="account-lead">
+    Suivez d'un coup d'œil votre gestion locative — loyers, reversements et
+    incidents — puis gérez vos biens et vos documents.
+  </p>
+</header>
+
+<!-- ===================== Indicateurs (tableau de bord) ==================== -->
+@if (loading()) {
+  <p class="owner-state">Chargement de votre tableau de bord…</p>
+} @else if (loadError()) {
+  <div class="owner-state owner-state-error">
+    <p>Impossible de charger votre tableau de bord pour le moment.</p>
+    <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+  </div>
+} @else {
+  <section class="owner-kpis" aria-label="Indicateurs de gestion locative">
+    @for (stat of stats(); track stat.label) {
+      <div class="owner-kpi" [attr.data-tone]="stat.tone">
+        <span class="owner-kpi-label">{{ stat.label }}</span>
+        <strong class="owner-kpi-value">{{ stat.value }}</strong>
+      </div>
+    }
+  </section>
+
+  <!-- Note : la gestion locative détaillée arrive en F4.4 -->
+  <p class="owner-hint">
+    Le détail des mandats, loyers et reversements arrivera prochainement dans la
+    rubrique « Gestion locative ».
+  </p>
+}
+
+<!-- ===================== Tuiles des sections ============================== -->
+<h2 class="owner-sections-title">Votre espace</h2>
+<section class="account-tiles">
+  @for (item of sections; track item.path) {
+    @if (item.ready) {
+      <a class="account-tile" [routerLink]="['/espace-proprietaire', item.path]">
+        <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
+        <span class="account-tile-body">
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.description }}</span>
+        </span>
+      </a>
+    } @else {
+      <div class="account-tile is-soon">
+        <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
+        <span class="account-tile-body">
+          <strong>{{ item.label }} <span class="account-soon-tag">Bientôt</span></strong>
+          <span>{{ item.description }}</span>
+        </span>
+      </div>
+    }
+  }
+</section>

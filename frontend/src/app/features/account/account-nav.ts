@@ -2,7 +2,7 @@
  * Carte de navigation de l'espace client (F3.1).
  *
  * Source unique décrivant les sections de l'espace personnel, partagée par la
- * navigation latérale (`account-layout`) ET les tuiles de la page d'accueil de
+ * navigation latérale (`space-layout`) ET les tuiles de la page d'accueil de
  * l'espace (`account-overview-page`). Chaque section porte un drapeau `ready` :
  *
  *   - `ready: true`  → l'écran est construit, l'entrée est un vrai lien ;
@@ -23,7 +23,10 @@ export type AccountIcon =
   | 'bell' // notifications
   | 'chat' // messages
   | 'user' // profil
-  | 'help'; // aide (mode d'emploi de l'espace)
+  | 'help' // aide (mode d'emploi de l'espace)
+  | 'building' // biens immobiliers (espace propriétaire, F4)
+  | 'wallet' // reversements / finances (espace propriétaire, F4)
+  | 'document'; // documents / rapports (espaces pro)
 
 /** Une entrée de navigation de l'espace client. */
 export interface AccountNavItem {
@@ -95,7 +98,7 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     ready: true, // F3.2 ✅
   },
   // NB : la rubrique « Aide » (mode d'emploi) n'est PAS listée ici : c'est un
-  // utilitaire, rendu dans le PIED du rail (account-layout) à côté de « Retour au
+  // utilitaire, rendu dans le PIED du rail (space-layout) à côté de « Retour au
   // site » / « Se déconnecter », pour garder la navigation principale courte (pas
   // de défilement du menu) et ne pas l'ajouter aux tuiles de l'accueil.
 ];
