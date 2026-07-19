@@ -12,6 +12,11 @@ use App\Models\User;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Immo\Enums\PropertyType;
 use App\Modules\Immo\Models\Property;
+use App\Modules\Manage\Models\Expense;
+use App\Modules\Manage\Models\Incident;
+use App\Modules\Manage\Models\ManagementMandate;
+use App\Modules\Manage\Models\OwnerPayout;
+use App\Modules\Manage\Models\Rent;
 use App\Modules\Mobility\Enums\VehicleType;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
@@ -85,6 +90,12 @@ class DemoSeeder extends Seeder
             $this->command?->info('DemoSeeder : catalogues de démonstration déjà présents.');
         }
 
+        // Gestion locative de démonstration pour peupler le tableau de bord de
+        // l'espace propriétaire (F4.1) : mandats, loyers, reversements, incidents.
+        // Idempotent (garde propre) ; s'appuie sur les biens de démo du
+        // propriétaire ci-dessus.
+        $this->seedOwnerManagement($owner);
+
         // Quelques réservations pour peupler l'écran « Mes réservations » (F3.4)
         // de l'espace client. Idempotent (garde propre) ; s'appuie sur les
         // bookables de démo ci-dessus (nuitées, véhicules, expériences, trajets).
@@ -103,6 +114,72 @@ class DemoSeeder extends Seeder
         // client : une avec le support Kaikun, une avec le propriétaire de démo.
         // Idempotent (garde propre).
         $this->seedClientConversations($client, $agent, $owner);
+    }
+
+    /**
+     * Gestion locative de démonstration pour le propriétaire (F4.1) : deux
+     * mandats actifs sur ses biens, avec loyers (payés / impayés), reversements
+     * (effectués / en attente), un incident ouvert et une dépense — de quoi
+     * remplir le tableau de bord de l'espace propriétaire (`GET /manage/dashboard`).
+     *
+     * Garde d'idempotence PROPRE : ne recrée rien si le propriétaire a déjà un
+     * mandat. Repli silencieux s'il n'a pas encore de bien.
+     */
+    private function seedOwnerManagement(User $owner): void
+    {
+        if (ManagementMandate::where('owner_id', $owner->id)->exists()) {
+            return;
+        }
+
+        // On confie deux des biens du propriétaire à la gestion Kaikun.
+        $properties = Property::query()
+            ->where('owner_id', $owner->id)
+            ->take(2)
+            ->get();
+
+        if ($properties->isEmpty()) {
+            $this->command?->info('DemoSeeder : aucun bien pour la gestion locative de démo.');
+
+            return;
+        }
+
+        // --- Mandat 1 : loyers payés + un impayé, un reversement effectué + un
+        //     en attente, un incident ouvert et une dépense. ---
+        $first = $properties->first();
+        $mandate1 = ManagementMandate::factory()->create([
+            'owner_id' => $owner->id,
+            'property_id' => $first->id,
+        ]);
+
+        Rent::factory()->count(3)->paid()->create(['mandate_id' => $mandate1->id]);
+        Rent::factory()->create(['mandate_id' => $mandate1->id]); // impayé (défaut)
+
+        OwnerPayout::factory()->done()->create([
+            'mandate_id' => $mandate1->id,
+            'owner_id' => $owner->id,
+        ]);
+        OwnerPayout::factory()->create([
+            'mandate_id' => $mandate1->id,
+            'owner_id' => $owner->id,
+        ]); // en attente (défaut)
+
+        Incident::factory()->create(['property_id' => $first->id]); // ouvert (défaut)
+        Expense::factory()->create(['property_id' => $first->id]);
+
+        // --- Mandat 2 : deux loyers payés et un reversement effectué. ---
+        if ($properties->count() > 1) {
+            $second = $properties->get(1);
+            $mandate2 = ManagementMandate::factory()->create([
+                'owner_id' => $owner->id,
+                'property_id' => $second->id,
+            ]);
+
+            Rent::factory()->count(2)->paid()->create(['mandate_id' => $mandate2->id]);
+            OwnerPayout::factory()->done()->create([
+                'mandate_id' => $mandate2->id,
+                'owner_id' => $owner->id,
+            ]);
+        }
     }
 
     /**
