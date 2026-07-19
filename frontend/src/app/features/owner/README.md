@@ -21,6 +21,11 @@ introduit en F4 par généralisation du shell de l'espace client (F3). Le shell 
   config (`providers: [{ provide: SPACE_CONFIG, useValue: OWNER_SPACE }]`) et
   protège toute la branche par `roleGuard` (`data: { roles: ['proprietaire'] }`).
 
+Comment le propriétaire y arrive : le lien **« Mon espace »** de l'en-tête public
+est **routé par rôle** via `core/auth/space-home.ts` (`spaceHomeFor(user)`) — un
+propriétaire est envoyé dans `/espace-proprietaire`, un client dans `/mon-espace`.
+Il n'atterrit donc plus systématiquement dans l'espace client.
+
 Chaque rubrique du rail porte un drapeau `ready` : les rubriques non encore
 construites sont affichées « Bientôt » (aucun lien mort), et passeront à
 `ready: true` avec leur sous-phase. En place : Tableau de bord (F4.1) et Mes

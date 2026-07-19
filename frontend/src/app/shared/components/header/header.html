@@ -64,7 +64,7 @@
     <!-- Actions -->
     <div class="actions">
       @if (isAuthenticated()) {
-        <a class="k-btn k-btn--ghost nav-cta" routerLink="/mon-espace">Mon espace</a>
+        <a class="k-btn k-btn--ghost nav-cta" [routerLink]="spaceHome()">Mon espace</a>
         <button class="nav-logout" type="button" (click)="logout()">Déconnexion</button>
       } @else {
         <a class="k-btn k-btn--primary nav-cta" routerLink="/auth/connexion">Connexion</a>
@@ -110,7 +110,7 @@
           Kaikun Pro
         </a>
         @if (isAuthenticated()) {
-          <a class="k-btn k-btn--primary k-btn--block" routerLink="/mon-espace" (click)="toggleMenu()">
+          <a class="k-btn k-btn--primary k-btn--block" [routerLink]="spaceHome()" (click)="toggleMenu()">
             Mon espace
           </a>
           <button class="k-btn k-btn--ghost k-btn--block" type="button" (click)="logout()">

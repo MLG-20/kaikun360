@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   HostListener,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -12,6 +13,7 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { spaceHomeFor } from '../../../core/auth/space-home';
 
 /** Clé d'icône SVG (rendue via un @switch dans le template). */
 type MegaIcon =
@@ -73,6 +75,12 @@ export class HeaderComponent {
 
   /** Session active ? (bascule « Connexion » ↔ « Mon espace »). */
   protected readonly isAuthenticated = this.auth.isAuthenticated;
+
+  /**
+   * Destination de « Mon espace » selon le rôle : un propriétaire est envoyé
+   * dans `/espace-proprietaire`, un client dans `/mon-espace` (cf. spaceHomeFor).
+   */
+  protected readonly spaceHome = computed(() => spaceHomeFor(this.auth.user()));
 
   /** Univers à méga-menu (mappés sur les pages réelles F2.3 → F2.7). */
   protected readonly groups: NavGroup[] = [
