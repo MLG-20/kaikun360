@@ -98,6 +98,7 @@ Tous validés (`exists` pour les FK, `Rule::in` pour type/sort). Exemple :
 | Méthode | URL | Accès |
 |---|---|---|
 | GET | `/api/v1/properties/mine` | `auth:sanctum` — mes biens (tous statuts) |
+| GET | `/api/v1/properties/mine/{property}` | `auth:sanctum` — fiche d'un de mes biens (tous statuts, 404 si bien d'autrui) |
 | POST | `/api/v1/properties` | `auth:sanctum` — déposer un bien (rôle proprietaire/admin) |
 | PATCH | `/api/v1/properties/{property}` | `auth:sanctum` — modifier (propriétaire/admin) |
 | POST | `/api/v1/properties/{property}/documents` | `auth:sanctum` — ajouter une pièce |

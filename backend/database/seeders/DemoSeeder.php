@@ -196,6 +196,20 @@ class DemoSeeder extends Seeder
                 'type' => $type->value,
             ]));
 
+        // Deux biens à statuts NON publiés pour l'espace propriétaire (F4.2) :
+        // « Mes biens » doit montrer la variété de statuts (attente + rejet), pas
+        // seulement des annonces publiées. Rattachés au même propriétaire démo.
+        Property::factory()->pending()->create([
+            'owner_id' => $owner->id,
+            'type' => PropertyType::APPARTEMENT->value,
+            'title' => 'Appartement F3 (en cours de validation)',
+        ]);
+        Property::factory()->rejected()->create([
+            'owner_id' => $owner->id,
+            'type' => PropertyType::TERRAIN->value,
+            'title' => 'Terrain non titré (dossier rejeté)',
+        ]);
+
         // --- Nuitées : 4 nuitées publiées, posées sur les premiers biens ---
         $properties->take(4)->each(
             fn (Property $property) => Stay::factory()->create(['property_id' => $property->id]),

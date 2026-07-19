@@ -30,6 +30,10 @@ Route::get('/properties/compare', [PropertyCatalogController::class, 'compare'])
 // car ce dernier est contraint aux identifiants numériques (whereNumber).
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/properties/mine', [PropertyManagementController::class, 'mine']);
+    // Fiche d'un de mes biens (tous statuts). Le segment "mine" n'étant pas
+    // numérique, cette route ne percute pas "/properties/{id}" (whereNumber).
+    Route::get('/properties/mine/{property}', [PropertyManagementController::class, 'show'])
+        ->whereNumber('property');
     Route::post('/properties', [PropertyManagementController::class, 'store'])->middleware('verified.account');
     Route::patch('/properties/{property}', [PropertyManagementController::class, 'update'])
         ->whereNumber('property');

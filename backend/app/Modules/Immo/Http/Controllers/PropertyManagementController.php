@@ -43,6 +43,24 @@ class PropertyManagementController extends Controller
     }
 
     /**
+     * Détail d'UN de mes biens (tous statuts). GET /api/v1/properties/mine/{property}
+     *
+     * Contrairement au détail public (`PropertyCatalogController@show`, restreint
+     * aux biens publiés), cet endpoint expose le bien au propriétaire quel que
+     * soit son statut — y compris en attente de validation ou rejeté. L'isolation
+     * est garantie en scoppant la requête sur `owner_id` : un bien qui n'appartient
+     * pas à l'utilisateur renvoie 404 (aucune fuite d'existence).
+     */
+    public function show(Request $request, Property $property): PropertyResource
+    {
+        abort_unless($property->owner_id === $request->user()->id, 404);
+
+        return PropertyResource::make(
+            $property->load(['region', 'department', 'commune', 'owner']),
+        );
+    }
+
+    /**
      * Dépôt d'un nouveau bien. POST /api/v1/properties
      *
      * Le bien est rattaché au propriétaire connecté et démarre en

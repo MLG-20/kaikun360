@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 160 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 161 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -86,6 +86,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/properties` | auth + vérifié | `PropertyManagementController@store` |
 | GET | `/properties/compare` | public | `PropertyCatalogController@compare` |
 | GET | `/properties/mine` | auth | `PropertyManagementController@mine` |
+| GET | `/properties/mine/{property}` | auth | `PropertyManagementController@show` |
 | GET | `/properties/{id}` | public | `PropertyCatalogController@show` |
 | PATCH | `/properties/{property}` | auth | `PropertyManagementController@update` |
 | PATCH | `/properties/{property}/approve` | auth + `can:valider:bien` | `PropertyValidationController@approve` |

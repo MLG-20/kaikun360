@@ -112,6 +112,56 @@ class PropertyManagementTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
+    public function test_mine_inclut_tous_les_statuts(): void
+    {
+        $owner = $this->proprietaire();
+        Property::factory()->published()->create(['owner_id' => $owner->id]);
+        Property::factory()->pending()->create(['owner_id' => $owner->id]);
+        Property::factory()->rejected()->create(['owner_id' => $owner->id]);
+
+        Sanctum::actingAs($owner);
+
+        $statuses = collect(
+            $this->getJson('/api/v1/properties/mine')->assertOk()->json('data'),
+        )->pluck('status')->all();
+
+        // Le propriétaire voit ses biens quel que soit leur statut (pas seulement publiés).
+        $this->assertContains('publie', $statuses);
+        $this->assertContains('en_attente_validation', $statuses);
+        $this->assertContains('rejete', $statuses);
+    }
+
+    public function test_un_proprietaire_voit_la_fiche_de_son_bien_non_publie(): void
+    {
+        $owner = $this->proprietaire();
+        $property = Property::factory()->pending()->create(['owner_id' => $owner->id]);
+
+        Sanctum::actingAs($owner);
+
+        $this->getJson("/api/v1/properties/mine/{$property->id}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $property->id)
+            ->assertJsonPath('data.status', 'en_attente_validation');
+    }
+
+    public function test_la_fiche_d_un_bien_d_un_autre_renvoie_404(): void
+    {
+        $owner = $this->proprietaire();
+        $autre = $this->proprietaire();
+        $property = Property::factory()->create(['owner_id' => $autre->id]);
+
+        Sanctum::actingAs($owner);
+
+        $this->getJson("/api/v1/properties/mine/{$property->id}")->assertStatus(404);
+    }
+
+    public function test_la_fiche_exige_authentification(): void
+    {
+        $property = Property::factory()->create();
+
+        $this->getJson("/api/v1/properties/mine/{$property->id}")->assertStatus(401);
+    }
+
     public function test_un_proprietaire_met_a_jour_son_bien(): void
     {
         $owner = $this->proprietaire();

@@ -63,4 +63,14 @@ class PropertyFactory extends Factory
             'status' => PropertyStatus::EN_ATTENTE_VALIDATION->value,
         ]);
     }
+
+    /**
+     * Bien rejeté par un agent (n'est pas publié).
+     */
+    public function rejected(): static
+    {
+        return $this->state(fn () => [
+            'status' => PropertyStatus::REJETE->value,
+        ]);
+    }
 }

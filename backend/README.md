@@ -8,7 +8,7 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **160 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **161 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **55 tables**, référentiel géographique du Sénégal inclus
 - **424 tests** automatisés (1198 assertions), tous verts ✅
@@ -180,7 +180,7 @@ backend/
 │   └── seeders/         # Rôles/permissions, référentiel géographique
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 160 endpoints
+├── API.md               # Référence des 161 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -313,7 +313,7 @@ php artisan test
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 160 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 161 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |
