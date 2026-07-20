@@ -49,10 +49,12 @@ export interface SpaceConfig {
    */
   helpPath?: string;
   /**
-   * URL **absolue** de la cloche de notifications de l'en-tête. Les notifications
-   * étant propres à l'utilisateur (et non à un espace), un espace pro peut
-   * pointer vers l'écran de notifications de l'espace client tant qu'il n'a pas
-   * le sien.
+   * URL **absolue** de la cloche de notifications de l'en-tête.
+   *
+   * ⚠️ Chaque espace doit pointer vers SON PROPRE écran : un espace ne renvoie
+   * jamais vers celui d'un autre, sinon l'utilisateur change de shell sans
+   * l'avoir demandé. Les écrans transverses (profil, notifications) sont des
+   * composants réutilisés, montés dans les routes de chaque espace.
    */
   notificationsPath: string;
   /** URL **absolue** ciblée par « Mon profil » dans le menu utilisateur. */

@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard } from '../../core/guards/auth.guard';
+import { roleGuard } from '../../core/guards/role.guard';
 import { SpaceLayoutComponent } from '../../layouts/space-layout/space-layout';
 import { SPACE_CONFIG } from '../../layouts/space-layout/space.config';
 import { CLIENT_SPACE } from './client-space';
@@ -9,15 +9,20 @@ import { CLIENT_SPACE } from './client-space';
  * Routes de l'espace client (F3.1), montées sous `/mon-espace`.
  *
  * Depuis F4, l'espace utilise le **shell générique** `SpaceLayoutComponent`,
- * paramétré par `CLIENT_SPACE` (fourni via le jeton `SPACE_CONFIG`). Toute la
- * branche est protégée par `authGuard` : sans session active, on est redirigé
- * vers la connexion avec l'URL demandée en `redirect`.
+ * paramétré par `CLIENT_SPACE` (fourni via le jeton `SPACE_CONFIG`).
+ *
+ * ⚠️ **Cloisonnement par rôle** : la branche exige le rôle `client` (et non un
+ * simple `authGuard`), comme `/espace-proprietaire` exige `proprietaire`. Chaque
+ * espace est autonome ; un compte qui n'est que propriétaire est renvoyé vers le
+ * sien. Un compte réellement multi-rôles (client ET propriétaire) conserve
+ * naturellement l'accès aux deux.
  */
 export const ACCOUNT_ROUTES: Routes = [
   {
     path: '',
     component: SpaceLayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [roleGuard],
+    data: { roles: ['client'] },
     providers: [{ provide: SPACE_CONFIG, useValue: CLIENT_SPACE }],
     children: [
       {

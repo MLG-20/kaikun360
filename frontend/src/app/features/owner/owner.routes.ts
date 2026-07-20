@@ -68,6 +68,26 @@ export const OWNER_ROUTES: Routes = [
           ),
         title: 'Mon bien — Kaikun 360',
       },
+      {
+        // Profil — écrans transverses montés DANS l'espace propriétaire.
+        // On réutilise les composants de l'espace client (ils portent sur
+        // l'utilisateur connecté, pas sur un espace), mais sous le shell
+        // propriétaire : cliquer « Mon profil » ne doit JAMAIS éjecter le
+        // propriétaire vers `/mon-espace` (chaque espace est autonome).
+        path: 'profil',
+        loadComponent: () =>
+          import('../account/profile/profile-page').then((m) => m.ProfilePageComponent),
+        title: 'Mon profil — Kaikun 360',
+      },
+      {
+        // Notifications — même principe que le profil (écran transverse).
+        path: 'notifications',
+        loadComponent: () =>
+          import('../account/notifications/notifications-page').then(
+            (m) => m.NotificationsPageComponent,
+          ),
+        title: 'Mes notifications — Kaikun 360',
+      },
     ],
   },
 ];

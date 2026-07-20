@@ -12,6 +12,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { VerificationChannel } from '../../../core/auth/auth.types';
 import { DOCUMENT_TYPES, UserDocument } from '../../../models/document.model';
 import { User } from '../../../models/user.model';
+import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { PasswordRevealDirective } from '../../../shared/directives/password-reveal.directive';
 
 /**
@@ -40,6 +41,12 @@ export class ProfilePageComponent {
   private readonly geo = inject(GeoService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  /**
+   * Espace dans lequel cet écran est monté. Le profil portant sur l'utilisateur
+   * et non sur un espace, il est monté dans chacun d'eux (les espaces sont
+   * autonomes) : le sur-titre doit donc refléter l'espace courant.
+   */
+  protected readonly spaceLabel = inject(SPACE_CONFIG).headerTitle;
 
   protected readonly documentTypes = DOCUMENT_TYPES;
 

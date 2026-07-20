@@ -5,8 +5,12 @@ import { Router } from '@angular/router';
 import { NotificationService } from '../../../core/api/notification.service';
 import { PageMeta } from '../../../core/api/pagination.model';
 import { AppNotification, NotificationCategory } from '../../../models/notification.model';
+import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { AccountIcon } from '../account-nav';
 import { AccountIconComponent } from '../account-icon';
+
+/** Préfixe des espaces client — celui pour lequel le serveur produit les `action_url`. */
+const CLIENT_BASE = '/mon-espace';
 
 @Component({
   selector: 'app-notifications-page',
@@ -16,19 +20,27 @@ import { AccountIconComponent } from '../account-icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 /**
- * Écran « Mes notifications » de l'espace client (F3.6), monté sous
- * `/mon-espace/notifications`. Liste paginée des notifications « base de
- * données » du client (`GET /users/me/notifications`, 15/page, plus récentes
- * d'abord), avec le nombre de non-lues joint aux métadonnées.
+ * Écran « Mes notifications » (F3.6). Les notifications portant sur
+ * l'utilisateur et non sur un espace, cet écran est **monté dans chaque espace**
+ * (`/mon-espace/notifications`, `/espace-proprietaire/notifications`, …) : les
+ * espaces sont autonomes, aucun ne renvoie vers l'écran d'un autre.
+ *
+ * Liste paginée des notifications « base de données » (`GET
+ * /users/me/notifications`, 15/page, plus récentes d'abord), avec le nombre de
+ * non-lues joint aux métadonnées.
  *
  * Chaque notification est une carte cliquable : au clic, on la marque comme lue
- * (si elle ne l'est pas) puis, si elle porte un `action_url`, on navigue vers
- * l'écran concerné (demande, réservation…). Un bouton « Tout marquer comme lu »
+ * (si elle ne l'est pas) puis on navigue vers l'écran concerné — **transposé
+ * dans l'espace courant** par `targetFor()`. Un bouton « Tout marquer comme lu »
  * apparaît dès qu'il reste des non-lues.
  */
 export class NotificationsPageComponent {
   private readonly notifications = inject(NotificationService);
   private readonly router = inject(Router);
+  /** Espace dans lequel cet écran est monté (client, propriétaire…). */
+  private readonly space = inject(SPACE_CONFIG);
+  /** Sur-titre de l'écran : le nom de l'espace courant, pas « Mon espace » en dur. */
+  protected readonly spaceLabel = this.space.headerTitle;
 
   // — État de l'écran —
   protected readonly loading = signal(true);
@@ -85,14 +97,44 @@ export class NotificationsPageComponent {
   }
 
   /**
+   * Cible réelle d'une notification, **ramenée dans l'espace courant**.
+   *
+   * Les `action_url` sont produites côté serveur pour l'espace client
+   * (`/mon-espace/...`). Cet écran étant monté dans plusieurs espaces, suivre le
+   * lien tel quel éjecterait un propriétaire hors du sien (et, les espaces étant
+   * cloisonnés par rôle, il serait aussitôt refusé). On transpose donc le lien
+   * dans l'espace courant quand la rubrique visée y existe ; sinon on se
+   * contente de l'accueil de l'espace, plutôt que d'envoyer vers un mur.
+   */
+  private targetFor(item: AppNotification): string | null {
+    const url = item.action_url;
+    const base = this.space.basePath;
+
+    if (!url || !url.startsWith(CLIENT_BASE) || base === CLIENT_BASE) {
+      return url ?? null;
+    }
+
+    const rest = url.slice(CLIENT_BASE.length); // ex. « /demandes », « /messages/12 »
+    const section = rest.split('/')[1] ?? '';
+    // Rubriques du rail réellement construites + écrans transverses de l'espace.
+    const exists =
+      this.space.nav.some((i) => i.ready && i.path === section) ||
+      section === 'profil' ||
+      section === 'notifications';
+
+    return exists ? `${base}${rest}` : base;
+  }
+
+  /**
    * Clic sur une notification : on la marque comme lue si besoin, puis, si elle
    * porte un lien interne, on navigue vers l'écran concerné. L'ordre garantit
    * que la pastille est décrémentée même quand la navigation quitte l'écran.
    */
   protected open(item: AppNotification): void {
     const go = () => {
-      if (item.action_url) {
-        this.router.navigateByUrl(item.action_url);
+      const target = this.targetFor(item);
+      if (target) {
+        this.router.navigateByUrl(target);
       }
     };
 

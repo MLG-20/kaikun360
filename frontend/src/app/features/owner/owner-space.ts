@@ -53,7 +53,9 @@ export const OWNER_SPACE: SpaceConfig = {
   nav: OWNER_NAV,
   // Pas encore de page d'aide dédiée à cet espace (F4.5+).
   helpPath: undefined,
-  // Notifications et profil sont partagés (propres à l'utilisateur).
-  notificationsPath: '/mon-espace/notifications',
-  profilePath: '/mon-espace/profil',
+  // ⚠️ Chaque espace est AUTONOME : ces liens restent dans l'espace propriétaire.
+  // (Ils pointaient vers `/mon-espace/...` en F4.1 — un propriétaire cliquant
+  // « Mon profil » était alors éjecté dans l'espace client.)
+  notificationsPath: '/espace-proprietaire/notifications',
+  profilePath: '/espace-proprietaire/profil',
 };
