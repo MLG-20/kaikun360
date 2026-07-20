@@ -33,6 +33,13 @@
       <!-- Bandeau explicatif du statut -->
       <p class="opd-status-hint" [attr.data-tone]="status().tone">{{ status().hint }}</p>
 
+      <!-- Action : éditer le bien -->
+      <div class="opd-actions">
+        <a class="k-btn k-btn--primary" [routerLink]="['/espace-proprietaire/biens', p.id, 'modifier']">
+          Modifier le bien
+        </a>
+      </div>
+
       @if (p.description) {
         <section class="opd-block">
           <h2 class="opd-block-title">Description</h2>
@@ -50,9 +57,15 @@
               <dd>{{ p.type_label }}</dd>
             </div>
           }
+          @if (rentalMode(); as mode) {
+            <div class="opd-fact">
+              <dt>Mode de location</dt>
+              <dd>{{ mode }}</dd>
+            </div>
+          }
           @if (priceLabel(); as price) {
             <div class="opd-fact">
-              <dt>Prix</dt>
+              <dt>Loyer mensuel</dt>
               <dd>{{ price }}</dd>
             </div>
           }
@@ -64,6 +77,37 @@
           }
         </dl>
       </section>
+
+      <!-- Config nuitées (si le bien est loué en courte durée) -->
+      @if (stay(); as s) {
+        <section class="opd-block">
+          <h2 class="opd-block-title">Nuitées (courte durée)</h2>
+          <dl class="opd-facts">
+            @if (nightlyLabel(); as ppn) {
+              <div class="opd-fact">
+                <dt>Prix par nuit</dt>
+                <dd>{{ ppn }}</dd>
+              </div>
+            }
+            @if (s.capacity) {
+              <div class="opd-fact">
+                <dt>Capacité</dt>
+                <dd>{{ s.capacity }} personne(s)</dd>
+              </div>
+            }
+            <div class="opd-fact">
+              <dt>Nuits</dt>
+              <dd>{{ s.min_nights ?? 1 }} min.{{ s.max_nights ? ' – ' + s.max_nights + ' max.' : '' }}</dd>
+            </div>
+            @if (s.check_in_time || s.check_out_time) {
+              <div class="opd-fact">
+                <dt>Arrivée / départ</dt>
+                <dd>{{ (s.check_in_time | slice: 0 : 5) || '—' }} / {{ (s.check_out_time | slice: 0 : 5) || '—' }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+      }
 
       <!-- Localisation -->
       <section class="opd-block">

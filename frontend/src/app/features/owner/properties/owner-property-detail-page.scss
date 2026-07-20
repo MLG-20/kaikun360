@@ -50,6 +50,13 @@
   }
 }
 
+// — Actions (éditer le bien) —
+.opd-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+}
+
 // — Blocs de contenu —
 .opd-block {
   background: var(--k-card);

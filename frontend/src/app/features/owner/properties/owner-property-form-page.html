@@ -1,0 +1,269 @@
+<!-- Dépôt / édition d'un bien depuis l'espace propriétaire (F4.3). -->
+<section class="account-head">
+  <app-back-link class="account-back" label="Mes biens" fallback="/espace-proprietaire/biens" />
+  <p class="account-eyebrow">Espace propriétaire</p>
+  <h1 class="account-title">{{ isEdit() ? 'Modifier le bien' : 'Déposer un bien' }}</h1>
+  <p class="account-lead">
+    {{
+      isEdit()
+        ? 'Mettez à jour les informations de votre bien et son mode de location.'
+        : 'Renseignez votre bien et choisissez son mode de location. Il sera vérifié par un agent Kaikun 360 avant sa mise en ligne.'
+    }}
+  </p>
+</section>
+
+@if (!isVerified()) {
+  <!-- Connecté mais non vérifié : les endpoints exigent un compte vérifié. -->
+  <div class="k-card opf-card">
+    <p class="k-muted">
+      Pour déposer ou modifier un bien, vérifiez d'abord votre compte (e-mail ou téléphone).
+    </p>
+    <a class="k-btn k-btn--primary k-btn--block" routerLink="/auth/verification">
+      Vérifier mon compte
+    </a>
+  </div>
+} @else if (loadState() === 'loading') {
+  <p class="pf-state" role="status">Chargement du bien…</p>
+} @else if (loadState() === 'notfound') {
+  <p class="pf-state pf-state--error" role="alert">
+    Ce bien est introuvable ou ne fait pas partie de vos annonces.
+  </p>
+} @else if (loadState() === 'failed') {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger ce bien pour le moment. Merci de réessayer plus tard.
+  </p>
+} @else {
+  <!-- Éligible : formulaire de dépôt / édition. -->
+  <form class="k-card opf-card" [formGroup]="form" (ngSubmit)="submit()">
+    @if (formError(); as err) {
+      <p class="k-form-error" role="alert">{{ err }}</p>
+    }
+
+    <!-- ===================== Mode de location ===================== -->
+    <fieldset class="opf-section">
+      <legend class="opf-legend">Mode de location</legend>
+      <div class="opf-modes" role="radiogroup" aria-label="Mode de location">
+        <label class="opf-mode" [class.is-active]="mode() === 'mensuelle'">
+          <input type="radio" name="mode" [checked]="mode() === 'mensuelle'" (change)="applyMode('mensuelle')" />
+          <span class="opf-mode-title">Mensuelle</span>
+          <span class="opf-mode-hint">Loué au mois</span>
+        </label>
+        <label class="opf-mode" [class.is-active]="mode() === 'nuitees'">
+          <input type="radio" name="mode" [checked]="mode() === 'nuitees'" (change)="applyMode('nuitees')" />
+          <span class="opf-mode-title">Nuitées</span>
+          <span class="opf-mode-hint">Courte durée</span>
+        </label>
+        <label class="opf-mode" [class.is-active]="mode() === 'mixte'">
+          <input type="radio" name="mode" [checked]="mode() === 'mixte'" (change)="applyMode('mixte')" />
+          <span class="opf-mode-title">Mixte</span>
+          <span class="opf-mode-hint">Mois + nuitées</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <!-- ===================== Le bien ===================== -->
+    <div class="opf-grid">
+      <div class="k-field">
+        <label class="k-label" for="opf-type">Type de bien</label>
+        <select
+          id="opf-type"
+          class="k-input"
+          formControlName="type"
+          [class.k-input--error]="form.controls.type.touched && form.controls.type.invalid"
+        >
+          <option value="" disabled>Choisir…</option>
+          @for (t of types; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+        @if (form.controls.type.touched && form.controls.type.invalid) {
+          <p class="k-error">Sélectionnez un type.</p>
+        }
+      </div>
+
+      @if (showsMonthly()) {
+        <div class="k-field">
+          <label class="k-label" for="opf-price">
+            Loyer mensuel (FCFA) <span class="k-optional">(facultatif)</span>
+          </label>
+          <input id="opf-price" class="k-input" type="number" min="0" formControlName="price_xof" />
+        </div>
+      }
+    </div>
+
+    <div class="k-field">
+      <label class="k-label" for="opf-title">Titre de l'annonce</label>
+      <input
+        id="opf-title"
+        class="k-input"
+        type="text"
+        formControlName="title"
+        [class.k-input--error]="form.controls.title.touched && form.controls.title.invalid"
+      />
+      @if (form.controls.title.touched && form.controls.title.invalid) {
+        <p class="k-error">Le titre est obligatoire.</p>
+      }
+    </div>
+
+    <div class="k-field">
+      <label class="k-label" for="opf-description">
+        Description <span class="k-optional">(facultatif)</span>
+      </label>
+      <textarea id="opf-description" class="k-input" rows="4" formControlName="description"></textarea>
+    </div>
+
+    <!-- ===================== Localisation (cascade) ===================== -->
+    <fieldset class="opf-section">
+      <legend class="opf-legend">Localisation</legend>
+
+      @if (geoError()) {
+        <p class="k-error">Le référentiel géographique n'a pas pu être chargé. Rechargez la page.</p>
+      }
+
+      <div class="opf-grid opf-grid--3">
+        <div class="k-field">
+          <label class="k-label" for="opf-region">Région</label>
+          <select
+            id="opf-region"
+            class="k-input"
+            formControlName="region_id"
+            [class.k-input--error]="form.controls.region_id.touched && form.controls.region_id.invalid"
+          >
+            <option [ngValue]="null" disabled>Choisir…</option>
+            @for (r of regions(); track r.id) {
+              <option [ngValue]="r.id">{{ r.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="k-field">
+          <label class="k-label" for="opf-department">Département</label>
+          <select
+            id="opf-department"
+            class="k-input"
+            formControlName="department_id"
+            [class.k-input--error]="form.controls.department_id.touched && form.controls.department_id.invalid"
+          >
+            <option [ngValue]="null" disabled>
+              {{ form.controls.region_id.value ? 'Choisir…' : 'Choisir une région d’abord' }}
+            </option>
+            @for (d of departments(); track d.id) {
+              <option [ngValue]="d.id">{{ d.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="k-field">
+          <label class="k-label" for="opf-commune">
+            Commune <span class="k-optional">(facultatif)</span>
+          </label>
+          <select id="opf-commune" class="k-input" formControlName="commune_id">
+            <option [ngValue]="null">
+              {{ form.controls.department_id.value ? 'Aucune / non précisée' : 'Choisir un département d’abord' }}
+            </option>
+            @for (c of communes(); track c.id) {
+              <option [ngValue]="c.id">{{ c.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="opf-grid">
+        <div class="k-field">
+          <label class="k-label" for="opf-address">
+            Adresse <span class="k-optional">(facultatif)</span>
+          </label>
+          <input id="opf-address" class="k-input" type="text" formControlName="address" />
+        </div>
+        <div class="k-field">
+          <label class="k-label" for="opf-zone">
+            Zone touristique <span class="k-optional">(facultatif)</span>
+          </label>
+          <input id="opf-zone" class="k-input" type="text" formControlName="tourist_zone" />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ===================== Config nuitées ===================== -->
+    @if (showsNightly()) {
+      <fieldset class="opf-section" formGroupName="stay">
+        <legend class="opf-legend">Paramètres nuitées</legend>
+        <p class="opf-section-hint k-muted">
+          Ces informations alimentent l'annonce « nuitées » de votre bien (visible au
+          catalogue une fois le bien publié).
+        </p>
+
+        <div class="opf-grid opf-grid--3">
+          <div class="k-field">
+            <label class="k-label" for="opf-ppn">Prix par nuit (FCFA)</label>
+            <input
+              id="opf-ppn"
+              class="k-input"
+              type="number"
+              min="0"
+              formControlName="price_per_night_xof"
+              [class.k-input--error]="
+                form.controls.stay.controls.price_per_night_xof.touched &&
+                form.controls.stay.controls.price_per_night_xof.invalid
+              "
+            />
+            @if (
+              form.controls.stay.controls.price_per_night_xof.touched &&
+              form.controls.stay.controls.price_per_night_xof.invalid
+            ) {
+              <p class="k-error">Le prix par nuit est obligatoire.</p>
+            }
+          </div>
+
+          <div class="k-field">
+            <label class="k-label" for="opf-caution">
+              Caution (FCFA) <span class="k-optional">(facultatif)</span>
+            </label>
+            <input id="opf-caution" class="k-input" type="number" min="0" formControlName="caution_xof" />
+          </div>
+
+          <div class="k-field">
+            <label class="k-label" for="opf-capacity">
+              Capacité (personnes) <span class="k-optional">(facultatif)</span>
+            </label>
+            <input id="opf-capacity" class="k-input" type="number" min="1" formControlName="capacity" />
+          </div>
+        </div>
+
+        <div class="opf-grid opf-grid--3">
+          <div class="k-field">
+            <label class="k-label" for="opf-min">
+              Nuits min. <span class="k-optional">(facultatif)</span>
+            </label>
+            <input id="opf-min" class="k-input" type="number" min="1" formControlName="min_nights" />
+          </div>
+          <div class="k-field">
+            <label class="k-label" for="opf-max">
+              Nuits max. <span class="k-optional">(facultatif)</span>
+            </label>
+            <input id="opf-max" class="k-input" type="number" min="1" formControlName="max_nights" />
+          </div>
+          <div class="k-field opf-times">
+            <div>
+              <label class="k-label" for="opf-cin">Arrivée</label>
+              <input id="opf-cin" class="k-input" type="time" formControlName="check_in_time" />
+            </div>
+            <div>
+              <label class="k-label" for="opf-cout">Départ</label>
+              <input id="opf-cout" class="k-input" type="time" formControlName="check_out_time" />
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    }
+
+    <button class="k-btn k-btn--primary k-btn--block" type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Enregistrement…' : isEdit() ? 'Enregistrer les modifications' : 'Déposer le bien' }}
+    </button>
+    @if (!isEdit()) {
+      <p class="opf-note k-muted">
+        Votre bien sera vérifié avant publication (documents et photos à ajouter ensuite).
+      </p>
+    }
+  </form>
+}

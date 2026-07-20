@@ -1,7 +1,7 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, SlicePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
@@ -16,7 +16,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
 
 @Component({
   selector: 'app-owner-property-detail-page',
-  imports: [DatePipe, BackLinkComponent],
+  imports: [DatePipe, SlicePipe, RouterLink, BackLinkComponent],
   templateUrl: './owner-property-detail-page.html',
   styleUrl: './owner-property-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,6 +49,32 @@ export class OwnerPropertyDetailPageComponent {
 
   /** Prix formaté en FCFA (ou null si non renseigné). */
   protected readonly priceLabel = computed(() => formatFcfa(this.property()?.price_xof));
+
+  /** Config nuitées du bien (présente si le bien est loué en courte durée). */
+  protected readonly stay = computed(() => this.property()?.stay ?? null);
+
+  /** Prix par nuit formaté (ou null). */
+  protected readonly nightlyLabel = computed(() =>
+    formatFcfa(this.stay()?.price_per_night_xof ?? null),
+  );
+
+  /**
+   * Mode de location déduit du bien : mensuelle (loyer seul), nuitées (config
+   * Stay seule) ou mixte (les deux). Un bien sans loyer ni nuitées reste
+   * « mensuelle » (loyer à préciser).
+   */
+  protected readonly rentalMode = computed(() => {
+    const p = this.property();
+    if (!p) {
+      return null;
+    }
+    const hasStay = !!p.stay;
+    const hasMonthly = p.price_xof != null;
+    if (hasStay && hasMonthly) {
+      return 'Mensuelle + nuitées';
+    }
+    return hasStay ? 'Nuitées' : 'Mensuelle';
+  });
 
   /** Le bien porte-t-il un badge de confiance « Vérifié » ? */
   protected readonly verified = computed(() => propertyVerified(this.property()?.verification_level ?? null));

@@ -1,0 +1,109 @@
+// Formulaire de dépôt / édition d'un bien — espace propriétaire (F4.3).
+// Réutilise les classes globales (k-card, k-field, k-input, account-head,
+// pf-state…) ; on ne style ici que ce qui est propre au formulaire.
+
+.opf-card {
+  padding: 1.75rem;
+  max-width: 820px;
+}
+
+// --- Sections encadrées (localisation, nuitées, mode) ---------------------
+.opf-section {
+  margin: 0.5rem 0 1.25rem;
+  padding: 1rem 1.1rem 1.25rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+}
+
+.opf-legend {
+  padding: 0 0.4rem;
+  font-weight: 600;
+}
+
+.opf-section-hint {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+}
+
+// --- Grilles de champs (2 colonnes par défaut, 3 pour géo/nuitées) --------
+.opf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.opf-grid--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+// Deux champs horaires côte à côte dans une même cellule de grille.
+.opf-times {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+// --- Sélecteur de mode de location (segmenté) -----------------------------
+.opf-modes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.opf-mode {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+
+  // Radio natif masqué mais focalisable (accessibilité conservée).
+  input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  &.is-active {
+    border-color: var(--k-brand);
+    background: color-mix(in srgb, var(--k-brand) 8%, transparent);
+  }
+
+  // Anneau de focus quand on tabule sur le radio caché.
+  input:focus-visible + .opf-mode-title {
+    outline: 2px solid var(--k-brand);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+.opf-mode-title {
+  font-weight: 600;
+}
+
+.opf-mode-hint {
+  font-size: 0.82rem;
+  color: var(--k-muted, #6b7280);
+}
+
+.opf-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .opf-grid,
+  .opf-grid--3,
+  .opf-modes {
+    grid-template-columns: 1fr;
+  }
+}

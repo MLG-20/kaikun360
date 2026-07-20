@@ -23,10 +23,10 @@ export const OWNER_NAV: readonly SpaceNavItem[] = [
   },
   {
     label: 'Mes biens',
-    description: 'Consultez vos biens et suivez la validation de vos annonces.',
+    description: 'Déposez, modifiez vos biens et suivez la validation de vos annonces.',
     path: 'biens',
     icon: 'building',
-    ready: true, // F4.2 ✅ (dépôt/édition en F4.3)
+    ready: true, // F4.2 ✅ (liste + fiche) · F4.3 ✅ (dépôt/édition + mode de location)
   },
   {
     label: 'Gestion locative',

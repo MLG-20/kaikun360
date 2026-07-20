@@ -4,6 +4,12 @@
 // `styles/_account.scss`. On ne définit ici que ce qui est PROPRE à cet écran :
 // l'état vide, la liste des cartes de bien et la pagination.
 
+// — Bouton « Déposer un bien » (en-tête d'écran) —
+.op-new {
+  display: inline-flex;
+  margin-top: 1rem;
+}
+
 // — État vide —
 .rq-empty {
   background: var(--k-card);

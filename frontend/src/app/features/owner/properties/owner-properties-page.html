@@ -6,6 +6,9 @@
     Retrouvez tous vos biens et suivez la validation de vos annonces. Un bien
     déposé est vérifié par un agent Kaikun 360 avant sa mise en ligne.
   </p>
+  <a class="k-btn k-btn--primary op-new" routerLink="/espace-proprietaire/biens/nouveau">
+    + Déposer un bien
+  </a>
 </section>
 
 @if (loading()) {
@@ -19,10 +22,12 @@
   <div class="rq-empty">
     <h2 class="rq-empty-title">Aucun bien pour l'instant</h2>
     <p class="rq-empty-text">
-      Vous n'avez pas encore déposé de bien. Le dépôt d'une annonce sera bientôt
-      disponible depuis cet espace ; vos biens et leur statut de validation
-      apparaîtront ici.
+      Vous n'avez pas encore déposé de bien. Déposez votre première annonce : elle
+      sera vérifiée par un agent Kaikun 360 avant sa mise en ligne.
     </p>
+    <a class="k-btn k-btn--primary" routerLink="/espace-proprietaire/biens/nouveau">
+      + Déposer un bien
+    </a>
   </div>
 } @else {
   <!-- =============================== Liste ================================= -->

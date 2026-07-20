@@ -49,9 +49,12 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   gestion locative** (F4.1 — mandats actifs, loyers encaissés / impayés,
   dépenses, reversements, incidents ouverts) et **« Mes biens »** (F4.2 — liste
   de tous ses biens **quel que soit leur statut** avec une pastille de **suivi de
-  validation** — publié / en attente / rejeté — et une fiche détaillée). Les
-  rubriques Gestion locative et Documents arrivent ensuite ; le dépôt/édition
-  d'un bien viendra en F4.3. 👉 Détail :
+  validation** — publié / en attente / rejeté — et une fiche détaillée), puis le
+  **dépôt et l'édition d'un bien** (F4.3 — un même formulaire pour créer et
+  modifier, avec le **mode de location** mensuelle / nuitées / mixte qui pilote
+  les champs affichés et les appels d'enregistrement, et une localisation en
+  cascade région → département → commune). Les rubriques Gestion locative (F4.4)
+  et Documents (F4.5) arrivent ensuite. 👉 Détail :
   [`src/app/features/owner/README.md`](src/app/features/owner/README.md).
 - 🚧 **À venir** : la suite de l'espace propriétaire, puis les espaces
   prestataire et entreprise, et le back-office.

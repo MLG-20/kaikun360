@@ -1,3 +1,5 @@
+import type { Stay } from './stay.model';
+
 /**
  * Bien immobilier — miroir de `PropertyResource` (module Immo).
  * Montants en FCFA (entiers). Les coordonnées sont des décimales sérialisées
@@ -14,6 +16,13 @@ export interface Property {
   verification_level: string | null;
   location: PropertyLocation;
   owner: PropertyOwner;
+  /**
+   * Config « nuitées » du bien (mode courte durée). Présente uniquement sur la
+   * gestion privée (fiche propriétaire `GET /properties/mine/{id}`) : `undefined`
+   * côté catalogue public (clé absente), `null` si le bien n'est pas en nuitées,
+   * l'objet `Stay` sinon. Sert à déduire le mode de location mensuelle/nuitées/mixte.
+   */
+  stay?: Stay | null;
   published_at: string | null;
   created_at: string | null;
 }
@@ -22,6 +31,10 @@ export interface PropertyLocation {
   region: string | null;
   department: string | null;
   commune: string | null;
+  /** Identifiants bruts du référentiel — servent à préremplir le formulaire d'édition (F4.3). */
+  region_id: number | null;
+  department_id: number | null;
+  commune_id: number | null;
   tourist_zone: string | null;
   address: string | null;
   latitude: string | null;

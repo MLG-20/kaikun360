@@ -28,8 +28,9 @@ Il n'atterrit donc plus systématiquement dans l'espace client.
 
 Chaque rubrique du rail porte un drapeau `ready` : les rubriques non encore
 construites sont affichées « Bientôt » (aucun lien mort), et passeront à
-`ready: true` avec leur sous-phase. En place : Tableau de bord (F4.1) et Mes
-biens (F4.2). À venir : Gestion locative (F4.4) et Documents (F4.5).
+`ready: true` avec leur sous-phase. En place : Tableau de bord (F4.1), Mes biens
+(F4.2) et dépôt/édition d'un bien (F4.3). À venir : Gestion locative (F4.4) et
+Documents (F4.5).
 
 ## Écrans
 
@@ -50,7 +51,34 @@ biens (F4.2). À venir : Gestion locative (F4.4) et Documents (F4.5).
   en attente de validation (or), rejeté (rouge), suspendu/archivé (gris). La
   **fiche** (`GET /properties/mine/{id}`, réservée au propriétaire → 404 sinon)
   détaille le statut avec une explication, la description, les caractéristiques,
-  la localisation et les dates. **Lecture seule** : le dépôt et l'édition d'un
-  bien viendront en F4.3. Helpers de présentation partagés dans
+  la localisation et les dates, ainsi que le **mode de location** et — le cas
+  échéant — le bloc **Nuitées (courte durée)**. Un bouton « Modifier le bien »
+  mène au formulaire d'édition (F4.3). Helpers de présentation partagés dans
   [`properties/property-status.ts`](properties/property-status.ts).
+- **Déposer / modifier un bien** (F4.3) —
+  [`properties/owner-property-form-page.ts`](properties/owner-property-form-page.ts),
+  monté sur `biens/nouveau` (création) et `biens/:id/modifier` (édition). **Un
+  seul composant sert les deux** : la présence d'un `:id` bascule en édition et
+  préremplit le formulaire depuis `GET /properties/mine/{id}`.
+
+  Le cœur de l'écran est le **mode de location**, qui décide de ce qu'on affiche
+  et de ce qu'on enregistre :
+
+  | Mode | Champs affichés | Enregistrement |
+  |---|---|---|
+  | Mensuelle | loyer mensuel (`price_xof`) | POST/PATCH `/properties` |
+  | Nuitées | bloc nuitées (prix/nuit, caution, capacité, nuits min/max, arrivée/départ) | + PUT `/properties/{id}/stay` |
+  | Mixte | les deux | POST/PATCH + PUT |
+
+  Le groupe de champs « nuitées » est **désactivé** (donc exclu de la validation)
+  quand le mode ne l'inclut pas. À l'enregistrement, le bien est sauvegardé
+  d'abord, puis la config nuitées est **réconciliée** : upsert (PUT) si le mode
+  l'inclut, **retrait (DELETE)** si le bien en avait une et qu'on repasse en
+  mensuelle seule, rien sinon. On redirige ensuite vers la fiche du bien.
+
+  Autres points : **compte vérifié requis** (les endpoints exigent
+  `verified.account` → un encart invite à vérifier sinon) ; **localisation en
+  cascade** région → département → commune, dont le préremplissage en édition
+  utilise `emitEvent: false` pour ne pas déclencher les remises à zéro en chaîne
+  (les ids du référentiel sont exposés par `PropertyResource.location`).
 - **Gestion locative** (F4.4), **Documents** (F4.5) — à venir.
