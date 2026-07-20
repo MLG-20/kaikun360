@@ -15,6 +15,9 @@
   // fiche sous le pli. Le ratio étant fixe, ce plafond règle aussi la largeur.
   // `object-fit: cover` recadre proprement au-delà.
   max-height: 500px;
+  // Le plafond de hauteur rétrécit la boîte (ratio fixe) : elle devient plus
+  // étroite que la colonne, on la recentre pour ne pas laisser un vide à droite.
+  margin-inline: auto;
   border-radius: var(--k-radius-lg);
   overflow: hidden;
   box-shadow: var(--k-shadow);
@@ -85,6 +88,8 @@
   display: flex;
   gap: 10px;
   margin-top: 12px;
+  // Alignées sur l'image principale, elle-même centrée.
+  justify-content: center;
   overflow-x: auto;
   padding-bottom: 4px;
 }
