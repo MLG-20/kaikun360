@@ -160,7 +160,8 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         price: formatFcfa(p.price_xof),
         priceUnit: null,
         badge: verifiedBadge(p.verification_level),
-        image: null,
+        // Photo de couverture du bien (principale). `null` → vignette dégradée.
+        image: p.photo_url ?? null,
         link: ['/immobilier', p.id],
         favoritable: { type: 'property', id: p.id },
       };
@@ -187,7 +188,8 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         price: formatFcfa(s.price_per_night_xof),
         priceUnit: '/ nuit',
         badge: verifiedBadge(s.property?.verification_level),
-        image: null,
+        // Une nuitée est illustrée par les photos de SON bien.
+        image: s.property?.photo_url ?? null,
         link: ['/nuitees', s.id],
         favoritable: { type: 'stay', id: s.id },
       };

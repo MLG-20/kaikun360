@@ -23,7 +23,11 @@
   @case ('ready') {
     @if (stay(); as s) {
       <!-- Coquille de fiche générique (F2.6). -->
-      <app-detail-layout [title]="property()?.title ?? 'Nuitée'" [galleryAlt]="property()?.title ?? 'Nuitée'">
+      <app-detail-layout
+        [title]="property()?.title ?? 'Nuitée'"
+        [galleryAlt]="property()?.title ?? 'Nuitée'"
+        [images]="photoUrls()"
+      >
         <ng-container crumbs>
           <a routerLink="/nuitees">Nuitées</a>
           <span aria-hidden="true">/</span>

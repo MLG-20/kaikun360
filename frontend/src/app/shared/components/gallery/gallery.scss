@@ -9,7 +9,12 @@
 // --- Image principale ------------------------------------------------------
 .main {
   position: relative; // repère pour les flèches/compteur superposés
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
+  // Plafond de hauteur : sans lui, sur un grand écran l'image occupait presque
+  // tout l'écran (la hauteur suit la largeur) et repoussait le contenu de la
+  // fiche sous le pli. Le ratio étant fixe, ce plafond règle aussi la largeur.
+  // `object-fit: cover` recadre proprement au-delà.
+  max-height: 500px;
   border-radius: var(--k-radius-lg);
   overflow: hidden;
   box-shadow: var(--k-shadow);
@@ -124,7 +129,8 @@
 
 // --- Repli sans photo ------------------------------------------------------
 .gallery--empty {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
+  max-height: 500px;
   display: grid;
   place-items: center;
   border-radius: var(--k-radius-lg);

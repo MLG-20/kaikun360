@@ -40,6 +40,29 @@
         </a>
       </div>
 
+      <!-- Photos du bien (couverture d'abord) -->
+      <section class="opd-block">
+        <h2 class="opd-block-title">Photos</h2>
+        @if (p.photos?.length) {
+          <ul class="opd-gallery">
+            @for (photo of p.photos; track photo.id) {
+              <li class="opd-gallery-item" [class.is-primary]="photo.is_primary">
+                <img [src]="photo.url" [alt]="photo.original_name ?? 'Photo du bien'" />
+                @if (photo.is_primary) {
+                  <span class="opd-gallery-tag">Couverture</span>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="opd-gallery-empty">
+            Ce bien n'a aucune photo. Les annonces illustrées inspirent davantage
+            confiance et sont bien plus consultées —
+            <a [routerLink]="['/espace-proprietaire/biens', p.id, 'modifier']">ajoutez des photos</a>.
+          </p>
+        }
+      </section>
+
       @if (p.description) {
         <section class="opd-block">
           <h2 class="opd-block-title">Description</h2>

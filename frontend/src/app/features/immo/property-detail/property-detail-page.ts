@@ -107,6 +107,18 @@ export class PropertyDetailPageComponent {
   /** Prix formaté du bien. */
   readonly priceLabel = computed(() => formatFcfa(this.property()?.price_xof));
 
+  /**
+   * URLs des photos du bien pour la galerie, **couverture en tête** (l'API les
+   * renvoie déjà triées). Les entrées sans URL exploitable sont écartées pour ne
+   * jamais produire d'image cassée ; une liste vide masque la galerie.
+   */
+  readonly photoUrls = computed(
+    () =>
+      this.property()
+        ?.photos?.map((photo) => photo.url)
+        .filter((url): url is string => !!url) ?? [],
+  );
+
   /** Localisation lisible (commune · département · région). */
   readonly locationLabel = computed(() => {
     const loc = this.property()?.location;

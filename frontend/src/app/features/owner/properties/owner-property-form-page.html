@@ -112,6 +112,78 @@
       <textarea id="opf-description" class="k-input" rows="4" formControlName="description"></textarea>
     </div>
 
+    <!-- ===================== Photos ===================== -->
+    <fieldset class="opf-section">
+      <legend class="opf-legend">Photos du bien</legend>
+      <p class="opf-section-hint k-muted">
+        Des photos nettes et bien éclairées sont ce qui décide un client : montrez
+        chaque pièce, la façade et les extérieurs. La première photo sert de
+        couverture dans le catalogue. Formats JPEG, PNG ou WebP, 5 Mo maximum.
+      </p>
+
+      @if (photoError(); as err) {
+        <p class="k-error" role="alert">{{ err }}</p>
+      }
+
+      @if (hasNoPhoto()) {
+        <p class="opf-photo-warn">
+          Aucune photo pour l'instant — une annonce sans photo est rarement consultée.
+        </p>
+      }
+
+      <div class="opf-photos">
+        <!-- Photos déjà en ligne (édition) -->
+        @for (photo of photos(); track photo.id) {
+          <figure class="opf-photo" [class.is-primary]="photo.is_primary">
+            <img [src]="photo.url" [alt]="photo.original_name ?? 'Photo du bien'" />
+            @if (photo.is_primary) {
+              <figcaption class="opf-photo-tag">Couverture</figcaption>
+            }
+            <div class="opf-photo-actions">
+              @if (!photo.is_primary) {
+                <button
+                  type="button"
+                  class="opf-photo-btn"
+                  [disabled]="photoBusyId() === photo.id"
+                  (click)="makePrimary(photo)"
+                >
+                  Couverture
+                </button>
+              }
+              <button
+                type="button"
+                class="opf-photo-btn opf-photo-btn--danger"
+                [disabled]="photoBusyId() === photo.id"
+                (click)="removePhoto(photo)"
+              >
+                Retirer
+              </button>
+            </div>
+          </figure>
+        }
+
+        <!-- Photos choisies, pas encore envoyées -->
+        @for (item of pendingPhotos(); track item.preview; let i = $index) {
+          <figure class="opf-photo opf-photo--pending">
+            <img [src]="item.preview" [alt]="item.file.name" />
+            <figcaption class="opf-photo-tag opf-photo-tag--pending">À envoyer</figcaption>
+            <div class="opf-photo-actions">
+              <button type="button" class="opf-photo-btn opf-photo-btn--danger" (click)="removePending(i)">
+                Retirer
+              </button>
+            </div>
+          </figure>
+        }
+
+        <!-- Ajout -->
+        <label class="opf-photo-add">
+          <input type="file" [accept]="accept" multiple (change)="onPhotosSelected($event)" />
+          <span class="opf-photo-add-plus">+</span>
+          <span>Ajouter des photos</span>
+        </label>
+      </div>
+    </fieldset>
+
     <!-- ===================== Localisation (cascade) ===================== -->
     <fieldset class="opf-section">
       <legend class="opf-legend">Localisation</legend>

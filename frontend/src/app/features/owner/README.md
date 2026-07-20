@@ -76,6 +76,15 @@ Documents (F4.5).
   l'inclut, **retrait (DELETE)** si le bien en avait une et qu'on repasse en
   mensuelle seule, rien sinon. On redirige ensuite vers la fiche du bien.
 
+  **Photos** (F4.3) — un bien sans photo n'est presque jamais consulté, donc
+  l'écran y insiste : le bloc « Photos du bien » permet d'en déposer plusieurs
+  (JPEG/PNG/WebP, 5 Mo max, contrôlés en amont pour éviter un 422), de désigner
+  la **couverture** (celle des cartes du catalogue) et d'en retirer. En
+  **création**, le bien n'existe pas encore : les fichiers sont retenus avec un
+  aperçu local puis téléversés **après** la création du bien, séquentiellement
+  pour conserver l'ordre choisi. Un encart avertit tant qu'aucune photo n'est
+  jointe.
+
   Autres points : **compte vérifié requis** (les endpoints exigent
   `verified.account` → un encart invite à vérifier sinon) ; **localisation en
   cascade** région → département → commune, dont le préremplissage en édition

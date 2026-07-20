@@ -23,8 +23,9 @@
   @case ('ready') {
     @if (property(); as p) {
       <!-- Coquille de fiche générique (F2.6) : titre, galerie, corps 2 colonnes.
-           La galerie reste masquée tant que les médias ne sont pas exposés. -->
-      <app-detail-layout [title]="p.title" [galleryAlt]="p.title">
+           La galerie affiche les photos du bien (couverture d'abord) ; elle
+           reste masquée d'elle-même si le bien n'en a aucune. -->
+      <app-detail-layout [title]="p.title" [galleryAlt]="p.title" [images]="photoUrls()">
         <!-- Fil d'Ariane. -->
         <ng-container crumbs>
           <a routerLink="/immobilier">Immobilier</a>

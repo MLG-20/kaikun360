@@ -53,7 +53,11 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   **dépôt et l'édition d'un bien** (F4.3 — un même formulaire pour créer et
   modifier, avec le **mode de location** mensuelle / nuitées / mixte qui pilote
   les champs affichés et les appels d'enregistrement, et une localisation en
-  cascade région → département → commune). Les rubriques Gestion locative (F4.4)
+  cascade région → département → commune). Le propriétaire y **illustre ses
+  biens** : dépôt de plusieurs photos, choix de l'image de couverture et retrait
+  — ces photos alimentent sa fiche, les **cartes du catalogue** et la **galerie
+  des fiches publiques** (bien et nuitées), un bien sans photo gardant la
+  vignette dégradée de repli. Les rubriques Gestion locative (F4.4)
   et Documents (F4.5) arrivent ensuite. 👉 Détail :
   [`src/app/features/owner/README.md`](src/app/features/owner/README.md).
 - 🚧 **À venir** : la suite de l'espace propriétaire, puis les espaces

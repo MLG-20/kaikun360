@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { concatMap, map, switchMap, toArray } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { Commune, Department, GeoService, Region } from '../../../core/api/geo.service';
@@ -15,8 +15,19 @@ import {
   UpsertStayPayload,
 } from '../../../core/api/property-management.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
-import { Property } from '../../../models/property.model';
+import { MediaService } from '../../../core/api/media.service';
+import { Property, PropertyPhoto } from '../../../models/property.model';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+
+/**
+ * Photo choisie mais **pas encore envoyée**. En création, le bien n'existe pas
+ * encore : on retient les fichiers et on les téléverse une fois le bien créé.
+ * `preview` est une URL objet locale, révoquée après usage.
+ */
+interface PendingPhoto {
+  file: File;
+  preview: string;
+}
 
 /** Option du sélecteur de type de bien (valeur = enum backend). */
 interface TypeOption {
@@ -65,6 +76,25 @@ export class OwnerPropertyFormPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly mediaApi = inject(MediaService);
+
+  // --- Photos ---------------------------------------------------------------
+  /** Photos déjà en ligne (mode édition), principale en tête. */
+  readonly photos = signal<PropertyPhoto[]>([]);
+  /** Photos choisies mais pas encore envoyées (voir `PendingPhoto`). */
+  readonly pendingPhotos = signal<PendingPhoto[]>([]);
+  /** Message d'erreur propre au bloc photos (fichier refusé, envoi échoué…). */
+  readonly photoError = signal<string | null>(null);
+  /** Photo en cours de suppression / promotion (désactive ses boutons). */
+  readonly photoBusyId = signal<number | null>(null);
+
+  /** Contraintes du serveur, exposées au gabarit. */
+  protected readonly accept = MediaService.ACCEPT;
+
+  /** Le bien n'a-t-il aucune photo (ni en ligne, ni en attente) ? */
+  readonly hasNoPhoto = computed(
+    () => this.photos().length === 0 && this.pendingPhotos().length === 0,
+  );
 
   /** Types de biens proposés (miroir de l'enum `PropertyType`). */
   readonly types: TypeOption[] = [
@@ -234,6 +264,9 @@ export class OwnerPropertyFormPageComponent {
       address: p.location.address ?? '',
     });
 
+    // Photos déjà en ligne (l'API les renvoie principale d'abord).
+    this.photos.set(p.photos ?? []);
+
     // Géo : on charge les listes puis on pose les valeurs sans réamorcer la
     // cascade (emitEvent: false), pour éviter la remise à zéro en chaîne.
     this.prefillGeo(p.location.region_id, p.location.department_id, p.location.commune_id);
@@ -287,6 +320,114 @@ export class OwnerPropertyFormPageComponent {
       },
       error: () => this.geoError.set(true),
     });
+  }
+
+  // --- Gestion des photos ---------------------------------------------------
+
+  /**
+   * Fichiers choisis dans le sélecteur : on filtre en amont ce que le serveur
+   * refuserait (type, taille), pour donner un retour immédiat plutôt qu'un 422.
+   */
+  onPhotosSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    this.photoError.set(null);
+
+    const accepted: PendingPhoto[] = [];
+    for (const file of files) {
+      if (!MediaService.ACCEPT.includes(file.type)) {
+        this.photoError.set(`« ${file.name} » n'est pas une image JPEG, PNG ou WebP.`);
+        continue;
+      }
+      if (file.size > MediaService.MAX_BYTES) {
+        this.photoError.set(`« ${file.name} » dépasse 5 Mo.`);
+        continue;
+      }
+      accepted.push({ file, preview: URL.createObjectURL(file) });
+    }
+
+    this.pendingPhotos.update((list) => [...list, ...accepted]);
+    // Permet de re-sélectionner le même fichier après un retrait.
+    input.value = '';
+  }
+
+  /** Retire une photo pas encore envoyée (et libère son URL objet). */
+  removePending(index: number): void {
+    this.pendingPhotos.update((list) => {
+      const target = list[index];
+      if (target) {
+        URL.revokeObjectURL(target.preview);
+      }
+      return list.filter((_, i) => i !== index);
+    });
+  }
+
+  /** Supprime une photo déjà en ligne (édition). */
+  removePhoto(photo: PropertyPhoto): void {
+    if (this.photoBusyId()) {
+      return;
+    }
+    this.photoBusyId.set(photo.id);
+    this.photoError.set(null);
+
+    this.mediaApi.remove(photo.id).subscribe({
+      next: () => {
+        this.photoBusyId.set(null);
+        this.photos.update((list) => list.filter((p) => p.id !== photo.id));
+      },
+      error: () => {
+        this.photoBusyId.set(null);
+        this.photoError.set("Cette photo n'a pas pu être supprimée. Réessayez.");
+      },
+    });
+  }
+
+  /** Désigne une photo déjà en ligne comme image de couverture. */
+  makePrimary(photo: PropertyPhoto): void {
+    if (this.photoBusyId() || photo.is_primary) {
+      return;
+    }
+    this.photoBusyId.set(photo.id);
+    this.photoError.set(null);
+
+    this.mediaApi.setPrimary(photo.id).subscribe({
+      next: () => {
+        this.photoBusyId.set(null);
+        // Reflète le choix localement : une seule couverture, remise en tête.
+        this.photos.update((list) => {
+          const next = list.map((p) => ({ ...p, is_primary: p.id === photo.id }));
+          return [...next].sort((a, b) => Number(b.is_primary) - Number(a.is_primary));
+        });
+      },
+      error: () => {
+        this.photoBusyId.set(null);
+        this.photoError.set("La photo de couverture n'a pas pu être changée. Réessayez.");
+      },
+    });
+  }
+
+  /**
+   * Envoie les photos en attente, une fois le bien connu (création comme
+   * édition). La première photo d'un bien qui n'en a aucune devient la
+   * couverture. Séquentiel (`concatMap`) pour que l'ordre choisi soit conservé.
+   */
+  private uploadPendingPhotos(propertyId: number): Observable<unknown> {
+    const pending = this.pendingPhotos();
+    if (pending.length === 0) {
+      return of(null);
+    }
+
+    const alreadyOnline = this.photos().length;
+
+    return from(pending.map((p, i) => ({ ...p, index: i }))).pipe(
+      concatMap((item) =>
+        this.mediaApi.upload(('property'), propertyId, item.file, {
+          isPrimary: alreadyOnline === 0 && item.index === 0,
+          position: alreadyOnline + item.index,
+        }),
+      ),
+      toArray(),
+    );
   }
 
   /** Corps « bien » à envoyer (le loyer mensuel n'est gardé que si le mode l'inclut). */
@@ -356,7 +497,12 @@ export class OwnerPropertyFormPageComponent {
       .pipe(
         switchMap((env) => {
           const propertyId = env.data.property.id;
-          return this.reconcileStay(propertyId).pipe(map(() => propertyId));
+          // Le bien existe désormais : on réconcilie sa config nuitées, puis on
+          // envoie les photos retenues (impossible avant, en création).
+          return this.reconcileStay(propertyId).pipe(
+            switchMap(() => this.uploadPendingPhotos(propertyId)),
+            map(() => propertyId),
+          );
         }),
       )
       .subscribe({

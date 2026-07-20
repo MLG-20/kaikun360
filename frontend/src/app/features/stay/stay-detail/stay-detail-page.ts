@@ -121,6 +121,18 @@ export class StayDetailPageComponent {
   // --- Dérivés d'affichage --------------------------------------------------
   readonly property = computed(() => this.stay()?.property ?? null);
 
+  /**
+   * URLs des photos pour la galerie : une nuitée est illustrée par les photos de
+   * SON bien (couverture en tête, ordre donné par l'API). Liste vide → galerie
+   * masquée d'elle-même.
+   */
+  readonly photoUrls = computed(
+    () =>
+      this.property()
+        ?.photos?.map((photo) => photo.url)
+        .filter((url): url is string => !!url) ?? [],
+  );
+
   readonly verified = computed(() => {
     const level = this.property()?.verification_level;
     return !!level && level !== 'unverified' && level !== 'aucun';

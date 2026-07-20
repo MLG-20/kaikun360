@@ -23,8 +23,33 @@ export interface Property {
    * l'objet `Stay` sinon. Sert à déduire le mode de location mensuelle/nuitées/mixte.
    */
   stay?: Stay | null;
+  /**
+   * Photos du bien, **image principale d'abord** puis ordre choisi par le
+   * propriétaire. Présentes dès que l'API charge la relation (catalogue, fiche
+   * publique, gestion privée).
+   */
+  photos?: PropertyPhoto[];
+  /**
+   * URL de la photo de couverture (la principale), ou `null` si le bien n'a pas
+   * encore de photo — le front retombe alors sur sa vignette de repli.
+   */
+  photo_url?: string | null;
   published_at: string | null;
   created_at: string | null;
+}
+
+/** Photo d'un bien — miroir de `MediaResource` (couche transversale). */
+export interface PropertyPhoto {
+  id: number;
+  reference: string;
+  type: string | null;
+  type_label: string | null;
+  url: string | null;
+  is_primary: boolean;
+  position: number;
+  status: string | null;
+  original_name: string | null;
+  size_bytes: number | null;
 }
 
 export interface PropertyLocation {

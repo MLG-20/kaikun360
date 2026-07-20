@@ -57,6 +57,52 @@
   margin-bottom: 1.75rem;
 }
 
+// — Galerie de photos —
+.opd-gallery {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.opd-gallery-item {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--k-radius-sm);
+  overflow: hidden;
+  border: 2px solid var(--k-line);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &.is-primary {
+    border-color: var(--k-brand);
+  }
+}
+
+.opd-gallery-tag {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--k-brand);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.opd-gallery-empty {
+  margin: 0;
+  color: var(--k-muted);
+}
+
 // — Blocs de contenu —
 .opd-block {
   background: var(--k-card);
