@@ -49,6 +49,17 @@ class PropertyResource extends JsonResource
                 'id' => $this->owner_id,
                 'name' => $this->owner?->name,
             ],
+            // Photos du bien (relation triée : principale d'abord). Exposées dès
+            // que la relation est chargée — catalogue public, fiche publique et
+            // gestion privée la chargent toutes. `photo_url` est le raccourci
+            // consommé par les cartes du catalogue (image de couverture) ; il
+            // vaut null si le bien n'a pas encore de photo, auquel cas le front
+            // retombe sur son visuel de repli.
+            'photos' => \App\Http\Resources\MediaResource::collection($this->whenLoaded('media')),
+            'photo_url' => $this->when(
+                $this->relationLoaded('media'),
+                fn () => $this->media->first()?->resolveUrl(),
+            ),
             // Config « nuitées » — présente seulement pour la gestion privée
             // (chargée par PropertyManagementController) : permet à la fiche et
             // au formulaire d'édition du propriétaire de connaître le mode de

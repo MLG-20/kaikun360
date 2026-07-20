@@ -120,6 +120,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // « propriétaire de la ressource » est déléguée à la policy `update` du
     // module concerné, côté contrôleur.
     Route::post('media/upload', [MediaController::class, 'store']);
+    // Choix de l'image de couverture parmi les photos déjà déposées (F4.3).
+    Route::patch('media/{media}/primary', [MediaController::class, 'setPrimary'])
+        ->whereNumber('media');
     Route::delete('media/{media}', [MediaController::class, 'destroy'])->whereNumber('media');
 
     // --- Avis (B12.2) --------------------------------------------------------

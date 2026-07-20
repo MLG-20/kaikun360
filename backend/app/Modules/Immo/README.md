@@ -55,8 +55,28 @@ réutilisable par les autres modules (Stay, Mobility…). Modèles dans `app/Mod
 Hiérarchie : `Region 1—N Department 1—N Commune`. Un bien pointe vers les trois
 niveaux (`region_id`, `department_id`, `commune_id`).
 
-> 📷 La relation **médias** (galerie photo) sera ajoutée en **phase B12**
-> (table polymorphe `media`).
+> 📷 **Photos du bien (F4.3)** — relation `Property::media()` (morphMany vers la
+> table polymorphe `media`, B12.1), triée **couverture d'abord** (`is_primary`)
+> puis `position`, et restreinte aux médias `visible()` (un média masqué en
+> modération disparaît des annonces sans être supprimé).
+>
+> `PropertyResource` en expose deux clés, **dès que la relation est chargée** :
+> - `photos` — la galerie complète (`MediaResource`), consommée par la fiche
+>   publique et la fiche du propriétaire ;
+> - `photo_url` — raccourci vers la couverture, consommé par les **cartes du
+>   catalogue** ; `null` si le bien n'a aucune photo (le front affiche alors sa
+>   vignette de repli plutôt qu'une image cassée).
+>
+> ⚠️ Les contrôleurs doivent **charger `media`** (`->with([... , 'media'])`) :
+> `PropertyCatalogController` (index/show/compare), `PropertyManagementController`
+> et `StayCatalogController` (`property.media`, une nuitée s'illustrant avec les
+> photos de son bien) le font. Sans eager load, la clé est simplement absente —
+> jamais de N+1.
+>
+> Le dépôt/retrait passe par les endpoints transversaux `POST /media/upload` et
+> `DELETE /media/{media}` ; le choix de la couverture par
+> `PATCH /media/{media}/primary`. Tous sont autorisés via la **`PropertyPolicy`**
+> (`update`) : seul le propriétaire du bien — ou un admin — illustre son bien.
 
 ---
 

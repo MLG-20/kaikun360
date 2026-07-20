@@ -83,6 +83,28 @@ class MediaController extends Controller
     }
 
     /**
+     * Désigne un média déjà déposé comme **image de couverture**.
+     * PATCH /api/v1/media/{media}/primary
+     *
+     * L'image principale est celle qu'affichent les cartes du catalogue : le
+     * propriétaire doit pouvoir la choisir après coup, sans re-téléverser.
+     * Une seule par ressource — les autres sont donc dépromues.
+     */
+    public function setPrimary(Media $media): JsonResponse
+    {
+        abort_unless($media->mediable !== null, 404);
+        Gate::authorize('update', $media->mediable);
+
+        Media::where('mediable_type', $media->mediable_type)
+            ->where('mediable_id', $media->mediable_id)
+            ->update(['is_primary' => false]);
+
+        $media->update(['is_primary' => true]);
+
+        return ApiResponse::success(['media' => MediaResource::make($media->refresh())]);
+    }
+
+    /**
      * Supprime un média (propriétaire de la ressource ou admin).
      * DELETE /api/v1/media/{media}
      */

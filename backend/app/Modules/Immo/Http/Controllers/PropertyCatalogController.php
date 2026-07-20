@@ -50,7 +50,7 @@ class PropertyCatalogController extends Controller
         $payload = CatalogCache::remember('properties', $cacheParams, function () use ($filters) {
             $query = Property::query()
                 ->published() // <-- garantie : catalogue public = biens validés uniquement
-                ->with(['region', 'department', 'commune', 'owner']);
+                ->with(['region', 'department', 'commune', 'owner', 'media']);
 
             // Filtres géographiques.
             $query->when($filters['region_id'] ?? null, fn ($q, $v) => $q->where('region_id', $v));
@@ -103,7 +103,7 @@ class PropertyCatalogController extends Controller
         $properties = Property::query()
             ->published()
             ->whereIn('id', $ids)
-            ->with(['region', 'department', 'commune', 'owner'])
+            ->with(['region', 'department', 'commune', 'owner', 'media'])
             ->get();
 
         return PropertyResource::collection($properties);
@@ -119,7 +119,7 @@ class PropertyCatalogController extends Controller
     {
         $property = Property::query()
             ->published()
-            ->with(['region', 'department', 'commune', 'owner'])
+            ->with(['region', 'department', 'commune', 'owner', 'media'])
             ->findOrFail($id);
 
         return PropertyResource::make($property);

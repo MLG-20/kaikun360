@@ -43,7 +43,7 @@ class StayCatalogController extends Controller
         $payload = CatalogCache::remember('stays', $cacheParams, function () use ($filters) {
             $query = Stay::query()
                 ->bookable()
-                ->with(['property.region', 'property.department', 'property.commune', 'property.owner']);
+                ->with(['property.region', 'property.department', 'property.commune', 'property.owner', 'property.media']);
 
             // Capacité minimale et fourchette de prix par nuit.
             $query->when($filters['capacity'] ?? null, fn ($q, $v) => $q->where('capacity', '>=', $v));
@@ -71,7 +71,7 @@ class StayCatalogController extends Controller
     {
         $stay = Stay::query()
             ->bookable()
-            ->with(['property.region', 'property.department', 'property.commune', 'property.owner'])
+            ->with(['property.region', 'property.department', 'property.commune', 'property.owner', 'property.media'])
             ->findOrFail($id);
 
         return StayResource::make($stay);
