@@ -35,7 +35,7 @@ class PropertyManagementController extends Controller
     {
         $properties = Property::query()
             ->where('owner_id', $request->user()->id)
-            ->with(['region', 'department', 'commune', 'owner'])
+            ->with(['region', 'department', 'commune', 'owner', 'stay'])
             ->latest()
             ->paginate(15);
 
@@ -56,7 +56,7 @@ class PropertyManagementController extends Controller
         abort_unless($property->owner_id === $request->user()->id, 404);
 
         return PropertyResource::make(
-            $property->load(['region', 'department', 'commune', 'owner']),
+            $property->load(['region', 'department', 'commune', 'owner', 'stay']),
         );
     }
 
@@ -80,7 +80,7 @@ class PropertyManagementController extends Controller
         PropertyCreated::dispatch($property);
 
         return ApiResponse::created([
-            'property' => PropertyResource::make($property->load(['region', 'department', 'commune', 'owner'])),
+            'property' => PropertyResource::make($property->load(['region', 'department', 'commune', 'owner', 'stay'])),
         ]);
     }
 
@@ -104,7 +104,7 @@ class PropertyManagementController extends Controller
         }
 
         return ApiResponse::success([
-            'property' => PropertyResource::make($property->fresh()->load(['region', 'department', 'commune', 'owner'])),
+            'property' => PropertyResource::make($property->fresh()->load(['region', 'department', 'commune', 'owner', 'stay'])),
         ]);
     }
 

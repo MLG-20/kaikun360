@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Bien immobilier (module Immo).
@@ -95,6 +96,18 @@ class Property extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(PropertyDocument::class);
+    }
+
+    /**
+     * Configuration « nuitées » du bien (relation 1–1, module Stay).
+     *
+     * Présente uniquement si le propriétaire propose le bien en location courte
+     * durée. Un bien loué au mois seulement n'a pas de Stay ; un bien « mixte »
+     * a à la fois un `price_xof` (loyer mensuel) et une config `stay` active.
+     */
+    public function stay(): HasOne
+    {
+        return $this->hasOne(\App\Modules\Stay\Models\Stay::class);
     }
 
     /** Région (référentiel géographique). */

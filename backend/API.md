@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 161 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 165 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -102,6 +102,12 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/stays/{id}` | public | `StayCatalogController@show` |
 | GET | `/stays/{id}/availability` | public | `StayBookingController@availability` |
 | POST | `/stays/{id}/bookings` | auth + vérifié | `StayBookingController@store` |
+| PUT | `/properties/{property}/stay` | auth + vérifié | `StayManagementController@upsert` |
+| DELETE | `/properties/{property}/stay` | auth | `StayManagementController@destroy` |
+
+> Les deux dernières routes gèrent la config « nuitées » d'un bien par son
+> **propriétaire** (F4.3) : activer/paramétrer (upsert) ou retirer le mode nuitées.
+> Autorisées via la `PropertyPolicy` (propriétaire du bien ou admin).
 
 ### Explore — expériences
 
@@ -216,6 +222,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | --- | --- | --- | --- |
 | POST | `/requests` | auth | `RequestController@store` |
 | GET | `/requests/my` | auth | `RequestController@my` |
+| GET | `/requests/{serviceRequest}` | auth | `RequestController@show` |
 | POST | `/requests/{serviceRequest}/quotes` | auth + `can:traiter:demandes` | `QuoteController@store` |
 | PATCH | `/requests/{serviceRequest}/status` | auth + `can:traiter:demandes` | `RequestController@updateStatus` |
 
@@ -231,6 +238,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
 | GET | `/bookings/my` | auth | `BookingController@my` |
+| GET | `/bookings/{booking}` | auth | `BookingController@show` |
 
 ### Messagerie (transversal)
 

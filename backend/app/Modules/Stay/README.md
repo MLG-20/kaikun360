@@ -72,3 +72,37 @@ Permet de proposer un **bien** (module Immo) en location **à la nuitée**.
    Statut initial `en_attente` (le paiement viendra en **B14**).
 
 > 💰 Retenue/restitution de la **caution** (remboursement PayTech) : phases B11/B14.
+
+---
+
+## Gestion de la config nuitées par le propriétaire (phase F4.3)
+
+Un bien peut être loué **au mois** (`price_xof` sur le bien), **à la nuitée**
+(config `Stay`) ou **les deux** (« mixte »). Ces deux endpoints permettent au
+propriétaire d'activer/paramétrer ou de retirer le mode nuitées de **son** bien.
+
+| Méthode | URL | Accès |
+|---|---|---|
+| PUT | `/api/v1/properties/{property}/stay` | `auth:sanctum` + `verified.account` — upsert |
+| DELETE | `/api/v1/properties/{property}/stay` | `auth:sanctum` — retrait |
+
+- `StayManagementController` (`upsert` / `destroy`). **Autorisation réutilisant la
+  `PropertyPolicy`** (`update`) : seul le propriétaire du bien (ou un admin) agit
+  dessus — aucune `StayPolicy` distincte.
+- **`upsert`** (idempotent, `updateOrCreate` sur `property_id`) : crée la config
+  si absente (**201**), la met à jour sinon (**200**), et **réactive** (`is_active
+  = true`) une config qui aurait été désactivée. Corps validé par
+  `UpsertStayRequest` (seul `price_per_night_xof` est requis ; `max_nights ≥
+  min_nights` vérifié).
+- **`destroy`** : **supprime** la config s'il n'existe aucune réservation ; sinon
+  la **désactive** (`is_active = false`) pour préserver l'intégrité de
+  l'historique (le bien disparaît du catalogue nuitées, les réservations passées
+  restent cohérentes). **404** si le bien n'a pas de config.
+- La config nuitées est **embarquée dans `PropertyResource`** (clé `stay`) quand
+  la relation est chargée — uniquement en gestion privée
+  (`PropertyManagementController`), jamais au catalogue public (pas de N+1, clé
+  absente). Alimente la fiche et le formulaire d'édition du propriétaire.
+
+> ✅ Tests : `tests/Feature/Stay/PropertyStayManagementTest` (12 cas) couvre
+> l'upsert (création/màj/réactivation), la validation, l'isolation entre
+> propriétaires, le retrait avec/sans réservation et l'exposition sur la fiche.

@@ -2,6 +2,7 @@
 
 use App\Modules\Stay\Http\Controllers\StayBookingController;
 use App\Modules\Stay\Http\Controllers\StayCatalogController;
+use App\Modules\Stay\Http\Controllers\StayManagementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,3 +29,15 @@ Route::post('/stays/{id}/bookings', [StayBookingController::class, 'store'])
 
 Route::get('/stays/{id}', [StayCatalogController::class, 'show'])
     ->whereNumber('id');
+
+// Gestion de la config « nuitées » d'un bien par son propriétaire (F4.3).
+// L'URI est nichée sous le bien (`/properties/{property}/stay`) : elle ne
+// percute pas les routes du module Immo (segment `stay` non numérique). Le
+// PUT exige un compte vérifié, comme le dépôt de bien.
+Route::middleware('auth:sanctum')->group(function () {
+    Route::put('/properties/{property}/stay', [StayManagementController::class, 'upsert'])
+        ->whereNumber('property')
+        ->middleware('verified.account');
+    Route::delete('/properties/{property}/stay', [StayManagementController::class, 'destroy'])
+        ->whereNumber('property');
+});
