@@ -90,4 +90,25 @@ Documents (F4.5).
   cascade** région → département → commune, dont le préremplissage en édition
   utilise `emitEvent: false` pour ne pas déclencher les remises à zéro en chaîne
   (les ids du référentiel sont exposés par `PropertyResource.location`).
-- **Gestion locative** (F4.4), **Documents** (F4.5) — à venir.
+- **Gestion locative** (`manage/`, F4.4) — deux écrans en **lecture seule** sur
+  le module Manage backend (les mandats sont établis par les agents Kaikun ; le
+  propriétaire consulte) :
+
+  - **Liste des mandats** (`gestion-locative`, `owner-manage-page`) —
+    `GET /manage/mandates/mine` (paginé 15/page). Chaque mandat est une carte
+    cliquable : bien géré, statut du mandat, loyers encaissés, et — en ambre —
+    impayés / incidents ouverts s'il y en a.
+  - **Fiche d'un mandat** (`gestion-locative/:id`, `owner-mandate-detail-page`) —
+    `GET /manage/mandates/{id}` (réservé au propriétaire, 404 sinon). On y trouve
+    un **résumé financier** (5 KPI), les conditions du mandat, les **lignes
+    récentes** (loyers, reversements, incidents — les 12 plus récents de chaque),
+    et surtout un **rapport mensuel** (`GET .../report?month=YYYY-MM`)
+    recalculable via un sélecteur de mois (12 derniers mois). Le rapport donne
+    loyers encaissés/impayés, dépenses, **commission Kaikun**, **net à reverser**
+    (mis en valeur) et reversements du mois.
+
+  Le helper `mandate-status.ts` ne fournit que les **tonalités** des pastilles
+  (`.bk-status[data-tone]`) — les libellés viennent déjà du serveur
+  (`status_label`). Les lignes détaillées ne sont chargées que sur la fiche : la
+  liste `mine` reste légère (agrégats seulement).
+- **Documents** (F4.5) — à venir.

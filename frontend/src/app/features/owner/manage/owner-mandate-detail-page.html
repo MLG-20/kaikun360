@@ -1,0 +1,234 @@
+<section class="account-head">
+  <app-back-link
+    class="account-back"
+    label="Gestion locative"
+    fallback="/espace-proprietaire/gestion-locative"
+  />
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="pf-state" role="status">Chargement du mandat…</p>
+  }
+  @case ('notfound') {
+    <p class="pf-state pf-state--error" role="alert">
+      Ce mandat est introuvable ou ne fait pas partie de votre gestion.
+    </p>
+  }
+  @case ('failed') {
+    <p class="pf-state pf-state--error" role="alert">
+      Impossible de charger ce mandat pour le moment. Merci de réessayer plus tard.
+    </p>
+  }
+  @case ('ready') {
+    @if (mandate(); as m) {
+      <!-- En-tête : bien géré + statut du mandat -->
+      <header class="opd-head">
+        <div class="opd-heading">
+          <p class="account-eyebrow">Gestion locative</p>
+          <h1 class="account-title">{{ titleOf(m) }}</h1>
+          <p class="opd-type">
+            @if (m.reference) {
+              Mandat {{ m.reference }}
+            }
+            @if (localityOf(m); as locality) {
+              · {{ locality }}
+            }
+          </p>
+        </div>
+        @if (m.status_label) {
+          <span class="bk-status" [attr.data-tone]="mandateTone(m.status)">{{ m.status_label }}</span>
+        }
+      </header>
+
+      <!-- Résumé financier (agrégats tous mois confondus) -->
+      <section class="mgd-kpis" aria-label="Résumé financier du mandat">
+        <div class="mgd-kpi" data-tone="good">
+          <span class="mgd-kpi-label">Loyers encaissés</span>
+          <strong class="mgd-kpi-value">{{ fcfa(m.summary.loyers_payes_xof) }}</strong>
+        </div>
+        <div class="mgd-kpi" [attr.data-tone]="m.summary.loyers_impayes_xof > 0 ? 'warn' : null">
+          <span class="mgd-kpi-label">Loyers impayés</span>
+          <strong class="mgd-kpi-value">{{ fcfa(m.summary.loyers_impayes_xof) }}</strong>
+        </div>
+        <div class="mgd-kpi">
+          <span class="mgd-kpi-label">Dépenses</span>
+          <strong class="mgd-kpi-value">{{ fcfa(m.summary.depenses_xof) }}</strong>
+        </div>
+        <div class="mgd-kpi">
+          <span class="mgd-kpi-label">Reversements</span>
+          <strong class="mgd-kpi-value">{{ fcfa(m.summary.reversements_xof) }}</strong>
+        </div>
+        <div class="mgd-kpi" [attr.data-tone]="m.summary.incidents_ouverts > 0 ? 'warn' : null">
+          <span class="mgd-kpi-label">Incidents ouverts</span>
+          <strong class="mgd-kpi-value">{{ m.summary.incidents_ouverts }}</strong>
+        </div>
+      </section>
+
+      <!-- Conditions du mandat -->
+      <section class="opd-block">
+        <h2 class="opd-block-title">Le mandat</h2>
+        <dl class="opd-facts">
+          <div class="opd-fact">
+            <dt>Commission Kaikun</dt>
+            <dd>{{ m.commission_rate }} %</dd>
+          </div>
+          @if (m.start_date) {
+            <div class="opd-fact">
+              <dt>Début</dt>
+              <dd>{{ m.start_date | date: 'longDate' : '' : 'fr' }}</dd>
+            </div>
+          }
+          @if (m.end_date) {
+            <div class="opd-fact">
+              <dt>Fin</dt>
+              <dd>{{ m.end_date | date: 'longDate' : '' : 'fr' }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      <!-- Rapport mensuel (recalculable via le sélecteur de mois) -->
+      <section class="opd-block">
+        <div class="mgd-report-head">
+          <h2 class="opd-block-title">Rapport mensuel</h2>
+          <label class="mgd-month">
+            <span class="mgd-month-label">Mois</span>
+            <select
+              class="mgd-month-select"
+              [value]="selectedMonth()"
+              (change)="onMonthChange($any($event.target).value)"
+            >
+              @for (opt of monthOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        @if (reportLoading()) {
+          <p class="pf-state" role="status">Calcul du rapport…</p>
+        } @else if (reportError()) {
+          <p class="pf-state pf-state--error" role="alert">
+            Impossible de calculer le rapport de ce mois.
+            <button type="button" class="k-btn k-btn--ghost mgd-retry" (click)="loadReport()">
+              Réessayer
+            </button>
+          </p>
+        } @else if (report(); as r) {
+          <p class="mgd-report-period">Période : <strong>{{ r.period.label }}</strong></p>
+          <dl class="opd-facts">
+            <div class="opd-fact">
+              <dt>Loyers encaissés</dt>
+              <dd>{{ fcfa(r.rents.paid_xof) }} <span class="mgd-count">({{ r.rents.count }} échéance(s))</span></dd>
+            </div>
+            <div class="opd-fact">
+              <dt>Loyers impayés</dt>
+              <dd>{{ fcfa(r.rents.unpaid_xof) }}</dd>
+            </div>
+            <div class="opd-fact">
+              <dt>Dépenses</dt>
+              <dd>{{ fcfa(r.expenses.total_xof) }} <span class="mgd-count">({{ r.expenses.count }})</span></dd>
+            </div>
+            <div class="opd-fact">
+              <dt>Commission Kaikun</dt>
+              <dd>− {{ fcfa(r.commission_xof) }}</dd>
+            </div>
+            <div class="opd-fact mgd-fact--net">
+              <dt>Net à reverser</dt>
+              <dd>{{ fcfa(r.net_owner_xof) }}</dd>
+            </div>
+            <div class="opd-fact">
+              <dt>Reversé ce mois</dt>
+              <dd>{{ fcfa(r.payouts.total_xof) }} <span class="mgd-count">({{ r.payouts.count }})</span></dd>
+            </div>
+            <div class="opd-fact">
+              <dt>Incidents</dt>
+              <dd>{{ r.incidents.opened }} ouvert(s) · {{ r.incidents.resolved }} résolu(s)</dd>
+            </div>
+          </dl>
+        }
+      </section>
+
+      <!-- Lignes détaillées : loyers -->
+      @if (m.rents?.length) {
+        <section class="opd-block">
+          <h2 class="opd-block-title">Loyers récents</h2>
+          <ul class="mgd-lines">
+            @for (rent of m.rents; track rent.id) {
+              <li class="mgd-line">
+                <div class="mgd-line-main">
+                  <span class="mgd-line-title">{{ rent.period_label || 'Échéance' }}</span>
+                  @if (rent.tenant_name) {
+                    <span class="mgd-line-sub">{{ rent.tenant_name }}</span>
+                  }
+                </div>
+                <span class="mgd-line-amount">{{ fcfa(rent.amount_xof) }}</span>
+                @if (rent.status_label) {
+                  <span class="bk-status" [attr.data-tone]="rentTone(rent.status)">
+                    {{ rent.status_label }}
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <!-- Lignes détaillées : reversements -->
+      @if (m.payouts?.length) {
+        <section class="opd-block">
+          <h2 class="opd-block-title">Reversements récents</h2>
+          <ul class="mgd-lines">
+            @for (payout of m.payouts; track payout.id) {
+              <li class="mgd-line">
+                <div class="mgd-line-main">
+                  <span class="mgd-line-title">{{ payout.period_label || payout.reference || 'Reversement' }}</span>
+                  @if (payout.paid_at) {
+                    <span class="mgd-line-sub">Le {{ payout.paid_at | date: 'longDate' : '' : 'fr' }}</span>
+                  }
+                </div>
+                <span class="mgd-line-amount">{{ fcfa(payout.amount_xof) }}</span>
+                @if (payout.status_label) {
+                  <span class="bk-status" [attr.data-tone]="payoutTone(payout.status)">
+                    {{ payout.status_label }}
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <!-- Lignes détaillées : incidents -->
+      @if (m.incidents?.length) {
+        <section class="opd-block">
+          <h2 class="opd-block-title">Incidents récents</h2>
+          <ul class="mgd-lines">
+            @for (incident of m.incidents; track incident.id) {
+              <li class="mgd-line">
+                <div class="mgd-line-main">
+                  <span class="mgd-line-title">{{ incident.title || 'Incident' }}</span>
+                  @if (incident.reference) {
+                    <span class="mgd-line-sub">{{ incident.reference }}</span>
+                  }
+                </div>
+                @if (incident.status_label) {
+                  <span class="bk-status" [attr.data-tone]="incidentTone(incident.status)">
+                    {{ incident.status_label }}
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (!hasLines()) {
+        <p class="mgd-empty-lines">
+          Aucun loyer, reversement ni incident n'est encore enregistré sur ce mandat.
+        </p>
+      }
+    }
+  }
+}

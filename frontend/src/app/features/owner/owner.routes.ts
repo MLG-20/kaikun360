@@ -69,6 +69,22 @@ export const OWNER_ROUTES: Routes = [
         title: 'Mon bien — Kaikun 360',
       },
       {
+        // F4.4 — Gestion locative : liste des mandats (GET /manage/mandates/mine).
+        path: 'gestion-locative',
+        loadComponent: () =>
+          import('./manage/owner-manage-page').then((m) => m.OwnerManagePageComponent),
+        title: 'Gestion locative — Kaikun 360',
+      },
+      {
+        // F4.4 — Fiche d'un mandat + rapport mensuel (GET /manage/mandates/{id}).
+        path: 'gestion-locative/:id',
+        loadComponent: () =>
+          import('./manage/owner-mandate-detail-page').then(
+            (m) => m.OwnerMandateDetailPageComponent,
+          ),
+        title: 'Mandat de gestion — Kaikun 360',
+      },
+      {
         // Profil — écrans transverses montés DANS l'espace propriétaire.
         // On réutilise les composants de l'espace client (ils portent sur
         // l'utilisateur connecté, pas sur un espace), mais sous le shell

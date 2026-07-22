@@ -57,8 +57,11 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   biens** : dépôt de plusieurs photos, choix de l'image de couverture et retrait
   — ces photos alimentent sa fiche, les **cartes du catalogue** et la **galerie
   des fiches publiques** (bien et nuitées), un bien sans photo gardant la
-  vignette dégradée de repli. Les rubriques Gestion locative (F4.4)
-  et Documents (F4.5) arrivent ensuite. 👉 Détail :
+  vignette dégradée de repli. Enfin la **gestion locative** (F4.4 — en lecture
+  seule) : la liste de ses **mandats** puis la **fiche d'un mandat** avec un
+  résumé financier, les loyers / reversements / incidents récents et un **rapport
+  mensuel** recalculable par mois (loyers encaissés, commission Kaikun, **net à
+  reverser**). La rubrique Documents (F4.5) arrive ensuite. 👉 Détail :
   [`src/app/features/owner/README.md`](src/app/features/owner/README.md).
 - 🚧 **À venir** : la suite de l'espace propriétaire, puis les espaces
   prestataire et entreprise, et le back-office.

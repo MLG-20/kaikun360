@@ -1,0 +1,231 @@
+// Fiche d'un mandat de gestion locative (F4.4). L'en-tête (.account-*), les
+// états (.pf-state) et la pastille de statut (.bk-status[data-tone]) proviennent
+// du partiel global `styles/_account.scss`. Les blocs (.opd-*) reprennent la
+// présentation de la fiche d'un bien (ré-encapsulés ici : scoping Angular par
+// composant). Le préfixe `.mgd-*` regroupe ce qui est PROPRE à ce rapport de
+// gestion : la grille de résumé, le sélecteur de mois et les listes de lignes.
+
+// — En-tête : bien géré + pastille de statut —
+.opd-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.opd-heading {
+  min-width: 0;
+
+  .account-title {
+    margin-bottom: 0.15rem;
+  }
+}
+
+.opd-type {
+  color: var(--k-muted);
+  font-size: 0.95rem;
+}
+
+// — Blocs de contenu —
+.opd-block {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 1.4rem 1.5rem;
+
+  & + & {
+    margin-top: 1.25rem;
+  }
+}
+
+.opd-block-title {
+  font-family: var(--k-font-display);
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+// Espace le titre de bloc quand il précède directement une liste de faits.
+.opd-block > .opd-block-title {
+  margin-bottom: 1rem;
+}
+
+// — Listes de faits (conditions du mandat, rapport) —
+.opd-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.1rem 1.5rem;
+  margin: 0;
+}
+
+.opd-fact {
+  dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--k-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
+// ======================= Résumé financier (KPI) ==========================
+.mgd-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.mgd-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.2rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-left: 3px solid var(--k-brand);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+
+  &[data-tone='warn'] {
+    border-left-color: var(--k-gold);
+  }
+  &[data-tone='good'] {
+    border-left-color: var(--k-green);
+  }
+}
+
+.mgd-kpi-label {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--k-muted);
+}
+
+.mgd-kpi-value {
+  font-family: var(--k-font-display);
+  font-size: clamp(1.2rem, 2.2vw, 1.5rem);
+  line-height: 1.1;
+  color: var(--k-ink);
+
+  .mgd-kpi[data-tone='warn'] & {
+    color: color-mix(in srgb, var(--k-gold) 70%, #6b4e00);
+  }
+  .mgd-kpi[data-tone='good'] & {
+    color: var(--k-green-600);
+  }
+}
+
+// ========================== Rapport mensuel ==============================
+.mgd-report-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.mgd-month {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mgd-month-label {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+.mgd-month-select {
+  font: inherit;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm, 8px);
+  background: var(--k-card);
+  color: var(--k-ink);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--k-brand);
+    outline-offset: 2px;
+  }
+}
+
+.mgd-report-period {
+  color: var(--k-muted);
+  margin: 0 0 1rem;
+}
+
+.mgd-count {
+  font-weight: 400;
+  color: var(--k-muted);
+  font-size: 0.85em;
+}
+
+.mgd-retry {
+  margin-left: 0.5rem;
+}
+
+// « Net à reverser » : la ligne de synthèse du rapport, mise en valeur.
+.mgd-fact--net {
+  dd {
+    color: var(--k-brand-600);
+    font-size: 1.15rem;
+  }
+}
+
+// ========================= Lignes détaillées =============================
+.mgd-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mgd-line {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--k-line);
+
+  &:first-child {
+    border-top: none;
+  }
+}
+
+.mgd-line-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mgd-line-title {
+  font-weight: 600;
+}
+
+.mgd-line-sub {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+.mgd-line-amount {
+  font-family: var(--k-font-display);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mgd-empty-lines {
+  color: var(--k-muted);
+  margin-top: 1.25rem;
+}

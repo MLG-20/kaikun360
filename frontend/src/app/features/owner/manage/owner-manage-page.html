@@ -1,0 +1,96 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-proprietaire" />
+  <p class="account-eyebrow">Espace propriétaire</p>
+  <h1 class="account-title">Gestion locative</h1>
+  <p class="account-lead">
+    Suivez vos mandats de gestion : loyers encaissés, reversements, incidents et
+    rapports mensuels. Vos mandats sont établis avec un agent Kaikun 360 ; vous
+    en gardez la visibilité complète depuis cet espace.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos mandats…</p>
+} @else if (loadError()) {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger vos mandats pour le moment. Merci de réessayer plus tard.
+  </p>
+} @else if (items().length === 0) {
+  <!-- ============================= Aucun mandat =========================== -->
+  <div class="rq-empty">
+    <h2 class="rq-empty-title">Aucun mandat de gestion</h2>
+    <p class="rq-empty-text">
+      Vous n'avez pas encore confié de bien en gestion. Pour mettre en place un
+      mandat, rapprochez-vous de votre conseiller Kaikun 360 : vos loyers,
+      reversements et rapports mensuels apparaîtront ensuite ici.
+    </p>
+  </div>
+} @else {
+  <!-- =============================== Liste ================================= -->
+  <ul class="op-list">
+    @for (mandate of items(); track mandate.id) {
+      <li class="op-card">
+        <!-- Toute la carte est un lien vers la fiche du mandat. -->
+        <a
+          class="op-card-link"
+          [routerLink]="['/espace-proprietaire/gestion-locative', mandate.id]"
+          [attr.aria-label]="'Voir la gestion du bien ' + titleOf(mandate)"
+        >
+          <header class="op-card-head">
+            <div class="op-card-heading">
+              <span class="op-title">{{ titleOf(mandate) }}</span>
+              @if (mandate.reference) {
+                <span class="op-type">Mandat {{ mandate.reference }}</span>
+              }
+            </div>
+            @if (mandate.status_label) {
+              <span class="bk-status" [attr.data-tone]="toneOf(mandate.status)">
+                {{ mandate.status_label }}
+              </span>
+            }
+          </header>
+
+          <dl class="op-facts">
+            @if (localityOf(mandate); as locality) {
+              <div class="op-fact">
+                <dt>Localité</dt>
+                <dd>{{ locality }}</dd>
+              </div>
+            }
+            <div class="op-fact">
+              <dt>Loyers encaissés</dt>
+              <dd>{{ fcfa(mandate.summary.loyers_payes_xof) }}</dd>
+            </div>
+            @if (mandate.summary.loyers_impayes_xof > 0) {
+              <div class="op-fact op-fact--warn">
+                <dt>Impayés</dt>
+                <dd>{{ fcfa(mandate.summary.loyers_impayes_xof) }}</dd>
+              </div>
+            }
+            @if (mandate.summary.incidents_ouverts > 0) {
+              <div class="op-fact op-fact--warn">
+                <dt>Incidents ouverts</dt>
+                <dd>{{ mandate.summary.incidents_ouverts }}</dd>
+              </div>
+            }
+          </dl>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <!-- Pagination -->
+  @if (meta(); as m) {
+    @if (m.last_page > 1) {
+      <nav class="rq-pager" aria-label="Pagination des mandats">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasPrev()" (click)="prev()">
+          ← Précédent
+        </button>
+        <span class="rq-pager-info">Page {{ m.current_page }} sur {{ m.last_page }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasNext()" (click)="next()">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}

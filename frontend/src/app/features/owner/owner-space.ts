@@ -33,7 +33,7 @@ export const OWNER_NAV: readonly SpaceNavItem[] = [
     description: 'Mandats, loyers, reversements et rapports mensuels.',
     path: 'gestion-locative',
     icon: 'wallet',
-    ready: false, // F4.4
+    ready: true, // F4.4 ✅ (mandats + loyers/reversements/incidents + rapport mensuel)
   },
   {
     label: 'Documents',
