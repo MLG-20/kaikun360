@@ -37,8 +37,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/properties', [PropertyManagementController::class, 'store'])->middleware('verified.account');
     Route::patch('/properties/{property}', [PropertyManagementController::class, 'update'])
         ->whereNumber('property');
+    // Documents d'un bien (F4.5) — liste, dépôt et suppression, réservés au
+    // propriétaire via la policy `manageDocuments`. Le téléchargement, lui,
+    // passe par une URL signée dédiée (définie plus bas, hors auth session).
+    Route::get('/properties/{property}/documents', [PropertyManagementController::class, 'listDocuments'])
+        ->whereNumber('property');
     Route::post('/properties/{property}/documents', [PropertyManagementController::class, 'storeDocument'])
         ->whereNumber('property');
+    Route::delete('/properties/{property}/documents/{document}', [PropertyManagementController::class, 'deleteDocument'])
+        ->whereNumber(['property', 'document']);
 });
 
 // Validation des biens par les agents (phase B2.4) — permission valider:bien.

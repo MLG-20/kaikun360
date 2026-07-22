@@ -121,7 +121,9 @@ Tous validés (`exists` pour les FK, `Rule::in` pour type/sort). Exemple :
 | GET | `/api/v1/properties/mine/{property}` | `auth:sanctum` — fiche d'un de mes biens (tous statuts, 404 si bien d'autrui) |
 | POST | `/api/v1/properties` | `auth:sanctum` — déposer un bien (rôle proprietaire/admin) |
 | PATCH | `/api/v1/properties/{property}` | `auth:sanctum` — modifier (propriétaire/admin) |
+| GET | `/api/v1/properties/{property}/documents` | `auth:sanctum` — lister les pièces d'un bien (F4.5) |
 | POST | `/api/v1/properties/{property}/documents` | `auth:sanctum` — ajouter une pièce |
+| DELETE | `/api/v1/properties/{property}/documents/{document}` | `auth:sanctum` — retirer une pièce (F4.5) |
 | GET | `/api/v1/properties/{property}/documents/{document}/download` | **URL signée** |
 
 ### Règles
@@ -135,6 +137,11 @@ Tous validés (`exists` pour les FK, `Rule::in` pour type/sort). Exemple :
 - **Cohérence géographique** validée (`StorePropertyRequest`/`UpdatePropertyRequest`) :
   le département doit appartenir à la région, la commune au département.
 - Documents : disque privé, formats PDF/JPG/PNG ≤ 5 Mo, accès par **URL signée** (10 min).
+  La **liste** (`listDocuments`) et la **suppression** (`deleteDocument`, retire la
+  ligne **et** le fichier) sont réservées au propriétaire via `manageDocuments`
+  (403 sinon) — alimentent l'écran **« Documents »** de l'espace propriétaire (F4.5).
+  Le compteur `documents_count` est exposé par `PropertyResource` quand la liste
+  `mine` le demande (`withCount('documents')`), pour le badge « N documents ».
 
 ### Briques
 

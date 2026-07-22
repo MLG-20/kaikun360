@@ -36,6 +36,9 @@ class PropertyManagementController extends Controller
         $properties = Property::query()
             ->where('owner_id', $request->user()->id)
             ->with(['region', 'department', 'commune', 'owner', 'stay', 'media'])
+            // Compteur de pièces justificatives : alimente le badge « N documents »
+            // de l'écran « Documents » (F4.5) sans charger les documents eux-mêmes.
+            ->withCount('documents')
             ->latest()
             ->paginate(15);
 
@@ -132,6 +135,43 @@ class PropertyManagementController extends Controller
         return ApiResponse::created([
             'document' => PropertyDocumentResource::make($document),
         ]);
+    }
+
+    /**
+     * Liste des documents d'un bien. GET /api/v1/properties/{property}/documents
+     *
+     * Réservé au propriétaire du bien (ou admin) via la policy `manageDocuments`.
+     * Chaque document porte un lien de téléchargement SIGNÉ et TEMPORAIRE
+     * (cf. PropertyDocumentResource) : le chemin de stockage n'est jamais exposé.
+     */
+    public function listDocuments(Request $request, Property $property): AnonymousResourceCollection
+    {
+        abort_unless($request->user()?->can('manageDocuments', $property) ?? false, 403);
+
+        return PropertyDocumentResource::collection(
+            $property->documents()->latest()->get(),
+        );
+    }
+
+    /**
+     * Suppression d'un document. DELETE /api/v1/properties/{property}/documents/{document}
+     *
+     * Retire la ligne ET le fichier sur disque privé. Réservé au propriétaire
+     * (ou admin) via la policy `manageDocuments`.
+     */
+    public function deleteDocument(Request $request, Property $property, PropertyDocument $document): JsonResponse
+    {
+        abort_unless($request->user()?->can('manageDocuments', $property) ?? false, 403);
+        // Le document doit bien appartenir au bien indiqué dans l'URL.
+        abort_unless($document->property_id === $property->id, 404);
+
+        // On efface d'abord le fichier physique (best-effort) puis la métadonnée.
+        Storage::disk($document->disk)->delete($document->path);
+        $document->delete();
+
+        activity()->causedBy($request->user())->performedOn($property)->log('Suppression de document de bien');
+
+        return ApiResponse::success(['deleted' => true]);
     }
 
     /**

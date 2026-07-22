@@ -73,6 +73,11 @@ class PropertyResource extends JsonResource
                     ? \App\Modules\Stay\Http\Resources\StayResource::make($this->stay)
                     : null,
             ),
+            // Nombre de pièces justificatives — présent seulement quand la liste
+            // « Mes biens » a demandé le compteur (`withCount('documents')`) pour
+            // l'écran « Documents » (F4.5). `whenCounted` garde la clé absente
+            // ailleurs (catalogue public, fiches) : aucune requête superflue.
+            'documents_count' => $this->whenCounted('documents'),
             'published_at' => $this->published_at,
             'created_at' => $this->created_at,
         ];

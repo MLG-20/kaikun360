@@ -207,6 +207,107 @@ class PropertyManagementTest extends TestCase
         Storage::disk('local')->assertExists($document->path);
     }
 
+    public function test_liste_des_documents_dun_bien(): void
+    {
+        Storage::fake('local');
+        $owner = $this->proprietaire();
+        $property = Property::factory()->create(['owner_id' => $owner->id]);
+
+        Sanctum::actingAs($owner);
+
+        // Deux dépôts, puis on liste.
+        $this->postJson("/api/v1/properties/{$property->id}/documents", [
+            'type' => 'titre_foncier',
+            'file' => UploadedFile::fake()->create('tf.pdf', 100, 'application/pdf'),
+        ])->assertCreated();
+        $this->postJson("/api/v1/properties/{$property->id}/documents", [
+            'type' => 'bail',
+            'file' => UploadedFile::fake()->create('bail.pdf', 100, 'application/pdf'),
+        ])->assertCreated();
+
+        $res = $this->getJson("/api/v1/properties/{$property->id}/documents");
+
+        $res->assertOk()->assertJsonCount(2, 'data');
+        // Un lien de téléchargement SIGNÉ est fourni, jamais le chemin brut.
+        $res->assertJsonPath('data.0.download_url', fn ($url) => is_string($url) && str_contains($url, 'signature='));
+        $res->assertJsonMissingPath('data.0.path');
+    }
+
+    public function test_liste_des_documents_isolee_par_proprietaire(): void
+    {
+        $owner = $this->proprietaire();
+        $autre = $this->proprietaire();
+        $property = Property::factory()->create(['owner_id' => $owner->id]);
+
+        Sanctum::actingAs($autre);
+
+        $this->getJson("/api/v1/properties/{$property->id}/documents")->assertStatus(403);
+    }
+
+    public function test_suppression_dun_document(): void
+    {
+        Storage::fake('local');
+        $owner = $this->proprietaire();
+        $property = Property::factory()->create(['owner_id' => $owner->id]);
+
+        Sanctum::actingAs($owner);
+
+        $this->postJson("/api/v1/properties/{$property->id}/documents", [
+            'type' => 'plan',
+            'file' => UploadedFile::fake()->create('plan.pdf', 100, 'application/pdf'),
+        ])->assertCreated();
+
+        $document = $property->documents()->first();
+        Storage::disk('local')->assertExists($document->path);
+
+        $this->deleteJson("/api/v1/properties/{$property->id}/documents/{$document->id}")
+            ->assertOk()
+            ->assertJsonPath('data.deleted', true);
+
+        // Ligne ET fichier physique retirés.
+        $this->assertDatabaseMissing('property_documents', ['id' => $document->id]);
+        Storage::disk('local')->assertMissing($document->path);
+    }
+
+    public function test_suppression_de_document_refusee_a_un_tiers(): void
+    {
+        Storage::fake('local');
+        $owner = $this->proprietaire();
+        $autre = $this->proprietaire();
+        $property = Property::factory()->create(['owner_id' => $owner->id]);
+
+        Sanctum::actingAs($owner);
+        $this->postJson("/api/v1/properties/{$property->id}/documents", [
+            'type' => 'autre',
+            'file' => UploadedFile::fake()->create('x.pdf', 100, 'application/pdf'),
+        ])->assertCreated();
+        $document = $property->documents()->first();
+
+        // Un autre propriétaire n'a aucun droit sur ce bien.
+        Sanctum::actingAs($autre);
+        $this->deleteJson("/api/v1/properties/{$property->id}/documents/{$document->id}")
+            ->assertStatus(403);
+
+        $this->assertDatabaseHas('property_documents', ['id' => $document->id]);
+    }
+
+    public function test_mine_expose_le_compteur_de_documents(): void
+    {
+        Storage::fake('local');
+        $owner = $this->proprietaire();
+        $property = Property::factory()->create(['owner_id' => $owner->id]);
+
+        Sanctum::actingAs($owner);
+        $this->postJson("/api/v1/properties/{$property->id}/documents", [
+            'type' => 'titre_foncier',
+            'file' => UploadedFile::fake()->create('tf.pdf', 100, 'application/pdf'),
+        ])->assertCreated();
+
+        $this->getJson('/api/v1/properties/mine')
+            ->assertOk()
+            ->assertJsonPath('data.0.documents_count', 1);
+    }
+
     public function test_mine_exige_authentification(): void
     {
         $this->getJson('/api/v1/properties/mine')->assertStatus(401);
