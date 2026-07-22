@@ -24,6 +24,7 @@ use App\Modules\Stay\Models\Stay;
 use App\Notifications\BookingConfirmedNotification;
 use App\Notifications\QuoteReceivedNotification;
 use App\Notifications\RequestStatusChangedNotification;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -131,55 +132,128 @@ class DemoSeeder extends Seeder
             return;
         }
 
-        // On confie deux des biens du propriétaire à la gestion Kaikun.
-        $properties = Property::query()
-            ->where('owner_id', $owner->id)
-            ->take(2)
-            ->get();
+        // ⚠️ Cohérence AVANT tout : cet écran doit se lire d'un coup d'œil. On ne
+        // tire donc PAS de montants aléatoires indépendants (loyers, dépenses,
+        // reversements sans lien → chiffres absurdes : reversé > encaissé, net
+        // négatif…). On raconte deux HISTOIRES simples, ancrées sur le MOIS
+        // COURANT (le rapport mensuel s'ouvre dessus) : un loyer fixe par bien,
+        // un seul locataire, des reversements = loyer − commission (− dépenses).
 
-        if ($properties->isEmpty()) {
-            $this->command?->info('DemoSeeder : aucun bien pour la gestion locative de démo.');
+        $thisMonth = CarbonImmutable::now()->startOfMonth();
+        $lastMonth = $thisMonth->subMonth();
+        $twoMonthsAgo = $thisMonth->subMonths(2);
 
-            return;
+        // Crée deux biens LOCATIFS dédiés (titres explicites + loyer mensuel comme
+        // prix). Kaikun fait vente ET location : ces annonces cohabitent sans souci
+        // avec les biens « à vendre » du catalogue.
+
+        // ————————————————————— Mandat A : locataire régulier —————————————————————
+        // Awa Ndiaye loue l'appartement 450 000 F/mois depuis 3 mois (tout payé).
+        // Une fuite d'eau a été réparée le mois dernier (55 000 F < loyer). Chaque
+        // loyer encaissé est reversé net de la commission (10 %) et des dépenses ;
+        // le reversement du mois courant est encore « en attente ».
+        $rentA = 450_000;
+        $rateA = 10.0;
+        $tenantA = 'Awa Ndiaye';
+
+        $flatA = Property::factory()->published()->create([
+            'owner_id' => $owner->id,
+            'type' => PropertyType::APPARTEMENT->value,
+            'title' => 'Appartement F3 en location',
+            'price_xof' => $rentA,
+        ]);
+        $mandateA = ManagementMandate::factory()->create([
+            'owner_id' => $owner->id,
+            'property_id' => $flatA->id,
+            'commission_rate' => $rateA,
+            'start_date' => $twoMonthsAgo->toDateString(),
+        ]);
+
+        foreach ([$twoMonthsAgo, $lastMonth, $thisMonth] as $month) {
+            $this->rent($mandateA, $tenantA, $month, $rentA, paid: true);
         }
 
-        // --- Mandat 1 : loyers payés + un impayé, un reversement effectué + un
-        //     en attente, un incident ouvert et une dépense. ---
-        $first = $properties->first();
-        $mandate1 = ManagementMandate::factory()->create([
-            'owner_id' => $owner->id,
-            'property_id' => $first->id,
+        $incidentA = Incident::factory()->create([
+            'property_id' => $flatA->id,
+            'title' => "Fuite d'eau salle de bain",
+            'priority' => 'p2',
+            'status' => 'resolu',
+            'created_at' => $lastMonth->addDays(9),
+            'resolved_at' => $lastMonth->addDays(13),
+        ]);
+        $expenseA = 55_000;
+        Expense::factory()->create([
+            'property_id' => $flatA->id,
+            'incident_id' => $incidentA->id,
+            'label' => 'Réparation plomberie',
+            'category' => 'reparation',
+            'amount_xof' => $expenseA,
+            'spent_at' => $lastMonth->addDays(13)->toDateString(),
         ]);
 
-        Rent::factory()->count(3)->paid()->create(['mandate_id' => $mandate1->id]);
-        Rent::factory()->create(['mandate_id' => $mandate1->id]); // impayé (défaut)
+        $commA = (int) round($rentA * $rateA / 100); // 45 000
+        $this->payout($mandateA, $owner, $twoMonthsAgo, $rentA - $commA, done: true);           // 405 000
+        $this->payout($mandateA, $owner, $lastMonth, $rentA - $commA - $expenseA, done: true);   // 350 000
+        $this->payout($mandateA, $owner, $thisMonth, $rentA - $commA, done: false);              // 405 000 en attente
 
-        OwnerPayout::factory()->done()->create([
-            'mandate_id' => $mandate1->id,
+        // —————————————————— Mandat B : locataire en retard ce mois ——————————————————
+        // Cheikh Fall loue la villa 800 000 F/mois (commission 12,5 %). Le mois
+        // dernier est payé et reversé (700 000 F net) ; le mois courant est IMPAYÉ
+        // (une relance est à faire) → illustre le suivi des impayés.
+        $rentB = 800_000;
+        $rateB = 12.5;
+        $tenantB = 'Cheikh Fall';
+
+        $villaB = Property::factory()->published()->create([
             'owner_id' => $owner->id,
+            'type' => PropertyType::VILLA->value,
+            'title' => 'Villa R+1 en location',
+            'price_xof' => $rentB,
         ]);
+        $mandateB = ManagementMandate::factory()->create([
+            'owner_id' => $owner->id,
+            'property_id' => $villaB->id,
+            'commission_rate' => $rateB,
+            'start_date' => $lastMonth->toDateString(),
+        ]);
+
+        $this->rent($mandateB, $tenantB, $lastMonth, $rentB, paid: true);
+        $this->rent($mandateB, $tenantB, $thisMonth, $rentB, paid: false); // impayé (relance)
+
+        $commB = (int) round($rentB * $rateB / 100); // 100 000
+        $this->payout($mandateB, $owner, $lastMonth, $rentB - $commB, done: true); // 700 000
+    }
+
+    /**
+     * Crée une échéance de loyer cohérente (même locataire, même montant, libellé
+     * de période aligné sur `$month`). `$paid` = encaissée, sinon impayée.
+     */
+    private function rent(ManagementMandate $mandate, string $tenant, CarbonImmutable $month, int $amount, bool $paid): void
+    {
+        $factory = $paid ? Rent::factory()->paid() : Rent::factory();
+        $factory->create([
+            'mandate_id' => $mandate->id,
+            'tenant_name' => $tenant,
+            'period_label' => $month->locale('fr')->translatedFormat('F Y'),
+            'due_date' => $month->toDateString(),
+            'amount_xof' => $amount,
+        ]);
+    }
+
+    /**
+     * Crée un reversement au propriétaire pour le mois `$month`. `$done` = effectué
+     * (payé en fin de mois, compté dans le rapport de ce mois), sinon en attente.
+     */
+    private function payout(ManagementMandate $mandate, User $owner, CarbonImmutable $month, int $amount, bool $done): void
+    {
         OwnerPayout::factory()->create([
-            'mandate_id' => $mandate1->id,
+            'mandate_id' => $mandate->id,
             'owner_id' => $owner->id,
-        ]); // en attente (défaut)
-
-        Incident::factory()->create(['property_id' => $first->id]); // ouvert (défaut)
-        Expense::factory()->create(['property_id' => $first->id]);
-
-        // --- Mandat 2 : deux loyers payés et un reversement effectué. ---
-        if ($properties->count() > 1) {
-            $second = $properties->get(1);
-            $mandate2 = ManagementMandate::factory()->create([
-                'owner_id' => $owner->id,
-                'property_id' => $second->id,
-            ]);
-
-            Rent::factory()->count(2)->paid()->create(['mandate_id' => $mandate2->id]);
-            OwnerPayout::factory()->done()->create([
-                'mandate_id' => $mandate2->id,
-                'owner_id' => $owner->id,
-            ]);
-        }
+            'period_label' => $month->locale('fr')->translatedFormat('F Y'),
+            'amount_xof' => $amount,
+            'status' => $done ? 'effectue' : 'en_attente',
+            'paid_at' => $done ? $month->endOfMonth() : null,
+        ]);
     }
 
     /**
