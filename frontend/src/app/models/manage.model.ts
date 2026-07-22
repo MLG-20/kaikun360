@@ -30,6 +30,9 @@ export interface OwnerDashboard {
 export interface MandateSummary {
   loyers_payes_xof: number;
   loyers_impayes_xof: number;
+  /** Nombre d'échéances réglées / impayées (désambiguïse deux mois au même loyer). */
+  loyers_payes_count: number;
+  loyers_impayes_count: number;
   depenses_xof: number;
   reversements_xof: number;
   incidents_ouverts: number;

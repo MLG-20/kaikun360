@@ -47,10 +47,16 @@
         <div class="mgd-kpi" data-tone="good">
           <span class="mgd-kpi-label">Loyers encaissés</span>
           <strong class="mgd-kpi-value">{{ fcfa(m.summary.loyers_payes_xof) }}</strong>
+          <span class="mgd-kpi-sub">
+            {{ m.summary.loyers_payes_count }} échéance{{ m.summary.loyers_payes_count > 1 ? 's' : '' }} réglée{{ m.summary.loyers_payes_count > 1 ? 's' : '' }}
+          </span>
         </div>
         <div class="mgd-kpi" [attr.data-tone]="m.summary.loyers_impayes_xof > 0 ? 'warn' : null">
           <span class="mgd-kpi-label">Loyers impayés</span>
           <strong class="mgd-kpi-value">{{ fcfa(m.summary.loyers_impayes_xof) }}</strong>
+          <span class="mgd-kpi-sub">
+            {{ m.summary.loyers_impayes_count }} échéance{{ m.summary.loyers_impayes_count > 1 ? 's' : '' }} en attente
+          </span>
         </div>
         <div class="mgd-kpi">
           <span class="mgd-kpi-label">Dépenses</span>

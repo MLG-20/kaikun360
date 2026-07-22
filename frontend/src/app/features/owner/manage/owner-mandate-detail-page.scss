@@ -132,6 +132,13 @@
   }
 }
 
+// Compte d'échéances sous le montant (ex. « 1 échéance en attente ») : dit
+// combien de mois se cachent derrière la somme, pour lever toute ambiguïté.
+.mgd-kpi-sub {
+  font-size: 0.78rem;
+  color: var(--k-muted);
+}
+
 // ========================== Rapport mensuel ==============================
 .mgd-report-head {
   display: flex;
