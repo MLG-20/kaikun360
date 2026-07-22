@@ -80,6 +80,15 @@ Relation `ManagementMandate::rents()` (hasMany).
   dépenses, reversements effectués, incidents ouverts.
 - `MandateResource` expose ces sommes sous `summary`.
 
+> **F4.4 — lignes détaillées sur la fiche.** Pour l'espace propriétaire, la fiche
+> `GET /manage/mandates/{mandate}` **eager-load** en plus les `rents`, `payouts`
+> et `incidents` (les **12 plus récents** de chaque) ; `MandateResource` les
+> expose sous les clés `rents` / `payouts` / `incidents` — **uniquement quand la
+> relation est chargée** (`when(relationLoaded(...))`, jamais `whenLoaded` qui
+> casserait `Resource::collection` sur une relation absente). La **liste** `mine`
+> ne charge PAS ces relations : elle reste légère (agrégats seulement), les clés
+> sont simplement absentes.
+
 ---
 
 ## Gestion par les agents & rapport mensuel (phase B4.6)

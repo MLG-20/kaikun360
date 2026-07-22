@@ -11,7 +11,7 @@ API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 - **166 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **55 tables**, référentiel géographique du Sénégal inclus
-- **488 tests** automatisés (1411 assertions), tous verts ✅
+- **490 tests** automatisés (1419 assertions), tous verts ✅
 
 ---
 
@@ -51,7 +51,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 488 tests automatiques** — des petits programmes
+notifications) et **vérifié par 490 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -301,7 +301,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 488 tests, 1411 assertions — verts
+# 490 tests, 1419 assertions — verts
 ```
 
 > Après toute nouvelle migration : régénérer le dump

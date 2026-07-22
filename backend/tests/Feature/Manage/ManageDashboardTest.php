@@ -103,6 +103,48 @@ class ManageDashboardTest extends TestCase
             ->assertJsonPath('data.mandate.id', $mandate->id);
     }
 
+    public function test_la_fiche_mandat_expose_ses_lignes_loyers_reversements_incidents(): void
+    {
+        $owner = User::factory()->create();
+        $mandate = ManagementMandate::factory()->create(['owner_id' => $owner->id]);
+
+        Rent::factory()->paid()->create(['mandate_id' => $mandate->id, 'amount_xof' => 100_000]);
+        OwnerPayout::factory()->done()->create([
+            'mandate_id' => $mandate->id,
+            'owner_id' => $owner->id,
+            'amount_xof' => 70_000,
+        ]);
+        Incident::factory()->create(['property_id' => $mandate->property_id, 'status' => 'ouvert']);
+
+        // Lignes d'un AUTRE mandat : ne doivent pas fuiter dans cette fiche.
+        $other = ManagementMandate::factory()->create();
+        Rent::factory()->create(['mandate_id' => $other->id]);
+
+        Sanctum::actingAs($owner);
+
+        $this->getJson("/api/v1/manage/mandates/{$mandate->id}")
+            ->assertOk()
+            ->assertJsonCount(1, 'data.mandate.rents')
+            ->assertJsonCount(1, 'data.mandate.payouts')
+            ->assertJsonCount(1, 'data.mandate.incidents')
+            ->assertJsonPath('data.mandate.rents.0.amount_xof', 100_000)
+            ->assertJsonPath('data.mandate.payouts.0.amount_xof', 70_000);
+    }
+
+    public function test_la_liste_mine_n_embarque_pas_les_lignes_detaillees(): void
+    {
+        $owner = User::factory()->create();
+        $mandate = ManagementMandate::factory()->create(['owner_id' => $owner->id]);
+        Rent::factory()->create(['mandate_id' => $mandate->id]);
+
+        Sanctum::actingAs($owner);
+
+        // La liste reste légère : agrégats oui, lignes non (clé absente).
+        $this->getJson('/api/v1/manage/mandates/mine')
+            ->assertOk()
+            ->assertJsonMissingPath('data.0.rents');
+    }
+
     public function test_l_espace_gestion_exige_une_authentification(): void
     {
         $this->getJson('/api/v1/manage/dashboard')->assertStatus(401);

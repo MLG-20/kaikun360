@@ -53,8 +53,14 @@ class ManageController extends Controller
 
         $mandate = $this->withAggregates(
             ManagementMandate::query()->whereKey($mandate->id)
-        )->with(['property.region', 'property.department', 'property.commune', 'property.owner'])
-            ->firstOrFail();
+        )->with([
+            'property.region', 'property.department', 'property.commune', 'property.owner',
+            // Lignes détaillées de la fiche (F4.4), les plus récentes d'abord.
+            // Bornées pour ne pas alourdir la réponse d'un mandat ancien.
+            'rents' => fn ($q) => $q->latest('due_date')->limit(12),
+            'payouts' => fn ($q) => $q->latest()->limit(12),
+            'incidents' => fn ($q) => $q->latest()->limit(12),
+        ])->firstOrFail();
 
         return ApiResponse::success(['mandate' => MandateResource::make($mandate)]);
     }

@@ -39,6 +39,24 @@ class MandateResource extends JsonResource
             ],
 
             'property' => PropertyResource::make($this->whenLoaded('property')),
+
+            // Lignes détaillées (échéances de loyer, reversements, incidents) —
+            // exposées UNIQUEMENT sur la fiche d'un mandat (F4.4), pas dans la
+            // liste. On teste `relationLoaded` (et non `whenLoaded`) car
+            // `RentResource::collection(MissingValue)` casserait ; absente au
+            // catalogue, la clé n'apparaît simplement pas → aucun N+1.
+            'rents' => $this->when(
+                $this->relationLoaded('rents'),
+                fn () => RentResource::collection($this->rents),
+            ),
+            'payouts' => $this->when(
+                $this->relationLoaded('payouts'),
+                fn () => OwnerPayoutResource::collection($this->payouts),
+            ),
+            'incidents' => $this->when(
+                $this->relationLoaded('incidents'),
+                fn () => IncidentResource::collection($this->incidents),
+            ),
         ];
     }
 }
