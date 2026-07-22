@@ -97,9 +97,16 @@ export class OwnerMandateDetailPageComponent {
         this.mandateId.set(id);
         return this.manage.getMandate(id).pipe(
           tap((env) => {
-            this.mandate.set(env.data.mandate);
+            const mandate = env.data.mandate;
+            this.mandate.set(mandate);
             this.state.set('ready');
-            // Le mandat est chargé : on récupère le rapport du mois courant.
+            // On ouvre le rapport sur le DERNIER mois ayant eu de l'activité
+            // financière (loyer encaissé / reversement effectué) plutôt que sur
+            // le mois courant : le propriétaire voit tout de suite l'argent
+            // réellement rentré/reversé, et avance dans le sélecteur pour suivre
+            // les échéances à venir. Un mois courant encore impayé afficherait
+            // sinon un rapport « vide » déroutant.
+            this.selectedMonth.set(this.latestActiveMonth(mandate));
             this.loadReport();
           }),
           catchError((err: { status?: number }) => {
@@ -110,6 +117,34 @@ export class OwnerMandateDetailPageComponent {
       }),
     ),
   );
+
+  /**
+   * Dernier mois (parmi les 12 proposés) ayant eu une **activité financière** :
+   * un loyer encaissé ou un reversement effectué. C'est le mois sur lequel on
+   * ouvre le rapport par défaut — celui où le propriétaire voit l'argent
+   * réellement rentré. Repli sur le mois courant si aucune activité (mandat tout
+   * neuf ou impayés seulement).
+   */
+  private latestActiveMonth(mandate: Mandate): string {
+    const inWindow = new Set(this.monthOptions.map((o) => o.value));
+    const months: string[] = [];
+
+    for (const rent of mandate.rents ?? []) {
+      if (rent.status === 'paye' && rent.due_date) {
+        months.push(rent.due_date.slice(0, 7));
+      }
+    }
+    for (const payout of mandate.payouts ?? []) {
+      if (payout.status === 'effectue' && payout.paid_at) {
+        months.push(payout.paid_at.slice(0, 7));
+      }
+    }
+
+    // On ne garde que les mois réellement sélectionnables (fenêtre de 12 mois),
+    // puis on prend le plus récent (tri lexicographique = chronologique en YYYY-MM).
+    const candidates = months.filter((m) => inWindow.has(m)).sort();
+    return candidates.length ? candidates[candidates.length - 1] : currentMonth();
+  }
 
   /** Recharge le rapport mensuel pour le mandat et le mois sélectionnés. */
   protected loadReport(): void {

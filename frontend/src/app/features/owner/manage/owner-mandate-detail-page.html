@@ -97,11 +97,15 @@
             <span class="mgd-month-label">Mois</span>
             <select
               class="mgd-month-select"
-              [value]="selectedMonth()"
               (change)="onMonthChange($any($event.target).value)"
             >
               @for (opt of monthOptions; track opt.value) {
-                <option [value]="opt.value">{{ opt.label }}</option>
+                <!-- `[selected]` (et non `[value]` sur le select) pour refléter
+                     un mois posé par programme : à l'ouverture, on sélectionne le
+                     dernier mois actif, pas forcément le mois courant. -->
+                <option [value]="opt.value" [selected]="opt.value === selectedMonth()">
+                  {{ opt.label }}
+                </option>
               }
             </select>
           </label>
