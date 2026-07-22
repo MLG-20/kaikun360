@@ -1,0 +1,135 @@
+// Bouton flottant « retour en haut » — global, hérité par toutes les pages.
+// Cercle blanc premium, anneau de progression de marque, apparition animée et
+// survol vivant. Fixé en bas à droite, au-dessus du contenu (sous les modales).
+
+:host {
+  // Le composant lui-même n'occupe aucune place dans le flux : le bouton est
+  // en position fixe. On neutralise tout impact sur la mise en page.
+  display: contents;
+}
+
+.scroll-top {
+  position: fixed;
+  right: clamp(16px, 3vw, 28px);
+  bottom: clamp(16px, 3vw, 28px);
+  z-index: 900;
+
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+
+  background: var(--k-white);
+  color: var(--k-brand);
+  box-shadow:
+    0 6px 20px rgba(3, 25, 63, 0.18),
+    0 2px 6px rgba(3, 25, 63, 0.12);
+
+  // État masqué (avant apparition) : décalé, réduit, non cliquable.
+  opacity: 0;
+  transform: translateY(16px) scale(0.85);
+  pointer-events: none;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease;
+}
+
+.scroll-top.is-visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.scroll-top:hover {
+  background: linear-gradient(135deg, var(--k-brand), var(--k-brand-600));
+  color: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(3, 72, 251, 0.34);
+}
+
+.scroll-top:active {
+  transform: translateY(-1px) scale(0.97);
+}
+
+.scroll-top:focus-visible {
+  outline: 2px solid var(--k-brand);
+  outline-offset: 3px;
+}
+
+// --- Anneau de progression -------------------------------------------------
+.scroll-top-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  // Démarre le trait au sommet du cercle.
+  transform: rotate(-90deg);
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--k-line);
+  stroke-width: 2;
+  opacity: 0.6;
+}
+
+.ring-progress {
+  fill: none;
+  stroke: var(--k-brand);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.12s linear;
+}
+
+.scroll-top:hover .ring-track {
+  stroke: rgba(255, 255, 255, 0.3);
+}
+
+.scroll-top:hover .ring-progress {
+  stroke: var(--k-gold-2);
+}
+
+// --- Chevron ---------------------------------------------------------------
+.scroll-top-ic {
+  display: grid;
+  place-items: center;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.scroll-top-ic svg {
+  width: 22px;
+  height: 22px;
+}
+
+// Le chevron « saute » légèrement vers le haut au survol (invite au clic).
+.scroll-top:hover .scroll-top-ic {
+  transform: translateY(-2px);
+}
+
+// --- ♿ Réduction des animations -------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+  .scroll-top {
+    transition: opacity 0.2s ease;
+  }
+
+  .scroll-top.is-visible,
+  .scroll-top:hover,
+  .scroll-top:active {
+    transform: none;
+  }
+
+  .ring-progress {
+    transition: none;
+  }
+
+  .scroll-top:hover .scroll-top-ic {
+    transform: none;
+  }
+}
