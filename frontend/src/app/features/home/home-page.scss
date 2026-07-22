@@ -861,6 +861,24 @@
   color: #fff;
 }
 
+// --- Titres des cartes : mise en couleur douce au survol -------------------
+// Le titre prend la couleur d'accent de sa carte (cohérence par univers).
+.univers-name,
+.services-card-title,
+.protocol-card-title {
+  transition: color 0.28s ease;
+}
+
+.univers-card:hover .univers-name {
+  color: var(--k-brand);
+}
+.services-card:hover .services-card-title {
+  color: var(--k-green-600);
+}
+.protocol-card:hover .protocol-card-title {
+  color: var(--k-gold-2);
+}
+
 // --- ♿ Réduction des animations : on fige tout ----------------------------
 @media (prefers-reduced-motion: reduce) {
   .hero-text > *,
