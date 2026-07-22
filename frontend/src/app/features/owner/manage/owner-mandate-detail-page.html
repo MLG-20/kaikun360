@@ -42,7 +42,8 @@
       </header>
 
       <!-- Résumé financier (agrégats tous mois confondus) -->
-      <section class="mgd-kpis" aria-label="Résumé financier du mandat">
+      <p class="mgd-caption">Cumul depuis le début du mandat</p>
+      <section class="mgd-kpis" aria-label="Résumé financier du mandat, cumul depuis le début">
         <div class="mgd-kpi" data-tone="good">
           <span class="mgd-kpi-label">Loyers encaissés</span>
           <strong class="mgd-kpi-value">{{ fcfa(m.summary.loyers_payes_xof) }}</strong>
@@ -147,6 +148,17 @@
               <dd>{{ r.incidents.opened }} ouvert(s) · {{ r.incidents.resolved }} résolu(s)</dd>
             </div>
           </dl>
+          <p class="mgd-report-note">
+            <strong>Net à reverser</strong> = loyers encaissés − commission Kaikun − dépenses.
+            @if (r.net_owner_xof < 0) {
+              <span class="mgd-report-warn">
+                Ce mois-ci, les dépenses dépassent les loyers encaissés : il n'y a
+                rien à reverser (le solde sera reporté).
+              </span>
+            } @else {
+              « Reversé ce mois » indique ce qui vous a déjà été effectivement versé.
+            }
+          </p>
         }
       </section>
 

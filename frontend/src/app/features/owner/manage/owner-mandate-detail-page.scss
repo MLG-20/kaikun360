@@ -75,6 +75,16 @@
 }
 
 // ======================= Résumé financier (KPI) ==========================
+// Légende qui lève l'ambiguïté avec le rapport mensuel : ces tuiles sont un
+// CUMUL (tous mois), le « Rapport mensuel » plus bas est borné à un mois.
+.mgd-caption {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--k-muted);
+  margin: 0 0 0.6rem;
+}
+
 .mgd-kpis {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -161,6 +171,19 @@
 .mgd-report-period {
   color: var(--k-muted);
   margin: 0 0 1rem;
+}
+
+// Explication du calcul du net (et cas où les dépenses dépassent les loyers).
+.mgd-report-note {
+  margin: 1rem 0 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--k-line);
+  font-size: 0.9rem;
+  color: var(--k-muted);
+}
+
+.mgd-report-warn {
+  color: color-mix(in srgb, var(--k-gold) 70%, #6b4e00);
 }
 
 .mgd-count {
