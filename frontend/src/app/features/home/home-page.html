@@ -40,7 +40,7 @@
      Chaque tuile mène au catalogue filtré ou à la section dédiée plus bas.
      ========================================================================= -->
 <section class="univers k-wrap" aria-labelledby="univers-title">
-  <header class="section-head">
+  <header class="section-head" appReveal>
     <span class="k-eyebrow">Nos univers</span>
     <h2 id="univers-title">Un seul compte, tous vos besoins au Sénégal</h2>
     <p class="k-muted section-lead">
@@ -49,7 +49,7 @@
     </p>
   </header>
 
-  <div class="univers-grid">
+  <div class="univers-grid" appReveal="group">
     @for (u of universes; track u.name) {
       <a
         class="univers-card k-card"
@@ -104,7 +104,7 @@
      ========================================================================= -->
 <section class="protocol" aria-labelledby="protocol-title">
   <div class="k-wrap">
-    <header class="protocol-head">
+    <header class="protocol-head" appReveal>
       <span class="k-eyebrow protocol-eyebrow">Protocole de confiance</span>
       <h2 id="protocol-title">
         La confiance n’est pas une promesse.<br />
@@ -117,7 +117,7 @@
       </p>
     </header>
 
-    <div class="protocol-grid">
+    <div class="protocol-grid" appReveal="group">
       @for (g of guarantees; track g.title) {
         <article class="protocol-card">
           <span class="protocol-icon" aria-hidden="true">
@@ -147,7 +147,7 @@
      proprement si l'API est indisponible.
      ========================================================================= -->
 <section id="catalogue" class="featured k-wrap" aria-labelledby="featured-title">
-  <header class="section-head-row">
+  <header class="section-head-row" appReveal>
     <div>
       <span class="k-eyebrow">Sélection du moment</span>
       <h2 id="featured-title">Des biens vérifiés, prêts à visiter</h2>
@@ -160,7 +160,7 @@
   @switch (featuredState()) {
     @case ('ready') {
       @if (featured().length) {
-        <div class="featured-grid">
+        <div class="featured-grid" appReveal="group">
           @for (card of featured(); track card.id) {
             <app-listing-card
               [title]="card.title"
@@ -202,7 +202,7 @@
      Traduit le protocole de confiance en bénéfices concrets.
      ========================================================================= -->
 <section id="diaspora" class="diaspora" aria-labelledby="diaspora-title">
-  <div class="k-wrap diaspora-grid">
+  <div class="k-wrap diaspora-grid" appReveal="group">
     <div class="diaspora-text">
       <span class="k-eyebrow">Kaikun Diaspora</span>
       <h2 id="diaspora-title">Pilotez votre projet au pays, depuis l’étranger</h2>
@@ -249,12 +249,12 @@
      Porte les ancres #services et #team-building ciblées par les univers.
      ========================================================================= -->
 <section id="services" class="services k-wrap" aria-labelledby="services-title">
-  <header class="section-head">
+  <header class="section-head" appReveal>
     <span class="k-eyebrow">Aller plus loin</span>
     <h2 id="services-title">D’autres services pensés pour vous simplifier la vie</h2>
   </header>
 
-  <div class="services-grid">
+  <div class="services-grid" appReveal="group">
     @for (s of services; track s.title) {
       <article class="services-card k-card" [id]="s.anchor ?? null">
         <span class="services-icon" aria-hidden="true">
@@ -286,7 +286,7 @@
      laquelle pointe le CTA (ancre #simulateur).
      ========================================================================= -->
 <section id="simulateur" class="simulator" aria-labelledby="simulator-title">
-  <div class="k-wrap simulator-card">
+  <div class="k-wrap simulator-card" appReveal>
     <div class="simulator-text">
       <span class="k-eyebrow">Kaikun Chantier</span>
       <h2 id="simulator-title">Estimez votre construction en 30 secondes</h2>
@@ -315,10 +315,10 @@
      Section 8 — Preuve : bandeau de statistiques de crédibilité.
      ========================================================================= -->
 <section class="stats" aria-label="Kaikun 360 en chiffres">
-  <div class="k-wrap stats-grid">
+  <div class="k-wrap stats-grid" appReveal="group">
     @for (stat of stats; track stat.label) {
       <div class="stat">
-        <span class="stat-value">{{ stat.value }}</span>
+        <span class="stat-value" [appCountUp]="stat.value">{{ stat.value }}</span>
         <span class="stat-label">{{ stat.label }}</span>
       </div>
     }
@@ -329,7 +329,7 @@
      Section 9 — Appel final : invitation à créer un compte / explorer.
      ========================================================================= -->
 <section class="cta-final" aria-labelledby="cta-title">
-  <div class="k-wrap cta-final-inner">
+  <div class="k-wrap cta-final-inner" appReveal>
     <div>
       <h2 id="cta-title">Prêt à démarrer votre projet au Sénégal&nbsp;?</h2>
       <p class="cta-final-lead">

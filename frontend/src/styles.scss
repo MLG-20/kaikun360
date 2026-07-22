@@ -9,3 +9,5 @@
 @use 'styles/conversion';
 // Styles partagés de l'espace client authentifié (F3).
 @use 'styles/account';
+// Utilitaires d'apparition au défilement (directive appReveal).
+@use 'styles/reveal';

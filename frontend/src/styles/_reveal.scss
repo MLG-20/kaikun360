@@ -1,0 +1,60 @@
+// =============================================================================
+// Révélation au défilement (directive `appReveal`) — utilitaires globaux.
+//
+// Ces classes sont posées par la directive DANS LE NAVIGATEUR (après hydratation)
+// puis basculées en `.is-in` quand l'élément entre à l'écran. Le serveur ne les
+// pose jamais : le contenu reste donc visible sans JS. Voir
+// `shared/directives/reveal.directive.ts`.
+//
+// Courbe douce + montée verticale discrète = apparition élégante, jamais tape-à-
+// l'œil. On n'anime que `opacity`/`transform` (pas de reflow) → 60 fps.
+// =============================================================================
+
+// Élément seul qui apparaît.
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 0.7, 0.24, 1),
+    transform 0.7s cubic-bezier(0.22, 0.7, 0.24, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+// Grille dont les enfants directs apparaissent EN CASCADE.
+.reveal-group > * {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 0.7, 0.24, 1),
+    transform 0.6s cubic-bezier(0.22, 0.7, 0.24, 1);
+}
+
+.reveal-group.is-in > * {
+  opacity: 1;
+  transform: none;
+}
+
+// Délais échelonnés : chaque enfant entre légèrement après le précédent.
+@for $i from 1 through 9 {
+  .reveal-group.is-in > *:nth-child(#{$i}) {
+    transition-delay: #{0.06s * ($i - 1)};
+  }
+}
+
+// ♿ Réduction des animations : tout est visible d'emblée, sans transition.
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal.is-in,
+  .reveal-group > *,
+  .reveal-group.is-in > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

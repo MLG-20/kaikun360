@@ -6,6 +6,8 @@ import { FavoriteStore } from '../../core/state/favorite-store';
 import { CatalogCard, UNIVERSES } from '../../shared/components/catalog/catalog.config';
 import { ListingCardComponent } from '../../shared/components/listing-card/listing-card';
 import { OrbitHeroComponent } from '../../shared/components/orbit-hero/orbit-hero';
+import { CountUpDirective } from '../../shared/directives/count-up.directive';
+import { RevealDirective } from '../../shared/directives/reveal.directive';
 
 /**
  * Tuile d'univers de la grille des services.
@@ -68,7 +70,7 @@ interface ServiceItem {
  */
 @Component({
   selector: 'app-home-page',
-  imports: [OrbitHeroComponent, ListingCardComponent, RouterLink],
+  imports: [OrbitHeroComponent, ListingCardComponent, RouterLink, RevealDirective, CountUpDirective],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

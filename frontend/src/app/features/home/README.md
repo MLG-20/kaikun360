@@ -62,6 +62,16 @@ d'accueil déroule donc une histoire, section après section :
   vitrine), tous décrits dans [`../../shared/README.md`](../../shared/README.md).
   (Le moteur de recherche `app-search-engine` reste disponible pour la page
   `/recherche` ; il a été retiré du hero de l'accueil.)
+- **Réactivité & mouvement** : le hero entre en **cascade au chargement** (CSS
+  pur) ; chaque section et chaque grille de cartes **apparaît au défilement** en
+  fondu/glissé via la directive `appReveal` (les cartes en cascade avec
+  `appReveal="group"`) ; la bande de statistiques **compte de 0 à sa valeur**
+  (`appCountUp`). Les cartes (univers, protocole, services) ont un **survol
+  premium** : élévation, halo de marque, icône qui réagit, reflet lumineux.
+  Tout est piloté par `opacity`/`transform` (60 fps) et neutralisé sous
+  `prefers-reduced-motion`. Les deux directives sont dans
+  [`../../shared/directives/`](../../shared/directives/), les styles d'apparition
+  dans [`../../../styles/_reveal.scss`](../../../styles/_reveal.scss).
 - **Vitrine (données réelles)** : `HomePageComponent` injecte le
   [`CatalogService`](../../core/api/catalog.service.ts) et appelle
   `properties({ per_page: 6, sort: 'recent' })` dans `ngOnInit`. Les éléments sont

@@ -708,3 +708,183 @@
     align-items: flex-start;
   }
 }
+
+// =============================================================================
+// RÉACTIVITÉ & MOUVEMENT — entrée du hero, survols enrichis des cartes.
+// Objectif : une page vivante et premium, sans nuire aux performances
+// (on n'anime que `opacity`/`transform`) ni à l'accessibilité (garde
+// `prefers-reduced-motion` en fin de bloc). L'apparition des sections au
+// défilement est gérée par la directive `appReveal` (cf. styles/_reveal.scss).
+// =============================================================================
+
+// --- Entrée du hero au chargement (cascade CSS pure, sans JS) --------------
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-text > *,
+.hero-visual {
+  animation: hero-in 0.7s cubic-bezier(0.22, 0.7, 0.24, 1) both;
+}
+
+.hero-text > .k-eyebrow {
+  animation-delay: 0.05s;
+}
+.hero-text h1 {
+  animation-delay: 0.14s;
+}
+.hero-text .lead {
+  animation-delay: 0.24s;
+}
+.hero-text .trust-row {
+  animation-delay: 0.34s;
+}
+.hero-visual {
+  animation-delay: 0.2s;
+  animation-duration: 0.9s;
+}
+
+// --- Univers : survol plus vivant (élévation, halo, icône, reflet) ---------
+.univers-card {
+  overflow: hidden; // pour contenir le reflet diagonal.
+  transition:
+    transform 0.28s cubic-bezier(0.22, 0.7, 0.24, 1),
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+// Reflet lumineux qui balaie la carte au survol.
+.univers-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.55) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.7s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.univers-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 22px 46px rgba(3, 72, 251, 0.16);
+  border-color: var(--k-brand);
+}
+
+.univers-card:hover::before {
+  transform: translateX(120%);
+}
+
+.univers-icon {
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.28s ease,
+    color 0.28s ease;
+}
+
+.univers-card:hover .univers-icon {
+  transform: translateY(-2px) scale(1.08) rotate(-4deg);
+  background: var(--k-brand);
+  color: #fff;
+}
+
+// Le contenu passe au-dessus du reflet.
+.univers-tag,
+.univers-name,
+.univers-desc,
+.univers-icon,
+.univers-arrow {
+  position: relative;
+  z-index: 2;
+}
+
+// --- Protocole (navy) : les cartes s'éclairent et se soulèvent -------------
+.protocol-card {
+  transition:
+    transform 0.28s cubic-bezier(0.22, 0.7, 0.24, 1),
+    border-color 0.28s ease,
+    background 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.protocol-icon {
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.protocol-card:hover {
+  transform: translateY(-6px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(211, 174, 82, 0.5);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.28);
+}
+
+.protocol-card:hover .protocol-icon {
+  transform: scale(1.1) rotate(-4deg);
+}
+
+// --- Services : élévation + icône réactive ---------------------------------
+.services-card {
+  transition:
+    transform 0.28s cubic-bezier(0.22, 0.7, 0.24, 1),
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.services-icon {
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.28s ease,
+    color 0.28s ease;
+}
+
+.services-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(56, 167, 116, 0.16);
+  border-color: var(--k-green);
+}
+
+.services-card:hover .services-icon {
+  transform: translateY(-2px) scale(1.08) rotate(-4deg);
+  background: var(--k-green);
+  color: #fff;
+}
+
+// --- ♿ Réduction des animations : on fige tout ----------------------------
+@media (prefers-reduced-motion: reduce) {
+  .hero-text > *,
+  .hero-visual {
+    animation: none;
+  }
+
+  .univers-card,
+  .univers-card::before,
+  .univers-icon,
+  .protocol-card,
+  .protocol-icon,
+  .services-card,
+  .services-icon {
+    transition: none;
+  }
+
+  .univers-card:hover,
+  .protocol-card:hover,
+  .services-card:hover {
+    transform: none;
+  }
+
+  .univers-card:hover::before {
+    transform: translateX(-120%); // reflet neutralisé.
+  }
+}
