@@ -111,12 +111,12 @@
 }
 
 // --- Nœuds en orbite ------------------------------------------------------
-// Calque qui porte les 8 nœuds et les fait tourner lentement autour du centre.
+// Calque qui porte les 9 nœuds et les fait tourner autour du centre.
 // La carte centrale et le libellé, eux, ne bougent pas.
 .orbit-nodes {
   position: absolute;
   inset: 0;
-  animation: orbit-spin 48s linear infinite;
+  animation: orbit-spin 36s linear infinite;
 }
 
 // Tout se fige dès que le curseur entre dans la zone : ainsi les nœuds
@@ -148,7 +148,8 @@
   color: var(--k-navy);
   transition: color 0.2s;
   // Contre-rotation : annule la rotation du calque pour garder l'icône droite.
-  animation: orbit-spin-rev 48s linear infinite;
+  // ⚠️ Durée IDENTIQUE à .orbit-nodes (sinon les icônes dérivent en tournant).
+  animation: orbit-spin-rev 36s linear infinite;
 }
 
 .orbit-node:hover,

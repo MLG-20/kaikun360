@@ -34,6 +34,7 @@ export class OrbitHeroComponent {
     { title: 'Diaspora', price: 'orientation gratuite', cta: 'Espace diaspora', link: '/diaspora', icon: ['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z', 'M3 12h18', 'M12 3c3 3.6 3 14.4 0 18', 'M12 3c-3 3.6-3 14.4 0 18'] },
     { title: 'Gestion locative', price: '8 % des loyers', cta: 'Confier un bien', link: '/gestion-locative', icon: ['M4 20V10', 'M10 20V4', 'M16 20v-7', 'M2 20h20'] },
     { title: 'Team building', price: 'dès 35 000 F / pers', cta: 'Organiser un groupe', link: '/team-building', icon: ['M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z', 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', 'M12 11.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1z'] },
+    { title: 'Entreprises', price: 'solutions sur mesure', cta: 'Espace entreprise', link: '/pro', icon: ['M3 8h18v11H3z', 'M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2', 'M3 13h18'] },
   ];
 
   /** Univers + position (% dans le carré) précalculée sur le cercle. */
