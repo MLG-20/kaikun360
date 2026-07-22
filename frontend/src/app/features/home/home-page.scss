@@ -82,10 +82,6 @@
   color: var(--k-muted);
 }
 
-.hero-search {
-  max-width: 640px;
-}
-
 // La signature orbitale respire un peu à droite.
 .hero-visual {
   display: flex;
@@ -678,13 +674,9 @@
   }
 
   // Sur mobile, l'orbite passe sous le texte (secondaire) pour prioriser
-  // l'accroche et la recherche.
+  // l'accroche.
   .hero-visual {
     order: 1;
-  }
-
-  .hero-search {
-    max-width: 100%;
   }
 
   .univers-grid,

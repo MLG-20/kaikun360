@@ -6,7 +6,6 @@ import { FavoriteStore } from '../../core/state/favorite-store';
 import { CatalogCard, UNIVERSES } from '../../shared/components/catalog/catalog.config';
 import { ListingCardComponent } from '../../shared/components/listing-card/listing-card';
 import { OrbitHeroComponent } from '../../shared/components/orbit-hero/orbit-hero';
-import { SearchEngineComponent } from '../../shared/components/search-engine/search-engine';
 
 /**
  * Tuile d'univers de la grille des services.
@@ -63,13 +62,13 @@ interface ServiceItem {
  * sous-phases F2.2.2 → F2.2.4.
  *
  * La page n'a presque pas de logique : elle assemble des composants réutilisables
- * (`app-orbit-hero`, `app-search-engine`) et affiche des contenus statiques de
+ * (`app-orbit-hero`) et affiche des contenus statiques de
  * présentation. Les données réelles (catalogue) arriveront via `CatalogService`
  * dans la vitrine (F2.2.3).
  */
 @Component({
   selector: 'app-home-page',
-  imports: [OrbitHeroComponent, SearchEngineComponent, ListingCardComponent, RouterLink],
+  imports: [OrbitHeroComponent, ListingCardComponent, RouterLink],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

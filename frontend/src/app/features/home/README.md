@@ -13,11 +13,11 @@ Quand quelqu'un arrive sur le site, il faut qu'en quelques secondes il comprenne
 d'accueil déroule donc une histoire, section après section :
 
 1. **L'accroche (« hero »)** — une phrase forte (« Tout votre projet sénégalais,
-   vérifié et suivi »), trois repères rassurants (régions couvertes, univers,
-   biens vérifiés), et surtout le **moteur de recherche** : on peut lancer une
-   recherche immédiatement. À droite, une animation « orbitale » illustre les
-   univers. Sur téléphone, l'animation passe sous le texte pour laisser la
-   priorité à l'accroche et à la recherche.
+   vérifié et suivi ») et trois repères rassurants (régions couvertes, univers,
+   biens vérifiés). À droite, une animation « orbitale » illustre les univers
+   (chaque univers reste accessible via la barre de navigation et la grille
+   « Nos univers » juste en dessous). Sur téléphone, l'animation passe sous le
+   texte pour laisser la priorité à l'accroche.
 
 2. **Nos univers** — une grille des **9 grands services** (immobilier, nuitées,
    tourisme, transport, construction, gestion locative, diaspora, team building,
@@ -58,9 +58,10 @@ d'accueil déroule donc une histoire, section après section :
 - **Composant** : `HomePageComponent` (`home-page.ts`), autonome (standalone),
   `ChangeDetectionStrategy.OnPush`. Routé sur `''` dans le cadre principal
   (`main-layout`), voir [`../../app.routes.ts`](../../app.routes.ts).
-- **Composants réutilisés** : `app-orbit-hero`, `app-search-engine` (moteur de
-  recherche F2.1, navigue vers `/recherche`), `app-listing-card` (cartes de la
+- **Composants réutilisés** : `app-orbit-hero` et `app-listing-card` (cartes de la
   vitrine), tous décrits dans [`../../shared/README.md`](../../shared/README.md).
+  (Le moteur de recherche `app-search-engine` reste disponible pour la page
+  `/recherche` ; il a été retiré du hero de l'accueil.)
 - **Vitrine (données réelles)** : `HomePageComponent` injecte le
   [`CatalogService`](../../core/api/catalog.service.ts) et appelle
   `properties({ per_page: 6, sort: 'recent' })` dans `ngOnInit`. Les éléments sont
