@@ -71,13 +71,19 @@ class ManageDashboardTest extends TestCase
     {
         $owner = User::factory()->create();
         $mandate = ManagementMandate::factory()->create(['owner_id' => $owner->id]);
-        Rent::factory()->paid()->create(['mandate_id' => $mandate->id, 'amount_xof' => 120_000]);
+        Rent::factory()->count(2)->paid()->create(['mandate_id' => $mandate->id, 'amount_xof' => 120_000]);
+        Rent::factory()->create(['mandate_id' => $mandate->id, 'amount_xof' => 120_000]); // impayé
 
         Sanctum::actingAs($owner);
 
+        // Montants ET nombre d'échéances (le compte lève l'ambiguïté de deux
+        // mois au même loyer : 240 000 encaissés = 2 échéances, 120 000 dus = 1).
         $this->getJson('/api/v1/manage/mandates/mine')
             ->assertOk()
-            ->assertJsonPath('data.0.summary.loyers_payes_xof', 120_000);
+            ->assertJsonPath('data.0.summary.loyers_payes_xof', 240_000)
+            ->assertJsonPath('data.0.summary.loyers_payes_count', 2)
+            ->assertJsonPath('data.0.summary.loyers_impayes_xof', 120_000)
+            ->assertJsonPath('data.0.summary.loyers_impayes_count', 1);
     }
 
     public function test_un_proprietaire_ne_peut_pas_voir_le_mandat_d_un_autre(): void

@@ -33,6 +33,10 @@ class MandateResource extends JsonResource
             'summary' => [
                 'loyers_payes_xof' => (int) ($this->loyers_payes ?? 0),
                 'loyers_impayes_xof' => (int) ($this->loyers_impayes ?? 0),
+                // Nombre d'échéances derrière chaque montant (désambiguïse deux
+                // mois au même loyer, cf. withCount du contrôleur).
+                'loyers_payes_count' => (int) ($this->loyers_payes_count ?? 0),
+                'loyers_impayes_count' => (int) ($this->loyers_impayes_count ?? 0),
                 'depenses_xof' => (int) ($this->depenses_total ?? 0),
                 'reversements_xof' => (int) ($this->reversements_effectues ?? 0),
                 'incidents_ouverts' => (int) ($this->incidents_ouverts ?? 0),

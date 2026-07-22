@@ -120,6 +120,10 @@ class ManageController extends Controller
         return $query
             ->withSum(['rents as loyers_payes' => fn (Builder $q) => $q->where('status', RentStatus::PAYE->value)], 'amount_xof')
             ->withSum(['rents as loyers_impayes' => fn (Builder $q) => $q->whereIn('status', [RentStatus::IMPAYE->value, RentStatus::EN_RETARD->value])], 'amount_xof')
+            // Nombre d'échéances (payées / impayées) : deux mois au même loyer
+            // affichent le même montant → le compte lève l'ambiguïté à l'écran.
+            ->withCount(['rents as loyers_payes_count' => fn (Builder $q) => $q->where('status', RentStatus::PAYE->value)])
+            ->withCount(['rents as loyers_impayes_count' => fn (Builder $q) => $q->whereIn('status', [RentStatus::IMPAYE->value, RentStatus::EN_RETARD->value])])
             ->withSum('expenses as depenses_total', 'amount_xof')
             ->withSum(['payouts as reversements_effectues' => fn (Builder $q) => $q->where('status', OwnerPayoutStatus::EFFECTUE->value)], 'amount_xof')
             ->withCount(['incidents as incidents_ouverts' => fn (Builder $q) => $q->where('status', IncidentStatus::OUVERT->value)]);
