@@ -47,6 +47,37 @@
   pointer-events: auto;
 }
 
+// Halo qui pulse doucement autour du bouton — attire l'œil sans agresser.
+.scroll-top::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(3, 72, 251, 0);
+}
+
+.scroll-top.is-visible::after {
+  animation: st-halo 2.8s ease-out infinite;
+}
+
+@keyframes st-halo {
+  0% {
+    box-shadow: 0 0 0 0 rgba(3, 72, 251, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(3, 72, 251, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(3, 72, 251, 0);
+  }
+}
+
+// Le halo se retire au survol (le bouton prend alors le premier plan).
+.scroll-top:hover::after {
+  animation: none;
+}
+
 .scroll-top:hover {
   background: linear-gradient(135deg, var(--k-brand), var(--k-brand-600));
   color: #fff;
@@ -100,6 +131,8 @@
 .scroll-top-ic {
   display: grid;
   place-items: center;
+  position: relative;
+  z-index: 1;
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -108,9 +141,26 @@
   height: 22px;
 }
 
-// Le chevron « saute » légèrement vers le haut au survol (invite au clic).
+// Le chevron flotte doucement de bas en haut quand le bouton est visible :
+// un mouvement subtil et continu qui « invite » à remonter.
+.scroll-top.is-visible .scroll-top-ic {
+  animation: st-bob 1.9s ease-in-out infinite;
+}
+
+@keyframes st-bob {
+  0%,
+  100% {
+    transform: translateY(1.5px);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+}
+
+// Au survol, on fige le flottement et le chevron monte franchement (invite au clic).
 .scroll-top:hover .scroll-top-ic {
-  transform: translateY(-2px);
+  animation: none;
+  transform: translateY(-3px);
 }
 
 // --- ♿ Réduction des animations -------------------------------------------
@@ -127,6 +177,12 @@
 
   .ring-progress {
     transition: none;
+  }
+
+  // On coupe le flottement du chevron, le halo pulsé et l'effet de survol.
+  .scroll-top.is-visible .scroll-top-ic,
+  .scroll-top.is-visible::after {
+    animation: none;
   }
 
   .scroll-top:hover .scroll-top-ic {
