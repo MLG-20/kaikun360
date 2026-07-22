@@ -34,7 +34,30 @@ export interface Property {
    * encore de photo — le front retombe alors sur sa vignette de repli.
    */
   photo_url?: string | null;
+  /**
+   * Nombre de pièces justificatives rattachées au bien. Présent uniquement sur
+   * la liste « Mes biens » (`GET /properties/mine`, via `withCount`) : alimente
+   * le compteur de l'écran « Documents » (F4.5). `undefined` ailleurs.
+   */
+  documents_count?: number;
   published_at: string | null;
+  created_at: string | null;
+}
+
+/**
+ * Pièce justificative d'un bien — miroir de `PropertyDocumentResource` (Immo).
+ *
+ * Le chemin de stockage n'est jamais exposé : seul un lien de téléchargement
+ * **signé et temporaire** (`download_url`, ~10 min) permet d'accéder au fichier.
+ */
+export interface PropertyDocument {
+  id: number;
+  type: string;
+  original_name: string | null;
+  mime_type: string | null;
+  size: number | null;
+  validation_status: string | null;
+  download_url: string;
   created_at: string | null;
 }
 

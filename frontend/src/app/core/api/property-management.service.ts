@@ -3,10 +3,16 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Property } from '../../models/property.model';
+import { Property, PropertyDocument } from '../../models/property.model';
 import { Stay } from '../../models/stay.model';
 import { ApiEnvelope } from './api-response.model';
 import { Paginated } from './pagination.model';
+
+/**
+ * Types de pièces justificatives d'un bien — miroir de l'allow-list du serveur
+ * (`StorePropertyDocumentRequest` : titre_foncier / bail / plan / autre).
+ */
+export type PropertyDocumentType = 'titre_foncier' | 'bail' | 'plan' | 'autre';
 
 /**
  * Nature d'un bien — miroir de l'enum `PropertyType` backend
@@ -161,6 +167,58 @@ export class PropertyManagementService {
       `${this.api}/properties/${id}/stay`,
     );
   }
+
+  /**
+   * GET /properties/{id}/documents — pièces justificatives d'un bien (F4.5).
+   *
+   * Réservé au propriétaire du bien (403 sinon). Chaque document porte un lien
+   * de téléchargement **signé et temporaire** (le chemin n'est jamais exposé).
+   */
+  documents(id: number | string): Observable<ApiEnvelope<PropertyDocument[]>> {
+    return this.http.get<ApiEnvelope<PropertyDocument[]>>(
+      `${this.api}/properties/${id}/documents`,
+    );
+  }
+
+  /**
+   * POST /properties/{id}/documents — dépose une pièce justificative (F4.5).
+   *
+   * Envoi **multipart** : le serveur attend `type` (titre_foncier/bail/plan/autre)
+   * et `file` (PDF/JPG/PNG ≤ 5 Mo, contrôlé aussi en amont). Compte vérifié requis.
+   */
+  uploadDocument(
+    id: number | string,
+    type: PropertyDocumentType,
+    file: File,
+  ): Observable<ApiEnvelope<{ document: PropertyDocument }>> {
+    const body = new FormData();
+    body.append('type', type);
+    body.append('file', file);
+
+    return this.http.post<ApiEnvelope<{ document: PropertyDocument }>>(
+      `${this.api}/properties/${id}/documents`,
+      body,
+    );
+  }
+
+  /**
+   * DELETE /properties/{id}/documents/{documentId} — retire une pièce (F4.5).
+   *
+   * Efface la métadonnée ET le fichier sur disque. Réservé au propriétaire du bien.
+   */
+  removeDocument(
+    id: number | string,
+    documentId: number,
+  ): Observable<ApiEnvelope<{ deleted: boolean }>> {
+    return this.http.delete<ApiEnvelope<{ deleted: boolean }>>(
+      `${this.api}/properties/${id}/documents/${documentId}`,
+    );
+  }
+
+  /** Extensions acceptées par le serveur, pour l'attribut `accept` du sélecteur. */
+  static readonly DOC_ACCEPT = 'application/pdf,image/jpeg,image/png';
+  /** Taille maximale d'un document (5 Mo), pour un contrôle en amont. */
+  static readonly DOC_MAX_BYTES = 5 * 1024 * 1024;
 
   /** Retire les clés optionnelles vides (null/undefined/chaîne vide). */
   private clean<T extends object>(payload: T): Record<string, unknown> {

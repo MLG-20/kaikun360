@@ -41,7 +41,7 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   catalogue pour les ajouter), **notifications** et **messagerie** (conversations
   + fil de discussion avec réponse). 👉 Détail :
   [`src/app/features/account/README.md`](src/app/features/account/README.md).
-- 🏗️ **L'espace propriétaire (F4, en cours)** : sous `/espace-proprietaire`,
+- ✅ **L'espace propriétaire (F4, terminé)** : sous `/espace-proprietaire`,
   réservé au rôle « propriétaire ». Il réutilise **le même habillage** que
   l'espace client (menu latéral sombre + en-tête épuré), désormais **généralisé
   en un shell partagé** (`layouts/space-layout/`, paramétré par espace) pour
@@ -61,10 +61,12 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   seule) : la liste de ses **mandats** puis la **fiche d'un mandat** avec un
   résumé financier, les loyers / reversements / incidents récents et un **rapport
   mensuel** recalculable par mois (loyers encaissés, commission Kaikun, **net à
-  reverser**). La rubrique Documents (F4.5) arrive ensuite. 👉 Détail :
+  reverser**). Enfin les **Documents** (F4.5) : par bien, le propriétaire liste,
+  **dépose** (titre foncier / bail / plan, PDF ou image ≤ 5 Mo), **télécharge**
+  (lien signé temporaire) et **supprime** les pièces justificatives — la liste
+  des biens affiche le nombre de documents de chacun. 👉 Détail :
   [`src/app/features/owner/README.md`](src/app/features/owner/README.md).
-- 🚧 **À venir** : la suite de l'espace propriétaire, puis les espaces
-  prestataire et entreprise, et le back-office.
+- 🚧 **À venir** : les espaces prestataire et entreprise, puis le back-office.
 
 ---
 

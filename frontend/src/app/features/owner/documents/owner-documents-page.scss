@@ -1,0 +1,125 @@
+// Écran « Documents » de l'espace propriétaire (F4.5) — liste des biens avec
+// leur nombre de pièces. L'en-tête d'écran (.account-head…), les états
+// (.pf-state) et la pastille (.bk-status[data-tone]) viennent du partiel global
+// `styles/_account.scss`. Les classes de carte/pagination (.op-*, .rq-*) sont
+// scopées par composant (encapsulation Angular) : on les REDÉFINIT ici, à
+// l'identique de l'écran « Mes biens » dont cet écran reprend la présentation.
+
+// — État vide —
+.rq-empty {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+}
+
+.rq-empty-title {
+  font-family: var(--k-font-display);
+  font-size: 1.25rem;
+  margin-bottom: 0.6rem;
+}
+
+.rq-empty-text {
+  color: var(--k-muted);
+  max-width: 52ch;
+  margin: 0 auto 1.25rem;
+}
+
+// — Liste des biens —
+.op-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.op-card {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:has(.op-card-link:hover) {
+    border-color: color-mix(in srgb, var(--k-brand) 35%, var(--k-line));
+    box-shadow: 0 6px 18px rgb(3 72 251 / 0.08);
+  }
+}
+
+.op-card-link {
+  display: block;
+  padding: 1.25rem 1.4rem;
+  color: inherit;
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--k-brand);
+    outline-offset: 4px;
+    border-radius: var(--k-radius-sm, 6px);
+  }
+}
+
+.op-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.op-card-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.op-title {
+  font-family: var(--k-font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.op-type {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+.op-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem 2rem;
+  margin: 1rem 0 0;
+}
+
+.op-fact {
+  dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--k-muted);
+    margin-bottom: 0.15rem;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
+// — Pagination —
+.rq-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+.rq-pager-info {
+  font-size: 0.9rem;
+  color: var(--k-muted);
+}

@@ -453,7 +453,7 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 ### Phase F4 — Espace propriétaire (OwnerSpaceModule)
 
-> 🏗️ **En cours.** L'espace propriétaire est monté sous `/espace-proprietaire`
+> ✅ **Terminée.** L'espace propriétaire est monté sous `/espace-proprietaire`
 > (réservé au rôle `proprietaire`). Il réutilise le **shell app-shell généralisé**
 > (menu latéral sombre + en-tête épuré), désormais extrait en un **layout partagé
 > paramétré par espace** (`SPACE_CONFIG`) qui sert aussi l'espace client et les
@@ -469,7 +469,9 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 > livré** : l'écran **« Gestion locative »** (liste des mandats + fiche avec
 > résumé financier, loyers/reversements/incidents et **rapport mensuel** par mois)
 > — en lecture seule sur le module Manage, dont la fiche mandat expose désormais
-> ses lignes détaillées.
+> ses lignes détaillées. **F4.5 livré** (clôture F4) : l'écran **« Documents »**
+> — gestion des pièces justificatives **par bien** (liste des biens avec compteur,
+> puis dépôt / téléchargement par URL signée / suppression des pièces d'un bien).
 
 - [x] **Écran « Mes biens » (F4.2)** : liste de tous les biens du propriétaire, **tous statuts confondus** (`GET /properties/mine`) — au contraire du catalogue public qui ne montre que les biens publiés. Chaque carte cliquable porte une **pastille de statut de validation** (publié, en attente, rejeté, suspendu/archivé) ; la **fiche** (`GET /properties/mine/{id}`, réservée au propriétaire → 404 sinon) détaille le statut avec une explication, la description, les caractéristiques, la localisation et les dates.
 - [x] **Formulaire de dépôt / édition de bien (F4.3)** : un **seul écran** sert la création (`biens/nouveau` → `POST /properties`) et l'édition (`biens/:id/modifier` → `PATCH /properties/{id}`, préremplie depuis la fiche privée). Localisation en **cascade** région → département → commune, **compte vérifié requis**, redirection vers la fiche après enregistrement. *(Les photos/documents du bien restent hors périmètre — voir F4.5.)*
@@ -477,7 +479,7 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [x] **Choix du mode de location (mensuelle, nuitées, formule mixte) (F4.3)** : un sélecteur pilote les champs affichés (loyer mensuel et/ou bloc nuitées : prix/nuit, caution, capacité, nuits min/max, horaires d'arrivée/départ) **et** les appels d'enregistrement. Côté backend, la config nuitées d'un bien est désormais gérée par son propriétaire via **`PUT /properties/{id}/stay`** (upsert idempotent, réactive une config désactivée) et **`DELETE /properties/{id}/stay`** (supprime, ou **désactive** si des réservations existent, pour préserver l'historique) — autorisés par la `PropertyPolicy`.
 - [ ] Tableau de bord propriétaire : demandes, visites, réservations, loyers, incidents. *(F4.1 : volet gestion locative — loyers, reversements, incidents — livré.)*
 - [x] **Écran « Gestion locative » (F4.4)** : liste des **mandats** du propriétaire (`GET /manage/mandates/mine`) puis **fiche d'un mandat** (`GET /manage/mandates/{id}`, réservée au propriétaire → 404 sinon) — résumé financier (5 KPI), conditions du mandat, **lignes récentes** (loyers, reversements, incidents) et **rapport mensuel** (`GET .../report?month=YYYY-MM`) recalculable via un sélecteur de mois : loyers encaissés/impayés, dépenses, **commission Kaikun**, **net à reverser** et reversements du mois. En **lecture seule** (les mandats sont établis par les agents) ; la fiche mandat expose désormais ses lignes détaillées (`MandateResource`).
-- [ ] Écran de gestion des documents propres au propriétaire.
+- [x] **Écran « Documents » (F4.5)** : gestion des pièces justificatives **par bien**. Un premier écran liste les biens du propriétaire (`GET /properties/mine`) avec, pour chacun, son **nombre de documents** (`documents_count`, via `withCount`) ; cliquer un bien ouvre la gestion de ses pièces (`documents/:id`) : liste (`GET /properties/{id}/documents`), **dépôt** (`POST`, type titre foncier/bail/plan/autre + fichier PDF/JPG/PNG ≤ 5 Mo, contrôlé en amont), **téléchargement** (URL **signée temporaire**, le chemin de stockage n'est jamais exposé) et **suppression** (`DELETE`, retire la ligne **et** le fichier sur disque privé). Réservé au propriétaire du bien via la policy `manageDocuments` (403 sinon). Le statut de validation d'une pièce est posé par un agent Kaikun (lecture seule côté propriétaire).
 
 ### Phase F5 — Espace prestataire (ProviderSpaceModule)
 

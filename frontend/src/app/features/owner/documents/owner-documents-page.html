@@ -1,0 +1,90 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-proprietaire" />
+  <p class="account-eyebrow">Espace propriétaire</p>
+  <h1 class="account-title">Documents</h1>
+  <p class="account-lead">
+    Rassemblez les pièces justificatives de chaque bien (titre foncier, bail,
+    plan…). Des documents complets rassurent les clients et accélèrent la
+    validation de vos annonces par un agent Kaikun 360.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos biens…</p>
+} @else if (loadError()) {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger vos biens pour le moment. Merci de réessayer plus tard.
+  </p>
+} @else if (items().length === 0) {
+  <!-- ============================== Aucun bien ============================= -->
+  <div class="rq-empty">
+    <h2 class="rq-empty-title">Aucun bien pour l'instant</h2>
+    <p class="rq-empty-text">
+      Vous n'avez pas encore déposé de bien. Une fois un bien créé, vous pourrez
+      y rattacher ses documents depuis cet écran.
+    </p>
+    <a class="k-btn k-btn--primary" routerLink="/espace-proprietaire/biens/nouveau">
+      + Déposer un bien
+    </a>
+  </div>
+} @else {
+  <!-- =============================== Liste ================================= -->
+  <ul class="op-list">
+    @for (property of items(); track property.id) {
+      <li class="op-card">
+        <!-- Toute la carte mène à la gestion des documents du bien. -->
+        <a
+          class="op-card-link"
+          [routerLink]="['/espace-proprietaire/documents', property.id]"
+          [attr.aria-label]="'Gérer les documents du bien ' + property.title"
+        >
+          <header class="op-card-head">
+            <div class="op-card-heading">
+              <span class="op-title">{{ property.title }}</span>
+              @if (property.type_label) {
+                <span class="op-type">{{ property.type_label }}</span>
+              }
+            </div>
+            <!-- Pastille = nombre de documents (ambre si aucun, pour inciter). -->
+            <span
+              class="bk-status"
+              [attr.data-tone]="(property.documents_count ?? 0) > 0 ? 'active' : 'pending'"
+            >
+              {{ docLabel(property.documents_count) }}
+            </span>
+          </header>
+
+          <dl class="op-facts">
+            @if (localityOf(property); as locality) {
+              <div class="op-fact">
+                <dt>Localité</dt>
+                <dd>{{ locality }}</dd>
+              </div>
+            }
+            @if (statusOf(property.status); as st) {
+              <div class="op-fact">
+                <dt>Statut du bien</dt>
+                <dd>{{ st.label }}</dd>
+              </div>
+            }
+          </dl>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <!-- Pagination -->
+  @if (meta(); as m) {
+    @if (m.last_page > 1) {
+      <nav class="rq-pager" aria-label="Pagination des biens">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasPrev()" (click)="prev()">
+          ← Précédent
+        </button>
+        <span class="rq-pager-info">Page {{ m.current_page }} sur {{ m.last_page }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasNext()" (click)="next()">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}

@@ -1,0 +1,185 @@
+// Gestion des documents d'un bien (F4.5). L'en-tête d'écran (.account-*), les
+// états (.pf-state), la pastille (.bk-status[data-tone]) et les boutons (.k-btn)
+// viennent des partiels globaux. Les classes .opd-* étant scopées par composant,
+// on redéfinit ici l'en-tête de fiche, puis les blocs propres à cet écran
+// (dépôt, liste des pièces).
+
+// — En-tête de fiche (identique à la fiche mandat) —
+.opd-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.opd-heading {
+  min-width: 0;
+
+  .account-title {
+    margin-bottom: 0.15rem;
+  }
+}
+
+.opd-type {
+  color: var(--k-muted);
+  font-size: 0.95rem;
+}
+
+// — Blocs (dépôt + liste) —
+.doc-upload,
+.doc-list-block {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 1.5rem 1.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.doc-block-title {
+  font-family: var(--k-font-display);
+  font-size: 1.15rem;
+  margin: 0 0 0.4rem;
+}
+
+.doc-hint {
+  color: var(--k-muted);
+  font-size: 0.9rem;
+  margin: 0 0 1.1rem;
+}
+
+// — Rangée de dépôt (type + fichier) —
+.doc-upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.doc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 12rem;
+}
+
+.doc-field-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--k-muted);
+}
+
+.doc-select {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm, 8px);
+  background: var(--k-bg, #fff);
+  color: inherit;
+  font: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--k-brand);
+    outline-offset: 2px;
+  }
+}
+
+// Bouton « Choisir un fichier » : un label stylé en bouton qui cache l'input.
+.doc-file-btn {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+
+  &--busy {
+    opacity: 0.7;
+    pointer-events: none;
+  }
+}
+
+.doc-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.doc-error {
+  color: var(--k-danger, #c0392b);
+  font-size: 0.9rem;
+  margin: 0.9rem 0 0;
+}
+
+// — Liste des pièces —
+.doc-empty {
+  color: var(--k-muted);
+  margin: 0;
+}
+
+.doc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.doc-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm, 8px);
+  background: var(--k-bg, #fff);
+}
+
+.doc-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.doc-item-name {
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.doc-item-meta {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+.doc-item-side {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.doc-item-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.doc-action {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.9rem;
+
+  &--danger {
+    color: var(--k-danger, #c0392b);
+    border-color: color-mix(in srgb, var(--k-danger, #c0392b) 40%, var(--k-line));
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--k-danger, #c0392b) 8%, transparent);
+    }
+  }
+}

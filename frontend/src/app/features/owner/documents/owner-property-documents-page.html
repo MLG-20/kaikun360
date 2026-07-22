@@ -1,0 +1,138 @@
+<section class="account-head">
+  <app-back-link class="account-back" label="Documents" fallback="/espace-proprietaire/documents" />
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="pf-state" role="status">Chargement du bien…</p>
+  }
+  @case ('notfound') {
+    <p class="pf-state pf-state--error" role="alert">
+      Ce bien est introuvable ou ne vous appartient pas.
+    </p>
+  }
+  @case ('failed') {
+    <p class="pf-state pf-state--error" role="alert">
+      Impossible de charger ce bien pour le moment. Merci de réessayer plus tard.
+    </p>
+  }
+  @case ('ready') {
+    @if (property(); as p) {
+      <!-- En-tête : bien concerné -->
+      <header class="opd-head">
+        <div class="opd-heading">
+          <p class="account-eyebrow">Documents du bien</p>
+          <h1 class="account-title">{{ p.title }}</h1>
+          <p class="opd-type">
+            @if (p.type_label) {
+              {{ p.type_label }}
+            }
+            @if (localityOf(p); as locality) {
+              · {{ locality }}
+            }
+          </p>
+        </div>
+      </header>
+
+      <!-- ============================ Dépôt ============================== -->
+      <section class="doc-upload" aria-labelledby="doc-upload-title">
+        <h2 class="doc-block-title" id="doc-upload-title">Ajouter un document</h2>
+        <p class="doc-hint">
+          Formats acceptés : PDF, JPG ou PNG, jusqu'à 5 Mo. Le document sera
+          vérifié par un agent Kaikun 360.
+        </p>
+
+        <div class="doc-upload-row">
+          <label class="doc-field">
+            <span class="doc-field-label">Type de document</span>
+            <select
+              class="doc-select"
+              [disabled]="uploading()"
+              (change)="onTypeChange($any($event.target).value)"
+            >
+              @for (opt of typeOptions; track opt.value) {
+                <option [value]="opt.value" [selected]="opt.value === selectedType()">
+                  {{ opt.label }}
+                </option>
+              }
+            </select>
+          </label>
+
+          <label class="k-btn k-btn--primary doc-file-btn" [class.doc-file-btn--busy]="uploading()">
+            {{ uploading() ? 'Envoi en cours…' : 'Choisir un fichier' }}
+            <input
+              type="file"
+              class="doc-file-input"
+              [accept]="accept"
+              [disabled]="uploading()"
+              (change)="onFileSelected($event)"
+            />
+          </label>
+        </div>
+
+        @if (uploadError(); as err) {
+          <p class="doc-error" role="alert">{{ err }}</p>
+        }
+      </section>
+
+      <!-- ========================== Liste ============================== -->
+      <section class="doc-list-block" aria-labelledby="doc-list-title">
+        <h2 class="doc-block-title" id="doc-list-title">Pièces déposées</h2>
+
+        @if (documentsLoading()) {
+          <p class="pf-state" role="status">Chargement des documents…</p>
+        } @else if (documentsError()) {
+          <p class="pf-state pf-state--error" role="alert">
+            Impossible de charger les documents. Merci de réessayer plus tard.
+          </p>
+        } @else if (documents().length === 0) {
+          <p class="doc-empty">
+            Aucun document pour ce bien. Ajoutez ses pièces justificatives
+            (titre foncier, bail, plan…) pour rassurer les clients.
+          </p>
+        } @else {
+          <ul class="doc-list">
+            @for (doc of documents(); track doc.id) {
+              <li class="doc-item">
+                <div class="doc-item-main">
+                  <span class="doc-item-name">{{ doc.original_name || typeLabel(doc.type) }}</span>
+                  <span class="doc-item-meta">
+                    {{ typeLabel(doc.type) }}
+                    @if (fileSize(doc.size); as size) {
+                      · {{ size }}
+                    }
+                    @if (doc.created_at) {
+                      · {{ doc.created_at | date: 'longDate' : '' : 'fr' }}
+                    }
+                  </span>
+                </div>
+
+                <div class="doc-item-side">
+                  @if (statusLabel(doc.validation_status); as label) {
+                    <span class="bk-status" [attr.data-tone]="statusTone(doc.validation_status)">
+                      {{ label }}
+                    </span>
+                  }
+                  <div class="doc-item-actions">
+                    <!-- Téléchargement via l'URL SIGNÉE fournie par le serveur. -->
+                    <a class="k-btn k-btn--ghost doc-action" [href]="doc.download_url">
+                      Télécharger
+                    </a>
+                    <button
+                      type="button"
+                      class="k-btn k-btn--ghost doc-action doc-action--danger"
+                      [disabled]="deletingId() === doc.id"
+                      (click)="remove(doc)"
+                    >
+                      {{ deletingId() === doc.id ? 'Suppression…' : 'Supprimer' }}
+                    </button>
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+  }
+}

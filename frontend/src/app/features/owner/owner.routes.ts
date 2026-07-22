@@ -14,9 +14,9 @@ import { OWNER_SPACE } from './owner-space';
  * (avec `redirect`) ; connecté sans le rôle → renvoi à l'accueil.
  *
  * Les rubriques se branchent au fil des sous-phases : tableau de bord (F4.1),
- * Mes biens (F4.2, liste + fiche) et dépôt/édition d'un bien (F4.3, formulaire +
- * mode de location) sont en place ; Gestion locative (F4.4) et Documents (F4.5)
- * suivront.
+ * Mes biens (F4.2, liste + fiche), dépôt/édition d'un bien (F4.3, formulaire +
+ * mode de location), Gestion locative (F4.4, mandats + rapport mensuel) et
+ * Documents (F4.5, pièces justificatives par bien) sont toutes en place.
  */
 export const OWNER_ROUTES: Routes = [
   {
@@ -83,6 +83,22 @@ export const OWNER_ROUTES: Routes = [
             (m) => m.OwnerMandateDetailPageComponent,
           ),
         title: 'Mandat de gestion — Kaikun 360',
+      },
+      {
+        // F4.5 — Documents : liste des biens + leur nombre de pièces (GET /properties/mine).
+        path: 'documents',
+        loadComponent: () =>
+          import('./documents/owner-documents-page').then((m) => m.OwnerDocumentsPageComponent),
+        title: 'Documents — Kaikun 360',
+      },
+      {
+        // F4.5 — Gestion des documents d'un bien (GET/POST/DELETE .../documents).
+        path: 'documents/:id',
+        loadComponent: () =>
+          import('./documents/owner-property-documents-page').then(
+            (m) => m.OwnerPropertyDocumentsPageComponent,
+          ),
+        title: 'Documents du bien — Kaikun 360',
       },
       {
         // Profil — écrans transverses montés DANS l'espace propriétaire.

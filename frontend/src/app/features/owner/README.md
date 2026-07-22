@@ -28,9 +28,9 @@ Il n'atterrit donc plus systématiquement dans l'espace client.
 
 Chaque rubrique du rail porte un drapeau `ready` : les rubriques non encore
 construites sont affichées « Bientôt » (aucun lien mort), et passeront à
-`ready: true` avec leur sous-phase. En place : Tableau de bord (F4.1), Mes biens
-(F4.2) et dépôt/édition d'un bien (F4.3). À venir : Gestion locative (F4.4) et
-Documents (F4.5).
+`ready: true` avec leur sous-phase. **Toutes en place** : Tableau de bord (F4.1),
+Mes biens (F4.2), dépôt/édition d'un bien (F4.3), Gestion locative (F4.4) et
+Documents (F4.5) — l'espace propriétaire est complet.
 
 ## Écrans
 
@@ -111,4 +111,21 @@ Documents (F4.5).
   (`.bk-status[data-tone]`) — les libellés viennent déjà du serveur
   (`status_label`). Les lignes détaillées ne sont chargées que sur la fiche : la
   liste `mine` reste légère (agrégats seulement).
-- **Documents** (F4.5) — à venir.
+- **Documents** (`documents/`, F4.5) — gestion des pièces justificatives
+  **par bien**, en deux écrans :
+  - **Liste des biens** (`documents`, `owner-documents-page`) — réutilise
+    `GET /properties/mine` (paginé) et affiche, sur chaque carte, une pastille
+    **« N documents »** (ambre si aucun, pour inciter) tirée de `documents_count`
+    (`withCount` côté serveur). Chaque carte mène à la gestion des documents du
+    bien. La présentation calque « Mes biens » (classes `.op-*` redéfinies, car
+    scopées par composant).
+  - **Documents d'un bien** (`documents/:id`, `owner-property-documents-page`) —
+    charge le bien (`GET /properties/mine/{id}`, 404 sinon) pour l'intitulé puis
+    ses pièces (`GET /properties/{id}/documents`). Le propriétaire **dépose** une
+    pièce (sélecteur de type titre foncier/bail/plan/autre + fichier ; le type
+    MIME et la taille — PDF/JPG/PNG ≤ 5 Mo — sont contrôlés **en amont** pour
+    éviter un 422 ; envoi `multipart` via `POST`), la **télécharge** (lien
+    **signé temporaire** fourni par le serveur, jamais le chemin de stockage) et
+    la **supprime** (`DELETE`, après confirmation ; retrait local immédiat). Le
+    statut de validation d'une pièce (`En attente de vérification`…) est posé par
+    un agent Kaikun — lecture seule ici.

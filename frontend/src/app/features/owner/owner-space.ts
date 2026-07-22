@@ -37,10 +37,10 @@ export const OWNER_NAV: readonly SpaceNavItem[] = [
   },
   {
     label: 'Documents',
-    description: 'Vos pièces et justificatifs de propriétaire.',
+    description: 'Les pièces justificatives de chacun de vos biens.',
     path: 'documents',
     icon: 'document',
-    ready: false, // F4.5
+    ready: true, // F4.5 ✅ (documents par bien : dépôt / téléchargement / suppression)
   },
 ];
 
