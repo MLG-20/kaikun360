@@ -108,7 +108,7 @@ export class HomePageComponent implements OnInit {
       commands: ['/immobilier'],
     },
     {
-      name: 'Kaikun Stay',
+      name: 'Kaikun Séjours',
       tag: 'Nuitées',
       desc: 'Séjours courts : maisons, lodges et résidences.',
       icon: 'bed',
@@ -116,7 +116,7 @@ export class HomePageComponent implements OnInit {
       commands: ['/nuitees'],
     },
     {
-      name: 'Kaikun Explore',
+      name: 'Kaikun Découverte',
       tag: 'Tourisme',
       desc: 'Expériences, circuits et découvertes au Sénégal.',
       icon: 'compass',
@@ -124,7 +124,7 @@ export class HomePageComponent implements OnInit {
       commands: ['/tourisme'],
     },
     {
-      name: 'Kaikun Mobility',
+      name: 'Kaikun Mobilité',
       tag: 'Transport & mobilité',
       desc: 'Véhicules avec ou sans chauffeur, navettes et transferts.',
       icon: 'car',
@@ -132,7 +132,7 @@ export class HomePageComponent implements OnInit {
       commands: ['/transport'],
     },
     {
-      name: 'Kaikun Build',
+      name: 'Kaikun Chantier',
       tag: 'Construction',
       desc: 'Construire à distance, avec un suivi filmé et daté.',
       icon: 'build',
@@ -140,7 +140,7 @@ export class HomePageComponent implements OnInit {
       commands: ['/construction'],
     },
     {
-      name: 'Kaikun Manage',
+      name: 'Kaikun Gérance',
       tag: 'Gestion locative',
       desc: 'Confiez la gestion de vos biens et suivez tout à distance.',
       icon: 'key',
@@ -156,8 +156,8 @@ export class HomePageComponent implements OnInit {
       commands: ['/diaspora'],
     },
     {
-      name: 'Kaikun Team',
-      tag: 'Team building',
+      name: 'Kaikun Groupes',
+      tag: 'Cohésion d’équipe',
       desc: 'Séminaires et activités de cohésion clés en main.',
       icon: 'team',
       // Page de conversion dédiée (F2.5).
@@ -208,7 +208,7 @@ export class HomePageComponent implements OnInit {
   ];
 
   /**
-   * Services complémentaires (« aller plus loin ») : team building, gestion
+   * Services complémentaires (« aller plus loin ») : cohésion d'équipe, gestion
    * locative et services du quotidien. Certaines cartes portent une ancre
    * ciblée par les tuiles d'univers du haut de page.
    */
@@ -216,7 +216,7 @@ export class HomePageComponent implements OnInit {
     {
       anchor: 'team-building',
       icon: 'team',
-      title: 'Team building & séminaires',
+      title: 'Cohésion d’équipe & séminaires',
       desc: 'Organisez la cohésion de vos équipes : lieux, activités et logistique clés en main.',
     },
     {
@@ -226,7 +226,7 @@ export class HomePageComponent implements OnInit {
     },
     {
       icon: 'box',
-      title: 'Delivery & conciergerie',
+      title: 'Livraison & conciergerie',
       desc: 'Courses, livraisons et services du quotidien pour vous ou vos proches au pays.',
     },
     {
