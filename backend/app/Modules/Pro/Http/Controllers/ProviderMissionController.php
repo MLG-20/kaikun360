@@ -74,6 +74,41 @@ class ProviderMissionController extends Controller
     }
 
     /**
+     * Synthèse revenus & commissions du prestataire. GET /api/v1/provider-missions/earnings
+     *
+     * Agrège les missions du prestataire connecté (scopé `user_id`) en trois
+     * blocs : **réalisé** (missions terminées → argent gagné), **à venir**
+     * (missions acceptées ou en cours → engagé mais pas encore encaissé) et le
+     * nombre de missions **à traiter** (affectées, en attente de réponse). Le net
+     * est toujours le montant moins la commission Kaikun.
+     */
+    public function earnings(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+        $mine = fn () => ProviderMission::whereHas('provider', fn ($q) => $q->where('user_id', $userId));
+
+        // Réalisé = missions terminées.
+        $revenuRealise = (int) $mine()->where('status', MissionStatus::TERMINEE->value)->sum('amount_xof');
+        $commissionRealisee = (int) $mine()->where('status', MissionStatus::TERMINEE->value)->sum('commission_xof');
+
+        // À venir = missions acceptées + en cours (engagées, pas encore encaissées).
+        $enCoursStatuts = [MissionStatus::ACCEPTEE->value, MissionStatus::EN_COURS->value];
+        $revenuAVenir = (int) $mine()->whereIn('status', $enCoursStatuts)->sum('amount_xof');
+        $commissionAVenir = (int) $mine()->whereIn('status', $enCoursStatuts)->sum('commission_xof');
+
+        return ApiResponse::success([
+            'revenu_realise_xof' => $revenuRealise,
+            'commission_realisee_xof' => $commissionRealisee,
+            'net_realise_xof' => $revenuRealise - $commissionRealisee,
+            'missions_terminees' => $mine()->where('status', MissionStatus::TERMINEE->value)->count(),
+            'revenu_a_venir_xof' => $revenuAVenir,
+            'net_a_venir_xof' => $revenuAVenir - $commissionAVenir,
+            'missions_a_venir' => $mine()->whereIn('status', $enCoursStatuts)->count(),
+            'missions_a_traiter' => $mine()->where('status', MissionStatus::AFFECTEE->value)->count(),
+        ]);
+    }
+
+    /**
      * Fait progresser le statut d'une mission (par le prestataire).
      * PATCH /api/v1/provider-missions/{mission}/{action}
      */

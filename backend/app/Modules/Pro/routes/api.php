@@ -26,6 +26,8 @@ Route::middleware('auth:sanctum')->prefix('providers')->group(function () {
 // --- Missions côté prestataire (auth) ----------------------------------------
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('provider-missions/mine', [ProviderMissionController::class, 'mine']);
+    // Synthèse revenus & commissions (F5.3) — agrégat scopé au prestataire.
+    Route::get('provider-missions/earnings', [ProviderMissionController::class, 'earnings']);
     Route::patch('provider-missions/{mission}/{action}', [ProviderMissionController::class, 'transition'])
         ->whereNumber('mission')
         ->whereIn('action', ['accept', 'refuse', 'start', 'complete']);

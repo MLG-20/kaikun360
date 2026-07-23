@@ -84,6 +84,7 @@ prestataire est suspendu d'office. `sanction_note` conserve le motif.
 |---|---|---|
 | POST | `/api/v1/providers/{provider}/missions` | admin (policy `assignMission`) — prestataire **validé** requis |
 | GET | `/api/v1/provider-missions/mine` | prestataire — mes missions |
+| GET | `/api/v1/provider-missions/earnings` | prestataire — synthèse revenus & commissions (F5.3) |
 | PATCH | `/api/v1/provider-missions/{mission}/{action}` | prestataire affecté — `accept`/`refuse`/`start`/`complete` |
 
 - **Commission** figée à l'affectation via `CommissionCalculator` (réutilisé du
@@ -91,6 +92,9 @@ prestataire est suspendu d'office. `sanction_note` conserve le motif.
 - Affectation refusée (422) si le prestataire n'est pas validé.
 - Transitions contrôlées : `affectee → acceptee → en_cours → terminee`
   (`refuse` depuis `affectee`) ; toute transition invalide renvoie 422.
+- **`earnings`** (F5.3) agrège les missions du prestataire connecté : réalisé
+  (missions `terminee`), à venir (`acceptee` + `en_cours`) et nombre de missions
+  à traiter (`affectee`) ; le net = montant − commission.
 
 > Notation prestataire : colonnes `rating_avg`/`rating_count` **remplies en B12.3**
 > par `App\Services\RatingAggregator` à la publication d'un avis (agrégation des

@@ -123,4 +123,47 @@ class ProviderMissionTest extends TestCase
 
         $this->patchJson("/api/v1/provider-missions/{$mission->id}/accept")->assertStatus(403);
     }
+
+    public function test_la_synthese_des_revenus_agrege_les_missions(): void
+    {
+        $user = User::factory()->create();
+        $provider = Provider::factory()->validated()->create(['user_id' => $user->id]);
+
+        // Réalisé : 2 missions terminées (500 000 + 300 000 = 800 000 ; commission 12 %).
+        ProviderMission::factory()->count(2)->create([
+            'provider_id' => $provider->id,
+            'status' => 'terminee',
+            'amount_xof' => 400_000,
+            'commission_xof' => 48_000,
+        ]);
+        // À venir : 1 acceptée + 1 en cours.
+        ProviderMission::factory()->create([
+            'provider_id' => $provider->id, 'status' => 'acceptee',
+            'amount_xof' => 200_000, 'commission_xof' => 24_000,
+        ]);
+        ProviderMission::factory()->create([
+            'provider_id' => $provider->id, 'status' => 'en_cours',
+            'amount_xof' => 100_000, 'commission_xof' => 12_000,
+        ]);
+        // À traiter : 1 affectée.
+        ProviderMission::factory()->create([
+            'provider_id' => $provider->id, 'status' => 'affectee',
+            'amount_xof' => 150_000, 'commission_xof' => 18_000,
+        ]);
+        // Mission d'un autre prestataire : ne doit PAS être comptée.
+        ProviderMission::factory()->create(['status' => 'terminee', 'amount_xof' => 999_000]);
+
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/v1/provider-missions/earnings')
+            ->assertOk()
+            ->assertJsonPath('data.revenu_realise_xof', 800_000)
+            ->assertJsonPath('data.commission_realisee_xof', 96_000)
+            ->assertJsonPath('data.net_realise_xof', 704_000)
+            ->assertJsonPath('data.missions_terminees', 2)
+            ->assertJsonPath('data.revenu_a_venir_xof', 300_000)
+            ->assertJsonPath('data.net_a_venir_xof', 264_000)
+            ->assertJsonPath('data.missions_a_venir', 2)
+            ->assertJsonPath('data.missions_a_traiter', 1);
+    }
 }
