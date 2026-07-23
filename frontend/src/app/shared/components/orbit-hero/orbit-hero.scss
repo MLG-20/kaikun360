@@ -17,6 +17,10 @@
 }
 
 // --- Anneaux tournants ----------------------------------------------------
+// Deux CERCLES concentriques (le conteneur est carré → `border-radius: 50%`
+// donne des cercles parfaits) qui encadrent la couronne des nœuds : ceux-ci
+// orbitent au rayon 43 %, exactement au MILIEU de la bande entre le cercle
+// intérieur (36 %, inset 14 %) et le cercle extérieur (50 %, inset 0).
 .orbit-ring {
   position: absolute;
   border-radius: 50%;
@@ -24,10 +28,12 @@
   animation: orbit-spin 60s linear infinite;
 }
 
+// Cercle INTÉRIEUR (bord interne de la couronne des nœuds).
 .orbit-ring.r1 {
-  inset: 8%;
+  inset: 14%;
 }
 
+// Cercle EXTÉRIEUR (bord externe de la couronne des nœuds).
 .orbit-ring.r2 {
   inset: 0;
   border-color: rgba(211, 174, 82, 0.4);
@@ -132,7 +138,8 @@
   width: 62px;
   height: 62px;
   margin: -31px 0 0 -31px;
-  border-radius: 18px;
+  // Pastilles d'univers en CERCLES parfaits (360°), pas des carrés arrondis.
+  border-radius: 50%;
   background: var(--k-card);
   border: 1px solid var(--k-line);
   box-shadow: var(--k-shadow);
