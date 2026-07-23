@@ -30,9 +30,13 @@ justificatifs fournis à l'inscription.
 
 ### Modèles
 
-- `Provider` : `belongsTo` user, `hasMany` certifications + missions (B10.3),
-  helper `isValidated()`, casts enums.
+- `Provider` : `belongsTo` user, `hasMany` certifications + missions (B10.3) +
+  weeklyAvailabilities + unavailabilities (F5.4), helper `isValidated()`, casts enums.
 - `ProviderCertification` : `belongsTo` provider.
+- `ProviderWeeklyAvailability` (F5.4) : `belongsTo` provider ; un jour du planning
+  (`weekday` 0 = lundi … 6 = dimanche, `is_open`, `start_time`/`end_time`).
+- `ProviderUnavailability` (F5.4) : `belongsTo` provider ; période d'absence
+  (`start_date` → `end_date`, `reason`).
 
 ### Enums
 
@@ -48,6 +52,10 @@ justificatifs fournis à l'inscription.
 |---|---|---|
 | POST | `/api/v1/providers` | auth — inscription (rôle+profil prestataire, statut `en_attente`) |
 | GET | `/api/v1/providers/mine` | auth — mon profil prestataire |
+| GET | `/api/v1/providers/availability` | prestataire — planning hebdo + indispos à venir (F5.4) |
+| PUT | `/api/v1/providers/availability/weekly` | prestataire — enregistre le planning hebdo (F5.4) |
+| POST | `/api/v1/providers/availability/unavailability` | prestataire — ajoute une indispo (F5.4) |
+| DELETE | `/api/v1/providers/availability/unavailability/{id}` | prestataire — supprime une indispo (F5.4) |
 | PATCH | `/api/v1/providers/{id}/validate` | agent (`can:valider:prestataire`) → `valide` |
 | PATCH | `/api/v1/providers/{id}/reject` | agent → `refuse` |
 | PATCH | `/api/v1/providers/{id}/suspend` | agent → `suspendu` (motif) |

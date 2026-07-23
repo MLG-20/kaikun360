@@ -75,6 +75,22 @@ class Provider extends Model
     }
 
     /**
+     * Le planning hebdomadaire récurrent (une ligne par jour ouvré) — F5.4.
+     */
+    public function weeklyAvailabilities(): HasMany
+    {
+        return $this->hasMany(ProviderWeeklyAvailability::class);
+    }
+
+    /**
+     * Les périodes d'indisponibilité ponctuelles (congés) — F5.4.
+     */
+    public function unavailabilities(): HasMany
+    {
+        return $this->hasMany(ProviderUnavailability::class);
+    }
+
+    /**
      * Le prestataire est-il validé (donc autorisé à publier / recevoir des missions) ?
      */
     public function isValidated(): bool

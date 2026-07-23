@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Pro\Http\Controllers\ProviderAvailabilityController;
 use App\Modules\Pro\Http\Controllers\ProviderMissionController;
 use App\Modules\Pro\Http\Controllers\ProviderRegistrationController;
 use App\Modules\Pro\Http\Controllers\ProviderValidationController;
@@ -19,6 +20,16 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->prefix('providers')->group(function () {
     Route::post('/', [ProviderRegistrationController::class, 'store'])->middleware('verified.account');
     Route::get('/mine', [ProviderRegistrationController::class, 'mine']);
+
+    // Disponibilités du prestataire (F5.4) : planning hebdomadaire + indispos.
+    // Déclarées AVANT `/{provider}/missions` : `availability` n'est pas numérique
+    // donc aucune collision, mais on garde les routes « dispo » groupées ici.
+    Route::get('/availability', [ProviderAvailabilityController::class, 'show']);
+    Route::put('/availability/weekly', [ProviderAvailabilityController::class, 'updateWeekly']);
+    Route::post('/availability/unavailability', [ProviderAvailabilityController::class, 'storeUnavailability']);
+    Route::delete('/availability/unavailability/{unavailability}', [ProviderAvailabilityController::class, 'destroyUnavailability'])
+        ->whereNumber('unavailability');
+
     // Affectation d'une mission (policy assignMission = admin).
     Route::post('/{provider}/missions', [ProviderMissionController::class, 'store'])->whereNumber('provider');
 });

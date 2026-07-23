@@ -378,6 +378,35 @@ class DemoSeeder extends Seeder
             ]);
         }
 
+        // Disponibilités de démonstration (F5.4) — garde propre. Planning
+        // hebdomadaire (lun→ven 9h-18h, sam 9h-13h, dim fermé) + une période
+        // d'indisponibilité à venir (congés).
+        if (! $marketplace->weeklyAvailabilities()->exists()) {
+            $open = fn (int $weekday, string $start, string $end) => [
+                'weekday' => $weekday, 'is_open' => true,
+                'start_time' => $start, 'end_time' => $end,
+            ];
+            $closed = fn (int $weekday) => [
+                'weekday' => $weekday, 'is_open' => false,
+                'start_time' => null, 'end_time' => null,
+            ];
+            $marketplace->weeklyAvailabilities()->createMany([
+                $open(0, '09:00', '18:00'), // lundi
+                $open(1, '09:00', '18:00'), // mardi
+                $open(2, '09:00', '18:00'), // mercredi
+                $open(3, '09:00', '18:00'), // jeudi
+                $open(4, '09:00', '18:00'), // vendredi
+                $open(5, '09:00', '13:00'), // samedi (matinée)
+                $closed(6),                 // dimanche
+            ]);
+
+            $marketplace->unavailabilities()->create([
+                'start_date' => CarbonImmutable::now()->addWeeks(3)->toDateString(),
+                'end_date' => CarbonImmutable::now()->addWeeks(3)->addDays(5)->toDateString(),
+                'reason' => 'Congés',
+            ]);
+        }
+
         // Missions de démonstration (F5.2) — garde propre, indépendante du profil
         // (permet d'ajouter les missions à un prestataire déjà seedé en F5.1).
         // Statuts variés pour illustrer TOUTES les actions possibles côté écran :

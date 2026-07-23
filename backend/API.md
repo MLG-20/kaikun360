@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 169 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 173 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -188,6 +188,10 @@ TypeScript miroir côté frontend Angular (phase F0).
 | --- | --- | --- | --- |
 | POST | `/providers` | auth + vérifié | `ProviderRegistrationController@store` |
 | GET | `/providers/mine` | auth | `ProviderRegistrationController@mine` |
+| GET | `/providers/availability` | auth | `ProviderAvailabilityController@show` |
+| PUT | `/providers/availability/weekly` | auth | `ProviderAvailabilityController@updateWeekly` |
+| POST | `/providers/availability/unavailability` | auth | `ProviderAvailabilityController@storeUnavailability` |
+| DELETE | `/providers/availability/unavailability/{unavailability}` | auth | `ProviderAvailabilityController@destroyUnavailability` |
 | POST | `/providers/{provider}/missions` | auth | `ProviderMissionController@store` |
 | PATCH | `/providers/{provider}/reject` | auth + `can:valider:prestataire` | `ProviderValidationController@reject` |
 | PATCH | `/providers/{provider}/suspend` | auth + `can:valider:prestataire` | `ProviderValidationController@suspend` |
