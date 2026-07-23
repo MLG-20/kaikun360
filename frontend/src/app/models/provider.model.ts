@@ -1,4 +1,12 @@
 /**
+ * Valeurs possibles du statut de validation d'un prestataire, miroir de l'enum
+ * `ProviderStatus` backend. Le champ `Provider.status` reste typé largement
+ * (`string | null`, tel que renvoyé par l'API) ; ce type sert aux traitements
+ * qui raisonnent sur les valeurs connues (tonalité, message de statut).
+ */
+export type ProviderStatusValue = 'en_attente' | 'valide' | 'refuse' | 'suspendu';
+
+/**
  * Certification prestataire — miroir de `ProviderCertificationResource`.
  */
 export interface ProviderCertification {

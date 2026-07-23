@@ -483,6 +483,17 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 ### Phase F5 — Espace prestataire (ProviderSpaceModule)
 
+> 🏗️ **En cours.** L'espace prestataire est monté sous `/espace-prestataire`
+> (réservé au rôle `prestataire`) et réutilise le **shell app-shell généralisé**
+> (`SPACE_CONFIG`), comme les espaces client (F3) et propriétaire (F4). **F5.1
+> livré** : le **socle** (navigation des 6 rubriques, garde de rôle, liens
+> transverses profil/notifications cloisonnés) et le **tableau de bord**
+> (`GET /providers/mine`) qui affiche l'**état du dossier prestataire** — statut
+> de validation, note moyenne, avis reçus, certifications (vérifiées ou en cours)
+> et avertissements. Le compte prestataire de démonstration reçoit un **profil
+> marketplace seedé** (validé, noté, certifié) pour peupler l'écran. Les écrans
+> ci-dessous suivront (F5.2 → F5.5).
+
 - [ ] Formulaire de dépôt de service (voiture, pirogue, circuit, BTP, guide, hébergement) avec documents de certification.
 - [ ] Écran de gestion des disponibilités.
 - [ ] Écran des missions reçues et de leur statut.

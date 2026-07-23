@@ -30,6 +30,12 @@ export const routes: Routes = [
     loadChildren: () => import('./features/owner/owner.routes').then((m) => m.OWNER_ROUTES),
   },
   {
+    // Espace prestataire authentifié (F5) : même shell app-shell générique,
+    // protégé par `roleGuard` (rôle `prestataire`). Déclaré avant `''`.
+    path: 'espace-prestataire',
+    loadChildren: () => import('./features/pro/provider.routes').then((m) => m.PROVIDER_ROUTES),
+  },
+  {
     path: '',
     component: MainLayoutComponent,
     children: [

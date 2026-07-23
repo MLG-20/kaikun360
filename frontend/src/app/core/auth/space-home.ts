@@ -12,12 +12,15 @@ import { User } from '../../models/user.model';
  * aussi client au sens technique) : on renvoie l'espace le plus spécifique.
  * L'espace client est le repli par défaut (tout compte authentifié y a accès).
  *
- * Les espaces prestataire (F5) et entreprise (F6) s'ajouteront ici quand ils
- * existeront ; en attendant, ces rôles retombent sur l'espace client.
+ * L'espace entreprise (F6) s'ajoutera ici quand il existera ; en attendant, ce
+ * rôle retombe sur l'espace client.
  */
 export function spaceHomeFor(user: User | null): string {
   if (user?.roles?.includes('proprietaire')) {
     return '/espace-proprietaire';
+  }
+  if (user?.roles?.includes('prestataire')) {
+    return '/espace-prestataire';
   }
   return '/mon-espace';
 }

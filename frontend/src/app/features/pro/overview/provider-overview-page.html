@@ -1,0 +1,121 @@
+<header class="account-head">
+  <p class="account-eyebrow">Espace prestataire</p>
+  <h1 class="account-title">
+    Bonjour, {{ firstName() || 'cher prestataire' }}
+  </h1>
+  <p class="account-lead">
+    Suivez l'état de votre dossier, votre note et vos certifications, puis gérez
+    vos services, vos disponibilités et vos missions.
+  </p>
+</header>
+
+@if (loading()) {
+  <p class="prov-state">Chargement de votre tableau de bord…</p>
+} @else if (loadError()) {
+  <div class="prov-state prov-state-error">
+    <p>Impossible de charger votre tableau de bord pour le moment.</p>
+    <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+  </div>
+} @else if (noProfile()) {
+  <!-- Compte prestataire sans profil marketplace : on invite à finaliser. -->
+  <div class="prov-state prov-onboard">
+    <p>
+      Vous n'avez pas encore complété votre profil prestataire. Décrivez vos
+      services et déposez vos certifications pour rejoindre la marketplace.
+    </p>
+    <a class="k-btn k-btn--primary" routerLink="/devenir-prestataire">
+      Compléter mon profil
+    </a>
+  </div>
+} @else if (provider(); as p) {
+  <!-- ===================== Bandeau de statut de validation ================= -->
+  <section class="prov-status-card" aria-label="Statut de votre dossier">
+    <div class="prov-status-head">
+      <div>
+        <strong class="prov-business">{{ p.business_name }}</strong>
+        @if (p.category_label) {
+          <span class="prov-category">{{ p.category_label }}</span>
+        }
+      </div>
+      <span class="bk-status" [attr.data-tone]="statusTone()">{{ p.status_label }}</span>
+    </div>
+    <p class="prov-status-hint">
+      @if (isValidated()) {
+        Votre dossier est validé : vos services peuvent être publiés et vous
+        pouvez recevoir des missions.
+      } @else if (p.status === 'en_attente') {
+        Votre dossier est en cours de vérification par Kaikun. Vous serez notifié
+        dès qu'il sera validé.
+      } @else if (p.status === 'refuse') {
+        Votre dossier a été refusé. Contactez le support pour en connaître le motif
+        et le régulariser.
+      } @else {
+        Votre compte est suspendu. Vos services ne sont plus visibles ; contactez
+        le support pour régulariser votre situation.
+      }
+    </p>
+    @if (p.sanction_note) {
+      <p class="prov-sanction">{{ p.sanction_note }}</p>
+    }
+  </section>
+
+  <!-- ===================== Indicateurs (tableau de bord) ==================== -->
+  <section class="prov-kpis" aria-label="Indicateurs de votre activité">
+    @for (stat of stats(); track stat.label) {
+      <div class="prov-kpi" [attr.data-tone]="stat.tone">
+        <span class="prov-kpi-label">{{ stat.label }}</span>
+        <strong class="prov-kpi-value">{{ stat.value }}</strong>
+      </div>
+    }
+  </section>
+
+  <!-- ===================== Certifications =================================== -->
+  <h2 class="prov-block-title">Mes certifications</h2>
+  @if (certifications().length) {
+    <ul class="prov-certs">
+      @for (cert of certifications(); track cert.id) {
+        <li class="prov-cert">
+          <span class="prov-cert-body">
+            <strong>{{ cert.name }}</strong>
+            @if (cert.issuer) {
+              <span class="prov-cert-issuer">{{ cert.issuer }}</span>
+            }
+          </span>
+          <span class="bk-status" [attr.data-tone]="cert.verified ? 'active' : 'pending'">
+            {{ cert.verified ? 'Vérifiée' : 'En vérification' }}
+          </span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="prov-state">
+      Aucune certification déposée pour l'instant.
+    </p>
+  }
+} @else {
+  <p class="prov-state">Aucune donnée à afficher.</p>
+}
+
+<!-- ===================== Tuiles des sections ============================== -->
+<h2 class="prov-sections-title">Votre espace</h2>
+<section class="account-tiles">
+  @for (item of sections; track item.path) {
+    @if (item.ready) {
+      <a class="account-tile" [routerLink]="['/espace-prestataire', item.path]">
+        <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
+        <span class="account-tile-body">
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.description }}</span>
+        </span>
+      </a>
+    } @else {
+      <div class="account-tile is-soon">
+        <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
+        <span class="account-tile-body">
+          <strong>{{ item.label }} <span class="account-soon-tag">Bientôt</span></strong>
+          <span>{{ item.description }}</span>
+        </span>
+      </div>
+    }
+  }
+</section>

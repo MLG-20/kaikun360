@@ -66,7 +66,18 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   (lien signé temporaire) et **supprime** les pièces justificatives — la liste
   des biens affiche le nombre de documents de chacun. 👉 Détail :
   [`src/app/features/owner/README.md`](src/app/features/owner/README.md).
-- 🚧 **À venir** : les espaces prestataire et entreprise, puis le back-office.
+- 🏗️ **L'espace prestataire (F5, en cours)** : sous `/espace-prestataire`,
+  réservé au rôle « prestataire ». Il réutilise **le même shell partagé** que les
+  espaces client et propriétaire (`layouts/space-layout/`). Écran livré : le
+  **tableau de bord** (F5.1 — `GET /providers/mine`) qui affiche l'**état du
+  dossier prestataire** — statut de validation (en attente / validé / refusé /
+  suspendu), note moyenne, avis reçus, certifications (vérifiées ou en cours) et
+  avertissements. Les rubriques **Mes services**, **Disponibilités**, **Missions
+  reçues**, **Avis reçus** et **Revenus & commissions** sont annoncées
+  « Bientôt » et se brancheront en F5.2 → F5.5. 👉 Détail :
+  [`src/app/features/pro/README.md`](src/app/features/pro/README.md).
+- 🚧 **À venir** : la suite de l'espace prestataire, l'espace entreprise, puis le
+  back-office.
 
 ---
 
