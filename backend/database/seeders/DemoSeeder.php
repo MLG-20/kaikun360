@@ -20,6 +20,9 @@ use App\Modules\Manage\Models\Rent;
 use App\Modules\Mobility\Enums\VehicleType;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Modules\Pro\Enums\ProviderCategory;
+use App\Modules\Pro\Enums\ProviderStatus;
+use App\Modules\Pro\Models\Provider;
 use App\Modules\Stay\Models\Stay;
 use App\Notifications\BookingConfirmedNotification;
 use App\Notifications\QuoteReceivedNotification;
@@ -90,6 +93,12 @@ class DemoSeeder extends Seeder
         } else {
             $this->command?->info('DemoSeeder : catalogues de démonstration déjà présents.');
         }
+
+        // Profil prestataire de démonstration pour peupler le tableau de bord de
+        // l'espace prestataire (F5.1) : le compte prestataire de démo a bien le
+        // rôle, mais AUCUNE ligne `Provider` (module Pro) n'était créée — l'appel
+        // `GET /providers/mine` renvoyait donc 404. Idempotent (garde propre).
+        $this->seedProviderProfile($provider);
 
         // Gestion locative de démonstration pour peupler le tableau de bord de
         // l'espace propriétaire (F4.1) : mandats, loyers, reversements, incidents.
@@ -320,6 +329,50 @@ class DemoSeeder extends Seeder
         ]);
 
         $this->command?->info('DemoSeeder : données de démonstration créées (biens, nuitées, véhicules, expériences, trajets).');
+    }
+
+    /**
+     * Crée un profil prestataire (module Pro) pour le compte prestataire de
+     * démonstration, afin de peupler le tableau de bord de l'espace prestataire
+     * (F5.1). Le prestataire est **validé** (donc autorisé à publier) et porte
+     * quelques certifications ainsi qu'une note moyenne réaliste.
+     *
+     * Idempotent : ne recrée rien si un profil `Provider` existe déjà pour ce
+     * compte (relance du seeder sans doublon).
+     */
+    private function seedProviderProfile(User $provider): void
+    {
+        if (Provider::query()->where('user_id', $provider->id)->exists()) {
+            return;
+        }
+
+        $marketplace = Provider::create([
+            'user_id' => $provider->id,
+            'business_name' => 'Teranga Événements & Transport',
+            'category' => ProviderCategory::EVENEMENTIEL->value,
+            'bio' => 'Organisation d\'événements, animation et transport touristique '
+                .'dans la région de Dakar et du Saloum. Équipe certifiée et véhicules '
+                .'contrôlés.',
+            'status' => ProviderStatus::VALIDE->value,
+            'validated_at' => CarbonImmutable::now()->subMonths(2),
+            // Note moyenne réaliste (les avis détaillés arrivent en F5.5).
+            'rating_avg' => 4.6,
+            'rating_count' => 18,
+        ]);
+
+        // Deux certifications : une vérifiée par Kaikun, une en cours.
+        $marketplace->certifications()->createMany([
+            [
+                'name' => 'Licence de transport touristique',
+                'issuer' => 'Ministère du Tourisme',
+                'verified' => true,
+            ],
+            [
+                'name' => 'Attestation d\'assurance responsabilité civile',
+                'issuer' => 'AXA Sénégal',
+                'verified' => false,
+            ],
+        ]);
     }
 
     /**
