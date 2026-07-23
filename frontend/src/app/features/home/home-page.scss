@@ -10,6 +10,13 @@
     radial-gradient(1100px 520px at 85% -10%, var(--k-brand-050), transparent 60%),
     linear-gradient(180deg, var(--k-cream), var(--k-white));
   padding: 40px 0 56px;
+  // Les anneaux/nœuds de l'orbite sont des carrés à bordure ronde qui TOURNENT :
+  // leur boîte englobante grandit (~×1,41) en pivotant et élargit la zone
+  // défilable (barre horizontale parasite sur mobile/tablette), alors que le
+  // cercle VISIBLE reste dans ses limites. `clip` contient ce débordement
+  // invisible sans rien rogner de visible — et, contrairement à `hidden`, ne
+  // transforme pas la section en conteneur de défilement (le sticky reste sain).
+  overflow-x: clip;
 }
 
 .hero-grid {

@@ -329,6 +329,16 @@
 // Zone d'action sous le bandeau d'un univers (ex. bouton WhatsApp Mobilité).
 .uni-hero-actions {
   margin-top: 1.25rem;
+
+  // Les boutons `.k-btn` sont en `white-space: nowrap` par défaut : un libellé
+  // long (ex. « Vous êtes propriétaire ? Déposez votre bien ») dépasse alors la
+  // largeur de l'écran sur mobile. Ici on autorise le retour à la ligne et on
+  // borne la largeur au conteneur (aucun effet sur desktop où tout tient).
+  .k-btn {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+  }
 }
 
 // Bloc de contact direct WhatsApp sous la carte latérale des fiches (F2.6).
