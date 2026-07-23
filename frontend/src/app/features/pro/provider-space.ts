@@ -41,7 +41,7 @@ export const PROVIDER_NAV: readonly SpaceNavItem[] = [
     description: 'Acceptez, refusez et suivez l’avancement des missions qui vous sont confiées.',
     path: 'missions',
     icon: 'inbox',
-    ready: false, // F5.2
+    ready: true, // F5.2 ✅
   },
   {
     label: 'Avis reçus',

@@ -490,13 +490,18 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 > transverses profil/notifications cloisonnés) et le **tableau de bord**
 > (`GET /providers/mine`) qui affiche l'**état du dossier prestataire** — statut
 > de validation, note moyenne, avis reçus, certifications (vérifiées ou en cours)
-> et avertissements. Le compte prestataire de démonstration reçoit un **profil
-> marketplace seedé** (validé, noté, certifié) pour peupler l'écran. Les écrans
-> ci-dessous suivront (F5.2 → F5.5).
+> et avertissements. **F5.2 livré** : l'écran **« Missions reçues »**
+> (`GET /provider-missions/mine`) — liste paginée des missions confiées, avec
+> montant, commission Kaikun, **net** revenant au prestataire, date prévue et
+> statut ; des **actions** font progresser chaque mission (accepter / refuser une
+> mission affectée, la démarrer, la marquer terminée) via
+> `PATCH /provider-missions/{id}/{action}`. Le compte prestataire de démonstration
+> reçoit un **profil marketplace seedé** (validé, noté, certifié) et **cinq
+> missions** à statuts variés. Les écrans ci-dessous suivront (F5.3 → F5.5).
 
 - [ ] Formulaire de dépôt de service (voiture, pirogue, circuit, BTP, guide, hébergement) avec documents de certification.
 - [ ] Écran de gestion des disponibilités.
-- [ ] Écran des missions reçues et de leur statut.
+- [x] Écran des missions reçues et de leur statut. — _F5.2 : liste + actions de transition (accepter / refuser / démarrer / terminer)._
 - [ ] Écran des avis reçus et de la notation.
 - [ ] Écran de suivi des revenus et commissions.
 

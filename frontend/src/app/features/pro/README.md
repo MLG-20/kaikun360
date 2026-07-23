@@ -57,6 +57,19 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
   la **liste des certifications** puis les tuiles des sections. Gère trois cas :
   chargement, échec réseau, et le **404 « pas encore de profil »** (→ invitation à
   compléter l'inscription via `/devenir-prestataire`).
+- **`missions/`** — `ProviderMissionsPageComponent`, route `missions` (F5.2).
+  Liste paginée des missions (`GET /provider-missions/mine`, 15/page) : chaque
+  carte affiche montant, commission Kaikun, **net** prestataire (montant −
+  commission), date prévue et statut (pastille `.bk-status` teintée). Selon le
+  statut, des **boutons d'action** appliquent une transition
+  (`PATCH /provider-missions/{id}/{action}`) : `affectee` → Accepter / Refuser,
+  `acceptee` → Démarrer, `en_cours` → Marquer terminée ; les missions clôturées
+  (terminée / refusée / annulée) n'ont pas d'action. « Refuser » demande une
+  confirmation. Le backend valide la transition (422 si impossible, 403 si ce
+  n'est pas le prestataire affecté) ; en cas de succès la mission est **remplacée
+  par sa version à jour** dans la liste, sinon un message d'erreur s'affiche.
 
-> Le modèle `models/provider.model.ts` et le service `core/api/provider.service.ts`
-> (méthode `mine()`) préexistaient (F2.7) et sont réutilisés tels quels.
+> Le modèle `models/provider.model.ts` (types `Provider`, `ProviderMission`,
+> `MissionAction`…) et le service `core/api/provider.service.ts` centralisent les
+> appels ; `mine()` préexistait (F2.7), `myMissions()` / `transitionMission()`
+> ont été ajoutés en F5.2.

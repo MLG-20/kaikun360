@@ -72,9 +72,13 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   **tableau de bord** (F5.1 — `GET /providers/mine`) qui affiche l'**état du
   dossier prestataire** — statut de validation (en attente / validé / refusé /
   suspendu), note moyenne, avis reçus, certifications (vérifiées ou en cours) et
-  avertissements. Les rubriques **Mes services**, **Disponibilités**, **Missions
-  reçues**, **Avis reçus** et **Revenus & commissions** sont annoncées
-  « Bientôt » et se brancheront en F5.2 → F5.5. 👉 Détail :
+  avertissements. **« Missions reçues »** (F5.2 —
+  `GET /provider-missions/mine`) : la liste paginée des missions confiées, avec
+  montant, commission Kaikun, **net** prestataire, date prévue et statut, plus des
+  **actions** de transition (accepter / refuser une mission affectée, la démarrer,
+  la marquer terminée). Les rubriques **Mes services**, **Disponibilités**, **Avis
+  reçus** et **Revenus & commissions** sont annoncées « Bientôt » et se
+  brancheront en F5.3 → F5.5. 👉 Détail :
   [`src/app/features/pro/README.md`](src/app/features/pro/README.md).
 - 🚧 **À venir** : la suite de l'espace prestataire, l'espace entreprise, puis le
   back-office.

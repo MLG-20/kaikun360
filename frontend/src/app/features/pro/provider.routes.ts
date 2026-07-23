@@ -36,6 +36,15 @@ export const PROVIDER_ROUTES: Routes = [
         title: 'Espace prestataire — Kaikun 360',
       },
       {
+        // F5.2 — Missions reçues (GET /provider-missions/mine + transitions).
+        path: 'missions',
+        loadComponent: () =>
+          import('./missions/provider-missions-page').then(
+            (m) => m.ProviderMissionsPageComponent,
+          ),
+        title: 'Missions reçues — Kaikun 360',
+      },
+      {
         // Profil — écran transverse monté DANS l'espace prestataire (réutilise le
         // composant de l'espace client : il porte sur l'utilisateur connecté).
         path: 'profil',

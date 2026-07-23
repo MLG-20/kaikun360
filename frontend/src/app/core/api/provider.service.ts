@@ -3,8 +3,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Provider } from '../../models/provider.model';
+import { MissionAction, Provider, ProviderMission } from '../../models/provider.model';
 import { ApiEnvelope } from './api-response.model';
+import { Paginated } from './pagination.model';
 
 /**
  * Catégorie de prestataire — miroir de l'enum `ProviderCategory` backend
@@ -64,6 +65,35 @@ export class ProviderService {
   /** GET /providers/mine — mon profil prestataire (404 si aucun). */
   mine(): Observable<ApiEnvelope<{ provider: Provider }>> {
     return this.http.get<ApiEnvelope<{ provider: Provider }>>(`${this.api}/providers/mine`);
+  }
+
+  /**
+   * GET /provider-missions/mine — mes missions (F5.2).
+   *
+   * Liste paginée (15/page, plus récentes d'abord), forme standard Laravel
+   * `{ data, links, meta }`. Scopée côté serveur au prestataire connecté.
+   */
+  myMissions(page = 1): Observable<Paginated<ProviderMission>> {
+    return this.http.get<Paginated<ProviderMission>>(`${this.api}/provider-missions/mine`, {
+      params: { page: String(page) },
+    });
+  }
+
+  /**
+   * PATCH /provider-missions/{id}/{action} — fait progresser une mission (F5.2).
+   *
+   * `action` ∈ `accept` | `refuse` | `start` | `complete`. Le backend valide la
+   * transition depuis le statut courant (422 si impossible) et n'autorise que le
+   * prestataire affecté (403 sinon). Renvoie la mission mise à jour.
+   */
+  transitionMission(
+    id: number,
+    action: MissionAction,
+  ): Observable<ApiEnvelope<{ mission: ProviderMission }>> {
+    return this.http.patch<ApiEnvelope<{ mission: ProviderMission }>>(
+      `${this.api}/provider-missions/${id}/${action}`,
+      {},
+    );
   }
 
   /**

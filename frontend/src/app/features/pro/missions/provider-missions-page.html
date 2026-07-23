@@ -1,0 +1,106 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-prestataire" />
+  <p class="account-eyebrow">Espace prestataire</p>
+  <h1 class="account-title">Missions reçues</h1>
+  <p class="account-lead">
+    Les missions que Kaikun 360 vous confie. Acceptez ou refusez une mission
+    proposée, démarrez-la une fois convenue, puis marquez-la terminée. Le net
+    indiqué correspond à votre part après commission Kaikun.
+  </p>
+</section>
+
+@if (actionError()) {
+  <p class="mission-alert" role="alert">{{ actionError() }}</p>
+}
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos missions…</p>
+} @else if (loadError()) {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger vos missions pour le moment. Merci de réessayer plus tard.
+  </p>
+} @else if (items().length === 0) {
+  <!-- ============================= Aucune mission ========================= -->
+  <div class="mission-empty">
+    <h2 class="mission-empty-title">Aucune mission pour l'instant</h2>
+    <p class="mission-empty-text">
+      Vous n'avez pas encore reçu de mission. Dès qu'un agent Kaikun 360 vous en
+      confie une, elle apparaîtra ici avec son montant et sa date prévue.
+    </p>
+  </div>
+} @else {
+  <!-- =============================== Liste ================================= -->
+  <ul class="mission-list">
+    @for (mission of items(); track mission.id) {
+      <li class="mission-card">
+        <header class="mission-head">
+          <div class="mission-heading">
+            <span class="mission-title">{{ mission.title }}</span>
+            <span class="mission-ref">{{ mission.reference }}</span>
+          </div>
+          <span class="bk-status" [attr.data-tone]="toneOf(mission.status)">
+            {{ mission.status_label }}
+          </span>
+        </header>
+
+        @if (mission.description) {
+          <p class="mission-desc">{{ mission.description }}</p>
+        }
+
+        <dl class="mission-facts">
+          <div class="mission-fact">
+            <dt>Montant</dt>
+            <dd>{{ fcfa(mission.amount_xof) }}</dd>
+          </div>
+          <div class="mission-fact">
+            <dt>Commission Kaikun</dt>
+            <dd>{{ fcfa(mission.commission_xof) }}</dd>
+          </div>
+          <div class="mission-fact mission-fact--net">
+            <dt>Votre net</dt>
+            <dd>{{ net(mission) }}</dd>
+          </div>
+          @if (schedule(mission.scheduled_at); as when) {
+            <div class="mission-fact">
+              <dt>Prévue le</dt>
+              <dd>{{ when }}</dd>
+            </div>
+          }
+        </dl>
+
+        @if (actionsFor(mission.status).length) {
+          <div class="mission-actions">
+            @for (btn of actionsFor(mission.status); track btn.action) {
+              <button
+                type="button"
+                class="k-btn"
+                [class.k-btn--primary]="btn.kind === 'primary'"
+                [class.k-btn--ghost]="btn.kind === 'ghost'"
+                [class.mission-btn--danger]="btn.kind === 'danger'"
+                [disabled]="busyId() !== null"
+                (click)="act(mission, btn.action)"
+              >
+                {{ busyId() === mission.id ? '…' : btn.label }}
+              </button>
+            }
+          </div>
+        }
+      </li>
+    }
+  </ul>
+
+  <!-- Pagination -->
+  @if (meta(); as m) {
+    @if (m.last_page > 1) {
+      <nav class="mission-pager" aria-label="Pagination des missions">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasPrev()" (click)="prev()">
+          ← Précédent
+        </button>
+        <span class="mission-pager-info">Page {{ m.current_page }} sur {{ m.last_page }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasNext()" (click)="next()">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}
