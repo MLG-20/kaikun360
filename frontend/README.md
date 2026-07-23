@@ -76,9 +76,12 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   `GET /provider-missions/mine`) : la liste paginée des missions confiées, avec
   montant, commission Kaikun, **net** prestataire, date prévue et statut, plus des
   **actions** de transition (accepter / refuser une mission affectée, la démarrer,
-  la marquer terminée). Les rubriques **Mes services**, **Disponibilités**, **Avis
-  reçus** et **Revenus & commissions** sont annoncées « Bientôt » et se
-  brancheront en F5.3 → F5.5. 👉 Détail :
+  la marquer terminée). **« Revenus & commissions »** (F5.3 —
+  `GET /provider-missions/earnings`) : la synthèse financière en deux blocs, le
+  **réalisé** (missions terminées : chiffre d'affaires, commission Kaikun, net
+  encaissé) et l'**à venir** (missions acceptées ou en cours). Les rubriques **Mes
+  services**, **Disponibilités** et **Avis reçus** sont annoncées « Bientôt » et
+  se brancheront en F5.4 → F5.5. 👉 Détail :
   [`src/app/features/pro/README.md`](src/app/features/pro/README.md).
 - 🚧 **À venir** : la suite de l'espace prestataire, l'espace entreprise, puis le
   back-office.

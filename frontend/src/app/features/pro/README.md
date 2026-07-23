@@ -69,7 +69,17 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
   n'est pas le prestataire affecté) ; en cas de succès la mission est **remplacée
   par sa version à jour** dans la liste, sinon un message d'erreur s'affiche.
 
+- **`earnings/`** — `ProviderEarningsPageComponent`, route `revenus` (F5.3).
+  Synthèse revenus & commissions issue de `GET /provider-missions/earnings`
+  (agrégat backend scopé au prestataire, pas un calcul côté client — robuste
+  au-delà des 15 missions paginées). Deux blocs d'indicateurs : **réalisé**
+  (missions terminées → chiffre d'affaires, commission Kaikun, **net encaissé**
+  mis en avant en vert) et **à venir** (missions acceptées ou en cours → net
+  attendu en doré, engagé mais pas encore encaissé), plus un renvoi vers les
+  missions à traiter (affectées) le cas échéant.
+
 > Le modèle `models/provider.model.ts` (types `Provider`, `ProviderMission`,
-> `MissionAction`…) et le service `core/api/provider.service.ts` centralisent les
-> appels ; `mine()` préexistait (F2.7), `myMissions()` / `transitionMission()`
-> ont été ajoutés en F5.2.
+> `MissionAction`, `ProviderEarnings`…) et le service
+> `core/api/provider.service.ts` centralisent les appels ; `mine()` préexistait
+> (F2.7), `myMissions()` / `transitionMission()` (F5.2) et `earnings()` (F5.3) ont
+> été ajoutés au fil des sous-phases.

@@ -497,13 +497,17 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 > mission affectée, la démarrer, la marquer terminée) via
 > `PATCH /provider-missions/{id}/{action}`. Le compte prestataire de démonstration
 > reçoit un **profil marketplace seedé** (validé, noté, certifié) et **cinq
-> missions** à statuts variés. Les écrans ci-dessous suivront (F5.3 → F5.5).
+> missions** à statuts variés. **F5.3 livré** : l'écran **« Revenus &
+> commissions »** (nouvel endpoint d'agrégat `GET /provider-missions/earnings`) —
+> synthèse du **réalisé** (missions terminées : chiffre d'affaires, commission
+> Kaikun, net encaissé) et de l'**à venir** (missions acceptées ou en cours :
+> engagé pas encore encaissé). Les écrans ci-dessous suivront (F5.4 → F5.5).
 
 - [ ] Formulaire de dépôt de service (voiture, pirogue, circuit, BTP, guide, hébergement) avec documents de certification.
 - [ ] Écran de gestion des disponibilités.
 - [x] Écran des missions reçues et de leur statut. — _F5.2 : liste + actions de transition (accepter / refuser / démarrer / terminer)._
 - [ ] Écran des avis reçus et de la notation.
-- [ ] Écran de suivi des revenus et commissions.
+- [x] Écran de suivi des revenus et commissions. — _F5.3 : synthèse réalisé / à venir (`GET /provider-missions/earnings`)._
 
 ### Phase F6 — Espace entreprise (EnterpriseSpaceModule)
 

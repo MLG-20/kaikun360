@@ -61,6 +61,30 @@ export interface ProviderMission {
 export type MissionAction = 'accept' | 'refuse' | 'start' | 'complete';
 
 /**
+ * Synthèse revenus & commissions du prestataire — miroir de
+ * `GET /provider-missions/earnings` (F5.3). Montants en francs CFA (XOF),
+ * entiers. Le net = montant − commission Kaikun.
+ */
+export interface ProviderEarnings {
+  /** Chiffre d'affaires réalisé (missions terminées). */
+  revenu_realise_xof: number;
+  /** Commissions Kaikun sur les missions terminées. */
+  commission_realisee_xof: number;
+  /** Net encaissé par le prestataire (réalisé − commission). */
+  net_realise_xof: number;
+  /** Nombre de missions terminées. */
+  missions_terminees: number;
+  /** Chiffre d'affaires engagé mais pas encore encaissé (missions acceptées + en cours). */
+  revenu_a_venir_xof: number;
+  /** Net attendu sur les missions à venir. */
+  net_a_venir_xof: number;
+  /** Nombre de missions acceptées ou en cours. */
+  missions_a_venir: number;
+  /** Nombre de missions affectées en attente de réponse. */
+  missions_a_traiter: number;
+}
+
+/**
  * Prestataire marketplace — miroir de `ProviderResource` (module Pro).
  *
  * `status` suit l'enum `ProviderStatus` backend :

@@ -45,6 +45,15 @@ export const PROVIDER_ROUTES: Routes = [
         title: 'Missions reçues — Kaikun 360',
       },
       {
+        // F5.3 — Revenus & commissions (GET /provider-missions/earnings).
+        path: 'revenus',
+        loadComponent: () =>
+          import('./earnings/provider-earnings-page').then(
+            (m) => m.ProviderEarningsPageComponent,
+          ),
+        title: 'Revenus & commissions — Kaikun 360',
+      },
+      {
         // Profil — écran transverse monté DANS l'espace prestataire (réutilise le
         // composant de l'espace client : il porte sur l'utilisateur connecté).
         path: 'profil',

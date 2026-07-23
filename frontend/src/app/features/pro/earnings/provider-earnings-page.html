@@ -1,0 +1,67 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-prestataire" />
+  <p class="account-eyebrow">Espace prestataire</p>
+  <h1 class="account-title">Revenus &amp; commissions</h1>
+  <p class="account-lead">
+    Votre chiffre d'affaires et le net qui vous revient après commission Kaikun.
+    Le « réalisé » correspond aux missions terminées ; le « à venir » aux missions
+    acceptées ou en cours, pas encore encaissées.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos revenus…</p>
+} @else if (loadError()) {
+  <div class="earn-error">
+    <p>Impossible de charger vos revenus pour le moment.</p>
+    <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+  </div>
+} @else if (data(); as d) {
+  <!-- ===================== Réalisé (missions terminées) ==================== -->
+  <h2 class="earn-block-title">Réalisé</h2>
+  <section class="earn-kpis" aria-label="Revenus réalisés">
+    <div class="earn-kpi earn-kpi--net">
+      <span class="earn-kpi-label">Net encaissé</span>
+      <strong class="earn-kpi-value">{{ fcfa(d.net_realise_xof) }}</strong>
+      <span class="earn-kpi-sub">sur {{ missionLabel(d.missions_terminees) }} terminée{{ d.missions_terminees > 1 ? 's' : '' }}</span>
+    </div>
+    <div class="earn-kpi">
+      <span class="earn-kpi-label">Chiffre d'affaires</span>
+      <strong class="earn-kpi-value">{{ fcfa(d.revenu_realise_xof) }}</strong>
+      <span class="earn-kpi-sub">montant total des missions terminées</span>
+    </div>
+    <div class="earn-kpi">
+      <span class="earn-kpi-label">Commissions Kaikun</span>
+      <strong class="earn-kpi-value">{{ fcfa(d.commission_realisee_xof) }}</strong>
+      <span class="earn-kpi-sub">prélevées sur le réalisé</span>
+    </div>
+  </section>
+
+  <!-- ===================== À venir (acceptées / en cours) ================== -->
+  <h2 class="earn-block-title">À venir</h2>
+  <section class="earn-kpis" aria-label="Revenus à venir">
+    <div class="earn-kpi earn-kpi--soft">
+      <span class="earn-kpi-label">Net à venir</span>
+      <strong class="earn-kpi-value">{{ fcfa(d.net_a_venir_xof) }}</strong>
+      <span class="earn-kpi-sub">sur {{ missionLabel(d.missions_a_venir) }} en cours</span>
+    </div>
+    <div class="earn-kpi">
+      <span class="earn-kpi-label">Chiffre d'affaires engagé</span>
+      <strong class="earn-kpi-value">{{ fcfa(d.revenu_a_venir_xof) }}</strong>
+      <span class="earn-kpi-sub">montant des missions acceptées ou en cours</span>
+    </div>
+  </section>
+
+  <!-- Note explicative + renvoi missions à traiter. -->
+  <p class="earn-note">
+    Votre net correspond au montant de la mission diminué de la commission Kaikun.
+  </p>
+  @if (hasPending()) {
+    <p class="earn-cta">
+      Vous avez {{ missionLabel(d.missions_a_traiter) }} en attente de réponse.
+      <a routerLink="/espace-prestataire/missions">Voir les missions reçues</a>.
+    </p>
+  }
+} @else {
+  <p class="pf-state">Aucune donnée à afficher.</p>
+}

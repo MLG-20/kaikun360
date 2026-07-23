@@ -55,7 +55,7 @@ export const PROVIDER_NAV: readonly SpaceNavItem[] = [
     description: 'Suivez vos gains et les commissions prélevées par Kaikun.',
     path: 'revenus',
     icon: 'wallet',
-    ready: false, // F5.3
+    ready: true, // F5.3 ✅
   },
 ];
 

@@ -3,7 +3,12 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { MissionAction, Provider, ProviderMission } from '../../models/provider.model';
+import {
+  MissionAction,
+  Provider,
+  ProviderEarnings,
+  ProviderMission,
+} from '../../models/provider.model';
 import { ApiEnvelope } from './api-response.model';
 import { Paginated } from './pagination.model';
 
@@ -77,6 +82,18 @@ export class ProviderService {
     return this.http.get<Paginated<ProviderMission>>(`${this.api}/provider-missions/mine`, {
       params: { page: String(page) },
     });
+  }
+
+  /**
+   * GET /provider-missions/earnings — synthèse revenus & commissions (F5.3).
+   *
+   * Agrégat scopé au prestataire connecté : réalisé (missions terminées), à venir
+   * (acceptées + en cours) et nombre de missions à traiter.
+   */
+  earnings(): Observable<ApiEnvelope<ProviderEarnings>> {
+    return this.http.get<ApiEnvelope<ProviderEarnings>>(
+      `${this.api}/provider-missions/earnings`,
+    );
   }
 
   /**
