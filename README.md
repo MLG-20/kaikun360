@@ -501,10 +501,15 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 > commissions »** (nouvel endpoint d'agrégat `GET /provider-missions/earnings`) —
 > synthèse du **réalisé** (missions terminées : chiffre d'affaires, commission
 > Kaikun, net encaissé) et de l'**à venir** (missions acceptées ou en cours :
-> engagé pas encore encaissé). Les écrans ci-dessous suivront (F5.4 → F5.5).
+> engagé pas encore encaissé). **F5.4 livré** : l'écran **« Disponibilités »** —
+> backend neuf (tables `provider_weekly_availabilities` + `provider_unavailabilities`,
+> 4 endpoints sous `/providers/availability`) — combinant un **planning
+> hebdomadaire récurrent** (7 jours, ouvert/fermé + horaires) et des **périodes
+> d'indisponibilité** ponctuelles (congés) qui priment sur le planning. Les écrans
+> ci-dessous suivront (F5.5).
 
 - [ ] Formulaire de dépôt de service (voiture, pirogue, circuit, BTP, guide, hébergement) avec documents de certification.
-- [ ] Écran de gestion des disponibilités.
+- [x] Écran de gestion des disponibilités. — _F5.4 : planning hebdomadaire récurrent + périodes d'indisponibilité._
 - [x] Écran des missions reçues et de leur statut. — _F5.2 : liste + actions de transition (accepter / refuser / démarrer / terminer)._
 - [ ] Écran des avis reçus et de la notation.
 - [x] Écran de suivi des revenus et commissions. — _F5.3 : synthèse réalisé / à venir (`GET /provider-missions/earnings`)._

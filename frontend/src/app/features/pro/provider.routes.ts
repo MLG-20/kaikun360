@@ -45,6 +45,15 @@ export const PROVIDER_ROUTES: Routes = [
         title: 'Missions reçues — Kaikun 360',
       },
       {
+        // F5.4 — Disponibilités (planning hebdo + indisponibilités).
+        path: 'disponibilites',
+        loadComponent: () =>
+          import('./availability/provider-availability-page').then(
+            (m) => m.ProviderAvailabilityPageComponent,
+          ),
+        title: 'Disponibilités — Kaikun 360',
+      },
+      {
         // F5.3 — Revenus & commissions (GET /provider-missions/earnings).
         path: 'revenus',
         loadComponent: () =>

@@ -5,9 +5,13 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   MissionAction,
+  NewUnavailability,
   Provider,
+  ProviderAvailability,
   ProviderEarnings,
   ProviderMission,
+  Unavailability,
+  WeeklyAvailability,
 } from '../../models/provider.model';
 import { ApiEnvelope } from './api-response.model';
 import { Paginated } from './pagination.model';
@@ -93,6 +97,46 @@ export class ProviderService {
   earnings(): Observable<ApiEnvelope<ProviderEarnings>> {
     return this.http.get<ApiEnvelope<ProviderEarnings>>(
       `${this.api}/provider-missions/earnings`,
+    );
+  }
+
+  /**
+   * GET /providers/availability — mes disponibilités (F5.4) : planning
+   * hebdomadaire (7 jours) + périodes d'indisponibilité à venir.
+   */
+  availability(): Observable<ApiEnvelope<ProviderAvailability>> {
+    return this.http.get<ApiEnvelope<ProviderAvailability>>(
+      `${this.api}/providers/availability`,
+    );
+  }
+
+  /**
+   * PUT /providers/availability/weekly — enregistre le planning hebdomadaire.
+   * Renvoie le planning à jour (les 7 jours).
+   */
+  saveWeekly(
+    days: WeeklyAvailability[],
+  ): Observable<ApiEnvelope<{ weekly: WeeklyAvailability[] }>> {
+    return this.http.put<ApiEnvelope<{ weekly: WeeklyAvailability[] }>>(
+      `${this.api}/providers/availability/weekly`,
+      { days },
+    );
+  }
+
+  /** POST /providers/availability/unavailability — ajoute une indisponibilité. */
+  addUnavailability(
+    payload: NewUnavailability,
+  ): Observable<ApiEnvelope<{ unavailability: Unavailability }>> {
+    return this.http.post<ApiEnvelope<{ unavailability: Unavailability }>>(
+      `${this.api}/providers/availability/unavailability`,
+      payload,
+    );
+  }
+
+  /** DELETE /providers/availability/unavailability/{id} — supprime une indisponibilité. */
+  removeUnavailability(id: number): Observable<ApiEnvelope<{ deleted: boolean }>> {
+    return this.http.delete<ApiEnvelope<{ deleted: boolean }>>(
+      `${this.api}/providers/availability/unavailability/${id}`,
     );
   }
 

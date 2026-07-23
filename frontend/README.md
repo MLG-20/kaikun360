@@ -79,9 +79,12 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   la marquer terminée). **« Revenus & commissions »** (F5.3 —
   `GET /provider-missions/earnings`) : la synthèse financière en deux blocs, le
   **réalisé** (missions terminées : chiffre d'affaires, commission Kaikun, net
-  encaissé) et l'**à venir** (missions acceptées ou en cours). Les rubriques **Mes
-  services**, **Disponibilités** et **Avis reçus** sont annoncées « Bientôt » et
-  se brancheront en F5.4 → F5.5. 👉 Détail :
+  encaissé) et l'**à venir** (missions acceptées ou en cours). **« Disponibilités »**
+  (F5.4 — `GET/PUT/POST/DELETE /providers/availability…`) : un **planning
+  hebdomadaire récurrent** (7 jours, ouvert/fermé + horaires) et des **périodes
+  d'indisponibilité** ponctuelles (congés) qui priment sur le planning. Les
+  rubriques **Mes services** et **Avis reçus** sont annoncées « Bientôt » et se
+  brancheront en F5.5. 👉 Détail :
   [`src/app/features/pro/README.md`](src/app/features/pro/README.md).
 - 🚧 **À venir** : la suite de l'espace prestataire, l'espace entreprise, puis le
   back-office.

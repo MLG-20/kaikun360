@@ -78,8 +78,18 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
   attendu en doré, engagé mais pas encore encaissé), plus un renvoi vers les
   missions à traiter (affectées) le cas échéant.
 
+- **`availability/`** — `ProviderAvailabilityPageComponent`, route
+  `disponibilites` (F5.4). Deux volets, chargés via `GET /providers/availability` :
+  un **planning hebdomadaire** (7 jours ; chaque jour ouvert/fermé + heures,
+  enregistré en bloc via `PUT .../weekly`) et des **périodes d'indisponibilité**
+  ponctuelles (congés — ajout `POST`, suppression `DELETE` avec confirmation) qui
+  priment sur le planning. Les lignes du planning sont éditées dans un signal
+  local puis renvoyées toutes ensemble ; un garde-fou client vérifie que la fin
+  suit le début sur un jour ouvert.
+
 > Le modèle `models/provider.model.ts` (types `Provider`, `ProviderMission`,
-> `MissionAction`, `ProviderEarnings`…) et le service
-> `core/api/provider.service.ts` centralisent les appels ; `mine()` préexistait
-> (F2.7), `myMissions()` / `transitionMission()` (F5.2) et `earnings()` (F5.3) ont
-> été ajoutés au fil des sous-phases.
+> `MissionAction`, `ProviderEarnings`, `WeeklyAvailability`, `Unavailability`…) et
+> le service `core/api/provider.service.ts` centralisent les appels ; `mine()`
+> préexistait (F2.7), puis `myMissions()` / `transitionMission()` (F5.2),
+> `earnings()` (F5.3) et `availability()` / `saveWeekly()` / `addUnavailability()`
+> / `removeUnavailability()` (F5.4) ont été ajoutés au fil des sous-phases.

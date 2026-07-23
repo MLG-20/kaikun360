@@ -1,0 +1,119 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-prestataire" />
+  <p class="account-eyebrow">Espace prestataire</p>
+  <h1 class="account-title">Disponibilités</h1>
+  <p class="account-lead">
+    Indiquez vos horaires habituels, semaine type, puis signalez vos absences
+    ponctuelles (congés). Les indisponibilités priment sur le planning : vous êtes
+    considéré absent sur ces dates même si le jour est ouvert.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos disponibilités…</p>
+} @else if (loadError()) {
+  <div class="av-error">
+    <p>Impossible de charger vos disponibilités pour le moment.</p>
+    <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+  </div>
+} @else {
+  <!-- ===================== Planning hebdomadaire ========================== -->
+  <h2 class="av-block-title">Planning hebdomadaire</h2>
+  <ul class="av-week">
+    @for (row of rows(); track row.weekday) {
+      <li class="av-day" [class.av-day--closed]="!row.is_open">
+        <span class="av-day-name">{{ row.label }}</span>
+
+        <label class="av-toggle">
+          <input
+            type="checkbox"
+            [checked]="row.is_open"
+            (change)="toggleDay(row.weekday, $any($event.target).checked)"
+          />
+          <span>{{ row.is_open ? 'Ouvert' : 'Fermé' }}</span>
+        </label>
+
+        @if (row.is_open) {
+          <span class="av-hours">
+            <input
+              type="time"
+              class="av-time"
+              [value]="row.start_time"
+              (change)="setTime(row.weekday, 'start_time', $any($event.target).value)"
+              aria-label="Heure de début"
+            />
+            <span class="av-hours-sep">→</span>
+            <input
+              type="time"
+              class="av-time"
+              [value]="row.end_time"
+              (change)="setTime(row.weekday, 'end_time', $any($event.target).value)"
+              aria-label="Heure de fin"
+            />
+          </span>
+        } @else {
+          <span class="av-hours av-hours--muted">Indisponible</span>
+        }
+      </li>
+    }
+  </ul>
+
+  @if (weeklyError()) {
+    <p class="av-msg av-msg--error" role="alert">{{ weeklyError() }}</p>
+  }
+  @if (weeklySaved()) {
+    <p class="av-msg av-msg--ok" role="status">Planning enregistré.</p>
+  }
+
+  <div class="av-actions">
+    <button type="button" class="k-btn k-btn--primary" [disabled]="savingWeekly()" (click)="saveWeekly()">
+      {{ savingWeekly() ? 'Enregistrement…' : 'Enregistrer le planning' }}
+    </button>
+  </div>
+
+  <!-- ===================== Indisponibilités ============================== -->
+  <h2 class="av-block-title av-block-title--spaced">Indisponibilités</h2>
+
+  @if (unavailabilities().length) {
+    <ul class="av-off-list">
+      @for (period of unavailabilities(); track period.id) {
+        <li class="av-off">
+          <span class="av-off-body">
+            <strong>{{ formatRange(period) }}</strong>
+            @if (period.reason) {
+              <span class="av-off-reason">{{ period.reason }}</span>
+            }
+          </span>
+          <button type="button" class="av-off-remove" (click)="removeOff(period)" aria-label="Supprimer cette indisponibilité">
+            Supprimer
+          </button>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="av-off-empty">Aucune indisponibilité déclarée : vous suivez votre planning habituel.</p>
+  }
+
+  <!-- Formulaire d'ajout -->
+  <form class="av-off-form" [formGroup]="offForm" (ngSubmit)="addOff()">
+    <div class="av-off-field">
+      <label for="off-start">Du</label>
+      <input id="off-start" type="date" formControlName="start_date" />
+    </div>
+    <div class="av-off-field">
+      <label for="off-end">Au</label>
+      <input id="off-end" type="date" formControlName="end_date" />
+    </div>
+    <div class="av-off-field av-off-field--grow">
+      <label for="off-reason">Motif (facultatif)</label>
+      <input id="off-reason" type="text" formControlName="reason" placeholder="Congés, indisponible…" maxlength="255" />
+    </div>
+    <button type="submit" class="k-btn k-btn--ghost" [disabled]="addingOff()">
+      {{ addingOff() ? 'Ajout…' : 'Ajouter' }}
+    </button>
+  </form>
+
+  @if (offError()) {
+    <p class="av-msg av-msg--error" role="alert">{{ offError() }}</p>
+  }
+}

@@ -85,6 +85,45 @@ export interface ProviderEarnings {
 }
 
 /**
+ * Un jour du planning hebdomadaire récurrent (F5.4). `weekday` : 0 = lundi …
+ * 6 = dimanche. Heures au format `HH:MM` quand le jour est ouvert, sinon null.
+ */
+export interface WeeklyAvailability {
+  weekday: number;
+  is_open: boolean;
+  start_time: string | null;
+  end_time: string | null;
+}
+
+/**
+ * Une période d'indisponibilité ponctuelle (F5.4) — miroir de
+ * `ProviderUnavailabilityResource`. Dates au format `YYYY-MM-DD` (incluses).
+ */
+export interface Unavailability {
+  id: number;
+  start_date: string;
+  end_date: string;
+  reason: string | null;
+}
+
+/**
+ * Disponibilités du prestataire — réponse de `GET /providers/availability`
+ * (F5.4) : le planning hebdomadaire (toujours 7 jours) et les périodes
+ * d'indisponibilité à venir.
+ */
+export interface ProviderAvailability {
+  weekly: WeeklyAvailability[];
+  unavailabilities: Unavailability[];
+}
+
+/** Corps d'ajout d'une indisponibilité (POST). */
+export interface NewUnavailability {
+  start_date: string;
+  end_date: string;
+  reason?: string | null;
+}
+
+/**
  * Prestataire marketplace — miroir de `ProviderResource` (module Pro).
  *
  * `status` suit l'enum `ProviderStatus` backend :

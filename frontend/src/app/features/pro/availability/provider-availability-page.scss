@@ -1,0 +1,208 @@
+// Écran « Disponibilités » de l'espace prestataire (F5.4). Briques partagées
+// globales (.account-*, .pf-state, .k-btn) ; ici : le planning hebdomadaire et
+// la liste/formulaire des indisponibilités.
+
+.av-error {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+  background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card));
+  border-radius: var(--k-radius);
+
+  p { margin: 0; color: var(--k-ink); }
+}
+
+.av-block-title {
+  font-family: var(--k-font-display);
+  font-size: 1.15rem;
+  margin: 0 0 1rem;
+
+  &--spaced { margin-top: 2.5rem; }
+}
+
+// --- Planning hebdomadaire -------------------------------------------------
+.av-week {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.av-day {
+  display: grid;
+  grid-template-columns: 8rem 8rem 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+
+  // Jour fermé : légèrement estompé.
+  &--closed {
+    background: color-mix(in srgb, var(--k-cream) 60%, var(--k-card));
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 0.6rem;
+  }
+}
+
+.av-day-name {
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.av-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: var(--k-muted);
+  font-size: 0.9rem;
+
+  input { accent-color: var(--k-brand); width: 1.05rem; height: 1.05rem; }
+}
+
+.av-hours {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  &--muted { color: var(--k-muted); font-size: 0.9rem; }
+
+  @media (max-width: 560px) {
+    grid-column: 1 / -1;
+  }
+}
+
+.av-time {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  background: var(--k-bg);
+  color: var(--k-ink);
+  font: inherit;
+}
+
+.av-hours-sep { color: var(--k-muted); }
+
+.av-actions {
+  margin-top: 1.2rem;
+}
+
+// --- Messages (succès / erreur) -------------------------------------------
+.av-msg {
+  margin: 1rem 0 0;
+  padding: 0.7rem 1rem;
+  border-radius: var(--k-radius);
+  font-size: 0.9rem;
+
+  &--error {
+    border: 1px solid color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+    background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card));
+    color: var(--k-ink);
+  }
+
+  &--ok {
+    border: 1px solid color-mix(in srgb, var(--k-green) 35%, var(--k-line));
+    background: color-mix(in srgb, var(--k-green) 10%, var(--k-card));
+    color: var(--k-green-600);
+  }
+}
+
+// --- Indisponibilités ------------------------------------------------------
+.av-off-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.av-off {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-left: 3px solid var(--k-gold);
+  border-radius: var(--k-radius);
+}
+
+.av-off-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  strong { color: var(--k-ink); }
+}
+
+.av-off-reason {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+.av-off-remove {
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--k-danger) 40%, var(--k-line));
+  background: transparent;
+  color: var(--k-danger);
+  border-radius: var(--k-radius);
+  padding: 0.35rem 0.8rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover { background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card)); }
+}
+
+.av-off-empty {
+  color: var(--k-muted);
+  margin: 0 0 1rem;
+}
+
+// Formulaire d'ajout.
+.av-off-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.8rem;
+  padding: 1.1rem 1.2rem;
+  background: var(--k-card);
+  border: 1px dashed var(--k-line);
+  border-radius: var(--k-radius);
+}
+
+.av-off-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  &--grow { flex: 1 1 12rem; }
+
+  label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--k-muted);
+  }
+
+  input {
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--k-line);
+    border-radius: var(--k-radius);
+    background: var(--k-bg);
+    color: var(--k-ink);
+    font: inherit;
+  }
+}

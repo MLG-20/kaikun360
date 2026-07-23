@@ -34,7 +34,7 @@ export const PROVIDER_NAV: readonly SpaceNavItem[] = [
     description: 'Indiquez vos créneaux et périodes d’indisponibilité.',
     path: 'disponibilites',
     icon: 'calendar',
-    ready: false, // F5.4
+    ready: true, // F5.4 ✅
   },
   {
     label: 'Missions reçues',
