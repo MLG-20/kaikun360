@@ -20,6 +20,7 @@ use App\Modules\Manage\Models\Rent;
 use App\Modules\Mobility\Enums\VehicleType;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Modules\Pro\Enums\MissionStatus;
 use App\Modules\Pro\Enums\ProviderCategory;
 use App\Modules\Pro\Enums\ProviderStatus;
 use App\Modules\Pro\Models\Provider;
@@ -94,11 +95,11 @@ class DemoSeeder extends Seeder
             $this->command?->info('DemoSeeder : catalogues de démonstration déjà présents.');
         }
 
-        // Profil prestataire de démonstration pour peupler le tableau de bord de
-        // l'espace prestataire (F5.1) : le compte prestataire de démo a bien le
-        // rôle, mais AUCUNE ligne `Provider` (module Pro) n'était créée — l'appel
-        // `GET /providers/mine` renvoyait donc 404. Idempotent (garde propre).
-        $this->seedProviderProfile($provider);
+        // Profil + missions prestataire de démonstration pour peupler l'espace
+        // prestataire : le tableau de bord (F5.1 — le compte de démo avait le rôle
+        // mais aucune ligne `Provider`, d'où un 404) et les missions reçues (F5.2 —
+        // statuts variés pour illustrer les actions). Idempotent (gardes propres).
+        $this->seedProviderProfile($provider, $client);
 
         // Gestion locative de démonstration pour peupler le tableau de bord de
         // l'espace propriétaire (F4.1) : mandats, loyers, reversements, incidents.
@@ -332,46 +333,110 @@ class DemoSeeder extends Seeder
     }
 
     /**
-     * Crée un profil prestataire (module Pro) pour le compte prestataire de
-     * démonstration, afin de peupler le tableau de bord de l'espace prestataire
-     * (F5.1). Le prestataire est **validé** (donc autorisé à publier) et porte
-     * quelques certifications ainsi qu'une note moyenne réaliste.
+     * Crée le profil prestataire (module Pro) et ses missions de démonstration
+     * pour le compte prestataire de démo, afin de peupler l'espace prestataire :
+     * le **tableau de bord** (F5.1 — prestataire **validé**, certifications, note)
+     * et les **missions reçues** (F5.2 — cinq missions à statuts variés, dont le
+     * client de démo est le donneur d'ordre).
      *
-     * Idempotent : ne recrée rien si un profil `Provider` existe déjà pour ce
-     * compte (relance du seeder sans doublon).
+     * Deux gardes d'idempotence indépendantes (profil / missions) : la relance du
+     * seeder ne crée aucun doublon, et les missions peuvent être ajoutées à un
+     * prestataire déjà seedé lors d'une phase précédente.
      */
-    private function seedProviderProfile(User $provider): void
+    private function seedProviderProfile(User $provider, User $client): void
     {
-        if (Provider::query()->where('user_id', $provider->id)->exists()) {
+        // Profil marketplace (F5.1) — créé une seule fois.
+        $marketplace = Provider::query()->where('user_id', $provider->id)->first();
+
+        if (! $marketplace) {
+            $marketplace = Provider::create([
+                'user_id' => $provider->id,
+                'business_name' => 'Teranga Événements & Transport',
+                'category' => ProviderCategory::EVENEMENTIEL->value,
+                'bio' => 'Organisation d\'événements, animation et transport touristique '
+                    .'dans la région de Dakar et du Saloum. Équipe certifiée et véhicules '
+                    .'contrôlés.',
+                'status' => ProviderStatus::VALIDE->value,
+                'validated_at' => CarbonImmutable::now()->subMonths(2),
+                // Note moyenne réaliste (les avis détaillés arrivent en F5.5).
+                'rating_avg' => 4.6,
+                'rating_count' => 18,
+            ]);
+
+            // Deux certifications : une vérifiée par Kaikun, une en cours.
+            $marketplace->certifications()->createMany([
+                [
+                    'name' => 'Licence de transport touristique',
+                    'issuer' => 'Ministère du Tourisme',
+                    'verified' => true,
+                ],
+                [
+                    'name' => 'Attestation d\'assurance responsabilité civile',
+                    'issuer' => 'AXA Sénégal',
+                    'verified' => false,
+                ],
+            ]);
+        }
+
+        // Missions de démonstration (F5.2) — garde propre, indépendante du profil
+        // (permet d'ajouter les missions à un prestataire déjà seedé en F5.1).
+        // Statuts variés pour illustrer TOUTES les actions possibles côté écran :
+        // affectée (Accepter/Refuser), acceptée (Démarrer), en cours (Terminer),
+        // et deux missions clôturées (terminée, refusée) sans action.
+        if ($marketplace->missions()->exists()) {
             return;
         }
 
-        $marketplace = Provider::create([
-            'user_id' => $provider->id,
-            'business_name' => 'Teranga Événements & Transport',
-            'category' => ProviderCategory::EVENEMENTIEL->value,
-            'bio' => 'Organisation d\'événements, animation et transport touristique '
-                .'dans la région de Dakar et du Saloum. Équipe certifiée et véhicules '
-                .'contrôlés.',
-            'status' => ProviderStatus::VALIDE->value,
-            'validated_at' => CarbonImmutable::now()->subMonths(2),
-            // Note moyenne réaliste (les avis détaillés arrivent en F5.5).
-            'rating_avg' => 4.6,
-            'rating_count' => 18,
-        ]);
+        $now = CarbonImmutable::now();
 
-        // Deux certifications : une vérifiée par Kaikun, une en cours.
-        $marketplace->certifications()->createMany([
-            [
-                'name' => 'Licence de transport touristique',
-                'issuer' => 'Ministère du Tourisme',
-                'verified' => true,
-            ],
-            [
-                'name' => 'Attestation d\'assurance responsabilité civile',
-                'issuer' => 'AXA Sénégal',
-                'verified' => false,
-            ],
+        // Une mission avec montant, commission Kaikun (12 %) et échéance.
+        $mission = fn (string $title, string $desc, int $amount, string $status, ?CarbonImmutable $when) => [
+            'reference' => 'MSN-'.Str::upper(Str::random(8)),
+            'client_id' => $client->id,
+            'title' => $title,
+            'description' => $desc,
+            'amount_xof' => $amount,
+            'commission_xof' => (int) round($amount * 0.12),
+            'status' => $status,
+            'scheduled_at' => $when,
+        ];
+
+        $marketplace->missions()->createMany([
+            $mission(
+                'Animation gala d\'entreprise',
+                'Soirée de fin d\'année pour 150 collaborateurs : animation, sonorisation et scène.',
+                450_000,
+                MissionStatus::AFFECTEE->value,
+                $now->addDays(12),
+            ),
+            $mission(
+                'Navette séminaire résidentiel',
+                'Transport aller-retour Dakar → Saly pour un séminaire de 2 jours (2 bus).',
+                320_000,
+                MissionStatus::ACCEPTEE->value,
+                $now->addDays(5),
+            ),
+            $mission(
+                'Guide circuit Delta du Saloum',
+                'Accompagnement d\'un groupe de 8 touristes sur 3 jours (pirogue + visites).',
+                600_000,
+                MissionStatus::EN_COURS->value,
+                $now->subDay(),
+            ),
+            $mission(
+                'Traiteur mariage',
+                'Service traiteur pour 200 couverts, cérémonie à Dakar.',
+                850_000,
+                MissionStatus::TERMINEE->value,
+                $now->subWeeks(3),
+            ),
+            $mission(
+                'Animation soirée privée',
+                'DJ pour un anniversaire privé (créneau déjà pris, décliné).',
+                180_000,
+                MissionStatus::REFUSEE->value,
+                $now->subDays(2),
+            ),
         ]);
     }
 

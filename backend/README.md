@@ -258,7 +258,7 @@ php artisan key:generate
 # 3. Base de données
 php artisan migrate --seed        # tables + rôles/permissions + référentiel géo
 php artisan db:seed --class=CommunesSeeder   # (optionnel) communes officielles ANSD
-php artisan db:seed --class=DemoSeeder       # (optionnel, dev) annonces + demandes + réservations + gestion locative + profil prestataire de démonstration
+php artisan db:seed --class=DemoSeeder       # (optionnel, dev) annonces + demandes + réservations + gestion locative + profil & missions prestataire de démonstration
                                              # → remplit les 5 catalogues publics et les espaces connectés ; idempotent
 php artisan db:seed --class=ContentSeeder    # (optionnel, dev) contenu éditorial de démo
                                              # → FAQ publiée + pages À propos/légales (slugs) ; idempotent
