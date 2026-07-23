@@ -136,15 +136,95 @@ Dans l'ordre prévu :
 
 ---
 
-## 6. Points nécessitant une décision ou une action du client
+## 6. À préparer par le client (accès & prérequis externes)
 
-Ces éléments ne sont pas des développements manquants, mais des **prérequis
-externes** à fournir pour la mise en production :
+Ces éléments ne sont **pas des développements manquants** : le code est déjà
+prêt à les utiliser. Ce sont des **comptes, numéros et accès à obtenir** auprès
+de services externes pour la mise en ligne. Il est utile de commencer à les
+préparer dès maintenant, car certains (nom de sender SMS, compte marchand)
+demandent des délais de validation.
 
-- **Paiement en ligne (PayTech)** : ouverture d'un **compte marchand** (bac à
-  sable puis production) — le code est prêt à être branché.
-- **Hébergement / mise en ligne** : choix de l'hébergeur et configuration du
-  serveur de production (nom de domaine, e-mails, SMS).
+### 6.1 Nom de domaine & hébergement
+
+- **Nom de domaine** : réserver le domaine officiel (ex. `kaikun360.sn` et/ou
+  `.com`). C'est l'adresse publique du site et la base des e-mails.
+- **Hébergement** : un serveur capable de faire tourner l'application
+  (environnement PHP/Laravel + base de données MySQL + Redis) et servir le site.
+- **Certificat de sécurité (HTTPS)** : généralement inclus par l'hébergeur
+  (indispensable pour les paiements et la confiance).
+
+### 6.2 E-mails professionnels (envois automatiques)
+
+La plateforme envoie des e-mails (vérification de compte, notifications,
+confirmations…). Il faut donc :
+
+- une **adresse d'expédition professionnelle** (ex. `bonjour@kaikun360.sn`,
+  `no-reply@kaikun360.sn`) ;
+- un **service d'envoi d'e-mails** (SMTP) : soit celui de l'hébergeur, soit un
+  service dédié (Brevo/Sendinblue, Mailgun, Amazon SES…) pour une bonne
+  délivrabilité. → nous fournir l'adresse, l'identifiant et le mot de passe.
+
+### 6.3 Numéros professionnels (contact & WhatsApp)
+
+- **Numéro WhatsApp de support** : le numéro professionnel vers lequel pointe le
+  bouton « Contacter sur WhatsApp » du site. → nous communiquer le numéro.
+- **Adresse e-mail de support** affichée sur la page Contact.
+- _(Ces deux informations se règlent ensuite dans l'administration, sans
+  nouveau développement.)_
+
+### 6.4 SMS (vérification & notifications) — Orange / Sonatel
+
+Pour l'envoi de SMS (codes de vérification, alertes) :
+
+- ouvrir un compte sur le **portail développeur Orange** (`developer.orange.com`,
+  API SMS) et obtenir les identifiants d'accès ;
+- faire **valider un nom d'expéditeur** (ex. `KAIKUN360`) — cette validation peut
+  prendre quelques jours.
+- _(Une alternative internationale, Twilio, est également prise en charge.)_
+
+### 6.5 Paiement en ligne — PayTech
+
+Le règlement **manuel** (Wave / Orange Money au numéro officiel, confirmé par
+l'administrateur) fonctionne déjà. Pour le **paiement en ligne automatique** :
+
+- ouvrir un **compte marchand PayTech** (d'abord en bac à sable/test, puis
+  demande d'activation en production) ;
+- nous transmettre les **clés d'accès** (clé d'API et clé de signature).
+- → le module est prêt, il ne reste qu'à brancher ces clés et tester.
+
+### 6.6 Automatisation & WhatsApp — n8n
+
+La plateforme peut **déclencher des automatisations** à chaque événement
+important (nouvelle demande, changement de statut…), notamment l'envoi de
+messages WhatsApp, via l'outil **n8n** :
+
+- disposer d'une **instance n8n** (hébergée par le client ou en service géré) ;
+- nous fournir son **adresse (URL)** ; une clé secrète de sécurité est générée
+  pour fiabiliser les échanges.
+- l'**automatisation WhatsApp** (envoi de messages sortants) se met en place dans
+  n8n, connectée à un compte WhatsApp Business.
+
+### 6.7 Connexion avec Google (optionnel)
+
+Pour proposer le bouton « Se connecter avec Google » :
+
+- créer un **identifiant OAuth** dans la **Google Cloud Console** et nous le
+  communiquer.
+- _(Tant qu'il n'est pas fourni, le bouton reste simplement masqué ; la
+  connexion classique par e-mail/téléphone fonctionne normalement.)_
+
+### Récapitulatif — checklist des accès à réunir
+
+| # | Élément | Où l'obtenir | Priorité |
+| --- | --- | --- | --- |
+| 1 | Nom de domaine | Registraire (.sn via NIC Sénégal, ou .com) | 🔴 Haute |
+| 2 | Hébergement + HTTPS | Hébergeur (PHP/MySQL/Redis) | 🔴 Haute |
+| 3 | Adresse e-mail pro + service d'envoi (SMTP) | Hébergeur ou Brevo/Mailgun/SES | 🔴 Haute |
+| 4 | Numéro WhatsApp de support + e-mail de contact | Le client | 🟠 Moyenne |
+| 5 | Accès SMS + nom d'expéditeur validé | developer.orange.com | 🟠 Moyenne |
+| 6 | Compte marchand + clés PayTech | paytech.sn | 🟠 Moyenne |
+| 7 | Instance n8n + compte WhatsApp Business | Client / service géré | 🟢 Selon besoin |
+| 8 | Identifiant Google OAuth | Google Cloud Console | 🟢 Optionnel |
 
 ---
 
