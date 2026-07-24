@@ -8,6 +8,7 @@ import {
   NewUnavailability,
   Provider,
   ProviderAvailability,
+  ProviderCertification,
   ProviderEarnings,
   ProviderMission,
   Unavailability,
@@ -48,6 +49,16 @@ export interface RegisterProviderPayload {
 }
 
 /**
+ * Corps de `PUT /providers/mine` (« Mes services ») — édition du profil. Mêmes
+ * champs que l'inscription hors certifications (gérées à part), tous requis.
+ */
+export interface UpdateProviderProfilePayload {
+  business_name: string;
+  category: ProviderCategory;
+  bio?: string | null;
+}
+
+/**
  * Inscription et suivi du profil prestataire (F2.7).
  *
  * `register` (POST /providers) exige une session ET un **compte vérifié**
@@ -74,6 +85,44 @@ export class ProviderService {
   /** GET /providers/mine — mon profil prestataire (404 si aucun). */
   mine(): Observable<ApiEnvelope<{ provider: Provider }>> {
     return this.http.get<ApiEnvelope<{ provider: Provider }>>(`${this.api}/providers/mine`);
+  }
+
+  /**
+   * PUT /providers/mine — met à jour mon profil prestataire (« Mes services »).
+   * N'affecte ni le statut de validation ni les certifications.
+   */
+  updateProfile(
+    payload: UpdateProviderProfilePayload,
+  ): Observable<ApiEnvelope<{ provider: Provider }>> {
+    return this.http.put<ApiEnvelope<{ provider: Provider }>>(`${this.api}/providers/mine`, {
+      business_name: payload.business_name,
+      category: payload.category,
+      bio: payload.bio ?? null,
+    });
+  }
+
+  /**
+   * POST /providers/certifications — ajoute une certification (créée « non
+   * vérifiée » ; la vérification est une action back-office).
+   */
+  addCertification(
+    input: ProviderCertificationInput,
+  ): Observable<ApiEnvelope<{ certification: ProviderCertification }>> {
+    const body: Record<string, unknown> = { name: input.name.trim() };
+    if (input.issuer && input.issuer.trim() !== '') {
+      body['issuer'] = input.issuer.trim();
+    }
+    return this.http.post<ApiEnvelope<{ certification: ProviderCertification }>>(
+      `${this.api}/providers/certifications`,
+      body,
+    );
+  }
+
+  /** DELETE /providers/certifications/{id} — supprime une certification. */
+  removeCertification(id: number): Observable<ApiEnvelope<{ deleted: boolean }>> {
+    return this.http.delete<ApiEnvelope<{ deleted: boolean }>>(
+      `${this.api}/providers/certifications/${id}`,
+    );
   }
 
   /**

@@ -27,7 +27,7 @@ export const PROVIDER_NAV: readonly SpaceNavItem[] = [
     description: 'Décrivez vos prestations et déposez vos documents de certification.',
     path: 'services',
     icon: 'building',
-    ready: false, // F5 (dépôt de service + certifications)
+    ready: true, // F5 (dépôt de service + certifications) ✅
   },
   {
     label: 'Disponibilités',

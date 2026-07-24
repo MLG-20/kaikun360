@@ -1,0 +1,134 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-prestataire" />
+  <p class="account-eyebrow">Espace prestataire</p>
+  <h1 class="account-title">Mes services</h1>
+  <p class="account-lead">
+    Décrivez la prestation que vous proposez et tenez à jour vos documents de
+    certification. Ces informations alimentent votre fiche publique une fois votre
+    dossier validé.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de votre profil…</p>
+} @else if (noProfile()) {
+  <div class="svc-empty">
+    <p>Vous avez le rôle prestataire mais pas encore de dossier marketplace.</p>
+    <a class="k-btn k-btn--primary" routerLink="/pro/inscription">Compléter mon inscription</a>
+  </div>
+} @else if (loadError()) {
+  <div class="svc-error">
+    <p>Impossible de charger votre profil pour le moment.</p>
+    <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+  </div>
+} @else {
+  <!-- ===================== Descriptif du service ========================== -->
+  <h2 class="svc-block-title">Descriptif du service</h2>
+  <form class="svc-form" [formGroup]="form" (ngSubmit)="saveProfile()">
+    <div class="svc-field">
+      <label for="svc-name">Raison sociale</label>
+      <input
+        id="svc-name"
+        type="text"
+        formControlName="business_name"
+        maxlength="255"
+        placeholder="Nom de votre activité"
+        (input)="onProfileEdited()"
+      />
+    </div>
+
+    <div class="svc-field">
+      <label for="svc-category">Catégorie</label>
+      <select id="svc-category" formControlName="category" (change)="onProfileEdited()">
+        <option value="" disabled>Choisissez une catégorie…</option>
+        @for (option of categories; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="svc-field svc-field--full">
+      <label for="svc-bio">Présentation (facultatif)</label>
+      <textarea
+        id="svc-bio"
+        formControlName="bio"
+        rows="4"
+        placeholder="Décrivez vos prestations, votre expérience, votre zone d’intervention…"
+        (input)="onProfileEdited()"
+      ></textarea>
+    </div>
+
+    @if (profileError()) {
+      <p class="svc-msg svc-msg--error" role="alert">{{ profileError() }}</p>
+    }
+    @if (profileSaved()) {
+      <p class="svc-msg svc-msg--ok" role="status">Profil enregistré.</p>
+    }
+
+    <div class="svc-actions">
+      <button type="submit" class="k-btn k-btn--primary" [disabled]="savingProfile()">
+        {{ savingProfile() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+      @if (statusLabel()) {
+        <span class="svc-note">
+          Modifier votre descriptif ne relance pas la validation (statut : {{ statusLabel() }}).
+        </span>
+      }
+    </div>
+  </form>
+
+  <!-- ===================== Certifications ================================= -->
+  <h2 class="svc-block-title svc-block-title--spaced">Documents de certification</h2>
+
+  @if (certifications().length) {
+    <ul class="svc-cert-list">
+      @for (cert of certifications(); track cert.id) {
+        <li class="svc-cert">
+          <span class="svc-cert-body">
+            <strong>{{ cert.name }}</strong>
+            @if (cert.issuer) {
+              <span class="svc-cert-issuer">{{ cert.issuer }}</span>
+            }
+          </span>
+          <span
+            class="svc-cert-state"
+            [class.svc-cert-state--verified]="cert.verified"
+          >{{ cert.verified ? 'Vérifiée' : 'En vérification' }}</span>
+          <button
+            type="button"
+            class="svc-cert-remove"
+            (click)="removeCert(cert)"
+            aria-label="Supprimer cette certification"
+          >
+            Supprimer
+          </button>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="svc-cert-empty">Aucune certification déposée pour l’instant.</p>
+  }
+
+  <!-- Formulaire d'ajout -->
+  <form class="svc-cert-form" [formGroup]="certForm" (ngSubmit)="addCert()">
+    <div class="svc-field svc-field--grow">
+      <label for="cert-name">Nom du document</label>
+      <input id="cert-name" type="text" formControlName="name" maxlength="255" placeholder="Licence, assurance, diplôme…" />
+    </div>
+    <div class="svc-field svc-field--grow">
+      <label for="cert-issuer">Organisme émetteur (facultatif)</label>
+      <input id="cert-issuer" type="text" formControlName="issuer" maxlength="255" placeholder="Ministère, compagnie…" />
+    </div>
+    <button type="submit" class="k-btn k-btn--ghost" [disabled]="addingCert()">
+      {{ addingCert() ? 'Ajout…' : 'Ajouter' }}
+    </button>
+  </form>
+
+  @if (certError()) {
+    <p class="svc-msg svc-msg--error" role="alert">{{ certError() }}</p>
+  }
+  <p class="svc-cert-hint">
+    Les documents ajoutés sont « En vérification » : un agent Kaikun les contrôle
+    avant de les marquer « Vérifiée ».
+  </p>
+}

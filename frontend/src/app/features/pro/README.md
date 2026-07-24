@@ -57,6 +57,17 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
   la **liste des certifications** puis les tuiles des sections. Gère trois cas :
   chargement, échec réseau, et le **404 « pas encore de profil »** (→ invitation à
   compléter l'inscription via `/devenir-prestataire`).
+- **`services/`** — `ProviderServicesPageComponent`, route `services` (F5,
+  « Mes services »). Écran d'**édition du dossier** chargé via `GET /providers/mine`,
+  en deux volets : le **descriptif du service** (raison sociale, catégorie,
+  présentation — formulaire réactif enregistré par `PUT /providers/mine`) et les
+  **documents de certification** (liste avec pastille Vérifiée / En vérification,
+  suppression avec confirmation via `DELETE /providers/certifications/{id}`, et
+  formulaire d'ajout `POST /providers/certifications`). Deux règles rappelées à
+  l'écran : enregistrer une modification **ne relance pas la validation**, et une
+  certification ajoutée reste « En vérification » jusqu'à revue back-office. Gère
+  les mêmes cas que le tableau de bord — chargement, échec réseau, et le **404
+  « pas encore de profil »** (→ `/pro/inscription`).
 - **`missions/`** — `ProviderMissionsPageComponent`, route `missions` (F5.2).
   Liste paginée des missions (`GET /provider-missions/mine`, 15/page) : chaque
   carte affiche montant, commission Kaikun, **net** prestataire (montant −
@@ -91,5 +102,7 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
 > `MissionAction`, `ProviderEarnings`, `WeeklyAvailability`, `Unavailability`…) et
 > le service `core/api/provider.service.ts` centralisent les appels ; `mine()`
 > préexistait (F2.7), puis `myMissions()` / `transitionMission()` (F5.2),
-> `earnings()` (F5.3) et `availability()` / `saveWeekly()` / `addUnavailability()`
-> / `removeUnavailability()` (F5.4) ont été ajoutés au fil des sous-phases.
+> `earnings()` (F5.3), `availability()` / `saveWeekly()` / `addUnavailability()`
+> / `removeUnavailability()` (F5.4) et enfin `updateProfile()` /
+> `addCertification()` / `removeCertification()` (« Mes services ») ont été
+> ajoutés au fil des sous-phases.

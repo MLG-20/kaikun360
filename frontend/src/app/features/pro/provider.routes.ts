@@ -36,6 +36,16 @@ export const PROVIDER_ROUTES: Routes = [
         title: 'Espace prestataire — Kaikun 360',
       },
       {
+        // F5 — Mes services : édition du profil + certifications (PUT /providers/mine,
+        // POST/DELETE /providers/certifications).
+        path: 'services',
+        loadComponent: () =>
+          import('./services/provider-services-page').then(
+            (m) => m.ProviderServicesPageComponent,
+          ),
+        title: 'Mes services — Kaikun 360',
+      },
+      {
         // F5.2 — Missions reçues (GET /provider-missions/mine + transitions).
         path: 'missions',
         loadComponent: () =>

@@ -82,9 +82,13 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   encaissé) et l'**à venir** (missions acceptées ou en cours). **« Disponibilités »**
   (F5.4 — `GET/PUT/POST/DELETE /providers/availability…`) : un **planning
   hebdomadaire récurrent** (7 jours, ouvert/fermé + horaires) et des **périodes
-  d'indisponibilité** ponctuelles (congés) qui priment sur le planning. Les
-  rubriques **Mes services** et **Avis reçus** sont annoncées « Bientôt » et se
-  brancheront en F5.5. 👉 Détail :
+  d'indisponibilité** ponctuelles (congés) qui priment sur le planning.
+  **« Mes services »** (`GET/PUT /providers/mine`,
+  `POST/DELETE /providers/certifications…`) : édition du **descriptif du service**
+  (raison sociale, catégorie, présentation) et gestion des **documents de
+  certification** — enregistrer ne relance pas la validation, un document ajouté
+  reste « En vérification ». La rubrique **Avis reçus** est annoncée « Bientôt »
+  et se branchera en F5.5. 👉 Détail :
   [`src/app/features/pro/README.md`](src/app/features/pro/README.md).
 - 🚧 **À venir** : la suite de l'espace prestataire, l'espace entreprise, puis le
   back-office.

@@ -1,0 +1,198 @@
+// Écran « Mes services » de l'espace prestataire (F5). Briques partagées globales
+// (.account-*, .pf-state, .k-btn) ; ici : le formulaire de descriptif et la
+// liste/formulaire des certifications. Conventions reprises de l'écran
+// « Disponibilités » (.av-*) pour rester cohérent.
+
+.svc-empty,
+.svc-error {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--k-line);
+  background: var(--k-card);
+  border-radius: var(--k-radius);
+
+  p { margin: 0; color: var(--k-ink); }
+}
+
+.svc-error {
+  border-color: color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+  background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card));
+}
+
+.svc-block-title {
+  font-family: var(--k-font-display);
+  font-size: 1.15rem;
+  margin: 0 0 1rem;
+
+  &--spaced { margin-top: 2.5rem; }
+}
+
+// --- Formulaire de descriptif ---------------------------------------------
+.svc-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.2rem;
+  padding: 1.3rem 1.4rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.svc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  &--full { grid-column: 1 / -1; }
+  &--grow { flex: 1 1 12rem; }
+
+  label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--k-muted);
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--k-line);
+    border-radius: var(--k-radius);
+    background: var(--k-bg);
+    color: var(--k-ink);
+    font: inherit;
+  }
+
+  textarea { resize: vertical; }
+}
+
+.svc-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.3rem;
+}
+
+.svc-note {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+// --- Messages (succès / erreur) -------------------------------------------
+.svc-msg {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border-radius: var(--k-radius);
+  font-size: 0.9rem;
+
+  &--error {
+    border: 1px solid color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+    background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card));
+    color: var(--k-ink);
+  }
+
+  &--ok {
+    border: 1px solid color-mix(in srgb, var(--k-green) 35%, var(--k-line));
+    background: color-mix(in srgb, var(--k-green) 10%, var(--k-card));
+    color: var(--k-green-600);
+  }
+}
+
+// --- Certifications --------------------------------------------------------
+.svc-cert-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.svc-cert {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-left: 3px solid var(--k-gold);
+  border-radius: var(--k-radius);
+}
+
+.svc-cert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1 1 auto;
+
+  strong { color: var(--k-ink); }
+}
+
+.svc-cert-issuer {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+.svc-cert-state {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--k-gold) 45%, var(--k-line));
+  color: color-mix(in srgb, var(--k-gold) 30%, var(--k-ink));
+  background: color-mix(in srgb, var(--k-gold) 12%, var(--k-card));
+
+  &--verified {
+    border-color: color-mix(in srgb, var(--k-green) 40%, var(--k-line));
+    color: var(--k-green-600);
+    background: color-mix(in srgb, var(--k-green) 12%, var(--k-card));
+  }
+}
+
+.svc-cert-remove {
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--k-danger) 40%, var(--k-line));
+  background: transparent;
+  color: var(--k-danger);
+  border-radius: var(--k-radius);
+  padding: 0.35rem 0.8rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover { background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card)); }
+}
+
+.svc-cert-empty {
+  color: var(--k-muted);
+  margin: 0 0 1rem;
+}
+
+// Formulaire d'ajout de certification.
+.svc-cert-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.8rem;
+  padding: 1.1rem 1.2rem;
+  background: var(--k-card);
+  border: 1px dashed var(--k-line);
+  border-radius: var(--k-radius);
+}
+
+.svc-cert-hint {
+  margin: 0.9rem 0 0;
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}

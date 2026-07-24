@@ -505,10 +505,16 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 > backend neuf (tables `provider_weekly_availabilities` + `provider_unavailabilities`,
 > 4 endpoints sous `/providers/availability`) — combinant un **planning
 > hebdomadaire récurrent** (7 jours, ouvert/fermé + horaires) et des **périodes
-> d'indisponibilité** ponctuelles (congés) qui priment sur le planning. Les écrans
-> ci-dessous suivront (F5.5).
+> d'indisponibilité** ponctuelles (congés) qui priment sur le planning.
+> **« Mes services » livré** : l'écran d'**édition du dossier prestataire** —
+> descriptif du service (raison sociale, catégorie, présentation) via le nouvel
+> endpoint `PUT /providers/mine`, et **gestion des documents de certification**
+> (ajout `POST /providers/certifications`, suppression `DELETE .../{id}`). Une
+> modification du descriptif **ne relance pas** la validation, et un document
+> ajouté reste « En vérification » jusqu'à revue back-office. Reste l'écran des
+> avis (F5.5).
 
-- [ ] Formulaire de dépôt de service (voiture, pirogue, circuit, BTP, guide, hébergement) avec documents de certification.
+- [x] Formulaire de dépôt de service (voiture, pirogue, circuit, BTP, guide, hébergement) avec documents de certification. — _« Mes services » : édition du descriptif (`PUT /providers/mine`) + ajout/suppression de certifications._
 - [x] Écran de gestion des disponibilités. — _F5.4 : planning hebdomadaire récurrent + périodes d'indisponibilité._
 - [x] Écran des missions reçues et de leur statut. — _F5.2 : liste + actions de transition (accepter / refuser / démarrer / terminer)._
 - [ ] Écran des avis reçus et de la notation.
