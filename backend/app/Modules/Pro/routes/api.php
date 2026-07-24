@@ -2,6 +2,7 @@
 
 use App\Modules\Pro\Http\Controllers\ProviderAvailabilityController;
 use App\Modules\Pro\Http\Controllers\ProviderMissionController;
+use App\Modules\Pro\Http\Controllers\ProviderProfileController;
 use App\Modules\Pro\Http\Controllers\ProviderRegistrationController;
 use App\Modules\Pro\Http\Controllers\ProviderValidationController;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,14 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->prefix('providers')->group(function () {
     Route::post('/', [ProviderRegistrationController::class, 'store'])->middleware('verified.account');
     Route::get('/mine', [ProviderRegistrationController::class, 'mine']);
+
+    // « Mes services » (F5) : édition du profil + gestion des certifications par
+    // le prestataire. Segments non numériques (`mine`, `certifications`) → aucune
+    // collision avec `/{provider}/...` (whereNumber).
+    Route::put('/mine', [ProviderProfileController::class, 'update']);
+    Route::post('/certifications', [ProviderProfileController::class, 'storeCertification']);
+    Route::delete('/certifications/{certification}', [ProviderProfileController::class, 'destroyCertification'])
+        ->whereNumber('certification');
 
     // Disponibilités du prestataire (F5.4) : planning hebdomadaire + indispos.
     // Déclarées AVANT `/{provider}/missions` : `availability` n'est pas numérique

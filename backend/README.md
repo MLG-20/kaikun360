@@ -149,7 +149,8 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   rapports d'avancement.
 - **TeamBuilding** — demandes d'entreprise, devis composés multi-prestataires
   avec marge.
-- **Pro** — inscription prestataire, charte qualité, validation, missions &
+- **Pro** — inscription prestataire, édition de son dossier (descriptif +
+  certifications), disponibilités, charte qualité, validation, missions &
   commission, notation agrégée à partir des avis.
 - **Admin** — tableau de bord KPI, file de validation générique, gestion des
   comptes, paramétrage (commissions/tarifs/FAQ/pages), export comptable JSON/CSV,

@@ -52,6 +52,9 @@ justificatifs fournis à l'inscription.
 |---|---|---|
 | POST | `/api/v1/providers` | auth — inscription (rôle+profil prestataire, statut `en_attente`) |
 | GET | `/api/v1/providers/mine` | auth — mon profil prestataire |
+| PUT | `/api/v1/providers/mine` | prestataire — édite son descriptif de service (« Mes services ») |
+| POST | `/api/v1/providers/certifications` | prestataire — ajoute une certification (toujours non vérifiée) |
+| DELETE | `/api/v1/providers/certifications/{id}` | prestataire — supprime une de ses certifications |
 | GET | `/api/v1/providers/availability` | prestataire — planning hebdo + indispos à venir (F5.4) |
 | PUT | `/api/v1/providers/availability/weekly` | prestataire — enregistre le planning hebdo (F5.4) |
 | POST | `/api/v1/providers/availability/unavailability` | prestataire — ajoute une indispo (F5.4) |
@@ -74,6 +77,34 @@ public » est réalisée de bout en bout (testée par intégration).
 
 `warn()` incrémente `warnings_count` ; au-delà de `SUSPENSION_THRESHOLD` (3) le
 prestataire est suspendu d'office. `sanction_note` conserve le motif.
+
+### « Mes services » — édition par le prestataire (F5)
+
+`ProviderProfileController` porte la **mise à jour** du dossier par le prestataire
+lui-même (l'inscription initiale reste `ProviderRegistrationController@store`).
+Tout est scopé au profil du compte connecté via le helper privé `providerFor()`
+(`Provider::where('user_id', …)->firstOrFail()` → **404 si pas de profil**) ; il
+n'y a donc pas de policy à invoquer.
+
+- `update` (**PUT** `/providers/mine`) — raison sociale, catégorie, présentation.
+  ⚠️ **Ne touche pas au statut de validation** : corriger un descriptif ne doit
+  pas re-déclencher une revue back-office (couvert par un test dédié).
+- `storeCertification` (**POST** `/providers/certifications`) — 201. La
+  certification est créée avec `verified => false` **explicite** : le défaut SQL
+  ne s'applique pas à l'instance renvoyée, la Resource sérialiserait `null`.
+- `destroyCertification` (**DELETE** `/providers/certifications/{id}`) —
+  cloisonnement par `abort_unless($certification->provider_id === $provider->id, 404)`.
+
+FormRequests : `UpdateProviderProfileRequest` (mêmes règles que l'inscription hors
+certifications) et `StoreCertificationRequest` (`name` requis, `issuer` facultatif ;
+`verified` **n'est pas** acceptée en entrée — la vérification est une action agent).
+
+Routes déclarées dans le groupe `providers` : segments **non numériques**
+(`mine`, `certifications`) → aucune collision avec `/{provider}/…` (`whereNumber`).
+
+Tests : `tests/Feature/Pro/ProviderProfileTest.php` (7 cas — mise à jour, statut
+inchangé, catégorie invalide 422, ajout non vérifié, suppression, suppression
+d'autrui 404, compte sans profil 404).
 
 ### Policy
 
