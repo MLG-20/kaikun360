@@ -15,14 +15,16 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { GoogleIdentityService } from '../../../../core/auth/google-identity.service';
+import { spaceHomeFor } from '../../../../core/auth/space-home';
 import { PasswordRevealDirective } from '../../../../shared/directives/password-reveal.directive';
 
 /**
  * Page de connexion (F1.1).
  *
  * Formulaire réactif : identifiant (e-mail ou téléphone) + mot de passe. En cas
- * de succès, `AuthService` stocke le jeton en mémoire et on redirige vers l'URL
- * demandée (`?redirect=`, posée par l'`authGuard`) ou l'accueil. Le backend
+ * de succès, `AuthService` ouvre la session et on redirige vers l'URL demandée
+ * (`?redirect=`, posée par les guards) ou, à défaut, **l'espace de l'utilisateur**
+ * (`spaceHomeFor`) plutôt que l'accueil public. Le backend
  * renvoie **422** pour des identifiants invalides : le message est affiché dans
  * un bandeau, sans quitter la page.
  */
@@ -86,8 +88,7 @@ export class LoginPageComponent implements AfterViewInit {
 
       this.auth.loginWithGoogle(idToken).subscribe({
         next: () => {
-          const redirect = this.route.snapshot.queryParamMap.get('redirect') ?? '/';
-          void this.router.navigateByUrl(redirect);
+          void this.router.navigateByUrl(this.landingUrl());
         },
         error: (error: HttpErrorResponse) => {
           this.submitting.set(false);
@@ -115,14 +116,23 @@ export class LoginPageComponent implements AfterViewInit {
 
     this.auth.login(this.form.getRawValue()).subscribe({
       next: () => {
-        const redirect = this.route.snapshot.queryParamMap.get('redirect') ?? '/';
-        void this.router.navigateByUrl(redirect);
+        void this.router.navigateByUrl(this.landingUrl());
       },
       error: (error: HttpErrorResponse) => {
         this.submitting.set(false);
         this.formError.set(this.messageFor(error));
       },
     });
+  }
+
+  /**
+   * Destination après connexion : l'URL demandée avant redirection (`?redirect=`,
+   * posée par les guards) si elle existe, sinon **l'espace propre à l'utilisateur**
+   * (`spaceHomeFor`) plutôt que l'accueil — se connecter doit faire entrer dans
+   * son espace, pas retomber sur la page publique.
+   */
+  private landingUrl(): string {
+    return this.route.snapshot.queryParamMap.get('redirect') ?? spaceHomeFor(this.auth.user());
   }
 
   /** Traduit une erreur HTTP en message lisible. */

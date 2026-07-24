@@ -117,10 +117,13 @@ fonctionnalité** — ainsi on peut faire évoluer une partie sans casser les au
 
 ### Un choix de sécurité à connaître
 
-La « clé d'accès » d'un utilisateur connecté (le jeton) est gardée **en mémoire
-vive uniquement**, jamais enregistrée durablement dans le navigateur. C'est plus
-sûr (utile sur un poste partagé), au prix d'un compromis assumé : **recharger la
-page déconnecte** — quitte à ajouter plus tard une reconnexion automatique.
+La « clé d'accès » d'un utilisateur connecté (le jeton) est gardée dans le
+**`sessionStorage`** : elle **survit à un rafraîchissement de page** (on reste
+dans son espace) mais est **effacée à la fermeture de l'onglet/navigateur** —
+jamais dans le `localStorage`, donc rien n'est conservé sur le disque entre deux
+sessions (utile sur un poste partagé). Au démarrage, la session est réhydratée
+puis **revalidée** auprès du serveur (`GET /users/me`) : un jeton révoqué ferme
+la session.
 
 ---
 
@@ -148,10 +151,16 @@ Angular « hydrate » ce HTML (le rend interactif sans le reconstruire). Concrè
   voir [`src/app/app.routes.server.ts`](src/app/app.routes.server.ts)) — choix
   adapté à des pages dynamiques (`/immobilier/:id`, `/pages/:slug`, `/recherche`)
   et alimentées par le backend.
+- Les **espaces privés** (`mon-espace`, `espace-proprietaire`, `espace-prestataire`)
+  sont au contraire en `RenderMode.Client` : le serveur ne connaissant pas la
+  session, les rendre au serveur y ferait tourner les guards de rôle sans jeton
+  et **redirigerait vers la connexion à chaque rafraîchissement**. Rendus côté
+  client, ils laissent d'abord la session se restaurer (sessionStorage) avant
+  d'exécuter les guards. Ces pages n'ont de toute façon aucun intérêt SEO.
 - Les données lues pendant le rendu serveur sont **transférées au client**
   (transfer-cache HTTP, actif via `provideClientHydration`) : le navigateur ne
   refait pas les mêmes appels API. `withFetch()` est activé pour le HttpClient.
-- Le jeton de session vivant **en mémoire seulement**, le serveur rend toujours la
+- Sur les pages publiques (SSR), le serveur ignorant la session rend toujours la
   vue « visiteur non connecté » — exactement ce qu'un moteur d'indexation doit voir.
 
 ```bash

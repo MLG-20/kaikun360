@@ -1,5 +1,6 @@
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { Observable, finalize, map, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
@@ -14,13 +15,21 @@ import {
   VerificationChannel,
 } from './auth.types';
 
+/** Clé de `sessionStorage` où la session (jeton + utilisateur) est conservée. */
+const SESSION_KEY = 'kaikun.session';
+
 /**
  * Service de session (F0.2).
  *
- * Le jeton Sanctum est conservé **en mémoire uniquement** (signal privé), jamais
- * dans le localStorage — exigence de sécurité du cahier des charges. Conséquence
- * assumée : un rafraîchissement de page déconnecte l'utilisateur (une reconnexion
- * silencieuse pourra être ajoutée plus tard si besoin).
+ * Le jeton Sanctum est conservé dans le **`sessionStorage`** : il survit à un
+ * **rafraîchissement de page** (l'utilisateur reste dans son espace) mais est
+ * effacé à la fermeture de l'onglet/navigateur — jamais dans le `localStorage`,
+ * donc rien n'est persisté sur le disque entre deux sessions de navigation.
+ *
+ * Au démarrage (navigateur uniquement), la session est **réhydratée** depuis le
+ * `sessionStorage` de façon synchrone — pour que les guards de route voient
+ * l'état dès le premier rendu client — puis **revalidée** en arrière-plan via
+ * `GET /users/me` (un jeton révoqué déclenche un 401 → `clearSession`).
  *
  * L'état est exposé via des signals en lecture seule ; le `tokenInterceptor` lit
  * le jeton, l'`errorInterceptor` appelle `clearSession()` sur un 401.
@@ -29,9 +38,14 @@ import {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly api = environment.apiUrl;
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private readonly tokenSignal = signal<string | null>(null);
   private readonly userSignal = signal<User | null>(null);
+
+  constructor() {
+    this.restoreSession();
+  }
 
   /** Utilisateur connecté (ou null). */
   readonly user = this.userSignal.asReadonly();
@@ -79,7 +93,7 @@ export class AuthService {
   verify(channel: VerificationChannel, code: string): Observable<User> {
     return this.http.post<ApiEnvelope<{ user: User }>>(`${this.api}/auth/verify`, { channel, code }).pipe(
       map((response) => response.data.user),
-      tap((user) => this.userSignal.set(user)),
+      tap((user) => this.setCurrentUser(user)),
     );
   }
 
@@ -116,12 +130,17 @@ export class AuthService {
    */
   setCurrentUser(user: User): void {
     this.userSignal.set(user);
+    // Garde la copie persistée à jour (nom d'en-tête, statut de vérification…).
+    this.persist();
   }
 
   /** Vide l'état de session (appelé aussi par l'errorInterceptor sur un 401). */
   clearSession(): void {
     this.tokenSignal.set(null);
     this.userSignal.set(null);
+    if (this.isBrowser) {
+      sessionStorage.removeItem(SESSION_KEY);
+    }
   }
 
   /** L'utilisateur possède-t-il ce rôle ? */
@@ -144,8 +163,59 @@ export class AuthService {
       tap((result) => {
         this.tokenSignal.set(result.token);
         this.userSignal.set(result.user);
+        this.persist();
       }),
       map((result) => result.user),
     );
+  }
+
+  /**
+   * Réhydrate la session depuis le `sessionStorage` (navigateur uniquement), de
+   * façon **synchrone** pour que les guards voient l'état dès le premier rendu
+   * client, puis revalide le jeton en arrière-plan.
+   */
+  private restoreSession(): void {
+    if (!this.isBrowser) {
+      return; // pas de sessionStorage au rendu serveur (SSR)
+    }
+
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) {
+      return;
+    }
+
+    try {
+      const saved = JSON.parse(raw) as { token: string; user: User };
+      if (saved?.token) {
+        this.tokenSignal.set(saved.token);
+        this.userSignal.set(saved.user ?? null);
+        this.revalidate();
+      }
+    } catch {
+      sessionStorage.removeItem(SESSION_KEY); // entrée corrompue
+    }
+  }
+
+  /**
+   * Revalide le jeton restauré via `GET /users/me` et rafraîchit l'utilisateur.
+   * Un jeton révoqué renvoie 401 → l'`errorInterceptor` appelle `clearSession()`.
+   */
+  private revalidate(): void {
+    this.http.get<ApiEnvelope<{ user: User }>>(`${this.api}/users/me`).subscribe({
+      next: (response) => this.setCurrentUser(response.data.user),
+      error: () => void 0, // 401 déjà traité par l'errorInterceptor
+    });
+  }
+
+  /** Écrit la session courante dans le `sessionStorage` (navigateur uniquement). */
+  private persist(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+    const token = this.tokenSignal();
+    const user = this.userSignal();
+    if (token) {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ token, user }));
+    }
   }
 }
