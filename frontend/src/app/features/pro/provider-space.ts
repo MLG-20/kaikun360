@@ -48,7 +48,7 @@ export const PROVIDER_NAV: readonly SpaceNavItem[] = [
     description: 'Consultez les avis et la notation laissés par vos clients.',
     path: 'avis',
     icon: 'chat',
-    ready: false, // F5.5
+    ready: true, // F5.5 ✅
   },
   {
     label: 'Revenus & commissions',

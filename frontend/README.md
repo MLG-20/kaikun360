@@ -66,7 +66,7 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   (lien signé temporaire) et **supprime** les pièces justificatives — la liste
   des biens affiche le nombre de documents de chacun. 👉 Détail :
   [`src/app/features/owner/README.md`](src/app/features/owner/README.md).
-- 🏗️ **L'espace prestataire (F5, en cours)** : sous `/espace-prestataire`,
+- 🎉 **L'espace prestataire (F5, terminé)** : sous `/espace-prestataire`,
   réservé au rôle « prestataire ». Il réutilise **le même shell partagé** que les
   espaces client et propriétaire (`layouts/space-layout/`). Écran livré : le
   **tableau de bord** (F5.1 — `GET /providers/mine`) qui affiche l'**état du
@@ -87,11 +87,14 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   `POST/DELETE /providers/certifications…`) : édition du **descriptif du service**
   (raison sociale, catégorie, présentation) et gestion des **documents de
   certification** — enregistrer ne relance pas la validation, un document ajouté
-  reste « En vérification ». La rubrique **Avis reçus** est annoncée « Bientôt »
-  et se branchera en F5.5. 👉 Détail :
+  reste « En vérification ». **« Avis reçus »** (F5.5 — `GET /providers/reviews`) :
+  les avis publiés qui concernent le prestataire, réunissant ceux laissés sur ses
+  **ressources** (véhicules, expériences) et les **avis directs** déposés après une
+  mission — une **synthèse de notation** (note moyenne, total, histogramme de
+  répartition par étoiles) surmonte la **liste des avis** (auteur, source,
+  commentaire, date). 👉 Détail :
   [`src/app/features/pro/README.md`](src/app/features/pro/README.md).
-- 🚧 **À venir** : la suite de l'espace prestataire, l'espace entreprise, puis le
-  back-office.
+- 🚧 **À venir** : l'espace entreprise (F6), puis le back-office (F7).
 
 ---
 

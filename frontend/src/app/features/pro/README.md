@@ -43,8 +43,8 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
 - **`provider-space.ts`** — `PROVIDER_SPACE` (`SpaceConfig`) + `PROVIDER_NAV` :
   les **6 rubriques** de l'espace (Tableau de bord, Mes services, Disponibilités,
   Missions reçues, Avis reçus, Revenus & commissions), chacune avec un drapeau
-  `ready`. Seules les rubriques construites sont cliquables ; les autres,
-  « Bientôt », passeront à `ready: true` avec leur sous-phase (F5.2 → F5.5).
+  `ready`. Depuis F5.5, **toutes** les rubriques sont construites et cliquables
+  (le drapeau `ready` reste le mécanisme d'ajout progressif « sans lien mort »).
 - **`provider.routes.ts`** — `PROVIDER_ROUTES` : `SpaceLayoutComponent` +
   `providers: [{ provide: SPACE_CONFIG, useValue: PROVIDER_SPACE }]`, protégé par
   `roleGuard` (`data: { roles: ['prestataire'] }`). Profil et notifications sont
@@ -98,11 +98,22 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
   local puis renvoyées toutes ensemble ; un garde-fou client vérifie que la fin
   suit le début sur un jour ouvert.
 
+- **`reviews/`** — `ProviderReviewsPageComponent`, route `avis` (F5.5). Écran
+  **« Avis reçus »** issu de `GET /providers/reviews` : réunit les avis publiés
+  sur les ressources du prestataire (véhicules, expériences) **et** les avis
+  **directs** déposés après une mission terminée. En tête, une **synthèse de
+  notation** (note moyenne, total, **histogramme** de répartition 5★→1★ construit
+  par un `computed`) ; en dessous, la **liste des avis** (pastille d'initiale,
+  auteur, `source` — « Prestation directe » ou nom de la ressource —, étoiles,
+  commentaire, date). Un **état vide** encourageant tant qu'aucun avis n'est
+  publié. Note et liste proviennent de la même requête backend → cohérence garantie.
+
 > Le modèle `models/provider.model.ts` (types `Provider`, `ProviderMission`,
-> `MissionAction`, `ProviderEarnings`, `WeeklyAvailability`, `Unavailability`…) et
-> le service `core/api/provider.service.ts` centralisent les appels ; `mine()`
-> préexistait (F2.7), puis `myMissions()` / `transitionMission()` (F5.2),
-> `earnings()` (F5.3), `availability()` / `saveWeekly()` / `addUnavailability()`
-> / `removeUnavailability()` (F5.4) et enfin `updateProfile()` /
-> `addCertification()` / `removeCertification()` (« Mes services ») ont été
-> ajoutés au fil des sous-phases.
+> `MissionAction`, `ProviderEarnings`, `WeeklyAvailability`, `Unavailability`,
+> `ProviderReviews`…) et le service `core/api/provider.service.ts` centralisent
+> les appels ; `mine()` préexistait (F2.7), puis `myMissions()` /
+> `transitionMission()` (F5.2), `earnings()` (F5.3), `availability()` /
+> `saveWeekly()` / `addUnavailability()` / `removeUnavailability()` (F5.4),
+> `updateProfile()` / `addCertification()` / `removeCertification()`
+> (« Mes services ») et enfin `reviews()` (F5.5) ont été ajoutés au fil des
+> sous-phases.

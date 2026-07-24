@@ -11,6 +11,7 @@ import {
   ProviderCertification,
   ProviderEarnings,
   ProviderMission,
+  ProviderReviews,
   Unavailability,
   WeeklyAvailability,
 } from '../../models/provider.model';
@@ -147,6 +148,17 @@ export class ProviderService {
     return this.http.get<ApiEnvelope<ProviderEarnings>>(
       `${this.api}/provider-missions/earnings`,
     );
+  }
+
+  /**
+   * GET /providers/reviews — mes avis reçus (F5.5).
+   *
+   * Réunit les avis publiés sur mes ressources (véhicules, expériences) et les
+   * avis directs déposés après une mission, avec la synthèse de notation
+   * (moyenne, total, répartition par étoiles). Scopé au prestataire connecté.
+   */
+  reviews(): Observable<ApiEnvelope<ProviderReviews>> {
+    return this.http.get<ApiEnvelope<ProviderReviews>>(`${this.api}/providers/reviews`);
   }
 
   /**

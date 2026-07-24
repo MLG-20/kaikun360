@@ -1,0 +1,82 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-prestataire" />
+  <p class="account-eyebrow">Espace prestataire</p>
+  <h1 class="account-title">Avis reçus</h1>
+  <p class="account-lead">
+    Les avis publiés que vos clients ont laissés sur vos prestations : ceux
+    déposés sur vos véhicules et expériences, et ceux qui vous notent directement
+    après une mission. Seuls les avis validés par Kaikun apparaissent ici.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos avis…</p>
+} @else if (loadError()) {
+  <div class="rv-error">
+    <p>Impossible de charger vos avis pour le moment.</p>
+    <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+  </div>
+} @else if (data(); as d) {
+  @if (isEmpty()) {
+    <div class="rv-empty">
+      <p class="rv-empty-title">Vous n'avez pas encore d'avis publié.</p>
+      <p class="rv-empty-sub">
+        Les avis apparaîtront ici dès qu'un client aura noté l'une de vos
+        prestations et que l'avis aura été validé.
+      </p>
+    </div>
+  } @else {
+    <!-- ===================== Synthèse de notation ======================= -->
+    <section class="rv-summary" aria-label="Synthèse de notation">
+      <div class="rv-score">
+        <strong class="rv-score-value">{{ d.summary.average }}</strong>
+        <span class="rv-stars rv-stars--lg" aria-hidden="true">
+          @for (full of stars(d.summary.average ?? 0); track $index) {
+            <span class="rv-star" [class.rv-star--on]="full">★</span>
+          }
+        </span>
+        <span class="rv-score-count">{{ reviewLabel(d.summary.count) }}</span>
+      </div>
+
+      <ul class="rv-dist" aria-label="Répartition des notes">
+        @for (bar of bars(); track bar.star) {
+          <li class="rv-dist-row">
+            <span class="rv-dist-star">{{ bar.star }}★</span>
+            <span class="rv-dist-track">
+              <span class="rv-dist-fill" [style.width.%]="bar.percent"></span>
+            </span>
+            <span class="rv-dist-count">{{ bar.count }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- ===================== Liste des avis ============================= -->
+    <ul class="rv-list">
+      @for (review of d.reviews; track review.id) {
+        <li class="rv-card">
+          <div class="rv-card-head">
+            <span class="rv-avatar" aria-hidden="true">{{ initial(review) }}</span>
+            <div class="rv-card-meta">
+              <span class="rv-author">{{ review.author?.name ?? 'Client Kaikun' }}</span>
+              <span class="rv-source">{{ review.source }}</span>
+            </div>
+            <span class="rv-stars" [attr.aria-label]="review.rating + ' sur 5'">
+              @for (full of stars(review.rating); track $index) {
+                <span class="rv-star" [class.rv-star--on]="full">★</span>
+              }
+            </span>
+          </div>
+          @if (review.comment) {
+            <p class="rv-comment">{{ review.comment }}</p>
+          }
+          @if (review.created_at) {
+            <p class="rv-date">{{ formatDate(review.created_at) }}</p>
+          }
+        </li>
+      }
+    </ul>
+  }
+} @else {
+  <p class="pf-state">Aucune donnée à afficher.</p>
+}

@@ -1,0 +1,211 @@
+// Écran « Avis reçus » de l'espace prestataire (F5.5). Les briques partagées
+// (en-tête .account-*, états .pf-state, boutons .k-btn) sont globales ; ici : la
+// synthèse de notation (note + histogramme) et les cartes d'avis.
+
+.rv-error {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+  background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card));
+  border-radius: var(--k-radius);
+
+  p {
+    margin: 0;
+    color: var(--k-ink);
+  }
+}
+
+// --- État vide --------------------------------------------------------------
+.rv-empty {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background: var(--k-card);
+  border: 1px dashed var(--k-line);
+  border-radius: var(--k-radius);
+}
+
+.rv-empty-title {
+  margin: 0 0 0.4rem;
+  font-family: var(--k-font-display);
+  font-size: 1.05rem;
+  color: var(--k-ink);
+}
+
+.rv-empty-sub {
+  margin: 0 auto;
+  max-width: 34rem;
+  color: var(--k-muted);
+  font-size: 0.92rem;
+}
+
+// --- Étoiles (partagées) ----------------------------------------------------
+.rv-stars {
+  display: inline-flex;
+  gap: 0.1rem;
+  white-space: nowrap;
+}
+
+.rv-star {
+  color: var(--k-line);
+  line-height: 1;
+
+  &--on {
+    color: var(--k-gold);
+  }
+}
+
+.rv-stars--lg .rv-star {
+  font-size: 1.35rem;
+}
+
+// --- Synthèse de notation ---------------------------------------------------
+.rv-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.5rem 2rem;
+  align-items: center;
+  padding: 1.4rem 1.5rem;
+  margin-bottom: 1.75rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-left: 3px solid var(--k-gold);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rv-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 8rem;
+}
+
+.rv-score-value {
+  font-family: var(--k-font-display);
+  font-size: clamp(2.4rem, 6vw, 3.2rem);
+  line-height: 1;
+  color: var(--k-ink);
+}
+
+.rv-score-count {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+// Histogramme de répartition des notes.
+.rv-dist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.rv-dist-row {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr 1.75rem;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.rv-dist-star {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  text-align: right;
+}
+
+.rv-dist-track {
+  height: 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--k-line) 60%, transparent);
+  overflow: hidden;
+}
+
+.rv-dist-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--k-gold);
+  transition: width 0.3s ease;
+}
+
+.rv-dist-count {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  text-align: right;
+}
+
+// --- Liste des avis ---------------------------------------------------------
+.rv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rv-card {
+  padding: 1.15rem 1.3rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.rv-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rv-avatar {
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--k-brand) 12%, var(--k-card));
+  color: var(--k-brand);
+  font-family: var(--k-font-display);
+  font-size: 1.05rem;
+}
+
+.rv-card-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rv-author {
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.rv-source {
+  font-size: 0.8rem;
+  color: var(--k-muted);
+}
+
+.rv-comment {
+  margin: 0.85rem 0 0;
+  color: var(--k-ink);
+  line-height: 1.5;
+}
+
+.rv-date {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  color: var(--k-muted);
+}

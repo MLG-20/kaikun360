@@ -64,6 +64,15 @@ export const PROVIDER_ROUTES: Routes = [
         title: 'Disponibilités — Kaikun 360',
       },
       {
+        // F5.5 — Avis reçus (GET /providers/reviews).
+        path: 'avis',
+        loadComponent: () =>
+          import('./reviews/provider-reviews-page').then(
+            (m) => m.ProviderReviewsPageComponent,
+          ),
+        title: 'Avis reçus — Kaikun 360',
+      },
+      {
         // F5.3 — Revenus & commissions (GET /provider-missions/earnings).
         path: 'revenus',
         loadComponent: () =>

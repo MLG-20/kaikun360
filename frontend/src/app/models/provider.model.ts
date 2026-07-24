@@ -124,6 +124,49 @@ export interface NewUnavailability {
 }
 
 /**
+ * Un avis reçu par le prestataire — miroir de `ProviderReviewResource` (F5.5).
+ *
+ * `source` est un libellé lisible indiquant la provenance de l'avis : le
+ * véhicule ou l'expérience noté, ou « Prestation directe » pour un avis déposé
+ * sur le prestataire lui-même après une mission.
+ */
+export interface ProviderReview {
+  id: number;
+  reference: string;
+  /** Note attribuée (1 à 5). */
+  rating: number;
+  comment: string | null;
+  /** Provenance lisible de l'avis (ex. « Véhicule · Toyota Hiace », « Prestation directe »). */
+  source: string;
+  /** Auteur de l'avis (présent si chargé côté backend). */
+  author?: { id: number; name: string };
+  /** Date de dépôt (ISO 8601). */
+  created_at: string | null;
+}
+
+/**
+ * Synthèse de notation d'un prestataire — en-tête de l'écran « Avis reçus ».
+ * `distribution` compte les avis par note (clés « 5 » → « 1 »).
+ */
+export interface ProviderReviewsSummary {
+  /** Note moyenne (null si aucun avis publié). */
+  average: number | null;
+  /** Nombre total d'avis publiés. */
+  count: number;
+  /** Répartition des notes : { "5": n, "4": n, "3": n, "2": n, "1": n }. */
+  distribution: Record<string, number>;
+}
+
+/**
+ * Réponse de `GET /providers/reviews` (F5.5) : la synthèse de notation et la
+ * liste des avis reçus (ressources + avis directs), plus récents d'abord.
+ */
+export interface ProviderReviews {
+  summary: ProviderReviewsSummary;
+  reviews: ProviderReview[];
+}
+
+/**
  * Prestataire marketplace — miroir de `ProviderResource` (module Pro).
  *
  * `status` suit l'enum `ProviderStatus` backend :
