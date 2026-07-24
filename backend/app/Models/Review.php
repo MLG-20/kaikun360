@@ -4,6 +4,9 @@ namespace App\Models;
 
 use App\Enums\BookingStatus;
 use App\Enums\ReviewStatus;
+use App\Modules\Pro\Enums\MissionStatus;
+use App\Modules\Pro\Models\Provider;
+use App\Modules\Pro\Models\ProviderMission;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,8 +26,15 @@ class Review extends Model
 
     /**
      * Ressources notables : clé courte (exposée à l'API) → classe Eloquent.
-     * Ce sont des ressources réservables (`Booking` polymorphe) : la
-     * consommation se prouve par une réservation terminée.
+     *
+     * Deux familles cohabitent :
+     *   - les ressources **réservables** (`Booking` polymorphe : nuitée, véhicule,
+     *     expérience) — la consommation se prouve par une réservation terminée ;
+     *   - le **prestataire lui-même** (`provider`, F5.5) — noté directement par le
+     *     client d'une **mission terminée** (`ProviderMission`), pour les
+     *     prestations qui ne passent pas par une réservation catalogue.
+     *
+     * La preuve d'éligibilité diffère donc selon la cible (cf. `ReviewPolicy`).
      *
      * @var array<string, class-string>
      */
@@ -32,6 +42,7 @@ class Review extends Model
         'stay' => \App\Modules\Stay\Models\Stay::class,
         'vehicle' => \App\Modules\Mobility\Models\Vehicle::class,
         'experience' => \App\Modules\Explore\Models\TourismExperience::class,
+        'provider' => \App\Modules\Pro\Models\Provider::class,
     ];
 
     /**
@@ -87,7 +98,8 @@ class Review extends Model
 
     /**
      * Un utilisateur a-t-il consommé la ressource (réservation terminée) ?
-     * C'est la condition d'éligibilité pour déposer un avis.
+     * C'est la condition d'éligibilité pour déposer un avis sur une ressource
+     * réservable (nuitée, véhicule, expérience).
      */
     public static function hasConsumed(User $user, Model $reviewable): bool
     {
@@ -96,6 +108,21 @@ class Review extends Model
             ->where('bookable_type', $reviewable->getMorphClass())
             ->where('bookable_id', $reviewable->getKey())
             ->where('status', BookingStatus::TERMINEE->value)
+            ->exists();
+    }
+
+    /**
+     * Un utilisateur a-t-il fait réaliser une mission **terminée** par ce
+     * prestataire ? C'est la condition d'éligibilité pour noter le prestataire
+     * directement (F5.5) : les prestations sur mission ne passent pas par une
+     * réservation catalogue, la preuve de consommation est donc la mission.
+     */
+    public static function hasCompletedMissionWith(User $user, Provider $provider): bool
+    {
+        return ProviderMission::query()
+            ->where('provider_id', $provider->id)
+            ->where('client_id', $user->id)
+            ->where('status', MissionStatus::TERMINEE->value)
             ->exists();
     }
 }

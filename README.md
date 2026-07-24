@@ -272,7 +272,7 @@ sur téléphone (technologie PWA).
 - [x] Logique d'inscription prestataire avec documents de certification.
 - [x] Statuts de validation prestataire (en attente, validé, refusé, suspendu).
 - [x] Endpoint de gestion des missions affectées à un prestataire.
-- [~] Système de notation/avis spécifique aux prestataires (champs `rating_avg`/`rating_count` prêts ; remplissage par le module reviews en B12).
+- [x] Système de notation/avis spécifique aux prestataires (`rating_avg`/`rating_count` remplis par `RatingAggregator` en B12 ; **F5.5** ajoute les avis directs après mission et l'écran « Avis reçus »).
 - [x] Logique de calcul de commission par mission/prestataire (réutilise `CommissionCalculator`).
 - [x] Charte qualité : champs de sanction/avertissement liés au profil prestataire.
 - [x] Policy : un prestataire non validé ne peut publier aucun service en public.
@@ -483,7 +483,7 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 ### Phase F5 — Espace prestataire (ProviderSpaceModule)
 
-> 🏗️ **En cours.** L'espace prestataire est monté sous `/espace-prestataire`
+> 🎉 **Terminée.** L'espace prestataire est monté sous `/espace-prestataire`
 > (réservé au rôle `prestataire`) et réutilise le **shell app-shell généralisé**
 > (`SPACE_CONFIG`), comme les espaces client (F3) et propriétaire (F4). **F5.1
 > livré** : le **socle** (navigation des 6 rubriques, garde de rôle, liens
@@ -511,13 +511,20 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 > endpoint `PUT /providers/mine`, et **gestion des documents de certification**
 > (ajout `POST /providers/certifications`, suppression `DELETE .../{id}`). Une
 > modification du descriptif **ne relance pas** la validation, et un document
-> ajouté reste « En vérification » jusqu'à revue back-office. Reste l'écran des
-> avis (F5.5).
+> ajouté reste « En vérification » jusqu'à revue back-office. **F5.5 livré**
+> (clôture F5) : l'écran **« Avis reçus »** (`GET /providers/reviews`) réunit
+> **deux sources d'avis** dans une notation unifiée — les avis publiés sur les
+> **ressources** du prestataire (véhicules, expériences) et un **nouveau canal
+> d'avis directs** le notant après une **mission terminée** (branché dans
+> `Review::TYPES`, éligibilité par mission dans `ReviewPolicy`, agrégation étendue
+> dans `RatingAggregator`). L'écran affiche une **synthèse de notation** (note
+> moyenne, total, histogramme de répartition par étoiles) et la **liste des avis**
+> (auteur, source, commentaire, date). **🎉 Phase F5 (Espace prestataire) terminée.**
 
 - [x] Formulaire de dépôt de service (voiture, pirogue, circuit, BTP, guide, hébergement) avec documents de certification. — _« Mes services » : édition du descriptif (`PUT /providers/mine`) + ajout/suppression de certifications._
 - [x] Écran de gestion des disponibilités. — _F5.4 : planning hebdomadaire récurrent + périodes d'indisponibilité._
 - [x] Écran des missions reçues et de leur statut. — _F5.2 : liste + actions de transition (accepter / refuser / démarrer / terminer)._
-- [ ] Écran des avis reçus et de la notation.
+- [x] Écran des avis reçus et de la notation. — _F5.5 : avis sur les ressources + avis directs après mission (`GET /providers/reviews`), note moyenne + répartition._
 - [x] Écran de suivi des revenus et commissions. — _F5.3 : synthèse réalisé / à venir (`GET /provider-missions/earnings`)._
 
 ### Phase F6 — Espace entreprise (EnterpriseSpaceModule)

@@ -7,6 +7,7 @@ use App\Enums\RequestStatus;
 use App\Enums\ServiceType;
 use App\Models\Booking;
 use App\Models\Conversation;
+use App\Models\Review;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Modules\Explore\Models\TourismExperience;
@@ -25,6 +26,8 @@ use App\Modules\Pro\Enums\ProviderCategory;
 use App\Modules\Pro\Enums\ProviderStatus;
 use App\Modules\Pro\Models\Provider;
 use App\Modules\Stay\Models\Stay;
+use App\Enums\ReviewStatus;
+use App\Services\RatingAggregator;
 use App\Notifications\BookingConfirmedNotification;
 use App\Notifications\QuoteReceivedNotification;
 use App\Notifications\RequestStatusChangedNotification;
@@ -100,6 +103,13 @@ class DemoSeeder extends Seeder
         // mais aucune ligne `Provider`, d'où un 404) et les missions reçues (F5.2 —
         // statuts variés pour illustrer les actions). Idempotent (gardes propres).
         $this->seedProviderProfile($provider, $client);
+
+        // Avis reçus de démonstration (F5.5) pour peupler l'écran « Avis reçus » :
+        // quelques avis publiés sur les ressources du prestataire + un avis direct
+        // (le client de démo a une mission « Traiteur mariage » terminée). La note
+        // agrégée est recalculée à partir de ces avis réels. Idempotent (garde
+        // propre) ; s'appuie sur les catalogues et le profil prestataire ci-dessus.
+        $this->seedProviderReviews($provider, $client);
 
         // Gestion locative de démonstration pour peupler le tableau de bord de
         // l'espace propriétaire (F4.1) : mandats, loyers, reversements, incidents.
@@ -358,9 +368,10 @@ class DemoSeeder extends Seeder
                     .'contrôlés.',
                 'status' => ProviderStatus::VALIDE->value,
                 'validated_at' => CarbonImmutable::now()->subMonths(2),
-                // Note moyenne réaliste (les avis détaillés arrivent en F5.5).
+                // Note initiale ; recalculée à partir des avis réels en F5.5
+                // (cf. seedProviderReviews → RatingAggregator).
                 'rating_avg' => 4.6,
-                'rating_count' => 18,
+                'rating_count' => 5,
             ]);
 
             // Deux certifications : une vérifiée par Kaikun, une en cours.
@@ -466,6 +477,79 @@ class DemoSeeder extends Seeder
                 MissionStatus::REFUSEE->value,
                 $now->subDays(2),
             ),
+        ]);
+    }
+
+    /**
+     * Crée des avis de démonstration reçus par le prestataire de démo (F5.5) :
+     * des avis publiés sur ses ressources (véhicule, expérience) et un avis
+     * **direct** déposé par le client de démo (qui a une mission terminée avec
+     * lui). La note agrégée du prestataire (`rating_avg`/`rating_count`) est
+     * ensuite recalculée à partir de ces avis réels — elle remplace la valeur
+     * amorcée en F5.1.
+     *
+     * Idempotent : ne fait rien si un avis direct existe déjà pour ce prestataire.
+     */
+    private function seedProviderReviews(User $providerUser, User $client): void
+    {
+        $provider = Provider::query()->where('user_id', $providerUser->id)->first();
+
+        if ($provider === null) {
+            return;
+        }
+
+        // Garde d'idempotence : l'avis direct est le marqueur du seeding F5.5.
+        $alreadySeeded = Review::query()
+            ->where('reviewable_type', Provider::class)
+            ->where('reviewable_id', $provider->id)
+            ->exists();
+
+        if ($alreadySeeded) {
+            return;
+        }
+
+        // Auteurs distincts (comptes clients de démonstration) pour des avis variés.
+        $awa = $this->demoUser('avis.awa@kaikun360.test', 'Awa Ndiaye', 'client');
+        $cheikh = $this->demoUser('avis.cheikh@kaikun360.test', 'Cheikh Fall', 'client');
+        $marie = $this->demoUser('avis.marie@kaikun360.test', 'Marie Sagna', 'client');
+
+        $vehicle = Vehicle::query()->where('provider_id', $providerUser->id)->first();
+        $experience = TourismExperience::query()->where('provider_id', $providerUser->id)->first();
+
+        // Avis publiés sur les ressources du prestataire.
+        if ($vehicle) {
+            $this->publishReview($awa, $vehicle, 5, 'Chauffeur ponctuel et véhicule impeccable.');
+            $this->publishReview($cheikh, $vehicle, 4, 'Très bon trajet, climatisation au top.');
+        }
+
+        if ($experience) {
+            $this->publishReview($marie, $experience, 5, 'Une expérience inoubliable dans le Delta du Saloum.');
+            $this->publishReview($awa, $experience, 4, 'Guide passionnant, à recommander.');
+        }
+
+        // Avis DIRECT : le client de démo a une mission « Traiteur mariage » terminée.
+        $this->publishReview($client, $provider, 5, 'Prestation traiteur remarquable, service très soigné.');
+
+        // La note affichée reflète désormais les avis réellement présents.
+        app(RatingAggregator::class)->recomputeForProviderUser($providerUser->id);
+    }
+
+    /**
+     * Crée un avis PUBLIÉ (déjà modéré) porté par `$author` sur la ressource
+     * `$reviewable` (véhicule, expérience ou prestataire). Utilitaire de
+     * démonstration : contourne volontairement la vérification d'éligibilité.
+     */
+    private function publishReview(User $author, \Illuminate\Database\Eloquent\Model $reviewable, int $rating, string $comment): void
+    {
+        Review::create([
+            'reference' => 'REV-'.Str::upper(Str::random(8)),
+            'user_id' => $author->id,
+            'reviewable_type' => $reviewable->getMorphClass(),
+            'reviewable_id' => $reviewable->getKey(),
+            'rating' => $rating,
+            'comment' => $comment,
+            'status' => ReviewStatus::PUBLIE->value,
+            'moderated_at' => CarbonImmutable::now()->subDays(fake()->numberBetween(2, 40)),
         ]);
     }
 

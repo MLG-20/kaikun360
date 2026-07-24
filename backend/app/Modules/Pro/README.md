@@ -59,6 +59,7 @@ justificatifs fournis à l'inscription.
 | PUT | `/api/v1/providers/availability/weekly` | prestataire — enregistre le planning hebdo (F5.4) |
 | POST | `/api/v1/providers/availability/unavailability` | prestataire — ajoute une indispo (F5.4) |
 | DELETE | `/api/v1/providers/availability/unavailability/{id}` | prestataire — supprime une indispo (F5.4) |
+| GET | `/api/v1/providers/reviews` | prestataire — mes avis reçus + synthèse de notation (F5.5) |
 | PATCH | `/api/v1/providers/{id}/validate` | agent (`can:valider:prestataire`) → `valide` |
 | PATCH | `/api/v1/providers/{id}/reject` | agent → `refuse` |
 | PATCH | `/api/v1/providers/{id}/suspend` | agent → `suspendu` (motif) |
@@ -135,6 +136,45 @@ d'autrui 404, compte sans profil 404).
   (missions `terminee`), à venir (`acceptee` + `en_cours`) et nombre de missions
   à traiter (`affectee`) ; le net = montant − commission.
 
+---
+
+## Avis reçus (F5.5)
+
+L'écran « Avis reçus » du prestataire réunit **deux sources d'avis** dans une même
+notation :
+
+1. les avis publiés sur ses **ressources** (véhicules, expériences) — déjà
+   agrégés en B12.3 ;
+2. les avis **directs** sur le prestataire lui-même, déposés par le client d'une
+   **mission terminée** — nouveau canal branché ici.
+
+### Branchement du canal direct
+
+- `Review::TYPES` gagne la clé `provider` → `Provider::class` : un prestataire
+  devient une cible notable au même titre qu'un véhicule ou une expérience.
+- `ReviewPolicy::create` distingue la cible : pour un `Provider`, l'éligibilité
+  est `Review::hasCompletedMissionWith($user, $provider)` (une `ProviderMission`
+  `terminee` dont l'utilisateur est le client) au lieu de la réservation terminée.
+- `RatingAggregator` réunit les deux sources en **une seule requête**
+  (`receivedReviewsQuery`), utilisée à la fois pour recalculer `rating_avg`/
+  `rating_count` **et** pour alimenter l'écran → la note de tête et la liste ne
+  peuvent pas diverger. `providerUserIdFor` reconnaît désormais un `Provider`
+  noté directement (retourne son `user_id`).
+
+### Endpoint
+
+`ProviderReviewController@index` (**GET** `/providers/reviews`) — scopé au profil
+du compte connecté via `providerFor()` (**404 si pas de profil**). Renvoie la
+`summary` (moyenne, total, `distribution` 5★→1★ calculés en direct) et la liste
+des avis (`ProviderReviewResource` : ajoute un libellé `source` — « Prestation
+directe » ou le nom de la ressource notée).
+
+Tests : `tests/Feature/Pro/ProviderReviewTest.php` (7 cas — réunion des sources,
+libellé « Prestation directe », exclusion d'un autre prestataire, 404 sans profil,
+dépôt d'avis direct après mission terminée, refus 403 sans mission terminée,
+report de la note à la publication).
+
 > Notation prestataire : colonnes `rating_avg`/`rating_count` **remplies en B12.3**
-> par `App\Services\RatingAggregator` à la publication d'un avis (agrégation des
-> avis publiés sur les véhicules et expériences du prestataire).
+> par `App\Services\RatingAggregator` à la publication d'un avis, en agrégeant les
+> avis publiés sur les véhicules et expériences du prestataire **ainsi que les
+> avis directs** le notant (F5.5).

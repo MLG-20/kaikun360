@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Review;
 use App\Models\User;
 use App\Modules\Core\Enums\UserRole;
+use App\Modules\Pro\Models\Provider;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -18,10 +19,19 @@ use Illuminate\Database\Eloquent\Model;
 class ReviewPolicy
 {
     /**
-     * Déposer un avis : il faut avoir consommé la ressource notée.
+     * Déposer un avis : il faut avoir réellement consommé la cible notée.
+     *
+     * L'éligibilité dépend de la nature de la cible :
+     *   - un **prestataire** (F5.5) se note après une **mission terminée** ;
+     *   - toute autre ressource (nuitée, véhicule, expérience) se note après une
+     *     **réservation terminée**.
      */
     public function create(User $user, Model $reviewable): bool
     {
+        if ($reviewable instanceof Provider) {
+            return Review::hasCompletedMissionWith($user, $reviewable);
+        }
+
         return Review::hasConsumed($user, $reviewable);
     }
 

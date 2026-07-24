@@ -6,6 +6,7 @@ use App\Models\Review;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Modules\Pro\Models\Provider;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -13,12 +14,18 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Quand un avis est publié, on recalcule la note moyenne (`rating_avg`) et le
  * nombre d'avis (`rating_count`) du prestataire concerné, en n'agrégeant que les
- * avis **publiés** portant sur ses ressources.
+ * avis **publiés** qui le concernent.
  *
- * Seules les ressources détenues par un prestataire alimentent cette note :
- * véhicules (Mobility) et expériences (Explore), dont `provider_id` désigne
- * l'utilisateur prestataire. Les nuitées (Stay), détenues par un propriétaire et
- * non par un prestataire au sens du module Pro, sont exclues de l'agrégation.
+ * Deux sources d'avis alimentent la note d'un prestataire (F5.5) :
+ *   - les avis sur ses **ressources** : véhicules (Mobility) et expériences
+ *     (Explore), dont `provider_id` désigne l'utilisateur prestataire ;
+ *   - les avis **directs** sur le prestataire lui-même (`reviewable = Provider`),
+ *     déposés par le client d'une mission terminée.
+ *
+ * Les nuitées (Stay), détenues par un propriétaire et non par un prestataire au
+ * sens du module Pro, restent exclues de l'agrégation. Cette même requête sert de
+ * source unique de vérité à l'écran « Avis reçus » : la note affichée en tête et
+ * la liste des avis ne peuvent pas diverger.
  */
 class RatingAggregator
 {
@@ -47,7 +54,7 @@ class RatingAggregator
 
     /**
      * Recalcule `rating_avg`/`rating_count` du prestataire (identifié par son
-     * user) sur l'ensemble de ses avis publiés (véhicules + expériences).
+     * user) sur l'ensemble de ses avis publiés (ressources + avis directs).
      */
     public function recomputeForProviderUser(int $providerUserId): void
     {
@@ -57,16 +64,7 @@ class RatingAggregator
             return; // le user n'est pas (ou plus) un prestataire enregistré
         }
 
-        $vehicleIds = Vehicle::where('provider_id', $providerUserId)->pluck('id');
-        $experienceIds = TourismExperience::where('provider_id', $providerUserId)->pluck('id');
-
-        $query = Review::published()->where(function ($q) use ($vehicleIds, $experienceIds) {
-            $q->where(function ($w) use ($vehicleIds) {
-                $w->where('reviewable_type', Vehicle::class)->whereIn('reviewable_id', $vehicleIds);
-            })->orWhere(function ($w) use ($experienceIds) {
-                $w->where('reviewable_type', TourismExperience::class)->whereIn('reviewable_id', $experienceIds);
-            });
-        });
+        $query = $this->receivedReviewsQuery($provider);
 
         $count = (clone $query)->count();
         $average = $count > 0 ? round((float) (clone $query)->avg('rating'), 2) : null;
@@ -78,11 +76,40 @@ class RatingAggregator
     }
 
     /**
-     * L'utilisateur prestataire propriétaire de la ressource, ou null si la
-     * ressource n'est pas rattachée à un prestataire.
+     * Requête des avis **publiés** reçus par un prestataire, toutes sources
+     * confondues : ses véhicules, ses expériences et les avis directs le notant.
+     *
+     * Source unique partagée par l'agrégat de note et l'écran « Avis reçus » (F5.5)
+     * pour garantir que la note affichée et la liste restent cohérentes.
+     */
+    public function receivedReviewsQuery(Provider $provider): Builder
+    {
+        $vehicleIds = Vehicle::where('provider_id', $provider->user_id)->pluck('id');
+        $experienceIds = TourismExperience::where('provider_id', $provider->user_id)->pluck('id');
+
+        return Review::published()->where(function ($q) use ($vehicleIds, $experienceIds, $provider) {
+            $q->where(function ($w) use ($vehicleIds) {
+                $w->where('reviewable_type', Vehicle::class)->whereIn('reviewable_id', $vehicleIds);
+            })->orWhere(function ($w) use ($experienceIds) {
+                $w->where('reviewable_type', TourismExperience::class)->whereIn('reviewable_id', $experienceIds);
+            })->orWhere(function ($w) use ($provider) {
+                $w->where('reviewable_type', Provider::class)->where('reviewable_id', $provider->id);
+            });
+        });
+    }
+
+    /**
+     * L'utilisateur prestataire concerné par la ressource notée, ou null si elle
+     * n'est rattachée à aucun prestataire. Deux cas : la ressource détenue par un
+     * prestataire (véhicule/expérience → `provider_id`), ou le prestataire noté
+     * directement (`Provider` → son `user_id`).
      */
     private function providerUserIdFor(Model $reviewable): ?int
     {
+        if ($reviewable instanceof Provider) {
+            return $reviewable->user_id;
+        }
+
         if (in_array($reviewable::class, self::PROVIDER_OWNED, true)) {
             return $reviewable->provider_id;
         }

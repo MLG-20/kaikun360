@@ -4,6 +4,7 @@ use App\Modules\Pro\Http\Controllers\ProviderAvailabilityController;
 use App\Modules\Pro\Http\Controllers\ProviderMissionController;
 use App\Modules\Pro\Http\Controllers\ProviderProfileController;
 use App\Modules\Pro\Http\Controllers\ProviderRegistrationController;
+use App\Modules\Pro\Http\Controllers\ProviderReviewController;
 use App\Modules\Pro\Http\Controllers\ProviderValidationController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,11 @@ Route::middleware('auth:sanctum')->prefix('providers')->group(function () {
     Route::post('/availability/unavailability', [ProviderAvailabilityController::class, 'storeUnavailability']);
     Route::delete('/availability/unavailability/{unavailability}', [ProviderAvailabilityController::class, 'destroyUnavailability'])
         ->whereNumber('unavailability');
+
+    // Avis reçus (F5.5) : consultation des avis publiés qui concernent le
+    // prestataire connecté (ressources + avis directs). Segment non numérique
+    // `reviews` → aucune collision avec `/{provider}/...` (whereNumber).
+    Route::get('/reviews', [ProviderReviewController::class, 'index']);
 
     // Affectation d'une mission (policy assignMission = admin).
     Route::post('/{provider}/missions', [ProviderMissionController::class, 'store'])->whereNumber('provider');
