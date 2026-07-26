@@ -35,11 +35,16 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   **assemblées par un serveur** puis envoyées prêtes à afficher (bon pour le
   référencement Google et pour un premier affichage rapide). Voir « SSR » ci-dessous.
 - ✅ **L'espace client (F3)** : l'espace personnel de la personne connectée, sous
-  `/mon-espace` (menu latéral sombre, en-tête épuré). Ses **six écrans** sont en
+  `/mon-espace` (menu latéral sombre, en-tête épuré). Ses écrans sont en
   place — tableau de bord, **profil** (identité, coordonnées, sécurité, pièces),
   **mes demandes** (liste + détail cliquable), **réservations** (liste + détail cliquable), **favoris** (tous univers, avec le cœur du
   catalogue pour les ajouter), **notifications** et **messagerie** (conversations
-  + fil de discussion avec réponse). 👉 Détail :
+  + fil de discussion avec réponse). **« Projets diaspora »** (F3.8 —
+  `GET/POST /diaspora-projects…`) : le client **lance et suit ses dossiers
+  pilotés à distance** (achat, construction, gestion locative) et consulte, pour
+  chacun, la **chronologie des rapports** de suivi (photos, vidéo, commentaires
+  datés) déposés par son référent Kaikun — le cœur de la promesse « confiance par
+  la preuve », et la mise en conformité du critère CDC §15. 👉 Détail :
   [`src/app/features/account/README.md`](src/app/features/account/README.md).
 - ✅ **L'espace propriétaire (F4, terminé)** : sous `/espace-proprietaire`,
   réservé au rôle « propriétaire ». Il réutilise **le même habillage** que

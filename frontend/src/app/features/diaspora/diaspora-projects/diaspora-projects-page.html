@@ -1,0 +1,58 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/mon-espace" />
+  <p class="account-eyebrow">Espace client</p>
+  <h1 class="account-title">Mes projets diaspora</h1>
+  <p class="account-lead">
+    Vos projets pilotés à distance (achat, construction, gestion locative), suivis
+    par un interlocuteur Kaikun et documentés par des rapports datés.
+  </p>
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="dp-state" role="status">Chargement de vos projets…</p>
+  }
+  @case ('error') {
+    <div class="dp-empty">
+      <p>Impossible de charger vos projets pour le moment.</p>
+      <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+    </div>
+  }
+  @default {
+    <div class="dp-toolbar">
+      <a class="k-btn k-btn--primary" routerLink="nouveau">Lancer un projet diaspora</a>
+    </div>
+
+    @if (projects().length === 0) {
+      <div class="dp-empty">
+        <p>
+          Vous n'avez pas encore de projet diaspora. Lancez un dossier d'achat, de
+          construction ou de gestion locative piloté à distance.
+        </p>
+      </div>
+    } @else {
+      <ul class="dp-list">
+        @for (p of projects(); track p.id) {
+          <li class="dp-card">
+            <a class="dp-card-link" [routerLink]="[p.id]">
+              <div class="dp-card-main">
+                <p class="dp-card-title">{{ p.project_type_label }}</p>
+                <p class="dp-card-meta">
+                  <span>Réf. {{ p.reference }}</span>
+                  <span>· Depuis {{ p.residence_country }}</span>
+                  @if (fcfa(p.budget_xof); as budget) {
+                    <span>· {{ budget }}</span>
+                  }
+                  @if (p.reports_count != null) {
+                    <span>· {{ p.reports_count }} rapport{{ p.reports_count > 1 ? 's' : '' }}</span>
+                  }
+                </p>
+              </div>
+              <span class="dp-badge" [class]="statusClass(p.status)">{{ p.status_label }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  }
+}

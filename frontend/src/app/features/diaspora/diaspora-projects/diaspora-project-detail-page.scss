@@ -1,0 +1,188 @@
+// Détail d'un projet diaspora + chronologie des rapports (F3.8).
+
+.dd-state {
+  margin: 1.5rem 0;
+  color: var(--k-muted);
+}
+
+.dd-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.3rem 1.4rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+
+  p {
+    margin: 0;
+    color: var(--k-ink);
+  }
+}
+
+// --- Résumé du projet ---
+.dd-summary {
+  padding: 1.3rem 1.4rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+}
+
+.dd-summary-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  .account-title {
+    margin: 0;
+  }
+}
+
+.dd-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem 1.5rem;
+  margin: 1.1rem 0 0;
+
+  dt {
+    font-size: 0.8rem;
+    color: var(--k-muted);
+    margin-bottom: 0.15rem;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+}
+
+.dd-description {
+  margin: 1.1rem 0 0;
+  color: var(--k-ink);
+  white-space: pre-line;
+}
+
+// --- Badge de statut ---
+.dd-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.is-new {
+    color: var(--k-gold);
+    background: color-mix(in srgb, var(--k-gold) 14%, transparent);
+  }
+  &.is-active,
+  &.is-done {
+    color: var(--k-green-600);
+    background: color-mix(in srgb, var(--k-green) 16%, transparent);
+  }
+  &.is-cancelled {
+    color: var(--k-muted);
+    background: color-mix(in srgb, var(--k-muted) 14%, transparent);
+  }
+}
+
+// --- Rapports de suivi ---
+.dd-reports {
+  margin-top: 2rem;
+}
+
+.dd-reports-title {
+  margin: 0 0 1rem;
+  font-family: var(--k-font-display);
+  font-size: 1.2rem;
+  color: var(--k-ink);
+}
+
+.dd-reports-empty {
+  margin: 0;
+  padding: 1.1rem 1.25rem;
+  background: var(--k-card);
+  border: 1px dashed var(--k-line);
+  border-radius: var(--k-radius);
+  color: var(--k-muted);
+}
+
+.dd-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.dd-report {
+  position: relative;
+  padding: 1.1rem 1.25rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-left: 3px solid var(--k-green);
+  border-radius: var(--k-radius);
+}
+
+.dd-report-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dd-report-type {
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.dd-report-date {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+.dd-report-comment {
+  margin: 0.5rem 0 0;
+  color: var(--k-ink);
+  white-space: pre-line;
+}
+
+.dd-report-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.dd-report-photo {
+  display: block;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--k-radius);
+  overflow: hidden;
+  border: 1px solid var(--k-line);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.dd-report-video {
+  display: inline-block;
+  margin-top: 0.8rem;
+  color: var(--k-green-600);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

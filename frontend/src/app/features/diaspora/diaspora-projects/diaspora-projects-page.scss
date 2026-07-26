@@ -1,0 +1,109 @@
+// Écran « Mes projets diaspora » (F3.8).
+
+.dp-state {
+  margin: 1.5rem 0;
+  color: var(--k-muted);
+}
+
+.dp-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 1.25rem 0 1rem;
+}
+
+.dp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.3rem 1.4rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+
+  p {
+    margin: 0;
+    color: var(--k-ink);
+  }
+}
+
+.dp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dp-card {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--k-green) 45%, var(--k-line));
+  }
+}
+
+.dp-card-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  text-decoration: none;
+  color: inherit;
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.dp-card-main {
+  min-width: 0;
+}
+
+.dp-card-title {
+  margin: 0 0 0.2rem;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.dp-card-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--k-muted);
+}
+
+.dp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &.is-new {
+    color: var(--k-gold);
+    background: color-mix(in srgb, var(--k-gold) 14%, transparent);
+  }
+  &.is-active {
+    color: var(--k-green-600);
+    background: color-mix(in srgb, var(--k-green) 14%, transparent);
+  }
+  &.is-done {
+    color: var(--k-green-600);
+    background: color-mix(in srgb, var(--k-green) 20%, transparent);
+  }
+  &.is-cancelled {
+    color: var(--k-muted);
+    background: color-mix(in srgb, var(--k-muted) 14%, transparent);
+  }
+}

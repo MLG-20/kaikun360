@@ -88,6 +88,12 @@ suivi, ses **réservations**, ses **favoris**, sa **messagerie**, ses
 **notifications** et son **profil** (coordonnées, adresse, mot de passe, pièces
 justificatives).
 
+Il inclut aussi ses **projets diaspora** : un membre de la diaspora peut
+**lancer un dossier piloté à distance** (achat, construction, gestion locative)
+et **suivre son avancement au fil des rapports** datés (photos, vidéo,
+commentaires) publiés par son référent Kaikun — le cœur de la promesse
+« confiance par la preuve ».
+
 ### 3.4 L'espace propriétaire — livré
 
 Espace dédié aux propriétaires de biens :

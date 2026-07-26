@@ -45,3 +45,21 @@
   color: rgba(255, 255, 255, 0.82);
   line-height: 1.6;
 }
+
+// Pont vers le suivi structuré (espace client) sous le formulaire de contact (F3.8).
+.conv-account-link {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--k-muted);
+  text-align: center;
+
+  a {
+    color: var(--k-green-600);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

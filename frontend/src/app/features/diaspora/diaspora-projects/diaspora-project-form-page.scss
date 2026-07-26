@@ -1,0 +1,81 @@
+// Formulaire de lancement d'un projet diaspora (F3.8).
+
+.df-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 1.5rem;
+  max-width: 640px;
+}
+
+.df-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.df-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.95rem;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--k-line);
+    border-radius: var(--k-radius);
+    background: var(--k-bg);
+    color: var(--k-ink);
+    font: inherit;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+}
+
+.df-opt {
+  font-weight: 400;
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+.df-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--k-muted);
+
+  &--error {
+    color: var(--k-danger);
+  }
+}
+
+.df-msg {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--k-radius);
+
+  &--error {
+    color: var(--k-danger);
+    background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card));
+    border: 1px solid color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+  }
+}
+
+.df-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}

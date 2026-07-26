@@ -1,0 +1,89 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/mon-espace/diaspora" />
+  <p class="account-eyebrow">Espace client · Projet diaspora</p>
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="dd-state" role="status">Chargement du projet…</p>
+  }
+  @case ('not-found') {
+    <div class="dd-empty">
+      <p>Ce projet est introuvable ou ne fait pas partie de vos dossiers.</p>
+      <a class="k-btn k-btn--ghost" routerLink="/mon-espace/diaspora">Retour à mes projets</a>
+    </div>
+  }
+  @case ('error') {
+    <div class="dd-empty">
+      <p>Impossible de charger ce projet pour le moment.</p>
+      <a class="k-btn k-btn--ghost" routerLink="/mon-espace/diaspora">Retour à mes projets</a>
+    </div>
+  }
+  @default {
+    @if (project(); as p) {
+      <!-- ===================== Résumé du projet ===================== -->
+      <div class="dd-summary">
+        <div class="dd-summary-head">
+          <h1 class="account-title">{{ p.project_type_label }}</h1>
+          <span class="dd-badge" [class]="statusClass(p.status)">{{ p.status_label }}</span>
+        </div>
+        <dl class="dd-facts">
+          <div><dt>Référence</dt><dd>{{ p.reference }}</dd></div>
+          <div><dt>Pays de résidence</dt><dd>{{ p.residence_country }}</dd></div>
+          @if (fcfa(p.budget_xof); as budget) {
+            <div><dt>Budget</dt><dd>{{ budget }}</dd></div>
+          }
+          @if (p.priority_label) {
+            <div><dt>Priorité</dt><dd>{{ p.priority_label }}</dd></div>
+          }
+        </dl>
+        @if (p.description) {
+          <p class="dd-description">{{ p.description }}</p>
+        }
+      </div>
+
+      <!-- ===================== Rapports de suivi ===================== -->
+      <section class="dd-reports">
+        <h2 class="dd-reports-title">Rapports de suivi</h2>
+
+        @if (reports().length === 0) {
+          <p class="dd-reports-empty">
+            Aucun rapport pour l'instant. Votre interlocuteur Kaikun publiera ici
+            les comptes rendus datés (photos, vidéo, commentaires) au fil de
+            l'avancement.
+          </p>
+        } @else {
+          <ol class="dd-timeline">
+            @for (r of reports(); track r.id) {
+              <li class="dd-report">
+                <div class="dd-report-head">
+                  <span class="dd-report-type">{{ r.type_label }}</span>
+                  @if (r.reported_at) {
+                    <time class="dd-report-date">{{ r.reported_at }}</time>
+                  }
+                </div>
+                @if (r.comment) {
+                  <p class="dd-report-comment">{{ r.comment }}</p>
+                }
+                @if (r.photos.length) {
+                  <div class="dd-report-photos">
+                    @for (photo of r.photos; track photo) {
+                      <a class="dd-report-photo" [href]="photo" target="_blank" rel="noopener">
+                        <img [src]="photo" alt="Photo du rapport de suivi" loading="lazy" />
+                      </a>
+                    }
+                  </div>
+                }
+                @if (r.video_url) {
+                  <a class="dd-report-video" [href]="r.video_url" target="_blank" rel="noopener">
+                    ▶ Voir la vidéo de suivi
+                  </a>
+                }
+              </li>
+            }
+          </ol>
+        }
+      </section>
+    }
+  }
+}

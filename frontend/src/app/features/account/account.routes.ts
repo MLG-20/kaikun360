@@ -60,6 +60,35 @@ export const ACCOUNT_ROUTES: Routes = [
         title: 'Ma réservation — Kaikun 360',
       },
       {
+        // F3.8 — Projets diaspora : liste des dossiers pilotés à distance
+        // (GET /diaspora-projects/mine).
+        path: 'diaspora',
+        loadComponent: () =>
+          import('../diaspora/diaspora-projects/diaspora-projects-page').then(
+            (m) => m.DiasporaProjectsPageComponent,
+          ),
+        title: 'Mes projets diaspora — Kaikun 360',
+      },
+      {
+        // F3.8 — Lancement d'un projet diaspora (POST /diaspora-projects).
+        path: 'diaspora/nouveau',
+        loadComponent: () =>
+          import('../diaspora/diaspora-projects/diaspora-project-form-page').then(
+            (m) => m.DiasporaProjectFormPageComponent,
+          ),
+        title: 'Lancer un projet diaspora — Kaikun 360',
+      },
+      {
+        // F3.8 — Détail d'un projet + rapports de suivi
+        // (GET /diaspora-projects/{id} + /reports).
+        path: 'diaspora/:id',
+        loadComponent: () =>
+          import('../diaspora/diaspora-projects/diaspora-project-detail-page').then(
+            (m) => m.DiasporaProjectDetailPageComponent,
+          ),
+        title: 'Projet diaspora — Kaikun 360',
+      },
+      {
         // F3.5 — Favoris : biens sauvegardés (GET /favorites, retrait).
         path: 'favoris',
         loadComponent: () =>

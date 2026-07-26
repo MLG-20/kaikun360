@@ -1,0 +1,65 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/mon-espace/diaspora" />
+  <p class="account-eyebrow">Espace client</p>
+  <h1 class="account-title">Lancer un projet diaspora</h1>
+  <p class="account-lead">
+    Décrivez votre projet piloté à distance. Un interlocuteur Kaikun le prend en
+    charge et vous transmet des rapports de suivi datés.
+  </p>
+</section>
+
+<form class="df-form" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="df-field">
+    <label for="df-type">Type de projet</label>
+    <select id="df-type" formControlName="project_type">
+      <option value="" disabled>Choisissez un type…</option>
+      @for (t of projectTypes; track t.value) {
+        <option [value]="t.value">{{ t.label }}</option>
+      }
+    </select>
+    @if (form.controls.project_type.touched && form.controls.project_type.invalid) {
+      <p class="df-hint df-hint--error">Le type de projet est obligatoire.</p>
+    }
+  </div>
+
+  <div class="df-field">
+    <label for="df-country">Pays de résidence</label>
+    <input id="df-country" type="text" formControlName="residence_country" maxlength="255"
+           placeholder="Ex. France, Italie, États-Unis…" />
+    @if (form.controls.residence_country.touched && form.controls.residence_country.invalid) {
+      <p class="df-hint df-hint--error">Indiquez votre pays de résidence.</p>
+    }
+  </div>
+
+  <div class="df-row">
+    <div class="df-field">
+      <label for="df-budget">Budget (FCFA) <span class="df-opt">(facultatif)</span></label>
+      <input id="df-budget" type="number" min="0" formControlName="budget_xof" />
+    </div>
+    <div class="df-field">
+      <label for="df-priority">Priorité</label>
+      <select id="df-priority" formControlName="priority">
+        @for (p of priorities; track p.value) {
+          <option [value]="p.value">{{ p.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <div class="df-field">
+    <label for="df-desc">Description du projet <span class="df-opt">(facultatif)</span></label>
+    <textarea id="df-desc" rows="5" formControlName="description"
+              placeholder="Localisation visée, objectif, contraintes, échéance…"></textarea>
+  </div>
+
+  @if (formError()) {
+    <p class="df-msg df-msg--error" role="alert">{{ formError() }}</p>
+  }
+
+  <div class="df-actions">
+    <button type="submit" class="k-btn k-btn--primary" [disabled]="submitting()">
+      {{ submitting() ? 'Enregistrement…' : 'Lancer le projet' }}
+    </button>
+    <a class="k-btn k-btn--ghost" routerLink="/mon-espace/diaspora">Annuler</a>
+  </div>
+</form>

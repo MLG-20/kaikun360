@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { LeadFormComponent } from '../../../shared/components/lead-form/lead-form';
 import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
@@ -14,7 +15,7 @@ import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-but
  */
 @Component({
   selector: 'app-diaspora-page',
-  imports: [LeadFormComponent, WhatsAppButtonComponent],
+  imports: [LeadFormComponent, WhatsAppButtonComponent, RouterLink],
   templateUrl: './diaspora-page.html',
   styleUrl: './diaspora-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
