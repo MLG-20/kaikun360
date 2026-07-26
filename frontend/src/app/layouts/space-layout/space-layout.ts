@@ -5,7 +5,6 @@ import { filter } from 'rxjs/operators';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { AccountIconComponent } from '../../features/account/account-icon';
-import { WhatsAppButtonComponent } from '../../shared/components/whatsapp-button/whatsapp-button';
 import { SPACE_CONFIG } from './space.config';
 import { SpaceHeaderComponent } from './space-header';
 
@@ -37,7 +36,6 @@ import { SpaceHeaderComponent } from './space-header';
     RouterLinkActive,
     SpaceHeaderComponent,
     AccountIconComponent,
-    WhatsAppButtonComponent,
   ],
   templateUrl: './space-layout.html',
   styleUrl: './space-layout.scss',

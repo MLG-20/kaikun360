@@ -74,57 +74,15 @@
   }
 }
 
-// Navigation : hauteur naturelle (la liste des rubriques est volontairement
-// courte). L'espace libre restant est occupé par la carte d'aide ci-dessous, et
-// le pied reste collé en bas.
+// Navigation : occupe l'espace disponible (le pied est poussé en bas).
+// Pas de défilement propre : la liste des rubriques est volontairement courte
+// (l'aide est passée dans le pied), donc le menu tient sans barre de défilement.
 .account-nav {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.9rem 0.7rem;
-}
-
-// Zone qui absorbe l'espace libre entre la nav et le pied, et y centre la
-// carte d'aide (fini la grande bande vide du rail).
-.account-help-wrap {
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 0;
-  padding: 0.7rem;
-}
-
-.account-help-card {
-  width: 100%;
-  padding: 1rem 0.95rem;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  text-align: center;
-}
-
-.account-help-title {
-  margin: 0 0 0.3rem;
-  font-family: var(--k-font-display);
-  font-weight: 700;
-  font-size: 0.98rem;
-  color: #fff;
-}
-
-.account-help-text {
-  margin: 0 0 0.85rem;
-  font-size: 0.82rem;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.62);
-}
-
-// Centre le bouton WhatsApp partagé dans la carte (sans toucher à ses styles
-// internes : on agit sur le composant hôte, pas sur son contenu).
-.account-help-card app-whatsapp-button {
-  display: flex;
-  justify-content: center;
 }
 
 .account-side-foot {

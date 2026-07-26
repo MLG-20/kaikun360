@@ -45,20 +45,6 @@
       }
     </nav>
 
-    <!-- Carte d'aide : occupe l'espace libre entre la nav et le pied. Le bouton
-         WhatsApp se masque de lui-même si aucun numéro de support n'est
-         paramétré (on garde alors le message, sans lien mort). -->
-    <div class="account-help-wrap">
-      <div class="account-help-card">
-        <p class="account-help-title">Besoin d’aide&nbsp;?</p>
-        <p class="account-help-text">
-          Une question sur votre espace&nbsp;? Notre équipe vous répond.
-        </p>
-        <app-whatsapp-button subject="Aide depuis mon espace Kaikun 360"
-                             label="Contacter le support" />
-      </div>
-    </div>
-
     <!-- Pied du rail : aide (si l'espace en a une) + retour au site + déconnexion -->
     <div class="account-side-foot">
       @if (space.helpPath !== undefined) {
