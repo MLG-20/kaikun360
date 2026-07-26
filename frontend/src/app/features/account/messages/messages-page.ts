@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 
 import { MessageService } from '../../../core/api/message.service';
 import { PageMeta } from '../../../core/api/pagination.model';
+import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { Conversation } from '../../../models/message.model';
 import { AccountIconComponent } from '../account-icon';
 
@@ -15,17 +16,23 @@ import { AccountIconComponent } from '../account-icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 /**
- * Écran « Messages » de l'espace client (F3.7), monté sous `/mon-espace/messages`.
+ * Écran « Messages » (F3.7), monté sous `<espace>/messages`. **Générique** : le
+ * même composant sert l'espace client (`/mon-espace`) et l'espace entreprise
+ * (`/espace-entreprise`, F6, cahier §5 « Messages = Tous »). Le préfixe des
+ * liens vers les fils est dérivé de `SPACE_CONFIG` (jamais codé en dur), de
+ * sorte qu'aucun lien ne renvoie l'utilisateur hors de son espace.
  *
- * Liste paginée des conversations du client (`GET /messages`, 15/page, les plus
- * actives d'abord), avec le total de messages non lus joint aux métadonnées.
- * Chaque ligne mène au fil correspondant (`/mon-espace/messages/{id}`), où l'on
- * lit et répond. On ne propose pas ici de « nouveau message » libre : les
- * conversations naissent d'un contexte (contact d'un pro/du support depuis une
- * annonce ou une demande) — le fil apparaît alors dans cette liste.
+ * Liste paginée des conversations (`GET /messages`, 15/page, les plus actives
+ * d'abord), avec le total de messages non lus joint aux métadonnées. Chaque
+ * ligne mène au fil correspondant, où l'on lit et répond. On ne propose pas ici
+ * de « nouveau message » libre : les conversations naissent d'un contexte
+ * (contact du support/d'un pro depuis une annonce ou une demande).
  */
 export class MessagesPageComponent {
   private readonly messages = inject(MessageService);
+
+  /** Préfixe des liens vers un fil (`<espace>/messages`), propre à l'espace courant. */
+  protected readonly messagesBase = `${inject(SPACE_CONFIG).basePath}/messages`;
 
   // — État de l'écran —
   protected readonly loading = signal(true);

@@ -1,0 +1,39 @@
+// Accueil de l'espace entreprise (F6). Les classes `.account-head`,
+// `.account-tiles` et `.account-tile*` sont globales (partiel `styles/_account.scss`,
+// partagées par tous les espaces) ; on ne style ici que la carte d'appel à l'action.
+
+.ent-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--k-line, #e2e8f0);
+  border-radius: 14px;
+  // Léger fond de marque (bleu) pour porter le CTA principal.
+  background: color-mix(in srgb, var(--k-brand, #0348fb) 6%, #fff);
+}
+
+.ent-cta-body {
+  flex: 1 1 18rem;
+}
+
+.ent-cta-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--k-ink, #132033);
+}
+
+.ent-cta-text {
+  margin: 0;
+  color: var(--k-muted, #64748b);
+  line-height: 1.5;
+}
+
+.ent-cta-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}

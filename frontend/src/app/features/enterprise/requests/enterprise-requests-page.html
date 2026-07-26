@@ -1,0 +1,91 @@
+<section class="account-head">
+  <div class="tbr-head-row">
+    <div>
+      <p class="account-eyebrow">Espace entreprise</p>
+      <h1 class="account-title">Mes demandes</h1>
+    </div>
+    <a class="k-btn k-btn--primary tbr-new" [routerLink]="[base, 'demandes', 'nouvelle']">
+      + Nouvelle demande
+    </a>
+  </div>
+  <p class="account-lead">
+    Suivez vos demandes de team building et les devis composés par Kaikun, de
+    leur dépôt jusqu'à l'organisation de votre événement.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos demandes…</p>
+} @else if (loadError()) {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger vos demandes pour le moment. Merci de réessayer plus tard.
+  </p>
+} @else if (items().length === 0) {
+  <div class="tbr-empty">
+    <h2 class="tbr-empty-title">Aucune demande pour l'instant</h2>
+    <p class="tbr-empty-text">
+      Vous n'avez pas encore de demande de team building. Lancez-en une : indiquez
+      vos participants, vos dates et vos besoins, et recevez un devis sur mesure.
+    </p>
+    <a class="k-btn k-btn--primary" [routerLink]="[base, 'demandes', 'nouvelle']">
+      Demander un pack groupe
+    </a>
+  </div>
+} @else {
+  <ul class="tbr-list">
+    @for (req of items(); track req.id) {
+      <li class="tbr-card">
+        <a
+          class="tbr-card-link"
+          [routerLink]="[base, 'demandes', req.id]"
+          [attr.aria-label]="'Voir le détail de la demande ' + req.reference"
+        >
+          <header class="tbr-card-head">
+            <span class="tbr-ref">{{ req.reference }}</span>
+            <span class="bk-status" [attr.data-tone]="status(req).tone">{{ status(req).label }}</span>
+          </header>
+
+          <dl class="tbr-facts">
+            <div class="tbr-fact">
+              <dt>Ville</dt>
+              <dd>{{ req.city }}</dd>
+            </div>
+            <div class="tbr-fact">
+              <dt>Participants</dt>
+              <dd>{{ req.participants }}</dd>
+            </div>
+            @if (req.start_date) {
+              <div class="tbr-fact">
+                <dt>Dates</dt>
+                <dd>
+                  {{ req.start_date | date: 'd MMM' : '' : 'fr' }}
+                  @if (req.end_date) { → {{ req.end_date | date: 'd MMM y' : '' : 'fr' }} }
+                </dd>
+              </div>
+            }
+            @if (budget(req); as amount) {
+              <div class="tbr-fact">
+                <dt>Budget indicatif</dt>
+                <dd>{{ amount }}</dd>
+              </div>
+            }
+          </dl>
+        </a>
+      </li>
+    }
+  </ul>
+
+  @if (meta(); as m) {
+    @if (m.last_page > 1) {
+      <nav class="tbr-pager" aria-label="Pagination des demandes">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasPrev()" (click)="prev()">
+          ← Précédent
+        </button>
+        <span class="tbr-pager-info">Page {{ m.current_page }} sur {{ m.last_page }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="!hasNext()" (click)="next()">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}

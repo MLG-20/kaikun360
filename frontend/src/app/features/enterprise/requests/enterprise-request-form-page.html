@@ -1,0 +1,124 @@
+<section class="account-head">
+  <a class="er-back" [routerLink]="[base, 'demandes']">← Mes demandes</a>
+  <p class="account-eyebrow">Espace entreprise</p>
+  <h1 class="account-title">Nouvelle demande de team building</h1>
+  <p class="account-lead">
+    Décrivez votre événement : Kaikun compose un pack sur mesure et vous envoie
+    un devis détaillé.
+  </p>
+</section>
+
+<form class="k-card er-form" [formGroup]="form" (ngSubmit)="submit()">
+  @if (formError(); as err) {
+    <p class="k-form-error" role="alert">{{ err }}</p>
+  }
+
+  <div class="er-grid">
+    <div class="k-field">
+      <label class="k-label" for="er-participants">Nombre de participants</label>
+      <input
+        id="er-participants"
+        class="k-input"
+        type="number"
+        min="1"
+        formControlName="participants"
+        [class.k-input--error]="form.controls.participants.touched && form.controls.participants.invalid"
+      />
+      @if (form.controls.participants.touched && form.controls.participants.invalid) {
+        <p class="k-error">Indiquez au moins 1 participant.</p>
+      }
+    </div>
+
+    <div class="k-field">
+      <label class="k-label" for="er-city">Ville</label>
+      <input
+        id="er-city"
+        class="k-input"
+        type="text"
+        placeholder="Ex. Saly, Dakar, Saint-Louis…"
+        formControlName="city"
+        [class.k-input--error]="form.controls.city.touched && form.controls.city.invalid"
+      />
+      @if (form.controls.city.touched && form.controls.city.invalid) {
+        <p class="k-error">La ville est obligatoire.</p>
+      }
+    </div>
+
+    <div class="k-field">
+      <label class="k-label" for="er-start">Date de début</label>
+      <input
+        id="er-start"
+        class="k-input"
+        type="date"
+        formControlName="start_date"
+        [class.k-input--error]="form.controls.start_date.touched && form.controls.start_date.invalid"
+      />
+      @if (form.controls.start_date.touched && form.controls.start_date.invalid) {
+        <p class="k-error">La date de début est obligatoire.</p>
+      }
+    </div>
+
+    <div class="k-field">
+      <label class="k-label" for="er-end">Date de fin</label>
+      <input
+        id="er-end"
+        class="k-input"
+        type="date"
+        formControlName="end_date"
+        [class.k-input--error]="(form.controls.end_date.touched && form.controls.end_date.invalid) || (form.touched && form.hasError('dateRange'))"
+      />
+      @if (form.controls.end_date.touched && form.controls.end_date.invalid) {
+        <p class="k-error">La date de fin est obligatoire.</p>
+      } @else if (form.touched && form.hasError('dateRange')) {
+        <p class="k-error">La date de fin doit être postérieure ou égale à la date de début.</p>
+      }
+    </div>
+
+    <div class="k-field">
+      <label class="k-label" for="er-budget">
+        Budget indicatif (FCFA) <span class="k-optional">(facultatif)</span>
+      </label>
+      <input
+        id="er-budget"
+        class="k-input"
+        type="number"
+        min="0"
+        placeholder="Ex. 5 000 000"
+        formControlName="budget_xof"
+      />
+    </div>
+  </div>
+
+  <!-- Besoins (cahier §9.4 : activités, transport, hébergement…) -->
+  <fieldset class="er-needs" formGroupName="needs">
+    <legend class="k-label">Vos besoins <span class="k-optional">(facultatif)</span></legend>
+    <div class="er-needs-grid">
+      @for (opt of needsOptions; track opt.key) {
+        <label class="er-check">
+          <input type="checkbox" [formControlName]="opt.key" />
+          <span>{{ opt.label }}</span>
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  <div class="k-field">
+    <label class="k-label" for="er-desc">
+      Précisions <span class="k-optional">(facultatif)</span>
+    </label>
+    <textarea
+      id="er-desc"
+      class="k-input"
+      rows="4"
+      placeholder="Objectifs, contraintes, préférences d'activités…"
+      formControlName="description"
+    ></textarea>
+  </div>
+
+  <button class="k-btn k-btn--primary k-btn--block" type="submit" [disabled]="submitting()">
+    {{ submitting() ? 'Envoi…' : 'Envoyer ma demande' }}
+  </button>
+  <p class="er-note k-muted">
+    Un conseiller Kaikun étudie votre demande et vous adresse un devis détaillé.
+  </p>
+</form>

@@ -529,9 +529,10 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 ### Phase F6 — Espace entreprise (EnterpriseSpaceModule)
 
-- [ ] Formulaire de demande de team building (participants, ville, dates, budget, activités, besoin transport/hébergement).
-- [ ] Écran de suivi des devis composés par l'admin.
-- [ ] Écran d'historique des commandes/demandes groupe.
+- [x] Formulaire de demande de team building (participants, ville, dates, budget, activités, besoin transport/hébergement). — _F6 : `/espace-entreprise/demandes/nouvelle` (`POST /team-building-requests`, cahier §9.4)._
+- [x] Écran de suivi des devis composés par l'admin. — _F6 : détail `/espace-entreprise/demandes/:id` (`GET /team-building-requests/{id}`) — lignes, sous-total, marge, total + **acceptation** d'un devis envoyé (`PATCH /team-building-quotes/{id}/accept`)._
+- [x] Écran d'historique des commandes/demandes groupe. — _F6 : « Mes demandes » `/espace-entreprise/demandes` (`GET /team-building-requests/mine`, paginé, pastille de statut)._
+- [x] **Messages dans l'espace entreprise** (cahier §5 « Messages = Tous ») — écrans de messagerie génériques réutilisés, rendus autonomes par `SPACE_CONFIG` ; **notif in-app** du devis envoyé (canal `database` ajouté à `TeamBuildingQuoteSentNotification`).
 
 ### Phase F7 — Back-office (AdminModule)
 
@@ -577,7 +578,7 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [ ] Un prestataire peut proposer véhicule, circuit, pirogue, prestation BTP ou guide.
 - [ ] La location de voiture particulière, voiture touristique et navette aéroportuaire sont des catégories distinctes et identifiables.
 - [ ] Un dossier diaspora peut être créé, suivi et enrichi de rapports.
-- [ ] Une entreprise peut demander un pack groupe avec participants, lieu, dates et budget.
+- [x] Une entreprise peut demander un pack groupe avec participants, lieu, dates et budget. — _F6 : espace entreprise (`/espace-entreprise`)._
 - [ ] Un admin peut valider, modifier, publier, refuser et suivre toutes les demandes depuis le back-office.
 - [ ] Chaque rôle ne voit que ses données autorisées (vérifié par des tests d'autorisation systématiques).
 - [ ] Le site est responsive, rapide et utilisable sur connexion moyenne.

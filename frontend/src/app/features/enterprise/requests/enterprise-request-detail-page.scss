@@ -1,0 +1,214 @@
+// Détail d'une demande + devis (F6). `.account-head`, `.bk-status`, `.pf-state`,
+// `.k-card`, `.k-btn`, `.k-form-error` sont globaux ; le reste (`.td-`) est
+// encapsulé par le composant.
+
+.td-back {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--k-muted, #64748b);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--k-brand, #0348fb);
+  }
+}
+
+.td-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.td-ref {
+  font-family: var(--k-font-mono, monospace);
+}
+
+// Bandeau d'explication du statut, teinté par tonalité (bordure gauche).
+.td-status-hint {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--k-muted, #64748b);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--k-muted, #64748b) 8%, #fff);
+  color: var(--k-ink, #132033);
+  line-height: 1.5;
+
+  &[data-tone='pending'] {
+    border-left-color: var(--k-gold, #d99a00);
+    background: color-mix(in srgb, var(--k-gold, #d99a00) 10%, #fff);
+  }
+  &[data-tone='ok'] {
+    border-left-color: var(--k-brand, #0348fb);
+    background: color-mix(in srgb, var(--k-brand, #0348fb) 8%, #fff);
+  }
+  &[data-tone='active'] {
+    border-left-color: var(--k-green, #38a774);
+    background: color-mix(in srgb, var(--k-green, #38a774) 10%, #fff);
+  }
+  &[data-tone='cancelled'] {
+    border-left-color: var(--k-danger, #dc2626);
+    background: color-mix(in srgb, var(--k-danger, #dc2626) 8%, #fff);
+  }
+}
+
+.td-block {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.td-block-title {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--k-ink, #132033);
+}
+
+.td-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 2rem;
+  margin: 0;
+}
+
+.td-fact {
+  dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--k-muted, #64748b);
+  }
+  dd {
+    margin: 0.15rem 0 0;
+    font-weight: 600;
+    color: var(--k-ink, #132033);
+  }
+}
+
+.td-needs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.td-needs-label {
+  font-size: 0.85rem;
+  color: var(--k-muted, #64748b);
+}
+
+.td-need-chip {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--k-brand, #0348fb) 10%, #fff);
+  color: var(--k-brand, #0348fb);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.td-desc {
+  margin: 1rem 0 0;
+  color: var(--k-ink, #132033);
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+// — Devis —
+.td-quotes-title {
+  margin-top: 0.5rem;
+}
+
+.td-noquote {
+  padding: 1.5rem;
+  border: 1px dashed var(--k-line, #e2e8f0);
+  border-radius: 12px;
+  color: var(--k-muted, #64748b);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.td-quote {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.td-quote-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.td-quote-ref {
+  font-family: var(--k-font-mono, monospace);
+  font-weight: 600;
+  color: var(--k-ink, #132033);
+}
+
+// Table des lignes — défile horizontalement sur mobile (jamais de débordement page).
+.td-lines-wrap {
+  overflow-x: auto;
+}
+
+.td-lines {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th,
+  td {
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+  }
+
+  thead th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--k-muted, #64748b);
+    border-bottom: 1px solid var(--k-line, #e2e8f0);
+  }
+
+  tbody td {
+    border-bottom: 1px solid color-mix(in srgb, var(--k-line, #e2e8f0) 60%, #fff);
+    color: var(--k-ink, #132033);
+  }
+
+  tfoot th,
+  tfoot td {
+    color: var(--k-ink, #132033);
+    font-weight: 600;
+  }
+}
+
+.td-num {
+  text-align: right !important;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.td-total {
+  th,
+  td {
+    font-size: 1.05rem;
+    font-weight: 700;
+    border-top: 2px solid var(--k-line, #e2e8f0);
+  }
+  td {
+    color: var(--k-brand, #0348fb);
+  }
+}
+
+.td-quote-actions {
+  margin-top: 1.25rem;
+}
+
+.td-quote-accepted {
+  margin: 1rem 0 0;
+  color: var(--k-green, #38a774);
+  font-weight: 600;
+}

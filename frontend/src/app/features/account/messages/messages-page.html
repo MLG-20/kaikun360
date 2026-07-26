@@ -40,7 +40,7 @@
   <ul class="ms-list">
     @for (conv of items(); track conv.id) {
       <li class="ms-item" [class.is-unread]="conv.unread_count > 0">
-        <a class="ms-link" [routerLink]="['/mon-espace/messages', conv.id]">
+        <a class="ms-link" [routerLink]="[messagesBase, conv.id]">
           <span class="ms-avatar" aria-hidden="true">
             <app-account-icon name="chat" />
           </span>

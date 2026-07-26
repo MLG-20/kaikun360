@@ -1,0 +1,37 @@
+<section class="account-head">
+  <p class="account-eyebrow">Espace entreprise</p>
+  <h1 class="account-title">
+    Bonjour{{ firstName() ? ', ' + firstName() : '' }} 👋
+  </h1>
+  <p class="account-lead">
+    Organisez vos événements de groupe — team building, séminaires, sorties — et
+    suivez ici vos demandes et les devis composés par Kaikun 360.
+  </p>
+</section>
+
+<!-- Appel à l'action principal : lancer une demande de pack groupe (cahier §9.4) -->
+<section class="ent-cta" aria-label="Demander un pack groupe">
+  <div class="ent-cta-body">
+    <h2 class="ent-cta-title">Un événement à organiser ?</h2>
+    <p class="ent-cta-text">
+      Indiquez le nombre de participants, la ville, les dates et vos besoins :
+      Kaikun compose un pack sur mesure et vous envoie un devis détaillé.
+    </p>
+  </div>
+  <a class="k-btn k-btn--primary ent-cta-btn" [routerLink]="[base, 'demandes', 'nouvelle']">
+    Demander un pack groupe
+  </a>
+</section>
+
+<!-- Tuiles vers les sections de l'espace -->
+<section class="account-tiles" aria-label="Sections de l’espace entreprise">
+  @for (item of sections; track item.path) {
+    <a class="account-tile" [routerLink]="[base, item.path]">
+      <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
+      <span class="account-tile-body">
+        <strong>{{ item.label }}</strong>
+        <span>{{ item.description }}</span>
+      </span>
+    </a>
+  }
+</section>

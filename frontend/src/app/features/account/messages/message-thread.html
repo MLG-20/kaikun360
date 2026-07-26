@@ -1,5 +1,5 @@
 <section class="account-head mt-head">
-  <a class="mt-back" routerLink="/mon-espace/messages">← Messages</a>
+  <a class="mt-back" [routerLink]="messagesBase">← Messages</a>
   @if (conversation(); as conv) {
     <h1 class="account-title mt-title">{{ title() }}</h1>
     <p class="mt-with">

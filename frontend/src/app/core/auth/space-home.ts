@@ -11,9 +11,6 @@ import { User } from '../../models/user.model';
  * L'ordre de priorité gère les comptes **multi-rôles** (un propriétaire est
  * aussi client au sens technique) : on renvoie l'espace le plus spécifique.
  * L'espace client est le repli par défaut (tout compte authentifié y a accès).
- *
- * L'espace entreprise (F6) s'ajoutera ici quand il existera ; en attendant, ce
- * rôle retombe sur l'espace client.
  */
 export function spaceHomeFor(user: User | null): string {
   if (user?.roles?.includes('proprietaire')) {
@@ -21,6 +18,9 @@ export function spaceHomeFor(user: User | null): string {
   }
   if (user?.roles?.includes('prestataire')) {
     return '/espace-prestataire';
+  }
+  if (user?.roles?.includes('entreprise')) {
+    return '/espace-entreprise';
   }
   return '/mon-espace';
 }

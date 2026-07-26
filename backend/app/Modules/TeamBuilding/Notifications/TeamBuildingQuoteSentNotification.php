@@ -11,7 +11,14 @@ use Illuminate\Notifications\Notification;
 /**
  * Notifie l'entreprise qu'un devis de team building lui a été envoyé.
  *
- * Canal mail (loggé en dev). Le push/WhatsApp viendra en phase B16.
+ * Deux canaux :
+ *   - `mail` (loggé en dev) — trace écrite pour l'entreprise ;
+ *   - `database` — alimente la **cloche** + l'écran « Notifications » de l'espace
+ *     entreprise (F6, cahier §5 « Notifications = Tous »). Sans lui, l'entreprise
+ *     ne verrait jamais in-app qu'un devis l'attend et devrait ouvrir « Mes
+ *     demandes » à l'aveugle.
+ *
+ * Le push/WhatsApp viendra en phase B16.
  */
 class TeamBuildingQuoteSentNotification extends Notification implements ShouldQueue
 {
@@ -24,7 +31,7 @@ class TeamBuildingQuoteSentNotification extends Notification implements ShouldQu
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -34,5 +41,23 @@ class TeamBuildingQuoteSentNotification extends Notification implements ShouldQu
             ->line("Un devis « {$this->quote->reference} » vous a été envoyé.")
             ->line("Montant total : {$this->quote->total_xof} XOF.")
             ->line('Connectez-vous pour l\'accepter.');
+    }
+
+    /**
+     * Charge utile du canal `database` (cloche + écran « Notifications »).
+     *
+     * `action_url` mène au détail de la demande dans l'espace entreprise, où le
+     * devis est consultable et acceptable (F6).
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'category' => 'team_building',
+            'title' => 'Votre devis team building est prêt',
+            'body' => "Le devis « {$this->quote->reference} » vous a été envoyé (total : {$this->quote->total_xof} XOF).",
+            'action_url' => '/espace-entreprise/demandes/'.$this->quote->request_id,
+        ];
     }
 }

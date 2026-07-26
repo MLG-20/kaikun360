@@ -94,7 +94,24 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   répartition par étoiles) surmonte la **liste des avis** (auteur, source,
   commentaire, date). 👉 Détail :
   [`src/app/features/pro/README.md`](src/app/features/pro/README.md).
-- 🚧 **À venir** : l'espace entreprise (F6), puis le back-office (F7).
+- 🎉 **L'espace entreprise (F6, terminé)** : sous `/espace-entreprise`, réservé au
+  rôle « entreprise » (entreprises, ONG, écoles, institutions). Il réutilise **le
+  même shell partagé** que les autres espaces. Écrans livrés : un **tableau de
+  bord** d'accueil avec l'appel à l'action principal ; **« Nouvelle demande »**
+  (`POST /team-building-requests`) — un formulaire reprenant les informations du
+  cahier §9.4 (participants, ville, dates, budget, besoins hébergement /
+  restauration / activités / transport / animation, descriptif) ; **« Mes
+  demandes »** (`GET /team-building-requests/mine`, paginé) — l'historique des
+  demandes de team building avec pastille de statut ; et le **détail d'une
+  demande** (`GET /team-building-requests/{id}`) qui affiche les **devis composés**
+  par Kaikun (lignes détaillées, sous-total, frais de coordination, total) et
+  permet d'**accepter** un devis envoyé (`PATCH /team-building-quotes/{id}/accept`).
+  L'espace inclut aussi la **messagerie** (cahier §5 « Messages = Tous ») : les
+  écrans de messagerie génériques y sont montés, rendus **autonomes** par le jeton
+  `SPACE_CONFIG` (plus aucun lien codé en dur vers `/mon-espace`), et une **notif
+  in-app** prévient l'entreprise dès qu'un devis lui est envoyé. 👉 Détail :
+  [`src/app/features/enterprise/README.md`](src/app/features/enterprise/README.md).
+- 🚧 **À venir** : le back-office (F7).
 
 ---
 
@@ -151,7 +168,8 @@ Angular « hydrate » ce HTML (le rend interactif sans le reconstruire). Concrè
   voir [`src/app/app.routes.server.ts`](src/app/app.routes.server.ts)) — choix
   adapté à des pages dynamiques (`/immobilier/:id`, `/pages/:slug`, `/recherche`)
   et alimentées par le backend.
-- Les **espaces privés** (`mon-espace`, `espace-proprietaire`, `espace-prestataire`)
+- Les **espaces privés** (`mon-espace`, `espace-proprietaire`, `espace-prestataire`,
+  `espace-entreprise`)
   sont au contraire en `RenderMode.Client` : le serveur ne connaissant pas la
   session, les rendre au serveur y ferait tourner les guards de rôle sans jeton
   et **redirigerait vers la connexion à chaque rafraîchissement**. Rendus côté

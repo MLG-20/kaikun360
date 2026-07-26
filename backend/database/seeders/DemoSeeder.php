@@ -26,6 +26,10 @@ use App\Modules\Pro\Enums\ProviderCategory;
 use App\Modules\Pro\Enums\ProviderStatus;
 use App\Modules\Pro\Models\Provider;
 use App\Modules\Stay\Models\Stay;
+use App\Modules\TeamBuilding\Enums\TeamBuildingQuoteStatus;
+use App\Modules\TeamBuilding\Enums\TeamBuildingRequestStatus;
+use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
+use App\Modules\TeamBuilding\Services\TeamBuildingQuoteComposer;
 use App\Enums\ReviewStatus;
 use App\Services\RatingAggregator;
 use App\Notifications\BookingConfirmedNotification;
@@ -69,6 +73,9 @@ class DemoSeeder extends Seeder
 
     /** Agent Kaikun de démonstration : correspondant « support » du client (F3.7). */
     private const AGENT_EMAIL = 'demo.agent@kaikun360.test';
+
+    /** Compte entreprise de démonstration : espace entreprise / team building (F6). */
+    private const ENTERPRISE_EMAIL = 'demo.entreprise@kaikun360.test';
 
     public function run(): void
     {
@@ -135,6 +142,14 @@ class DemoSeeder extends Seeder
         // client : une avec le support Kaikun, une avec le propriétaire de démo.
         // Idempotent (garde propre).
         $this->seedClientConversations($client, $agent, $owner);
+
+        // Espace entreprise (F6) : compte entreprise de démonstration + demandes de
+        // team building à divers stades (nouvelle, devis envoyé, acceptée) pour
+        // peupler « Mes demandes » et le suivi des devis, plus une conversation
+        // avec le support pour l'écran Messages. Idempotent (gardes propres).
+        $enterprise = $this->demoUser(self::ENTERPRISE_EMAIL, 'Entreprise Démo', 'entreprise');
+        $this->seedEnterpriseRequests($enterprise);
+        $this->seedEnterpriseConversation($enterprise, $agent);
     }
 
     /**
@@ -798,6 +813,120 @@ class DemoSeeder extends Seeder
         );
 
         $this->command?->info('DemoSeeder : conversations de démonstration créées pour le client.');
+    }
+
+    /**
+     * Demandes de team building de démonstration pour l'espace entreprise (F6).
+     *
+     * Trois demandes couvrant le cycle décrit au cahier §9.4, afin d'illustrer
+     * chaque état de l'écran de suivi :
+     *   1. NOUVEAU — déposée, en attente d'étude (aucun devis) ;
+     *   2. DEVIS_ENVOYE — l'admin a composé et envoyé un devis (statut `envoye`),
+     *      l'entreprise peut l'accepter ;
+     *   3. ACCEPTE — devis accepté, suivi opérationnel amorcé.
+     *
+     * Les devis sont composés par le vrai service `TeamBuildingQuoteComposer`
+     * (lignes + marge + totaux figés) pour rester fidèles au calcul de production.
+     *
+     * Garde d'idempotence PROPRE : ne recrée rien si l'entreprise a déjà une demande.
+     */
+    private function seedEnterpriseRequests(User $enterprise): void
+    {
+        if (TeamBuildingRequest::query()->where('company_id', $enterprise->id)->exists()) {
+            return;
+        }
+
+        $composer = app(TeamBuildingQuoteComposer::class);
+
+        // 1) Nouvelle demande (aucun devis encore) — colonne « en attente d'étude ».
+        TeamBuildingRequest::create([
+            'reference' => 'TBR-'.Str::upper(Str::random(8)),
+            'company_id' => $enterprise->id,
+            'participants' => 45,
+            'city' => 'Saly',
+            'start_date' => now()->addMonths(2)->toDateString(),
+            'end_date' => now()->addMonths(2)->addDays(2)->toDateString(),
+            'budget_xof' => 6_000_000,
+            'needs' => ['hebergement' => true, 'restauration' => true, 'activite' => true, 'mobilite' => true],
+            'description' => 'Séminaire annuel de cohésion pour nos équipes commerciales.',
+            'status' => TeamBuildingRequestStatus::NOUVEAU->value,
+        ]);
+
+        // 2) Demande avec un devis ENVOYÉ (l'entreprise peut l'accepter).
+        $sentRequest = TeamBuildingRequest::create([
+            'reference' => 'TBR-'.Str::upper(Str::random(8)),
+            'company_id' => $enterprise->id,
+            'participants' => 30,
+            'city' => 'Dakar',
+            'start_date' => now()->addMonth()->toDateString(),
+            'end_date' => now()->addMonth()->addDay()->toDateString(),
+            'budget_xof' => 3_500_000,
+            'needs' => ['restauration' => true, 'activite' => true, 'animation' => true],
+            'description' => 'Journée cohésion pour le lancement de notre nouveau produit.',
+            'status' => TeamBuildingRequestStatus::DEVIS_ENVOYE->value,
+        ]);
+        $sentQuote = $composer->composeFor($sentRequest, [
+            ['category' => 'activite', 'label' => 'Ateliers cohésion', 'module' => 'explore', 'quantity' => 30, 'unit_price_xof' => 25_000],
+            ['category' => 'restauration', 'label' => 'Déjeuner traiteur', 'quantity' => 30, 'unit_price_xof' => 15_000],
+            ['category' => 'animation', 'label' => 'Animateur événementiel', 'quantity' => 1, 'unit_price_xof' => 250_000],
+        ]);
+        $sentQuote->update([
+            'status' => TeamBuildingQuoteStatus::ENVOYE->value,
+            'sent_at' => now()->subDays(2),
+        ]);
+
+        // 3) Demande ACCEPTÉE (devis accepté, suivi opérationnel en cours).
+        $acceptedRequest = TeamBuildingRequest::create([
+            'reference' => 'TBR-'.Str::upper(Str::random(8)),
+            'company_id' => $enterprise->id,
+            'participants' => 60,
+            'city' => 'Sine-Saloum',
+            'start_date' => now()->subWeeks(2)->toDateString(),
+            'end_date' => now()->subWeeks(2)->addDays(3)->toDateString(),
+            'budget_xof' => 12_000_000,
+            'needs' => ['hebergement' => true, 'restauration' => true, 'activite' => true, 'mobilite' => true, 'animation' => true],
+            'description' => 'Séminaire résidentiel de direction (3 nuits).',
+            'status' => TeamBuildingRequestStatus::ACCEPTE->value,
+        ]);
+        $acceptedQuote = $composer->composeFor($acceptedRequest, [
+            ['category' => 'hebergement', 'label' => 'Lodge (3 nuits)', 'module' => 'stay', 'quantity' => 60, 'unit_price_xof' => 120_000],
+            ['category' => 'restauration', 'label' => 'Pension complète', 'quantity' => 60, 'unit_price_xof' => 45_000],
+            ['category' => 'mobilite', 'label' => 'Bus aller-retour', 'module' => 'mobility', 'quantity' => 2, 'unit_price_xof' => 400_000],
+            ['category' => 'activite', 'label' => 'Excursion pirogue', 'module' => 'explore', 'quantity' => 60, 'unit_price_xof' => 20_000],
+        ]);
+        $acceptedQuote->update([
+            'status' => TeamBuildingQuoteStatus::ACCEPTE->value,
+            'sent_at' => now()->subWeeks(4),
+            'accepted_at' => now()->subWeeks(3),
+        ]);
+
+        $this->command?->info('DemoSeeder : demandes de team building créées pour l\'entreprise.');
+    }
+
+    /**
+     * Une conversation entreprise ↔ support Kaikun pour peupler l'écran
+     * « Messages » de l'espace entreprise (F6, cahier §5 « Messages = Tous »).
+     * Garde d'idempotence propre (aucune conversation existante pour l'entreprise).
+     */
+    private function seedEnterpriseConversation(User $enterprise, User $agent): void
+    {
+        if ($enterprise->conversations()->exists()) {
+            return;
+        }
+
+        $this->makeConversation(
+            'Organisation de votre séminaire',
+            [
+                [$enterprise, 'Bonjour, nous souhaitons organiser un séminaire pour 30 personnes le mois prochain.'],
+                [$agent, 'Bonjour ! Avec plaisir. Je prépare une proposition et vous envoie un devis détaillé.'],
+                [$agent, 'Le devis vient de vous être envoyé, vous pouvez le consulter dans « Mes demandes ».'],
+            ],
+            // L'entreprise a lu jusqu'à son propre message : les 2 réponses de
+            // l'agent restent non lues (2 non-lus attendus sur ce fil).
+            readBy: [$enterprise->id => 0],
+        );
+
+        $this->command?->info('DemoSeeder : conversation de démonstration créée pour l\'entreprise.');
     }
 
     /**

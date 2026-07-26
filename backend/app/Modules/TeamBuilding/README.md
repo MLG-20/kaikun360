@@ -74,7 +74,10 @@ animation) agrégeant plusieurs modules.
 
 - `TeamBuildingRequestCreated` → `NotifyAdminsOfTeamBuildingRequest` (file
   d'attente admin : permission `consulter:dashboard-admin`).
-- `QuoteSent` → `NotifyCompanyOfQuoteSent` (notifie l'entreprise).
+- `QuoteSent` → `NotifyCompanyOfQuoteSent` (notifie l'entreprise). La
+  `TeamBuildingQuoteSentNotification` émet sur **deux canaux** : `mail` (trace) et
+  `database` (F6 — alimente la cloche + l'écran « Notifications » de l'espace
+  entreprise ; `action_url` = `/espace-entreprise/demandes/{request_id}`).
 - `QuoteAccepted` → `StartOperationalFollowUp` (amorce le suivi opérationnel
   multi-prestataires ; orchestration concrète via Bookings/Quotes B11).
 

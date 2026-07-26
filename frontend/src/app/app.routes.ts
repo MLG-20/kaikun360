@@ -36,6 +36,13 @@ export const routes: Routes = [
     loadChildren: () => import('./features/pro/provider.routes').then((m) => m.PROVIDER_ROUTES),
   },
   {
+    // Espace entreprise authentifié (F6) : même shell app-shell générique,
+    // protégé par `roleGuard` (rôle `entreprise`). Déclaré avant `''`.
+    path: 'espace-entreprise',
+    loadChildren: () =>
+      import('./features/enterprise/enterprise.routes').then((m) => m.ENTERPRISE_ROUTES),
+  },
+  {
     path: '',
     component: MainLayoutComponent,
     children: [

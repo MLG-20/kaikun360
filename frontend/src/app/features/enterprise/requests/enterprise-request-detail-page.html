@@ -1,0 +1,157 @@
+@if (state() === 'loading') {
+  <p class="pf-state" role="status">Chargement de la demande…</p>
+} @else if (state() === 'notfound') {
+  <div class="pf-state pf-state--error" role="alert">
+    <p>Cette demande est introuvable.</p>
+    <a class="k-btn k-btn--ghost" [routerLink]="[base, 'demandes']">← Mes demandes</a>
+  </div>
+} @else if (state() === 'forbidden') {
+  <div class="pf-state pf-state--error" role="alert">
+    <p>Vous n'avez pas accès à cette demande.</p>
+    <a class="k-btn k-btn--ghost" [routerLink]="[base, 'demandes']">← Mes demandes</a>
+  </div>
+} @else if (state() === 'failed') {
+  <p class="pf-state pf-state--error" role="alert">
+    Impossible de charger cette demande. Merci de réessayer plus tard.
+  </p>
+} @else if (request(); as req) {
+  <section class="account-head">
+    <a class="td-back" [routerLink]="[base, 'demandes']">← Mes demandes</a>
+    <div class="td-head-row">
+      <div>
+        <p class="account-eyebrow">Demande de team building</p>
+        <h1 class="account-title td-ref">{{ req.reference }}</h1>
+      </div>
+      <span class="bk-status" [attr.data-tone]="status().tone">{{ status().label }}</span>
+    </div>
+  </section>
+
+  <!-- Bandeau d'explication du statut -->
+  <p class="td-status-hint" [attr.data-tone]="status().tone">{{ status().hint }}</p>
+
+  <!-- Informations de la demande -->
+  <section class="k-card td-block">
+    <h2 class="td-block-title">Votre demande</h2>
+    <dl class="td-facts">
+      <div class="td-fact">
+        <dt>Ville</dt>
+        <dd>{{ req.city }}</dd>
+      </div>
+      <div class="td-fact">
+        <dt>Participants</dt>
+        <dd>{{ req.participants }}</dd>
+      </div>
+      @if (req.start_date) {
+        <div class="td-fact">
+          <dt>Dates</dt>
+          <dd>
+            {{ req.start_date | date: 'longDate' : '' : 'fr' }}
+            @if (req.end_date) { → {{ req.end_date | date: 'longDate' : '' : 'fr' }} }
+          </dd>
+        </div>
+      }
+      @if (budgetLabel(); as amount) {
+        <div class="td-fact">
+          <dt>Budget indicatif</dt>
+          <dd>{{ amount }}</dd>
+        </div>
+      }
+    </dl>
+
+    @if (needsLabels().length) {
+      <div class="td-needs">
+        <span class="td-needs-label">Besoins :</span>
+        @for (need of needsLabels(); track need) {
+          <span class="td-need-chip">{{ need }}</span>
+        }
+      </div>
+    }
+
+    @if (req.description) {
+      <p class="td-desc">{{ req.description }}</p>
+    }
+  </section>
+
+  <!-- Devis composés par Kaikun -->
+  <section class="td-quotes" aria-label="Devis">
+    <h2 class="td-block-title td-quotes-title">Devis</h2>
+
+    @if (acceptError(); as err) {
+      <p class="k-form-error" role="alert">{{ err }}</p>
+    }
+
+    @if (quotes().length === 0) {
+      <p class="td-noquote">
+        Aucun devis pour l'instant. Kaikun étudie votre demande et vous adressera
+        une proposition détaillée ici même.
+      </p>
+    } @else {
+      @for (quote of quotes(); track quote.id) {
+        <article class="k-card td-quote">
+          <header class="td-quote-head">
+            <span class="td-quote-ref">{{ quote.reference }}</span>
+            <span class="bk-status" [attr.data-tone]="quoteStatusOf(quote).tone">
+              {{ quoteStatusOf(quote).label }}
+            </span>
+          </header>
+
+          <div class="td-lines-wrap">
+            <table class="td-lines">
+              <thead>
+                <tr>
+                  <th scope="col">Prestation</th>
+                  <th scope="col" class="td-num">Qté</th>
+                  <th scope="col" class="td-num">Prix unitaire</th>
+                  <th scope="col" class="td-num">Montant</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (line of quote.lines; track $index) {
+                  <tr>
+                    <td>{{ line.label }}</td>
+                    <td class="td-num">{{ line.quantity }}</td>
+                    <td class="td-num">{{ fcfa(line.unit_price_xof) }}</td>
+                    <td class="td-num">{{ fcfa(line.amount_xof) }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th scope="row" colspan="3">Sous-total</th>
+                  <td class="td-num">{{ fcfa(quote.subtotal_xof) }}</td>
+                </tr>
+                <tr>
+                  <th scope="row" colspan="3">Frais de coordination ({{ marginLabel(quote) }})</th>
+                  <td class="td-num">{{ fcfa(quote.margin_xof) }}</td>
+                </tr>
+                <tr class="td-total">
+                  <th scope="row" colspan="3">Total</th>
+                  <td class="td-num">{{ fcfa(quote.total_xof) }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          @if (canAccept(quote)) {
+            <div class="td-quote-actions">
+              <button
+                type="button"
+                class="k-btn k-btn--primary"
+                [disabled]="accepting() !== null"
+                (click)="accept(quote)"
+              >
+                {{ accepting() === quote.id ? 'Acceptation…' : 'Accepter ce devis' }}
+              </button>
+            </div>
+          } @else if (quote.status === 'accepte') {
+            <p class="td-quote-accepted" role="status">
+              ✓ Devis accepté — Kaikun coordonne l'organisation de votre événement.
+            </p>
+          }
+        </article>
+      }
+    }
+  </section>
+} @else {
+  <p class="pf-state" role="status">Chargement…</p>
+}

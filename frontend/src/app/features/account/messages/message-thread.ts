@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { MessageService } from '../../../core/api/message.service';
+import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { Conversation, ConversationMessage } from '../../../models/message.model';
 
 @Component({
@@ -23,7 +24,9 @@ import { Conversation, ConversationMessage } from '../../../models/message.model
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 /**
- * Écran d'un fil de discussion (F3.7), monté sous `/mon-espace/messages/{id}`.
+ * Écran d'un fil de discussion (F3.7), monté sous `<espace>/messages/{id}`.
+ * **Générique** : partagé par l'espace client et l'espace entreprise (F6) ; le
+ * lien de retour est dérivé de `SPACE_CONFIG` (jamais codé en dur).
  *
  * Ouvre la conversation (`GET /messages/{id}`) — ce qui la marque comme lue côté
  * serveur — affiche les messages sous forme de bulles (les miens à droite, ceux
@@ -34,6 +37,9 @@ import { Conversation, ConversationMessage } from '../../../models/message.model
 export class MessageThreadComponent implements AfterViewChecked {
   private readonly messages = inject(MessageService);
   private readonly route = inject(ActivatedRoute);
+
+  /** Lien de retour vers la liste des messages de l'espace courant (`<espace>/messages`). */
+  protected readonly messagesBase = `${inject(SPACE_CONFIG).basePath}/messages`;
 
   /** Zone défilante des messages : on la fait défiler en bas à chaque ajout. */
   private readonly scroller = viewChild<ElementRef<HTMLElement>>('scroller');

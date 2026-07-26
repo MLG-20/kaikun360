@@ -140,6 +140,24 @@ class TeamBuildingApiTest extends TestCase
         Notification::assertSentTo($company, TeamBuildingQuoteSentNotification::class);
     }
 
+    public function test_l_envoi_d_un_devis_alimente_la_cloche_in_app_de_l_entreprise(): void
+    {
+        // Sans Notification::fake : on vérifie que le canal `database` écrit bien
+        // une notification exploitable par la cloche de l'espace entreprise (F6).
+        $company = User::factory()->create();
+        $request = TeamBuildingRequest::factory()->create(['company_id' => $company->id]);
+        $quote = TeamBuildingQuote::factory()->create(['request_id' => $request->id]);
+
+        Sanctum::actingAs($this->admin());
+
+        $this->patchJson("/api/v1/team-building-quotes/{$quote->id}/send")->assertOk();
+
+        $notification = $company->fresh()->notifications()->first();
+        $this->assertNotNull($notification, 'Une notification in-app doit être créée pour l\'entreprise.');
+        $this->assertSame('team_building', $notification->data['category']);
+        $this->assertSame('/espace-entreprise/demandes/'.$request->id, $notification->data['action_url']);
+    }
+
     public function test_l_entreprise_accepte_un_devis_envoye(): void
     {
         $company = User::factory()->create();

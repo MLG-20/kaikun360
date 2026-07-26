@@ -1,0 +1,65 @@
+// Formulaire de nouvelle demande (F6). Les classes `.k-*` (champs, boutons,
+// carte) et `.account-*` (en-tête) sont globales ; on ne style ici que la mise
+// en page propre au formulaire.
+
+.er-back {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--k-muted, #64748b);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--k-brand, #0348fb);
+  }
+}
+
+.er-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 1rem;
+}
+
+// Deux colonnes sur écran large ; une seule sur mobile.
+.er-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.er-needs {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.er-needs-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.er-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: var(--k-ink, #132033);
+
+  input {
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: var(--k-brand, #0348fb);
+  }
+}
+
+.er-note {
+  margin: 0;
+  font-size: 0.85rem;
+}
