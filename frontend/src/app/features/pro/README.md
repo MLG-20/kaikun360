@@ -27,7 +27,7 @@ service mais une **inscription** : les boutons mènent à
   d'audiences `.conv-features`, étapes `.conv-steps`, appel à l'action `.conv-cta`
   avec `.conv-cta-actions` pour les boutons).
 - **`provider-registration/`** — `ProviderRegistrationPageComponent`, route
-  `/devenir-prestataire` (F2.7). Formulaire d'adhésion à la marketplace
+  `/pro/inscription` (F2.7). Formulaire d'adhésion à la marketplace
   (`POST /providers`, service `core/api/provider.service.ts`) : nom commercial,
   catégorie, présentation, certifications. Détecte via `GET /providers/mine` si un
   profil existe déjà (→ rappel du statut plutôt que double inscription).
@@ -41,10 +41,11 @@ générique** `layouts/space-layout/` paramétré par une `SpaceConfig` — mêm
 mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
 
 - **`provider-space.ts`** — `PROVIDER_SPACE` (`SpaceConfig`) + `PROVIDER_NAV` :
-  les **6 rubriques** de l'espace (Tableau de bord, Mes services, Disponibilités,
-  Missions reçues, Avis reçus, Revenus & commissions), chacune avec un drapeau
-  `ready`. Depuis F5.5, **toutes** les rubriques sont construites et cliquables
-  (le drapeau `ready` reste le mécanisme d'ajout progressif « sans lien mort »).
+  les **7 rubriques** de l'espace (Tableau de bord, Mes services, **Mes offres**,
+  Disponibilités, Missions reçues, Avis reçus, Revenus & commissions), chacune
+  avec un drapeau `ready`. Depuis F5.6, **toutes** les rubriques sont construites
+  et cliquables (le drapeau `ready` reste le mécanisme d'ajout progressif « sans
+  lien mort »).
 - **`provider.routes.ts`** — `PROVIDER_ROUTES` : `SpaceLayoutComponent` +
   `providers: [{ provide: SPACE_CONFIG, useValue: PROVIDER_SPACE }]`, protégé par
   `roleGuard` (`data: { roles: ['prestataire'] }`). Profil et notifications sont
@@ -56,7 +57,7 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
   (note moyenne, avis reçus, certifications vérifiées/en cours, avertissements),
   la **liste des certifications** puis les tuiles des sections. Gère trois cas :
   chargement, échec réseau, et le **404 « pas encore de profil »** (→ invitation à
-  compléter l'inscription via `/devenir-prestataire`).
+  compléter l'inscription via `/pro/inscription`).
 - **`services/`** — `ProviderServicesPageComponent`, route `services` (F5,
   « Mes services »). Écran d'**édition du dossier** chargé via `GET /providers/mine`,
   en deux volets : le **descriptif du service** (raison sociale, catégorie,
@@ -68,6 +69,38 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
   certification ajoutée reste « En vérification » jusqu'à revue back-office. Gère
   les mêmes cas que le tableau de bord — chargement, échec réseau, et le **404
   « pas encore de profil »** (→ `/pro/inscription`).
+- **`offers/`** — dépôt des **offres réservables** du prestataire (F5.6),
+  routes `offres`, `offres/vehicule/nouveau`, `offres/vehicule/:id/modifier` et
+  `offres/experience/nouvelle`. Comble l'exigence CDC §5.2 / §15 (« un
+  prestataire peut proposer véhicule, circuit, pirogue… ») en branchant des
+  interfaces sur des endpoints déjà exposés par le backend.
+  - `ProviderOffersPageComponent` (`offres`) — liste **Mes offres** en deux
+    blocs (Véhicules & mobilité / Circuits & expériences), chargée en parallèle
+    via `GET /vehicles/mine` + `GET /experiences/mine` (`forkJoin`). Chaque offre
+    affiche son **statut de validation** (pastille `.of-badge` teintée) ; les
+    véhicules ont un lien **Modifier**. Boutons de dépôt en tête de chaque bloc.
+  - `ProviderVehicleFormPageComponent` (`offres/vehicule/nouveau` &
+    `.../:id/modifier`) — dépôt/édition d'un véhicule (`POST /vehicles`,
+    `PATCH /vehicles/{id}`). Le **type** propose les 8 catégories distinctes de
+    l'enum `VehicleType` (voiture particulière / touristique / navette AIBD / bus
+    / minibus / 4x4 / pirogue / chauffeur). Les **champs de conformité** affichés
+    dépendent de la famille du type : assurance + identité chauffeur (motorisé)
+    ou gilets + conformité météo/prestataire (pirogue) — cf. CDC §12. En édition,
+    le véhicule est rechargé via `OfferService.findMyVehicle` (le détail public
+    ne renvoie que les véhicules publiés). Gère les 403 (dossier non validé) et
+    422 (validation).
+  - `ProviderExperienceFormPageComponent` (`offres/experience/nouvelle`) — dépôt
+    d'un circuit (`POST /experiences`) : titre, destination, durée, capacité,
+    prix par participant, programme et **inclusions** cochées (restauration,
+    guide, transport, hébergement → `{ cle: booléen }`). Création uniquement (le
+    backend n'expose pas d'édition d'expérience ; la modification passe par le
+    back-office).
+  - Service dédié **`core/api/offer.service.ts`** (`OfferService`) : constantes
+    `VEHICLE_TYPES` / `EXPERIENCE_INCLUSIONS`, helper `vehicleFamily`, et méthodes
+    `myVehicles` / `createVehicle` / `updateVehicle` / `findMyVehicle` /
+    `myExperiences` / `createExperience`. Le nettoyage des corps n'envoie que les
+    champs de conformité pertinents pour la famille du véhicule.
+
 - **`missions/`** — `ProviderMissionsPageComponent`, route `missions` (F5.2).
   Liste paginée des missions (`GET /provider-missions/mine`, 15/page) : chaque
   carte affiche montant, commission Kaikun, **net** prestataire (montant −

@@ -1,0 +1,132 @@
+// Formulaire de dépôt / édition d'un véhicule (F5.6).
+
+.vf-state {
+  margin: 1.5rem 0;
+  color: var(--k-muted);
+}
+
+.vf-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding: 1.3rem 1.4rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+
+  p {
+    margin: 0;
+    color: var(--k-ink);
+  }
+}
+
+.vf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 1.5rem;
+  max-width: 640px;
+}
+
+.vf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.95rem;
+  }
+
+  input,
+  select,
+  textarea {
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--k-line);
+    border-radius: var(--k-radius);
+    background: var(--k-bg);
+    color: var(--k-ink);
+    font: inherit;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+}
+
+.vf-opt {
+  font-weight: 400;
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+.vf-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--k-ink);
+
+  input {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+}
+
+.vf-compliance {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  background: color-mix(in srgb, var(--k-gold) 5%, var(--k-card));
+
+  legend {
+    padding: 0 0.4rem;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+}
+
+.vf-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--k-muted);
+
+  &--error {
+    color: var(--k-danger);
+  }
+}
+
+.vf-msg {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--k-radius);
+
+  &--error {
+    color: var(--k-danger);
+    background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card));
+    border: 1px solid color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+  }
+}
+
+.vf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}

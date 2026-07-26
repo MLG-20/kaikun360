@@ -61,6 +61,11 @@ import { AccountIcon } from './account-nav';
           <path d="M3 7v10a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1v-3" />
           <path d="M21 11v4h-4a2 2 0 0 1 0-4z" />
         }
+        @case ('car') {
+          <path d="M3 13l2-5a2 2 0 0 1 1.9-1.4h10.2A2 2 0 0 1 19 8l2 5" />
+          <path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
+          <path d="M6.5 15.5h.01M17.5 15.5h.01" />
+        }
         @case ('document') {
           <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
           <path d="M14 3v5h5" />

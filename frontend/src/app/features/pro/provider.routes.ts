@@ -46,6 +46,43 @@ export const PROVIDER_ROUTES: Routes = [
         title: 'Mes services — Kaikun 360',
       },
       {
+        // F5.6 — Mes offres : liste des véhicules & expériences déposés
+        // (GET /vehicles/mine, GET /experiences/mine) avec leur statut.
+        path: 'offres',
+        loadComponent: () =>
+          import('./offers/provider-offers-page').then(
+            (m) => m.ProviderOffersPageComponent,
+          ),
+        title: 'Mes offres — Kaikun 360',
+      },
+      {
+        // F5.6 — Dépôt d'un véhicule (POST /vehicles).
+        path: 'offres/vehicule/nouveau',
+        loadComponent: () =>
+          import('./offers/provider-vehicle-form-page').then(
+            (m) => m.ProviderVehicleFormPageComponent,
+          ),
+        title: 'Déposer un véhicule — Kaikun 360',
+      },
+      {
+        // F5.6 — Édition d'un véhicule (PATCH /vehicles/{id}).
+        path: 'offres/vehicule/:id/modifier',
+        loadComponent: () =>
+          import('./offers/provider-vehicle-form-page').then(
+            (m) => m.ProviderVehicleFormPageComponent,
+          ),
+        title: 'Modifier le véhicule — Kaikun 360',
+      },
+      {
+        // F5.6 — Dépôt d'une expérience touristique (POST /experiences).
+        path: 'offres/experience/nouvelle',
+        loadComponent: () =>
+          import('./offers/provider-experience-form-page').then(
+            (m) => m.ProviderExperienceFormPageComponent,
+          ),
+        title: 'Déposer un circuit — Kaikun 360',
+      },
+      {
         // F5.2 — Missions reçues (GET /provider-missions/mine + transitions).
         path: 'missions',
         loadComponent: () =>

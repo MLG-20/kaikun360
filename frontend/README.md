@@ -92,7 +92,14 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   **ressources** (véhicules, expériences) et les **avis directs** déposés après une
   mission — une **synthèse de notation** (note moyenne, total, histogramme de
   répartition par étoiles) surmonte la **liste des avis** (auteur, source,
-  commentaire, date). 👉 Détail :
+  commentaire, date). **« Mes offres »** (F5.6 — `GET/POST/PATCH /vehicles…`,
+  `GET/POST /experiences`) : le prestataire **dépose et suit ses prestations
+  réservables** — véhicules (les 8 catégories distinctes : voiture particulière,
+  touristique, navette aéroportuaire, bus, minibus, 4x4, pirogue, chauffeur) et
+  **circuits touristiques** — chacune avec son **statut de validation** ; les
+  champs de sécurité s'adaptent au type (assurance/chauffeur pour un motorisé,
+  gilets/conformité météo pour une pirogue). C'est le geste central attendu par
+  le cahier des charges (§5.2 / §15), désormais couvert. 👉 Détail :
   [`src/app/features/pro/README.md`](src/app/features/pro/README.md).
 - 🎉 **L'espace entreprise (F6, terminé)** : sous `/espace-entreprise`, réservé au
   rôle « entreprise » (entreprises, ONG, écoles, institutions). Il réutilise **le

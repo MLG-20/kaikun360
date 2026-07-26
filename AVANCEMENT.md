@@ -5,7 +5,7 @@
 > construire**. Le détail technique complet est tenu à jour dans le
 > [`README.md`](README.md) (journal de bord) et la documentation de chaque module.
 >
-> _Dernière mise à jour : 23 juillet 2026._
+> _Dernière mise à jour : 26 juillet 2026._
 
 ---
 
@@ -32,15 +32,15 @@ Le projet se compose de deux briques :
 | **Site public (grand public)** | ✅ **Terminé** | Accueil, 9 univers de services, pages de conversion, catalogue et recherche. |
 | **Espace client** | ✅ **Terminé** | Compte, demandes, réservations, favoris, messages, profil. |
 | **Espace propriétaire** | ✅ **Terminé** | Biens, dépôt/édition, photos, gestion locative, documents. |
-| **Espace prestataire** | ⏳ À venir | Pour les fournisseurs de services (véhicules, artisans, guides…). |
-| **Espace entreprise** | ⏳ À venir | Pour les demandes groupées (team building, séminaires). |
+| **Espace prestataire** | ✅ **Terminé** | Profil, certifications, disponibilités, missions, avis, revenus **et dépôt d'offres réservables** (véhicules & circuits). |
+| **Espace entreprise** | ✅ **Terminé** | Demandes groupées (team building, séminaires) et suivi des devis. |
 | **Back-office d'administration** | ⏳ À venir | L'outil interne de pilotage de Kaikun 360. |
 | **Finitions (référencement, performance)** | ⏳ À venir | Optimisations finales avant mise en ligne publique. |
 
-**En résumé :** toute la partie **visible du grand public** et les **deux premiers
-espaces personnels** (client et propriétaire) sont livrés et fonctionnels, sur un
-moteur central déjà complet. Restent les espaces professionnels, l'outil
-d'administration interne et les finitions.
+**En résumé :** toute la partie **visible du grand public** et les **quatre
+espaces personnels** (client, propriétaire, prestataire et entreprise) sont
+livrés et fonctionnels, sur un moteur central déjà complet. Restent l'outil
+d'administration interne (back-office) et les finitions.
 
 ---
 
@@ -101,6 +101,27 @@ Espace dédié aux propriétaires de biens :
 - **Documents** : dépôt, téléchargement sécurisé et suppression des pièces
   justificatives, bien par bien.
 
+### 3.5 L'espace prestataire — livré
+
+Espace dédié aux professionnels (loueurs, guides, transporteurs, artisans…) :
+
+- **Tableau de bord** : statut de validation du dossier, note moyenne,
+  certifications.
+- **Mes services** : descriptif de l'activité et documents de certification.
+- **Mes offres** : dépôt et suivi des **prestations réservables** — véhicules
+  (voiture particulière, touristique, navette aéroportuaire, bus, minibus, 4x4,
+  pirogue, chauffeur) et **circuits touristiques** — chacune avec son **statut de
+  validation**. Les champs de sécurité s'adaptent (assurance et chauffeur pour un
+  véhicule motorisé, gilets et conformité météo pour une pirogue).
+- **Disponibilités** : planning hebdomadaire et périodes d'indisponibilité.
+- **Missions reçues**, **Avis reçus**, **Revenus & commissions**.
+
+### 3.6 L'espace entreprise — livré
+
+Espace dédié aux entreprises, ONG, écoles et institutions : dépôt d'une
+**demande groupée** (team building, séminaire) avec participants, lieu, dates et
+budget, **suivi des demandes et des devis**, messagerie et profil.
+
 ---
 
 ## 4. Qualité, confiance et expérience
@@ -124,14 +145,10 @@ Espace dédié aux propriétaires de biens :
 
 Dans l'ordre prévu :
 
-1. **Espace prestataire** — dépôt de services (véhicules, artisans, guides,
-   hébergements) avec certifications, disponibilités, missions reçues, avis et
-   suivi des revenus/commissions.
-2. **Espace entreprise** — demandes de team building/séminaires et suivi des
-   devis groupés.
-3. **Back-office d'administration** — l'outil interne de Kaikun 360 (validation
-   des biens et prestataires, gestion des demandes, paiements, contenus…).
-4. **Finitions** — référencement (SEO), performance et accessibilité avant la
+1. **Back-office d'administration** — l'outil interne de Kaikun 360 (validation
+   des biens et prestataires, gestion des demandes, paiements, contenus…). Toute
+   la logique existe déjà côté moteur ; il reste à construire l'interface.
+2. **Finitions** — référencement (SEO), performance et accessibilité avant la
    mise en ligne publique.
 
 ---

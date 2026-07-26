@@ -30,6 +30,13 @@ export const PROVIDER_NAV: readonly SpaceNavItem[] = [
     ready: true, // F5 (dépôt de service + certifications) ✅
   },
   {
+    label: 'Mes offres',
+    description: 'Publiez vos véhicules et circuits réservables et suivez leur validation.',
+    path: 'offres',
+    icon: 'car',
+    ready: true, // F5.6 (dépôt d'offres réservables : véhicules & expériences) ✅
+  },
+  {
     label: 'Disponibilités',
     description: 'Indiquez vos créneaux et périodes d’indisponibilité.',
     path: 'disponibilites',

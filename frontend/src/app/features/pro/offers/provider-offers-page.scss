@@ -1,0 +1,148 @@
+// Écran « Mes offres » de l'espace prestataire (F5.6).
+// Réutilise les tokens de charte (--k-*) et les classes globales `k-btn`.
+
+.of-state {
+  margin: 1.5rem 0;
+  color: var(--k-muted);
+}
+
+.of-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding: 1.3rem 1.4rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+
+  p {
+    margin: 0;
+    color: var(--k-ink);
+  }
+}
+
+// --- Bloc (Véhicules / Expériences) ---
+.of-block {
+  margin-top: 2rem;
+}
+
+.of-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.of-block-title {
+  margin: 0;
+  font-family: var(--k-font-display);
+  font-size: 1.2rem;
+  color: var(--k-ink);
+}
+
+.of-block-empty {
+  margin: 0;
+  padding: 1.1rem 1.25rem;
+  background: var(--k-card);
+  border: 1px dashed var(--k-line);
+  border-radius: var(--k-radius);
+  color: var(--k-muted);
+}
+
+// --- Liste des offres ---
+.of-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.of-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.of-card-main {
+  min-width: 0;
+}
+
+.of-card-title {
+  margin: 0 0 0.2rem;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.of-card-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--k-muted);
+}
+
+.of-card-side {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.of-card-edit {
+  color: var(--k-green-600);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// --- Badge de statut de validation ---
+.of-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.is-pending {
+    color: var(--k-gold);
+    background: color-mix(in srgb, var(--k-gold) 14%, transparent);
+  }
+  &.is-published {
+    color: var(--k-green-600);
+    background: color-mix(in srgb, var(--k-green) 14%, transparent);
+  }
+  &.is-rejected {
+    color: var(--k-danger);
+    background: color-mix(in srgb, var(--k-danger) 12%, transparent);
+  }
+  &.is-suspended {
+    color: var(--k-muted);
+    background: color-mix(in srgb, var(--k-muted) 14%, transparent);
+  }
+}

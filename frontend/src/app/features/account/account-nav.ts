@@ -26,6 +26,7 @@ export type AccountIcon =
   | 'help' // aide (mode d'emploi de l'espace)
   | 'building' // biens immobiliers (espace propriétaire, F4)
   | 'wallet' // reversements / finances (espace propriétaire, F4)
+  | 'car' // offres réservables — véhicules & circuits (espace prestataire, F5.6)
   | 'document'; // documents / rapports (espaces pro)
 
 /** Une entrée de navigation de l'espace client. */

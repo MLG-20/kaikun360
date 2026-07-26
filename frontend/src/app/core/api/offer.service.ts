@@ -1,0 +1,238 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable, of, switchMap } from 'rxjs';
+
+import { environment } from '../../../environments/environment';
+import { Experience } from '../../models/experience.model';
+import { Vehicle } from '../../models/vehicle.model';
+import { ApiEnvelope } from './api-response.model';
+import { Paginated } from './pagination.model';
+
+/**
+ * Type de véhicule — miroir EXACT de l'enum `VehicleType` backend (module
+ * Mobility). `family` regroupe les types pour piloter les champs de conformité
+ * du formulaire de dépôt :
+ *   - `motorise` → assurance + identité chauffeur (voitures, navette, bus…) ;
+ *   - `pirogue`  → gilets de sauvetage, conformité météo & prestataire.
+ */
+export type VehicleTypeValue =
+  | 'voiture_particuliere'
+  | 'voiture_touristique'
+  | 'navette_aibd'
+  | 'bus'
+  | 'minibus'
+  | 'quatre_quatre'
+  | 'pirogue'
+  | 'chauffeur';
+
+/** Option du sélecteur de type de véhicule (valeur + libellé + famille). */
+export interface VehicleTypeOption {
+  value: VehicleTypeValue;
+  label: string;
+  family: 'motorise' | 'pirogue';
+}
+
+/**
+ * Catalogue des types de véhicule proposés au dépôt (miroir de `VehicleType`).
+ * Le CDC (§2.1 / §15) exige des catégories **distinctes** : voiture
+ * particulière, voiture touristique et navette aéroportuaire notamment.
+ */
+export const VEHICLE_TYPES: readonly VehicleTypeOption[] = [
+  { value: 'voiture_particuliere', label: 'Voiture particulière', family: 'motorise' },
+  { value: 'voiture_touristique', label: 'Voiture touristique', family: 'motorise' },
+  { value: 'navette_aibd', label: 'Navette aéroportuaire (AIBD)', family: 'motorise' },
+  { value: 'bus', label: 'Bus', family: 'motorise' },
+  { value: 'minibus', label: 'Minibus', family: 'motorise' },
+  { value: 'quatre_quatre', label: '4x4', family: 'motorise' },
+  { value: 'pirogue', label: 'Pirogue', family: 'pirogue' },
+  { value: 'chauffeur', label: 'Chauffeur (mise à disposition)', family: 'motorise' },
+];
+
+/** Renvoie la famille (`motorise` / `pirogue`) d'un type de véhicule. */
+export function vehicleFamily(type: string | null | undefined): 'motorise' | 'pirogue' | null {
+  return VEHICLE_TYPES.find((t) => t.value === type)?.family ?? null;
+}
+
+/**
+ * Corps de `POST /vehicles` / `PATCH /vehicles/{id}` — miroir de
+ * `StoreVehicleRequest` / `UpdateVehicleRequest`. Les champs de conformité sont
+ * facultatifs au dépôt mais conditionnent la **validation** back-office.
+ */
+export interface NewVehiclePayload {
+  type: VehicleTypeValue;
+  brand?: string | null;
+  model?: string | null;
+  capacity: number;
+  price_per_day_xof: number;
+  has_driver: boolean;
+  caution_xof?: number | null;
+  description?: string | null;
+  // Conformité motorisé.
+  insurance_ref?: string | null;
+  driver_identity?: string | null;
+  // Conformité pirogue.
+  life_jackets_count?: number | null;
+  weather_compliant?: boolean | null;
+  provider_compliant?: boolean | null;
+}
+
+/** Une inclusion structurée d'un circuit (clé backend + libellé affiché). */
+export interface ExperienceInclusionOption {
+  key: string;
+  label: string;
+}
+
+/**
+ * Inclusions proposées à la composition d'un circuit (§4.1 tourisme :
+ * programme, guide, restauration…). Stockées en `{ cle: booléen }`.
+ */
+export const EXPERIENCE_INCLUSIONS: readonly ExperienceInclusionOption[] = [
+  { key: 'restauration', label: 'Restauration' },
+  { key: 'guide', label: 'Guide' },
+  { key: 'transport', label: 'Transport' },
+  { key: 'hebergement', label: 'Hébergement' },
+];
+
+/** Corps de `POST /experiences` — miroir de `StoreExperienceRequest`. */
+export interface NewExperiencePayload {
+  title: string;
+  destination: string;
+  description?: string | null;
+  duration_days: number;
+  price_xof: number;
+  capacity: number;
+  /** Inclusions structurées : `{ restauration: true, guide: false, … }`. */
+  inclusions?: Record<string, boolean>;
+}
+
+/**
+ * Dépôt et gestion des **offres réservables** d'un prestataire (F5.6) :
+ * véhicules (module Mobility) et expériences touristiques (module Explore).
+ *
+ * Comble l'exigence CDC §5.2 / §15 (« un prestataire peut proposer véhicule,
+ * circuit, pirogue… ») restée sans interface : le backend l'expose déjà via
+ * `POST /vehicles`, `GET /vehicles/mine`, `PATCH /vehicles/{id}` et
+ * `POST /experiences`, `GET /experiences/mine`.
+ *
+ * Toutes les routes de dépôt exigent une session + un **compte vérifié**
+ * (`verified.account`) et un **profil prestataire validé** (policy `create`) :
+ * un 403 est possible et géré par les écrans appelants.
+ */
+@Injectable({ providedIn: 'root' })
+export class OfferService {
+  private readonly http = inject(HttpClient);
+  private readonly api = environment.apiUrl;
+
+  // --- Véhicules (module Mobility) -------------------------------------------
+
+  /** GET /vehicles/mine — mes véhicules, tous statuts (paginé, 15/page). */
+  myVehicles(page = 1): Observable<Paginated<Vehicle>> {
+    return this.http.get<Paginated<Vehicle>>(`${this.api}/vehicles/mine`, {
+      params: { page: String(page) },
+    });
+  }
+
+  /**
+   * Retrouve un de mes véhicules par son id, tous statuts confondus, en
+   * parcourant `GET /vehicles/mine` page par page. Nécessaire pour l'édition :
+   * le détail public `GET /vehicles/{id}` ne renvoie que les véhicules publiés,
+   * or on édite justement des véhicules « en attente » ou « rejetés ».
+   * Renvoie `null` si aucun véhicule ne correspond (id inconnu ou pas à moi).
+   */
+  findMyVehicle(id: number): Observable<Vehicle | null> {
+    const search = (page: number): Observable<Vehicle | null> =>
+      this.myVehicles(page).pipe(
+        switchMap((res) => {
+          const found = res.data.find((v) => v.id === id);
+          if (found) return of(found);
+          if (res.meta.current_page < res.meta.last_page) return search(page + 1);
+          return of(null);
+        }),
+      );
+    return search(1);
+  }
+
+  /** POST /vehicles — dépose un véhicule (créé « en attente de validation »). */
+  createVehicle(payload: NewVehiclePayload): Observable<ApiEnvelope<{ vehicle: Vehicle }>> {
+    return this.http.post<ApiEnvelope<{ vehicle: Vehicle }>>(
+      `${this.api}/vehicles`,
+      this.cleanVehicle(payload),
+    );
+  }
+
+  /** PATCH /vehicles/{id} — met à jour un véhicule (le statut n'est pas modifiable ici). */
+  updateVehicle(
+    id: number,
+    payload: NewVehiclePayload,
+  ): Observable<ApiEnvelope<{ vehicle: Vehicle }>> {
+    return this.http.patch<ApiEnvelope<{ vehicle: Vehicle }>>(
+      `${this.api}/vehicles/${id}`,
+      this.cleanVehicle(payload),
+    );
+  }
+
+  // --- Expériences (module Explore) ------------------------------------------
+
+  /** GET /experiences/mine — mes expériences, tous statuts (paginé, 15/page). */
+  myExperiences(page = 1): Observable<Paginated<Experience>> {
+    return this.http.get<Paginated<Experience>>(`${this.api}/experiences/mine`, {
+      params: { page: String(page) },
+    });
+  }
+
+  /** POST /experiences — publie une expérience (créée « en attente de validation »). */
+  createExperience(
+    payload: NewExperiencePayload,
+  ): Observable<ApiEnvelope<{ experience: Experience }>> {
+    return this.http.post<ApiEnvelope<{ experience: Experience }>>(
+      `${this.api}/experiences`,
+      this.cleanExperience(payload),
+    );
+  }
+
+  // --- Préparation des corps -------------------------------------------------
+
+  /**
+   * Prépare le corps d'un véhicule : n'envoie que les champs de conformité
+   * pertinents pour la famille du type (assurance/chauffeur pour un motorisé,
+   * gilets/météo pour une pirogue) et omet les valeurs vides.
+   */
+  private cleanVehicle(p: NewVehiclePayload): Record<string, unknown> {
+    const body: Record<string, unknown> = {
+      type: p.type,
+      capacity: p.capacity,
+      price_per_day_xof: p.price_per_day_xof,
+      has_driver: p.has_driver,
+    };
+    if (p.brand && p.brand.trim() !== '') body['brand'] = p.brand.trim();
+    if (p.model && p.model.trim() !== '') body['model'] = p.model.trim();
+    if (p.description && p.description.trim() !== '') body['description'] = p.description.trim();
+    if (p.caution_xof != null) body['caution_xof'] = p.caution_xof;
+
+    if (vehicleFamily(p.type) === 'pirogue') {
+      if (p.life_jackets_count != null) body['life_jackets_count'] = p.life_jackets_count;
+      if (p.weather_compliant != null) body['weather_compliant'] = p.weather_compliant;
+      if (p.provider_compliant != null) body['provider_compliant'] = p.provider_compliant;
+    } else {
+      if (p.insurance_ref && p.insurance_ref.trim() !== '')
+        body['insurance_ref'] = p.insurance_ref.trim();
+      if (p.driver_identity && p.driver_identity.trim() !== '')
+        body['driver_identity'] = p.driver_identity.trim();
+    }
+    return body;
+  }
+
+  /** Prépare le corps d'une expérience (omet description vide, garde les inclusions). */
+  private cleanExperience(p: NewExperiencePayload): Record<string, unknown> {
+    const body: Record<string, unknown> = {
+      title: p.title.trim(),
+      destination: p.destination.trim(),
+      duration_days: p.duration_days,
+      price_xof: p.price_xof,
+      capacity: p.capacity,
+    };
+    if (p.description && p.description.trim() !== '') body['description'] = p.description.trim();
+    if (p.inclusions && Object.keys(p.inclusions).length) body['inclusions'] = p.inclusions;
+    return body;
+  }
+}

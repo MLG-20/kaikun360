@@ -1,0 +1,140 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-prestataire/offres" />
+  <p class="account-eyebrow">Espace prestataire</p>
+  <h1 class="account-title">{{ isEdit() ? 'Modifier le véhicule' : 'Déposer un véhicule' }}</h1>
+  <p class="account-lead">
+    Renseignez les caractéristiques de votre véhicule. Il sera proposé à la
+    location une fois votre dossier vérifié par Kaikun.
+  </p>
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="vf-state" role="status">Chargement du véhicule…</p>
+  }
+  @case ('not-found') {
+    <div class="vf-error">
+      <p>Ce véhicule est introuvable ou ne fait pas partie de vos offres.</p>
+      <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Retour à mes offres</a>
+    </div>
+  }
+  @case ('error') {
+    <div class="vf-error">
+      <p>Impossible de charger ce véhicule pour le moment.</p>
+      <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Retour à mes offres</a>
+    </div>
+  }
+  @default {
+    <form class="vf-form" [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Type (catégories distinctes exigées par le CDC §15) -->
+      <div class="vf-field">
+        <label for="vf-type">Type de véhicule</label>
+        <select id="vf-type" formControlName="type">
+          <option value="" disabled>Choisissez un type…</option>
+          @for (t of types; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+        @if (form.controls.type.touched && form.controls.type.invalid) {
+          <p class="vf-hint vf-hint--error">Le type est obligatoire.</p>
+        }
+      </div>
+
+      <div class="vf-row">
+        <div class="vf-field">
+          <label for="vf-brand">Marque <span class="vf-opt">(facultatif)</span></label>
+          <input id="vf-brand" type="text" formControlName="brand" maxlength="255" />
+        </div>
+        <div class="vf-field">
+          <label for="vf-model">Modèle <span class="vf-opt">(facultatif)</span></label>
+          <input id="vf-model" type="text" formControlName="model" maxlength="255" />
+        </div>
+      </div>
+
+      <div class="vf-row">
+        <div class="vf-field">
+          <label for="vf-capacity">Capacité (nombre de places)</label>
+          <input id="vf-capacity" type="number" min="1" formControlName="capacity" />
+          @if (form.controls.capacity.touched && form.controls.capacity.invalid) {
+            <p class="vf-hint vf-hint--error">Indiquez une capacité d'au moins 1.</p>
+          }
+        </div>
+        <div class="vf-field">
+          <label for="vf-price">Prix par jour (FCFA)</label>
+          <input id="vf-price" type="number" min="0" formControlName="price_per_day_xof" />
+          @if (form.controls.price_per_day_xof.touched && form.controls.price_per_day_xof.invalid) {
+            <p class="vf-hint vf-hint--error">Indiquez un prix (0 ou plus).</p>
+          }
+        </div>
+      </div>
+
+      <div class="vf-field">
+        <label for="vf-caution">Caution (FCFA) <span class="vf-opt">(facultatif)</span></label>
+        <input id="vf-caution" type="number" min="0" formControlName="caution_xof" />
+      </div>
+
+      <label class="vf-check">
+        <input type="checkbox" formControlName="has_driver" />
+        <span>Véhicule proposé avec chauffeur</span>
+      </label>
+
+      <div class="vf-field">
+        <label for="vf-desc">Description <span class="vf-opt">(facultatif)</span></label>
+        <textarea id="vf-desc" rows="4" formControlName="description"
+                  placeholder="État, options, conditions d'utilisation…"></textarea>
+      </div>
+
+      <!-- Conformité conditionnelle selon la famille du type (CDC §12) -->
+      @if (family() === 'motorise') {
+        <fieldset class="vf-compliance">
+          <legend>Conformité (transport motorisé)</legend>
+          <p class="vf-hint">
+            Facultatif au dépôt, mais requis pour la validation : assurance et
+            identité du chauffeur.
+          </p>
+          <div class="vf-row">
+            <div class="vf-field">
+              <label for="vf-insurance">Référence d'assurance</label>
+              <input id="vf-insurance" type="text" formControlName="insurance_ref" maxlength="255" />
+            </div>
+            <div class="vf-field">
+              <label for="vf-driver">Identité du chauffeur</label>
+              <input id="vf-driver" type="text" formControlName="driver_identity" maxlength="255" />
+            </div>
+          </div>
+        </fieldset>
+      } @else if (family() === 'pirogue') {
+        <fieldset class="vf-compliance">
+          <legend>Conformité (pirogue)</legend>
+          <p class="vf-hint">
+            Facultatif au dépôt, mais requis pour la validation : gilets de
+            sauvetage et conformité météo/prestataire.
+          </p>
+          <div class="vf-field">
+            <label for="vf-jackets">Nombre de gilets de sauvetage</label>
+            <input id="vf-jackets" type="number" min="0" formControlName="life_jackets_count" />
+          </div>
+          <label class="vf-check">
+            <input type="checkbox" formControlName="weather_compliant" />
+            <span>Respecte les conditions météo de navigation</span>
+          </label>
+          <label class="vf-check">
+            <input type="checkbox" formControlName="provider_compliant" />
+            <span>Prestataire conforme (déclaration, agréments)</span>
+          </label>
+        </fieldset>
+      }
+
+      @if (formError()) {
+        <p class="vf-msg vf-msg--error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="vf-actions">
+        <button type="submit" class="k-btn k-btn--primary" [disabled]="submitting()">
+          {{ submitting() ? 'Enregistrement…' : isEdit() ? 'Enregistrer les modifications' : 'Déposer le véhicule' }}
+        </button>
+        <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Annuler</a>
+      </div>
+    </form>
+  }
+}

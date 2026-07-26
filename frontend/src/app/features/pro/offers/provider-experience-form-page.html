@@ -1,0 +1,84 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-prestataire/offres" />
+  <p class="account-eyebrow">Espace prestataire</p>
+  <h1 class="account-title">Déposer un circuit</h1>
+  <p class="account-lead">
+    Composez une expérience touristique (excursion, circuit, activité). Elle
+    sera proposée aux voyageurs une fois validée par Kaikun.
+  </p>
+</section>
+
+<form class="xf-form" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="xf-field">
+    <label for="xf-title">Titre du circuit</label>
+    <input id="xf-title" type="text" formControlName="title" maxlength="255"
+           placeholder="Ex. Excursion à l'île de Gorée" />
+    @if (form.controls.title.touched && form.controls.title.invalid) {
+      <p class="xf-hint xf-hint--error">Le titre est obligatoire.</p>
+    }
+  </div>
+
+  <div class="xf-field">
+    <label for="xf-destination">Destination</label>
+    <input id="xf-destination" type="text" formControlName="destination" maxlength="255"
+           placeholder="Ville, région ou site" />
+    @if (form.controls.destination.touched && form.controls.destination.invalid) {
+      <p class="xf-hint xf-hint--error">La destination est obligatoire.</p>
+    }
+  </div>
+
+  <div class="xf-row">
+    <div class="xf-field">
+      <label for="xf-duration">Durée (jours)</label>
+      <input id="xf-duration" type="number" min="1" formControlName="duration_days" />
+      @if (form.controls.duration_days.touched && form.controls.duration_days.invalid) {
+        <p class="xf-hint xf-hint--error">Indiquez au moins 1 jour.</p>
+      }
+    </div>
+    <div class="xf-field">
+      <label for="xf-capacity">Capacité (participants)</label>
+      <input id="xf-capacity" type="number" min="1" formControlName="capacity" />
+      @if (form.controls.capacity.touched && form.controls.capacity.invalid) {
+        <p class="xf-hint xf-hint--error">Indiquez au moins 1 place.</p>
+      }
+    </div>
+  </div>
+
+  <div class="xf-field">
+    <label for="xf-price">Prix par participant (FCFA)</label>
+    <input id="xf-price" type="number" min="0" formControlName="price_xof" />
+    @if (form.controls.price_xof.touched && form.controls.price_xof.invalid) {
+      <p class="xf-hint xf-hint--error">Indiquez un prix (0 ou plus).</p>
+    }
+  </div>
+
+  <div class="xf-field">
+    <label for="xf-desc">Programme &amp; description <span class="xf-opt">(facultatif)</span></label>
+    <textarea id="xf-desc" rows="5" formControlName="description"
+              placeholder="Déroulé, points d'intérêt, niveau, matériel fourni…"></textarea>
+  </div>
+
+  <fieldset class="xf-inclusions" formGroupName="inclusions">
+    <legend>Inclusions</legend>
+    <p class="xf-hint">Cochez ce qui est compris dans le prix.</p>
+    <div class="xf-inclusions-grid">
+      @for (inc of inclusions; track inc.key) {
+        <label class="xf-check">
+          <input type="checkbox" [formControlName]="inc.key" />
+          <span>{{ inc.label }}</span>
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  @if (formError()) {
+    <p class="xf-msg xf-msg--error" role="alert">{{ formError() }}</p>
+  }
+
+  <div class="xf-actions">
+    <button type="submit" class="k-btn k-btn--primary" [disabled]="submitting()">
+      {{ submitting() ? 'Enregistrement…' : 'Déposer le circuit' }}
+    </button>
+    <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Annuler</a>
+  </div>
+</form>

@@ -1,0 +1,117 @@
+// Formulaire de dépôt d'une expérience touristique (F5.6).
+
+.xf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 1.5rem;
+  max-width: 640px;
+}
+
+.xf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.xf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.95rem;
+  }
+
+  input,
+  textarea {
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--k-line);
+    border-radius: var(--k-radius);
+    background: var(--k-bg);
+    color: var(--k-ink);
+    font: inherit;
+  }
+
+  textarea {
+    resize: vertical;
+  }
+}
+
+.xf-opt {
+  font-weight: 400;
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+.xf-inclusions {
+  margin: 0;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  background: var(--k-card);
+
+  legend {
+    padding: 0 0.4rem;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+}
+
+.xf-inclusions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem 1.2rem;
+  margin-top: 0.5rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.xf-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--k-ink);
+
+  input {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+}
+
+.xf-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--k-muted);
+
+  &--error {
+    color: var(--k-danger);
+  }
+}
+
+.xf-msg {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--k-radius);
+
+  &--error {
+    color: var(--k-danger);
+    background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card));
+    border: 1px solid color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+  }
+}
+
+.xf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}

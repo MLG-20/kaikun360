@@ -519,9 +519,20 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 > `Review::TYPES`, éligibilité par mission dans `ReviewPolicy`, agrégation étendue
 > dans `RatingAggregator`). L'écran affiche une **synthèse de notation** (note
 > moyenne, total, histogramme de répartition par étoiles) et la **liste des avis**
-> (auteur, source, commentaire, date). **🎉 Phase F5 (Espace prestataire) terminée.**
+> (auteur, source, commentaire, date). **F5.6 livré** (mise en conformité CDC
+> §5.2 / §15) : l'écran **« Mes offres »** branche enfin le **dépôt d'offres
+> réservables** sur des endpoints backend déjà exposés mais sans interface —
+> **véhicules** (`POST /vehicles`, `PATCH /vehicles/{id}`, `GET /vehicles/mine`)
+> et **circuits touristiques** (`POST /experiences`, `GET /experiences/mine`). Le
+> formulaire véhicule propose les **8 catégories distinctes** de `VehicleType` et
+> adapte ses **champs de conformité** à la famille du type (assurance + identité
+> chauffeur pour un motorisé ; gilets + conformité météo/prestataire pour une
+> pirogue, cf. §12). Chaque offre affiche son **statut de validation** ; l'édition
+> d'un véhicule le recharge via `OfferService.findMyVehicle` (le détail public ne
+> renvoie que les véhicules publiés). Nouveau service `core/api/offer.service.ts`.
+> **🎉 Phase F5 (Espace prestataire) terminée.**
 
-- [x] Formulaire de dépôt de service (voiture, pirogue, circuit, BTP, guide, hébergement) avec documents de certification. — _« Mes services » : édition du descriptif (`PUT /providers/mine`) + ajout/suppression de certifications._
+- [x] Formulaire de dépôt de service (voiture, pirogue, circuit, BTP, guide, hébergement) avec documents de certification. — _F5.6 : « Mes offres » — dépôt/édition de **véhicules** (`POST/PATCH /vehicles`) et de **circuits** (`POST /experiences`) avec statut de validation ; « Mes services » gère en complément le descriptif (`PUT /providers/mine`) et les certifications._
 - [x] Écran de gestion des disponibilités. — _F5.4 : planning hebdomadaire récurrent + périodes d'indisponibilité._
 - [x] Écran des missions reçues et de leur statut. — _F5.2 : liste + actions de transition (accepter / refuser / démarrer / terminer)._
 - [x] Écran des avis reçus et de la notation. — _F5.5 : avis sur les ressources + avis directs après mission (`GET /providers/reviews`), note moyenne + répartition._

@@ -1,0 +1,104 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-prestataire" />
+  <p class="account-eyebrow">Espace prestataire</p>
+  <h1 class="account-title">Mes offres</h1>
+  <p class="account-lead">
+    Publiez les prestations que les clients pourront réserver — véhicules et
+    circuits touristiques. Chaque offre est mise en ligne après validation par
+    Kaikun.
+  </p>
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="of-state" role="status">Chargement de vos offres…</p>
+  }
+  @case ('no-profile') {
+    <div class="of-empty">
+      <p>
+        Le dépôt d'offres est réservé aux prestataires dont le dossier est
+        <strong>validé</strong>. Complétez votre inscription pour commencer.
+      </p>
+      <a class="k-btn k-btn--primary" routerLink="/pro/inscription">Compléter mon inscription</a>
+    </div>
+  }
+  @case ('error') {
+    <div class="of-empty">
+      <p>Impossible de charger vos offres pour le moment.</p>
+      <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+    </div>
+  }
+  @default {
+    <!-- ===================== Véhicules ===================== -->
+    <section class="of-block">
+      <header class="of-block-head">
+        <h2 class="of-block-title">Véhicules &amp; mobilité</h2>
+        <a class="k-btn k-btn--primary" routerLink="vehicule/nouveau">Déposer un véhicule</a>
+      </header>
+
+      @if (vehicles().length === 0) {
+        <p class="of-block-empty">
+          Aucun véhicule déposé. Ajoutez une voiture, une navette ou une pirogue
+          pour la proposer à la location.
+        </p>
+      } @else {
+        <ul class="of-list">
+          @for (v of vehicles(); track v.id) {
+            <li class="of-card">
+              <div class="of-card-main">
+                <p class="of-card-title">{{ vehicleName(v) }}</p>
+                <p class="of-card-meta">
+                  <span>{{ v.type_label ?? 'Véhicule' }}</span>
+                  <span>· {{ v.capacity }} place{{ v.capacity > 1 ? 's' : '' }}</span>
+                  @if (fcfa(v.price_per_day_xof); as price) {
+                    <span>· {{ price }} / jour</span>
+                  }
+                </p>
+              </div>
+              <div class="of-card-side">
+                <span class="of-badge" [class]="statusClass(v.status)">{{ v.status_label }}</span>
+                <a class="of-card-edit" [routerLink]="['vehicule', v.id, 'modifier']">Modifier</a>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- ===================== Expériences ===================== -->
+    <section class="of-block">
+      <header class="of-block-head">
+        <h2 class="of-block-title">Circuits &amp; expériences</h2>
+        <a class="k-btn k-btn--primary" routerLink="experience/nouvelle">Déposer un circuit</a>
+      </header>
+
+      @if (experiences().length === 0) {
+        <p class="of-block-empty">
+          Aucun circuit déposé. Composez une excursion ou une expérience
+          touristique à proposer aux voyageurs.
+        </p>
+      } @else {
+        <ul class="of-list">
+          @for (x of experiences(); track x.id) {
+            <li class="of-card">
+              <div class="of-card-main">
+                <p class="of-card-title">{{ x.title }}</p>
+                <p class="of-card-meta">
+                  <span>{{ x.destination }}</span>
+                  <span>· {{ x.duration_days }} jour{{ x.duration_days > 1 ? 's' : '' }}</span>
+                  <span>· {{ x.capacity }} place{{ x.capacity > 1 ? 's' : '' }}</span>
+                  @if (fcfa(x.price_xof); as price) {
+                    <span>· {{ price }}</span>
+                  }
+                </p>
+              </div>
+              <div class="of-card-side">
+                <span class="of-badge" [class]="statusClass(x.status)">{{ x.status_label }}</span>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+}
