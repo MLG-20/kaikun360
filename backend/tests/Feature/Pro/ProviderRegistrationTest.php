@@ -3,6 +3,7 @@
 namespace Tests\Feature\Pro;
 
 use App\Models\User;
+use App\Modules\Admin\Enums\AdminPermission;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Pro\Enums\ProviderStatus;
 use App\Modules\Pro\Models\Provider;
@@ -29,6 +30,7 @@ class ProviderRegistrationTest extends TestCase
     {
         $agent = User::factory()->create();
         $agent->assignRole(UserRole::AGENT_KAIKUN->value);
+        $agent->givePermissionTo(AdminPermission::operational()); // F7.1.b : agent pleinement outillé (droits désormais délégués, plus portés par le rôle)
 
         return $agent;
     }

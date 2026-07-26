@@ -7,7 +7,9 @@ use App\Modules\Admin\Http\Controllers\AdminDocumentController;
 use App\Modules\Admin\Http\Controllers\AdminDossierController;
 use App\Modules\Admin\Http\Controllers\AdminPaymentController;
 use App\Modules\Admin\Http\Controllers\AdminSettingsController;
+use App\Modules\Admin\Http\Controllers\AdminTeamController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
+use App\Modules\Admin\Http\Controllers\AttendanceController;
 use App\Modules\Admin\Http\Controllers\FaqController;
 use App\Modules\Admin\Http\Controllers\PageController;
 use App\Modules\Admin\Http\Controllers\ReferenceController;
@@ -45,6 +47,37 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         ->where('type', '[a-z]+')
         ->whereNumber('id')
         ->middleware('can:consulter:dashboard-admin');
+
+    // F7.1.a — Équipe back-office (« poste de commandement ») : annuaire des
+    // employés (agents / admins), enrôlement et pilotage rôle/statut. Niveau
+    // admin (`gerer:utilisateurs`) ; garde-fous de hiérarchie dans le contrôleur.
+    Route::middleware('can:gerer:utilisateurs')->group(function () {
+        Route::get('/team', [AdminTeamController::class, 'index']);
+        Route::post('/team', [AdminTeamController::class, 'store']);
+        Route::patch('/team/{member}', [AdminTeamController::class, 'update'])
+            ->whereNumber('member');
+
+        // F7.1.b — Délégation « grant pur par personne » : le super admin coche,
+        // pour chaque agent, les dossiers qu'il a le droit de traiter (12
+        // permissions délégables). Le garde-fou super_admin sur la gouvernance
+        // est vérifié dans le contrôleur.
+        Route::get('/team/{member}/permissions', [AdminTeamController::class, 'permissions'])
+            ->whereNumber('member');
+        Route::put('/team/{member}/permissions', [AdminTeamController::class, 'syncPermissions'])
+            ->whereNumber('member');
+
+        // F7.1.c — Feuille de présence de l'équipe (supervision, niveau admin).
+        Route::get('/attendance', [AttendanceController::class, 'sheet']);
+    });
+
+    // F7.1.c — Pointeuse : périmètre PERSONNEL (tout membre de l'équipe pointe
+    // pour lui-même). Garde = accès back-office ; aucune donnée d'un autre
+    // employé n'est accessible ici (les actions visent le compte connecté).
+    Route::middleware('can:consulter:dashboard-admin')->group(function () {
+        Route::post('/attendance/clock-in', [AttendanceController::class, 'clockIn']);
+        Route::post('/attendance/clock-out', [AttendanceController::class, 'clockOut']);
+        Route::get('/attendance/me', [AttendanceController::class, 'me']);
+    });
 
     // B13.3 — Gestion des comptes (rôles, statut, désactivation). Niveau admin.
     Route::get('/users', [AdminUserController::class, 'index'])

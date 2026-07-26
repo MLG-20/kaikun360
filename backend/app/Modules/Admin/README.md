@@ -21,6 +21,103 @@ pour les actions sensibles (`gerer:utilisateurs`, `gerer:parametres`,
 | B13.5 | Export comptable / reporting | ✅ |
 | B13.6 | Nuitées back-office + consolidation des policies | ✅ |
 | B13.7 | Vues back-office par module + gestion documentaire | ✅ |
+| F7.1.a | Équipe back-office : annuaire, enrôlement, pilotage rôle/statut | ✅ |
+| F7.1.b | Délégation des dossiers par personne (« grant pur ») | ✅ |
+| F7.1.c | Pointeuse de l'équipe (entrée/sortie + feuille mensuelle) | ✅ |
+
+## F7.1.a — Équipe back-office (« poste de commandement »)
+
+Gestion des **employés du back-office** (agents opérationnels / administrateurs)
+par le super administrateur. C'est la première brique de la salle de contrôle
+(F7) : on enrôle un membre, on l'annuaire, on le promeut/suspend. La délégation
+fine des dossiers qu'il peut traiter (permissions par personne) arrive en F7.1.b,
+le pointage des présences en F7.1.c.
+
+Accès **niveau admin** (`can:gerer:utilisateurs` ; les agents en sont exclus),
+avec les mêmes garde-fous de hiérarchie que la gestion des comptes publics.
+Rôles concernés = `UserRole::staff()` (agent_kaikun, admin, super_admin).
+
+**`GET /api/v1/admin/team`** — annuaire **limité aux rôles d'équipe** (les comptes
+publics n'y figurent jamais). Filtres `role`, `status`, `q` (nom / e-mail /
+téléphone). Chaque entrée = `TeamMemberResource` (rôle principal + permissions
+effectives + statut).
+
+**`POST /api/v1/admin/team`** — enrôle un membre : corps `{ name, email, phone?,
+role }` où `role ∈ UserRole::assignableStaff()` (**agent** ou **admin** ;
+`super_admin` n'est jamais attribuable). Crée le compte avec un secret aléatoire
+jamais communiqué, statut `en_attente_verification`, puis envoie par e-mail un
+**code d'invitation** (réutilise le flux de réinitialisation : l'invité définit
+son mot de passe via `/auth/password/reset`). Garde-fou d'escalade : **créer un
+`admin` exige d'être `super_admin`** → 403 sinon.
+
+**`PATCH /api/v1/admin/team/{member}`** — corps `{ role?, status? }` (au moins un).
+`status ∈ {actif, suspendu, desactive}`. Garde-fous : cible hors équipe → **404** ;
+auto-modification → **403** ; toucher un `super_admin` sans l'être → **403** ;
+attribuer `admin` sans être `super_admin` → **403**. Toute action est tracée au
+journal d'audit (Spatie Activitylog).
+
+## F7.1.b — Délégation des dossiers (« grant pur par personne »)
+
+**Changement de modèle d'autorisation.** Auparavant, le rôle `agent_kaikun`
+portait en bloc toutes les permissions de traitement : tous les agents avaient
+donc exactement les mêmes droits. Depuis F7.1.b, le **rôle n'ouvre que l'accès**
+(`consulter:dashboard-admin`) et chaque dossier qu'un sous-admin a le droit de
+traiter lui est **délégué individuellement** par le super administrateur
+(permissions **directes** Spatie). C'est ce que réclame un back-office « digne
+d'une entreprise » : le responsable décide, personne par personne, du périmètre.
+
+Le catalogue des permissions est centralisé dans l'enum
+`App\Modules\Admin\Enums\AdminPermission` (libellé, groupe d'affichage, exigence
+super_admin). Les **12 permissions délégables** (tout sauf l'accès de base) se
+répartissent en trois groupes : *Validation* (biens, véhicules, circuits,
+prestataires), *Exploitation* (gestion locative, chantiers, nuitées, demandes,
+avis) et *Gouvernance* (utilisateurs, paiements, paramètres).
+
+**`GET /api/v1/admin/team/{member}/permissions`** — renvoie `{ catalog, granted }` :
+le catalogue des 12 permissions délégables (`value`, `label`, `group`,
+`requires_super_admin`) et la liste des permissions **directes** déjà accordées à
+l'agent (= les cases cochées).
+
+**`PUT /api/v1/admin/team/{member}/permissions`** — corps `{ permissions: [...] }`.
+La liste **remplace** l'ensemble des permissions directes de l'agent (cases
+cochées = liste envoyée ; `[]` retire tout). Garde-fous : cible hors équipe →
+**404** ; cible non-agent (un admin a déjà tout) → **422** ; permission hors des
+12 délégables → **422** ; déléguer une permission de **gouvernance** sans être
+super_admin → **403**. Action tracée au journal d'audit.
+
+> **Impact tests :** l'allègement du rôle a nécessité de rendre « pleinement
+> outillés » les agents des tests de modules qui exécutent des actions
+> opérationnelles (`$agent->givePermissionTo(AdminPermission::operational())`),
+> `operational()` reproduisant exactement l'ancien jeu de droits du rôle.
+
+## F7.1.c — Pointeuse de l'équipe
+
+Suivi des présences des employés du back-office « comme une entreprise » :
+pointage d'entrée / de sortie et feuille de présence mensuelle. Une ligne de la
+table `attendances` = une **session** (`started_at` → `ended_at`) ; une session
+sans sortie = « en poste actuellement ». L'agrégation (jour par jour, cumul
+d'heures) est faite par `Services\AttendanceSheet`.
+
+**Périmètre personnel** (tout membre de l'équipe, garde `consulter:dashboard-admin` ;
+les actions visent le compte connecté, donc on ne pointe QUE pour soi) :
+
+- **`POST /api/v1/admin/attendance/clock-in`** — ouvre une session. **422** s'il
+  reste une session ouverte (on solde d'abord la sortie).
+- **`POST /api/v1/admin/attendance/clock-out`** — solde la session ouverte. **422**
+  s'il n'y en a aucune.
+- **`GET /api/v1/admin/attendance/me`** — mon état courant (`on_duty`, session en
+  cours) + mon détail du mois en cours.
+
+**Supervision** (administrateur, garde `gerer:utilisateurs`) :
+
+- **`GET /api/v1/admin/attendance`** — feuille de présence mensuelle. Paramètres :
+  `month` (`Y-m`, défaut = mois courant), `user` (identifiant d'un employé →
+  **détail** jour par jour ; absent → **récapitulatif** de toute l'équipe :
+  total d'heures, jours présents, « en poste » par personne), `format`
+  (`json` par défaut, ou `csv` pour l'export téléchargeable). Cibler un compte
+  hors équipe → **404**.
+
+Chaque pointage est tracé au journal d'audit.
 
 ## B13.1 — Tableau de bord
 

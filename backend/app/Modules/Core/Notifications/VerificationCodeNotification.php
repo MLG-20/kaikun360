@@ -49,9 +49,11 @@ class VerificationCodeNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $intro = $this->purpose === 'password_reset'
-            ? 'Voici votre code de réinitialisation de mot de passe Kaikun 360 :'
-            : 'Voici votre code de vérification Kaikun 360 :';
+        $intro = match ($this->purpose) {
+            'password_reset' => 'Voici votre code de réinitialisation de mot de passe Kaikun 360 :',
+            'two_factor' => 'Voici votre code de connexion au back-office Kaikun 360 (double authentification) :',
+            default => 'Voici votre code de vérification Kaikun 360 :',
+        };
 
         return (new MailMessage)
             ->subject('Votre code Kaikun 360')

@@ -66,4 +66,59 @@ enum UserRole: string
     {
         return array_column(self::cases(), 'value');
     }
+
+    /**
+     * Rôles de l'ÉQUIPE back-office (« poste de commandement », F7.1).
+     *
+     * Ce sont les seuls comptes qui accèdent au back-office : l'agent opérationnel
+     * (sous-admin), l'administrateur et le super administrateur. Les rôles publics
+     * (client, propriétaire…) en sont exclus. Sert à filtrer l'annuaire de l'équipe
+     * et à garder les routes du back-office.
+     *
+     * @return array<int, string>
+     */
+    public static function staff(): array
+    {
+        return [
+            self::AGENT_KAIKUN->value,
+            self::ADMIN->value,
+            self::SUPER_ADMIN->value,
+        ];
+    }
+
+    /**
+     * Rôles qu'un administrateur peut ATTRIBUER à un membre de l'équipe (F7.1.a).
+     *
+     * On n'attribue jamais `super_admin` via l'interface : c'est le compte racine,
+     * créé par amorçage (seeder) et jamais dégradé/créé depuis le back-office.
+     * `admin` reste attribuable, mais uniquement par un super_admin (garde-fou
+     * d'escalade vérifié dans le contrôleur).
+     *
+     * @return array<int, string>
+     */
+    public static function assignableStaff(): array
+    {
+        return [
+            self::AGENT_KAIKUN->value,
+            self::ADMIN->value,
+        ];
+    }
+
+    /**
+     * Rôles pour lesquels la double authentification est OBLIGATOIRE (F7.1.d).
+     *
+     * Les comptes à fort privilège (admin, super_admin) doivent valider un second
+     * facteur (code e-mail) à la connexion : ce sont eux qui pilotent la
+     * plateforme. L'agent (sous-admin) n'y est pas soumis pour l'instant — le
+     * périmètre peut être élargi ici sans toucher au reste du flux.
+     *
+     * @return array<int, string>
+     */
+    public static function twoFactorRequired(): array
+    {
+        return [
+            self::ADMIN->value,
+            self::SUPER_ADMIN->value,
+        ];
+    }
 }

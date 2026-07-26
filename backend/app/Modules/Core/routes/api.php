@@ -26,8 +26,8 @@ use Illuminate\Support\Facades\Route;
 // JSON standard (ApiResponse::success) mise en place en phase B0.4.
 Route::get('/version', function () {
     return ApiResponse::success([
-        'name'   => config('app.name'),
-        'api'    => 'v1',
+        'name' => config('app.name'),
+        'api' => 'v1',
         'status' => 'ok',
     ]);
 });
@@ -41,6 +41,8 @@ Route::get('/version', function () {
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    // F7.1.d — Second facteur du back-office (2FA e-mail admin/super_admin).
+    Route::post('/two-factor', [AuthController::class, 'twoFactor']);
     Route::post('/google', [AuthController::class, 'google']); // connexion Google (B19)
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 

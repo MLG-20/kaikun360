@@ -123,7 +123,15 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   `SPACE_CONFIG` (plus aucun lien codé en dur vers `/mon-espace`), et une **notif
   in-app** prévient l'entreprise dès qu'un devis lui est envoyé. 👉 Détail :
   [`src/app/features/enterprise/README.md`](src/app/features/enterprise/README.md).
-- 🚧 **À venir** : le back-office (F7).
+- 🚧 **À venir** : le back-office (F7). **Attention — il ne réutilisera PAS le
+  shell partagé des espaces** (`layouts/space-layout/`) : décision produit d'un
+  **shell dédié et indépendant** (racine propre, guard de rôle strict pour
+  agent/admin/super_admin, identité « salle de contrôle »), pour un niveau de
+  sécurité maximal. On démarre par **F7.1 « Poste de commandement de l'équipe »**
+  (annuaire + enrôlement des employés, **matrice de délégation** des dossiers par
+  personne, **pointeuse** entrée/sortie + feuille mensuelle), puis la **2FA**
+  (OTP e-mail) des comptes admin. Le socle backend correspondant (F7.1.a→c) est
+  déjà livré et testé (voir `backend/app/Modules/Admin`).
 
 ---
 

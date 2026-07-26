@@ -132,6 +132,7 @@ restriction ne s'applique donc à ce rôle.
 |---|---|---|---|
 | POST | `/api/v1/auth/register` | public | Inscription |
 | POST | `/api/v1/auth/login` | public | Connexion |
+| POST | `/api/v1/auth/two-factor` | public | Second facteur back-office (2FA, F7.1.d) |
 | POST | `/api/v1/auth/logout` | `auth:sanctum` | Déconnexion |
 
 ### `register`
@@ -145,6 +146,21 @@ Le compte démarre au statut `en_attente_verification`.
 Corps : `login` (e-mail **ou** téléphone) + `password`. Détection automatique du
 type d'identifiant. Échec → **422** générique (`Identifiants invalides.`) sans
 révéler quel champ est faux (anti-énumération de comptes). Succès → `{ data: { user, token } }`.
+
+**Exception 2FA (F7.1.d)** : si le compte porte un rôle à fort privilège
+(`admin` / `super_admin`, cf. `UserRole::twoFactorRequired()`), le login **ne
+renvoie PAS de jeton**. Il envoie un code à 6 chiffres par e-mail et répond
+`{ data: { two_factor_required: true, channel: "email", login } }`. Le frontend
+doit alors résoudre le défi via `two-factor`.
+
+### `two-factor` (2FA back-office)
+Corps : `login` (le même identifiant qu'à l'étape login) + `code` (reçu par
+e-mail). Vérifie le code (`VerificationService`, purpose `two_factor`) et, en cas
+de succès, délivre un jeton à **expiration courte** (session back-office = 8 h) :
+`{ data: { user, token, expires_at } }`. Réponses génériques en cas d'échec
+(**422**, `code` invalide/expiré) — pas de distinction identifiant/code. Le
+périmètre 2FA est piloté par `UserRole::twoFactorRequired()` (extensible aux
+agents sans toucher au flux).
 
 ### `logout`
 Révoque **uniquement** le token de la requête courante (les autres appareils

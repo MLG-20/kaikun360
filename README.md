@@ -324,6 +324,9 @@ sur téléphone (technologie PWA).
 - [x] Endpoints spécifiques team building (demandes, packages, devis, affectation prestataires) pour vue back-office. — _file back-office exposée dans le module Team Building (`GET /team-building-requests`)._
 - [x] Endpoints spécifiques diaspora (dossiers à forte valeur, vérification, reporting, priorités) pour vue back-office. — _vue priorisée exposée dans le module Diaspora (`GET /diaspora-projects`)._
 - [x] Policies différenciées Agent / Admin / Super Admin selon le tableau de rôles du cahier des charges.
+- [x] Endpoints `GET/POST /admin/team` + `PATCH /admin/team/{id}` — gestion de l'**équipe back-office** (annuaire, enrôlement d'un agent/admin avec code d'invitation e-mail, pilotage rôle/statut), garde-fous de hiérarchie (escalade, auto-modification, protection super_admin). — _F7.1.a._
+- [x] Endpoints `GET/PUT /admin/team/{id}/permissions` — **délégation des dossiers par personne** (« grant pur ») : le rôle `agent_kaikun` n'ouvre plus que l'accès, chacune des **12 permissions** de traitement est déléguée individuellement (`AdminPermission`), la gouvernance exigeant un super_admin. — _F7.1.b._
+- [x] Endpoints pointeuse `POST /admin/attendance/clock-in|clock-out`, `GET /admin/attendance/me`, `GET /admin/attendance` — **présences de l'équipe** (entrée/sortie, feuille mensuelle détail/récapitulatif, export CSV). — _F7.1.c._
 
 ### Phase B14 — Paiement avec PayTech
 
@@ -548,6 +551,14 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 ### Phase F7 — Back-office (AdminModule)
 
+> **Shell DÉDIÉ et indépendant** (décision produit) : le back-office n'utilise PAS le shell des espaces utilisateurs. Il a sa propre racine, son guard de rôle strict et son identité « salle de contrôle » — niveau de sécurité maximal car « tout passe par là ». On commence par **F7.1 « Poste de commandement de l'équipe »** (super admin + sous-admins) avant le reste.
+>
+> Socle backend F7.1 livré (voir Phase B13) : **F7.1.a** équipe/enrôlement · **F7.1.b** délégation « grant pur » des permissions par personne · **F7.1.c** pointeuse (présences + feuille mensuelle) · **F7.1.d** 2FA e-mail obligatoire admin/super_admin + session courte. **Backend F7.1 terminé.** Reste les écrans Angular (shell dédié + équipe/permissions/pointeuse).
+
+- [ ] Écran **Équipe** (annuaire des employés, enrôlement d'un agent/admin, rôle/statut) — _backend F7.1.a prêt._
+- [ ] Écran **Permissions** (matrice de délégation par employé : 12 cases-dossiers) — _backend F7.1.b prêt._
+- [ ] Écran **Pointeuse** (bouton pointer entrée/sortie, feuille de présence mensuelle, export) — _backend F7.1.c prêt._
+- [x] **2FA** obligatoire pour les comptes admin/super_admin (OTP e-mail, `POST /auth/two-factor`) + jeton back-office à expiration courte (8 h) — _F7.1.d (backend). Le branchement des écrans reste à faire côté Angular._
 - [ ] Écran Tableau de bord (demandes du jour, revenus estimés, biens en attente, prestataires à valider, alertes, KPI).
 - [ ] Écran Utilisateurs (liste, rôles, statut, documents, historique, désactivation).
 - [ ] Écran Biens immobiliers (créer, modifier, valider, publier, archiver, attribuer).

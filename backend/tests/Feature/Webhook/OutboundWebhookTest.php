@@ -5,6 +5,7 @@ namespace Tests\Feature\Webhook;
 use App\Jobs\SendWebhookJob;
 use App\Models\ServiceRequest;
 use App\Models\User;
+use App\Modules\Admin\Enums\AdminPermission;
 use App\Modules\Core\Enums\UserRole;
 use App\Support\Webhooks\WebhookDispatcher;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -86,6 +87,7 @@ class OutboundWebhookTest extends TestCase
 
         $agent = User::factory()->create();
         $agent->assignRole(UserRole::AGENT_KAIKUN->value);
+        $agent->givePermissionTo(AdminPermission::operational()); // F7.1.b : agent pleinement outillé (droits désormais délégués, plus portés par le rôle)
         $request = ServiceRequest::factory()->create();
 
         Sanctum::actingAs($agent);

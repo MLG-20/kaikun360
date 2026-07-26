@@ -35,16 +35,26 @@ class BackOfficeRoleMatrixTest extends TestCase
         return $user;
     }
 
-    public function test_l_agent_est_operationnel_mais_pas_administrateur(): void
+    public function test_l_agent_a_l_acces_seul_par_defaut_puis_traite_ce_qu_on_lui_delegue(): void
     {
+        // F7.1.b : le rôle agent n'ouvre QUE l'accès au back-office.
         $agent = $this->withRole(UserRole::AGENT_KAIKUN->value);
 
-        // Périmètre opérationnel autorisé.
-        foreach (['consulter:dashboard-admin', 'valider:bien', 'valider:vehicule', 'moderer:avis', 'gerer:nuitees'] as $allowed) {
-            $this->assertTrue($agent->can($allowed), "L'agent devrait avoir {$allowed}");
+        $this->assertTrue($agent->can('consulter:dashboard-admin'), "L'agent doit accéder au back-office");
+
+        // Aucun droit de traitement tant qu'on ne lui délègue rien.
+        foreach (['valider:bien', 'valider:vehicule', 'moderer:avis', 'gerer:nuitees'] as $denied) {
+            $this->assertFalse($agent->can($denied), "L'agent ne devrait pas avoir {$denied} par défaut");
         }
 
-        // Périmètre d'administration interdit.
+        // Le super admin délègue deux dossiers : l'agent ne traite QUE ceux-là.
+        $agent->givePermissionTo(['valider:bien', 'gerer:nuitees']);
+        $agent = $agent->fresh();
+        $this->assertTrue($agent->can('valider:bien'));
+        $this->assertTrue($agent->can('gerer:nuitees'));
+        $this->assertFalse($agent->can('valider:vehicule'));
+
+        // Le périmètre de gouvernance reste hors de portée d'un agent.
         foreach (['gerer:utilisateurs', 'gerer:paiements', 'gerer:parametres'] as $denied) {
             $this->assertFalse($agent->can($denied), "L'agent ne devrait pas avoir {$denied}");
         }

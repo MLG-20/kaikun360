@@ -66,19 +66,15 @@ class RolesAndPermissionsSeeder extends Seeder
             UserRole::PRESTATAIRE->value => [],
             UserRole::ENTREPRISE->value => [],
 
-            // L'agent opérationnel valide les ressources et modère, mais ne gère
-            // ni les comptes, ni les paiements, ni les paramètres globaux.
+            // L'agent (sous-admin) ne reçoit par défaut QUE l'accès au back-office.
+            // Depuis F7.1.b (« grant pur par personne »), chaque dossier qu'il a le
+            // droit de traiter lui est DÉLÉGUÉ individuellement par le super
+            // administrateur (permissions directes, cf. AdminPermission::delegable()
+            // et AdminTeamController::syncPermissions). Le rôle ne porte donc plus
+            // les permissions opérationnelles — elles ne sont plus « héritées en
+            // bloc », ce qui donnerait le même pouvoir à tous les agents.
             UserRole::AGENT_KAIKUN->value => [
-                'valider:bien',
-                'valider:vehicule',
-                'valider:experience',
-                'valider:prestataire',
-                'gerer:gestion-locative',
-                'gerer:chantiers',
-                'gerer:nuitees',
-                'traiter:demandes',
                 'consulter:dashboard-admin',
-                'moderer:avis',
             ],
 
             // L'admin a l'ensemble du back-office.

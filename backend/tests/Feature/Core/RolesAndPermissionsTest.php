@@ -47,13 +47,20 @@ class RolesAndPermissionsTest extends TestCase
         $this->assertTrue($superAdmin->can('capacite-inexistante-quelconque'));
     }
 
-    public function test_agent_valide_mais_ne_gere_pas_les_comptes(): void
+    public function test_agent_a_l_acces_mais_aucun_droit_de_traitement_par_defaut(): void
     {
+        // Depuis F7.1.b (« grant pur par personne »), le rôle agent n'ouvre QUE
+        // l'accès au back-office : les dossiers à traiter sont délégués un par un.
         $agent = User::factory()->create();
         $agent->assignRole(UserRole::AGENT_KAIKUN->value);
 
-        $this->assertTrue($agent->can('valider:bien'));
+        $this->assertTrue($agent->can('consulter:dashboard-admin'));
+        $this->assertFalse($agent->can('valider:bien'));
         $this->assertFalse($agent->can('gerer:utilisateurs'));
+
+        // Une fois un dossier délégué, l'agent le traite.
+        $agent->givePermissionTo('valider:bien');
+        $this->assertTrue($agent->fresh()->can('valider:bien'));
     }
 
     public function test_client_n_a_aucune_permission_d_administration(): void

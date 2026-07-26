@@ -5,6 +5,7 @@ namespace Tests\Feature\Transversal;
 use App\Enums\ContactMessageStatus;
 use App\Models\ContactMessage;
 use App\Models\User;
+use App\Modules\Admin\Enums\AdminPermission;
 use App\Modules\Core\Enums\UserRole;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,6 +30,7 @@ class ContactMessageTest extends TestCase
     {
         $agent = User::factory()->create();
         $agent->assignRole(UserRole::AGENT_KAIKUN->value);
+        $agent->givePermissionTo(AdminPermission::operational()); // F7.1.b : agent pleinement outillé (droits désormais délégués, plus portés par le rôle)
 
         return $agent;
     }

@@ -4,6 +4,7 @@ namespace Tests\Feature\Immo;
 
 use App\Models\Region;
 use App\Models\User;
+use App\Modules\Admin\Enums\AdminPermission;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Immo\Events\PropertyCreated;
 use App\Modules\Immo\Models\Property;
@@ -35,6 +36,13 @@ class PropertyValidationTest extends TestCase
     {
         $user = User::factory()->create();
         $user->assignRole($role);
+
+        // F7.1.b : les droits de traitement ne sont plus portés par le rôle
+        // agent mais délégués par personne. Un agent de test est ici « pleinement
+        // outillé » pour retrouver le comportement opérationnel d'avant.
+        if ($role === UserRole::AGENT_KAIKUN->value) {
+            $user->givePermissionTo(AdminPermission::operational());
+        }
 
         return $user;
     }

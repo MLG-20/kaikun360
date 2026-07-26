@@ -18,10 +18,16 @@ class VerificationService
 {
     /** Finalités possibles d'un code. */
     public const PURPOSE_ACCOUNT = 'account_verification';
+
     public const PURPOSE_PASSWORD_RESET = 'password_reset';
+
+    // Double authentification du back-office (F7.1.d) : second facteur envoyé à la
+    // connexion d'un compte admin / super_admin.
+    public const PURPOSE_TWO_FACTOR = 'two_factor';
 
     /** Canaux possibles. */
     public const CHANNEL_EMAIL = 'email';
+
     public const CHANNEL_PHONE = 'phone';
 
     /** Durée de validité d'un code, en minutes. */

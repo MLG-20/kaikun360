@@ -28,6 +28,15 @@ use Illuminate\Validation\ValidationException;
  */
 class AuthController extends Controller
 {
+    /**
+     * Durée de vie d'un jeton de session BACK-OFFICE (F7.1.d), en minutes.
+     *
+     * Session volontairement courte (8 h ≈ une journée de travail) : les comptes
+     * privilégiés se re-authentifient régulièrement (2FA comprise). Les jetons des
+     * comptes publics gardent la durée par défaut (illimitée, cf. config/sanctum).
+     */
+    private const BACKOFFICE_TOKEN_TTL_MINUTES = 480;
+
     public function __construct(private readonly VerificationService $verification) {}
 
     /**
@@ -170,11 +179,72 @@ class AuthController extends Controller
             ]);
         }
 
+        // F7.1.d — Double authentification obligatoire pour les comptes à fort
+        // privilège (admin / super_admin). On NE délivre PAS de jeton ici : on
+        // envoie un code par e-mail et on renvoie un « défi » que le frontend
+        // devra résoudre via POST /auth/two-factor.
+        if ($user->hasAnyRole(UserRole::twoFactorRequired())) {
+            $this->verification->issue($user, VerificationService::PURPOSE_TWO_FACTOR, VerificationService::CHANNEL_EMAIL);
+
+            return ApiResponse::success([
+                'two_factor_required' => true,
+                'channel' => VerificationService::CHANNEL_EMAIL,
+                // Identifiant à renvoyer tel quel à l'étape de vérification.
+                'login' => $data['login'],
+            ]);
+        }
+
         $token = $user->createToken('auth')->plainTextToken;
 
         return ApiResponse::success([
             'user' => UserResource::make($user->load('profile')),
             'token' => $token,
+        ]);
+    }
+
+    /**
+     * Second facteur du back-office. POST /api/v1/auth/two-factor
+     *
+     * Résout le défi de double authentification : on vérifie le code e-mail envoyé
+     * à la connexion d'un compte admin / super_admin, puis on délivre le jeton
+     * d'API — avec une **expiration courte** (session back-office). Réponses
+     * volontairement génériques (pas de distinction identifiant/code) pour ne pas
+     * faciliter l'énumération.
+     */
+    public function twoFactor(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'login' => ['required', 'string'],
+            'code' => ['required', 'string'],
+        ]);
+
+        $field = filter_var($data['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $user = User::where($field, $data['login'])->first();
+
+        // Le compte doit exister, être soumis à la 2FA, et fournir un code valide.
+        $ok = $user
+            && $user->hasAnyRole(UserRole::twoFactorRequired())
+            && $this->verification->verify($user, VerificationService::PURPOSE_TWO_FACTOR, VerificationService::CHANNEL_EMAIL, $data['code']);
+
+        if (! $ok) {
+            throw ValidationException::withMessages([
+                'code' => ['Code de vérification invalide ou expiré.'],
+            ]);
+        }
+
+        // Jeton à durée de vie courte (session back-office).
+        $token = $user->createToken(
+            'back-office',
+            ['*'],
+            now()->addMinutes(self::BACKOFFICE_TOKEN_TTL_MINUTES),
+        )->plainTextToken;
+
+        activity()->causedBy($user)->performedOn($user)->log('Connexion back-office (2FA validée)');
+
+        return ApiResponse::success([
+            'user' => UserResource::make($user->load('profile')),
+            'token' => $token,
+            'expires_at' => now()->addMinutes(self::BACKOFFICE_TOKEN_TTL_MINUTES),
         ]);
     }
 

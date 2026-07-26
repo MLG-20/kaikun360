@@ -131,6 +131,8 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
 
 - **Core** — inscription (5 profils : client, propriétaire, prestataire, diaspora,
   entreprise), connexion e-mail/téléphone **ou Google** (flux ID token),
+  **double authentification e-mail (2FA) obligatoire pour les comptes admin/
+  super_admin** avec jeton back-office à expiration courte (F7.1.d),
   vérification par code, récupération de compte, profils, documents KYC sur disque
   privé (téléchargement par URL signée), 8 rôles / permissions fines.
 - **Immo** — catalogue public filtrable, dépôt de biens, validation par un agent,
@@ -156,6 +158,12 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
 - **Admin** — tableau de bord KPI, file de validation générique, gestion des
   comptes, paramétrage (commissions/tarifs/FAQ/pages), export comptable JSON/CSV,
   supervision des paiements (remboursements + confirmation manuelle Wave/OM).
+  **Poste de commandement de l'équipe (F7.1)** : annuaire + enrôlement des
+  employés (`/admin/team`), **délégation des dossiers par personne** (« grant
+  pur » : le rôle agent n'ouvre que l'accès, chaque permission se délègue
+  individuellement — `/admin/team/{id}/permissions`, catalogue `AdminPermission`)
+  et **pointeuse** (présences entrée/sortie + feuille mensuelle + export CSV,
+  `/admin/attendance`).
 
 Couches **transversales** : demandes de service (machine à états stricte), devis
 génériques, réservations polymorphes, **messagerie générique** (conversations à

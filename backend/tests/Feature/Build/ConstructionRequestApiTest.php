@@ -4,6 +4,7 @@ namespace Tests\Feature\Build;
 
 use App\Models\Report;
 use App\Models\User;
+use App\Modules\Admin\Enums\AdminPermission;
 use App\Modules\Build\Enums\ConstructionObjective;
 use App\Modules\Build\Enums\ConstructionZone;
 use App\Modules\Build\Enums\FinishLevel;
@@ -32,6 +33,7 @@ class ConstructionRequestApiTest extends TestCase
     {
         $agent = User::factory()->create();
         $agent->assignRole(UserRole::AGENT_KAIKUN->value);
+        $agent->givePermissionTo(AdminPermission::operational()); // F7.1.b : agent pleinement outillé (droits désormais délégués, plus portés par le rôle)
 
         return $agent;
     }
