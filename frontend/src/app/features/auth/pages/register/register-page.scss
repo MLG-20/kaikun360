@@ -46,7 +46,8 @@
   color: var(--k-muted);
 }
 
-// Le dernier profil (Diaspora) occupe toute la largeur si la grille est impaire.
+// Si le nombre de profils est impair, la dernière carte occupe toute la largeur
+// (garde-fou : la grille en compte 4, donc 2×2, mais reste propre si ça évolue).
 .profile-card:last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }

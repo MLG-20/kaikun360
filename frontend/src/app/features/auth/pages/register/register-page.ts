@@ -19,8 +19,8 @@ interface ProfileOption {
 /**
  * Page d'inscription + onboarding (F1.2).
  *
- * Un écran : choix du profil (5 casquettes métier) puis coordonnées et mot de
- * passe. En cas de succès, `AuthService.register` ouvre la session (jeton en
+ * Un écran : choix du profil (4 casquettes métier, une par espace) puis
+ * coordonnées et mot de passe. En cas de succès, `AuthService.register` ouvre la session (jeton en
  * mémoire). Le backend renvoie **422** avec des erreurs par champ (e-mail ou
  * téléphone déjà utilisés…) : elles sont affichées sous les champs concernés.
  */
@@ -36,13 +36,18 @@ export class RegisterPageComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  /** Les 5 profils du cahier des charges (valeurs = enum ProfileType backend). */
+  /**
+   * Les 4 profils correspondant aux espaces (valeurs = enum ProfileType backend).
+   *
+   * NB : « Diaspora » n'est PAS proposé ici — ce n'est pas un espace mais une
+   * fonctionnalité de l'espace client (un membre de la diaspora s'inscrit comme
+   * « Client » et retrouve ses projets pilotés à distance dans son espace).
+   */
   protected readonly profiles: ProfileOption[] = [
     { value: 'client', icon: '🔎', label: 'Client', description: 'Rechercher, réserver, demander un service' },
     { value: 'proprietaire', icon: '🏠', label: 'Propriétaire', description: 'Déposer et gérer vos biens' },
     { value: 'prestataire', icon: '🧰', label: 'Prestataire', description: 'Proposer véhicule, circuit, BTP, guide…' },
     { value: 'entreprise', icon: '🏢', label: 'Entreprise', description: 'Demandes groupées, team building, devis' },
-    { value: 'diaspora', icon: '✈️', label: 'Diaspora', description: 'Piloter vos projets depuis l’étranger' },
   ];
 
   protected readonly submitting = signal(false);

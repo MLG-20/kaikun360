@@ -14,7 +14,7 @@ visiteur peut y faire quatre choses (une cinquième arrive bientôt) :
 | Ce que la personne veut faire | Où | Ce qui se passe, en clair |
 | --- | --- | --- |
 | **Se connecter** | `/auth/connexion` | Elle saisit son e-mail (ou téléphone) et son mot de passe. Si c'est correct, elle entre dans son espace. Sinon, un message lui dit que les identifiants sont incorrects. |
-| **Créer un compte** | `/auth/inscription` | Elle choisit d'abord **qui elle est** (Client, Propriétaire, Prestataire, Entreprise ou Diaspora), puis remplit ses informations. Son compte est créé immédiatement. |
+| **Créer un compte** | `/auth/inscription` | Elle choisit d'abord **qui elle est** (Client, Propriétaire, Prestataire ou Entreprise — un profil par espace ; la diaspora s'inscrit comme Client), puis remplit ses informations. Son compte est créé immédiatement. |
 | **Confirmer son compte** | `/auth/verification` | Juste après l'inscription, on lui envoie un **code** (par e-mail ou SMS). En le saisissant, elle prouve que l'adresse/le numéro est bien le sien : son compte devient **actif**. |
 | **Mot de passe oublié** | `/auth/mot-de-passe-oublie` | Elle indique son e-mail ou téléphone, reçoit un **code**, puis choisit un nouveau mot de passe. |
 | **Connexion Google** | sur la page de connexion | Un bouton « Continuer avec Google » pour se connecter en un clic, sans créer de mot de passe. |
