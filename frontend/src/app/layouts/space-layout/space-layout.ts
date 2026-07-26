@@ -79,11 +79,7 @@ export class SpaceLayoutComponent {
     this.sidebarOpen.set(false);
   }
 
-  /** Déconnexion depuis le pied du menu latéral : vide la session, retour à l'accueil. */
-  protected logout(): void {
-    this.auth.logout().subscribe({
-      next: () => this.router.navigate(['/']),
-      error: () => this.router.navigate(['/']),
-    });
-  }
+  // La déconnexion vit désormais uniquement dans le menu utilisateur de
+  // l'en-tête (`space-header`) : plus de bouton « Se déconnecter » dans le pied
+  // du rail.
 }

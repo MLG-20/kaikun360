@@ -99,15 +99,9 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     icon: 'chat',
     ready: true, // F3.7 ✅
   },
-  {
-    label: 'Profil',
-    description: 'Identité, téléphone, documents, préférences et sécurité.',
-    path: 'profil',
-    icon: 'user',
-    ready: true, // F3.2 ✅
-  },
-  // NB : la rubrique « Aide » (mode d'emploi) n'est PAS listée ici : c'est un
-  // utilitaire, rendu dans le PIED du rail (space-layout) à côté de « Retour au
-  // site » / « Se déconnecter », pour garder la navigation principale courte (pas
-  // de défilement du menu) et ne pas l'ajouter aux tuiles de l'accueil.
+  // NB : « Profil » et « Se déconnecter » ne sont PAS dans le menu de gauche :
+  // ils sont accessibles depuis le menu utilisateur de l'en-tête (haut droite),
+  // ce qui garde le rail court (pas de défilement). De même, « Aide » (mode
+  // d'emploi) est rendue dans le PIED du rail (space-layout) à côté de « Retour
+  // au site », et n'apparaît pas dans les tuiles de l'accueil.
 ];
