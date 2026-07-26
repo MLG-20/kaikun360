@@ -19,6 +19,13 @@
   flex-direction: column;
   gap: 1.1rem;
   margin-top: 1rem;
+  // `.k-card` ne fournit pas de padding : on l'ajoute pour que les champs ne
+  // collent pas aux bords de la carte.
+  padding: 1.5rem;
+
+  @media (max-width: 640px) {
+    padding: 1.15rem;
+  }
 }
 
 // Deux colonnes sur écran large ; une seule sur mobile.
