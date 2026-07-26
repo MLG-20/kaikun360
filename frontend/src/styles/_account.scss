@@ -179,14 +179,16 @@
   margin: 0;
   padding: 1.1rem 0 0;
   border-top: 1px solid var(--k-line);
-  display: flex;
-  flex-wrap: wrap;
+  // Grille déterministe (6 étapes sur une rangée) : plus fiable que flex-wrap
+  // pour maîtriser le trait de liaison, qui déborde dès qu'une étape se
+  // retrouve en tête d'une rangée après un retour (cf. media query plus bas).
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: 0.35rem;
 }
 
 .rq-step {
-  flex: 1 1 0;
-  min-width: 80px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -255,8 +257,19 @@
   }
 }
 
-// ============================================================================
-// Briques d'une réservation (préfixe `bk-`) — partagées par la LISTE « Mes
+// Cartes étroites (mobile) : 2 rangées de 3 étapes. On masque le trait de
+// liaison en TÊTE de chaque rangée (1ʳᵉ et 4ᵉ étape) : sinon il pointe vers la
+// gauche « dans le vide » et déborde hors de la carte.
+@media (max-width: 560px) {
+  .rq-timeline {
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 1.15rem;
+  }
+
+  .rq-step:nth-child(3n + 1)::before {
+    display: none;
+  }
+}
 // réservations » et l'écran de DÉTAIL d'une réservation. Déclarées globalement
 // (styles Angular scopés autrement).
 // ============================================================================
