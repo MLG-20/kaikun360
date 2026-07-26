@@ -17,15 +17,20 @@
 
 // --- Rail latéral sombre ---------------------------------------------------
 .account-side {
-  flex: 0 0 264px;
   width: 264px;
-  // Collé à gauche, pleine hauteur, il reste en place au défilement.
-  position: sticky;
+  // Rail RÉELLEMENT figé : sorti du flux (position: fixed), il reste collé à
+  // gauche quelle que soit la page ou la longueur du contenu (sticky était trop
+  // fragile). Le contenu est décalé de 264px via `.account-body` ci-dessous.
+  position: fixed;
   top: 0;
+  left: 0;
   height: 100vh;
-  align-self: flex-start;
+  z-index: 40;
   display: flex;
   flex-direction: column;
+  // Si le rail est plus haut que l'écran (petite hauteur), il défile en interne
+  // pour que le pied (déconnexion) reste toujours atteignable.
+  overflow-y: auto;
   background: var(--k-navy);
   color: rgba(255, 255, 255, 0.86);
 }
@@ -182,6 +187,8 @@
 .account-body {
   flex: 1 1 auto;
   min-width: 0;
+  // Place laissée au rail fixe de 264px (voir `.account-side`).
+  margin-left: 264px;
   display: flex;
   flex-direction: column;
 }
@@ -216,6 +223,11 @@
       transform: translateX(0);
       visibility: visible;
     }
+  }
+
+  // Le rail est un tiroir hors-écran : le contenu reprend toute la largeur.
+  .account-body {
+    margin-left: 0;
   }
 
   // Fond sombre couvrant tout, sous le tiroir mais au-dessus du contenu.
