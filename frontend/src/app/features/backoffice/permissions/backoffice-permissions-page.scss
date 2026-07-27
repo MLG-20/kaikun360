@@ -1,0 +1,200 @@
+// Écran Permissions du back-office (F7.1.g) — matrice de délégation.
+
+:host {
+  display: block;
+  max-width: 1040px;
+}
+
+.pm-head {
+  margin-bottom: 20px;
+}
+
+.pm-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.pm-sub {
+  color: var(--k-muted);
+  margin: 0;
+}
+
+.pm-muted {
+  color: var(--k-muted);
+  font-size: 0.9rem;
+}
+
+.pm-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 22px;
+
+  @media (max-width: 820px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// --- Liste des agents ---
+.pm-agents {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 16px;
+  align-self: start;
+
+  &__title {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    margin: 0 0 10px;
+  }
+}
+
+.pm-agent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pm-agent {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 10px 12px;
+  border-radius: var(--k-radius-sm);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    background: var(--k-cream);
+  }
+
+  &.is-active {
+    background: var(--k-brand-050);
+    box-shadow: inset 3px 0 0 var(--k-brand);
+  }
+
+  &__name {
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.92rem;
+  }
+
+  &__email {
+    font-size: 0.78rem;
+    color: var(--k-muted);
+  }
+}
+
+// --- Matrice ---
+.pm-matrix {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 22px;
+  min-height: 220px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  &__name {
+    font-family: var(--k-font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--k-ink);
+    margin: 0;
+  }
+
+  &__meta {
+    color: var(--k-muted);
+    font-size: 0.82rem;
+    margin: 2px 0 0;
+  }
+}
+
+.pm-placeholder {
+  color: var(--k-muted);
+  padding: 40px 0;
+  text-align: center;
+}
+
+.pm-group {
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 14px 16px;
+  margin: 0 0 14px;
+
+  &__title {
+    font-family: var(--k-font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--k-brand-600);
+    padding: 0 6px;
+  }
+
+  &__items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 18px;
+
+    @media (max-width: 560px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.pm-perm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 4px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: var(--k-ink);
+
+  input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--k-brand);
+    cursor: pointer;
+  }
+
+  &.is-locked {
+    cursor: not-allowed;
+    color: var(--k-muted);
+  }
+
+  &__tag {
+    font-family: var(--k-font-mono);
+    font-size: 0.56rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 6px;
+    border-radius: var(--k-radius-pill);
+    background: rgba(211, 174, 82, 0.18);
+    color: #9a7b1e;
+  }
+}
+
+.pm-note {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: var(--k-muted);
+}

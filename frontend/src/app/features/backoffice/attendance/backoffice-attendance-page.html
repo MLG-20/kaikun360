@@ -1,0 +1,131 @@
+<header class="at-head">
+  <h1 class="at-title">Pointeuse</h1>
+  <p class="at-sub">Présences de l’équipe : pointage et feuille mensuelle.</p>
+</header>
+
+<!-- MA PRÉSENCE -->
+<section class="at-me">
+  @if (loadingMe()) {
+    <p class="at-muted">Chargement…</p>
+  } @else if (me(); as m) {
+    <div class="at-me__status" [class.is-on]="m.on_duty">
+      <span class="at-dot"></span>
+      @if (m.on_duty) {
+        <span>En poste depuis <strong>{{ timeOf(m.current?.started_at ?? null) }}</strong></span>
+      } @else {
+        <span>Vous n’êtes pas en poste.</span>
+      }
+    </div>
+
+    <div class="at-me__right">
+      <span class="at-me__total">Ce mois : <strong>{{ toHours(m.month.total_minutes) }}</strong></span>
+      <button
+        type="button"
+        class="k-btn"
+        [class.k-btn--primary]="!m.on_duty"
+        [class.k-btn--danger]="m.on_duty"
+        [disabled]="actionBusy()"
+        (click)="togglePunch()">
+        {{ actionBusy() ? '…' : (m.on_duty ? 'Pointer la sortie' : 'Pointer l’entrée') }}
+      </button>
+    </div>
+  }
+  @if (actionError()) {
+    <p class="k-form-error at-me__error" role="alert">{{ actionError() }}</p>
+  }
+</section>
+
+<!-- FEUILLE DE L'ÉQUIPE (admin) -->
+@if (isSupervisor()) {
+  <section class="at-sheet">
+    <div class="at-sheet__head">
+      <h2 class="at-sheet__title">Feuille de présence de l’équipe</h2>
+      <div class="at-sheet__tools">
+        <input
+          type="month"
+          class="k-input at-month"
+          [value]="month()"
+          (change)="onMonthChange($any($event.target).value)" />
+        <button type="button" class="k-btn k-btn--ghost" (click)="exportCsv()">Exporter CSV</button>
+      </div>
+    </div>
+
+    @if (loadingSummary()) {
+      <p class="at-muted">Chargement de la feuille…</p>
+    } @else if (summary(); as s) {
+      @if (s.employees.length === 0) {
+        <p class="at-muted">Aucune présence enregistrée sur ce mois.</p>
+      } @else {
+        <div class="at-table-wrap">
+          <table class="at-table">
+            <thead>
+              <tr>
+                <th>Employé</th>
+                <th>Jours présents</th>
+                <th>Total</th>
+                <th>État</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (emp of s.employees; track emp.user.id) {
+                <tr>
+                  <td>
+                    <span class="at-name">{{ emp.user.name }}</span>
+                    <span class="at-email">{{ emp.user.email }}</span>
+                  </td>
+                  <td>{{ emp.days_present }}</td>
+                  <td><strong>{{ toHours(emp.total_minutes) }}</strong></td>
+                  <td>
+                    @if (emp.currently_on_duty) {
+                      <span class="at-badge is-on">En poste</span>
+                    } @else {
+                      <span class="at-badge">Hors poste</span>
+                    }
+                  </td>
+                  <td>
+                    <button type="button" class="at-link" (click)="showDetail(emp)">Détail →</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- Détail d'un employé -->
+    @if (detail(); as d) {
+      <div class="at-detail">
+        <div class="at-detail__head">
+          <h3 class="at-detail__title">{{ d.user.name }} — {{ d.month }}</h3>
+          <button type="button" class="at-link" (click)="closeDetail()">Fermer ✕</button>
+        </div>
+        @if (d.days.length === 0) {
+          <p class="at-muted">Aucun jour de présence ce mois.</p>
+        } @else {
+          <table class="at-table at-table--compact">
+            <thead>
+              <tr><th>Date</th><th>Sessions</th><th>Total</th></tr>
+            </thead>
+            <tbody>
+              @for (day of d.days; track day.date) {
+                <tr>
+                  <td>{{ day.date }}</td>
+                  <td>
+                    @for (sess of day.sessions; track sess.id) {
+                      <span class="at-sess">
+                        {{ timeOf(sess.started_at) }}–{{ sess.is_open ? '…' : timeOf(sess.ended_at) }}
+                      </span>
+                    }
+                  </td>
+                  <td>{{ toHours(day.total_minutes) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    }
+  </section>
+}

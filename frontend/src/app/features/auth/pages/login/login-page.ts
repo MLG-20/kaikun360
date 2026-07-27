@@ -62,6 +62,17 @@ export class LoginPageComponent implements AfterViewInit {
     password: ['', [Validators.required]],
   });
 
+  /**
+   * Défi de double authentification en cours (comptes admin/super_admin, F7.1.d).
+   * `null` = étape identifiant/mot de passe ; sinon on affiche la saisie du code.
+   */
+  protected readonly twoFactor = signal<{ login: string; channel: string } | null>(null);
+
+  /** Formulaire du second facteur : le code reçu par e-mail. */
+  protected readonly codeForm = this.fb.nonNullable.group({
+    code: ['', [Validators.required, Validators.minLength(6)]],
+  });
+
   /** Après l'affichage : si Google est activé, on y dessine son bouton officiel. */
   ngAfterViewInit(): void {
     const host = this.googleBtn()?.nativeElement;
@@ -115,7 +126,13 @@ export class LoginPageComponent implements AfterViewInit {
     this.formError.set(null);
 
     this.auth.login(this.form.getRawValue()).subscribe({
-      next: () => {
+      next: (outcome) => {
+        this.submitting.set(false);
+        // Compte à fort privilège : bascule sur la saisie du code 2FA.
+        if (outcome.kind === 'two_factor') {
+          this.twoFactor.set({ login: outcome.login, channel: outcome.channel });
+          return;
+        }
         void this.router.navigateByUrl(this.landingUrl());
       },
       error: (error: HttpErrorResponse) => {
@@ -123,6 +140,51 @@ export class LoginPageComponent implements AfterViewInit {
         this.formError.set(this.messageFor(error));
       },
     });
+  }
+
+  /** Un champ du second facteur est-il invalide ET déjà touché ? */
+  protected codeInvalid(): boolean {
+    const control = this.codeForm.controls.code;
+    return control.invalid && control.touched;
+  }
+
+  /** Valide le second facteur (2FA back-office) et ouvre la session. */
+  protected submitCode(): void {
+    const challenge = this.twoFactor();
+    if (!challenge || this.submitting()) {
+      return;
+    }
+    if (this.codeForm.invalid) {
+      this.codeForm.markAllAsTouched();
+      return;
+    }
+
+    this.submitting.set(true);
+    this.formError.set(null);
+
+    this.auth
+      .twoFactor({ login: challenge.login, code: this.codeForm.getRawValue().code })
+      .subscribe({
+        next: () => {
+          void this.router.navigateByUrl(this.landingUrl());
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submitting.set(false);
+          const body = error.error as ValidationErrorBody | null;
+          this.formError.set(
+            error.status === 422
+              ? (body?.message ?? 'Code de vérification invalide ou expiré.')
+              : 'Vérification impossible pour le moment. Réessayez.',
+          );
+        },
+      });
+  }
+
+  /** Revient à l'étape identifiant/mot de passe (abandon du défi 2FA). */
+  protected cancelTwoFactor(): void {
+    this.twoFactor.set(null);
+    this.codeForm.reset();
+    this.formError.set(null);
   }
 
   /**

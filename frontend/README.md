@@ -123,15 +123,25 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   `SPACE_CONFIG` (plus aucun lien codé en dur vers `/mon-espace`), et une **notif
   in-app** prévient l'entreprise dès qu'un devis lui est envoyé. 👉 Détail :
   [`src/app/features/enterprise/README.md`](src/app/features/enterprise/README.md).
-- 🚧 **À venir** : le back-office (F7). **Attention — il ne réutilisera PAS le
-  shell partagé des espaces** (`layouts/space-layout/`) : décision produit d'un
-  **shell dédié et indépendant** (racine propre, guard de rôle strict pour
-  agent/admin/super_admin, identité « salle de contrôle »), pour un niveau de
-  sécurité maximal. On démarre par **F7.1 « Poste de commandement de l'équipe »**
-  (annuaire + enrôlement des employés, **matrice de délégation** des dossiers par
-  personne, **pointeuse** entrée/sortie + feuille mensuelle), puis la **2FA**
-  (OTP e-mail) des comptes admin. Le socle backend correspondant (F7.1.a→c) est
-  déjà livré et testé (voir `backend/app/Modules/Admin`).
+- 🎉 **Le back-office (F7.1, terminé)** : sous `/back-office`, réservé aux rôles
+  **staff** (agent / admin / super_admin) par `roleGuard`. **Il NE réutilise PAS
+  le shell des espaces** (`layouts/space-layout/`) : décision produit d'un **shell
+  dédié et indépendant** (`layouts/backoffice-layout/`, rail graphite « Poste de
+  commandement », identité « salle de contrôle »), pour un niveau de sécurité
+  maximal. **Connexion à deux facteurs** : à la connexion d'un compte admin/
+  super_admin, la page bascule sur la saisie d'un **code reçu par e-mail**
+  (`auth.service` renvoie un `LoginOutcome` discriminé → `POST /auth/two-factor`),
+  et les comptes staff atterrissent au back-office (`spaceHomeFor`). Écrans livrés
+  (`features/backoffice/`, données via `core/api/admin.service.ts`) : **Vue
+  d'ensemble** (KPIs), **Équipe** (annuaire + enrôlement + rôle/statut),
+  **Permissions** (matrice de délégation « grant pur » par agent), **Pointeuse**
+  (pointer entrée/sortie + feuille mensuelle d'équipe + export CSV). Rubriques
+  suivantes du back-office = étapes F7.2+.
+  > **Lancer en local** : `php artisan serve` (API `:8000`) + un **worker de file**
+  > (`php artisan queue:work`, pour l'envoi des codes 2FA) + `npm start` (Angular
+  > `:4200`, proxy `/api`→`:8000` via `proxy.conf.json`). Comptes de démo :
+  > `php artisan db:seed --class=Database\Seeders\BackOfficeDemoSeeder` (super_admin
+  > + agent ; e-mail du super_admin réglé par `BACKOFFICE_DEMO_SUPER_EMAIL`).
 
 ---
 

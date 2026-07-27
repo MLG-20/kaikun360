@@ -9,9 +9,12 @@ import { ApiEnvelope } from '../api/api-response.model';
 import {
   AuthResult,
   GooglePayload,
+  LoginOutcome,
   LoginPayload,
   RegisterPayload,
   ResetPasswordPayload,
+  TwoFactorChallenge,
+  TwoFactorPayload,
   VerificationChannel,
 } from './auth.types';
 
@@ -57,9 +60,41 @@ export class AuthService {
     return this.tokenSignal();
   }
 
-  /** Connexion (e-mail ou téléphone). */
-  login(payload: LoginPayload): Observable<User> {
-    return this.authenticate(`${this.api}/auth/login`, payload);
+  /**
+   * Connexion (e-mail ou téléphone).
+   *
+   * Renvoie un **résultat discriminé** : soit la session est ouverte
+   * (`authenticated`), soit le compte est soumis à la double authentification
+   * (`two_factor`, comptes admin/super_admin) — auquel cas AUCUN jeton n'est
+   * stocké et le frontend doit résoudre le défi via {@link twoFactor}.
+   */
+  login(payload: LoginPayload): Observable<LoginOutcome> {
+    return this.http
+      .post<ApiEnvelope<AuthResult | TwoFactorChallenge>>(`${this.api}/auth/login`, payload)
+      .pipe(
+        map((response): LoginOutcome => {
+          const data = response.data;
+
+          // Session normale : la présence d'un jeton distingue ce cas du défi 2FA.
+          if ('token' in data) {
+            this.tokenSignal.set(data.token);
+            this.userSignal.set(data.user);
+            this.persist();
+            return { kind: 'authenticated', user: data.user };
+          }
+
+          // Défi 2FA : pas de jeton, on remonte le challenge au composant.
+          return { kind: 'two_factor', login: data.login, channel: data.channel };
+        }),
+      );
+  }
+
+  /**
+   * Résout le second facteur du back-office (F7.1.d) : envoie le code reçu par
+   * e-mail et ouvre la session (jeton à expiration courte côté serveur).
+   */
+  twoFactor(payload: TwoFactorPayload): Observable<User> {
+    return this.authenticate(`${this.api}/auth/two-factor`, payload);
   }
 
   /** Inscription puis ouverture de session. */
@@ -156,7 +191,7 @@ export class AuthService {
   /** Appel commun login/register/google : POST, puis stockage jeton + utilisateur. */
   private authenticate(
     url: string,
-    body: LoginPayload | RegisterPayload | GooglePayload,
+    body: LoginPayload | RegisterPayload | GooglePayload | TwoFactorPayload,
   ): Observable<User> {
     return this.http.post<ApiEnvelope<AuthResult>>(url, body).pipe(
       map((response) => response.data),

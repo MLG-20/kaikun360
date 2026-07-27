@@ -1,0 +1,85 @@
+<header class="pm-head">
+  <h1 class="pm-title">Permissions</h1>
+  <p class="pm-sub">
+    Déléguez à chaque agent, dossier par dossier, ce qu’il a le droit de traiter.
+  </p>
+</header>
+
+<div class="pm-layout">
+  <!-- Colonne gauche : les agents -->
+  <aside class="pm-agents">
+    <h2 class="pm-agents__title">Agents</h2>
+    @if (loadingAgents()) {
+      <p class="pm-muted">Chargement…</p>
+    } @else if (agents().length === 0) {
+      <p class="pm-muted">Aucun agent. Enrôlez-en un depuis l’écran Équipe.</p>
+    } @else {
+      <ul class="pm-agent-list">
+        @for (a of agents(); track a.id) {
+          <li>
+            <button
+              type="button"
+              class="pm-agent"
+              [class.is-active]="selected()?.id === a.id"
+              (click)="select(a)">
+              <span class="pm-agent__name">{{ a.name }}</span>
+              <span class="pm-agent__email">{{ a.email }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </aside>
+
+  <!-- Colonne droite : la matrice -->
+  <section class="pm-matrix">
+    @if (!selected()) {
+      <p class="pm-placeholder">← Sélectionnez un agent pour gérer ses dossiers.</p>
+    } @else if (loadingMatrix()) {
+      <p class="pm-muted">Chargement de la matrice…</p>
+    } @else {
+      <div class="pm-matrix__head">
+        <div>
+          <h2 class="pm-matrix__name">{{ selected()!.name }}</h2>
+          <p class="pm-matrix__meta">{{ granted().length }} dossier(s) délégué(s)</p>
+        </div>
+        <button type="button" class="k-btn k-btn--primary" (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
+
+      @if (saveSuccess()) {
+        <p class="k-form-info" role="status">{{ saveSuccess() }}</p>
+      }
+      @if (error()) {
+        <p class="k-form-error" role="alert">{{ error() }}</p>
+      }
+
+      @for (group of groups(); track group.name) {
+        <fieldset class="pm-group">
+          <legend class="pm-group__title">{{ group.name }}</legend>
+          <div class="pm-group__items">
+            @for (item of group.items; track item.value) {
+              <label class="pm-perm" [class.is-locked]="isLocked(item)">
+                <input
+                  type="checkbox"
+                  [checked]="isGranted(item.value)"
+                  [disabled]="isLocked(item)"
+                  (change)="toggle(item)" />
+                <span class="pm-perm__label">{{ item.label }}</span>
+                @if (item.requires_super_admin) {
+                  <span class="pm-perm__tag">super admin</span>
+                }
+              </label>
+            }
+          </div>
+        </fieldset>
+      }
+
+      <p class="pm-note">
+        Les dossiers « super admin » (gouvernance) ne sont délégables que par un
+        super administrateur. L’enregistrement remplace l’ensemble des dossiers de l’agent.
+      </p>
+    }
+  </section>
+</div>

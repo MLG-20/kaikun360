@@ -1,0 +1,153 @@
+<header class="tm-head">
+  <div>
+    <h1 class="tm-title">Équipe</h1>
+    <p class="tm-sub">Les employés du back-office : agents et administrateurs.</p>
+  </div>
+  <button type="button" class="k-btn k-btn--primary" (click)="toggleCreate()">
+    {{ showCreate() ? 'Fermer' : '+ Enrôler un membre' }}
+  </button>
+</header>
+
+@if (createSuccess()) {
+  <p class="k-form-info" role="status">{{ createSuccess() }}</p>
+}
+@if (actionError()) {
+  <p class="k-form-error" role="alert">{{ actionError() }}</p>
+}
+
+<!-- Panneau d'enrôlement -->
+@if (showCreate()) {
+  <section class="tm-create">
+    <h2 class="tm-create__title">Nouveau membre de l’équipe</h2>
+    @if (createError()) {
+      <p class="k-form-error" role="alert">{{ createError() }}</p>
+    }
+    <form class="tm-form" [formGroup]="createForm" (ngSubmit)="create()" novalidate>
+      <div class="k-field">
+        <label class="k-label" for="name">Nom complet</label>
+        <input id="name" type="text" class="k-input" formControlName="name" placeholder="Awa Diop" />
+        @if (invalid('name')) { <span class="k-error">Nom requis.</span> }
+      </div>
+      <div class="k-field">
+        <label class="k-label" for="email">E-mail</label>
+        <input id="email" type="email" class="k-input" formControlName="email" placeholder="awa@kaikun.sn" />
+        @if (invalid('email')) { <span class="k-error">E-mail valide requis.</span> }
+      </div>
+      <div class="k-field">
+        <label class="k-label" for="phone">Téléphone (optionnel)</label>
+        <input id="phone" type="text" class="k-input" formControlName="phone" placeholder="+221 77 000 00 00" />
+      </div>
+      <div class="k-field">
+        <label class="k-label" for="role">Rôle</label>
+        <select id="role" class="k-input" formControlName="role">
+          <option value="agent_kaikun">Agent (sous-admin)</option>
+          @if (isSuperAdmin()) {
+            <option value="admin">Administrateur</option>
+          }
+        </select>
+      </div>
+      <div class="tm-form__actions">
+        <button type="submit" class="k-btn k-btn--primary" [disabled]="submitting()">
+          {{ submitting() ? 'Envoi…' : 'Enrôler et inviter' }}
+        </button>
+      </div>
+    </form>
+    <p class="tm-hint">
+      Le nouveau membre recevra un e-mail avec un code pour définir son mot de passe.
+      @if (!isSuperAdmin()) { Seul un super administrateur peut créer un administrateur. }
+    </p>
+  </section>
+}
+
+<!-- Filtres -->
+<section class="tm-filters" [formGroup]="filterForm">
+  <input class="k-input tm-search" type="search" formControlName="q" placeholder="Rechercher (nom, e-mail, téléphone)…" />
+  <select class="k-input" formControlName="role" aria-label="Filtrer par rôle">
+    <option value="">Tous les rôles</option>
+    <option value="agent_kaikun">Agents</option>
+    <option value="admin">Administrateurs</option>
+    <option value="super_admin">Super admins</option>
+  </select>
+  <select class="k-input" formControlName="status" aria-label="Filtrer par statut">
+    <option value="">Tous les statuts</option>
+    <option value="actif">Actifs</option>
+    <option value="suspendu">Suspendus</option>
+    <option value="desactive">Désactivés</option>
+    <option value="en_attente_verification">Invitations en attente</option>
+  </select>
+</section>
+
+<!-- Annuaire -->
+@if (loading()) {
+  <p class="tm-state" role="status">Chargement de l’équipe…</p>
+} @else if (listError()) {
+  <p class="tm-state tm-state--error" role="alert">Impossible de charger l’équipe. Réessayez.</p>
+} @else {
+  <p class="tm-count">{{ total() }} membre(s)</p>
+  <div class="tm-table-wrap">
+    <table class="tm-table">
+      <thead>
+        <tr>
+          <th>Membre</th>
+          <th>Rôle</th>
+          <th>Statut</th>
+          <th>Changer le statut</th>
+          <th>Dossiers</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of members(); track m.id) {
+          <tr>
+            <td>
+              <span class="tm-name">{{ m.name }}</span>
+              <span class="tm-email">{{ m.email }}</span>
+            </td>
+            <td>
+              @if (m.id === currentUserId() || m.role === 'super_admin') {
+                <span class="tm-role">{{ m.role_label }}</span>
+              } @else {
+                <select
+                  class="tm-select"
+                  (change)="setRole(m, $any($event.target).value)"
+                  aria-label="Rôle du membre">
+                  <option value="agent_kaikun" [selected]="m.role === 'agent_kaikun'">Agent</option>
+                  @if (isSuperAdmin() || m.role === 'admin') {
+                    <option value="admin" [selected]="m.role === 'admin'">Administrateur</option>
+                  }
+                </select>
+              }
+            </td>
+            <td>
+              <span class="tm-badge" [class]="statusClass(m.status)">{{ m.status_label }}</span>
+            </td>
+            <td>
+              @if (m.id === currentUserId()) {
+                <span class="tm-self">Vous</span>
+              } @else {
+                <select
+                  class="tm-select"
+                  (change)="setStatus(m, $any($event.target).value)"
+                  aria-label="Statut du membre">
+                  <option value="actif" [selected]="m.status === 'actif'">Actif</option>
+                  <option value="suspendu" [selected]="m.status === 'suspendu'">Suspendu</option>
+                  <option value="desactive" [selected]="m.status === 'desactive'">Désactivé</option>
+                </select>
+              }
+            </td>
+            <td>
+              @if (m.role === 'agent_kaikun') {
+                <a class="tm-link" routerLink="/back-office/permissions" [queryParams]="{ member: m.id }">
+                  Gérer les dossiers →
+                </a>
+              } @else {
+                <span class="tm-self">—</span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="5" class="tm-empty">Aucun membre ne correspond à ces filtres.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

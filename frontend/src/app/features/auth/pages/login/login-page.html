@@ -1,9 +1,51 @@
-<header class="auth-head">
-  <h1 class="auth-title">Connexion</h1>
-  <p class="auth-sub k-muted">Accédez à votre espace Kaikun&nbsp;360.</p>
-</header>
+@if (twoFactor(); as challenge) {
+  <!-- Étape 2 — Double authentification (comptes back-office admin/super_admin). -->
+  <header class="auth-head">
+    <h1 class="auth-title">Vérification en deux étapes</h1>
+    <p class="auth-sub k-muted">
+      Un code à 6&nbsp;chiffres a été envoyé par e-mail. Saisissez-le pour accéder
+      au back-office.
+    </p>
+  </header>
 
-<form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <form class="auth-form" [formGroup]="codeForm" (ngSubmit)="submitCode()" novalidate>
+    @if (formError()) {
+      <p class="k-form-error" role="alert">{{ formError() }}</p>
+    }
+
+    <div class="k-field">
+      <label class="k-label" for="code">Code de vérification</label>
+      <input
+        id="code"
+        type="text"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        maxlength="6"
+        class="k-input"
+        [class.k-input--error]="codeInvalid()"
+        formControlName="code"
+        placeholder="000000"
+        autofocus />
+      @if (codeInvalid()) {
+        <span class="k-error">Code à 6 chiffres requis.</span>
+      }
+    </div>
+
+    <button type="submit" class="k-btn k-btn--primary k-btn--block" [disabled]="submitting()">
+      {{ submitting() ? 'Vérification…' : 'Valider le code' }}
+    </button>
+
+    <button type="button" class="k-btn k-btn--ghost k-btn--block" (click)="cancelTwoFactor()">
+      Revenir en arrière
+    </button>
+  </form>
+} @else {
+  <header class="auth-head">
+    <h1 class="auth-title">Connexion</h1>
+    <p class="auth-sub k-muted">Accédez à votre espace Kaikun&nbsp;360.</p>
+  </header>
+
+  <form class="auth-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
   @if (info) {
     <p class="k-form-info" role="status">{{ info }}</p>
   }
@@ -59,6 +101,7 @@
 }
 
 <p class="auth-alt">
-  Pas encore de compte ?
-  <a class="auth-link" routerLink="/auth/inscription">Créer un compte</a>
-</p>
+    Pas encore de compte ?
+    <a class="auth-link" routerLink="/auth/inscription">Créer un compte</a>
+  </p>
+}

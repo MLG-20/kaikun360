@@ -43,6 +43,14 @@ export const routes: Routes = [
       import('./features/enterprise/enterprise.routes').then((m) => m.ENTERPRISE_ROUTES),
   },
   {
+    // Back-office (F7) : poste de commandement de l'équipe. Shell DÉDIÉ et
+    // indépendant (pas le shell des espaces), protégé par `roleGuard` avec les
+    // rôles staff (agent/admin/super_admin). Déclaré avant `''`.
+    path: 'back-office',
+    loadChildren: () =>
+      import('./features/backoffice/backoffice.routes').then((m) => m.BACKOFFICE_ROUTES),
+  },
+  {
     path: '',
     component: MainLayoutComponent,
     children: [

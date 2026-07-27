@@ -1,0 +1,102 @@
+<div class="bo-app">
+  <!-- Fond de tiroir (petit écran) : ferme le rail au clic. -->
+  @if (sidebarOpen()) {
+    <div class="bo-backdrop" (click)="closeSidebar()"></div>
+  }
+
+  <!-- RAIL SOMBRE « salle de commande » -->
+  <aside class="bo-side" [class.bo-side--open]="sidebarOpen()">
+    <a class="bo-brand" [routerLink]="linkFor('')">
+      <span class="bo-brand__logo">K360</span>
+      <span class="bo-brand__sub">Poste de commandement</span>
+    </a>
+
+    <nav class="bo-nav" aria-label="Navigation du back-office">
+      @for (item of nav; track item.path) {
+        @if (item.ready) {
+          <a
+            class="bo-nav__link"
+            [routerLink]="linkFor(item.path)"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="{ exact: item.path === '' }">
+            <span class="bo-nav__icon">
+              @switch (item.icon) {
+                @case ('grid') {
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" stroke="currentColor" stroke-width="1.6"/></svg>
+                }
+                @case ('users') {
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.2a3 3 0 0 1 0 5.6M20.5 19a5 5 0 0 0-3.5-4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                }
+                @case ('shield') {
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                }
+                @case ('clock') {
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                }
+              }
+            </span>
+            <span class="bo-nav__label">{{ item.label }}</span>
+          </a>
+        } @else {
+          <span class="bo-nav__link bo-nav__link--soon" aria-disabled="true">
+            <span class="bo-nav__icon">
+              @switch (item.icon) {
+                @case ('users') {
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.2a3 3 0 0 1 0 5.6M20.5 19a5 5 0 0 0-3.5-4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                }
+                @case ('shield') {
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                }
+                @case ('clock') {
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                }
+              }
+            </span>
+            <span class="bo-nav__label">{{ item.label }}</span>
+            <span class="bo-nav__soon">Bientôt</span>
+          </span>
+        }
+      }
+    </nav>
+
+    <div class="bo-side__foot">
+      <a class="bo-side__link" routerLink="/">Retour au site</a>
+      <button type="button" class="bo-side__link bo-side__logout" (click)="logout()">
+        Se déconnecter
+      </button>
+    </div>
+  </aside>
+
+  <!-- COLONNE CONTENU -->
+  <div class="bo-body">
+    <header class="bo-topbar">
+      <button
+        type="button"
+        class="bo-burger"
+        (click)="toggleSidebar()"
+        aria-label="Ouvrir la navigation">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+
+      <div class="bo-topbar__title">Back-office</div>
+
+      <div class="bo-topbar__right">
+        <span class="bo-secure" title="Session sécurisée">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Session sécurisée
+        </span>
+        <div class="bo-user">
+          <span class="bo-user__avatar">{{ (user()?.name || '?').charAt(0) }}</span>
+          <span class="bo-user__meta">
+            <span class="bo-user__name">{{ user()?.name }}</span>
+            <span class="bo-user__role">{{ roleLabel() }}</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <main class="bo-main">
+      <router-outlet />
+    </main>
+  </div>
+</div>

@@ -1,0 +1,235 @@
+// Écran Pointeuse du back-office (F7.1.h).
+
+:host {
+  display: block;
+  max-width: 1000px;
+}
+
+.at-head {
+  margin-bottom: 20px;
+}
+
+.at-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.at-sub {
+  color: var(--k-muted);
+  margin: 0;
+}
+
+.at-muted {
+  color: var(--k-muted);
+  font-size: 0.9rem;
+}
+
+// Bouton « danger » (sortie) — non défini globalement.
+.k-btn--danger {
+  background: var(--k-danger);
+  color: #fff;
+
+  &:hover {
+    background: #a92f3f;
+  }
+}
+
+// --- Ma présence ---
+.at-me {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px 22px;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  margin-bottom: 26px;
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.98rem;
+    color: var(--k-muted);
+
+    &.is-on {
+      color: var(--k-ink);
+    }
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__total {
+    color: var(--k-muted);
+    font-size: 0.92rem;
+  }
+
+  &__error {
+    flex-basis: 100%;
+    margin: 4px 0 0;
+  }
+}
+
+.at-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--k-line-strong);
+
+  .at-me__status.is-on & {
+    background: var(--k-green);
+    box-shadow: 0 0 0 4px rgba(56, 167, 116, 0.18);
+  }
+}
+
+// --- Feuille d'équipe ---
+.at-sheet {
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    font-family: var(--k-font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--k-ink);
+    margin: 0;
+  }
+
+  &__tools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+.at-month {
+  max-width: 180px;
+}
+
+.at-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.at-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 560px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: middle;
+  }
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  &--compact {
+    min-width: 0;
+    margin-top: 10px;
+  }
+}
+
+.at-name {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.at-email {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--k-muted);
+}
+
+.at-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--k-sand);
+  color: var(--k-muted);
+
+  &.is-on {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+}
+
+.at-link {
+  border: 0;
+  background: transparent;
+  color: var(--k-brand-600);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.at-sess {
+  display: inline-block;
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+
+// --- Détail employé ---
+.at-detail {
+  margin-top: 18px;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__title {
+    font-family: var(--k-font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--k-ink);
+    margin: 0;
+  }
+}

@@ -13,6 +13,12 @@ import { User } from '../../models/user.model';
  * L'espace client est le repli par défaut (tout compte authentifié y a accès).
  */
 export function spaceHomeFor(user: User | null): string {
+  // Membres de l'équipe back-office (agent / admin / super_admin) : leur espace
+  // est le poste de commandement, prioritaire sur tout rôle « public ».
+  const staff = ['agent_kaikun', 'admin', 'super_admin'];
+  if (user?.roles?.some((role) => staff.includes(role))) {
+    return '/back-office';
+  }
   if (user?.roles?.includes('proprietaire')) {
     return '/espace-proprietaire';
   }

@@ -1,0 +1,218 @@
+// Écran Équipe du back-office (F7.1.f).
+
+:host {
+  display: block;
+  max-width: 1000px;
+}
+
+.tm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.tm-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.tm-sub {
+  color: var(--k-muted);
+  margin: 0;
+}
+
+// --- Panneau d'enrôlement ---
+.tm-create {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 20px;
+  margin-bottom: 20px;
+
+  &__title {
+    font-family: var(--k-font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0 0 14px;
+    color: var(--k-ink);
+  }
+}
+
+.tm-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+
+  &__actions {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tm-hint {
+  margin: 12px 0 0;
+  font-size: 0.82rem;
+  color: var(--k-muted);
+}
+
+// --- Filtres ---
+.tm-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .tm-search {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  select {
+    max-width: 210px;
+  }
+}
+
+// --- États ---
+.tm-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.tm-count {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  margin: 0 0 8px;
+}
+
+// --- Table ---
+.tm-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.tm-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: middle;
+  }
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.tm-name {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.tm-email {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--k-muted);
+}
+
+.tm-role {
+  font-weight: 600;
+  color: var(--k-navy-2);
+}
+
+.tm-self {
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+.tm-link {
+  color: var(--k-brand-600);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.tm-select {
+  padding: 7px 10px;
+  border: 1px solid var(--k-line-strong);
+  border-radius: var(--k-radius-sm);
+  background: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--k-ink);
+  cursor: pointer;
+}
+
+.tm-empty {
+  text-align: center;
+  color: var(--k-muted);
+  padding: 26px;
+}
+
+// --- Badge de statut ---
+.tm-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &.is-warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+  }
+}

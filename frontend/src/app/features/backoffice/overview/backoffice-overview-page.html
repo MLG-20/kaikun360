@@ -1,0 +1,69 @@
+<header class="ov-head">
+  <h1 class="ov-title">Vue d’ensemble</h1>
+  <p class="ov-sub">Photographie en temps réel de l’activité de la plateforme.</p>
+</header>
+
+@if (loading()) {
+  <p class="ov-state" role="status">Chargement des indicateurs…</p>
+} @else if (error()) {
+  <p class="ov-state ov-state--error" role="alert">
+    Impossible de charger le tableau de bord. Vérifiez votre session, puis réessayez.
+  </p>
+} @else if (snapshot(); as s) {
+  <!-- Files de validation : le cœur opérationnel du back-office. -->
+  <section class="ov-block">
+    <div class="ov-block__head">
+      <h2 class="ov-block__title">Files de validation</h2>
+      <span class="ov-pill">{{ pendingTotal(s) }} en attente</span>
+    </div>
+    <div class="ov-grid">
+      <article class="ov-card"><span class="ov-card__value">{{ s.queues.properties_pending }}</span><span class="ov-card__label">Biens</span></article>
+      <article class="ov-card"><span class="ov-card__value">{{ s.queues.vehicles_pending }}</span><span class="ov-card__label">Véhicules</span></article>
+      <article class="ov-card"><span class="ov-card__value">{{ s.queues.experiences_pending }}</span><span class="ov-card__label">Circuits</span></article>
+      <article class="ov-card"><span class="ov-card__value">{{ s.queues.providers_pending }}</span><span class="ov-card__label">Prestataires</span></article>
+    </div>
+  </section>
+
+  <div class="ov-cols">
+    <!-- Activité du jour -->
+    <section class="ov-block">
+      <div class="ov-block__head"><h2 class="ov-block__title">Aujourd’hui</h2></div>
+      <div class="ov-grid ov-grid--2">
+        <article class="ov-card"><span class="ov-card__value">{{ s.today.requests }}</span><span class="ov-card__label">Demandes reçues</span></article>
+        <article class="ov-card"><span class="ov-card__value">{{ s.today.bookings }}</span><span class="ov-card__label">Réservations</span></article>
+      </div>
+    </section>
+
+    <!-- Alertes -->
+    <section class="ov-block">
+      <div class="ov-block__head"><h2 class="ov-block__title">Alertes</h2></div>
+      <div class="ov-grid ov-grid--2">
+        <article class="ov-card ov-card--warn"><span class="ov-card__value">{{ s.alerts.reviews_to_moderate }}</span><span class="ov-card__label">Avis à modérer</span></article>
+        <article class="ov-card ov-card--warn"><span class="ov-card__value">{{ s.alerts.open_incidents }}</span><span class="ov-card__label">Incidents ouverts</span></article>
+      </div>
+    </section>
+  </div>
+
+  <!-- Revenus estimés -->
+  <section class="ov-block">
+    <div class="ov-block__head">
+      <h2 class="ov-block__title">Revenus estimés</h2>
+      <span class="ov-hint">Estimation (encaissement réel via PayTech)</span>
+    </div>
+    <div class="ov-grid ov-grid--2">
+      <article class="ov-card ov-card--money"><span class="ov-card__value">{{ xof(s.revenue.gross_volume_xof) }}</span><span class="ov-card__label">Volume brut</span></article>
+      <article class="ov-card ov-card--money"><span class="ov-card__value">{{ xof(s.revenue.commission_xof) }}</span><span class="ov-card__label">Commission plateforme</span></article>
+    </div>
+  </section>
+
+  <!-- Indicateurs cumulés -->
+  <section class="ov-block">
+    <div class="ov-block__head"><h2 class="ov-block__title">Indicateurs</h2></div>
+    <div class="ov-grid">
+      <article class="ov-card"><span class="ov-card__value">{{ s.kpi.users_total }}</span><span class="ov-card__label">Utilisateurs</span></article>
+      <article class="ov-card"><span class="ov-card__value">{{ s.kpi.providers_validated }}</span><span class="ov-card__label">Prestataires validés</span></article>
+      <article class="ov-card"><span class="ov-card__value">{{ s.kpi.properties_published }}</span><span class="ov-card__label">Biens publiés</span></article>
+      <article class="ov-card"><span class="ov-card__value">{{ s.kpi.bookings_total }}</span><span class="ov-card__label">Réservations totales</span></article>
+    </div>
+  </section>
+}

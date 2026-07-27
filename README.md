@@ -553,13 +553,16 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 > **Shell DÉDIÉ et indépendant** (décision produit) : le back-office n'utilise PAS le shell des espaces utilisateurs. Il a sa propre racine, son guard de rôle strict et son identité « salle de contrôle » — niveau de sécurité maximal car « tout passe par là ». On commence par **F7.1 « Poste de commandement de l'équipe »** (super admin + sous-admins) avant le reste.
 >
-> Socle backend F7.1 livré (voir Phase B13) : **F7.1.a** équipe/enrôlement · **F7.1.b** délégation « grant pur » des permissions par personne · **F7.1.c** pointeuse (présences + feuille mensuelle) · **F7.1.d** 2FA e-mail obligatoire admin/super_admin + session courte. **Backend F7.1 terminé.** Reste les écrans Angular (shell dédié + équipe/permissions/pointeuse).
+> **🎉 F7.1 « Poste de commandement de l'équipe » terminé** (backend + frontend, vérifié dans le navigateur). Backend (voir Phase B13) : **F7.1.a** équipe/enrôlement · **F7.1.b** délégation « grant pur » par personne · **F7.1.c** pointeuse · **F7.1.d** 2FA e-mail + session courte. Frontend : shell dédié `layouts/backoffice-layout/` sous `/back-office` (guard rôle staff), connexion 2FA, et les écrans ci-dessous. Prochaine étape F7 : les autres écrans (biens, nuitées, paiements, paramètres…).
 
-- [ ] Écran **Équipe** (annuaire des employés, enrôlement d'un agent/admin, rôle/statut) — _backend F7.1.a prêt._
-- [ ] Écran **Permissions** (matrice de délégation par employé : 12 cases-dossiers) — _backend F7.1.b prêt._
-- [ ] Écran **Pointeuse** (bouton pointer entrée/sortie, feuille de présence mensuelle, export) — _backend F7.1.c prêt._
-- [x] **2FA** obligatoire pour les comptes admin/super_admin (OTP e-mail, `POST /auth/two-factor`) + jeton back-office à expiration courte (8 h) — _F7.1.d (backend). Le branchement des écrans reste à faire côté Angular._
-- [ ] Écran Tableau de bord (demandes du jour, revenus estimés, biens en attente, prestataires à valider, alertes, KPI).
+- [x] **Shell back-office dédié** (`/back-office`) + **connexion 2FA** (login → saisie du code e-mail) + redirection des comptes staff. — _F7.1.e._
+- [x] Écran **Vue d'ensemble** (KPIs `GET /admin/dashboard` : files de validation, activité du jour, alertes, revenus, indicateurs). — _F7.1.e._
+- [x] Écran **Équipe** (annuaire des employés, enrôlement d'un agent/admin avec invitation, rôle/statut). — _F7.1.f._
+- [x] Écran **Permissions** (matrice de délégation par agent : 12 cases-dossiers groupées, gouvernance réservée au super_admin). — _F7.1.g._
+- [x] Écran **Pointeuse** (pointer entrée/sortie perso + feuille de présence mensuelle d'équipe + détail + export CSV). — _F7.1.h._
+- [x] **2FA** obligatoire pour les comptes admin/super_admin (OTP e-mail, `POST /auth/two-factor`) + jeton back-office à expiration courte (8 h) — _F7.1.d (back) + F7.1.e (écran)._
+- [ ] Écran Tableau de bord (demandes du jour, revenus estimés, biens en attente, prestataires à valider, alertes, KPI). <!-- socle livré en Vue d'ensemble (F7.1.e) ; à enrichir. -->
+- [ ] Écran Utilisateurs (liste, rôles, statut, documents, historique, désactivation). <!-- volet équipe/permissions livré en F7.1.f/g ; reste les comptes publics. -->
 - [ ] Écran Utilisateurs (liste, rôles, statut, documents, historique, désactivation).
 - [ ] Écran Biens immobiliers (créer, modifier, valider, publier, archiver, attribuer).
 - [ ] Écran Nuitées (calendrier, disponibilité, caution, ménage, check-in/check-out).

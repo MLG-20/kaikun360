@@ -1,0 +1,8 @@
+{
+  "//": "Proxy de DÉVELOPPEMENT (F7.1.e) : redirige les appels /api du serveur ng (:4200) vers l'API Laravel locale (php artisan serve, :8000). L'app utilise des URLs relatives (/api/v1) ; en prod, Laravel sert le SPA sur la même origine, donc aucun proxy n'est nécessaire.",
+  "/api": {
+    "target": "http://localhost:8000",
+    "secure": false,
+    "changeOrigin": true
+  }
+}
