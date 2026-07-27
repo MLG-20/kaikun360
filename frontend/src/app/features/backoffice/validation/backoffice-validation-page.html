@@ -1,0 +1,151 @@
+<header class="vl-head">
+  <div>
+    <h1 class="vl-title">Validation</h1>
+    <p class="vl-sub">
+      Les ressources en attente d’approbation. Validez pour publier, ou refusez avec un motif.
+    </p>
+  </div>
+  @if (overview(); as o) {
+    <span class="vl-total" [class.is-clear]="o.total_pending === 0">
+      {{ o.total_pending }} en attente
+    </span>
+  }
+</header>
+
+<!-- Onglets par type (compteurs issus de la vue d'ensemble) -->
+@if (loadingOverview()) {
+  <p class="vl-state" role="status">Chargement de la file de validation…</p>
+} @else if (overviewError()) {
+  <p class="vl-state vl-state--error" role="alert">
+    Impossible de charger la file de validation. Réessayez.
+  </p>
+} @else {
+  <nav class="vl-tabs" aria-label="Types à valider">
+    @for (t of types; track t.key) {
+      <button
+        type="button"
+        class="vl-tab"
+        [class.is-active]="selected() === t.key"
+        (click)="select(t.key)">
+        {{ t.label }}
+        <span class="vl-tab__count" [class.is-zero]="count(t.key) === 0">{{ count(t.key) }}</span>
+      </button>
+    }
+  </nav>
+
+  @if (actionDone()) {
+    <p class="k-form-info" role="status">{{ actionDone() }}</p>
+  }
+  @if (actionError()) {
+    <p class="k-form-error" role="alert">{{ actionError() }}</p>
+  }
+
+  <!-- Liste du type sélectionné -->
+  @if (loadingList()) {
+    <p class="vl-state" role="status">Chargement…</p>
+  } @else if (listError()) {
+    <p class="vl-state vl-state--error" role="alert">Impossible de charger cette file. Réessayez.</p>
+  } @else if (entries().length === 0) {
+    <div class="vl-empty">
+      <span class="vl-empty__icon" aria-hidden="true">✓</span>
+      <p>Aucun {{ currentMeta().singular }} en attente de validation. File à jour.</p>
+    </div>
+  } @else {
+    <ul class="vl-list">
+      @for (e of entries(); track e.id) {
+        <li class="vl-item">
+          <div class="vl-item__main">
+            <span class="vl-item__label">{{ e.label }}</span>
+            <span class="vl-item__meta">
+              @if (e.reference) {
+                <span class="vl-ref">{{ e.reference }}</span>
+              }
+              <span class="vl-item__date">Soumis le {{ submittedAt(e.submitted_at) }}</span>
+            </span>
+
+            <!-- Déposant : qui a soumis la ressource (identité + contact). -->
+            <div class="vl-owner">
+              <span class="vl-owner__avatar" aria-hidden="true">
+                {{ (e.owner?.name || '?').charAt(0) }}
+              </span>
+              <span class="vl-owner__text">
+                @if (e.owner) {
+                  <span class="vl-owner__name">{{ e.owner.name }}</span>
+                  <span class="vl-owner__contact">
+                    @if (e.owner.email) {
+                      <a class="vl-owner__link" [href]="'mailto:' + e.owner.email">{{ e.owner.email }}</a>
+                    }
+                    @if (e.owner.email && e.owner.phone) { <span class="vl-owner__sep">·</span> }
+                    @if (e.owner.phone) {
+                      <a class="vl-owner__link" [href]="'tel:' + e.owner.phone">{{ e.owner.phone }}</a>
+                    }
+                  </span>
+                } @else {
+                  <span class="vl-owner__name vl-owner__name--muted">Déposant introuvable (compte supprimé)</span>
+                }
+              </span>
+            </div>
+          </div>
+
+          <div class="vl-item__actions">
+            <button
+              type="button"
+              class="k-btn k-btn--primary vl-btn"
+              [disabled]="processingId() !== null"
+              (click)="approve(e)">
+              {{ processingId() === e.id ? '…' : 'Valider' }}
+            </button>
+            <button
+              type="button"
+              class="k-btn k-btn--ghost vl-btn"
+              [class.is-open]="rejectingId() === e.id"
+              [disabled]="processingId() !== null"
+              (click)="toggleReject(e)">
+              Refuser
+            </button>
+          </div>
+
+          <!-- Champ de motif (déplié pour la ligne en cours de refus) -->
+          @if (rejectingId() === e.id) {
+            <div class="vl-reject">
+              <input
+                type="text"
+                class="k-input"
+                [(ngModel)]="reason"
+                maxlength="500"
+                placeholder="Motif du refus (facultatif, transmis dans le journal)…" />
+              <button
+                type="button"
+                class="k-btn vl-btn vl-btn--danger"
+                [disabled]="processingId() !== null"
+                (click)="reject(e)">
+                Confirmer le refus
+              </button>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+
+    <!-- Pagination -->
+    @if (lastPage() > 1) {
+      <nav class="vl-pager" aria-label="Pagination">
+        <button
+          type="button"
+          class="k-btn k-btn--ghost"
+          [disabled]="page() === 1"
+          (click)="goTo(page() - 1)">
+          ← Précédent
+        </button>
+        <span class="vl-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+        <button
+          type="button"
+          class="k-btn k-btn--ghost"
+          [disabled]="page() === lastPage()"
+          (click)="goTo(page() + 1)">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}

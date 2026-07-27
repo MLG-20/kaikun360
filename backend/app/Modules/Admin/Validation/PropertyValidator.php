@@ -30,6 +30,7 @@ class PropertyValidator implements ResourceValidator
     public function pendingQuery(): Builder
     {
         return Property::query()
+            ->with('owner') // évite le N+1 : le déposant est affiché dans la file.
             ->where('status', PropertyStatus::EN_ATTENTE_VALIDATION->value)
             ->oldest();
     }
@@ -58,6 +59,7 @@ class PropertyValidator implements ResourceValidator
             'reference' => null,
             'label' => $model->title,
             'owner_id' => $model->owner_id,
+            'owner' => OwnerEntry::from($model->owner),
             'submitted_at' => $model->created_at,
         ];
     }

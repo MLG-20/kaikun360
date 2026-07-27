@@ -34,6 +34,7 @@ class ProviderValidator implements ResourceValidator
     public function pendingQuery(): Builder
     {
         return Provider::query()
+            ->with('user') // évite le N+1 : le titulaire du compte est affiché dans la file.
             ->where('status', ProviderStatus::EN_ATTENTE->value)
             ->oldest();
     }
@@ -62,6 +63,7 @@ class ProviderValidator implements ResourceValidator
             'reference' => null,
             'label' => $model->business_name,
             'owner_id' => $model->user_id,
+            'owner' => OwnerEntry::from($model->user),
             'submitted_at' => $model->created_at,
         ];
     }

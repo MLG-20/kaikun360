@@ -135,8 +135,18 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   (`features/backoffice/`, données via `core/api/admin.service.ts`) : **Vue
   d'ensemble** (KPIs), **Équipe** (annuaire + enrôlement + rôle/statut),
   **Permissions** (matrice de délégation « grant pur » par agent), **Pointeuse**
-  (pointer entrée/sortie + feuille mensuelle d'équipe + export CSV). Rubriques
-  suivantes du back-office = étapes F7.2+.
+  (pointer entrée/sortie + feuille mensuelle d'équipe + export CSV).
+- ▶ **F7.2 — les autres écrans du back-office** (frontend pur sur l'API Admin de
+  B13). **F7.2.a Validation** (`features/backoffice/validation/`) : file
+  d'approbation générique (`GET /admin/queue` + `PATCH /admin/validate/{type}/{id}`)
+  avec **onglets par type** (biens / véhicules / expériences / prestataires) et
+  compteurs, le **déposant identifié** sous chaque ligne (nom + e-mail/téléphone
+  cliquables) et la décision **valider / refuser** (motif facultatif).
+  > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
+  > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
+  > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au
+  > `sessionStorage`) et **déconnecterait à chaque rafraîchissement**. Tout nouvel
+  > espace privé doit être ajouté à cette liste.
   > **Lancer en local** : `php artisan serve` (API `:8000`) + un **worker de file**
   > (`php artisan queue:work`, pour l'envoi des codes 2FA) + `npm start` (Angular
   > `:4200`, proxy `/api`→`:8000` via `proxy.conf.json`). Comptes de démo :

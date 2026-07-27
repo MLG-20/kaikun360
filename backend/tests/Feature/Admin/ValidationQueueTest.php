@@ -68,8 +68,30 @@ class ValidationQueueTest extends TestCase
             ->assertJsonPath('data.queue.provider.count', 1)
             ->assertJsonPath('data.queue.property.items.0.type', 'property')
             ->assertJsonStructure([
-                'data' => ['queue' => ['property' => ['items' => [['type', 'id', 'label', 'owner_id', 'submitted_at']]]]],
+                'data' => ['queue' => ['property' => ['items' => [
+                    ['type', 'id', 'label', 'owner_id', 'owner' => ['id', 'name', 'email', 'phone'], 'submitted_at'],
+                ]]]],
             ]);
+    }
+
+    public function test_chaque_entree_expose_le_deposant(): void
+    {
+        // F7.2.a : l'agent doit savoir QUI a déposé (nom + contact), pas seulement
+        // un identifiant, pour trancher la validation.
+        $owner = User::factory()->create(['name' => 'Fatou Ndiaye', 'email' => 'fatou@exemple.sn']);
+        $property = Property::factory()->create([
+            'owner_id' => $owner->id,
+            'status' => 'en_attente_validation',
+        ]);
+
+        Sanctum::actingAs($this->agent());
+
+        $this->getJson('/api/v1/admin/queue?type=property')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $property->id)
+            ->assertJsonPath('data.0.owner.id', $owner->id)
+            ->assertJsonPath('data.0.owner.name', 'Fatou Ndiaye')
+            ->assertJsonPath('data.0.owner.email', 'fatou@exemple.sn');
     }
 
     public function test_la_file_filtre_et_pagine_par_type(): void

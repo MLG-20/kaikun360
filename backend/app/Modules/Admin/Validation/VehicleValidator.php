@@ -36,6 +36,7 @@ class VehicleValidator implements ResourceValidator
     public function pendingQuery(): Builder
     {
         return Vehicle::query()
+            ->with('provider') // évite le N+1 : le déposant est affiché dans la file.
             ->where('status', VehicleStatus::EN_ATTENTE_VALIDATION->value)
             ->oldest();
     }
@@ -64,6 +65,7 @@ class VehicleValidator implements ResourceValidator
             'reference' => $model->reference,
             'label' => trim($model->brand.' '.$model->model),
             'owner_id' => $model->provider_id,
+            'owner' => OwnerEntry::from($model->provider),
             'submitted_at' => $model->created_at,
         ];
     }

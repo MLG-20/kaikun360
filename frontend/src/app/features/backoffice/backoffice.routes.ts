@@ -30,6 +30,16 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Back-office — Kaikun 360',
       },
       {
+        // F7.2.a — Validation : file d'approbation des ressources (biens,
+        // véhicules, expériences, prestataires) + décision valider/refuser.
+        path: 'validation',
+        loadComponent: () =>
+          import('./validation/backoffice-validation-page').then(
+            (m) => m.BackofficeValidationPageComponent,
+          ),
+        title: 'Validation — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         loadComponent: () =>

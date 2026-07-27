@@ -28,6 +28,7 @@ class ExperienceValidator implements ResourceValidator
     public function pendingQuery(): Builder
     {
         return TourismExperience::query()
+            ->with('provider') // évite le N+1 : le déposant est affiché dans la file.
             ->where('status', ExperienceStatus::EN_ATTENTE_VALIDATION->value)
             ->oldest();
     }
@@ -56,6 +57,7 @@ class ExperienceValidator implements ResourceValidator
             'reference' => $model->reference,
             'label' => $model->title,
             'owner_id' => $model->provider_id,
+            'owner' => OwnerEntry::from($model->provider),
             'submitted_at' => $model->created_at,
         ];
     }

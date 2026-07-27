@@ -149,6 +149,50 @@ export interface AttendanceSummary {
   employees: AttendanceEmployee[];
 }
 
+// --- File de validation (F7.2.a) ---------------------------------------------
+
+/** Types de ressources soumis à validation (miroir de `ValidatorRegistry`). */
+export type ValidationType = 'property' | 'vehicle' | 'experience' | 'provider';
+
+/**
+ * Une entrée normalisée de la file de validation (miroir de
+ * `ResourceValidator::toEntry()` — même forme pour tous les types).
+ */
+export interface QueueEntry {
+  type: ValidationType;
+  id: number;
+  /** Référence lisible (véhicules, expériences) ; null pour biens/prestataires. */
+  reference: string | null;
+  label: string;
+  owner_id: number;
+  /** Déposant : identité + contact (null si le compte a été supprimé). */
+  owner: QueueOwner | null;
+  submitted_at: string | null;
+}
+
+/** Le déposant d'une ressource en attente (miroir de `OwnerEntry`). */
+export interface QueueOwner {
+  id: number;
+  name: string;
+  email: string | null;
+  phone: string | null;
+}
+
+/** Un seau de la file d'ensemble : compteur + aperçu des éléments en attente. */
+export interface QueueBucket {
+  count: number;
+  items: QueueEntry[];
+}
+
+/** Vue d'ensemble de la file de validation (GET /admin/queue, sans `type`). */
+export interface ValidationQueueOverview {
+  queue: Record<ValidationType, QueueBucket>;
+  total_pending: number;
+}
+
+/** Décision de modération d'une ressource en attente. */
+export type ValidationDecision = 'approve' | 'reject';
+
 /**
  * Service d'accès à l'API du **back-office** (F7).
  *
@@ -257,5 +301,48 @@ export class AdminService {
     if (month) params = params.set('month', month);
     if (userId) params = params.set('user', String(userId));
     return this.http.get(`${this.api}/admin/attendance`, { params, responseType: 'blob' });
+  }
+
+  // --- File de validation (F7.2.a) --------------------------------------------
+
+  /** Vue d'ensemble de la file : compteur + aperçu par type. GET /admin/queue */
+  validationQueue(): Observable<ValidationQueueOverview> {
+    return this.http
+      .get<ApiEnvelope<ValidationQueueOverview>>(`${this.api}/admin/queue`)
+      .pipe(map((response) => response.data));
+  }
+
+  /** Liste paginée des éléments en attente d'un type. GET /admin/queue?type= */
+  validationQueueByType(
+    type: ValidationType,
+    page = 1,
+    perPage = 20,
+  ): Observable<Paginated<QueueEntry>> {
+    const params = new HttpParams()
+      .set('type', type)
+      .set('page', String(page))
+      .set('per_page', String(perPage));
+    return this.http.get<Paginated<QueueEntry>>(`${this.api}/admin/queue`, { params });
+  }
+
+  /**
+   * Valide ou refuse une ressource en attente.
+   * PATCH /admin/validate/{type}/{id}
+   *
+   * Un refus peut être motivé (tracé dans le journal d'activité). L'API vérifie
+   * la permission fine propre au type (`valider:bien`, `valider:vehicule`…) →
+   * un agent sans le droit reçoit un 403.
+   */
+  decide(
+    type: ValidationType,
+    id: number,
+    decision: ValidationDecision,
+    reason?: string,
+  ): Observable<void> {
+    const body: { decision: ValidationDecision; reason?: string } = { decision };
+    if (reason) body.reason = reason;
+    return this.http
+      .patch<ApiEnvelope<unknown>>(`${this.api}/admin/validate/${type}/${id}`, body)
+      .pipe(map(() => undefined));
   }
 }

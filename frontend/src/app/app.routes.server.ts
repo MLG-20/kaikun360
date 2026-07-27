@@ -20,12 +20,12 @@ import { RenderMode, ServerRoute } from '@angular/ssr';
  * doit voir sur des pages publiques.
  *
  * ⚠️ Conséquence pour les **espaces privés** (`mon-espace`, `espace-proprietaire`,
- * `espace-prestataire`, `espace-entreprise`) : les rendre au serveur y ferait tourner les guards de
- * rôle SANS session → une **redirection systématique vers la connexion**, y
- * compris lors d'un simple rafraîchissement de page. On les bascule donc en
- * **`RenderMode.Client`** : le serveur envoie la coquille, puis le client
- * restaure la session (sessionStorage) et exécute les guards LÀ où le jeton
- * existe. Ces pages n'ont de toute façon aucun intérêt SEO (contenu privé).
+ * `espace-prestataire`, `espace-entreprise`, `back-office`) : les rendre au serveur y ferait tourner
+ * les guards de rôle SANS session → une **redirection systématique vers la
+ * connexion**, y compris lors d'un simple rafraîchissement de page. On les
+ * bascule donc en **`RenderMode.Client`** : le serveur envoie la coquille, puis
+ * le client restaure la session (sessionStorage) et exécute les guards LÀ où le
+ * jeton existe. Ces pages n'ont de toute façon aucun intérêt SEO (contenu privé).
  */
 export const serverRoutes: ServerRoute[] = [
   { path: 'mon-espace', renderMode: RenderMode.Client },
@@ -36,6 +36,10 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'espace-prestataire/**', renderMode: RenderMode.Client },
   { path: 'espace-entreprise', renderMode: RenderMode.Client },
   { path: 'espace-entreprise/**', renderMode: RenderMode.Client },
+  // Back-office (F7) : espace privé le plus sensible → même stratégie, rendu
+  // client pour que les guards s'exécutent là où la session existe.
+  { path: 'back-office', renderMode: RenderMode.Client },
+  { path: 'back-office/**', renderMode: RenderMode.Client },
   {
     path: '**',
     renderMode: RenderMode.Server,

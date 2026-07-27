@@ -553,7 +553,9 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 
 > **Shell DÉDIÉ et indépendant** (décision produit) : le back-office n'utilise PAS le shell des espaces utilisateurs. Il a sa propre racine, son guard de rôle strict et son identité « salle de contrôle » — niveau de sécurité maximal car « tout passe par là ». On commence par **F7.1 « Poste de commandement de l'équipe »** (super admin + sous-admins) avant le reste.
 >
-> **🎉 F7.1 « Poste de commandement de l'équipe » terminé** (backend + frontend, vérifié dans le navigateur). Backend (voir Phase B13) : **F7.1.a** équipe/enrôlement · **F7.1.b** délégation « grant pur » par personne · **F7.1.c** pointeuse · **F7.1.d** 2FA e-mail + session courte. Frontend : shell dédié `layouts/backoffice-layout/` sous `/back-office` (guard rôle staff), connexion 2FA, et les écrans ci-dessous. Prochaine étape F7 : les autres écrans (biens, nuitées, paiements, paramètres…).
+> **🎉 F7.1 « Poste de commandement de l'équipe » terminé** (backend + frontend, vérifié dans le navigateur). Backend (voir Phase B13) : **F7.1.a** équipe/enrôlement · **F7.1.b** délégation « grant pur » par personne · **F7.1.c** pointeuse · **F7.1.d** 2FA e-mail + session courte. Frontend : shell dédié `layouts/backoffice-layout/` sous `/back-office` (guard rôle staff), connexion 2FA, et les écrans ci-dessous.
+>
+> **▶ F7.2 « Les autres écrans du back-office » en cours** (frontend pur, branché sur l'API Admin déjà livrée en B13). **F7.2.a Validation** livré : file d'approbation générique des biens / véhicules / expériences / prestataires, avec le déposant (identité + contact) et décision valider/refuser.
 
 - [x] **Shell back-office dédié** (`/back-office`) + **connexion 2FA** (login → saisie du code e-mail) + redirection des comptes staff. — _F7.1.e._
 - [x] Écran **Vue d'ensemble** (KPIs `GET /admin/dashboard` : files de validation, activité du jour, alertes, revenus, indicateurs). — _F7.1.e._
@@ -561,10 +563,11 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [x] Écran **Permissions** (matrice de délégation par agent : 12 cases-dossiers groupées, gouvernance réservée au super_admin). — _F7.1.g._
 - [x] Écran **Pointeuse** (pointer entrée/sortie perso + feuille de présence mensuelle d'équipe + détail + export CSV). — _F7.1.h._
 - [x] **2FA** obligatoire pour les comptes admin/super_admin (OTP e-mail, `POST /auth/two-factor`) + jeton back-office à expiration courte (8 h) — _F7.1.d (back) + F7.1.e (écran)._
+- [x] Écran **Validation** (file d'approbation générique `GET /admin/queue` + `PATCH /admin/validate/{type}/{id}` : onglets biens/véhicules/expériences/prestataires avec compteurs, **déposant identifié** (nom + e-mail/téléphone), valider/refuser avec motif). Enrichissement backend : `owner` joint à chaque entrée de la file (helper `OwnerEntry`, eager-loading). — _F7.2.a._
+- [x] **Correctif SSR** : `/back-office` basculé en `RenderMode.Client` (comme les autres espaces privés) — le rafraîchissement d'une page du back-office ne déconnecte plus (le guard s'exécute côté client, là où la session existe). — _F7.2.a._
 - [ ] Écran Tableau de bord (demandes du jour, revenus estimés, biens en attente, prestataires à valider, alertes, KPI). <!-- socle livré en Vue d'ensemble (F7.1.e) ; à enrichir. -->
 - [ ] Écran Utilisateurs (liste, rôles, statut, documents, historique, désactivation). <!-- volet équipe/permissions livré en F7.1.f/g ; reste les comptes publics. -->
-- [ ] Écran Utilisateurs (liste, rôles, statut, documents, historique, désactivation).
-- [ ] Écran Biens immobiliers (créer, modifier, valider, publier, archiver, attribuer).
+- [ ] Écran Biens immobiliers (créer, modifier, valider, publier, archiver, attribuer). <!-- validation/publication livrée dans l'écran Validation (F7.2.a) ; reste la supervision catalogue (F7.2.b). -->
 - [ ] Écran Nuitées (calendrier, disponibilité, caution, ménage, check-in/check-out).
 - [ ] Écran Gestion locative (contrats, loyers, incidents, dépenses, reversements, rapport mensuel).
 - [ ] Écran Construction (devis, prestataires BTP, jalons chantier, rapports photo/vidéo).

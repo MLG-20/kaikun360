@@ -1,0 +1,320 @@
+// Écran Validation du back-office (F7.2.a) — file d'approbation des ressources.
+
+:host {
+  display: block;
+  max-width: 1000px;
+}
+
+.vl-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.vl-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.vl-sub {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 60ch;
+}
+
+.vl-total {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: rgba(216, 135, 24, 0.16);
+  color: var(--k-warning);
+  white-space: nowrap;
+
+  &.is-clear {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+}
+
+// --- Onglets par type ---
+.vl-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.vl-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-pill);
+  background: #fff;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--k-ink);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: var(--k-brand);
+  }
+
+  &.is-active {
+    background: var(--k-navy);
+    border-color: var(--k-navy);
+    color: #fff;
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: var(--k-radius-pill);
+    font-size: 0.75rem;
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+
+    &.is-zero {
+      background: var(--k-cream);
+      color: var(--k-muted);
+    }
+  }
+
+  &.is-active &__count {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+  }
+}
+
+// --- États ---
+.vl-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.vl-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 20px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px dashed var(--k-line-strong);
+  color: var(--k-muted);
+  text-align: center;
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+// --- Liste des éléments en attente ---
+.vl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vl-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+
+  &__main {
+    min-width: 0;
+  }
+
+  &__label {
+    display: block;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 3px;
+    font-size: 0.82rem;
+    color: var(--k-muted);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+
+    &__actions {
+      justify-content: flex-start;
+    }
+  }
+}
+
+.vl-ref {
+  padding: 1px 8px;
+  border-radius: var(--k-radius-sm);
+  background: var(--k-cream);
+  color: var(--k-navy-2);
+  font-weight: 600;
+  font-size: 0.76rem;
+}
+
+// --- Déposant ---
+.vl-owner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 10px;
+
+  &__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--k-ink);
+
+    &--muted {
+      font-weight: 500;
+      color: var(--k-muted);
+      font-style: italic;
+    }
+  }
+
+  &__contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    color: var(--k-muted);
+  }
+
+  &__link {
+    color: var(--k-brand-600);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__sep {
+    color: var(--k-line-strong);
+  }
+}
+
+.vl-btn {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+
+  &--danger {
+    background: var(--k-danger);
+    color: #fff;
+
+    &:hover {
+      filter: brightness(0.94);
+    }
+  }
+}
+
+// --- Champ de motif de refus (déplié) ---
+.vl-reject {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--k-line);
+
+  .k-input {
+    flex: 1;
+  }
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+  }
+}
+
+// --- Pagination ---
+.vl-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+
+  &__info {
+    font-size: 0.85rem;
+    color: var(--k-muted);
+  }
+}

@@ -178,7 +178,13 @@ qui **réutilise** les événements et services de son module :
   (aperçu de 15 éléments par type) ;
 - `?type=vehicle&per_page=20` → liste paginée normalisée d'un seul type.
 
-Entrée de file normalisée : `{ type, id, reference, label, owner_id, submitted_at }`.
+Entrée de file normalisée : `{ type, id, reference, label, owner_id, owner, submitted_at }`.
+Le champ **`owner`** (F7.2.a) porte l'identité + le contact du **déposant**
+(`{ id, name, email, phone }`, ou `null` si le compte a disparu) — biens : le
+propriétaire ; véhicules/expériences : le prestataire ; prestataires : le
+titulaire du compte. Produit par le helper `Validation\OwnerEntry`, avec
+**eager-loading** de la relation dans `pendingQuery()` (anti N+1). L'écran de
+validation du back-office (F7.2.a) affiche ce déposant pour trancher.
 
 **`PATCH /api/v1/admin/validate/{type}/{id}`** — corps
 `{ "decision": "approve"|"reject", "reason"?: string }`.
