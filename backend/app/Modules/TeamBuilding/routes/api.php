@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\TeamBuilding\Http\Controllers\TeamBuildingAssignmentController;
 use App\Modules\TeamBuilding\Http\Controllers\TeamBuildingQuoteController;
 use App\Modules\TeamBuilding\Http\Controllers\TeamBuildingRequestController;
 use Illuminate\Support\Facades\Route;
@@ -32,4 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Cycle de vie d'un devis.
     Route::patch('team-building-quotes/{quote}/send', [TeamBuildingQuoteController::class, 'send'])->whereNumber('quote');
     Route::patch('team-building-quotes/{quote}/accept', [TeamBuildingQuoteController::class, 'accept'])->whereNumber('quote');
+
+    // Affectation des prestataires (back-office, F7.2.h — policy `manage`).
+    Route::get('team-building-requests/{teamBuildingRequest}/assignments', [TeamBuildingAssignmentController::class, 'index'])->whereNumber('teamBuildingRequest');
+    Route::post('team-building-requests/{teamBuildingRequest}/assignments', [TeamBuildingAssignmentController::class, 'store'])->whereNumber('teamBuildingRequest');
 });

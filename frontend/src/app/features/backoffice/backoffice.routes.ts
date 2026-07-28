@@ -103,6 +103,25 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Avis & qualité — Back-office Kaikun 360',
       },
       {
+        // F7.2.h — Team building : file des demandes entreprises + fiche
+        // (devis pack + affectation prestataires).
+        path: 'team-building',
+        loadComponent: () =>
+          import('./team-building/backoffice-team-building-page').then(
+            (m) => m.BackofficeTeamBuildingPageComponent,
+          ),
+        title: 'Team building — Back-office Kaikun 360',
+      },
+      {
+        // F7.2.h — Fiche d'une demande de team building (devis + prestataires).
+        path: 'team-building/:id',
+        loadComponent: () =>
+          import('./team-building/detail/backoffice-team-building-detail-page').then(
+            (m) => m.BackofficeTeamBuildingDetailPageComponent,
+          ),
+        title: 'Demande team building — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         loadComponent: () =>

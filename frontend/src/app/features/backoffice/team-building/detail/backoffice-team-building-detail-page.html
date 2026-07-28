@@ -1,0 +1,220 @@
+<button type="button" class="k-btn k-btn--ghost tb-back" (click)="back()">← Retour aux demandes</button>
+
+@if (loading()) {
+  <p class="tb-state" role="status">Chargement de la demande…</p>
+} @else if (error() || !request()) {
+  <p class="tb-state tb-state--error" role="alert">Impossible de charger cette demande.</p>
+} @else {
+  @let req = request()!;
+
+  <!-- ===================== EN-TÊTE DEMANDE ===================== -->
+  <header class="tb-dhead">
+    <div>
+      <h1 class="tb-dtitle">{{ req.reference }}</h1>
+      <p class="tb-dsub">Demande de team building · #{{ req.id }}</p>
+    </div>
+    <span class="tb-badge" [class]="requestStatusClass(req.status)">
+      {{ req.status_label || req.status || '—' }}
+    </span>
+  </header>
+
+  <section class="tb-card">
+    <h2 class="tb-card__title">La demande</h2>
+    <dl class="tb-grid">
+      <div><dt>Entreprise</dt><dd>{{ req.company?.name || '—' }}</dd></div>
+      <div><dt>Contact</dt><dd>{{ req.company?.email || '—' }}<br /><span class="tb-muted">{{ req.company?.phone || '' }}</span></dd></div>
+      <div><dt>Participants</dt><dd>{{ req.participants }} personnes</dd></div>
+      <div><dt>Ville</dt><dd>{{ req.city || '—' }}</dd></div>
+      <div><dt>Période</dt><dd>{{ period() }}</dd></div>
+      <div><dt>Budget indicatif</dt><dd>{{ xof(req.budget_xof) }}</dd></div>
+    </dl>
+    @if (needsList().length) {
+      <div class="tb-needs">
+        <span class="tb-needs__label">Besoins :</span>
+        @for (need of needsList(); track need) {
+          <span class="tb-chip">{{ need }}</span>
+        }
+      </div>
+    }
+    @if (req.description) {
+      <p class="tb-desc">{{ req.description }}</p>
+    }
+  </section>
+
+  <!-- ===================== DEVIS (PACK) ===================== -->
+  <section class="tb-card">
+    <h2 class="tb-card__title">Devis du pack</h2>
+
+    @if (req.quotes.length) {
+      @for (quote of req.quotes; track quote.id) {
+        <article class="tb-quote">
+          <div class="tb-quote__head">
+            <div>
+              <span class="tb-strong">{{ quote.reference }}</span>
+              <span class="tb-badge" [class]="quoteStatusClass(quote.status)">{{ quote.status_label || quote.status }}</span>
+            </div>
+            @if (canManage() && canSend(quote)) {
+              <button
+                type="button"
+                class="k-btn k-btn--primary k-btn--sm"
+                [disabled]="sendingId() === quote.id"
+                (click)="sendQuote(quote)">
+                {{ sendingId() === quote.id ? 'Envoi…' : "Envoyer à l'entreprise" }}
+              </button>
+            }
+          </div>
+          <div class="tb-table-wrap">
+            <table class="tb-table tb-table--slim">
+              <thead>
+                <tr><th>Brique</th><th>Détail</th><th>Qté</th><th>PU</th><th>Total</th></tr>
+              </thead>
+              <tbody>
+                @for (line of quote.lines; track $index) {
+                  <tr>
+                    <td><span class="tb-role">{{ categoryLabel(line.category) }}</span></td>
+                    <td><span class="tb-muted">{{ line.label || '—' }}</span></td>
+                    <td><span class="tb-muted">{{ line.quantity }}</span></td>
+                    <td><span class="tb-muted">{{ xof(line.unit_price_xof) }}</span></td>
+                    <td><span class="tb-strong">{{ xof(line.line_total_xof ?? line.unit_price_xof * line.quantity) }}</span></td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr><td colspan="4">Sous-total</td><td>{{ xof(quote.subtotal_xof) }}</td></tr>
+                <tr><td colspan="4">Marge ({{ quote.margin_rate }} %)</td><td>{{ xof(quote.margin_xof) }}</td></tr>
+                <tr class="tb-quote__total"><td colspan="4">Total</td><td>{{ xof(quote.total_xof) }}</td></tr>
+              </tfoot>
+            </table>
+          </div>
+        </article>
+      }
+    } @else {
+      <p class="tb-muted tb-empty-inline">Aucun devis composé pour cette demande.</p>
+    }
+
+    <!-- Composer un nouveau devis -->
+    @if (canManage()) {
+      <div class="tb-compose">
+        <h3 class="tb-compose__title">Composer un devis</h3>
+        <div class="tb-table-wrap">
+          <table class="tb-table tb-table--slim tb-compose__table">
+            <thead>
+              <tr><th>Brique</th><th>Détail</th><th>Qté</th><th>Prix unitaire (F)</th><th aria-label="Retirer"></th></tr>
+            </thead>
+            <tbody>
+              @for (line of draftLines(); track $index) {
+                <tr>
+                  <td>
+                    <select class="k-input k-input--sm" [(ngModel)]="line.category" [name]="'cat' + $index" aria-label="Catégorie">
+                      @for (opt of categoryOptions; track opt.value) {
+                        <option [value]="opt.value">{{ opt.label }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td><input class="k-input k-input--sm" [(ngModel)]="line.label" [name]="'lbl' + $index" placeholder="ex. Lodge 3★" /></td>
+                  <td><input class="k-input k-input--sm tb-num" type="number" min="1" [(ngModel)]="line.quantity" [name]="'qty' + $index" /></td>
+                  <td><input class="k-input k-input--sm tb-num" type="number" min="0" [(ngModel)]="line.unit_price_xof" [name]="'pu' + $index" placeholder="0" /></td>
+                  <td class="tb-actions-cell">
+                    <button type="button" class="tb-remove" (click)="removeLine($index)" aria-label="Retirer la ligne" [disabled]="draftLines().length === 1">✕</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="tb-compose__foot">
+          <button type="button" class="k-btn k-btn--ghost k-btn--sm" (click)="addLine()">+ Ajouter une brique</button>
+          <label class="tb-margin">
+            Marge %
+            <input class="k-input k-input--sm tb-num" type="number" min="0" max="100" [(ngModel)]="marginRate" name="margin" />
+          </label>
+          <span class="tb-preview">Total estimé : <strong>{{ xof(draftTotal()) }}</strong></span>
+          <button type="button" class="k-btn k-btn--primary k-btn--sm" [disabled]="composing()" (click)="composeQuote()">
+            {{ composing() ? 'Composition…' : 'Composer le devis' }}
+          </button>
+        </div>
+        @if (composeError()) {
+          <p class="tb-inline-error" role="alert">{{ composeError() }}</p>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- ===================== AFFECTATION PRESTATAIRES ===================== -->
+  <section class="tb-card">
+    <h2 class="tb-card__title">Affectation des prestataires</h2>
+    <p class="tb-card__hint">
+      Affectez un prestataire validé à chaque brique du pack. Chaque affectation
+      crée une mission suivie de son côté (acceptation, exécution, commission).
+    </p>
+
+    @if (missionsOf().length) {
+      <div class="tb-table-wrap">
+        <table class="tb-table tb-table--slim">
+          <thead>
+            <tr><th>Brique</th><th>Prestataire</th><th>Montant</th><th>Commission</th><th>Net presta.</th><th>Statut</th></tr>
+          </thead>
+          <tbody>
+            @for (m of missionsOf(); track m.id) {
+              <tr>
+                <td><span class="tb-role">{{ categoryLabel(m.category) }}</span></td>
+                <td>
+                  <span class="tb-strong">{{ m.provider?.business_name || ('Prestataire #' + m.provider_id) }}</span>
+                  <span class="tb-place">{{ m.provider?.category_label || m.title }}</span>
+                </td>
+                <td><span class="tb-muted">{{ xof(m.amount_xof) }}</span></td>
+                <td><span class="tb-muted">{{ xof(m.commission_xof) }}</span></td>
+                <td><span class="tb-strong">{{ xof(m.net_xof) }}</span></td>
+                <td><span class="tb-badge" [class]="missionStatusClass(m.status)">{{ m.status_label || m.status }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="tb-muted tb-empty-inline">Aucun prestataire affecté pour l'instant.</p>
+    }
+
+    @if (canManage()) {
+      <div class="tb-assign">
+        <h3 class="tb-compose__title">Affecter un prestataire</h3>
+        <div class="tb-assign__form">
+          <label class="tb-field">
+            <span>Brique du pack</span>
+            <select class="k-input k-input--sm" [(ngModel)]="assignCategory" name="assignCat">
+              @for (opt of categoryOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="tb-field tb-field--wide">
+            <span>Prestataire validé</span>
+            <select class="k-input k-input--sm" [(ngModel)]="assignProviderId" name="assignProvider">
+              <option [ngValue]="null">— Choisir un prestataire —</option>
+              @for (p of providers(); track p.id) {
+                <option [ngValue]="p.id">{{ p.business_name }}{{ p.category_label ? ' · ' + p.category_label : '' }}</option>
+              }
+            </select>
+          </label>
+          <label class="tb-field">
+            <span>Montant (F)</span>
+            <input class="k-input k-input--sm tb-num" type="number" min="0" [(ngModel)]="assignAmount" name="assignAmount" placeholder="0" />
+          </label>
+          <label class="tb-field tb-field--wide">
+            <span>Intitulé (optionnel)</span>
+            <input class="k-input k-input--sm" [(ngModel)]="assignTitle" name="assignTitle" placeholder="ex. Traiteur soirée de gala" />
+          </label>
+          <button type="button" class="k-btn k-btn--primary k-btn--sm tb-assign__btn" [disabled]="assigning()" (click)="assign()">
+            {{ assigning() ? 'Affectation…' : 'Affecter' }}
+          </button>
+        </div>
+        @if (assignError()) {
+          <p class="tb-inline-error" role="alert">{{ assignError() }}</p>
+        }
+        @if (providersLoaded() && providers().length === 0) {
+          <p class="tb-muted tb-empty-inline">Aucun prestataire validé disponible — validez d'abord des prestataires dans « Validation ».</p>
+        }
+      </div>
+    }
+  </section>
+}

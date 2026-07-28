@@ -456,6 +456,134 @@ export interface AdminDocument {
   created_at: string | null;
 }
 
+// --- Team building (F7.2.h) --------------------------------------------------
+
+/** Statut d'une demande de team building (miroir de `TeamBuildingRequestStatus`). */
+export type TeamBuildingStatus = 'nouveau' | 'en_etude' | 'devis_envoye' | 'accepte' | 'annule';
+
+/** Statut d'un devis team building (miroir de `TeamBuildingQuoteStatus`). */
+export type TeamBuildingQuoteStatus = 'brouillon' | 'envoye' | 'accepte' | 'refuse';
+
+/**
+ * Brique du pack couverte par une ligne de devis / une affectation prestataire
+ * (miroir de `QuoteLineCategory`). Chaque catégorie renvoie à un module fournisseur.
+ */
+export type PackCategory = 'lieu' | 'hebergement' | 'restauration' | 'activite' | 'mobilite' | 'animation';
+
+/** Statut d'une mission prestataire affectée (miroir de `MissionStatus`). */
+export type MissionStatus = 'affectee' | 'acceptee' | 'en_cours' | 'terminee' | 'refusee' | 'annulee';
+
+/** Une ligne de devis composée (brique du pack). */
+export interface QuoteLine {
+  category: PackCategory;
+  label?: string | null;
+  module?: string | null;
+  quantity: number;
+  unit_price_xof: number;
+  /** Total de la ligne (quantité × PU), calculé côté serveur. */
+  line_total_xof?: number;
+}
+
+/** Composant d'entrée pour composer un devis (POST .../quotes). */
+export interface QuoteComponent {
+  category: PackCategory;
+  label?: string;
+  module?: string;
+  quantity: number;
+  unit_price_xof: number;
+}
+
+/** Un devis team building (miroir de `TeamBuildingQuoteResource`). */
+export interface TeamBuildingQuote {
+  id: number;
+  reference: string;
+  request_id: number;
+  lines: QuoteLine[];
+  subtotal_xof: number;
+  margin_rate: number | string | null;
+  margin_xof: number;
+  total_xof: number;
+  status: TeamBuildingQuoteStatus | null;
+  status_label: string | null;
+  sent_at: string | null;
+  accepted_at: string | null;
+}
+
+/** L'entreprise à l'origine d'une demande (bloc `company` de la resource). */
+export interface TeamBuildingCompany {
+  id: number;
+  name: string;
+  email: string | null;
+  phone: string | null;
+}
+
+/**
+ * Une mission prestataire affectée à une demande TB (miroir de
+ * `ProviderMissionResource` rattaché) — réalise l'« affectation prestataires ».
+ */
+export interface ProviderMissionItem {
+  id: number;
+  reference: string;
+  provider_id: number;
+  team_building_request_id: number | null;
+  category: PackCategory | null;
+  title: string;
+  description: string | null;
+  amount_xof: number;
+  commission_xof: number;
+  net_xof: number;
+  status: MissionStatus | null;
+  status_label: string | null;
+  scheduled_at: string | null;
+  /** Prestataire affecté (nom commercial…), chargé dans la fiche TB. */
+  provider?: {
+    id: number;
+    business_name: string;
+    category_label: string | null;
+    status: string | null;
+  };
+}
+
+/** Une demande de team building en file back-office (miroir de `TeamBuildingRequestResource`). */
+export interface TeamBuildingRequestItem {
+  id: number;
+  reference: string;
+  participants: number;
+  city: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  budget_xof: number | null;
+  /** Besoins déclarés (map clé→valeur, ex. { hebergement: true }). */
+  needs: Record<string, unknown>;
+  description: string | null;
+  status: TeamBuildingStatus | null;
+  status_label: string | null;
+  quotes_count?: number;
+  company?: TeamBuildingCompany;
+}
+
+/** Fiche détaillée d'une demande TB : la demande + devis + prestataires affectés. */
+export interface TeamBuildingRequestDetail extends TeamBuildingRequestItem {
+  quotes: TeamBuildingQuote[];
+  provider_missions: ProviderMissionItem[];
+}
+
+/** Filtres de la file des demandes de team building. */
+export interface TeamBuildingQuery {
+  status?: string;
+  q?: string;
+  page?: number;
+}
+
+/** Corps d'affectation d'un prestataire à une demande (POST .../assignments). */
+export interface AssignProviderPayload {
+  provider_id: number;
+  category: PackCategory;
+  title?: string;
+  amount_xof: number;
+  scheduled_at?: string;
+}
+
 /**
  * Service d'accès à l'API du **back-office** (F7).
  *
@@ -852,5 +980,81 @@ export class AdminService {
     return this.http
       .patch<ApiEnvelope<{ provider: Provider }>>(`${this.api}/providers/${id}/suspend`, { reason })
       .pipe(map((response) => response.data.provider));
+  }
+
+  // --- Team building (F7.2.h) ------------------------------------------------
+  //
+  // Endpoints au niveau racine (hors préfixe /admin) : la file back-office est
+  // gardée par `consulter:dashboard-admin`, la composition de devis et
+  // l'affectation de prestataires par la policy `manage` (rôle admin).
+
+  /** File des demandes de team building (paginée, filtrable). GET /team-building-requests */
+  teamBuildingRequests(query: TeamBuildingQuery = {}): Observable<Paginated<TeamBuildingRequestItem>> {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.q) params = params.set('q', query.q);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<TeamBuildingRequestItem>>(`${this.api}/team-building-requests`, {
+      params,
+    });
+  }
+
+  /** Fiche d'une demande (devis + prestataires affectés). GET /team-building-requests/{id} */
+  teamBuildingRequest(id: number): Observable<TeamBuildingRequestDetail> {
+    return this.http
+      .get<ApiEnvelope<{ request: TeamBuildingRequestDetail }>>(`${this.api}/team-building-requests/${id}`)
+      .pipe(map((response) => response.data.request));
+  }
+
+  /**
+   * Compose un devis (pack multi-modules) pour une demande.
+   * POST /team-building-requests/{id}/quotes
+   *
+   * `components` = les briques du pack (catégorie, quantité, prix unitaire) ;
+   * `marginRate` = marge plateforme en % (défaut serveur 15 %).
+   */
+  composeTeamBuildingQuote(
+    id: number,
+    components: QuoteComponent[],
+    marginRate?: number,
+  ): Observable<TeamBuildingQuote> {
+    const body: { components: QuoteComponent[]; margin_rate?: number } = { components };
+    if (marginRate !== undefined && marginRate !== null) body.margin_rate = marginRate;
+    return this.http
+      .post<ApiEnvelope<{ quote: TeamBuildingQuote }>>(
+        `${this.api}/team-building-requests/${id}/quotes`,
+        body,
+      )
+      .pipe(map((response) => response.data.quote));
+  }
+
+  /** Envoie un devis à l'entreprise. PATCH /team-building-quotes/{id}/send */
+  sendTeamBuildingQuote(quoteId: number): Observable<TeamBuildingQuote> {
+    return this.http
+      .patch<ApiEnvelope<{ quote: TeamBuildingQuote }>>(
+        `${this.api}/team-building-quotes/${quoteId}/send`,
+        {},
+      )
+      .pipe(map((response) => response.data.quote));
+  }
+
+  /** Prestataires affectés à une demande. GET /team-building-requests/{id}/assignments */
+  teamBuildingAssignments(id: number): Observable<ProviderMissionItem[]> {
+    return this.http
+      .get<ApiEnvelope<ProviderMissionItem[]>>(`${this.api}/team-building-requests/${id}/assignments`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Affecte un prestataire validé à une brique du pack (crée une mission Pro).
+   * POST /team-building-requests/{id}/assignments
+   */
+  assignTeamBuildingProvider(id: number, payload: AssignProviderPayload): Observable<ProviderMissionItem> {
+    return this.http
+      .post<ApiEnvelope<{ mission: ProviderMissionItem }>>(
+        `${this.api}/team-building-requests/${id}/assignments`,
+        payload,
+      )
+      .pipe(map((response) => response.data.mission));
   }
 }

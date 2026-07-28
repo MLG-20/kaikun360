@@ -65,6 +65,15 @@ class TeamBuildingRequest extends Model
         return $this->hasMany(TeamBuildingQuote::class, 'request_id');
     }
 
+    /**
+     * Les prestataires affectés à cette demande (F7.2.h « affectation
+     * prestataires » du CDC §6) — chaque affectation est une mission Pro rattachée.
+     */
+    public function providerMissions(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Pro\Models\ProviderMission::class, 'team_building_request_id');
+    }
+
     protected static function newFactory(): TeamBuildingRequestFactory
     {
         return TeamBuildingRequestFactory::new();

@@ -56,7 +56,8 @@ class TeamBuildingRequestController extends Controller
     {
         Gate::authorize('view', $teamBuildingRequest);
 
-        $teamBuildingRequest->load('quotes');
+        // Devis + prestataires affectés (avec leur nom commercial) + entreprise.
+        $teamBuildingRequest->load(['quotes', 'company', 'providerMissions.provider']);
 
         return ApiResponse::success(['request' => TeamBuildingRequestResource::make($teamBuildingRequest)]);
     }
@@ -68,11 +69,28 @@ class TeamBuildingRequestController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        $request->validate([
+            'status' => ['nullable', 'string', 'in:'.implode(',', TeamBuildingRequestStatus::values())],
+            'q' => ['nullable', 'string', 'max:100'],
+        ]);
+
         $requests = TeamBuildingRequest::query()
+            ->with('company')
             ->withCount('quotes')
+            // Filtre statut (onglet de file) et recherche (référence, ville, entreprise).
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
+            ->when($request->filled('q'), function ($query) use ($request) {
+                $term = '%'.$request->string('q')->toString().'%';
+                $query->where(function ($sub) use ($term) {
+                    $sub->where('reference', 'like', $term)
+                        ->orWhere('city', 'like', $term)
+                        ->orWhereHas('company', fn ($c) => $c->where('name', 'like', $term));
+                });
+            })
             ->orderByRaw("FIELD(status, 'nouveau', 'en_etude', 'devis_envoye', 'accepte', 'annule')")
             ->latest()
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         return TeamBuildingRequestResource::collection($requests);
     }

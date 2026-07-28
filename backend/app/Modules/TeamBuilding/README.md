@@ -69,6 +69,22 @@ animation) agrégeant plusieurs modules.
 | POST | `/api/v1/team-building-requests/{id}/quotes` | admin (policy `manage`) — compose un devis |
 | PATCH | `/api/v1/team-building-quotes/{quote}/send` | admin — envoie (event `QuoteSent`) |
 | PATCH | `/api/v1/team-building-quotes/{quote}/accept` | entreprise (policy `accept`) — accepte (event `QuoteAccepted`) |
+| GET | `/api/v1/team-building-requests/{id}/assignments` | admin (policy `manage`) — prestataires affectés |
+| POST | `/api/v1/team-building-requests/{id}/assignments` | admin (policy `manage`) — **affecte un prestataire** (F7.2.h) |
+
+### Affectation des prestataires (F7.2.h — CDC §6 « affectation prestataires »)
+
+`TeamBuildingAssignmentController` réalise l'exigence CDC. Plutôt que de dupliquer
+la notion, une affectation crée une **mission du module Pro** (`ProviderMission`)
+rattachée à la demande via les colonnes nullables `team_building_request_id` +
+`category` (migration additive `..._add_team_building_link_to_provider_missions`).
+L'affectation exige un prestataire **validé** ; la commission plateforme est figée
+via `CommissionCalculator` ; la mission suit ensuite son cycle standard
+(`affectee → acceptee → en_cours → terminee`) et remonte dans les revenus du
+prestataire. Le `client_id` de la mission = l'entreprise de la demande. La fiche
+(`show`) charge `providerMissions.provider` et les expose dans la resource
+(`provider_missions`, avec le nom commercial). Requête : `AssignTeamBuildingProviderRequest`
+(`provider_id`, `category` ∈ `QuoteLineCategory`, `amount_xof`, `title?`, `scheduled_at?`).
 
 ### Events & listeners (enregistrés dans `AppServiceProvider`)
 

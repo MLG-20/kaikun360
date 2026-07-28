@@ -1,0 +1,378 @@
+// Fiche d'une demande de team building (F7.2.h) — demande + devis (pack) +
+// affectation des prestataires.
+
+:host {
+  display: block;
+  max-width: 1080px;
+}
+
+.tb-back {
+  margin-bottom: 16px;
+}
+
+.tb-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+  margin: 0 0 14px;
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+// --- En-tête ---
+.tb-dhead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.tb-dtitle {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.tb-dsub {
+  color: var(--k-muted);
+  margin: 0;
+}
+
+// --- Cartes ---
+.tb-card {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+
+  &__title {
+    font-family: var(--k-font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--k-ink);
+    margin: 0 0 14px;
+  }
+
+  &__hint {
+    color: var(--k-muted);
+    font-size: 0.85rem;
+    margin: -8px 0 16px;
+    max-width: 72ch;
+  }
+}
+
+.tb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 0;
+
+  dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    margin-bottom: 3px;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.9rem;
+  }
+}
+
+.tb-needs {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  &__label {
+    font-size: 0.78rem;
+    color: var(--k-muted);
+    font-weight: 600;
+  }
+}
+
+.tb-chip {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--k-brand-050);
+  color: var(--k-brand-600);
+}
+
+.tb-desc {
+  margin: 16px 0 0;
+  color: var(--k-ink);
+  font-size: 0.9rem;
+  white-space: pre-line;
+}
+
+// --- Textes partagés ---
+.tb-strong {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.85rem;
+}
+
+.tb-place {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--k-muted);
+}
+
+.tb-muted {
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+.tb-role {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--k-cream);
+  color: var(--k-navy-2);
+  border: 1px solid var(--k-line);
+}
+
+.tb-empty-inline {
+  padding: 14px 0;
+  margin: 0;
+}
+
+.tb-actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+// --- Badges ---
+.tb-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+  margin-left: 8px;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &.is-info {
+    background: rgba(3, 72, 251, 0.1);
+    color: var(--k-brand-600);
+  }
+
+  &.is-warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-cream);
+    color: var(--k-navy-2);
+    border: 1px solid var(--k-line);
+  }
+}
+
+// --- Table (devis / affectations) ---
+.tb-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  margin-bottom: 14px;
+}
+
+.tb-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: middle;
+  }
+
+  th {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tfoot td {
+    border-bottom: 0;
+    font-size: 0.82rem;
+    color: var(--k-muted);
+    text-align: right;
+
+    &:last-child {
+      color: var(--k-ink);
+      font-weight: 600;
+    }
+  }
+
+  &--slim {
+    min-width: 640px;
+  }
+}
+
+.tb-quote {
+  margin-bottom: 18px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  &__total td {
+    font-weight: 700;
+    color: var(--k-ink);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--k-line);
+  }
+}
+
+// --- Composition de devis ---
+.tb-compose,
+.tb-assign {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--k-line);
+
+  &__title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--k-ink);
+    margin: 0 0 12px;
+  }
+}
+
+.tb-compose__foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.tb-margin {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  font-weight: 600;
+}
+
+.tb-preview {
+  font-size: 0.9rem;
+  color: var(--k-ink);
+  margin-left: auto;
+}
+
+.tb-num {
+  max-width: 110px;
+}
+
+.tb-remove {
+  appearance: none;
+  border: 1px solid var(--k-line);
+  background: #fff;
+  color: var(--k-danger);
+  border-radius: var(--k-radius-sm, 8px);
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 0.9rem;
+
+  &:hover:not(:disabled) {
+    background: rgba(199, 59, 77, 0.08);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+// --- Affectation prestataire ---
+.tb-assign__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.tb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.76rem;
+  color: var(--k-muted);
+  font-weight: 600;
+  min-width: 150px;
+
+  &--wide {
+    flex: 1;
+    min-width: 220px;
+  }
+}
+
+.tb-assign__btn {
+  height: 38px;
+}
+
+// --- Utilitaires d'input compacts ---
+.k-input--sm {
+  padding: 7px 10px;
+  font-size: 0.85rem;
+}
+
+.k-btn--sm {
+  padding: 7px 14px;
+  font-size: 0.85rem;
+}
+
+.tb-inline-error {
+  margin: 12px 0 0;
+  color: var(--k-danger);
+  font-size: 0.85rem;
+}

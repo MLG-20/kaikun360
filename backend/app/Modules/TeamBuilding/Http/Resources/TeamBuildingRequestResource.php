@@ -2,6 +2,7 @@
 
 namespace App\Modules\TeamBuilding\Http\Resources;
 
+use App\Modules\Pro\Http\Resources\ProviderMissionResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -29,7 +30,17 @@ class TeamBuildingRequestResource extends JsonResource
             'description' => $this->description,
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
+            'quotes_count' => $this->whenCounted('quotes'),
+            // Entreprise à l'origine de la demande (utile à la file/fiche back-office).
+            'company' => $this->whenLoaded('company', fn () => [
+                'id' => $this->company->id,
+                'name' => $this->company->name,
+                'email' => $this->company->email,
+                'phone' => $this->company->phone,
+            ]),
             'quotes' => TeamBuildingQuoteResource::collection($this->whenLoaded('quotes')),
+            // Prestataires affectés (F7.2.h « affectation prestataires »).
+            'provider_missions' => ProviderMissionResource::collection($this->whenLoaded('providerMissions')),
         ];
     }
 }

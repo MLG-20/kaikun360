@@ -150,7 +150,11 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
 - **Diaspora** — projets pilotés par un agent (affectation auto au moins chargé),
   rapports d'avancement.
 - **TeamBuilding** — demandes d'entreprise, devis composés multi-prestataires
-  avec marge.
+  avec marge, et **affectation des prestataires** (F7.2.h — CDC §6) : une
+  affectation crée une **mission Pro** rattachée à la demande
+  (`provider_missions.team_building_request_id` + `category`, migration additive),
+  prestataire validé requis, commission figée, cycle de mission standard —
+  endpoints `GET|POST /team-building-requests/{id}/assignments` (policy `manage`).
 - **Pro** — inscription prestataire, édition de son dossier (descriptif +
   certifications), disponibilités, charte qualité, validation, missions &
   commission, **avis reçus** (avis sur ses ressources + avis directs après mission,

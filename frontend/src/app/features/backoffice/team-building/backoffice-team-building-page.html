@@ -1,0 +1,87 @@
+<header class="tb-head">
+  <div>
+    <h1 class="tb-title">Team building</h1>
+    <p class="tb-sub">
+      Demandes groupées des entreprises (séminaires, cohésion, sorties). Composez
+      le pack, envoyez le devis, puis affectez les prestataires.
+    </p>
+  </div>
+</header>
+
+<section class="tb-filters">
+  <input
+    class="k-input tb-search"
+    type="search"
+    name="search"
+    [(ngModel)]="search"
+    (keyup.enter)="applyFilters()"
+    placeholder="Référence, ville ou entreprise…" />
+  <select class="k-input" name="status" [(ngModel)]="status" (change)="applyFilters()" aria-label="Filtrer par statut">
+    @for (opt of statusOptions; track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+  <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
+</section>
+
+@if (loading()) {
+  <p class="tb-state" role="status">Chargement des demandes…</p>
+} @else if (error()) {
+  <p class="tb-state tb-state--error" role="alert">Impossible de charger les demandes. Réessayez.</p>
+} @else {
+  <p class="tb-count">{{ total() }} demande(s) — cliquez sur une ligne pour ouvrir la fiche</p>
+  <div class="tb-table-wrap">
+    <table class="tb-table">
+      <thead>
+        <tr>
+          <th>Demande</th>
+          <th>Entreprise</th>
+          <th>Ville</th>
+          <th>Période</th>
+          <th>Participants</th>
+          <th>Budget</th>
+          <th>Devis</th>
+          <th>Statut</th>
+          <th aria-label="Ouvrir"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.id) {
+          <tr class="tb-row" tabindex="0" (click)="open(r)" (keyup.enter)="open(r)">
+            <td>
+              <span class="tb-name">{{ r.reference }}</span>
+              <span class="tb-id">#{{ r.id }}</span>
+            </td>
+            <td>
+              <span class="tb-strong">{{ r.company?.name || '—' }}</span>
+              <span class="tb-place">{{ r.company?.email || 'Contact inconnu' }}</span>
+            </td>
+            <td><span class="tb-muted">{{ r.city || '—' }}</span></td>
+            <td><span class="tb-muted">{{ period(r) }}</span></td>
+            <td><span class="tb-muted">{{ r.participants }} pers.</span></td>
+            <td><span class="tb-muted">{{ xof(r.budget_xof) }}</span></td>
+            <td><span class="tb-role">{{ r.quotes_count ?? 0 }} devis</span></td>
+            <td><span class="tb-badge" [class]="statusClass(r.status)">{{ r.status_label || r.status || '—' }}</span></td>
+            <td class="tb-actions-cell"><span class="tb-open" aria-hidden="true">Voir →</span></td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="9" class="tb-empty">Aucune demande ne correspond à ces filtres.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (lastPage() > 1) {
+    <nav class="tb-pager" aria-label="Pagination">
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === 1" (click)="goTo(page() - 1)">
+        ← Précédent
+      </button>
+      <span class="tb-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === lastPage()" (click)="goTo(page() + 1)">
+        Suivant →
+      </button>
+    </nav>
+  }
+}

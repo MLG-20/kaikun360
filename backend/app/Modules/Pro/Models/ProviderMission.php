@@ -4,6 +4,7 @@ namespace App\Modules\Pro\Models;
 
 use App\Models\User;
 use App\Modules\Pro\Enums\MissionStatus;
+use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
 use Database\Factories\ProviderMissionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +24,8 @@ class ProviderMission extends Model
         'reference',
         'provider_id',
         'client_id',
+        'team_building_request_id',
+        'category',
         'title',
         'description',
         'amount_xof',
@@ -52,6 +55,14 @@ class ProviderMission extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_id');
+    }
+
+    /**
+     * Demande de team building d'origine (null pour une mission ordinaire).
+     */
+    public function teamBuildingRequest(): BelongsTo
+    {
+        return $this->belongsTo(TeamBuildingRequest::class);
     }
 
     protected static function newFactory(): ProviderMissionFactory

@@ -190,6 +190,22 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   (`PATCH …/warn`, au-delà du seuil = suspension d'office) et **suspendre**
   (`PATCH …/suspend`), motif obligatoire. Les **incidents** ne sont pas dupliqués
   ici : renvoi vers l'écran **Dossiers** (F7.2.e).
+
+  **F7.2.h Team building** (`features/backoffice/team-building/`) : couvre le
+  module CDC §6 *Team building*. **Liste** : file `GET /team-building-requests`
+  (triée nouveau → annulé, filtres statut + recherche par référence/ville/
+  entreprise) ; un clic ouvre la **fiche** `/back-office/team-building/:id`
+  (`GET /team-building-requests/{id}`). La fiche a trois zones : la **demande**
+  (participants, ville, période, budget, besoins, entreprise) ; le **devis pack**
+  (composition ligne par ligne — brique/label/qté/PU + marge, aperçu du total en
+  direct — via `POST …/quotes`, puis **envoi** à l'entreprise `PATCH
+  /team-building-quotes/{id}/send`) ; et l'**affectation des prestataires**
+  (exigence CDC « affectation prestataires ») : on affecte un prestataire
+  **validé** (`GET /admin/providers?status=valide`) à une brique du pack via
+  `POST …/assignments` → cela crée une **mission Pro** rattachée (montant,
+  commission figée, cycle de mission), listée avec son statut. Les actions de
+  composition/envoi/affectation sont masquées aux profils sans le rôle admin
+  (garde serveur `policy manage`).
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au
