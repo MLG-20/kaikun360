@@ -1,0 +1,107 @@
+<header class="cat-head">
+  <div>
+    <h1 class="cat-title">Catalogues</h1>
+    <p class="cat-sub">
+      Toute l’offre, tous statuts confondus. Supervision en lecture seule —
+      l’approbation se fait dans l’écran Validation.
+    </p>
+  </div>
+</header>
+
+<!-- Onglets par univers -->
+<nav class="cat-tabs" aria-label="Catalogues">
+  @for (t of tabs; track t.key) {
+    <button
+      type="button"
+      class="cat-tab"
+      [class.is-active]="selected() === t.key"
+      (click)="select(t.key)">
+      {{ t.label }}
+    </button>
+  }
+</nav>
+
+<!-- Filtres -->
+<section class="cat-filters">
+  <input
+    class="k-input cat-search"
+    type="search"
+    name="search"
+    [(ngModel)]="search"
+    (keyup.enter)="applyFilters()"
+    placeholder="Rechercher (titre, marque, destination)…" />
+  <select class="k-input" name="status" [(ngModel)]="status" (change)="applyFilters()" aria-label="Filtrer par statut">
+    @for (opt of statusOptions; track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+  <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
+</section>
+
+<!-- Liste -->
+@if (loading()) {
+  <p class="cat-state" role="status">Chargement du catalogue…</p>
+} @else if (error()) {
+  <p class="cat-state cat-state--error" role="alert">Impossible de charger ce catalogue. Réessayez.</p>
+} @else {
+  <p class="cat-count">{{ total() }} élément(s)</p>
+  <div class="cat-table-wrap">
+    <table class="cat-table">
+      <thead>
+        <tr>
+          <th>Élément</th>
+          <th>Statut</th>
+          <th>Propriétaire</th>
+          <th>Prix</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.id) {
+          <tr>
+            <td>
+              <span class="cat-label">{{ row.label }}</span>
+              @if (row.reference) {
+                <span class="cat-ref">{{ row.reference }}</span>
+              }
+            </td>
+            <td>
+              <span class="cat-badge" [class]="statusClass(row.status)">{{ row.statusLabel }}</span>
+            </td>
+            <td>
+              @if (row.ownerName) {
+                <span class="cat-owner">{{ row.ownerName }}</span>
+              } @else {
+                <span class="cat-muted">—</span>
+              }
+            </td>
+            <td>
+              <span class="cat-price">{{ xof(row.priceXof) }}</span>
+              @if (row.priceSuffix && row.priceXof !== null) {
+                <span class="cat-price__suffix"> {{ row.priceSuffix }}</span>
+              }
+            </td>
+            <td><span class="cat-muted">{{ shortDate(row.date) }}</span></td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="cat-empty">Aucun élément ne correspond à ces filtres.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  @if (lastPage() > 1) {
+    <nav class="cat-pager" aria-label="Pagination">
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === 1" (click)="goTo(page() - 1)">
+        ← Précédent
+      </button>
+      <span class="cat-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === lastPage()" (click)="goTo(page() + 1)">
+        Suivant →
+      </button>
+    </nav>
+  }
+}

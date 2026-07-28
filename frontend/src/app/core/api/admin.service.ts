@@ -3,6 +3,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { Experience } from '../../models/experience.model';
+import { Property } from '../../models/property.model';
+import { Vehicle } from '../../models/vehicle.model';
 import { ApiEnvelope } from './api-response.model';
 import { Paginated } from './pagination.model';
 
@@ -193,6 +196,15 @@ export interface ValidationQueueOverview {
 /** Décision de modération d'une ressource en attente. */
 export type ValidationDecision = 'approve' | 'reject';
 
+/** Filtres communs des catalogues de supervision (F7.2.b). */
+export interface CatalogQuery {
+  /** Statut exact (`en_attente_validation`, `publie`, `suspendu`, `rejete`, `archive`). */
+  status?: string;
+  /** Recherche plein-texte (titre / marque-modèle / destination selon le type). */
+  q?: string;
+  page?: number;
+}
+
 /**
  * Service d'accès à l'API du **back-office** (F7).
  *
@@ -344,5 +356,37 @@ export class AdminService {
     return this.http
       .patch<ApiEnvelope<unknown>>(`${this.api}/admin/validate/${type}/${id}`, body)
       .pipe(map(() => undefined));
+  }
+
+  // --- Catalogues (F7.2.b) ----------------------------------------------------
+
+  /** Biens, TOUS statuts (supervision). GET /admin/properties */
+  adminProperties(query: CatalogQuery = {}): Observable<Paginated<Property>> {
+    return this.http.get<Paginated<Property>>(`${this.api}/admin/properties`, {
+      params: this.catalogParams(query),
+    });
+  }
+
+  /** Véhicules, TOUS statuts (supervision). GET /admin/vehicles */
+  adminVehicles(query: CatalogQuery = {}): Observable<Paginated<Vehicle>> {
+    return this.http.get<Paginated<Vehicle>>(`${this.api}/admin/vehicles`, {
+      params: this.catalogParams(query),
+    });
+  }
+
+  /** Expériences, TOUS statuts (supervision). GET /admin/experiences */
+  adminExperiences(query: CatalogQuery = {}): Observable<Paginated<Experience>> {
+    return this.http.get<Paginated<Experience>>(`${this.api}/admin/experiences`, {
+      params: this.catalogParams(query),
+    });
+  }
+
+  /** Construit les query params communs des catalogues (statut, recherche, page). */
+  private catalogParams(query: CatalogQuery): HttpParams {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.q) params = params.set('q', query.q);
+    if (query.page) params = params.set('page', String(query.page));
+    return params;
   }
 }

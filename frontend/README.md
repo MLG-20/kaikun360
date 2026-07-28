@@ -142,6 +142,11 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   avec **onglets par type** (biens / véhicules / expériences / prestataires) et
   compteurs, le **déposant identifié** sous chaque ligne (nom + e-mail/téléphone
   cliquables) et la décision **valider / refuser** (motif facultatif).
+  **F7.2.b Catalogues** (`features/backoffice/catalogues/`) : navigateur de
+  supervision (`GET /admin/properties|vehicles|experiences`) avec onglets
+  Biens / Véhicules / Expériences, affichant **tous les statuts** (et pas
+  seulement le publié comme le catalogue public), filtres statut + recherche,
+  pagination. Lecture seule — l'approbation reste dans l'écran Validation.
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

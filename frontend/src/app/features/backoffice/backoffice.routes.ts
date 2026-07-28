@@ -40,6 +40,16 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Validation — Back-office Kaikun 360',
       },
       {
+        // F7.2.b — Catalogues : navigateur de supervision (biens / véhicules /
+        // expériences), tous statuts, en lecture seule.
+        path: 'catalogues',
+        loadComponent: () =>
+          import('./catalogues/backoffice-catalogues-page').then(
+            (m) => m.BackofficeCataloguesPageComponent,
+          ),
+        title: 'Catalogues — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         loadComponent: () =>

@@ -1,0 +1,215 @@
+// Écran Catalogues du back-office (F7.2.b) — supervision de l'offre, tous statuts.
+
+:host {
+  display: block;
+  max-width: 1000px;
+}
+
+.cat-head {
+  margin-bottom: 18px;
+}
+
+.cat-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.cat-sub {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 62ch;
+}
+
+// --- Onglets (mêmes codes que l'écran Validation) ---
+.cat-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.cat-tab {
+  padding: 9px 16px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-pill);
+  background: #fff;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--k-ink);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: var(--k-brand);
+  }
+
+  &.is-active {
+    background: var(--k-navy);
+    border-color: var(--k-navy);
+    color: #fff;
+  }
+}
+
+// --- Filtres ---
+.cat-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .cat-search {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  select {
+    max-width: 220px;
+  }
+}
+
+// --- États ---
+.cat-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.cat-count {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  margin: 0 0 8px;
+}
+
+// --- Table ---
+.cat-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.cat-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: middle;
+  }
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.cat-label {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.cat-ref {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 1px 8px;
+  border-radius: var(--k-radius-sm);
+  background: var(--k-cream);
+  color: var(--k-navy-2);
+  font-weight: 600;
+  font-size: 0.74rem;
+}
+
+.cat-owner {
+  color: var(--k-ink);
+  font-size: 0.9rem;
+}
+
+.cat-muted {
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+.cat-price {
+  font-weight: 600;
+  color: var(--k-ink);
+
+  &__suffix {
+    font-weight: 400;
+    color: var(--k-muted);
+    font-size: 0.82rem;
+  }
+}
+
+.cat-empty {
+  text-align: center;
+  color: var(--k-muted);
+  padding: 26px;
+}
+
+// --- Badge de statut ---
+.cat-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &.is-warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+  }
+}
+
+// --- Pagination ---
+.cat-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+
+  &__info {
+    font-size: 0.85rem;
+    color: var(--k-muted);
+  }
+}

@@ -6,7 +6,7 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 
 /** Clé d'icône du rail (rendue en SVG inline dans le template). */
-type BoIcon = 'grid' | 'check' | 'users' | 'shield' | 'clock';
+type BoIcon = 'grid' | 'check' | 'layers' | 'users' | 'shield' | 'clock';
 
 /** Une rubrique de navigation du poste de commandement. */
 interface BoNavItem {
@@ -54,10 +54,11 @@ export class BackofficeLayoutComponent {
     return 'Équipe';
   });
 
-  /** Rubriques du poste de commandement (F7.1 : Vue d'ensemble → Pointeuse ; F7.2.a : Validation). */
+  /** Rubriques du poste de commandement (F7.1 : Vue d'ensemble → Pointeuse ; F7.2 : Validation, Catalogues). */
   protected readonly nav: readonly BoNavItem[] = [
     { label: 'Vue d’ensemble', path: '', icon: 'grid', ready: true },
     { label: 'Validation', path: 'validation', icon: 'check', ready: true },
+    { label: 'Catalogues', path: 'catalogues', icon: 'layers', ready: true },
     { label: 'Équipe', path: 'equipe', icon: 'users', ready: true },
     { label: 'Permissions', path: 'permissions', icon: 'shield', ready: true },
     { label: 'Pointeuse', path: 'pointeuse', icon: 'clock', ready: true },
