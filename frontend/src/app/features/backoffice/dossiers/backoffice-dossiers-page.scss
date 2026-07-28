@@ -1,0 +1,242 @@
+// Écran Dossiers du back-office (F7.2.e) — supervision construction + gestion locative (lecture seule).
+
+:host {
+  display: block;
+  max-width: 1160px;
+}
+
+.ds-head {
+  margin-bottom: 18px;
+}
+
+.ds-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.ds-sub {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 68ch;
+}
+
+// --- Onglets ---
+.ds-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--k-line);
+  margin-bottom: 18px;
+}
+
+.ds-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    color: var(--k-ink);
+  }
+
+  &.is-active {
+    color: var(--k-brand-600);
+    border-bottom-color: var(--k-brand-600);
+  }
+}
+
+// --- Filtres ---
+.ds-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .ds-search {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  select {
+    max-width: 220px;
+  }
+}
+
+// --- États ---
+.ds-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.ds-count {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  margin: 0 0 8px;
+}
+
+// --- Table ---
+.ds-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.ds-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 960px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: middle;
+  }
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.ds-ref {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.88rem;
+}
+
+.ds-strong {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.88rem;
+}
+
+.ds-place {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--k-muted);
+
+  &--warn {
+    color: var(--k-warning);
+  }
+}
+
+.ds-amount {
+  font-weight: 700;
+  color: var(--k-ink);
+}
+
+.ds-muted {
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+// --- Puces d'avancement ---
+.ds-chips {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ds-chip {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: var(--k-cream);
+  color: var(--k-navy-2);
+  border: 1px solid var(--k-line);
+
+  &--warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+    border-color: transparent;
+  }
+}
+
+.ds-empty {
+  text-align: center;
+  color: var(--k-muted);
+  padding: 26px;
+}
+
+// --- Badge de statut ---
+.ds-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &.is-active {
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+  }
+
+  &.is-warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-cream);
+    color: var(--k-navy-2);
+    border: 1px solid var(--k-line);
+  }
+}
+
+// --- Pagination ---
+.ds-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+
+  &__info {
+    font-size: 0.85rem;
+    color: var(--k-muted);
+  }
+}

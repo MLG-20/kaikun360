@@ -6,7 +6,16 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 
 /** Clé d'icône du rail (rendue en SVG inline dans le template). */
-type BoIcon = 'grid' | 'check' | 'layers' | 'calendar' | 'card' | 'users' | 'shield' | 'clock';
+type BoIcon =
+  | 'grid'
+  | 'check'
+  | 'layers'
+  | 'calendar'
+  | 'card'
+  | 'folder'
+  | 'users'
+  | 'shield'
+  | 'clock';
 
 /** Une rubrique de navigation du poste de commandement. */
 interface BoNavItem {
@@ -61,6 +70,7 @@ export class BackofficeLayoutComponent {
     { label: 'Catalogues', path: 'catalogues', icon: 'layers', ready: true },
     { label: 'Nuitées', path: 'nuitees', icon: 'calendar', ready: true },
     { label: 'Paiements', path: 'paiements', icon: 'card', ready: true },
+    { label: 'Dossiers', path: 'dossiers', icon: 'folder', ready: true },
     { label: 'Équipe', path: 'equipe', icon: 'users', ready: true },
     { label: 'Permissions', path: 'permissions', icon: 'shield', ready: true },
     { label: 'Pointeuse', path: 'pointeuse', icon: 'clock', ready: true },

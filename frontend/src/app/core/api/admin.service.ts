@@ -255,6 +255,81 @@ export interface PaymentQuery {
   page?: number;
 }
 
+// --- Dossiers de suivi (F7.2.e) ---------------------------------------------
+
+/**
+ * Une demande de construction en supervision (miroir de
+ * `ConstructionRequestResource`, module Build). Lecture seule côté back-office.
+ */
+export interface ConstructionDossier {
+  id: number;
+  reference: string;
+  objective: string | null;
+  objective_label: string | null;
+  city: string | null;
+  surface_m2: number | null;
+  budget_xof: number | null;
+  finish_level: string | null;
+  finish_level_label: string | null;
+  description: string | null;
+  estimated_cost_xof: number | null;
+  status: string | null;
+  status_label: string | null;
+  /** Nombre de comptes rendus de chantier (photos/vidéos). */
+  reports_count?: number;
+  /** Nombre de jalons du planning. */
+  milestones_count?: number;
+}
+
+/** Agrégats financiers d'un mandat (miroir du bloc `summary` de `MandateResource`). */
+export interface MandateSummary {
+  loyers_payes_xof: number;
+  loyers_impayes_xof: number;
+  loyers_payes_count: number;
+  loyers_impayes_count: number;
+  depenses_xof: number;
+  reversements_xof: number;
+  incidents_ouverts: number;
+}
+
+/**
+ * Un mandat de gestion locative en supervision (miroir de `MandateResource`,
+ * module Manage). Lecture seule côté back-office.
+ */
+export interface MandateDossier {
+  id: number;
+  reference: string;
+  commission_rate: number | string | null;
+  status: string | null;
+  status_label: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  summary: MandateSummary;
+  /** Bien géré (titre, localisation, propriétaire) — réutilise le modèle Property. */
+  property: Property;
+  /** Compteurs bruts de supervision (surfacés par le contrôleur admin). */
+  rents_count?: number;
+  incidents_count?: number;
+  expenses_count?: number;
+  payouts_count?: number;
+}
+
+/** Filtres des demandes de construction (supervision). */
+export interface ConstructionQuery {
+  /** Statut exact (`soumise`, `en_etude`, `devis_envoye`, `acceptee`, `en_chantier`, `terminee`, `annulee`). */
+  status?: string;
+  /** Filtre par ville. */
+  city?: string;
+  page?: number;
+}
+
+/** Filtres des mandats de gestion locative (supervision). */
+export interface MandateQuery {
+  /** Statut exact (`en_attente`, `actif`, `suspendu`, `termine`). */
+  status?: string;
+  page?: number;
+}
+
 /**
  * Service d'accès à l'API du **back-office** (F7).
  *
@@ -524,5 +599,26 @@ export class AdminService {
     return this.http
       .post<ApiEnvelope<{ payment: Payment }>>(`${this.api}/admin/payments/${paymentId}/refund`, body)
       .pipe(map((response) => response.data.payment));
+  }
+
+  // --- Dossiers de suivi (F7.2.e) --------------------------------------------
+
+  /** Demandes de construction, toutes (supervision). GET /admin/construction-requests */
+  adminConstructionRequests(query: ConstructionQuery = {}): Observable<Paginated<ConstructionDossier>> {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.city) params = params.set('city', query.city);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<ConstructionDossier>>(`${this.api}/admin/construction-requests`, {
+      params,
+    });
+  }
+
+  /** Mandats de gestion locative, tous (supervision). GET /admin/mandates */
+  adminMandates(query: MandateQuery = {}): Observable<Paginated<MandateDossier>> {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<MandateDossier>>(`${this.api}/admin/mandates`, { params });
   }
 }

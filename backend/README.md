@@ -163,7 +163,12 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   pur » : le rôle agent n'ouvre que l'accès, chaque permission se délègue
   individuellement — `/admin/team/{id}/permissions`, catalogue `AdminPermission`)
   et **pointeuse** (présences entrée/sortie + feuille mensuelle + export CSV,
-  `/admin/attendance`).
+  `/admin/attendance`). **Supervision des dossiers de suivi** (`AdminDossierController`,
+  B13.7.2) : listes transverses en lecture seule des demandes de **construction**
+  (`GET /admin/construction-requests`) et des **mandats** de gestion locative
+  (`GET /admin/mandates`), avec compteurs d'avancement (jalons/rapports côté
+  construction ; loyers/incidents/dépenses/reversements côté mandat) — exploitées
+  par l'écran back-office **Dossiers** (F7.2.e).
 
 Couches **transversales** : demandes de service (machine à états stricte), devis
 génériques, réservations polymorphes, **messagerie générique** (conversations à

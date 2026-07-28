@@ -158,6 +158,16 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   de transaction) et **rembourser** total/partiel un paiement encaissé
   (`POST …/refund`, panneau avec montant). Les actions disponibles dépendent du
   mode/statut (manuel non encaissé → confirmable ; `complete` → remboursable).
+  **F7.2.e Dossiers** (`features/backoffice/dossiers/`) : supervision transverse
+  des suivis longs, en **lecture seule**, avec deux onglets chargés à la demande —
+  **Construction** (`GET /admin/construction-requests`) : objectif, ville, surface,
+  budget / coût estimé, niveau de finition, avancement (rapports / jalons) et
+  statut, filtres statut + ville ; **Gestion locative** (`GET /admin/mandates`) :
+  bien géré + propriétaire, commission, période, agrégats financiers (loyers payés /
+  **impayés en alerte**, dépenses, reversements, incidents ouverts) et statut,
+  filtre statut. Petit enrichissement backend au passage (`milestones_count` et les
+  compteurs bruts `rents/incidents/expenses/payouts` surfacés dans les Resources,
+  déjà comptés côté contrôleur admin).
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

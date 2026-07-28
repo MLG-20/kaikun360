@@ -42,6 +42,17 @@ class MandateResource extends JsonResource
                 'incidents_ouverts' => (int) ($this->incidents_ouverts ?? 0),
             ],
 
+            // Compteurs bruts de supervision back-office : le contrôleur admin
+            // (AdminDossierController::mandates) fait withCount(['rents',
+            // 'incidents', 'expenses', 'payouts']) mais n'alimente pas les alias
+            // détaillés du `summary` ci-dessus (réservés à la fiche F4.4). On
+            // expose donc ces comptes bruts via whenCounted : présents seulement
+            // quand ils ont été comptés, sinon la clé n'apparaît pas.
+            'rents_count' => $this->whenCounted('rents'),
+            'incidents_count' => $this->whenCounted('incidents'),
+            'expenses_count' => $this->whenCounted('expenses'),
+            'payouts_count' => $this->whenCounted('payouts'),
+
             'property' => PropertyResource::make($this->whenLoaded('property')),
 
             // Lignes détaillées (échéances de loyer, reversements, incidents) —

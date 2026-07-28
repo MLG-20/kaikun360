@@ -35,6 +35,10 @@ class ConstructionRequestResource extends JsonResource
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             'reports_count' => $this->whenCounted('reports'),
+            // Nombre de jalons (compté par la supervision back-office qui fait
+            // withCount(['milestones']) sans charger le détail). Absent des vues
+            // qui ne comptent pas → la clé n'apparaît simplement pas.
+            'milestones_count' => $this->whenCounted('milestones'),
             'milestones' => ConstructionMilestoneResource::collection($this->whenLoaded('milestones')),
         ];
     }

@@ -48,7 +48,11 @@ class AdminDossierTest extends TestCase
 
         $this->getJson('/api/v1/admin/construction-requests')
             ->assertOk()
-            ->assertJsonPath('meta.total', 3);
+            ->assertJsonPath('meta.total', 3)
+            // Compteurs de supervision surfacés pour la liste back-office.
+            ->assertJsonStructure([
+                'data' => [['reference', 'status', 'reports_count', 'milestones_count']],
+            ]);
     }
 
     public function test_liste_tous_les_mandats_de_gestion_locative(): void
@@ -59,6 +63,14 @@ class AdminDossierTest extends TestCase
 
         $this->getJson('/api/v1/admin/mandates')
             ->assertOk()
-            ->assertJsonPath('meta.total', 2);
+            ->assertJsonPath('meta.total', 2)
+            // Compteurs bruts (rents/incidents/expenses/payouts) surfacés pour la
+            // supervision, en plus du bloc `summary`.
+            ->assertJsonStructure([
+                'data' => [[
+                    'reference', 'status', 'summary',
+                    'rents_count', 'incidents_count', 'expenses_count', 'payouts_count',
+                ]],
+            ]);
     }
 }

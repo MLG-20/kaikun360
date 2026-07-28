@@ -66,6 +66,15 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Paiements — Back-office Kaikun 360',
       },
       {
+        // F7.2.e — Dossiers : supervision construction + mandats de gestion (lecture seule).
+        path: 'dossiers',
+        loadComponent: () =>
+          import('./dossiers/backoffice-dossiers-page').then(
+            (m) => m.BackofficeDossiersPageComponent,
+          ),
+        title: 'Dossiers — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         loadComponent: () =>
