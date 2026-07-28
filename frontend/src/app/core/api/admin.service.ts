@@ -4,6 +4,7 @@ import { Observable, map } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { Experience } from '../../models/experience.model';
+import { Payment } from '../../models/payment.model';
 import { Property } from '../../models/property.model';
 import { Vehicle } from '../../models/vehicle.model';
 import { ApiEnvelope } from './api-response.model';
@@ -242,6 +243,18 @@ export interface StayCalendarQuery {
   page?: number;
 }
 
+// --- Paiements (F7.2.d) -----------------------------------------------------
+
+/** Filtres de la supervision des paiements. */
+export interface PaymentQuery {
+  /** Statut exact (`initie`, `en_attente`, `autorise`, `complete`, `refuse`, `annule`, `rembourse`). */
+  status?: string;
+  /** Recherche par référence interne ou PSP. */
+  reference?: string;
+  booking_id?: number;
+  page?: number;
+}
+
 /**
  * Service d'accès à l'API du **back-office** (F7).
  *
@@ -469,5 +482,47 @@ export class AdminService {
         { status },
       )
       .pipe(map((response) => response.data.booking));
+  }
+
+  // --- Paiements (F7.2.d) ----------------------------------------------------
+
+  /** Liste paginée des paiements (supervision). GET /admin/payments */
+  payments(query: PaymentQuery = {}): Observable<Paginated<Payment>> {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.reference) params = params.set('reference', query.reference);
+    if (query.booking_id) params = params.set('booking_id', String(query.booking_id));
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<Payment>>(`${this.api}/admin/payments`, { params });
+  }
+
+  /**
+   * Confirme manuellement un paiement Wave/OM (Phase 1 du CDC).
+   * POST /admin/payments/{id}/confirm
+   *
+   * Réservé au mode `manuel` non encore encaissé. `providerReference` = preuve
+   * (identifiant de la transaction Wave/OM), conservée pour la traçabilité.
+   */
+  confirmPayment(paymentId: number, providerReference?: string): Observable<Payment> {
+    const body: { provider_reference?: string } = {};
+    if (providerReference) body.provider_reference = providerReference;
+    return this.http
+      .post<ApiEnvelope<{ payment: Payment }>>(`${this.api}/admin/payments/${paymentId}/confirm`, body)
+      .pipe(map((response) => response.data.payment));
+  }
+
+  /**
+   * Rembourse tout ou partie d'un paiement encaissé.
+   * POST /admin/payments/{id}/refund
+   *
+   * `amountXof` absent = remboursement total ; sinon montant partiel (≤ payé).
+   * Seul un paiement au statut `complete` est remboursable.
+   */
+  refundPayment(paymentId: number, amountXof?: number): Observable<Payment> {
+    const body: { amount_xof?: number } = {};
+    if (amountXof) body.amount_xof = amountXof;
+    return this.http
+      .post<ApiEnvelope<{ payment: Payment }>>(`${this.api}/admin/payments/${paymentId}/refund`, body)
+      .pipe(map((response) => response.data.payment));
   }
 }

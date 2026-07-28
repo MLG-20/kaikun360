@@ -1,0 +1,167 @@
+<header class="pm-head">
+  <div>
+    <h1 class="pm-title">Paiements</h1>
+    <p class="pm-sub">
+      Supervision des règlements. Confirmez les paiements Wave/Orange Money reçus,
+      ou remboursez un paiement encaissé.
+    </p>
+  </div>
+</header>
+
+<!-- Filtres -->
+<section class="pm-filters">
+  <input
+    class="k-input pm-search"
+    type="search"
+    name="reference"
+    [(ngModel)]="reference"
+    (keyup.enter)="applyFilters()"
+    placeholder="Référence (interne ou PSP)…" />
+  <select class="k-input" name="status" [(ngModel)]="status" (change)="applyFilters()" aria-label="Filtrer par statut">
+    @for (opt of statusOptions; track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+  <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
+</section>
+
+@if (actionDone()) {
+  <p class="k-form-info" role="status">{{ actionDone() }}</p>
+}
+@if (actionError() && openPanelId() === null) {
+  <p class="k-form-error" role="alert">{{ actionError() }}</p>
+}
+
+@if (loading()) {
+  <p class="pm-state" role="status">Chargement des paiements…</p>
+} @else if (error()) {
+  <p class="pm-state pm-state--error" role="alert">Impossible de charger les paiements. Réessayez.</p>
+} @else {
+  <p class="pm-count">{{ total() }} paiement(s)</p>
+  <div class="pm-table-wrap">
+    <table class="pm-table">
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Mode</th>
+          <th>Montant</th>
+          <th>Commission</th>
+          <th>Statut</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of payments(); track p.id) {
+          <tr>
+            <td>
+              <span class="pm-ref">{{ p.reference }}</span>
+              @if (p.booking_id) {
+                <span class="pm-booking">Résa #{{ p.booking_id }}</span>
+              }
+            </td>
+            <td><span class="pm-mode">{{ modeLabel(p.mode) }}</span></td>
+            <td><span class="pm-amount">{{ xof(p.amount_xof) }}</span></td>
+            <td><span class="pm-muted">{{ xof(p.commission_xof) }}</span></td>
+            <td><span class="pm-badge" [class]="statusClass(p.status)">{{ p.status_label || p.status }}</span></td>
+            <td><span class="pm-muted">{{ shortDate(p.created_at) }}</span></td>
+            <td>
+              <div class="pm-actions">
+                @if (canConfirm(p)) {
+                  <button
+                    type="button"
+                    class="k-btn k-btn--primary pm-btn"
+                    [disabled]="processingId() !== null"
+                    (click)="openConfirm(p)">
+                    Confirmer
+                  </button>
+                }
+                @if (canRefund(p)) {
+                  <button
+                    type="button"
+                    class="k-btn k-btn--ghost pm-btn"
+                    [disabled]="processingId() !== null"
+                    (click)="openRefund(p)">
+                    Rembourser
+                  </button>
+                }
+                @if (!canConfirm(p) && !canRefund(p)) {
+                  <span class="pm-muted">—</span>
+                }
+              </div>
+            </td>
+          </tr>
+
+          <!-- Panneau d'action déplié sous la ligne concernée -->
+          @if (openPanelId() === p.id) {
+            <tr class="pm-panel-row">
+              <td colspan="7">
+                <div class="pm-panel">
+                  @if (actionError()) {
+                    <p class="k-form-error" role="alert">{{ actionError() }}</p>
+                  }
+                  @if (panelKind() === 'confirm') {
+                    <p class="pm-panel__title">Confirmer un règlement manuel (Wave / Orange Money)</p>
+                    <div class="pm-panel__row">
+                      <input
+                        class="k-input"
+                        type="text"
+                        [(ngModel)]="proofReference"
+                        maxlength="255"
+                        placeholder="Référence de la transaction Wave/OM (preuve, facultatif)…" />
+                      <button
+                        type="button"
+                        class="k-btn k-btn--primary pm-btn"
+                        [disabled]="processingId() !== null"
+                        (click)="confirm(p)">
+                        {{ processingId() === p.id ? '…' : 'Valider la réception' }}
+                      </button>
+                      <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="closePanel()">Annuler</button>
+                    </div>
+                    <p class="pm-panel__hint">La réservation liée sera confirmée à la validation.</p>
+                  } @else if (panelKind() === 'refund') {
+                    <p class="pm-panel__title">Rembourser le paiement {{ p.reference }}</p>
+                    <div class="pm-panel__row">
+                      <input
+                        class="k-input pm-amount-input"
+                        type="number"
+                        [(ngModel)]="refundAmount"
+                        min="1"
+                        [max]="p.amount_xof"
+                        placeholder="Montant (FCFA)" />
+                      <button
+                        type="button"
+                        class="k-btn pm-btn pm-btn--danger"
+                        [disabled]="processingId() !== null"
+                        (click)="refund(p)">
+                        {{ processingId() === p.id ? '…' : 'Confirmer le remboursement' }}
+                      </button>
+                      <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="closePanel()">Annuler</button>
+                    </div>
+                    <p class="pm-panel__hint">Laissez le montant total pour un remboursement intégral (max {{ xof(p.amount_xof) }}).</p>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        } @empty {
+          <tr>
+            <td colspan="7" class="pm-empty">Aucun paiement ne correspond à ces filtres.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (lastPage() > 1) {
+    <nav class="pm-pager" aria-label="Pagination">
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === 1" (click)="goTo(page() - 1)">
+        ← Précédent
+      </button>
+      <span class="pm-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === lastPage()" (click)="goTo(page() + 1)">
+        Suivant →
+      </button>
+    </nav>
+  }
+}

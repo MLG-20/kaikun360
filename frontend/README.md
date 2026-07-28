@@ -152,6 +152,12 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   cycle **arrivée → départ → ménage** piloté par ligne (`PATCH
   /admin/stay-bookings/{id}/check-in|check-out|housekeeping`). Les boutons
   s'adaptent à l'étape du séjour (À venir / Sur place / Parti).
+  **F7.2.d Paiements** (`features/backoffice/payments/`) : supervision
+  (`GET /admin/payments`, filtres statut + référence) + deux actions sensibles —
+  **confirmer** un règlement manuel Wave/OM (`POST …/confirm`, panneau avec preuve
+  de transaction) et **rembourser** total/partiel un paiement encaissé
+  (`POST …/refund`, panneau avec montant). Les actions disponibles dépendent du
+  mode/statut (manuel non encaissé → confirmable ; `complete` → remboursable).
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

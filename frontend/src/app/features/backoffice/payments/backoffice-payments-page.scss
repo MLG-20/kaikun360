@@ -1,0 +1,235 @@
+// Écran Paiements du back-office (F7.2.d) — supervision + confirmation + remboursement.
+
+:host {
+  display: block;
+  max-width: 1080px;
+}
+
+.pm-head {
+  margin-bottom: 18px;
+}
+
+.pm-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.pm-sub {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 62ch;
+}
+
+// --- Filtres ---
+.pm-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .pm-search {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  select {
+    max-width: 210px;
+  }
+}
+
+// --- États ---
+.pm-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.pm-count {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  margin: 0 0 8px;
+}
+
+// --- Table ---
+.pm-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.pm-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 820px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: middle;
+  }
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.pm-ref {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.88rem;
+}
+
+.pm-booking {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--k-muted);
+}
+
+.pm-mode {
+  font-size: 0.85rem;
+  color: var(--k-navy-2);
+  font-weight: 600;
+}
+
+.pm-amount {
+  font-weight: 700;
+  color: var(--k-ink);
+}
+
+.pm-muted {
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+.pm-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pm-btn {
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+
+  &--danger {
+    background: var(--k-danger);
+    color: #fff;
+
+    &:hover {
+      filter: brightness(0.94);
+    }
+  }
+}
+
+.pm-empty {
+  text-align: center;
+  color: var(--k-muted);
+  padding: 26px;
+}
+
+// --- Badge de statut ---
+.pm-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &.is-warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+  }
+}
+
+// --- Panneau d'action déplié (confirmation / remboursement) ---
+.pm-panel-row td {
+  background: var(--k-cream);
+}
+
+.pm-panel {
+  padding: 6px 2px;
+
+  &__title {
+    margin: 0 0 10px;
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.9rem;
+  }
+
+  &__row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+
+    .k-input {
+      flex: 1;
+      min-width: 220px;
+    }
+  }
+
+  &__hint {
+    margin: 10px 0 0;
+    font-size: 0.8rem;
+    color: var(--k-muted);
+  }
+}
+
+.pm-amount-input {
+  max-width: 220px;
+}
+
+// --- Pagination ---
+.pm-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+
+  &__info {
+    font-size: 0.85rem;
+    color: var(--k-muted);
+  }
+}

@@ -3,10 +3,12 @@
 namespace Database\Seeders;
 
 use App\Enums\BookingStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\RequestStatus;
 use App\Enums\ServiceType;
 use App\Models\Booking;
 use App\Models\Conversation;
+use App\Models\Payment;
 use App\Models\Review;
 use App\Models\ServiceRequest;
 use App\Models\User;
@@ -645,48 +647,58 @@ class DemoSeeder extends Seeder
         }
 
         // Une nuitée confirmée (non annulable côté client : pas d'endpoint dédié).
-        $this->makeBooking($client, $stay, BookingStatus::CONFIRMEE, [
+        $nuitee = $this->makeBooking($client, $stay, BookingStatus::CONFIRMEE, [
             'start_date' => now()->addWeeks(2)->toDateString(),
             'end_date' => now()->addWeeks(2)->addDays(3)->toDateString(),
             'guests' => 2,
             'amount_xof' => 180_000,
             'caution_xof' => 100_000,
         ]);
+        // Réglée par PayTech, encaissée → remboursable dans le back-office.
+        $this->payFor($nuitee, 'paytech', PaymentStatus::COMPLETE);
 
         // Une location de véhicule confirmée à venir (annulable côté client).
-        $this->makeBooking($client, $vehicles[0], BookingStatus::CONFIRMEE, [
+        $vehicule = $this->makeBooking($client, $vehicles[0], BookingStatus::CONFIRMEE, [
             'start_date' => now()->addWeek()->toDateString(),
             'end_date' => now()->addWeek()->addDays(2)->toDateString(),
             'guests' => 3,
             'amount_xof' => 90_000,
             'caution_xof' => 150_000,
         ]);
+        // Réglée par Wave au numéro officiel, EN ATTENTE de validation → confirmable à la main.
+        $this->payFor($vehicule, 'manuel', PaymentStatus::EN_ATTENTE);
 
         // Une expérience en attente de confirmation (annulable côté client).
-        $this->makeBooking($client, $experience, BookingStatus::EN_ATTENTE, [
+        $exp = $this->makeBooking($client, $experience, BookingStatus::EN_ATTENTE, [
             'start_date' => now()->addWeeks(3)->toDateString(),
             'end_date' => now()->addWeeks(3)->toDateString(),
             'guests' => 4,
             'amount_xof' => 120_000,
         ]);
+        // Intention de paiement manuel non encore reçue → confirmable à la main.
+        $this->payFor($exp, 'manuel', PaymentStatus::INITIE);
 
         // Un trajet déjà terminé (historique, non annulable).
-        $this->makeBooking($client, $trip, BookingStatus::TERMINEE, [
+        $trajet = $this->makeBooking($client, $trip, BookingStatus::TERMINEE, [
             'start_date' => now()->subWeeks(2)->toDateString(),
             'end_date' => now()->subWeeks(2)->toDateString(),
             'guests' => 1,
             'amount_xof' => 15_000,
         ]);
+        // Réglé et encaissé (PayTech) → remboursable.
+        $this->payFor($trajet, 'paytech', PaymentStatus::COMPLETE);
 
         // Une location de véhicule déjà annulée par le client (état terminal).
-        $this->makeBooking($client, $vehicles[1], BookingStatus::ANNULEE_CLIENT, [
+        $annulee = $this->makeBooking($client, $vehicles[1], BookingStatus::ANNULEE_CLIENT, [
             'start_date' => now()->addWeeks(4)->toDateString(),
             'end_date' => now()->addWeeks(4)->addDay()->toDateString(),
             'guests' => 2,
             'amount_xof' => 60_000,
         ]);
+        // Paiement déjà remboursé (annulation) → état terminal, aucune action.
+        $this->payFor($annulee, 'paytech', PaymentStatus::REMBOURSE);
 
-        $this->command?->info('DemoSeeder : réservations de démonstration créées pour le client.');
+        $this->command?->info('DemoSeeder : réservations + paiements de démonstration créés pour le client.');
     }
 
     /**
@@ -999,15 +1011,38 @@ class DemoSeeder extends Seeder
      * @param  \Illuminate\Database\Eloquent\Model  $bookable
      * @param  array<string, mixed>  $attributes
      */
-    private function makeBooking(User $client, $bookable, BookingStatus $status, array $attributes): void
+    private function makeBooking(User $client, $bookable, BookingStatus $status, array $attributes): Booking
     {
-        Booking::create(array_merge([
+        return Booking::create(array_merge([
             'reference' => 'BK-'.strtoupper(Str::random(8)),
             'user_id' => $client->id,
             'bookable_type' => $bookable::class,
             'bookable_id' => $bookable->id,
             'status' => $status->value,
         ], $attributes));
+    }
+
+    /**
+     * Crée un paiement de démonstration rattaché à une réservation (F7.2.d) — pour
+     * que l'écran « Paiements » du back-office ait de quoi superviser :
+     *   - `manuel` + statut non encaissé → confirmable à la main (Wave/OM) ;
+     *   - `paytech` + `COMPLETE` → remboursable ;
+     *   - `paytech` + `REMBOURSE` → état terminal (déjà remboursé).
+     * La commission est estimée à 10 % (barème de démo), comme le moteur réel.
+     */
+    private function payFor(Booking $booking, string $mode, PaymentStatus $status): void
+    {
+        $amount = (int) $booking->amount_xof;
+
+        Payment::create([
+            'reference' => 'PAY-'.strtoupper(Str::random(8)),
+            'booking_id' => $booking->id,
+            'provider' => $mode === 'manuel' ? 'wave' : 'paytech',
+            'amount_xof' => $amount,
+            'commission_xof' => (int) round($amount * 0.10),
+            'status' => $status->value,
+            'mode' => $mode,
+        ]);
     }
 
     /**

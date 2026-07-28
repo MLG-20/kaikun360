@@ -57,6 +57,15 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Nuitées — Back-office Kaikun 360',
       },
       {
+        // F7.2.d — Paiements : supervision + confirmation manuelle Wave/OM + remboursement.
+        path: 'paiements',
+        loadComponent: () =>
+          import('./payments/backoffice-payments-page').then(
+            (m) => m.BackofficePaymentsPageComponent,
+          ),
+        title: 'Paiements — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         loadComponent: () =>
