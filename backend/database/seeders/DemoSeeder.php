@@ -319,10 +319,24 @@ class DemoSeeder extends Seeder
             'title' => 'Terrain non titré (dossier rejeté)',
         ]);
 
-        // --- Nuitées : 4 nuitées publiées, posées sur les premiers biens ---
-        $properties->take(4)->each(
-            fn (Property $property) => Stay::factory()->create(['property_id' => $property->id]),
-        );
+        // --- Nuitées : 4 biens MEUBLÉS dédiés à la location courte durée ---
+        // Une nuitée n'est PAS un bien « à vendre » (titre par défaut de la
+        // factory) : on crée des logements avec des intitulés cohérents, sinon le
+        // calendrier d'exploitation du back-office afficherait « Villa à vendre ».
+        $stayHomes = [
+            [PropertyType::VILLA, 'Villa meublée bord de mer — nuitées'],
+            [PropertyType::APPARTEMENT, 'Appartement F3 meublé — courte durée'],
+            [PropertyType::STUDIO, 'Studio cosy centre-ville — nuitées'],
+            [PropertyType::MAISON, "Maison d'hôtes avec piscine — nuitées"],
+        ];
+        foreach ($stayHomes as [$type, $title]) {
+            $home = Property::factory()->published()->create([
+                'owner_id' => $owner->id,
+                'type' => $type->value,
+                'title' => $title,
+            ]);
+            Stay::factory()->create(['property_id' => $home->id]);
+        }
 
         // --- Transport : véhicules publiés couvrant les principaux types ---
         $vehicleTypes = [

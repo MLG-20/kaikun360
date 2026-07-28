@@ -147,6 +147,11 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   Biens / Véhicules / Expériences, affichant **tous les statuts** (et pas
   seulement le publié comme le catalogue public), filtres statut + recherche,
   pagination. Lecture seule — l'approbation reste dans l'écran Validation.
+  **F7.2.c Nuitées** (`features/backoffice/stays/`) : exploitation hôtelière —
+  calendrier des séjours (`GET /admin/stays/calendar`), filtre par période, et
+  cycle **arrivée → départ → ménage** piloté par ligne (`PATCH
+  /admin/stay-bookings/{id}/check-in|check-out|housekeeping`). Les boutons
+  s'adaptent à l'étape du séjour (À venir / Sur place / Parti).
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

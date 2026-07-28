@@ -205,6 +205,43 @@ export interface CatalogQuery {
   page?: number;
 }
 
+// --- Nuitées / exploitation (F7.2.c) ----------------------------------------
+
+/** Statut du ménage d'une nuitée (miroir de `HousekeepingStatus`). */
+export type HousekeepingStatus = 'a_faire' | 'en_cours' | 'fait';
+
+/** Une réservation de nuitée dans le calendrier d'exploitation. */
+export interface StayBooking {
+  booking_id: number;
+  reference: string;
+  stay_id: number;
+  property_title: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  guests: number;
+  status: string;
+  checked_in_at: string | null;
+  checked_out_at: string | null;
+  housekeeping_status: HousekeepingStatus | null;
+}
+
+/** Résumé renvoyé après une transition (check-in/out, ménage) — partiel. */
+export interface StayBookingSummary {
+  booking_id: number;
+  reference: string;
+  status: string;
+  checked_in_at: string | null;
+  checked_out_at: string | null;
+  housekeeping_status: HousekeepingStatus | null;
+}
+
+/** Filtres du calendrier des nuitées (bornes sur la date d'arrivée). */
+export interface StayCalendarQuery {
+  from?: string;
+  to?: string;
+  page?: number;
+}
+
 /**
  * Service d'accès à l'API du **back-office** (F7).
  *
@@ -388,5 +425,49 @@ export class AdminService {
     if (query.q) params = params.set('q', query.q);
     if (query.page) params = params.set('page', String(query.page));
     return params;
+  }
+
+  // --- Nuitées / exploitation (F7.2.c) --------------------------------------
+
+  /** Calendrier des séjours (paginé). GET /admin/stays/calendar */
+  staysCalendar(query: StayCalendarQuery = {}): Observable<Paginated<StayBooking>> {
+    let params = new HttpParams();
+    if (query.from) params = params.set('from', query.from);
+    if (query.to) params = params.set('to', query.to);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<StayBooking>>(`${this.api}/admin/stays/calendar`, { params });
+  }
+
+  /** Enregistre l'arrivée. PATCH /admin/stay-bookings/{id}/check-in */
+  stayCheckIn(bookingId: number): Observable<StayBookingSummary> {
+    return this.http
+      .patch<ApiEnvelope<{ booking: StayBookingSummary }>>(
+        `${this.api}/admin/stay-bookings/${bookingId}/check-in`,
+        {},
+      )
+      .pipe(map((response) => response.data.booking));
+  }
+
+  /** Enregistre le départ (déclenche le ménage). PATCH /admin/stay-bookings/{id}/check-out */
+  stayCheckOut(bookingId: number): Observable<StayBookingSummary> {
+    return this.http
+      .patch<ApiEnvelope<{ booking: StayBookingSummary }>>(
+        `${this.api}/admin/stay-bookings/${bookingId}/check-out`,
+        {},
+      )
+      .pipe(map((response) => response.data.booking));
+  }
+
+  /** Met à jour le statut de ménage. PATCH /admin/stay-bookings/{id}/housekeeping */
+  stayHousekeeping(
+    bookingId: number,
+    status: HousekeepingStatus,
+  ): Observable<StayBookingSummary> {
+    return this.http
+      .patch<ApiEnvelope<{ booking: StayBookingSummary }>>(
+        `${this.api}/admin/stay-bookings/${bookingId}/housekeeping`,
+        { status },
+      )
+      .pipe(map((response) => response.data.booking));
   }
 }

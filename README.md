@@ -555,7 +555,7 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 >
 > **🎉 F7.1 « Poste de commandement de l'équipe » terminé** (backend + frontend, vérifié dans le navigateur). Backend (voir Phase B13) : **F7.1.a** équipe/enrôlement · **F7.1.b** délégation « grant pur » par personne · **F7.1.c** pointeuse · **F7.1.d** 2FA e-mail + session courte. Frontend : shell dédié `layouts/backoffice-layout/` sous `/back-office` (guard rôle staff), connexion 2FA, et les écrans ci-dessous.
 >
-> **▶ F7.2 « Les autres écrans du back-office » en cours** (frontend pur, branché sur l'API Admin déjà livrée en B13). **F7.2.a Validation** : file d'approbation générique des biens / véhicules / expériences / prestataires, avec le déposant (identité + contact) et décision valider/refuser. **F7.2.b Catalogues** : navigateur de supervision de toute l'offre (tous statuts), en lecture seule.
+> **▶ F7.2 « Les autres écrans du back-office » en cours** (frontend pur, branché sur l'API Admin déjà livrée en B13). **F7.2.a Validation** : file d'approbation générique des biens / véhicules / expériences / prestataires, avec le déposant (identité + contact) et décision valider/refuser. **F7.2.b Catalogues** : navigateur de supervision de toute l'offre (tous statuts), en lecture seule. **F7.2.c Nuitées** : calendrier des séjours + check-in / check-out + suivi du ménage.
 
 - [x] **Shell back-office dédié** (`/back-office`) + **connexion 2FA** (login → saisie du code e-mail) + redirection des comptes staff. — _F7.1.e._
 - [x] Écran **Vue d'ensemble** (KPIs `GET /admin/dashboard` : files de validation, activité du jour, alertes, revenus, indicateurs). — _F7.1.e._
@@ -566,10 +566,11 @@ _(Les Network APIs Orange — vérification de numéro / SIM Swap — ont été 
 - [x] Écran **Validation** (file d'approbation générique `GET /admin/queue` + `PATCH /admin/validate/{type}/{id}` : onglets biens/véhicules/expériences/prestataires avec compteurs, **déposant identifié** (nom + e-mail/téléphone), valider/refuser avec motif). Enrichissement backend : `owner` joint à chaque entrée de la file (helper `OwnerEntry`, eager-loading). — _F7.2.a._
 - [x] **Correctif SSR** : `/back-office` basculé en `RenderMode.Client` (comme les autres espaces privés) — le rafraîchissement d'une page du back-office ne déconnecte plus (le guard s'exécute côté client, là où la session existe). — _F7.2.a._
 - [x] Écran **Catalogues** (supervision `GET /admin/properties|vehicles|experiences` : onglets Biens/Véhicules/Expériences, **tous statuts**, filtres statut + recherche, pagination, lecture seule). — _F7.2.b._
+- [x] Écran **Nuitées** (exploitation `GET /admin/stays/calendar` + `PATCH /admin/stay-bookings/{id}/check-in|check-out|housekeeping` : calendrier des séjours, filtre par période, **check-in / check-out**, suivi du **ménage** À faire → En cours → Fait). Correctif du `DemoSeeder` au passage : les nuitées de démo sont posées sur des logements meublés dédiés (plus de « Villa à vendre » dans le calendrier). — _F7.2.c._
 - [ ] Écran Tableau de bord (demandes du jour, revenus estimés, biens en attente, prestataires à valider, alertes, KPI). <!-- socle livré en Vue d'ensemble (F7.1.e) ; à enrichir. -->
 - [ ] Écran Utilisateurs (liste, rôles, statut, documents, historique, désactivation). <!-- volet équipe/permissions livré en F7.1.f/g ; reste les comptes publics. -->
 - [ ] Écran Biens immobiliers (créer, modifier, valider, publier, archiver, attribuer). <!-- validation/publication livrée dans l'écran Validation (F7.2.a) ; reste la supervision catalogue (F7.2.b). -->
-- [ ] Écran Nuitées (calendrier, disponibilité, caution, ménage, check-in/check-out).
+- [x] Écran Nuitées (calendrier, check-in/check-out, ménage). — _F7.2.c ; caution/disponibilité gérées côté catalogue/réservation._
 - [ ] Écran Gestion locative (contrats, loyers, incidents, dépenses, reversements, rapport mensuel).
 - [ ] Écran Construction (devis, prestataires BTP, jalons chantier, rapports photo/vidéo).
 - [ ] Écran Mobilité (véhicules, chauffeurs, pirogues, bus, disponibilités, assurances, capacités).

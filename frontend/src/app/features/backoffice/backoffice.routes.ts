@@ -50,6 +50,13 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Catalogues — Back-office Kaikun 360',
       },
       {
+        // F7.2.c — Nuitées : calendrier des séjours + check-in/out + ménage.
+        path: 'nuitees',
+        loadComponent: () =>
+          import('./stays/backoffice-stays-page').then((m) => m.BackofficeStaysPageComponent),
+        title: 'Nuitées — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         loadComponent: () =>
