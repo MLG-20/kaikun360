@@ -26,6 +26,8 @@ Route::middleware('auth:sanctum')->prefix('diaspora-projects')->group(function (
 
     // Détail + rapports (policy view/update côté contrôleur).
     Route::get('/{project}', [DiasporaProjectController::class, 'show'])->whereNumber('project');
+    // Pilotage back-office : statut et/ou priorité (policy update = agent affecté ou admin).
+    Route::patch('/{project}', [DiasporaProjectController::class, 'update'])->whereNumber('project');
     Route::get('/{project}/reports', [DiasporaReportController::class, 'index'])->whereNumber('project');
     Route::post('/{project}/reports', [DiasporaReportController::class, 'store'])->whereNumber('project');
 

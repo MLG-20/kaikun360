@@ -148,7 +148,10 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
 - **Mobility** — véhicules (avec contrôle de conformité assurance/pirogue),
   services de mobilité, commission & caution.
 - **Diaspora** — projets pilotés par un agent (affectation auto au moins chargé),
-  rapports d'avancement.
+  rapports d'avancement, et **pilotage back-office** (F7.2.i — CDC §6) : file
+  priorisée filtrable + `PATCH /diaspora-projects/{id}` (statut et/ou priorité,
+  sans effet de bord — permet de clôturer/annuler et de (re)prioriser hors
+  affectation), resource enrichie `client`+`agent`.
 - **TeamBuilding** — demandes d'entreprise, devis composés multi-prestataires
   avec marge, et **affectation des prestataires** (F7.2.h — CDC §6) : une
   affectation crée une **mission Pro** rattachée à la demande

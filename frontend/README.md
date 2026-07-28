@@ -206,6 +206,20 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   commission figée, cycle de mission), listée avec son statut. Les actions de
   composition/envoi/affectation sont masquées aux profils sans le rôle admin
   (garde serveur `policy manage`).
+
+  **F7.2.i Diaspora** (`features/backoffice/diaspora/`) : couvre le module CDC §6
+  *Diaspora*. **Liste** : file **priorisée** `GET /diaspora-projects` (dossiers à
+  forte valeur en tête, filtres statut / priorité / recherche par référence·pays·
+  client) ; un clic ouvre la **fiche** `/back-office/diaspora/:id`
+  (`GET /diaspora-projects/{id}`). La fiche pilote le dossier de bout en bout : le
+  **dossier** (client, type, pays de résidence, budget, agent) ; le **pilotage** —
+  **priorité** en un clic (`PATCH …` sans effet de bord), **agent dédié**
+  (`PATCH …/assign`, explicite via la liste des agents `GET /admin/team?role=agent_kaikun`
+  ou automatique = le moins chargé), **statut** (en cours / terminé / annulé) ; et
+  les **rapports de suivi** (`GET/POST …/reports`) — vérification terrain,
+  avancement chantier, reporting (photo/vidéo/mixte + commentaire + lien vidéo).
+  Le pilotage est réservé à l'admin ou à l'agent affecté (garde serveur `update` /
+  `assign`).
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

@@ -31,6 +31,19 @@ class DiasporaProjectResource extends JsonResource
             'status_label' => $this->status?->label(),
             'agent_id' => $this->agent_id,
             'reports_count' => $this->whenCounted('reports'),
+            // Client à l'origine du dossier (utile à la file/fiche back-office).
+            'client' => $this->whenLoaded('client', fn () => [
+                'id' => $this->client->id,
+                'name' => $this->client->name,
+                'email' => $this->client->email,
+                'phone' => $this->client->phone,
+            ]),
+            // Agent dédié affecté (null tant que non affecté).
+            'agent' => $this->whenLoaded('agent', fn () => $this->agent ? [
+                'id' => $this->agent->id,
+                'name' => $this->agent->name,
+                'email' => $this->agent->email,
+            ] : null),
         ];
     }
 }

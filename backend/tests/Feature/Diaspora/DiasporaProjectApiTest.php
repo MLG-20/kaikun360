@@ -175,4 +175,70 @@ class DiasporaProjectApiTest extends TestCase
 
         $this->getJson('/api/v1/diaspora-projects')->assertStatus(403);
     }
+
+    public function test_la_file_expose_le_client_et_l_agent(): void
+    {
+        $agent = $this->agent();
+        $project = DiasporaProject::factory()->assigned($agent)->create();
+
+        Sanctum::actingAs($this->admin());
+
+        $this->getJson('/api/v1/diaspora-projects')
+            ->assertOk()
+            ->assertJsonPath('data.0.client.id', $project->client_id)
+            ->assertJsonPath('data.0.agent.id', $agent->id);
+    }
+
+    public function test_un_admin_pilote_statut_et_priorite_sans_effet_de_bord(): void
+    {
+        // Dossier NON affecté : la (re)priorisation ne doit PAS forcer d'affectation.
+        $project = DiasporaProject::factory()->create([
+            'priority' => DiasporaPriority::NORMALE->value,
+            'status' => 'nouveau',
+        ]);
+
+        Sanctum::actingAs($this->admin());
+
+        $this->patchJson("/api/v1/diaspora-projects/{$project->id}", [
+            'priority' => 'strategique',
+            'status' => 'termine',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.project.priority', 'strategique')
+            ->assertJsonPath('data.project.status', 'termine')
+            ->assertJsonPath('data.project.agent_id', null);
+    }
+
+    public function test_l_agent_affecte_peut_faire_progresser_le_statut(): void
+    {
+        $agent = $this->agent();
+        $project = DiasporaProject::factory()->assigned($agent)->create();
+
+        Sanctum::actingAs($agent);
+
+        $this->patchJson("/api/v1/diaspora-projects/{$project->id}", ['status' => 'termine'])
+            ->assertOk()
+            ->assertJsonPath('data.project.status', 'termine');
+    }
+
+    public function test_le_client_ne_peut_pas_piloter_le_dossier(): void
+    {
+        $project = DiasporaProject::factory()->create();
+
+        Sanctum::actingAs(User::find($project->client_id));
+
+        $this->patchJson("/api/v1/diaspora-projects/{$project->id}", ['status' => 'annule'])
+            ->assertStatus(403);
+    }
+
+    public function test_une_mise_a_jour_vide_est_rejetee(): void
+    {
+        $project = DiasporaProject::factory()->create();
+
+        Sanctum::actingAs($this->admin());
+
+        $this->patchJson("/api/v1/diaspora-projects/{$project->id}", [])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['status', 'priority']);
+    }
 }

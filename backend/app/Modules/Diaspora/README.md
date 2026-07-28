@@ -36,8 +36,9 @@ sur le modèle transversal `App\Models\Report` (commun au module Build).
 | POST | `/api/v1/diaspora-projects` | client — dépôt (statut `nouveau`) |
 | GET | `/api/v1/diaspora-projects/mine` | client — mes projets |
 | GET | `/api/v1/diaspora-projects/{id}` | client propriétaire, agent affecté ou admin (policy `view`) |
-| GET | `/api/v1/diaspora-projects` | back-office (`can:consulter:dashboard-admin`) — **priorisé** |
-| PATCH | `/api/v1/diaspora-projects/{id}/assign` | admin (policy `assign`) — agent explicite ou auto |
+| GET | `/api/v1/diaspora-projects` | back-office (`can:consulter:dashboard-admin`) — **priorisé** ; filtres `status`/`priority`/`q` (F7.2.i) |
+| PATCH | `/api/v1/diaspora-projects/{id}` | agent affecté ou admin (policy `update`) — **statut et/ou priorité, sans effet de bord** (F7.2.i) |
+| PATCH | `/api/v1/diaspora-projects/{id}/assign` | admin (policy `assign`) — agent explicite ou auto (bascule « en cours ») |
 | GET | `/api/v1/diaspora-projects/{id}/reports` | lecture (policy `view`) |
 | POST | `/api/v1/diaspora-projects/{id}/reports` | agent affecté ou admin (policy `update`) |
 
@@ -48,6 +49,12 @@ sur le modèle transversal `App\Models\Report` (commun au module Build).
   l'agent le **moins chargé** (moins de projets actifs) ; passe le projet
   `en_cours`. Charge calculée par requête (pas de relation sur `User`).
 - **Priorisation** : `index` back-office trie par priorité (stratégique > haute >
-  normale) puis récence.
+  normale) puis récence, et accepte les filtres `status` / `priority` / `q`
+  (référence, pays de résidence, nom du client) — F7.2.i.
+- **Pilotage back-office (F7.2.i)** : `update` (`PATCH /diaspora-projects/{id}`,
+  `UpdateDiasporaProjectRequest`) modifie le **statut** et/ou la **priorité** SANS
+  effet de bord (contrairement à `/assign`), ce qui permet de (re)prioriser un
+  dossier avant toute affectation et de le clôturer/annuler. La `DiasporaProjectResource`
+  expose `client` + `agent` (chargés dans `index`/`show`) pour la file/fiche back-office.
 - **Rapports** : réutilisent le modèle transversal `App\Models\Report` et
   `ReportResource` (partagés avec Build).

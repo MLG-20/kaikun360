@@ -584,6 +584,82 @@ export interface AssignProviderPayload {
   scheduled_at?: string;
 }
 
+// --- Diaspora (F7.2.i) -------------------------------------------------------
+
+/** Statut d'un projet diaspora (miroir de `DiasporaProjectStatus`). */
+export type DiasporaStatus = 'nouveau' | 'en_cours' | 'termine' | 'annule';
+
+/** Priorité d'un dossier diaspora (miroir de `DiasporaPriority`). */
+export type DiasporaPriority = 'normale' | 'haute' | 'strategique';
+
+/** Nature d'un projet diaspora (miroir de `DiasporaProjectType`). */
+export type DiasporaProjectType = 'achat' | 'construction' | 'gestion_locative';
+
+/** Nature d'un rapport de suivi (miroir de `ReportType`, module Build). */
+export type ReportType = 'photo' | 'video' | 'mixte';
+
+/** Un rapport de suivi (miroir de `ReportResource`). */
+export interface DiasporaReport {
+  id: number;
+  reference: string;
+  type: ReportType | null;
+  type_label: string | null;
+  photos: string[];
+  video_url: string | null;
+  comment: string | null;
+  reported_at: string | null;
+}
+
+/** Un projet diaspora en supervision (miroir de `DiasporaProjectResource`). */
+export interface DiasporaProject {
+  id: number;
+  reference: string;
+  project_type: DiasporaProjectType | null;
+  project_type_label: string | null;
+  residence_country: string | null;
+  budget_xof: number | null;
+  description: string | null;
+  priority: DiasporaPriority | null;
+  priority_label: string | null;
+  status: DiasporaStatus | null;
+  status_label: string | null;
+  agent_id: number | null;
+  reports_count?: number;
+  /** Client à l'origine du dossier (chargé côté back-office). */
+  client?: { id: number; name: string; email: string | null; phone: string | null };
+  /** Agent dédié affecté (null tant que non affecté). */
+  agent?: { id: number; name: string; email: string | null } | null;
+}
+
+/** Filtres de la file des dossiers diaspora. */
+export interface DiasporaQuery {
+  status?: string;
+  priority?: string;
+  q?: string;
+  page?: number;
+}
+
+/** Corps de pilotage d'un dossier (PATCH /diaspora-projects/{id}). Au moins l'un des deux. */
+export interface UpdateDiasporaPayload {
+  status?: DiasporaStatus;
+  priority?: DiasporaPriority;
+}
+
+/** Corps d'affectation d'un agent (PATCH …/assign). `agent_id` absent = auto (moins chargé). */
+export interface AssignAgentPayload {
+  agent_id?: number;
+  priority?: DiasporaPriority;
+}
+
+/** Corps d'ajout d'un rapport de suivi (POST …/reports). */
+export interface CreateReportPayload {
+  type: ReportType;
+  reported_at: string;
+  comment?: string;
+  video_url?: string;
+  photos?: string[];
+}
+
 /**
  * Service d'accès à l'API du **back-office** (F7).
  *
@@ -1056,5 +1132,61 @@ export class AdminService {
         payload,
       )
       .pipe(map((response) => response.data.mission));
+  }
+
+  // --- Diaspora (F7.2.i) -----------------------------------------------------
+  //
+  // Endpoints au niveau racine (`/diaspora-projects`, hors préfixe /admin) : la
+  // file priorisée est gardée par `consulter:dashboard-admin` ; le pilotage
+  // (statut/priorité) et les rapports par la policy `update` (agent affecté ou
+  // admin) ; l'affectation d'un agent par la policy `assign` (admin).
+
+  /** File priorisée des dossiers diaspora (paginée, filtrable). GET /diaspora-projects */
+  diasporaProjects(query: DiasporaQuery = {}): Observable<Paginated<DiasporaProject>> {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.priority) params = params.set('priority', query.priority);
+    if (query.q) params = params.set('q', query.q);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<DiasporaProject>>(`${this.api}/diaspora-projects`, { params });
+  }
+
+  /** Fiche d'un dossier diaspora. GET /diaspora-projects/{id} */
+  diasporaProject(id: number): Observable<DiasporaProject> {
+    return this.http
+      .get<ApiEnvelope<{ project: DiasporaProject }>>(`${this.api}/diaspora-projects/${id}`)
+      .pipe(map((response) => response.data.project));
+  }
+
+  /** Pilote un dossier : statut et/ou priorité (sans effet de bord). PATCH /diaspora-projects/{id} */
+  updateDiasporaProject(id: number, payload: UpdateDiasporaPayload): Observable<DiasporaProject> {
+    return this.http
+      .patch<ApiEnvelope<{ project: DiasporaProject }>>(`${this.api}/diaspora-projects/${id}`, payload)
+      .pipe(map((response) => response.data.project));
+  }
+
+  /**
+   * Affecte un agent dédié (explicite ou auto = le moins chargé) — bascule le
+   * dossier « en cours ». PATCH /diaspora-projects/{id}/assign
+   */
+  assignDiasporaAgent(id: number, payload: AssignAgentPayload = {}): Observable<DiasporaProject> {
+    return this.http
+      .patch<ApiEnvelope<{ project: DiasporaProject }>>(`${this.api}/diaspora-projects/${id}/assign`, payload)
+      .pipe(map((response) => response.data.project));
+  }
+
+  /** Rapports de suivi d'un dossier (paginés). GET /diaspora-projects/{id}/reports */
+  diasporaReports(id: number, page = 1): Observable<Paginated<DiasporaReport>> {
+    const params = new HttpParams().set('page', String(page));
+    return this.http.get<Paginated<DiasporaReport>>(`${this.api}/diaspora-projects/${id}/reports`, {
+      params,
+    });
+  }
+
+  /** Ajoute un rapport de suivi (vérification / chantier). POST /diaspora-projects/{id}/reports */
+  addDiasporaReport(id: number, payload: CreateReportPayload): Observable<DiasporaReport> {
+    return this.http
+      .post<ApiEnvelope<{ report: DiasporaReport }>>(`${this.api}/diaspora-projects/${id}/reports`, payload)
+      .pipe(map((response) => response.data.report));
   }
 }

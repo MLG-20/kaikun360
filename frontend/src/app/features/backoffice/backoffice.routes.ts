@@ -122,6 +122,25 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Demande team building — Back-office Kaikun 360',
       },
       {
+        // F7.2.i — Diaspora : file priorisée des dossiers à distance + fiche
+        // (priorité, affectation d'agent, statut, rapports de suivi).
+        path: 'diaspora',
+        loadComponent: () =>
+          import('./diaspora/backoffice-diaspora-page').then(
+            (m) => m.BackofficeDiasporaPageComponent,
+          ),
+        title: 'Diaspora — Back-office Kaikun 360',
+      },
+      {
+        // F7.2.i — Fiche d'un dossier diaspora.
+        path: 'diaspora/:id',
+        loadComponent: () =>
+          import('./diaspora/detail/backoffice-diaspora-detail-page').then(
+            (m) => m.BackofficeDiasporaDetailPageComponent,
+          ),
+        title: 'Dossier diaspora — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         loadComponent: () =>

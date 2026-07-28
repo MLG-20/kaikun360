@@ -1,0 +1,155 @@
+<button type="button" class="k-btn k-btn--ghost tb-back" (click)="back()">← Retour aux dossiers</button>
+
+@if (loading()) {
+  <p class="tb-state" role="status">Chargement du dossier…</p>
+} @else if (error() || !project()) {
+  <p class="tb-state tb-state--error" role="alert">Impossible de charger ce dossier.</p>
+} @else {
+  @let p = project()!;
+
+  <header class="tb-dhead">
+    <div>
+      <h1 class="tb-dtitle">{{ p.reference }}</h1>
+      <p class="tb-dsub">Dossier diaspora · #{{ p.id }}</p>
+    </div>
+    <div class="tb-dbadges">
+      <span class="tb-badge" [class]="priorityClass(p.priority)">{{ p.priority_label || p.priority }}</span>
+      <span class="tb-badge" [class]="statusClass(p.status)">{{ p.status_label || p.status }}</span>
+    </div>
+  </header>
+
+  <!-- ===================== LE DOSSIER ===================== -->
+  <section class="tb-card">
+    <h2 class="tb-card__title">Le dossier</h2>
+    <dl class="tb-grid">
+      <div><dt>Client</dt><dd>{{ p.client?.name || '—' }}</dd></div>
+      <div><dt>Contact</dt><dd>{{ p.client?.email || '—' }}<br /><span class="tb-muted">{{ p.client?.phone || '' }}</span></dd></div>
+      <div><dt>Type de projet</dt><dd>{{ p.project_type_label || '—' }}</dd></div>
+      <div><dt>Pays de résidence</dt><dd>{{ p.residence_country || '—' }}</dd></div>
+      <div><dt>Budget</dt><dd>{{ xof(p.budget_xof) }}</dd></div>
+      <div><dt>Agent dédié</dt><dd>{{ p.agent?.name || 'Non affecté' }}</dd></div>
+    </dl>
+    @if (p.description) {
+      <p class="tb-desc">{{ p.description }}</p>
+    }
+  </section>
+
+  <!-- ===================== PILOTAGE ===================== -->
+  @if (canWrite()) {
+    <section class="tb-card">
+      <h2 class="tb-card__title">Pilotage du dossier</h2>
+
+      <div class="tb-control">
+        <span class="tb-control__label">Priorité</span>
+        <div class="tb-btn-group">
+          @for (opt of priorityOptions; track opt.value) {
+            <button
+              type="button"
+              class="tb-choice"
+              [class.is-active]="p.priority === opt.value"
+              [disabled]="busy()"
+              (click)="setPriority($any(opt.value))">
+              {{ opt.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (isAdmin()) {
+        <div class="tb-control">
+          <span class="tb-control__label">Agent dédié</span>
+          <div class="tb-assign-row">
+            <select class="k-input k-input--sm" [(ngModel)]="selectedAgentId" name="agent" [disabled]="busy()">
+              <option [ngValue]="'auto'">Automatique (le moins chargé)</option>
+              @for (a of agents(); track a.id) {
+                <option [ngValue]="a.id">{{ a.name }}</option>
+              }
+            </select>
+            <button type="button" class="k-btn k-btn--primary k-btn--sm" [disabled]="busy()" (click)="assignAgent()">
+              Affecter
+            </button>
+          </div>
+        </div>
+      }
+
+      <div class="tb-control">
+        <span class="tb-control__label">Statut</span>
+        <div class="tb-btn-group">
+          <button type="button" class="tb-choice" [class.is-active]="p.status === 'en_cours'" [disabled]="busy()" (click)="setStatus('en_cours')">En cours</button>
+          <button type="button" class="tb-choice" [class.is-active]="p.status === 'termine'" [disabled]="busy()" (click)="setStatus('termine')">Terminé</button>
+          <button type="button" class="tb-choice tb-choice--danger" [class.is-active]="p.status === 'annule'" [disabled]="busy()" (click)="setStatus('annule')">Annulé</button>
+        </div>
+      </div>
+
+      @if (actionError()) {
+        <p class="tb-inline-error" role="alert">{{ actionError() }}</p>
+      }
+    </section>
+  }
+
+  <!-- ===================== RAPPORTS DE SUIVI ===================== -->
+  <section class="tb-card">
+    <h2 class="tb-card__title">Rapports de suivi</h2>
+    <p class="tb-card__hint">Vérification terrain, avancement chantier, reporting à distance pour le client.</p>
+
+    @if (reports().length) {
+      <ul class="tb-reports">
+        @for (r of reports(); track r.id) {
+          <li class="tb-report">
+            <div class="tb-report__head">
+              <span class="tb-role">{{ r.type_label || r.type }}</span>
+              <span class="tb-muted">{{ shortDate(r.reported_at) }}</span>
+            </div>
+            @if (r.comment) {
+              <p class="tb-report__comment">{{ r.comment }}</p>
+            }
+            <div class="tb-report__meta">
+              @if (r.photos.length) {
+                <span class="tb-muted">{{ r.photos.length }} photo(s)</span>
+              }
+              @if (r.video_url) {
+                <a class="tb-link" [href]="r.video_url" target="_blank" rel="noopener">Voir la vidéo →</a>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="tb-muted tb-empty-inline">Aucun rapport de suivi pour l'instant.</p>
+    }
+
+    @if (canWrite()) {
+      <div class="tb-compose">
+        <h3 class="tb-compose__title">Ajouter un rapport</h3>
+        <div class="tb-report-form">
+          <label class="tb-field">
+            <span>Type</span>
+            <select class="k-input k-input--sm" [(ngModel)]="reportType" name="rtype">
+              @for (opt of reportTypeOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="tb-field">
+            <span>Date</span>
+            <input class="k-input k-input--sm" type="date" [(ngModel)]="reportDate" name="rdate" />
+          </label>
+          <label class="tb-field tb-field--wide">
+            <span>Lien vidéo (optionnel)</span>
+            <input class="k-input k-input--sm" [(ngModel)]="reportVideoUrl" name="rvideo" placeholder="https://…" />
+          </label>
+          <label class="tb-field tb-field--full">
+            <span>Commentaire</span>
+            <textarea class="k-input k-input--sm" rows="2" [(ngModel)]="reportComment" name="rcomment" placeholder="Observation terrain, avancement…"></textarea>
+          </label>
+          <button type="button" class="k-btn k-btn--primary k-btn--sm tb-report-form__btn" [disabled]="addingReport()" (click)="addReport()">
+            {{ addingReport() ? 'Ajout…' : 'Ajouter le rapport' }}
+          </button>
+        </div>
+        @if (reportError()) {
+          <p class="tb-inline-error" role="alert">{{ reportError() }}</p>
+        }
+      </div>
+    }
+  </section>
+}
