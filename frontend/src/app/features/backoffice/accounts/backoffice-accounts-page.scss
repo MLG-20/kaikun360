@@ -1,0 +1,313 @@
+// Écran Comptes & documents du back-office (F7.2.f) — annuaire des comptes
+// (pilotage statut / rôle / demande de pièce) + vue documentaire transverse.
+
+:host {
+  display: block;
+  max-width: 1180px;
+}
+
+.ac-head {
+  margin-bottom: 18px;
+}
+
+.ac-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.ac-sub {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 68ch;
+}
+
+// --- Onglets ---
+.ac-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--k-line);
+  margin-bottom: 18px;
+}
+
+.ac-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    color: var(--k-ink);
+  }
+
+  &.is-active {
+    color: var(--k-brand-600);
+    border-bottom-color: var(--k-brand-600);
+  }
+}
+
+// --- Filtres ---
+.ac-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .ac-search {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  select {
+    max-width: 220px;
+  }
+}
+
+// --- États ---
+.ac-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+  margin: 0 0 14px;
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.ac-count {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  margin: 0 0 8px;
+}
+
+// --- Table ---
+.ac-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.ac-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 940px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: middle;
+  }
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+// Ligne cliquable → ouvre la fiche détaillée.
+.ac-row {
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--k-brand-050);
+    outline: none;
+  }
+
+  &:hover .ac-open {
+    color: var(--k-brand);
+  }
+}
+
+.ac-open {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  white-space: nowrap;
+}
+
+.ac-name {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.88rem;
+}
+
+.ac-id {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.74rem;
+  color: var(--k-muted);
+}
+
+.ac-strong {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.85rem;
+}
+
+.ac-place {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--k-muted);
+}
+
+.ac-muted {
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+.ac-file {
+  display: inline-block;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.ac-role {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--k-cream);
+  color: var(--k-navy-2);
+  border: 1px solid var(--k-line);
+}
+
+.ac-empty {
+  text-align: center;
+  color: var(--k-muted);
+  padding: 26px;
+}
+
+.ac-actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+// --- Badge de statut ---
+.ac-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &.is-warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-cream);
+    color: var(--k-navy-2);
+    border: 1px solid var(--k-line);
+  }
+}
+
+// --- Cartes de la vue documentaire ---
+.ac-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.ac-card {
+  appearance: none;
+  text-align: left;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+
+  &:hover {
+    border-color: var(--k-brand);
+    transform: translateY(-1px);
+  }
+
+  &.is-active {
+    border-color: var(--k-brand);
+    box-shadow: 0 0 0 2px var(--k-brand-050);
+  }
+
+  &__count {
+    font-family: var(--k-font-display);
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--k-ink);
+    line-height: 1.1;
+  }
+
+  &__label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--k-ink);
+  }
+
+  &__hint {
+    font-size: 0.76rem;
+    color: var(--k-muted);
+  }
+}
+
+// --- Pagination ---
+.ac-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+
+  &__info {
+    font-size: 0.85rem;
+    color: var(--k-muted);
+  }
+}

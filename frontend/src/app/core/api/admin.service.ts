@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { Experience } from '../../models/experience.model';
 import { Payment } from '../../models/payment.model';
 import { Property } from '../../models/property.model';
+import { User } from '../../models/user.model';
 import { Vehicle } from '../../models/vehicle.model';
 import { ApiEnvelope } from './api-response.model';
 import { Paginated } from './pagination.model';
@@ -330,6 +331,86 @@ export interface MandateQuery {
   page?: number;
 }
 
+// --- Comptes & documents (F7.2.f) -------------------------------------------
+
+/** Filtres de l'annuaire des comptes utilisateurs (supervision). */
+export interface AccountQuery {
+  /** Rôle Spatie (`client`, `proprietaire`, `prestataire`, `entreprise`, `agent_kaikun`…). */
+  role?: string;
+  /** Statut du compte (`actif`, `suspendu`, `desactive`, `en_attente_verification`). */
+  status?: string;
+  /** Recherche plein-texte (nom / e-mail / téléphone). */
+  q?: string;
+  page?: number;
+}
+
+/** Corps de mise à jour d'un compte (PATCH /admin/users/{id}). Au moins l'un des deux. */
+export interface UpdateUserPayload {
+  role?: string;
+  status?: string;
+}
+
+/** Une pièce justificative (KYC) déposée par un utilisateur (fiche compte). */
+export interface AccountDocument {
+  id: number;
+  type: string;
+  type_label: string;
+  original_name: string | null;
+  status: string | null;
+  created_at: string | null;
+}
+
+/**
+ * Une entrée du journal d'audit concernant un compte (exigence CDC §6
+ * « historique » du module Utilisateurs).
+ */
+export interface AccountActivity {
+  id: number;
+  description: string | null;
+  log_name: string | null;
+  /** Nom de l'acteur qui a réalisé l'action (null si automatique/système). */
+  causer_name: string | null;
+  /** Propriétés tracées (ex. { role, status }). */
+  properties: Record<string, unknown> | null;
+  created_at: string | null;
+}
+
+/** Fiche complète d'un compte (GET /admin/users/{id}) : identité + pièces + historique. */
+export interface AccountDetail {
+  user: User;
+  documents: AccountDocument[];
+  activity: AccountActivity[];
+}
+
+/**
+ * Familles de pièces exposées par la vue documentaire transverse
+ * (miroir de `AdminDocumentController::TYPES`).
+ */
+export type DocumentType = 'kyc' | 'property' | 'certification' | 'payout_proof';
+
+/** Compteurs de la vue d'ensemble documentaire (GET /admin/documents sans `type`). */
+export type DocumentsOverview = Record<DocumentType, number>;
+
+/**
+ * Une pièce normalisée de la vue documentaire (miroir de la forme renvoyée par
+ * `AdminDocumentController::index` avec `?type=`). Le sujet (`subject_type` +
+ * `subject_id`) rattache la pièce à un utilisateur, un bien, un prestataire ou
+ * un propriétaire selon la famille.
+ */
+export interface AdminDocument {
+  doc_type: DocumentType;
+  id: number;
+  subject_type: string;
+  subject_id: number;
+  /** Intitulé lisible (type de pièce, nom de certification, référence…). */
+  label: string | null;
+  /** Nom d'origine du fichier ou chemin de stockage. */
+  original_name: string | null;
+  /** Statut de la pièce (validation KYC, vérification certif, statut reversement…). */
+  status: string | null;
+  created_at: string | null;
+}
+
 /**
  * Service d'accès à l'API du **back-office** (F7).
  *
@@ -620,5 +701,62 @@ export class AdminService {
     if (query.status) params = params.set('status', query.status);
     if (query.page) params = params.set('page', String(query.page));
     return this.http.get<Paginated<MandateDossier>>(`${this.api}/admin/mandates`, { params });
+  }
+
+  // --- Comptes & documents (F7.2.f) ------------------------------------------
+
+  /** Annuaire paginé des comptes (supervision). GET /admin/users */
+  users(query: AccountQuery = {}): Observable<Paginated<User>> {
+    let params = new HttpParams();
+    if (query.role) params = params.set('role', query.role);
+    if (query.status) params = params.set('status', query.status);
+    if (query.q) params = params.set('q', query.q);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<User>>(`${this.api}/admin/users`, { params });
+  }
+
+  /** Fiche complète d'un compte (identité + profil + pièces). GET /admin/users/{id} */
+  userDetail(id: number): Observable<AccountDetail> {
+    return this.http
+      .get<ApiEnvelope<AccountDetail>>(`${this.api}/admin/users/${id}`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Met à jour le rôle et/ou le statut d'un compte. PATCH /admin/users/{id}
+   *
+   * Les garde-fous de hiérarchie (pas d'auto-modification, escalade réservée au
+   * super_admin, compte super_admin protégé) sont appliqués côté serveur ; un
+   * refus remonte en 403.
+   */
+  updateUser(id: number, payload: UpdateUserPayload): Observable<User> {
+    return this.http
+      .patch<ApiEnvelope<{ user: User }>>(`${this.api}/admin/users/${id}`, payload)
+      .pipe(map((response) => response.data.user));
+  }
+
+  /**
+   * Demande une pièce à un utilisateur (notification + relais n8n/WhatsApp).
+   * POST /admin/users/{id}/request-document
+   */
+  requestDocument(id: number, documentType: string, note?: string): Observable<string> {
+    const body: { document_type: string; note?: string } = { document_type: documentType };
+    if (note) body.note = note;
+    return this.http
+      .post<ApiEnvelope<{ message: string }>>(`${this.api}/admin/users/${id}/request-document`, body)
+      .pipe(map((response) => response.data.message));
+  }
+
+  /** Compteurs de la vue documentaire transverse. GET /admin/documents */
+  documentsOverview(): Observable<DocumentsOverview> {
+    return this.http
+      .get<ApiEnvelope<{ documents: DocumentsOverview }>>(`${this.api}/admin/documents`)
+      .pipe(map((response) => response.data.documents));
+  }
+
+  /** Liste paginée normalisée d'une famille de pièces. GET /admin/documents?type= */
+  documents(type: DocumentType, page = 1): Observable<Paginated<AdminDocument>> {
+    const params = new HttpParams().set('type', type).set('page', String(page));
+    return this.http.get<Paginated<AdminDocument>>(`${this.api}/admin/documents`, { params });
   }
 }

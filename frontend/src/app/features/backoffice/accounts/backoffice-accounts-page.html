@@ -1,0 +1,182 @@
+<header class="ac-head">
+  <div>
+    <h1 class="ac-title">Comptes &amp; documents</h1>
+    <p class="ac-sub">
+      Annuaire de tous les comptes (clients, propriétaires, prestataires,
+      entreprises, équipe) et vue transverse des pièces justificatives.
+    </p>
+  </div>
+</header>
+
+<!-- Onglets -->
+<div class="ac-tabs" role="tablist">
+  <button
+    type="button"
+    class="ac-tab"
+    role="tab"
+    [class.is-active]="tab() === 'accounts'"
+    [attr.aria-selected]="tab() === 'accounts'"
+    (click)="switchTab('accounts')">
+    Comptes
+  </button>
+  <button
+    type="button"
+    class="ac-tab"
+    role="tab"
+    [class.is-active]="tab() === 'documents'"
+    [attr.aria-selected]="tab() === 'documents'"
+    (click)="switchTab('documents')">
+    Documents
+  </button>
+</div>
+
+<!-- ===================== ONGLET COMPTES ===================== -->
+@if (tab() === 'accounts') {
+  <section class="ac-filters">
+    <input
+      class="k-input ac-search"
+      type="search"
+      name="search"
+      [(ngModel)]="search"
+      (keyup.enter)="applyFilters()"
+      placeholder="Nom, e-mail ou téléphone…" />
+    <select class="k-input" name="role" [(ngModel)]="role" (change)="applyFilters()" aria-label="Filtrer par rôle">
+      @for (opt of roleOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+    <select class="k-input" name="status" [(ngModel)]="status" (change)="applyFilters()" aria-label="Filtrer par statut">
+      @for (opt of statusOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+    <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
+  </section>
+
+  @if (loading()) {
+    <p class="ac-state" role="status">Chargement des comptes…</p>
+  } @else if (error()) {
+    <p class="ac-state ac-state--error" role="alert">Impossible de charger les comptes. Réessayez.</p>
+  } @else {
+    <p class="ac-count">{{ total() }} compte(s) — cliquez sur une ligne pour ouvrir la fiche</p>
+    <div class="ac-table-wrap">
+      <table class="ac-table">
+        <thead>
+          <tr>
+            <th>Compte</th>
+            <th>Contact</th>
+            <th>Rôle</th>
+            <th>Localité</th>
+            <th>Vérification</th>
+            <th>Inscription</th>
+            <th>Statut</th>
+            <th aria-label="Ouvrir"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of rows(); track u.id) {
+            <tr class="ac-row" tabindex="0" (click)="openAccount(u)" (keyup.enter)="openAccount(u)">
+              <td>
+                <span class="ac-name">{{ u.name }}</span>
+                <span class="ac-id">#{{ u.id }}</span>
+              </td>
+              <td>
+                <span class="ac-strong">{{ u.email || '—' }}</span>
+                <span class="ac-place">{{ u.phone || 'Pas de téléphone' }}</span>
+              </td>
+              <td><span class="ac-role">{{ roleLabel(u) }}</span></td>
+              <td><span class="ac-muted">{{ u.city || u.commune || '—' }}</span></td>
+              <td><span class="ac-muted">{{ verifiedLabel(u) }}</span></td>
+              <td><span class="ac-muted">{{ shortDate(u.created_at) }}</span></td>
+              <td><span class="ac-badge" [class]="statusClass(u.status)">{{ u.status_label || u.status || '—' }}</span></td>
+              <td class="ac-actions-cell"><span class="ac-open" aria-hidden="true">Voir →</span></td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="ac-empty">Aucun compte ne correspond à ces filtres.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (lastPage() > 1) {
+      <nav class="ac-pager" aria-label="Pagination">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === 1" (click)="goTo(page() - 1)">
+          ← Précédent
+        </button>
+        <span class="ac-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === lastPage()" (click)="goTo(page() + 1)">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}
+
+<!-- ===================== ONGLET DOCUMENTS ===================== -->
+@if (tab() === 'documents') {
+  <section class="ac-cards">
+    @for (card of docCards; track card.type) {
+      <button
+        type="button"
+        class="ac-card"
+        [class.is-active]="docType$() === card.type"
+        (click)="openDocType(card.type)">
+        <span class="ac-card__count">{{ countOf(card.type) }}</span>
+        <span class="ac-card__label">{{ card.label }}</span>
+        <span class="ac-card__hint">{{ card.hint }}</span>
+      </button>
+    }
+  </section>
+
+  @if (docType$() === null) {
+    <p class="ac-state" role="status">Choisissez une famille de pièces pour en afficher le détail.</p>
+  } @else if (docLoading()) {
+    <p class="ac-state" role="status">Chargement des pièces…</p>
+  } @else if (docError()) {
+    <p class="ac-state ac-state--error" role="alert">Impossible de charger ces pièces. Réessayez.</p>
+  } @else {
+    <p class="ac-count">{{ docTotal() }} pièce(s) — {{ docCardLabel(docType$()) }}</p>
+    <div class="ac-table-wrap">
+      <table class="ac-table">
+        <thead>
+          <tr>
+            <th>Pièce</th>
+            <th>Fichier</th>
+            <th>Rattachée à</th>
+            <th>Statut</th>
+            <th>Déposée le</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of docRows(); track d.doc_type + '-' + d.id) {
+            <tr>
+              <td><span class="ac-strong">{{ d.label || '—' }}</span></td>
+              <td><span class="ac-muted ac-file">{{ d.original_name || '—' }}</span></td>
+              <td><span class="ac-muted">{{ d.subject_type }} #{{ d.subject_id }}</span></td>
+              <td><span class="ac-badge is-pending">{{ d.status || '—' }}</span></td>
+              <td><span class="ac-muted">{{ shortDate(d.created_at) }}</span></td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="ac-empty">Aucune pièce dans cette famille.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (docLastPage() > 1) {
+      <nav class="ac-pager" aria-label="Pagination">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="docPage() === 1" (click)="goToDoc(docPage() - 1)">
+          ← Précédent
+        </button>
+        <span class="ac-pager__info">Page {{ docPage() }} / {{ docLastPage() }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="docPage() === docLastPage()" (click)="goToDoc(docPage() + 1)">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}

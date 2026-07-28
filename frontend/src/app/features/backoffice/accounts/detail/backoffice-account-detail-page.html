@@ -1,0 +1,181 @@
+<a class="ad-back" [routerLink]="['/back-office', 'comptes']">← Retour à l’annuaire</a>
+
+@if (loading()) {
+  <p class="ad-state" role="status">Chargement de la fiche…</p>
+} @else if (error() || !user()) {
+  <p class="ad-state ad-state--error" role="alert">
+    Impossible de charger ce compte. <button type="button" class="ad-link" (click)="back()">Revenir à l’annuaire</button>.
+  </p>
+} @else if (user(); as u) {
+  <!-- En-tête -->
+  <header class="ad-head">
+    <span class="ad-avatar">{{ initial(u.name) }}</span>
+    <div class="ad-head__meta">
+      <h1 class="ad-name">{{ u.name }}</h1>
+      <p class="ad-sub">
+        <span class="ad-role">{{ roleLabel(u) }}</span>
+        <span class="ad-badge" [class]="statusClass(u.status)">{{ u.status_label || u.status || '—' }}</span>
+        <span class="ad-id">Compte #{{ u.id }}</span>
+      </p>
+    </div>
+  </header>
+
+  @if (actionError()) {
+    <p class="ad-state ad-state--error" role="alert">{{ actionError() }}</p>
+  }
+
+  <!-- Informations -->
+  <section class="ad-grid">
+    <div class="ad-card">
+      <h2 class="ad-card__title">Identité &amp; contact</h2>
+      <dl class="ad-dl">
+        <dt>Nom</dt><dd>{{ u.name }}</dd>
+        <dt>E-mail</dt><dd>{{ u.email || '—' }}</dd>
+        <dt>Téléphone</dt><dd>{{ u.phone || '—' }}</dd>
+        <dt>Adresse</dt><dd>{{ u.address || '—' }}</dd>
+        <dt>Localisation</dt><dd>{{ placeLabel(u) }}</dd>
+      </dl>
+    </div>
+
+    <div class="ad-card">
+      <h2 class="ad-card__title">Profil &amp; vérification</h2>
+      <dl class="ad-dl">
+        <dt>Type de profil</dt><dd>{{ u.profile?.type_label || u.profile?.type || '—' }}</dd>
+        <dt>Statut du compte</dt><dd>{{ u.status_label || u.status || '—' }}</dd>
+        <dt>Vérification profil</dt><dd>{{ u.profile?.verification_status || '—' }}</dd>
+        <dt>E-mail vérifié</dt><dd>{{ u.email_verified_at ? longDate(u.email_verified_at) : 'Non' }}</dd>
+        <dt>Téléphone vérifié</dt><dd>{{ u.phone_verified_at ? longDate(u.phone_verified_at) : 'Non' }}</dd>
+        <dt>Inscription</dt><dd>{{ longDate(u.created_at) }}</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Pilotage -->
+  <section class="ad-card ad-manage">
+    <h2 class="ad-card__title">Pilotage du compte</h2>
+
+    @if (!canManage()) {
+      <p class="ad-note">
+        @if (u.id === currentUserId()) {
+          Vous ne pouvez pas piloter votre propre compte depuis le back-office.
+        } @else {
+          Ce compte super administrateur ne peut être modifié que par un super administrateur.
+        }
+      </p>
+    } @else {
+      <div class="ad-manage__blocks">
+        <!-- Statut -->
+        <div class="ad-block">
+          <span class="ad-block__label">Statut</span>
+          <div class="ad-block__btns">
+            @if (u.status !== 'actif') {
+              <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="setStatus('actif')">
+                {{ u.status === 'en_attente_verification' ? 'Activer' : 'Réactiver' }}
+              </button>
+            }
+            @if (u.status !== 'suspendu') {
+              <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="setStatus('suspendu')">Suspendre</button>
+            }
+            @if (u.status !== 'desactive') {
+              <button type="button" class="k-btn k-btn--sm k-btn--danger" (click)="setStatus('desactive')">Désactiver</button>
+            }
+          </div>
+        </div>
+
+        <!-- Rôle -->
+        <div class="ad-block">
+          <span class="ad-block__label">Rôle</span>
+          <select
+            class="k-input ad-role-select"
+            [ngModel]="u.roles[0]"
+            (ngModelChange)="setRole($event)"
+            aria-label="Rôle du compte">
+            @for (opt of assignableRoles; track opt.value) {
+              <option
+                [value]="opt.value"
+                [disabled]="(opt.value === 'admin' || opt.value === 'super_admin') && !isSuperAdmin()">
+                {{ opt.label }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Demande de pièce -->
+      <div class="ad-block ad-block--doc">
+        <span class="ad-block__label">Demander une pièce justificative</span>
+        <div class="ad-doc-form">
+          <select class="k-input" [(ngModel)]="docType" aria-label="Type de pièce">
+            @for (opt of documentTypes; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+          <input class="k-input" type="text" [(ngModel)]="docNote" maxlength="500" placeholder="Note (facultatif)…" />
+          <button type="button" class="k-btn k-btn--sm k-btn--primary" [disabled]="requesting()" (click)="sendDocumentRequest()">
+            {{ requesting() ? 'Envoi…' : 'Envoyer la demande' }}
+          </button>
+        </div>
+        @if (requestSuccess()) {
+          <p class="ad-ok" role="status">{{ requestSuccess() }}</p>
+        }
+        @if (requestError()) {
+          <p class="ad-err" role="alert">{{ requestError() }}</p>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Pièces déposées -->
+  <section class="ad-card">
+    <h2 class="ad-card__title">Pièces déposées ({{ documents().length }})</h2>
+    @if (documents().length === 0) {
+      <p class="ad-note">Aucune pièce justificative déposée par ce compte.</p>
+    } @else {
+      <div class="ad-table-wrap">
+        <table class="ad-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Fichier</th>
+              <th>Statut</th>
+              <th>Déposée le</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of documents(); track d.id) {
+              <tr>
+                <td>{{ d.type_label || d.type }}</td>
+                <td><span class="ad-file">{{ d.original_name || '—' }}</span></td>
+                <td><span class="ad-badge is-pending">{{ d.status || '—' }}</span></td>
+                <td class="ad-muted">{{ longDate(d.created_at) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <!-- Historique (journal d'audit — exigence CDC « historique ») -->
+  <section class="ad-card">
+    <h2 class="ad-card__title">Historique du compte</h2>
+    @if (activity().length === 0) {
+      <p class="ad-note">Aucune action enregistrée pour ce compte.</p>
+    } @else {
+      <ul class="ad-timeline">
+        @for (a of activity(); track a.id) {
+          <li class="ad-event">
+            <span class="ad-event__dot" aria-hidden="true"></span>
+            <div class="ad-event__body">
+              <span class="ad-event__desc">{{ a.description || 'Action' }}</span>
+              <span class="ad-event__meta">
+                {{ dateTime(a.created_at) }}
+                @if (a.causer_name) { · par {{ a.causer_name }} }
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}

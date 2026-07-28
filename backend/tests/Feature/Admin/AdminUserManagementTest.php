@@ -61,6 +61,47 @@ class AdminUserManagementTest extends TestCase
             ->assertJsonPath('meta.total', 2);
     }
 
+    public function test_la_fiche_detaillee_expose_identite_pieces_et_historique(): void
+    {
+        $target = $this->withRole(UserRole::CLIENT->value);
+        $target->documents()->create([
+            'type' => 'cni',
+            'disk' => 'local',
+            'path' => 'docs/cni.pdf',
+            'original_name' => 'cni.pdf',
+            'status' => 'en_attente',
+        ]);
+
+        $admin = $this->withRole(UserRole::ADMIN->value);
+        Sanctum::actingAs($admin);
+
+        // Une action tracée pour peupler l'historique.
+        $this->patchJson("/api/v1/admin/users/{$target->id}", ['status' => 'suspendu'])->assertOk();
+
+        $this->getJson("/api/v1/admin/users/{$target->id}")
+            ->assertOk()
+            ->assertJsonPath('data.user.id', $target->id)
+            ->assertJsonPath('data.documents.0.type', 'cni')
+            ->assertJsonPath('data.documents.0.type_label', "Carte nationale d'identité")
+            // L'historique remonte au moins la mise à jour de statut, avec l'acteur.
+            ->assertJsonPath('data.activity.0.causer_name', $admin->name)
+            ->assertJsonStructure([
+                'data' => [
+                    'user' => ['id', 'name', 'status'],
+                    'documents',
+                    'activity' => [['id', 'description', 'causer_name', 'created_at']],
+                ],
+            ]);
+    }
+
+    public function test_un_agent_ne_peut_pas_ouvrir_une_fiche_compte(): void
+    {
+        $target = $this->withRole(UserRole::CLIENT->value);
+        Sanctum::actingAs($this->withRole(UserRole::AGENT_KAIKUN->value));
+
+        $this->getJson("/api/v1/admin/users/{$target->id}")->assertStatus(403);
+    }
+
     public function test_l_admin_change_le_role_et_le_statut(): void
     {
         $target = $this->withRole(UserRole::CLIENT->value);

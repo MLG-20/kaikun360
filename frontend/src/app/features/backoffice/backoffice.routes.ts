@@ -75,6 +75,25 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Dossiers — Back-office Kaikun 360',
       },
       {
+        // F7.2.f — Comptes & documents : annuaire des comptes (statut/rôle/pièces)
+        // + vue documentaire transverse (KYC, biens, certifs, reversements).
+        path: 'comptes',
+        loadComponent: () =>
+          import('./accounts/backoffice-accounts-page').then(
+            (m) => m.BackofficeAccountsPageComponent,
+          ),
+        title: 'Comptes & documents — Back-office Kaikun 360',
+      },
+      {
+        // F7.2.f — Fiche détaillée d'un compte (toutes ses infos + pilotage).
+        path: 'comptes/:id',
+        loadComponent: () =>
+          import('./accounts/detail/backoffice-account-detail-page').then(
+            (m) => m.BackofficeAccountDetailPageComponent,
+          ),
+        title: 'Fiche compte — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         loadComponent: () =>

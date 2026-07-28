@@ -4,8 +4,10 @@ namespace App\Modules\Admin\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Admin\Http\Requests\UpdateUserRequest;
+use App\Modules\Core\Enums\DocumentType;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Core\Http\Resources\UserResource;
+use App\Modules\Core\Models\UserDocument;
 use App\Models\User;
 use App\Notifications\DocumentRequiredNotification;
 use App\Support\ApiResponse;
@@ -13,6 +15,7 @@ use App\Support\Webhooks\WebhookDispatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Spatie\Activitylog\Models\Activity;
 
 /**
  * Gestion des comptes utilisateurs par le back-office (B13.3).
@@ -49,6 +52,57 @@ class AdminUserController extends Controller
             ->paginate($perPage);
 
         return UserResource::collection($users);
+    }
+
+    /**
+     * Fiche complète d'un compte. GET /api/v1/admin/users/{user}
+     *
+     * Charge l'identité, le profil, la localisation structurée (noms lisibles),
+     * les pièces justificatives (KYC) déposées par l'utilisateur et l'historique
+     * des actions le concernant (journal d'audit — exigence CDC §6 « historique »),
+     * pour alimenter la page de détail du back-office (F7.2.f).
+     */
+    public function show(User $user): JsonResponse
+    {
+        $user->load(['profile', 'region', 'department', 'commune']);
+
+        $documents = $user->documents()->latest()->get()->map(fn (UserDocument $document) => [
+            'id' => $document->id,
+            'type' => $document->type instanceof DocumentType
+                ? $document->type->value
+                : (string) $document->type,
+            'type_label' => $document->type instanceof DocumentType
+                ? $document->type->label()
+                : (string) $document->type,
+            'original_name' => $document->original_name,
+            'status' => $document->status,
+            'created_at' => $document->created_at,
+        ]);
+
+        // Historique : les 30 dernières entrées du journal d'audit dont ce compte
+        // est le sujet (mises à jour de rôle/statut, demandes de pièce…), avec
+        // l'acteur (qui a agi) quand il est connu.
+        $activity = Activity::query()
+            ->where('subject_type', $user->getMorphClass())
+            ->where('subject_id', $user->id)
+            ->with('causer')
+            ->latest()
+            ->limit(30)
+            ->get()
+            ->map(fn (Activity $entry) => [
+                'id' => $entry->id,
+                'description' => $entry->description,
+                'log_name' => $entry->log_name,
+                'causer_name' => $entry->causer?->name,
+                'properties' => $entry->properties,
+                'created_at' => $entry->created_at,
+            ]);
+
+        return ApiResponse::success([
+            'user' => UserResource::make($user),
+            'documents' => $documents,
+            'activity' => $activity,
+        ]);
     }
 
     /**

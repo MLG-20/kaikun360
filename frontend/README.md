@@ -168,6 +168,19 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   filtre statut. Petit enrichissement backend au passage (`milestones_count` et les
   compteurs bruts `rents/incidents/expenses/payouts` surfacés dans les Resources,
   déjà comptés côté contrôleur admin).
+  **F7.2.f Comptes & documents** (`features/backoffice/accounts/`) : couvre les
+  modules CDC §6 *Utilisateurs* et *Documents*. Onglet **Comptes** : annuaire de
+  tous les comptes (`GET /admin/users`, filtres rôle / statut / recherche) — chaque
+  ligne est **cliquable** et ouvre la **fiche détaillée**
+  (`accounts/detail/`, route `comptes/:id`, `GET /admin/users/{id}`) : identité,
+  contact, localisation, profil / vérification, **pilotage** du compte (statut
+  activer / suspendre / désactiver, **rôle**, **demande de pièce**
+  `POST …/request-document` — le tout avec les garde-fous serveur reflétés), la
+  liste des **pièces déposées** (KYC) et l'**historique** du compte (timeline du
+  journal d'audit Spatie — exigence CDC « historique »). Onglet **Documents** :
+  vue transverse (`GET /admin/documents`) — compteurs par famille (KYC, documents
+  de biens, certifications, preuves de reversement) puis liste normalisée paginée,
+  en lecture seule.
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

@@ -13,6 +13,7 @@ type BoIcon =
   | 'calendar'
   | 'card'
   | 'folder'
+  | 'id'
   | 'users'
   | 'shield'
   | 'clock';
@@ -71,6 +72,7 @@ export class BackofficeLayoutComponent {
     { label: 'Nuitées', path: 'nuitees', icon: 'calendar', ready: true },
     { label: 'Paiements', path: 'paiements', icon: 'card', ready: true },
     { label: 'Dossiers', path: 'dossiers', icon: 'folder', ready: true },
+    { label: 'Comptes', path: 'comptes', icon: 'id', ready: true },
     { label: 'Équipe', path: 'equipe', icon: 'users', ready: true },
     { label: 'Permissions', path: 'permissions', icon: 'shield', ready: true },
     { label: 'Pointeuse', path: 'pointeuse', icon: 'clock', ready: true },

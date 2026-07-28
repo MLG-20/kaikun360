@@ -83,6 +83,10 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/users', [AdminUserController::class, 'index'])
         ->middleware('can:gerer:utilisateurs');
 
+    Route::get('/users/{user}', [AdminUserController::class, 'show'])
+        ->whereNumber('user')
+        ->middleware('can:gerer:utilisateurs');
+
     Route::patch('/users/{user}', [AdminUserController::class, 'update'])
         ->whereNumber('user')
         ->middleware('can:gerer:utilisateurs');

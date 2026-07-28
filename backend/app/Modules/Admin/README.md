@@ -201,6 +201,13 @@ agents en sont exclus).
 **`GET /api/v1/admin/users`** — liste paginée (profil chargé), filtres `role`,
 `status`, `q` (nom / email / téléphone). Utilise le scope Spatie `role()`.
 
+**`GET /api/v1/admin/users/{user}`** — fiche complète pour la page de détail du
+back-office (F7.2.f). Renvoie `{ user, documents, activity }` : le compte avec
+profil + localisation lisible (`UserResource`), ses **pièces justificatives**
+(KYC, `UserDocument`) et son **historique** — les 30 dernières entrées du journal
+d'audit dont le compte est le sujet, avec l'acteur (`causer`). Répond à
+l'exigence CDC §6 « historique » du module *Utilisateurs*.
+
 **`PATCH /api/v1/admin/users/{user}`** — corps `{ role?, status? }` (au moins un,
 `required_without`). `role` remplace le rôle principal (`syncRoles`), `status`
 pilote actif / suspendu / désactivé / en attente. Deux garde-fous de hiérarchie :
