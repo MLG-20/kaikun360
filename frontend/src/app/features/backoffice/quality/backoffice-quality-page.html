@@ -1,0 +1,233 @@
+<header class="ql-head">
+  <div>
+    <h1 class="ql-title">Avis &amp; qualité</h1>
+    <p class="ql-sub">
+      Modération des avis et charte qualité des prestataires (note, avertissements,
+      suspensions). Les incidents restent suivis dans l’écran
+      <a class="ql-inline-link" [routerLink]="['/back-office', 'dossiers']">Dossiers</a>.
+    </p>
+  </div>
+</header>
+
+<!-- Onglets -->
+<div class="ql-tabs" role="tablist">
+  <button
+    type="button"
+    class="ql-tab"
+    role="tab"
+    [class.is-active]="tab() === 'reviews'"
+    [attr.aria-selected]="tab() === 'reviews'"
+    (click)="switchTab('reviews')">
+    Avis à modérer
+  </button>
+  <button
+    type="button"
+    class="ql-tab"
+    role="tab"
+    [class.is-active]="tab() === 'providers'"
+    [attr.aria-selected]="tab() === 'providers'"
+    (click)="switchTab('providers')">
+    Prestataires
+  </button>
+</div>
+
+<!-- ===================== ONGLET AVIS ===================== -->
+@if (tab() === 'reviews') {
+  <section class="ql-filters">
+    <input
+      class="k-input ql-search"
+      type="search"
+      name="reviewSearch"
+      [(ngModel)]="reviewSearch"
+      (keyup.enter)="applyReviewFilters()"
+      placeholder="Rechercher dans les commentaires…" />
+    <select class="k-input" name="reviewStatus" [(ngModel)]="reviewStatus" (change)="applyReviewFilters()" aria-label="Filtrer par statut">
+      @for (opt of reviewStatusOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+    <button type="button" class="k-btn k-btn--primary" (click)="applyReviewFilters()">Filtrer</button>
+  </section>
+
+  @if (reviewActionError()) {
+    <p class="ql-state ql-state--error" role="alert">{{ reviewActionError() }}</p>
+  }
+
+  @if (reviewsLoading()) {
+    <p class="ql-state" role="status">Chargement des avis…</p>
+  } @else if (reviewsError()) {
+    <p class="ql-state ql-state--error" role="alert">Impossible de charger les avis. Réessayez.</p>
+  } @else {
+    <p class="ql-count">{{ reviewsTotal() }} avis</p>
+    <div class="ql-table-wrap">
+      <table class="ql-table">
+        <thead>
+          <tr>
+            <th>Auteur</th>
+            <th>Ressource</th>
+            <th>Note</th>
+            <th>Commentaire</th>
+            <th>Déposé le</th>
+            <th>Statut</th>
+            <th aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of reviews(); track r.id) {
+            <tr>
+              <td>{{ r.author?.name || '—' }}</td>
+              <td>
+                <span class="ql-strong">{{ r.resource_label }}</span>
+                <span class="ql-place">{{ resourceTypeLabel(r.resource_type) }}</span>
+              </td>
+              <td><span class="ql-stars" [attr.aria-label]="r.rating + ' sur 5'">{{ stars(r.rating) }}</span></td>
+              <td><span class="ql-comment">{{ r.comment || '—' }}</span></td>
+              <td><span class="ql-muted">{{ shortDate(r.created_at) }}</span></td>
+              <td><span class="ql-badge" [class]="reviewStatusClass(r.status)">{{ r.status_label || r.status }}</span></td>
+              <td class="ql-actions-cell">
+                @if (r.status === 'en_attente') {
+                  <div class="ql-btns">
+                    <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="moderate(r, 'publie')">Publier</button>
+                    <button type="button" class="k-btn k-btn--sm k-btn--danger" (click)="moderate(r, 'rejete')">Rejeter</button>
+                  </div>
+                } @else {
+                  <span class="ql-muted">—</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="ql-empty">Aucun avis ne correspond à ces filtres.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (reviewsLastPage() > 1) {
+      <nav class="ql-pager" aria-label="Pagination">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="reviewsPage() === 1" (click)="goToReviews(reviewsPage() - 1)">
+          ← Précédent
+        </button>
+        <span class="ql-pager__info">Page {{ reviewsPage() }} / {{ reviewsLastPage() }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="reviewsPage() === reviewsLastPage()" (click)="goToReviews(reviewsPage() + 1)">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}
+
+<!-- ===================== ONGLET PRESTATAIRES ===================== -->
+@if (tab() === 'providers') {
+  <section class="ql-filters">
+    <input
+      class="k-input ql-search"
+      type="search"
+      name="providerSearch"
+      [(ngModel)]="providerSearch"
+      (keyup.enter)="applyProviderFilters()"
+      placeholder="Nom du prestataire…" />
+    <select class="k-input" name="providerStatus" [(ngModel)]="providerStatus" (change)="applyProviderFilters()" aria-label="Filtrer par statut">
+      @for (opt of providerStatusOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+    <button type="button" class="k-btn k-btn--primary" (click)="applyProviderFilters()">Filtrer</button>
+  </section>
+
+  @if (providerActionError()) {
+    <p class="ql-state ql-state--error" role="alert">{{ providerActionError() }}</p>
+  }
+
+  @if (providersLoading()) {
+    <p class="ql-state" role="status">Chargement des prestataires…</p>
+  } @else if (providersError()) {
+    <p class="ql-state ql-state--error" role="alert">Impossible de charger les prestataires. Réessayez.</p>
+  } @else {
+    <p class="ql-count">{{ providersTotal() }} prestataire(s)</p>
+    <div class="ql-table-wrap">
+      <table class="ql-table">
+        <thead>
+          <tr>
+            <th>Prestataire</th>
+            <th>Catégorie</th>
+            <th>Note</th>
+            <th>Avertissements</th>
+            <th>Statut</th>
+            <th aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of providers(); track p.id) {
+            <tr [class.is-expanded]="expandedProviderId() === p.id">
+              <td>
+                <span class="ql-strong">{{ p.business_name }}</span>
+                @if (p.sanction_note) {
+                  <span class="ql-place ql-place--warn">Sanction : {{ p.sanction_note }}</span>
+                }
+              </td>
+              <td><span class="ql-muted">{{ p.category_label || p.category || '—' }}</span></td>
+              <td><span class="ql-muted">{{ ratingLabel(p) }}</span></td>
+              <td>
+                @if (p.warnings_count > 0) {
+                  <span class="ql-chip ql-chip--warn">{{ p.warnings_count }}</span>
+                } @else {
+                  <span class="ql-muted">0</span>
+                }
+              </td>
+              <td><span class="ql-badge" [class]="providerStatusClass(p.status)">{{ p.status_label || p.status }}</span></td>
+              <td class="ql-actions-cell">
+                <button
+                  type="button"
+                  class="k-btn k-btn--ghost k-btn--sm"
+                  [attr.aria-expanded]="expandedProviderId() === p.id"
+                  (click)="toggleSanction(p)">
+                  {{ expandedProviderId() === p.id ? 'Fermer' : 'Sanctionner' }}
+                </button>
+              </td>
+            </tr>
+
+            @if (expandedProviderId() === p.id) {
+              <tr class="ql-panel-row">
+                <td colspan="6">
+                  <div class="ql-panel">
+                    <label class="ql-panel__label" [attr.for]="'reason-' + p.id">Motif (obligatoire)</label>
+                    <textarea
+                      class="k-input ql-reason"
+                      [id]="'reason-' + p.id"
+                      [(ngModel)]="sanctionReason"
+                      maxlength="500"
+                      rows="2"
+                      placeholder="Motif de l’avertissement ou de la suspension…"></textarea>
+                    <div class="ql-panel__btns">
+                      <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="warn(p)">Avertir</button>
+                      <button type="button" class="k-btn k-btn--sm k-btn--danger" (click)="suspend(p)">Suspendre</button>
+                    </div>
+                    <p class="ql-panel__hint">Au-delà du seuil d’avertissements, le prestataire est suspendu d’office.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          } @empty {
+            <tr>
+              <td colspan="6" class="ql-empty">Aucun prestataire ne correspond à ces filtres.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (providersLastPage() > 1) {
+      <nav class="ql-pager" aria-label="Pagination">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="providersPage() === 1" (click)="goToProviders(providersPage() - 1)">
+          ← Précédent
+        </button>
+        <span class="ql-pager__info">Page {{ providersPage() }} / {{ providersLastPage() }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="providersPage() === providersLastPage()" (click)="goToProviders(providersPage() + 1)">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}

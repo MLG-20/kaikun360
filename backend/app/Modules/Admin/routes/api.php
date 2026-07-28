@@ -6,6 +6,8 @@ use App\Modules\Admin\Http\Controllers\AdminDashboardController;
 use App\Modules\Admin\Http\Controllers\AdminDocumentController;
 use App\Modules\Admin\Http\Controllers\AdminDossierController;
 use App\Modules\Admin\Http\Controllers\AdminPaymentController;
+use App\Modules\Admin\Http\Controllers\AdminProviderController;
+use App\Modules\Admin\Http\Controllers\AdminReviewController;
 use App\Modules\Admin\Http\Controllers\AdminSettingsController;
 use App\Modules\Admin\Http\Controllers\AdminTeamController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
@@ -93,6 +95,14 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::post('/users/{user}/request-document', [AdminUserController::class, 'requestDocument'])
         ->whereNumber('user')
         ->middleware('can:gerer:utilisateurs');
+
+    // F7.2.g — Avis & qualité : file de modération des avis + supervision des
+    // prestataires (note + sanctions). Les actions (moderate / warn / suspend)
+    // restent servies par leurs contrôleurs d'origine (transversal / module Pro).
+    Route::get('/reviews', [AdminReviewController::class, 'index'])
+        ->middleware('can:moderer:avis');
+    Route::get('/providers', [AdminProviderController::class, 'index'])
+        ->middleware('can:valider:prestataire');
 
     // B13.4 — Paramétrage global (commissions, tarifs, coordonnées).
     Route::get('/settings', [AdminSettingsController::class, 'index'])

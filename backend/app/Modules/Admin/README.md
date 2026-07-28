@@ -331,3 +331,17 @@ administrateur `gerer:utilisateurs`. `GET /admin/documents` : vue d'ensemble
 (compteurs `kyc` / `property` / `certification` / `payout_proof`) ou liste
 normalisée paginée `?type=` (`{ doc_type, id, subject_type, subject_id, label,
 original_name, status, created_at }`) ; type inconnu → **404**.
+
+**Avis & qualité (F7.2.g)** — deux vues de supervision (les actions restent
+servies par leurs contrôleurs d'origine) :
+
+- `GET /admin/reviews` (`moderer:avis`) — **file de modération** de tous les avis,
+  filtrable par `status` (défaut `en_attente`) et `q` (commentaire), normalisée
+  (`{ id, reference, rating, comment, status, author, resource_type,
+  resource_label, created_at }`). Complète le `GET /reviews` public qui, lui, ne
+  rend que les avis publiés d'une ressource précise. La décision reste
+  `PATCH /reviews/{review}/moderate` (transversal B12.3).
+- `GET /admin/providers` (`valider:prestataire`) — **supervision des
+  prestataires** (`ProviderResource` : `rating_avg`/`rating_count`,
+  `warnings_count`, `sanction_note`, `status`), filtres `status` + `q`. Les
+  sanctions restent `PATCH /providers/{id}/warn|suspend` (module Pro).

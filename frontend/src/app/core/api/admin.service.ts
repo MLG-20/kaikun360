@@ -6,6 +6,8 @@ import { environment } from '../../../environments/environment';
 import { Experience } from '../../models/experience.model';
 import { Payment } from '../../models/payment.model';
 import { Property } from '../../models/property.model';
+import { Provider } from '../../models/provider.model';
+import { Review } from '../../models/review.model';
 import { User } from '../../models/user.model';
 import { Vehicle } from '../../models/vehicle.model';
 import { ApiEnvelope } from './api-response.model';
@@ -380,6 +382,49 @@ export interface AccountDetail {
   user: User;
   documents: AccountDocument[];
   activity: AccountActivity[];
+}
+
+// --- Avis & qualité (F7.2.g) ------------------------------------------------
+
+/**
+ * Un avis dans la file de modération (miroir de la forme normalisée de
+ * `AdminReviewController::index`). Ajoute à l'avis la ressource notée
+ * (`resource_type` + `resource_label`) pour l'affichage.
+ */
+export interface AdminReview {
+  id: number;
+  reference: string;
+  rating: number;
+  comment: string | null;
+  status: string | null;
+  status_label: string | null;
+  author: { id: number; name: string } | null;
+  /** Type de ressource notée : `stay` / `vehicle` / `experience` / `provider`. */
+  resource_type: string;
+  /** Intitulé lisible de la ressource notée. */
+  resource_label: string;
+  created_at: string | null;
+}
+
+/** Filtres de la file de modération des avis. */
+export interface ReviewQuery {
+  /** Statut (`en_attente` par défaut côté serveur, `publie`, `rejete`). */
+  status?: string;
+  /** Recherche dans le commentaire. */
+  q?: string;
+  page?: number;
+}
+
+/** Décision de modération d'un avis. */
+export type ReviewModeration = 'publie' | 'rejete';
+
+/** Filtres de la supervision des prestataires. */
+export interface ProviderQuery {
+  /** Statut (`en_attente`, `valide`, `refuse`, `suspendu`). */
+  status?: string;
+  /** Recherche sur le nom commercial. */
+  q?: string;
+  page?: number;
 }
 
 /**
@@ -758,5 +803,54 @@ export class AdminService {
   documents(type: DocumentType, page = 1): Observable<Paginated<AdminDocument>> {
     const params = new HttpParams().set('type', type).set('page', String(page));
     return this.http.get<Paginated<AdminDocument>>(`${this.api}/admin/documents`, { params });
+  }
+
+  // --- Avis & qualité (F7.2.g) -----------------------------------------------
+
+  /** File de modération des avis (par défaut `en_attente`). GET /admin/reviews */
+  adminReviews(query: ReviewQuery = {}): Observable<Paginated<AdminReview>> {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.q) params = params.set('q', query.q);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<AdminReview>>(`${this.api}/admin/reviews`, { params });
+  }
+
+  /**
+   * Publie ou rejette un avis en attente. PATCH /reviews/{id}/moderate
+   *
+   * Sert l'endpoint transversal de modération (hors préfixe `/admin`). Une
+   * publication répercute la note sur le prestataire concerné côté serveur.
+   */
+  moderateReview(id: number, status: ReviewModeration): Observable<Review> {
+    return this.http
+      .patch<ApiEnvelope<{ review: Review }>>(`${this.api}/reviews/${id}/moderate`, { status })
+      .pipe(map((response) => response.data.review));
+  }
+
+  /** Supervision des prestataires (note + sanctions). GET /admin/providers */
+  adminProviders(query: ProviderQuery = {}): Observable<Paginated<Provider>> {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.q) params = params.set('q', query.q);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<Provider>>(`${this.api}/admin/providers`, { params });
+  }
+
+  /**
+   * Émet un avertissement à un prestataire (charte qualité).
+   * PATCH /providers/{id}/warn — au-delà du seuil, suspension d'office côté serveur.
+   */
+  warnProvider(id: number, reason: string): Observable<Provider> {
+    return this.http
+      .patch<ApiEnvelope<{ provider: Provider }>>(`${this.api}/providers/${id}/warn`, { reason })
+      .pipe(map((response) => response.data.provider));
+  }
+
+  /** Suspend un prestataire (motif obligatoire). PATCH /providers/{id}/suspend */
+  suspendProvider(id: number, reason: string): Observable<Provider> {
+    return this.http
+      .patch<ApiEnvelope<{ provider: Provider }>>(`${this.api}/providers/${id}/suspend`, { reason })
+      .pipe(map((response) => response.data.provider));
   }
 }

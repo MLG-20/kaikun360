@@ -94,6 +94,15 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Fiche compte — Back-office Kaikun 360',
       },
       {
+        // F7.2.g — Avis & qualité : modération des avis + notation/sanctions prestataires.
+        path: 'qualite',
+        loadComponent: () =>
+          import('./quality/backoffice-quality-page').then(
+            (m) => m.BackofficeQualityPageComponent,
+          ),
+        title: 'Avis & qualité — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         loadComponent: () =>

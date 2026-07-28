@@ -181,6 +181,15 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   vue transverse (`GET /admin/documents`) — compteurs par famille (KYC, documents
   de biens, certifications, preuves de reversement) puis liste normalisée paginée,
   en lecture seule.
+  **F7.2.g Avis & qualité** (`features/backoffice/quality/`) : couvre le module
+  CDC §6 *Avis et qualité*. Onglet **Avis à modérer** : file `GET /admin/reviews`
+  (défaut `en_attente`, filtres statut + recherche) avec **publier / rejeter**
+  (`PATCH /reviews/{id}/moderate`) — un avis modéré sort de la file en direct.
+  Onglet **Prestataires** : liste `GET /admin/providers` (note agrégée, compteur
+  d'avertissements, statut) avec panneau de **sanction** par ligne — **avertir**
+  (`PATCH …/warn`, au-delà du seuil = suspension d'office) et **suspendre**
+  (`PATCH …/suspend`), motif obligatoire. Les **incidents** ne sont pas dupliqués
+  ici : renvoi vers l'écran **Dossiers** (F7.2.e).
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au
