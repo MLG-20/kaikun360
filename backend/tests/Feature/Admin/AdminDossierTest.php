@@ -55,6 +55,24 @@ class AdminDossierTest extends TestCase
             ]);
     }
 
+    /**
+     * F7.3.b — La supervision doit dire DE QUI vient le dossier : sans le
+     * demandeur, l'écran n'est pas exploitable (même correctif qu'en F7.2.a sur
+     * la file de validation).
+     */
+    public function test_chaque_demande_de_construction_expose_son_demandeur(): void
+    {
+        $client = User::factory()->create(['name' => 'Awa Ndiaye', 'phone' => '+221770000001']);
+        ConstructionRequest::factory()->create(['client_id' => $client->id]);
+
+        Sanctum::actingAs($this->agent());
+
+        $this->getJson('/api/v1/admin/construction-requests')
+            ->assertOk()
+            ->assertJsonPath('data.0.client.name', 'Awa Ndiaye')
+            ->assertJsonPath('data.0.client.phone', '+221770000001');
+    }
+
     public function test_liste_tous_les_mandats_de_gestion_locative(): void
     {
         ManagementMandate::factory()->count(2)->create();

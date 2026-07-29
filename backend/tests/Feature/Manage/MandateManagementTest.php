@@ -191,4 +191,63 @@ class MandateManagementTest extends TestCase
             'amount_xof' => 150_000,
         ])->assertStatus(403);
     }
+
+    /**
+     * F7.3.a — La fiche d'un mandat doit rendre les SIX éléments de la ligne
+     * CDC §6 « Gestion locative » : contrats, loyers, incidents, dépenses,
+     * reversements, rapport mensuel.
+     *
+     * Deux d'entre eux manquaient : les **dépenses** (créables mais jamais
+     * relisables) et les **clauses** du mandat (stockées, jamais exposées).
+     */
+    public function test_la_fiche_d_un_mandat_expose_les_clauses_et_les_depenses(): void
+    {
+        $agent = $this->agent();
+        $mandate = ManagementMandate::factory()->create([
+            'terms' => 'Commission prélevée sur les loyers encaissés.',
+        ]);
+
+        Sanctum::actingAs($agent);
+
+        // Une dépense enregistrée par l'agent doit revenir dans la fiche.
+        $this->postJson("/api/v1/manage/mandates/{$mandate->id}/expenses", [
+            'label' => 'Réfection plomberie',
+            'category' => 'reparation',
+            'amount_xof' => 85_000,
+            'spent_at' => '2026-07-10',
+        ])->assertCreated();
+
+        $this->getJson("/api/v1/manage/mandates/{$mandate->id}")
+            ->assertOk()
+            ->assertJsonPath('data.mandate.terms', 'Commission prélevée sur les loyers encaissés.')
+            ->assertJsonPath('data.mandate.expenses.0.label', 'Réfection plomberie')
+            ->assertJsonPath('data.mandate.expenses.0.amount_xof', 85_000)
+            // Les agrégats restent cohérents avec la ligne détaillée.
+            ->assertJsonPath('data.mandate.summary.depenses_xof', 85_000)
+            // Les autres lignes de la fiche ne régressent pas.
+            ->assertJsonStructure([
+                'data' => ['mandate' => ['rents', 'payouts', 'incidents', 'expenses']],
+            ]);
+    }
+
+    /**
+     * F7.3.a — Un incident se résout depuis le back-office : l'endpoint
+     * existait déjà mais n'était atteignable depuis aucune interface.
+     */
+    public function test_un_agent_resout_un_incident_depuis_la_fiche(): void
+    {
+        $mandate = ManagementMandate::factory()->create();
+        $incident = Incident::factory()->create(['property_id' => $mandate->property_id]);
+
+        Sanctum::actingAs($this->agent());
+
+        $this->patchJson("/api/v1/manage/incidents/{$incident->id}/resolve")
+            ->assertOk()
+            ->assertJsonPath('data.incident.status', 'resolu');
+
+        // Le compteur d'incidents ouverts de la fiche retombe à zéro.
+        $this->getJson("/api/v1/manage/mandates/{$mandate->id}")
+            ->assertOk()
+            ->assertJsonPath('data.mandate.summary.incidents_ouverts', 0);
+    }
 }

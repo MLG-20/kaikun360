@@ -28,6 +28,10 @@ class MandateResource extends JsonResource
             'status_label' => $this->status?->label(),
             'start_date' => $this->start_date?->toDateString(),
             'end_date' => $this->end_date?->toDateString(),
+            // F7.3.a — Clauses du mandat : ce sont les « contrats » de la ligne
+            // CDC §6 « Gestion locative ». Stockées depuis B4.6 mais jamais
+            // exposées, donc invisibles partout.
+            'terms' => $this->terms,
 
             // Agrégats (présents si chargés via withSum/withCount ; sinon 0).
             'summary' => [
@@ -71,6 +75,10 @@ class MandateResource extends JsonResource
             'incidents' => $this->when(
                 $this->relationLoaded('incidents'),
                 fn () => IncidentResource::collection($this->incidents),
+            ),
+            'expenses' => $this->when(
+                $this->relationLoaded('expenses'),
+                fn () => ExpenseResource::collection($this->expenses),
             ),
         ];
     }

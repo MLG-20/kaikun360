@@ -1,0 +1,212 @@
+<nav class="cs-back">
+  <a [routerLink]="['/back-office', 'construction']">← Retour aux demandes</a>
+</nav>
+
+@if (loading()) {
+  <p class="cs-state" role="status">Chargement du dossier…</p>
+} @else if (forbidden()) {
+  <p class="cs-state cs-state--error" role="alert">
+    Ce dossier ne vous est pas accessible.
+  </p>
+} @else if (notFound()) {
+  <p class="cs-state cs-state--error" role="alert">Demande introuvable.</p>
+} @else if (dossier(); as d) {
+  <header class="cs-head">
+    <div>
+      <h1 class="cs-title">{{ d.objective_label || 'Projet de construction' }} — {{ d.city || '—' }}</h1>
+      <p class="cs-sub">
+        Dossier <strong>{{ d.reference }}</strong>
+        @if (d.created_at) { · déposé le {{ shortDate(d.created_at) }} }
+      </p>
+    </div>
+    <span class="cs-badge" [class]="statusClass(d.status)">{{ d.status_label || d.status }}</span>
+  </header>
+
+  @if (actionError()) {
+    <p class="cs-state cs-state--error" role="alert">{{ actionError() }}</p>
+  }
+  @if (actionMessage()) {
+    <p class="cs-state cs-state--ok" role="status">{{ actionMessage() }}</p>
+  }
+
+  <!-- ============ LE DEMANDEUR ============ -->
+  <section class="cs-card cs-client">
+    <div>
+      <span class="cs-label">Demandeur</span>
+      <p class="cs-client-name">{{ d.client?.name || 'Client inconnu' }}</p>
+    </div>
+    <div class="cs-client-contact">
+      @if (d.client?.phone) {
+        <a class="cs-link" [href]="'tel:' + d.client!.phone">{{ d.client!.phone }}</a>
+      }
+      @if (d.client?.email) {
+        <a class="cs-link" [href]="'mailto:' + d.client!.email">{{ d.client!.email }}</a>
+      }
+      @if (!d.client?.phone && !d.client?.email) {
+        <span class="cs-muted">Aucun contact renseigné</span>
+      }
+    </div>
+  </section>
+
+  <!-- ============ LE PROJET ============ -->
+  <section class="cs-card">
+    <h2 class="cs-card-title">Le projet</h2>
+    <dl class="cs-facts">
+      <div><dt>Objectif</dt><dd>{{ d.objective_label || '—' }}</dd></div>
+      <div><dt>Ville</dt><dd>{{ d.city || '—' }}</dd></div>
+      <div><dt>Surface</dt><dd>{{ d.surface_m2 ? d.surface_m2 + ' m²' : '—' }}</dd></div>
+      <div><dt>Finition</dt><dd>{{ d.finish_level_label || '—' }}</dd></div>
+      <div><dt>Budget annoncé</dt><dd>{{ money(d.budget_xof) }}</dd></div>
+      <div><dt>Coût estimé</dt><dd>{{ money(d.estimated_cost_xof) }}</dd></div>
+    </dl>
+
+    <!-- L'écart budget/estimation est le premier signal d'un dossier mal parti. -->
+    @if (budgetGap(d); as gap) {
+      <p class="cs-gap" [class.is-alert]="gap < 0">
+        @if (gap < 0) {
+          ⚠️ Budget inférieur de <strong>{{ money(-gap) }}</strong> à l’estimation.
+        } @else {
+          Marge de <strong>{{ money(gap) }}</strong> entre le budget annoncé et l’estimation.
+        }
+      </p>
+    }
+
+    @if (d.description) {
+      <div class="cs-desc">
+        <h3 class="cs-subtitle">Description du client</h3>
+        <p>{{ d.description }}</p>
+      </div>
+    }
+  </section>
+
+  <!-- ============ AVANCEMENT / JALONS ============ -->
+  <section class="cs-card">
+    <div class="cs-card-head">
+      <h2 class="cs-card-title">Avancement du chantier</h2>
+      @if (progress() !== null) {
+        <span class="cs-progress-label">{{ progress() }} % des jalons terminés</span>
+      }
+    </div>
+
+    @if (progress() !== null) {
+      <div class="cs-progress" [attr.aria-label]="progress() + ' pour cent'">
+        <span class="cs-progress__fill" [style.width.%]="progress()"></span>
+      </div>
+    }
+
+    @if ((d.milestones ?? []).length) {
+      <ol class="cs-timeline">
+        @for (milestone of d.milestones ?? []; track milestone.id) {
+          <li class="cs-step" [class]="milestoneClass(milestone.status)">
+            <span class="cs-step__dot" aria-hidden="true"></span>
+            <div class="cs-step__body">
+              <span class="cs-step__name">{{ milestone.name }}</span>
+              <span class="cs-step__meta">
+                {{ milestone.status_label || milestone.status }}
+                · prévu {{ shortDate(milestone.planned_date) }}
+                @if (milestone.actual_date) { · réalisé {{ shortDate(milestone.actual_date) }} }
+              </span>
+            </div>
+          </li>
+        }
+      </ol>
+    } @else {
+      <p class="cs-state">Aucun jalon sur ce dossier.</p>
+    }
+
+    <p class="cs-note cs-note--warn">
+      ⚠️ Les jalons sont affichés en <strong>lecture seule</strong> : la plateforme
+      les crée au dépôt de la demande, mais aucun point d’accès ne permet encore de
+      les faire avancer. Il en va de même des <strong>devis</strong> et de
+      l’<strong>affectation de prestataires BTP</strong>, prévus par le cahier des
+      charges. Ces trois manques sont identifiés et planifiés — l’écran les signale
+      plutôt que de laisser croire à un planning pilotable.
+    </p>
+  </section>
+
+  <!-- ============ COMPTES RENDUS ============ -->
+  <section class="cs-card">
+    <div class="cs-card-head">
+      <h2 class="cs-card-title">Comptes rendus de chantier</h2>
+      <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleReportForm()">
+        {{ reportFormOpen() ? 'Annuler' : 'Publier un compte rendu' }}
+      </button>
+    </div>
+
+    @if (reportFormOpen()) {
+      <div class="cs-form">
+        <label class="cs-field">
+          <span>Nature</span>
+          <select class="k-input" name="repType" [(ngModel)]="reportForm.type">
+            @for (opt of reportTypes; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </label>
+        <label class="cs-field">
+          <span>Date du constat</span>
+          <input class="k-input" type="date" name="repDate" [(ngModel)]="reportForm.reported_at" />
+        </label>
+        <label class="cs-field cs-field--wide">
+          <span>Lien vidéo</span>
+          <input class="k-input" type="url" name="repVideo" [(ngModel)]="reportForm.video_url" placeholder="https://…" />
+        </label>
+        <label class="cs-field cs-field--full">
+          <span>Photos (un chemin par ligne)</span>
+          <textarea class="k-input" rows="3" name="repPhotos" [(ngModel)]="reportForm.photos" placeholder="suivi/dalle-01.jpg"></textarea>
+        </label>
+        <label class="cs-field cs-field--full">
+          <span>Commentaire</span>
+          <textarea class="k-input" rows="3" name="repComment" [(ngModel)]="reportForm.comment" placeholder="Coulage de la dalle terminé, séchage en cours."></textarea>
+        </label>
+        <button type="button" class="k-btn k-btn--primary" [disabled]="saving()" (click)="addReport()">
+          Publier
+        </button>
+      </div>
+    }
+
+    @if (reportsLoading()) {
+      <p class="cs-state" role="status">Chargement des comptes rendus…</p>
+    } @else {
+      <p class="cs-count">{{ reportsTotal() }} compte(s) rendu(s)</p>
+
+      @for (report of reports(); track report.id) {
+        <article class="cs-report">
+          <div class="cs-report__head">
+            <span class="cs-report__type">{{ report.type_label || report.type }}</span>
+            <span class="cs-muted">{{ shortDate(report.reported_at) }}</span>
+          </div>
+          @if (report.comment) {
+            <p class="cs-report__comment">{{ report.comment }}</p>
+          }
+          @if (report.photos.length) {
+            <ul class="cs-photos">
+              @for (photo of report.photos; track photo) {
+                <li><code class="cs-code">{{ photo }}</code></li>
+              }
+            </ul>
+          }
+          @if (report.video_url) {
+            <a class="cs-link" [href]="report.video_url" target="_blank" rel="noopener noreferrer">
+              Voir la vidéo →
+            </a>
+          }
+        </article>
+      } @empty {
+        <p class="cs-state">Aucun compte rendu publié sur ce chantier.</p>
+      }
+
+      @if (reportsLastPage() > 1) {
+        <nav class="cs-pager" aria-label="Pagination">
+          <button type="button" class="k-btn k-btn--ghost k-btn--sm" [disabled]="reportsPage() === 1" (click)="goToReports(reportsPage() - 1)">
+            ← Précédent
+          </button>
+          <span class="cs-muted">Page {{ reportsPage() }} / {{ reportsLastPage() }}</span>
+          <button type="button" class="k-btn k-btn--ghost k-btn--sm" [disabled]="reportsPage() === reportsLastPage()" (click)="goToReports(reportsPage() + 1)">
+            Suivant →
+          </button>
+        </nav>
+      }
+    }
+  </section>
+}

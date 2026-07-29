@@ -158,7 +158,14 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   de transaction) et **rembourser** total/partiel un paiement encaissé
   (`POST …/refund`, panneau avec montant). Les actions disponibles dépendent du
   mode/statut (manuel non encaissé → confirmable ; `complete` → remboursable).
-  **F7.2.e Dossiers** (`features/backoffice/dossiers/`) : supervision transverse
+  **F7.2.e Dossiers → F7.3.c : deux rubriques distinctes.** L'écran unique à
+  onglets (`features/backoffice/dossiers/`) a été **scindé** en
+  `features/backoffice/construction/` (route `construction`) et
+  `features/backoffice/rental/` (route `gestion-locative`), chacun avec sa
+  rubrique au rail et sa fiche. Motif : deux métiers qui n'ont ni le même
+  cycle ni les mêmes gestes, réunis sous un même écran devenu illisible à
+  mesure que chacun gagnait sa fiche de pilotage. Contenu initial (F7.2.e) :
+  supervision transverse
   des suivis longs, en **lecture seule**, avec deux onglets chargés à la demande —
   **Construction** (`GET /admin/construction-requests`) : objectif, ville, surface,
   budget / coût estimé, niveau de finition, avancement (rapports / jalons) et
@@ -168,6 +175,38 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   filtre statut. Petit enrichissement backend au passage (`milestones_count` et les
   compteurs bruts `rents/incidents/expenses/payouts` surfacés dans les Resources,
   déjà comptés côté contrôleur admin).
+
+  **F7.3.a Fiche mandat PILOTABLE** (`features/backoffice/dossiers/mandate/`,
+  route `dossiers/mandats/:id`) : une ligne de l'onglet Gestion locative est
+  désormais **cliquable** et ouvre la fiche de pilotage — l'onglet reste une
+  supervision, la fiche porte les actions, comme pour les comptes (F7.2.f) ou le
+  team building (F7.2.h). Les six fonctions de la ligne CDC §6 y sont : **le
+  contrat** (clauses, commission, période), les **loyers** (ajouter une échéance,
+  l'encaisser), les **incidents** (signaler, **clore**), les **dépenses**
+  (enregistrer, rattachables à un incident ouvert), les **reversements**
+  (préparer, marquer effectué) et le **rapport mensuel** recalculable par mois.
+  ⚠️ Ces routes sont sous `/manage`, **pas** `/admin` : elles vivent dans le
+  module métier et exigent `gerer:gestion-locative` en écriture (403 explicite).
+  ⚠️ Le serveur borne chaque liste aux **12 dernières lignes** — l'écran le dit,
+  pour qu'on ne la prenne pas pour l'historique complet ; les totaux du rapport,
+  eux, portent sur tout le mois. Après chaque écriture la fiche est **rechargée
+  entièrement** : une écriture déplace les agrégats ET le rapport, recoller la
+  réponse partielle laisserait des totaux faux à l'écran.
+
+  **F7.3.b Fiche demande de construction**
+  (`features/backoffice/dossiers/construction/`, route
+  `dossiers/construction/:id`) : l'onglet Construction n'affichait qu'un tableau,
+  illisible pour un dossier de chantier dont l'essentiel — qui a demandé quoi, où
+  en est le chantier, ce qui a été constaté sur place — ne tient pas dans une
+  ligne. La fiche restitue **le demandeur** (nom + contact cliquable), **le
+  projet** (avec l'**écart budget / estimation** mis en évidence : un projet
+  sous-budgété part mal), **l'avancement** (jalons dans l'ordre + jauge) et les
+  **comptes rendus** photo/vidéo, avec publication d'un nouveau compte rendu.
+  ⚠️ **Les jalons sont en lecture seule** : la plateforme les crée au dépôt mais
+  aucun endpoint ne permet de les faire avancer — pas plus que de gérer les
+  devis ou d'affecter un prestataire BTP. Ce sont des trous **backend**
+  identifiés à l'audit CDC ; l'écran les signale dans un encart plutôt que
+  d'afficher un planning qu'on croirait pilotable.
   **F7.2.f Comptes & documents** (`features/backoffice/accounts/`) : couvre les
   modules CDC §6 *Utilisateurs* et *Documents*. Onglet **Comptes** : annuaire de
   tous les comptes (`GET /admin/users`, filtres rôle / statut / recherche) — chaque
@@ -189,7 +228,8 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   d'avertissements, statut) avec panneau de **sanction** par ligne — **avertir**
   (`PATCH …/warn`, au-delà du seuil = suspension d'office) et **suspendre**
   (`PATCH …/suspend`), motif obligatoire. Les **incidents** ne sont pas dupliqués
-  ici : renvoi vers l'écran **Dossiers** (F7.2.e).
+  ici : renvoi vers l'écran **Gestion locative**, où ils se résolvent depuis la
+  fiche du mandat (F7.3.a).
 
   **F7.2.h Team building** (`features/backoffice/team-building/`) : couvre le
   module CDC §6 *Team building*. **Liste** : file `GET /team-building-requests`

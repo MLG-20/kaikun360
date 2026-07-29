@@ -125,3 +125,38 @@ encaissés × taux), **net propriétaire** (= encaissé − commission − dépe
 reversements effectués, incidents ouverts/résolus. Bornage par mois calendaire.
 
 > Export **PDF** reporté à une phase ultérieure ; le frontend consomme le JSON.
+
+## Pilotage depuis le back-office (F7.3.a)
+
+Les endpoints de gestion ci-dessus existaient depuis **B4.6** mais **aucune
+interface ne les atteignait** : l'écran back-office *Dossiers* (F7.2.e) ne faisait
+que superviser les mandats en lecture seule. Un agent ne pouvait donc ni encaisser
+un loyer, ni clore un incident, ni enregistrer une dépense depuis l'application.
+La **fiche mandat** du back-office (`/back-office/dossiers/mandats/:id`) les branche
+tous — l'écart était **entièrement frontend**.
+
+Deux manques **côté serveur** sont apparus en ouvrant la tranche, et sont comblés :
+
+- **Les dépenses n'étaient pas relisables.** `POST .../expenses` les créait, mais
+  `GET /manage/mandates/{mandate}` ne chargeait pas la relation et
+  `MandateResource` ne l'exposait pas — la ligne CDC §6 les cite pourtant
+  explicitement. Elles sont désormais eager-loadées (12 dernières, `spent_at`
+  décroissant, même bornage que les autres lignes) et rendues par
+  `ExpenseResource`. ⚠️ Rappel : `expenses` et `incidents` pointent vers le
+  **bien** (`property_id`), pas vers le mandat — la relation passe par la colonne
+  partagée.
+- **Les clauses du mandat (`terms`) étaient invisibles.** Stockées depuis B4.6,
+  jamais exposées : ce sont les « contrats » de la ligne CDC. `MandateResource`
+  les rend maintenant.
+
+Aucune migration, aucun endpoint neuf : la fiche consomme les routes existantes.
+
+> ⚠️ **Permissions.** La *lecture* de la fiche passe par la policy `view`
+> (propriétaire du mandat **ou** agent/admin) ; toute *écriture* exige
+> `gerer:gestion-locative`. Un compte back-office sans cette délégation voit donc
+> la fiche mais échoue en 403 sur les actions — l'écran l'explique au lieu
+> d'afficher une erreur générique.
+
+Effet de bord bienvenu : les **incidents deviennent résolvables**, ce qui referme
+le dernier point ouvert du module CDC §6 *Avis et qualité* (les incidents y sont
+rangés, mais l'écran Avis & qualité renvoie vers Dossiers — décision F7.2.g).

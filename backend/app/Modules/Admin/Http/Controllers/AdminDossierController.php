@@ -31,6 +31,9 @@ class AdminDossierController extends Controller
     public function constructionRequests(Request $request): AnonymousResourceCollection
     {
         $requests = ConstructionRequest::query()
+            // F7.3.b — Le demandeur remonte aussi dans la LISTE : sans lui, la
+            // supervision ne dit pas de qui vient le dossier (anti-N+1).
+            ->with('client')
             ->withCount(['reports', 'milestones'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->when($request->filled('city'), fn ($q) => $q->where('city', $request->string('city')->toString()))

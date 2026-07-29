@@ -83,7 +83,13 @@ class ConstructionRequestController extends Controller
     {
         Gate::authorize('view', $constructionRequest);
 
-        $constructionRequest->load('milestones')->loadCount('reports');
+        // F7.3.b — `client` chargé pour la fiche back-office (qui a déposé, et
+        // comment le joindre) ; les jalons sont triés par leur position, l'ordre
+        // du chantier étant ce que l'écran restitue.
+        $constructionRequest->load([
+            'client',
+            'milestones' => fn ($query) => $query->orderBy('position'),
+        ])->loadCount('reports');
 
         return ApiResponse::success([
             'construction_request' => ConstructionRequestResource::make($constructionRequest),

@@ -1,0 +1,414 @@
+// Fiche demande de construction (F7.3.b) — projet, demandeur, jalons et
+// comptes rendus de chantier.
+
+:host {
+  display: block;
+  max-width: 1100px;
+}
+
+.cs-back {
+  margin-bottom: 14px;
+
+  a {
+    color: var(--k-muted);
+    font-size: 0.85rem;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--k-brand);
+    }
+  }
+}
+
+.cs-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.cs-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.45rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.cs-sub {
+  color: var(--k-muted);
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+// --- Cartes ---
+.cs-card {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+
+.cs-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.cs-card-title {
+  font-family: var(--k-font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--k-ink);
+  margin: 0;
+}
+
+.cs-subtitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--k-ink);
+  margin: 0 0 6px;
+}
+
+// --- Demandeur ---
+.cs-client {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.cs-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--k-muted);
+}
+
+.cs-client-name {
+  margin: 3px 0 0;
+  font-family: var(--k-font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--k-ink);
+}
+
+.cs-client-contact {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cs-link {
+  color: var(--k-brand);
+  font-size: 0.87rem;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// --- Le projet ---
+.cs-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 14px;
+  margin: 0;
+
+  dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-muted);
+    margin-bottom: 3px;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.95rem;
+  }
+}
+
+.cs-gap {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--k-radius);
+  background: rgba(56, 167, 116, 0.1);
+  color: var(--k-ink);
+  font-size: 0.85rem;
+
+  &.is-alert {
+    background: rgba(199, 59, 77, 0.09);
+    color: var(--k-danger);
+  }
+}
+
+.cs-desc {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--k-line);
+
+  p {
+    margin: 0;
+    color: var(--k-muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+}
+
+// --- Avancement ---
+.cs-progress-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--k-muted);
+}
+
+.cs-progress {
+  height: 8px;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-cream);
+  overflow: hidden;
+  margin-bottom: 18px;
+
+  &__fill {
+    display: block;
+    height: 100%;
+    background: var(--k-green-600, #38a774);
+    transition: width 0.3s ease;
+  }
+}
+
+.cs-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 6px;
+}
+
+.cs-step {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding: 0 0 18px 18px;
+  border-left: 2px solid var(--k-line);
+
+  &:last-child {
+    border-left-color: transparent;
+    padding-bottom: 0;
+  }
+
+  &__dot {
+    position: absolute;
+    left: -7px;
+    top: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--k-line);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__name {
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.9rem;
+  }
+
+  &__meta {
+    font-size: 0.78rem;
+    color: var(--k-muted);
+  }
+
+  &.is-done .cs-step__dot {
+    background: var(--k-green-600, #38a774);
+    border-color: var(--k-green-600, #38a774);
+  }
+
+  &.is-current .cs-step__dot {
+    background: var(--k-brand);
+    border-color: var(--k-brand);
+  }
+}
+
+// --- Comptes rendus ---
+.cs-count {
+  font-size: 0.8rem;
+  color: var(--k-muted);
+  margin: 0 0 10px;
+}
+
+.cs-report {
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  &__type {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-brand-600);
+  }
+
+  &__comment {
+    margin: 0 0 8px;
+    font-size: 0.88rem;
+    color: var(--k-ink);
+    line-height: 1.55;
+  }
+}
+
+.cs-photos {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cs-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.74rem;
+  background: var(--k-cream);
+  padding: 3px 8px;
+  border-radius: 5px;
+  color: var(--k-muted);
+}
+
+// --- Formulaire ---
+.cs-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  margin-bottom: 16px;
+  background: var(--k-cream);
+  border-radius: var(--k-radius);
+}
+
+.cs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  span {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+
+  &--wide {
+    grid-column: span 2;
+  }
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+}
+
+// --- Divers ---
+.cs-muted {
+  color: var(--k-muted);
+  font-size: 0.83rem;
+}
+
+.cs-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &.is-progress {
+    background: rgba(3, 72, 251, 0.1);
+    color: var(--k-brand-600);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-cream);
+    color: var(--k-muted);
+  }
+}
+
+.cs-state {
+  padding: 16px 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+  margin: 0 0 14px;
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+
+  &--ok {
+    background: rgba(56, 167, 116, 0.08);
+    border-color: rgba(56, 167, 116, 0.3);
+    color: var(--k-green-600);
+  }
+}
+
+.cs-note {
+  margin: 18px 0 0;
+  padding: 12px 15px;
+  border-radius: var(--k-radius);
+  background: var(--k-cream);
+  color: var(--k-muted);
+  font-size: 0.8rem;
+  line-height: 1.55;
+
+  &--warn {
+    background: rgba(216, 135, 24, 0.1);
+    color: var(--k-ink);
+  }
+}
+
+.cs-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 14px;
+}

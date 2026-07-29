@@ -1,0 +1,369 @@
+<nav class="mn-back">
+  <a [routerLink]="['/back-office', 'gestion-locative']">← Retour à la gestion locative</a>
+</nav>
+
+@if (loading()) {
+  <p class="mn-state" role="status">Chargement du mandat…</p>
+} @else if (forbidden()) {
+  <p class="mn-state mn-state--error" role="alert">
+    Ce mandat ne vous est pas accessible. La gestion locative demande le droit
+    « gestion locative ».
+  </p>
+} @else if (notFound()) {
+  <p class="mn-state mn-state--error" role="alert">Mandat introuvable.</p>
+} @else if (mandate(); as m) {
+  <header class="mn-head">
+    <div>
+      <h1 class="mn-title">{{ m.property.title || 'Bien géré' }}</h1>
+      <p class="mn-sub">
+        Mandat <strong>{{ m.reference }}</strong>
+        · {{ place(m) }}
+        · Propriétaire : {{ m.property.owner.name || '—' }}
+      </p>
+    </div>
+    <span class="mn-badge" [class]="mandateStatusClass(m.status)">{{ m.status_label || m.status }}</span>
+  </header>
+
+  @if (actionError()) {
+    <p class="mn-state mn-state--error" role="alert">{{ actionError() }}</p>
+  }
+  @if (actionMessage()) {
+    <p class="mn-state mn-state--ok" role="status">{{ actionMessage() }}</p>
+  }
+
+  <!-- ============ LE CONTRAT ============ -->
+  <section class="mn-card">
+    <h2 class="mn-card-title">Le contrat</h2>
+    <dl class="mn-facts">
+      <div><dt>Commission</dt><dd>{{ m.commission_rate }} %</dd></div>
+      <div><dt>Début</dt><dd>{{ shortDate(m.start_date) }}</dd></div>
+      <div><dt>Fin</dt><dd>{{ m.end_date ? shortDate(m.end_date) : 'Sans terme' }}</dd></div>
+      <div><dt>Incidents ouverts</dt><dd>{{ m.summary.incidents_ouverts }}</dd></div>
+    </dl>
+    @if (m.terms) {
+      <div class="mn-terms">
+        <h3 class="mn-subtitle">Clauses</h3>
+        <p>{{ m.terms }}</p>
+      </div>
+    }
+  </section>
+
+  <!-- ============ RAPPORT MENSUEL ============ -->
+  <section class="mn-card">
+    <div class="mn-card-head">
+      <h2 class="mn-card-title">Rapport mensuel</h2>
+      <div class="mn-month">
+        <input class="k-input" type="month" name="reportMonth" [(ngModel)]="reportMonth" aria-label="Mois du rapport" />
+        <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="loadReport()">Recalculer</button>
+      </div>
+    </div>
+
+    @if (reportLoading()) {
+      <p class="mn-state" role="status">Calcul en cours…</p>
+    } @else if (report(); as r) {
+      <p class="mn-period">{{ r.period.label }}</p>
+      <div class="mn-kpis">
+        <div class="mn-kpi">
+          <span class="mn-kpi__label">Loyers encaissés</span>
+          <span class="mn-kpi__value">{{ money(r.rents.paid_xof) }}</span>
+          <span class="mn-kpi__hint">{{ r.rents.count }} échéance(s)</span>
+        </div>
+        <div class="mn-kpi">
+          <span class="mn-kpi__label">Impayés</span>
+          <span class="mn-kpi__value" [class.is-alert]="r.rents.unpaid_xof > 0">{{ money(r.rents.unpaid_xof) }}</span>
+        </div>
+        <div class="mn-kpi">
+          <span class="mn-kpi__label">Dépenses</span>
+          <span class="mn-kpi__value">{{ money(r.expenses.total_xof) }}</span>
+          <span class="mn-kpi__hint">{{ r.expenses.count }} ligne(s)</span>
+        </div>
+        <div class="mn-kpi">
+          <span class="mn-kpi__label">Commission Kaikun</span>
+          <span class="mn-kpi__value">{{ money(r.commission_xof) }}</span>
+        </div>
+        <div class="mn-kpi mn-kpi--strong">
+          <span class="mn-kpi__label">Net propriétaire</span>
+          <!-- Peut être négatif (mois de gros travaux) : on l'affiche tel quel. -->
+          <span class="mn-kpi__value" [class.is-alert]="r.net_owner_xof < 0">{{ money(r.net_owner_xof) }}</span>
+          <span class="mn-kpi__hint">Loyers − commission − dépenses</span>
+        </div>
+        <div class="mn-kpi">
+          <span class="mn-kpi__label">Déjà reversé</span>
+          <span class="mn-kpi__value">{{ money(r.payouts.total_xof) }}</span>
+          <span class="mn-kpi__hint">{{ r.incidents.opened }} incident(s) ouvert(s), {{ r.incidents.resolved }} résolu(s)</span>
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- ============ LOYERS ============ -->
+  <section class="mn-card">
+    <div class="mn-card-head">
+      <h2 class="mn-card-title">Loyers</h2>
+      <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleForm('rent')">
+        {{ openForm() === 'rent' ? 'Annuler' : 'Ajouter une échéance' }}
+      </button>
+    </div>
+
+    @if (openForm() === 'rent') {
+      <div class="mn-form">
+        <label class="mn-field">
+          <span>Échéance</span>
+          <input class="k-input" type="date" name="rentDue" [(ngModel)]="rentForm.due_date" />
+        </label>
+        <label class="mn-field">
+          <span>Montant (FCFA)</span>
+          <input class="k-input" type="number" min="0" name="rentAmount" [(ngModel)]="rentForm.amount_xof" />
+        </label>
+        <label class="mn-field">
+          <span>Locataire</span>
+          <input class="k-input" type="text" name="rentTenant" [(ngModel)]="rentForm.tenant_name" placeholder="Facultatif" />
+        </label>
+        <label class="mn-field">
+          <span>Période</span>
+          <input class="k-input" type="text" name="rentPeriod" [(ngModel)]="rentForm.period_label" placeholder="Juillet 2026" />
+        </label>
+        <button type="button" class="k-btn k-btn--primary" [disabled]="saving()" (click)="addRent()">Enregistrer</button>
+      </div>
+    }
+
+    <div class="mn-table-wrap">
+      <table class="mn-table">
+        <thead>
+          <tr>
+            <th>Période</th>
+            <th>Échéance</th>
+            <th>Locataire</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (rent of m.rents ?? []; track rent.id) {
+            <tr>
+              <td>{{ rent.period_label || '—' }}</td>
+              <td><span class="mn-muted">{{ shortDate(rent.due_date) }}</span></td>
+              <td>{{ rent.tenant_name || '—' }}</td>
+              <td><span class="mn-strong">{{ money(rent.amount_xof) }}</span></td>
+              <td><span class="mn-badge" [class]="rentStatusClass(rent.status)">{{ rent.status_label || rent.status }}</span></td>
+              <td class="mn-actions-cell">
+                @if (rent.status !== 'paye') {
+                  <button type="button" class="k-btn k-btn--sm k-btn--primary" [disabled]="saving()" (click)="markRentPaid(rent)">
+                    Encaisser
+                  </button>
+                } @else {
+                  <span class="mn-muted">{{ shortDate(rent.paid_at) }}</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="mn-empty">Aucune échéance enregistrée.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ INCIDENTS ============ -->
+  <section class="mn-card">
+    <div class="mn-card-head">
+      <h2 class="mn-card-title">Incidents</h2>
+      <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleForm('incident')">
+        {{ openForm() === 'incident' ? 'Annuler' : 'Signaler un incident' }}
+      </button>
+    </div>
+
+    @if (openForm() === 'incident') {
+      <div class="mn-form">
+        <label class="mn-field mn-field--wide">
+          <span>Intitulé</span>
+          <input class="k-input" type="text" name="incTitle" [(ngModel)]="incidentForm.title" placeholder="Fuite d’eau salle de bain" />
+        </label>
+        <label class="mn-field">
+          <span>Priorité</span>
+          <select class="k-input" name="incPriority" [(ngModel)]="incidentForm.priority">
+            @for (opt of priorityOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </label>
+        <label class="mn-field mn-field--full">
+          <span>Description</span>
+          <textarea class="k-input" rows="3" name="incDesc" [(ngModel)]="incidentForm.description"></textarea>
+        </label>
+        <button type="button" class="k-btn k-btn--primary" [disabled]="saving()" (click)="addIncident()">Enregistrer</button>
+      </div>
+    }
+
+    <div class="mn-table-wrap">
+      <table class="mn-table">
+        <thead>
+          <tr>
+            <th>Incident</th>
+            <th>Priorité</th>
+            <th>Statut</th>
+            <th aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (incident of m.incidents ?? []; track incident.id) {
+            <tr>
+              <td>
+                <span class="mn-strong">{{ incident.title }}</span>
+                <span class="mn-place">{{ incident.reference }}{{ incident.description ? ' · ' + incident.description : '' }}</span>
+              </td>
+              <td><span class="mn-muted">{{ incident.priority || '—' }}</span></td>
+              <td><span class="mn-badge" [class]="incidentStatusClass(incident.status)">{{ incident.status_label || incident.status }}</span></td>
+              <td class="mn-actions-cell">
+                @if (incident.status !== 'resolu') {
+                  <button type="button" class="k-btn k-btn--sm k-btn--primary" [disabled]="saving()" (click)="resolveIncident(incident)">
+                    Clore
+                  </button>
+                } @else {
+                  <span class="mn-muted">{{ shortDate(incident.resolved_at) }}</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="mn-empty">Aucun incident signalé.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ DÉPENSES ============ -->
+  <section class="mn-card">
+    <div class="mn-card-head">
+      <h2 class="mn-card-title">Dépenses</h2>
+      <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleForm('expense')">
+        {{ openForm() === 'expense' ? 'Annuler' : 'Enregistrer une dépense' }}
+      </button>
+    </div>
+
+    @if (openForm() === 'expense') {
+      <div class="mn-form">
+        <label class="mn-field mn-field--wide">
+          <span>Intitulé</span>
+          <input class="k-input" type="text" name="expLabel" [(ngModel)]="expenseForm.label" placeholder="Réfection plomberie" />
+        </label>
+        <label class="mn-field">
+          <span>Catégorie</span>
+          <select class="k-input" name="expCat" [(ngModel)]="expenseForm.category">
+            @for (opt of expenseCategories; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </label>
+        <label class="mn-field">
+          <span>Montant (FCFA)</span>
+          <input class="k-input" type="number" min="0" name="expAmount" [(ngModel)]="expenseForm.amount_xof" />
+        </label>
+        <label class="mn-field">
+          <span>Date</span>
+          <input class="k-input" type="date" name="expDate" [(ngModel)]="expenseForm.spent_at" />
+        </label>
+        <label class="mn-field">
+          <span>Incident lié</span>
+          <select class="k-input" name="expIncident" [(ngModel)]="expenseForm.incident_id">
+            <option value="">Aucun</option>
+            @for (incident of openIncidents(); track incident.id) {
+              <option [value]="incident.id">{{ incident.title }}</option>
+            }
+          </select>
+        </label>
+        <button type="button" class="k-btn k-btn--primary" [disabled]="saving()" (click)="addExpense()">Enregistrer</button>
+      </div>
+    }
+
+    <div class="mn-table-wrap">
+      <table class="mn-table">
+        <thead>
+          <tr>
+            <th>Dépense</th>
+            <th>Catégorie</th>
+            <th>Montant</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (expense of m.expenses ?? []; track expense.id) {
+            <tr>
+              <td><span class="mn-strong">{{ expense.label }}</span></td>
+              <td><span class="mn-muted">{{ expense.category_label || expense.category }}</span></td>
+              <td><span class="mn-strong">{{ money(expense.amount_xof) }}</span></td>
+              <td><span class="mn-muted">{{ shortDate(expense.spent_at) }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="mn-empty">Aucune dépense enregistrée.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ REVERSEMENTS ============ -->
+  <section class="mn-card">
+    <div class="mn-card-head">
+      <h2 class="mn-card-title">Reversements au propriétaire</h2>
+      <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleForm('payout')">
+        {{ openForm() === 'payout' ? 'Annuler' : 'Préparer un reversement' }}
+      </button>
+    </div>
+
+    @if (openForm() === 'payout') {
+      <div class="mn-form">
+        <label class="mn-field">
+          <span>Montant (FCFA)</span>
+          <input class="k-input" type="number" min="0" name="payAmount" [(ngModel)]="payoutForm.amount_xof" />
+        </label>
+        <label class="mn-field">
+          <span>Période</span>
+          <input class="k-input" type="text" name="payPeriod" [(ngModel)]="payoutForm.period_label" placeholder="Juillet 2026" />
+        </label>
+        <button type="button" class="k-btn k-btn--primary" [disabled]="saving()" (click)="addPayout()">Enregistrer</button>
+      </div>
+    }
+
+    <div class="mn-table-wrap">
+      <table class="mn-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Période</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (payout of m.payouts ?? []; track payout.id) {
+            <tr>
+              <td><span class="mn-muted">{{ payout.reference }}</span></td>
+              <td>{{ payout.period_label || '—' }}</td>
+              <td><span class="mn-strong">{{ money(payout.amount_xof) }}</span></td>
+              <td><span class="mn-badge" [class]="payoutStatusClass(payout.status)">{{ payout.status_label || payout.status }}</span></td>
+              <td class="mn-actions-cell">
+                @if (payout.status !== 'effectue') {
+                  <button type="button" class="k-btn k-btn--sm k-btn--primary" [disabled]="saving()" (click)="markPayoutPaid(payout)">
+                    Marquer effectué
+                  </button>
+                } @else {
+                  <span class="mn-muted">{{ shortDate(payout.paid_at) }}</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="mn-empty">Aucun reversement enregistré.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="mn-note">
+    Les listes ci-dessus affichent les <strong>12 dernières lignes</strong> de chaque
+    catégorie. Les totaux du rapport mensuel, eux, portent sur l’intégralité du mois.
+  </p>
+}

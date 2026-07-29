@@ -312,6 +312,40 @@ export interface ConstructionDossier {
   reports_count?: number;
   /** Nombre de jalons du planning. */
   milestones_count?: number;
+  /** Date de dépôt de la demande. */
+  created_at?: string | null;
+  /** Le demandeur (nom + contact) — exposé depuis F7.3.b, liste ET fiche. */
+  client?: { id: number; name: string; email: string | null; phone: string | null } | null;
+  /** Jalons du chantier, triés par position — présents sur la FICHE seulement. */
+  milestones?: ConstructionMilestone[];
+}
+
+/** Un jalon de chantier (miroir de `ConstructionMilestoneResource`). */
+export interface ConstructionMilestone {
+  id: number;
+  name: string;
+  position: number;
+  status: string | null;
+  status_label: string | null;
+  planned_date: string | null;
+  actual_date: string | null;
+}
+
+/**
+ * Un compte rendu de chantier (miroir de `ReportResource`).
+ *
+ * Le modèle `Report` est **polymorphe** et partagé avec la diaspora (B5/B8) :
+ * même forme, même formulaire de dépôt.
+ */
+export interface ConstructionReport {
+  id: number;
+  reference: string;
+  type: string | null;
+  type_label: string | null;
+  photos: string[];
+  video_url: string | null;
+  comment: string | null;
+  reported_at: string | null;
 }
 
 /** Agrégats financiers d'un mandat (miroir du bloc `summary` de `MandateResource`). */
@@ -337,6 +371,8 @@ export interface MandateDossier {
   status_label: string | null;
   start_date: string | null;
   end_date: string | null;
+  /** Clauses du mandat = les « contrats » du CDC. Présent sur la fiche (F7.3.a). */
+  terms?: string | null;
   summary: MandateSummary;
   /** Bien géré (titre, localisation, propriétaire) — réutilise le modèle Property. */
   property: Property;
@@ -345,6 +381,115 @@ export interface MandateDossier {
   incidents_count?: number;
   expenses_count?: number;
   payouts_count?: number;
+  // --- Lignes détaillées : présentes UNIQUEMENT sur la fiche (F7.3.a), --------
+  // bornées aux 12 dernières côté serveur.
+  rents?: MandateRent[];
+  payouts?: MandatePayout[];
+  incidents?: MandateIncident[];
+  expenses?: MandateExpense[];
+}
+
+/** Une échéance de loyer (miroir de `RentResource`). */
+export interface MandateRent {
+  id: number;
+  mandate_id: number;
+  tenant_id: number | null;
+  tenant_name: string | null;
+  period_label: string | null;
+  due_date: string | null;
+  amount_xof: number;
+  status: string | null;
+  status_label: string | null;
+  paid_at: string | null;
+}
+
+/** Un reversement au propriétaire (miroir de `OwnerPayoutResource`). */
+export interface MandatePayout {
+  id: number;
+  reference: string;
+  mandate_id: number;
+  owner_id: number;
+  period_label: string | null;
+  amount_xof: number;
+  status: string | null;
+  status_label: string | null;
+  paid_at: string | null;
+}
+
+/** Un incident sur le bien géré (miroir de `IncidentResource`). */
+export interface MandateIncident {
+  id: number;
+  reference: string;
+  property_id: number;
+  reported_by: number | null;
+  title: string;
+  description: string | null;
+  priority: string | null;
+  status: string | null;
+  status_label: string | null;
+  resolved_at: string | null;
+}
+
+/** Une dépense engagée sur le bien géré (miroir de `ExpenseResource`). */
+export interface MandateExpense {
+  id: number;
+  property_id: number;
+  incident_id: number | null;
+  label: string;
+  category: string | null;
+  category_label: string | null;
+  amount_xof: number;
+  spent_at: string | null;
+}
+
+/** Corps de création d'une échéance de loyer (`StoreRentRequest`). */
+export interface RentPayload {
+  due_date: string;
+  amount_xof: number;
+  tenant_name?: string | null;
+  period_label?: string | null;
+}
+
+/** Corps de signalement d'un incident (`StoreIncidentRequest`). */
+export interface IncidentPayload {
+  title: string;
+  description?: string | null;
+  priority?: string | null;
+}
+
+/** Corps d'enregistrement d'une dépense (`StoreExpenseRequest`). */
+export interface ExpensePayload {
+  label: string;
+  category: string;
+  amount_xof: number;
+  spent_at: string;
+  /** Dépense rattachée à un incident précis (facultatif). */
+  incident_id?: number | null;
+}
+
+/** Corps de création d'un reversement (`StorePayoutRequest`). */
+export interface PayoutPayload {
+  amount_xof: number;
+  period_label?: string | null;
+}
+
+/**
+ * Rapport mensuel d'un mandat — miroir exact de
+ * `ManagementReportService::forMandate()`.
+ *
+ * ⚠️ `net_owner_xof` = loyers encaissés − commission Kaikun − dépenses du mois.
+ * Il peut donc être NÉGATIF (mois de gros travaux) : l'écran doit le montrer
+ * tel quel, pas l'écrêter à zéro.
+ */
+export interface MandateReport {
+  mandate: { id: number; reference: string; commission_rate: number | string };
+  period: { month: string; label: string };
+  rents: { paid_xof: number; unpaid_xof: number; count: number };
+  expenses: { total_xof: number; count: number };
+  commission_xof: number;
+  net_owner_xof: number;
+  payouts: { total_xof: number; count: number };
+  incidents: { opened: number; resolved: number };
 }
 
 /** Filtres des demandes de construction (supervision). */
@@ -1188,6 +1333,128 @@ export class AdminService {
     if (query.status) params = params.set('status', query.status);
     if (query.page) params = params.set('page', String(query.page));
     return this.http.get<Paginated<MandateDossier>>(`${this.api}/admin/mandates`, { params });
+  }
+
+  // --- Dossier de construction (F7.3.b) --------------------------------------
+  //
+  // Routes du module Build (hors préfixe /admin) : la lecture passe par la
+  // policy `view` (client propriétaire OU agent/admin), le dépôt d'un compte
+  // rendu exige la permission `gerer:chantiers`.
+
+  /** Fiche d'une demande de construction (jalons + demandeur). GET /construction-requests/{id} */
+  constructionRequest(id: number): Observable<ConstructionDossier> {
+    return this.http
+      .get<ApiEnvelope<{ construction_request: ConstructionDossier }>>(
+        `${this.api}/construction-requests/${id}`,
+      )
+      .pipe(map((response) => response.data.construction_request));
+  }
+
+  /** Comptes rendus de chantier (paginés). GET /construction-requests/{id}/reports */
+  constructionReports(id: number, page = 1): Observable<Paginated<ConstructionReport>> {
+    const params = new HttpParams().set('page', String(page));
+    return this.http.get<Paginated<ConstructionReport>>(
+      `${this.api}/construction-requests/${id}/reports`,
+      { params },
+    );
+  }
+
+  /** Publie un compte rendu de chantier. POST /construction-requests/{id}/reports */
+  addConstructionReport(id: number, payload: CreateReportPayload): Observable<ConstructionReport> {
+    return this.http
+      .post<ApiEnvelope<{ report: ConstructionReport }>>(
+        `${this.api}/construction-requests/${id}/reports`,
+        payload,
+      )
+      .pipe(map((response) => response.data.report));
+  }
+
+  // --- Pilotage de la gestion locative (F7.3.a) ------------------------------
+  //
+  // ⚠️ Ces routes ne sont PAS sous /admin : elles vivent dans le module Manage
+  // et sont gardées par la permission `gerer:gestion-locative` (lecture de la
+  // fiche = policy `view`, qui autorise le propriétaire OU un agent/admin).
+
+  /** Fiche complète d'un mandat (lignes + agrégats). GET /manage/mandates/{id} */
+  mandate(id: number): Observable<MandateDossier> {
+    return this.http
+      .get<ApiEnvelope<{ mandate: MandateDossier }>>(`${this.api}/manage/mandates/${id}`)
+      .pipe(map((response) => response.data.mandate));
+  }
+
+  /**
+   * Rapport mensuel d'un mandat. GET /manage/mandates/{id}/report?month=YYYY-MM
+   * Sans `month`, le serveur prend le mois courant.
+   */
+  mandateReport(id: number, month?: string): Observable<MandateReport> {
+    let params = new HttpParams();
+    if (month) params = params.set('month', month);
+    return this.http
+      .get<ApiEnvelope<{ report: MandateReport }>>(`${this.api}/manage/mandates/${id}/report`, {
+        params,
+      })
+      .pipe(map((response) => response.data.report));
+  }
+
+  /** Ajoute une échéance de loyer (créée « impayée »). POST /manage/mandates/{id}/rents */
+  addRent(mandateId: number, payload: RentPayload): Observable<MandateRent> {
+    return this.http
+      .post<ApiEnvelope<{ rent: MandateRent }>>(`${this.api}/manage/mandates/${mandateId}/rents`, payload)
+      .pipe(map((response) => response.data.rent));
+  }
+
+  /** Marque une échéance comme encaissée. PATCH /manage/rents/{id}/pay */
+  markRentPaid(rentId: number): Observable<MandateRent> {
+    return this.http
+      .patch<ApiEnvelope<{ rent: MandateRent }>>(`${this.api}/manage/rents/${rentId}/pay`, {})
+      .pipe(map((response) => response.data.rent));
+  }
+
+  /** Signale un incident sur le bien géré. POST /manage/mandates/{id}/incidents */
+  addIncident(mandateId: number, payload: IncidentPayload): Observable<MandateIncident> {
+    return this.http
+      .post<ApiEnvelope<{ incident: MandateIncident }>>(
+        `${this.api}/manage/mandates/${mandateId}/incidents`,
+        payload,
+      )
+      .pipe(map((response) => response.data.incident));
+  }
+
+  /** Clôt un incident. PATCH /manage/incidents/{id}/resolve */
+  resolveIncident(incidentId: number): Observable<MandateIncident> {
+    return this.http
+      .patch<ApiEnvelope<{ incident: MandateIncident }>>(
+        `${this.api}/manage/incidents/${incidentId}/resolve`,
+        {},
+      )
+      .pipe(map((response) => response.data.incident));
+  }
+
+  /** Enregistre une dépense sur le bien géré. POST /manage/mandates/{id}/expenses */
+  addExpense(mandateId: number, payload: ExpensePayload): Observable<MandateExpense> {
+    return this.http
+      .post<ApiEnvelope<{ expense: MandateExpense }>>(
+        `${this.api}/manage/mandates/${mandateId}/expenses`,
+        payload,
+      )
+      .pipe(map((response) => response.data.expense));
+  }
+
+  /** Prépare un reversement au propriétaire. POST /manage/mandates/{id}/payouts */
+  addPayout(mandateId: number, payload: PayoutPayload): Observable<MandatePayout> {
+    return this.http
+      .post<ApiEnvelope<{ payout: MandatePayout }>>(
+        `${this.api}/manage/mandates/${mandateId}/payouts`,
+        payload,
+      )
+      .pipe(map((response) => response.data.payout));
+  }
+
+  /** Marque un reversement comme effectué. PATCH /manage/payouts/{id}/pay */
+  markPayoutPaid(payoutId: number): Observable<MandatePayout> {
+    return this.http
+      .patch<ApiEnvelope<{ payout: MandatePayout }>>(`${this.api}/manage/payouts/${payoutId}/pay`, {})
+      .pipe(map((response) => response.data.payout));
   }
 
   // --- Comptes & documents (F7.2.f) ------------------------------------------

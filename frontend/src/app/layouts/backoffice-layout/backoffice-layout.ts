@@ -14,7 +14,8 @@ type BoIcon =
   | 'compass'
   | 'calendar'
   | 'card'
-  | 'folder'
+  | 'hammer'
+  | 'key'
   | 'id'
   | 'star'
   | 'briefcase'
@@ -79,7 +80,10 @@ export class BackofficeLayoutComponent {
     { label: 'Tourisme', path: 'tourisme', icon: 'compass', ready: true },
     { label: 'Nuitées', path: 'nuitees', icon: 'calendar', ready: true },
     { label: 'Paiements', path: 'paiements', icon: 'card', ready: true },
-    { label: 'Dossiers', path: 'dossiers', icon: 'folder', ready: true },
+    // F7.3.c — L'écran « Dossiers » à onglets est scindé : construction et
+    // gestion locative sont deux métiers distincts, ils ont chacun leur rubrique.
+    { label: 'Construction', path: 'construction', icon: 'hammer', ready: true },
+    { label: 'Gestion locative', path: 'gestion-locative', icon: 'key', ready: true },
     { label: 'Comptes', path: 'comptes', icon: 'id', ready: true },
     { label: 'Avis & qualité', path: 'qualite', icon: 'star', ready: true },
     { label: 'Team building', path: 'team-building', icon: 'briefcase', ready: true },

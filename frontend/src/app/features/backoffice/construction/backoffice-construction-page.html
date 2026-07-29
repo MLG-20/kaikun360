@@ -1,0 +1,100 @@
+<header class="ds-head">
+  <div>
+    <h1 class="ds-title">Construction</h1>
+    <p class="ds-sub">
+      Demandes de construction et de rénovation, tous clients confondus.
+      <strong>Cliquez une ligne</strong> pour ouvrir le dossier : projet, jalons
+      du chantier et comptes rendus photo/vidéo.
+    </p>
+  </div>
+</header>
+
+<section class="ds-filters">
+  <input
+    class="k-input ds-search"
+    type="search"
+    name="city"
+    [(ngModel)]="city"
+    (keyup.enter)="applyFilters()"
+    placeholder="Ville…" />
+  <select
+    class="k-input"
+    name="status"
+    [(ngModel)]="status"
+    (change)="applyFilters()"
+    aria-label="Filtrer par statut">
+    @for (opt of statusOptions; track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+  <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
+</section>
+
+@if (loading()) {
+  <p class="ds-state" role="status">Chargement des demandes de construction…</p>
+} @else if (error()) {
+  <p class="ds-state ds-state--error" role="alert">Impossible de charger les dossiers. Réessayez.</p>
+} @else {
+  <p class="ds-count">{{ total() }} demande(s) de construction</p>
+  <div class="ds-table-wrap">
+    <table class="ds-table">
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Demandeur</th>
+          <th>Objectif</th>
+          <th>Ville</th>
+          <th>Surface</th>
+          <th>Budget</th>
+          <th>Coût estimé</th>
+          <th>Finition</th>
+          <th>Avancement</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.id) {
+          <!-- La ligne mène à la fiche détaillée du dossier (F7.3.b). -->
+          <tr class="ds-row" tabindex="0" (click)="open(r)" (keyup.enter)="open(r)">
+            <td><span class="ds-ref">{{ r.reference }}</span></td>
+            <td>
+              <span class="ds-strong">{{ r.client?.name || '—' }}</span>
+              @if (r.client?.phone) {
+                <span class="ds-place">{{ r.client!.phone }}</span>
+              }
+            </td>
+            <td>{{ r.objective_label || '—' }}</td>
+            <td>{{ r.city || '—' }}</td>
+            <td><span class="ds-muted">{{ surface(r.surface_m2) }}</span></td>
+            <td><span class="ds-amount">{{ xof(r.budget_xof) }}</span></td>
+            <td><span class="ds-muted">{{ xof(r.estimated_cost_xof) }}</span></td>
+            <td>{{ r.finish_level_label || '—' }}</td>
+            <td>
+              <span class="ds-chips">
+                <span class="ds-chip" title="Comptes rendus de chantier">{{ r.reports_count ?? 0 }} rapp.</span>
+                <span class="ds-chip" title="Jalons du planning">{{ r.milestones_count ?? 0 }} jalons</span>
+              </span>
+            </td>
+            <td><span class="ds-badge" [class]="statusClass(r.status)">{{ r.status_label || r.status }}</span></td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="10" class="ds-empty">Aucune demande de construction ne correspond à ces filtres.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (lastPage() > 1) {
+    <nav class="ds-pager" aria-label="Pagination">
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === 1" (click)="goTo(page() - 1)">
+        ← Précédent
+      </button>
+      <span class="ds-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === lastPage()" (click)="goTo(page() + 1)">
+        Suivant →
+      </button>
+    </nav>
+  }
+}

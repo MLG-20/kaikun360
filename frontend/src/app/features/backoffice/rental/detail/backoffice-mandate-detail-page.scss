@@ -1,0 +1,329 @@
+// Fiche mandat de gestion locative pilotable (F7.3.a) — loyers, incidents,
+// dépenses, reversements et rapport mensuel.
+
+:host {
+  display: block;
+  max-width: 1100px;
+}
+
+.mn-back {
+  margin-bottom: 14px;
+
+  a {
+    color: var(--k-muted);
+    font-size: 0.85rem;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--k-brand);
+    }
+  }
+}
+
+.mn-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.mn-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.45rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.mn-sub {
+  color: var(--k-muted);
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+// --- Cartes ---
+.mn-card {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+
+.mn-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.mn-card-title {
+  font-family: var(--k-font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--k-ink);
+  margin: 0;
+}
+
+.mn-subtitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--k-ink);
+  margin: 0 0 6px;
+}
+
+// --- Le contrat ---
+.mn-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin: 0;
+
+  dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-muted);
+    margin-bottom: 3px;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.95rem;
+  }
+}
+
+.mn-terms {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--k-line);
+
+  p {
+    margin: 0;
+    color: var(--k-muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+}
+
+// --- Rapport mensuel ---
+.mn-month {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .k-input {
+    max-width: 180px;
+  }
+}
+
+.mn-period {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--k-muted);
+  text-transform: capitalize;
+}
+
+.mn-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.mn-kpi {
+  background: var(--k-cream);
+  border-radius: var(--k-radius);
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  &--strong {
+    background: rgba(3, 72, 251, 0.07);
+  }
+
+  &__label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-muted);
+  }
+
+  &__value {
+    font-family: var(--k-font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--k-ink);
+
+    &.is-alert {
+      color: var(--k-danger);
+    }
+  }
+
+  &__hint {
+    font-size: 0.74rem;
+    color: var(--k-muted);
+  }
+}
+
+// --- Formulaires dépliés ---
+.mn-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  margin-bottom: 16px;
+  background: var(--k-cream);
+  border-radius: var(--k-radius);
+}
+
+.mn-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  span {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+
+  &--wide {
+    grid-column: span 2;
+  }
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+}
+
+// --- Tables ---
+.mn-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+}
+
+.mn-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: middle;
+  }
+
+  th {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.mn-strong {
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.88rem;
+}
+
+.mn-place {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: var(--k-muted);
+  max-width: 52ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mn-muted {
+  color: var(--k-muted);
+  font-size: 0.83rem;
+}
+
+.mn-actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.mn-empty {
+  text-align: center;
+  color: var(--k-muted);
+  padding: 22px;
+}
+
+// --- Badges & états ---
+.mn-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &.is-warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-cream);
+    color: var(--k-muted);
+  }
+}
+
+.mn-state {
+  padding: 16px 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+  margin: 0 0 14px;
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+
+  &--ok {
+    background: rgba(56, 167, 116, 0.08);
+    border-color: rgba(56, 167, 116, 0.3);
+    color: var(--k-green-600);
+  }
+}
+
+.mn-note {
+  font-size: 0.78rem;
+  color: var(--k-muted);
+  margin: 0 0 24px;
+}

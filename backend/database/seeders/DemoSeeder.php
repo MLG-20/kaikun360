@@ -12,6 +12,14 @@ use App\Models\Payment;
 use App\Models\Review;
 use App\Models\ServiceRequest;
 use App\Models\User;
+use App\Models\Report;
+use App\Modules\Build\Enums\ConstructionObjective;
+use App\Modules\Build\Enums\ConstructionRequestStatus;
+use App\Modules\Build\Enums\FinishLevel;
+use App\Modules\Build\Enums\MilestoneStatus;
+use App\Modules\Build\Enums\ReportType;
+use App\Modules\Build\Models\ConstructionMilestone;
+use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Immo\Enums\PropertyType;
 use App\Modules\Immo\Models\Property;
@@ -96,6 +104,12 @@ class DemoSeeder extends Seeder
         // celle des annonces ci-dessous) : on ne recrée rien si le client en a
         // déjà, afin que la relance du seeder reste sans doublon.
         $this->seedClientRequests($client);
+
+        // Dossiers de construction (F7.2.e / F7.3.b) : l'écran Dossiers et sa
+        // fiche ont besoin de dossiers à différents stades, AVEC des jalons et
+        // des comptes rendus de chantier — sans quoi la fiche s'ouvre vide.
+        // Garde propre, indépendante des catalogues.
+        $this->seedConstructionDossiers($client);
 
         // Catalogues de démonstration : créés une seule fois (garde d'idempotence
         // sur l'existence d'un bien du propriétaire de démo). On n'utilise plus un
@@ -213,6 +227,11 @@ class DemoSeeder extends Seeder
             'property_id' => $flatA->id,
             'commission_rate' => $rateA,
             'start_date' => $twoMonthsAgo->toDateString(),
+            // F7.3.a — Les clauses sont les « contrats » de la ligne CDC §6 :
+            // la fiche back-office les affiche, elles ne peuvent pas rester nulles.
+            'terms' => "Commission de {$rateA} % prélevée sur les loyers effectivement encaissés. "
+                .'Reversement au propriétaire le 5 de chaque mois, déduction faite des dépenses engagées. '
+                .'Kaikun 360 avance les réparations urgentes jusqu’à 150 000 FCFA sans accord préalable.',
         ]);
 
         foreach ([$twoMonthsAgo, $lastMonth, $thisMonth] as $month) {
@@ -261,6 +280,9 @@ class DemoSeeder extends Seeder
             'property_id' => $villaB->id,
             'commission_rate' => $rateB,
             'start_date' => $lastMonth->toDateString(),
+            'terms' => "Commission de {$rateB} % sur les loyers encaissés. "
+                .'Mandat reconductible tacitement par période de douze mois. '
+                .'Toute dépense supérieure à 300 000 FCFA requiert l’accord écrit du propriétaire.',
         ]);
 
         $this->rent($mandateB, $tenantB, $lastMonth, $rentB, paid: true);
@@ -313,6 +335,146 @@ class DemoSeeder extends Seeder
      * Garde d'idempotence PROPRE (l'existence d'un prestataire `guide` sert de
      * marqueur) : la relance du seeder complète une base déjà peuplée.
      */
+    /**
+     * Dossiers de construction de démonstration (F7.2.e, enrichis en F7.3.b).
+     *
+     * Trois dossiers à des stades différents, pour que l'écran Dossiers montre
+     * autre chose qu'une seule situation, et surtout pour que la **fiche** ait
+     * de quoi se remplir : des **jalons** (l'avancement du chantier) et des
+     * **comptes rendus** photo/vidéo (la preuve terrain, cœur de la promesse
+     * « confiance par la preuve »).
+     *
+     * ⚠️ Les jalons sont normalement semés par le CONTRÔLEUR `store` : une
+     * demande créée directement par le modèle n'en a aucun. On les pose donc
+     * explicitement ici.
+     */
+    private function seedConstructionDossiers(User $client): void
+    {
+        if (ConstructionRequest::query()->where('client_id', $client->id)->exists()) {
+            return;
+        }
+
+        $today = CarbonImmutable::now();
+
+        // --- Dossier 1 : chantier EN COURS, le plus riche (démo de la fiche).
+        $running = ConstructionRequest::create([
+            'reference' => 'CST-'.Str::upper(Str::random(6)),
+            'client_id' => $client->id,
+            'objective' => ConstructionObjective::CONSTRUCTION_NEUVE->value,
+            'city' => 'Thiès',
+            'surface_m2' => 140,
+            'budget_xof' => 32_000_000,
+            'finish_level' => FinishLevel::STANDARD->value,
+            'description' => "Villa R+1 sur un terrain de 300 m². Trois chambres, un salon "
+                ."traversant et un studio indépendant à l'étage pour de la location.",
+            'estimated_cost_xof' => 35_000_000,
+            'status' => ConstructionRequestStatus::EN_CHANTIER->value,
+        ]);
+
+        // Un planning qui raconte un chantier réellement en cours : le passé est
+        // terminé, l'étape courante est en cours, la suite est à venir.
+        $steps = [
+            ['Études & plans', MilestoneStatus::TERMINE, -90],
+            ['Fondations', MilestoneStatus::TERMINE, -60],
+            ['Élévation des murs', MilestoneStatus::EN_COURS, -10],
+            ['Toiture', MilestoneStatus::A_VENIR, 25],
+            ['Second œuvre', MilestoneStatus::A_VENIR, 60],
+        ];
+
+        foreach ($steps as $position => [$name, $status, $offset]) {
+            ConstructionMilestone::create([
+                'construction_request_id' => $running->id,
+                'name' => $name,
+                'position' => $position + 1,
+                'status' => $status->value,
+                'planned_date' => $today->addDays($offset)->toDateString(),
+                // Une date réelle n'a de sens que pour un jalon achevé.
+                'actual_date' => $status === MilestoneStatus::TERMINE
+                    ? $today->addDays($offset + 2)->toDateString()
+                    : null,
+            ]);
+        }
+
+        $this->constructionReport($running, ReportType::PHOTO, $today->subDays(58),
+            'Fondations coulées, séchage en cours. Ferraillage conforme au plan.',
+            ['suivi/thies-fondations-01.jpg', 'suivi/thies-fondations-02.jpg']);
+
+        $this->constructionReport($running, ReportType::MIXTE, $today->subDays(9),
+            'Élévation en cours au niveau du rez-de-chaussée. Livraison de ciment réceptionnée.',
+            ['suivi/thies-murs-01.jpg'], 'https://example.com/kaikun/suivi-thies.mp4');
+
+        // --- Dossier 2 : devis envoyé, en attente de décision du client.
+        $quoted = ConstructionRequest::create([
+            'reference' => 'CST-'.Str::upper(Str::random(6)),
+            'client_id' => $client->id,
+            'objective' => ConstructionObjective::RENOVATION->value,
+            'city' => 'Dakar',
+            'surface_m2' => 85,
+            // Budget VOLONTAIREMENT inférieur à l'estimation : la fiche doit
+            // faire ressortir l'écart, c'est le premier signal d'un dossier
+            // mal parti.
+            'budget_xof' => 9_000_000,
+            'finish_level' => FinishLevel::PREMIUM->value,
+            'description' => 'Rénovation complète d’un appartement : cuisine, salle d’eau, sols.',
+            'estimated_cost_xof' => 12_400_000,
+            'status' => ConstructionRequestStatus::DEVIS_ENVOYE->value,
+        ]);
+
+        foreach ([['Visite technique', MilestoneStatus::TERMINE, -20], ['Chiffrage', MilestoneStatus::TERMINE, -8], ['Démarrage', MilestoneStatus::A_VENIR, 15]] as $position => [$name, $status, $offset]) {
+            ConstructionMilestone::create([
+                'construction_request_id' => $quoted->id,
+                'name' => $name,
+                'position' => $position + 1,
+                'status' => $status->value,
+                'planned_date' => $today->addDays($offset)->toDateString(),
+                'actual_date' => $status === MilestoneStatus::TERMINE ? $today->addDays($offset)->toDateString() : null,
+            ]);
+        }
+
+        // --- Dossier 3 : à peine soumis, rien à montrer (cas « dossier neuf »).
+        ConstructionRequest::create([
+            'reference' => 'CST-'.Str::upper(Str::random(6)),
+            'client_id' => $client->id,
+            'objective' => ConstructionObjective::EXTENSION->value,
+            'city' => 'Mbour',
+            'surface_m2' => 40,
+            'budget_xof' => 7_000_000,
+            'finish_level' => FinishLevel::ECONOMIQUE->value,
+            'description' => 'Extension d’une chambre et d’une terrasse couverte à l’arrière.',
+            'estimated_cost_xof' => 8_800_000,
+            'status' => ConstructionRequestStatus::SOUMISE->value,
+        ]);
+
+        $this->command?->info('DemoSeeder : 3 dossiers de construction créés (jalons + comptes rendus).');
+    }
+
+    /**
+     * Publie un compte rendu de chantier de démonstration (modèle `Report`
+     * polymorphe, partagé avec la diaspora).
+     *
+     * @param  list<string>  $photos
+     */
+    private function constructionReport(
+        ConstructionRequest $request,
+        ReportType $type,
+        CarbonImmutable $reportedAt,
+        string $comment,
+        array $photos = [],
+        ?string $videoUrl = null,
+    ): void {
+        Report::create([
+            'reference' => 'RPT-'.Str::upper(Str::random(8)),
+            'reportable_type' => ConstructionRequest::class,
+            'reportable_id' => $request->id,
+            'created_by' => null,
+            'type' => $type->value,
+            'photos' => $photos,
+            'video_url' => $videoUrl,
+            'comment' => $comment,
+            'reported_at' => $reportedAt->toDateString(),
+        ]);
+    }
+
     private function seedTourismSupervision(User $provider): void
     {
         if (Provider::query()->where('category', ProviderCategory::GUIDE->value)->exists()) {

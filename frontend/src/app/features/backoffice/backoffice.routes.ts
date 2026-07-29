@@ -86,13 +86,41 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Paiements — Back-office Kaikun 360',
       },
       {
-        // F7.2.e — Dossiers : supervision construction + mandats de gestion (lecture seule).
-        path: 'dossiers',
+        // F7.3.c — Construction : l'ancien écran « Dossiers » à onglets est
+        // scindé, chaque métier ayant sa rubrique au rail.
+        path: 'construction',
         loadComponent: () =>
-          import('./dossiers/backoffice-dossiers-page').then(
-            (m) => m.BackofficeDossiersPageComponent,
+          import('./construction/backoffice-construction-page').then(
+            (m) => m.BackofficeConstructionPageComponent,
           ),
-        title: 'Dossiers — Back-office Kaikun 360',
+        title: 'Construction — Back-office Kaikun 360',
+      },
+      {
+        // F7.3.b — Fiche d'une demande de construction : projet, demandeur,
+        // jalons (lecture seule) et comptes rendus de chantier.
+        path: 'construction/:id',
+        loadComponent: () =>
+          import('./construction/detail/backoffice-construction-detail-page').then(
+            (m) => m.BackofficeConstructionDetailPageComponent,
+          ),
+        title: 'Demande de construction — Back-office Kaikun 360',
+      },
+      {
+        // F7.3.c — Gestion locative : mandats de tous les propriétaires.
+        path: 'gestion-locative',
+        loadComponent: () =>
+          import('./rental/backoffice-rental-page').then((m) => m.BackofficeRentalPageComponent),
+        title: 'Gestion locative — Back-office Kaikun 360',
+      },
+      {
+        // F7.3.a — Fiche d'un mandat, PILOTABLE (loyers, incidents, dépenses,
+        // reversements, rapport mensuel).
+        path: 'gestion-locative/:id',
+        loadComponent: () =>
+          import('./rental/detail/backoffice-mandate-detail-page').then(
+            (m) => m.BackofficeMandateDetailPageComponent,
+          ),
+        title: 'Mandat de gestion — Back-office Kaikun 360',
       },
       {
         // F7.2.f — Comptes & documents : annuaire des comptes (statut/rôle/pièces)

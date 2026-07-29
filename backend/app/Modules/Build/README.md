@@ -155,3 +155,39 @@ La répartition des travaux, l'échéancier et le délai sont **structurels**
   `whenCounted`), `ConstructionMilestoneResource`, `ReportResource`.
 - À la création : `ConstructionEstimator` renseigne `estimated_cost_xof` et
   `ConstructionMilestoneService` sème les jalons.
+
+## Fiche dossier au back-office (F7.3.b)
+
+L'écran back-office *Dossiers* (F7.2.e) ne montrait les demandes que sous forme
+de tableau — illisible pour un dossier de chantier, dont l'essentiel (qui a
+demandé quoi, où en est le chantier, ce qui a été constaté sur place) ne tient
+pas dans une ligne. Une **fiche** consomme désormais les endpoints existants :
+
+- `GET /construction-requests/{id}` — policy `view` (client propriétaire **ou**
+  agent/admin). Charge le **client**, les **jalons triés par `position`** (l'ordre
+  du chantier est ce que l'écran restitue) et le compte des rapports.
+- `GET|POST /construction-requests/{id}/reports` — comptes rendus photo/vidéo ;
+  la publication exige `gerer:chantiers`.
+
+**Deux ajouts additifs** dans `ConstructionRequestResource`, sans migration :
+
+- **`client`** (id, nom, e-mail, téléphone) via `whenLoaded` — le back-office
+  pilote des dossiers, pas des lignes anonymes : sans le demandeur, l'agent ne
+  peut ni comprendre ni rappeler. Même correctif qu'en F7.2.a sur la file de
+  validation. `AdminDossierController::constructionRequests` eager-load donc
+  `client` (anti-N+1), ce qui alimente aussi une colonne **Demandeur** dans la
+  liste.
+- **`created_at`** — un dossier de suivi se lit d'abord par son ancienneté.
+
+> ⚠️ **Trois manques du CDC §6 *Construction* restent ouverts, côté serveur :**
+> 1. **Faire avancer un jalon** — `ConstructionMilestoneService::seedDefault()`
+>    les crée au dépôt, mais **aucun endpoint ne les met à jour**. Les jalons sont
+>    donc en lecture seule à l'écran, qui le dit explicitement.
+> 2. **Devis** — `ConstructionRequest::quotes` n'est branché sur rien (la couche
+>    transversale `Quote` de B11 existe, la jonction reste à faire).
+> 3. **Prestataires BTP** — aucun rattachement mission ↔ chantier, contrairement
+>    au team building (`provider_missions.team_building_request_id`, F7.2.h) qui
+>    fournit le motif à reprendre.
+>
+> ⚠️ **Piège de test** : les jalons sont semés par le **contrôleur** `store`, pas
+> par la factory — une demande créée directement par le modèle n'en a aucun.

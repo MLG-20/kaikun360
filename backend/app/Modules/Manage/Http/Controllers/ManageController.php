@@ -60,6 +60,11 @@ class ManageController extends Controller
             'rents' => fn ($q) => $q->latest('due_date')->limit(12),
             'payouts' => fn ($q) => $q->latest()->limit(12),
             'incidents' => fn ($q) => $q->latest()->limit(12),
+            // F7.3.a — Les dépenses manquaient : on pouvait en enregistrer une
+            // (POST .../expenses) sans jamais pouvoir la relire, alors que le
+            // CDC §6 les liste explicitement. Même bornage que les autres
+            // lignes ; la relation passe par `property_id`, comme les incidents.
+            'expenses' => fn ($q) => $q->latest('spent_at')->limit(12),
         ])->firstOrFail();
 
         return ApiResponse::success(['mandate' => MandateResource::make($mandate)]);

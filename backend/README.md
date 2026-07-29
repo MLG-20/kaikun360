@@ -140,7 +140,14 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
 - **Stay** — catalogue de nuitées, disponibilité, réservation anti-double-booking,
   caution ; check-in/out & ménage côté back-office.
 - **Manage** — mandats de gestion, loyers, incidents, dépenses, reversements
-  propriétaires, rapport mensuel.
+  propriétaires, rapport mensuel. Le **pilotage** (créer un mandat, ajouter et
+  encaisser un loyer, signaler et résoudre un incident, enregistrer une dépense,
+  préparer et marquer un reversement) existe depuis B4.6 sous la permission
+  `gerer:gestion-locative` ; il est branché sur la **fiche mandat du back-office**
+  depuis F7.3.a — jusque-là aucune interface ne l'atteignait. À cette occasion,
+  `GET /manage/mandates/{id}` charge enfin les **dépenses** (créables mais
+  jusqu'alors jamais relisables) et `MandateResource` expose les **clauses**
+  (`terms`) du mandat, soit les « contrats » de la ligne CDC §6.
 - **Build** — simulateur de coût de construction, jalons de chantier, rapports
   photo/vidéo polymorphes.
 - **Explore** — expériences touristiques, capacité, réservation, annulation/

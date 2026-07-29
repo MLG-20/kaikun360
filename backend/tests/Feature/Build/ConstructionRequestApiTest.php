@@ -8,6 +8,7 @@ use App\Modules\Admin\Enums\AdminPermission;
 use App\Modules\Build\Enums\ConstructionObjective;
 use App\Modules\Build\Enums\ConstructionZone;
 use App\Modules\Build\Enums\FinishLevel;
+use App\Modules\Build\Models\ConstructionMilestone;
 use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Core\Enums\UserRole;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -109,6 +110,41 @@ class ConstructionRequestApiTest extends TestCase
         $this->getJson("/api/v1/construction-requests/{$request->id}")
             ->assertOk()
             ->assertJsonPath('data.construction_request.id', $request->id);
+    }
+
+    /**
+     * F7.3.b — La fiche back-office doit porter le demandeur (nom + contact) et
+     * les jalons DANS L'ORDRE du chantier : c'est ce qui rend le dossier
+     * lisible, la liste seule ne suffisait pas.
+     */
+    public function test_la_fiche_expose_le_demandeur_et_les_jalons_ordonnes(): void
+    {
+        $client = User::factory()->create(['name' => 'Moussa Fall']);
+        $request = ConstructionRequest::factory()->create(['client_id' => $client->id]);
+
+        // ⚠️ Les jalons sont semés par le CONTRÔLEUR `store`, pas par la
+        // factory : une demande créée directement n'en a aucun. On les pose
+        // volontairement en désordre pour vérifier le tri du serveur.
+        foreach ([3, 1, 2] as $position) {
+            ConstructionMilestone::factory()->create([
+                'construction_request_id' => $request->id,
+                'position' => $position,
+            ]);
+        }
+
+        Sanctum::actingAs($this->agent());
+
+        $response = $this->getJson("/api/v1/construction-requests/{$request->id}")
+            ->assertOk()
+            ->assertJsonPath('data.construction_request.client.name', 'Moussa Fall')
+            ->assertJsonPath('data.construction_request.client.email', $client->email);
+
+        // Les jalons semés à la création sortent triés par position croissante.
+        $positions = array_column($response->json('data.construction_request.milestones'), 'position');
+        $sorted = $positions;
+        sort($sorted);
+        $this->assertSame($sorted, $positions);
+        $this->assertNotEmpty($positions);
     }
 
     public function test_le_client_consulte_les_rapports_de_sa_demande(): void
