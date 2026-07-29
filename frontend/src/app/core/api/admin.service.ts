@@ -288,6 +288,60 @@ export interface PaymentQuery {
   page?: number;
 }
 
+// --- Export comptable (F7.3.d) ----------------------------------------------
+
+/**
+ * Totaux consolidés de la période (miroir de `AccountingReporter::report`).
+ *
+ * ⚠️ Les montants n'agrègent que les réservations **non annulées** : d'où l'écart
+ * volontaire entre `bookings_count` (toutes les lignes du grand livre) et
+ * `active_bookings_count` (celles qui portent les montants).
+ */
+export interface AccountingSummary {
+  bookings_count: number;
+  active_bookings_count: number;
+  gross_volume_xof: number;
+  commission_xof: number;
+  payouts_count: number;
+  payouts_total_xof: number;
+}
+
+/** Une ligne du grand livre des réservations. */
+export interface AccountingBookingLine {
+  reference: string;
+  date: string | null;
+  /** Nom court du modèle réservé (`Stay`, `Vehicle`, `Experience`, `Trip`…). */
+  type: string;
+  amount_xof: number;
+  commission_xof: number;
+  status: string;
+}
+
+/** Un reversement propriétaire effectué sur la période. */
+export interface AccountingPayoutLine {
+  reference: string;
+  paid_at: string | null;
+  owner_id: number;
+  period_label: string | null;
+  amount_xof: number;
+}
+
+/** Rapport comptable complet renvoyé en JSON. */
+export interface AccountingReport {
+  period: { from: string | null; to: string | null };
+  summary: AccountingSummary;
+  bookings: AccountingBookingLine[];
+  payouts: AccountingPayoutLine[];
+}
+
+/** Bornes de période de l'export (facultatives : absentes = pas de borne). */
+export interface AccountingQuery {
+  /** Date de début incluse, au format `YYYY-MM-DD`. */
+  from?: string;
+  /** Date de fin incluse, au format `YYYY-MM-DD`. */
+  to?: string;
+}
+
 // --- Dossiers de suivi (F7.2.e) ---------------------------------------------
 
 /**
@@ -1312,6 +1366,44 @@ export class AdminService {
     return this.http
       .post<ApiEnvelope<{ payment: Payment }>>(`${this.api}/admin/payments/${paymentId}/refund`, body)
       .pipe(map((response) => response.data.payment));
+  }
+
+  // --- Export comptable (F7.3.d) ---------------------------------------------
+
+  /**
+   * Rapport comptable consolidé de la période (affichage à l'écran).
+   * GET /admin/reports/export (format JSON par défaut)
+   *
+   * Garde serveur : permission `gerer:paiements`.
+   */
+  accountingReport(query: AccountingQuery = {}): Observable<AccountingReport> {
+    return this.http
+      .get<ApiEnvelope<AccountingReport>>(`${this.api}/admin/reports/export`, {
+        params: this.accountingParams(query),
+      })
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Grand livre des réservations en CSV téléchargeable.
+   * GET /admin/reports/export?format=csv
+   *
+   * ⚠️ Le CSV serveur ne contient que les **réservations** ; les reversements ne
+   * sont lisibles qu'à l'écran (via {@link accountingReport}).
+   */
+  accountingCsv(query: AccountingQuery = {}): Observable<Blob> {
+    return this.http.get(`${this.api}/admin/reports/export`, {
+      params: this.accountingParams(query).set('format', 'csv'),
+      responseType: 'blob',
+    });
+  }
+
+  /** Bornes de période communes aux deux formats d'export. */
+  private accountingParams(query: AccountingQuery): HttpParams {
+    let params = new HttpParams();
+    if (query.from) params = params.set('from', query.from);
+    if (query.to) params = params.set('to', query.to);
+    return params;
   }
 
   // --- Dossiers de suivi (F7.2.e) --------------------------------------------

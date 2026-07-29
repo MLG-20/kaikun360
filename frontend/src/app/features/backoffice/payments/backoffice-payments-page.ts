@@ -2,7 +2,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { AdminService, PaymentQuery } from '../../../core/api/admin.service';
+import {
+  AccountingQuery,
+  AccountingReport,
+  AdminService,
+  PaymentQuery,
+} from '../../../core/api/admin.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { Payment } from '../../../models/payment.model';
 
@@ -11,6 +16,9 @@ interface StatusOption {
   value: string;
   label: string;
 }
+
+/** Onglet actif de l'écran. */
+type PaymentsTab = 'supervision' | 'export';
 
 /**
  * Écran **Paiements** du back-office (F7.2.d) — supervision financière.
@@ -24,6 +32,12 @@ interface StatusOption {
  *
  * L'écran reflète les garde-fous serveur (mode manuel requis pour confirmer,
  * statut `complete` requis pour rembourser) et rend les refus lisibles.
+ *
+ * **Onglet « Export comptable » (F7.3.d)** — CDC §6 module 11 : le endpoint
+ * `GET /admin/reports/export` existait depuis B13.5 sans aucune interface. Il est
+ * ici branché en deux temps : le rapport JSON est d'abord affiché à l'écran
+ * (totaux + grand livre + reversements) pour que l'admin CONTRÔLE la période
+ * avant de télécharger, puis le CSV est proposé sur la même période.
  */
 @Component({
   selector: 'app-backoffice-payments-page',
@@ -71,8 +85,38 @@ export class BackofficePaymentsPageComponent {
     { value: 'rembourse', label: 'Remboursé' },
   ];
 
+  // --- Onglet « Export comptable » (F7.3.d) -----------------------------------
+
+  /** Onglet affiché ; la supervision reste l'entrée par défaut. */
+  protected readonly tab = signal<PaymentsTab>('supervision');
+
+  /** Bornes de période saisies (`YYYY-MM-DD`, vides = pas de borne). */
+  protected exportFrom = '';
+  protected exportTo = '';
+
+  /** Rapport affiché, ou `null` tant qu'aucune période n'a été calculée. */
+  protected readonly report = signal<AccountingReport | null>(null);
+  protected readonly reportLoading = signal(false);
+  protected readonly reportError = signal<string | null>(null);
+  /** Téléchargement CSV en cours (verrouille le bouton). */
+  protected readonly downloading = signal(false);
+
   constructor() {
     this.load();
+  }
+
+  /**
+   * Bascule d'onglet. Le rapport est calculé au PREMIER affichage de l'onglet
+   * export (sur le mois courant), puis conservé : rebasculer ne relance pas une
+   * requête d'agrégation potentiellement lourde.
+   */
+  protected switchTab(tab: PaymentsTab): void {
+    if (this.tab() === tab) return;
+    this.tab.set(tab);
+
+    if (tab === 'export' && this.report() === null && !this.reportLoading()) {
+      this.thisMonth();
+    }
   }
 
   /** Applique les filtres depuis la première page. */
@@ -204,6 +248,137 @@ export class BackofficePaymentsPageComponent {
   /** Remplace un paiement dans la liste après action. */
   private replace(updated: Payment): void {
     this.payments.update((list) => list.map((p) => (p.id === updated.id ? updated : p)));
+  }
+
+  // --- Export comptable : périodes & chargement --------------------------------
+
+  /** Raccourci « mois en cours » (du 1er à aujourd'hui). */
+  protected thisMonth(): void {
+    const now = new Date();
+    this.exportFrom = this.isoDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    this.exportTo = this.isoDate(now);
+    this.loadReport();
+  }
+
+  /** Raccourci « mois dernier » (période complète). */
+  protected lastMonth(): void {
+    const now = new Date();
+    this.exportFrom = this.isoDate(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+    // Le jour 0 du mois courant = dernier jour du mois précédent.
+    this.exportTo = this.isoDate(new Date(now.getFullYear(), now.getMonth(), 0));
+    this.loadReport();
+  }
+
+  /** Raccourci « année en cours ». */
+  protected thisYear(): void {
+    const now = new Date();
+    this.exportFrom = this.isoDate(new Date(now.getFullYear(), 0, 1));
+    this.exportTo = this.isoDate(now);
+    this.loadReport();
+  }
+
+  /** Raccourci « tout l'historique » : aucune borne envoyée au serveur. */
+  protected allTime(): void {
+    this.exportFrom = '';
+    this.exportTo = '';
+    this.loadReport();
+  }
+
+  /** Calcule le rapport de la période saisie. */
+  protected loadReport(): void {
+    // Garde-fou local : le serveur exige `to >= from` (422 sinon), autant le dire
+    // tout de suite plutôt que de laisser partir une requête vouée à l'échec.
+    if (this.exportFrom && this.exportTo && this.exportTo < this.exportFrom) {
+      this.reportError.set('La date de fin doit être postérieure à la date de début.');
+      return;
+    }
+
+    this.reportLoading.set(true);
+    this.reportError.set(null);
+
+    this.admin.accountingReport(this.periodQuery()).subscribe({
+      next: (report) => {
+        this.report.set(report);
+        this.reportLoading.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.reportLoading.set(false);
+        this.reportError.set(this.messageFor(err));
+      },
+    });
+  }
+
+  /**
+   * Télécharge le grand livre des réservations en CSV sur la MÊME période que le
+   * rapport affiché. Le serveur répond en `streamDownload` : on passe par un blob
+   * puis un lien synthétique, comme l'export de la pointeuse.
+   */
+  protected downloadCsv(): void {
+    if (this.downloading()) return;
+    this.downloading.set(true);
+    this.reportError.set(null);
+
+    this.admin.accountingCsv(this.periodQuery()).subscribe({
+      next: (blob) => {
+        this.downloading.set(false);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `export-comptable-${this.exportFrom || 'debut'}_${this.exportTo || 'aujourdhui'}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.downloading.set(false);
+        this.reportError.set(this.messageFor(err));
+      },
+    });
+  }
+
+  /** Bornes courantes, les champs vides étant omis (= pas de borne). */
+  private periodQuery(): AccountingQuery {
+    return {
+      from: this.exportFrom || undefined,
+      to: this.exportTo || undefined,
+    };
+  }
+
+  /** Date locale → `YYYY-MM-DD` (sans passer par l'UTC, qui décalerait le jour). */
+  private isoDate(date: Date): string {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
+  }
+
+  /** Période du rapport en clair, bornes ouvertes comprises. */
+  protected periodLabel(): string {
+    const period = this.report()?.period;
+    if (!period) return '—';
+    if (!period.from && !period.to) return 'Tout l’historique';
+    if (period.from && !period.to) return `Depuis le ${this.shortDate(period.from)}`;
+    if (!period.from && period.to) return `Jusqu’au ${this.shortDate(period.to)}`;
+    return `Du ${this.shortDate(period.from)} au ${this.shortDate(period.to)}`;
+  }
+
+  /**
+   * Libellé du type réservé. Le serveur renvoie le nom court du modèle
+   * (`class_basename`) : on le traduit pour l'écran.
+   */
+  protected typeLabel(type: string): string {
+    switch (type) {
+      case 'Stay':
+        return 'Nuitée';
+      case 'Vehicle':
+        return 'Véhicule';
+      case 'Experience':
+        return 'Expérience';
+      case 'Trip':
+        return 'Trajet';
+      case 'Property':
+        return 'Bien';
+      default:
+        return type;
+    }
   }
 
   /** Classe CSS du badge de statut. */

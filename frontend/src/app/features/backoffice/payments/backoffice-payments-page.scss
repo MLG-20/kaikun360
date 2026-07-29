@@ -23,6 +23,39 @@
   max-width: 62ch;
 }
 
+// --- Onglets (règlements / export comptable) ---
+.pm-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--k-line);
+  margin-bottom: 18px;
+}
+
+.pm-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    color: var(--k-ink);
+  }
+
+  &.is-active {
+    color: var(--k-brand-600);
+    border-bottom-color: var(--k-brand-600);
+  }
+}
+
 // --- Filtres ---
 .pm-filters {
   display: flex;
@@ -218,6 +251,121 @@
 
 .pm-amount-input {
   max-width: 220px;
+}
+
+// --- Export comptable (F7.3.d) : période, totaux, barre de téléchargement ---
+.pm-period {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 16px;
+  margin-bottom: 18px;
+
+  &__fields {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    font-weight: 600;
+  }
+
+  &__presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--k-line);
+  }
+}
+
+.pm-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pm-kpi {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 14px 16px;
+
+  // La commission est la ligne que le comptable cherche en premier.
+  &--accent {
+    border-color: var(--k-brand-600);
+    background: var(--k-brand-050);
+  }
+
+  &__label {
+    margin: 0 0 6px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    font-weight: 600;
+  }
+
+  &__value {
+    margin: 0;
+    font-family: var(--k-font-display);
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--k-ink);
+  }
+
+  &__hint {
+    margin: 4px 0 0;
+    font-size: 0.78rem;
+    color: var(--k-muted);
+  }
+}
+
+.pm-export-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  background: var(--k-cream);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+
+  &__period {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--k-ink);
+  }
+}
+
+.pm-export-hint {
+  margin: 8px 0 22px;
+  font-size: 0.8rem;
+  color: var(--k-muted);
+  max-width: 78ch;
+}
+
+.pm-section-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--k-ink);
+  margin: 24px 0 10px;
 }
 
 // --- Pagination ---

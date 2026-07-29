@@ -288,6 +288,13 @@ annulées**) et reversements propriétaires **effectués** (module Manage).
 L'encaissement réel relèvera de PayTech (B14) ; ici les montants sont ceux figés
 à la réservation.
 
+**Consommateur (depuis F7.3.d)** : l'onglet *Export comptable* de l'écran
+Paiements du back-office. Il appelle le format JSON pour afficher la période
+(totaux + grand livre + reversements), puis le CSV sur les **mêmes** bornes.
+⚠️ Le CSV ne contient que les réservations : si les reversements doivent y
+figurer un jour, c'est ici qu'il faut agir (un paramètre `scope`), pas côté
+frontend.
+
 ## B13.6 — Exploitation des nuitées & matrice de rôles
 
 **Nuitées** (permission `gerer:nuitees`, agents + admin). Données d'exploitation

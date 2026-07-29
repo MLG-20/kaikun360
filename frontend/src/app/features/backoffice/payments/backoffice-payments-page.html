@@ -3,165 +3,327 @@
     <h1 class="pm-title">Paiements</h1>
     <p class="pm-sub">
       Supervision des règlements. Confirmez les paiements Wave/Orange Money reçus,
-      ou remboursez un paiement encaissé.
+      ou remboursez un paiement encaissé. L’onglet <strong>Export comptable</strong> consolide
+      les flux d’une période et les sort en CSV.
     </p>
   </div>
 </header>
 
-<!-- Filtres -->
-<section class="pm-filters">
-  <input
-    class="k-input pm-search"
-    type="search"
-    name="reference"
-    [(ngModel)]="reference"
-    (keyup.enter)="applyFilters()"
-    placeholder="Référence (interne ou PSP)…" />
-  <select class="k-input" name="status" [(ngModel)]="status" (change)="applyFilters()" aria-label="Filtrer par statut">
-    @for (opt of statusOptions; track opt.value) {
-      <option [value]="opt.value">{{ opt.label }}</option>
-    }
-  </select>
-  <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
-</section>
+<!-- Onglets -->
+<div class="pm-tabs" role="tablist">
+  <button
+    type="button"
+    class="pm-tab"
+    role="tab"
+    [class.is-active]="tab() === 'supervision'"
+    [attr.aria-selected]="tab() === 'supervision'"
+    (click)="switchTab('supervision')">
+    Règlements
+  </button>
+  <button
+    type="button"
+    class="pm-tab"
+    role="tab"
+    [class.is-active]="tab() === 'export'"
+    [attr.aria-selected]="tab() === 'export'"
+    (click)="switchTab('export')">
+    Export comptable
+  </button>
+</div>
 
-@if (actionDone()) {
-  <p class="k-form-info" role="status">{{ actionDone() }}</p>
-}
-@if (actionError() && openPanelId() === null) {
-  <p class="k-form-error" role="alert">{{ actionError() }}</p>
-}
+<!-- ===================== ONGLET RÈGLEMENTS ===================== -->
+@if (tab() === 'supervision') {
+  <!-- Filtres -->
+  <section class="pm-filters">
+    <input
+      class="k-input pm-search"
+      type="search"
+      name="reference"
+      [(ngModel)]="reference"
+      (keyup.enter)="applyFilters()"
+      placeholder="Référence (interne ou PSP)…" />
+    <select class="k-input" name="status" [(ngModel)]="status" (change)="applyFilters()" aria-label="Filtrer par statut">
+      @for (opt of statusOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+    <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
+  </section>
 
-@if (loading()) {
-  <p class="pm-state" role="status">Chargement des paiements…</p>
-} @else if (error()) {
-  <p class="pm-state pm-state--error" role="alert">Impossible de charger les paiements. Réessayez.</p>
-} @else {
-  <p class="pm-count">{{ total() }} paiement(s)</p>
-  <div class="pm-table-wrap">
-    <table class="pm-table">
-      <thead>
-        <tr>
-          <th>Référence</th>
-          <th>Mode</th>
-          <th>Montant</th>
-          <th>Commission</th>
-          <th>Statut</th>
-          <th>Date</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (p of payments(); track p.id) {
+  @if (actionDone()) {
+    <p class="k-form-info" role="status">{{ actionDone() }}</p>
+  }
+  @if (actionError() && openPanelId() === null) {
+    <p class="k-form-error" role="alert">{{ actionError() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="pm-state" role="status">Chargement des paiements…</p>
+  } @else if (error()) {
+    <p class="pm-state pm-state--error" role="alert">Impossible de charger les paiements. Réessayez.</p>
+  } @else {
+    <p class="pm-count">{{ total() }} paiement(s)</p>
+    <div class="pm-table-wrap">
+      <table class="pm-table">
+        <thead>
           <tr>
-            <td>
-              <span class="pm-ref">{{ p.reference }}</span>
-              @if (p.booking_id) {
-                <span class="pm-booking">Résa #{{ p.booking_id }}</span>
-              }
-            </td>
-            <td><span class="pm-mode">{{ modeLabel(p.mode) }}</span></td>
-            <td><span class="pm-amount">{{ xof(p.amount_xof) }}</span></td>
-            <td><span class="pm-muted">{{ xof(p.commission_xof) }}</span></td>
-            <td><span class="pm-badge" [class]="statusClass(p.status)">{{ p.status_label || p.status }}</span></td>
-            <td><span class="pm-muted">{{ shortDate(p.created_at) }}</span></td>
-            <td>
-              <div class="pm-actions">
-                @if (canConfirm(p)) {
-                  <button
-                    type="button"
-                    class="k-btn k-btn--primary pm-btn"
-                    [disabled]="processingId() !== null"
-                    (click)="openConfirm(p)">
-                    Confirmer
-                  </button>
-                }
-                @if (canRefund(p)) {
-                  <button
-                    type="button"
-                    class="k-btn k-btn--ghost pm-btn"
-                    [disabled]="processingId() !== null"
-                    (click)="openRefund(p)">
-                    Rembourser
-                  </button>
-                }
-                @if (!canConfirm(p) && !canRefund(p)) {
-                  <span class="pm-muted">—</span>
-                }
-              </div>
-            </td>
+            <th>Référence</th>
+            <th>Mode</th>
+            <th>Montant</th>
+            <th>Commission</th>
+            <th>Statut</th>
+            <th>Date</th>
+            <th>Action</th>
           </tr>
-
-          <!-- Panneau d'action déplié sous la ligne concernée -->
-          @if (openPanelId() === p.id) {
-            <tr class="pm-panel-row">
-              <td colspan="7">
-                <div class="pm-panel">
-                  @if (actionError()) {
-                    <p class="k-form-error" role="alert">{{ actionError() }}</p>
+        </thead>
+        <tbody>
+          @for (p of payments(); track p.id) {
+            <tr>
+              <td>
+                <span class="pm-ref">{{ p.reference }}</span>
+                @if (p.booking_id) {
+                  <span class="pm-booking">Résa #{{ p.booking_id }}</span>
+                }
+              </td>
+              <td><span class="pm-mode">{{ modeLabel(p.mode) }}</span></td>
+              <td><span class="pm-amount">{{ xof(p.amount_xof) }}</span></td>
+              <td><span class="pm-muted">{{ xof(p.commission_xof) }}</span></td>
+              <td><span class="pm-badge" [class]="statusClass(p.status)">{{ p.status_label || p.status }}</span></td>
+              <td><span class="pm-muted">{{ shortDate(p.created_at) }}</span></td>
+              <td>
+                <div class="pm-actions">
+                  @if (canConfirm(p)) {
+                    <button
+                      type="button"
+                      class="k-btn k-btn--primary pm-btn"
+                      [disabled]="processingId() !== null"
+                      (click)="openConfirm(p)">
+                      Confirmer
+                    </button>
                   }
-                  @if (panelKind() === 'confirm') {
-                    <p class="pm-panel__title">Confirmer un règlement manuel (Wave / Orange Money)</p>
-                    <div class="pm-panel__row">
-                      <input
-                        class="k-input"
-                        type="text"
-                        [(ngModel)]="proofReference"
-                        maxlength="255"
-                        placeholder="Référence de la transaction Wave/OM (preuve, facultatif)…" />
-                      <button
-                        type="button"
-                        class="k-btn k-btn--primary pm-btn"
-                        [disabled]="processingId() !== null"
-                        (click)="confirm(p)">
-                        {{ processingId() === p.id ? '…' : 'Valider la réception' }}
-                      </button>
-                      <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="closePanel()">Annuler</button>
-                    </div>
-                    <p class="pm-panel__hint">La réservation liée sera confirmée à la validation.</p>
-                  } @else if (panelKind() === 'refund') {
-                    <p class="pm-panel__title">Rembourser le paiement {{ p.reference }}</p>
-                    <div class="pm-panel__row">
-                      <input
-                        class="k-input pm-amount-input"
-                        type="number"
-                        [(ngModel)]="refundAmount"
-                        min="1"
-                        [max]="p.amount_xof"
-                        placeholder="Montant (FCFA)" />
-                      <button
-                        type="button"
-                        class="k-btn pm-btn pm-btn--danger"
-                        [disabled]="processingId() !== null"
-                        (click)="refund(p)">
-                        {{ processingId() === p.id ? '…' : 'Confirmer le remboursement' }}
-                      </button>
-                      <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="closePanel()">Annuler</button>
-                    </div>
-                    <p class="pm-panel__hint">Laissez le montant total pour un remboursement intégral (max {{ xof(p.amount_xof) }}).</p>
+                  @if (canRefund(p)) {
+                    <button
+                      type="button"
+                      class="k-btn k-btn--ghost pm-btn"
+                      [disabled]="processingId() !== null"
+                      (click)="openRefund(p)">
+                      Rembourser
+                    </button>
+                  }
+                  @if (!canConfirm(p) && !canRefund(p)) {
+                    <span class="pm-muted">—</span>
                   }
                 </div>
               </td>
             </tr>
-          }
-        } @empty {
-          <tr>
-            <td colspan="7" class="pm-empty">Aucun paiement ne correspond à ces filtres.</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
 
-  @if (lastPage() > 1) {
-    <nav class="pm-pager" aria-label="Pagination">
-      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === 1" (click)="goTo(page() - 1)">
-        ← Précédent
+            <!-- Panneau d'action déplié sous la ligne concernée -->
+            @if (openPanelId() === p.id) {
+              <tr class="pm-panel-row">
+                <td colspan="7">
+                  <div class="pm-panel">
+                    @if (actionError()) {
+                      <p class="k-form-error" role="alert">{{ actionError() }}</p>
+                    }
+                    @if (panelKind() === 'confirm') {
+                      <p class="pm-panel__title">Confirmer un règlement manuel (Wave / Orange Money)</p>
+                      <div class="pm-panel__row">
+                        <input
+                          class="k-input"
+                          type="text"
+                          [(ngModel)]="proofReference"
+                          maxlength="255"
+                          placeholder="Référence de la transaction Wave/OM (preuve, facultatif)…" />
+                        <button
+                          type="button"
+                          class="k-btn k-btn--primary pm-btn"
+                          [disabled]="processingId() !== null"
+                          (click)="confirm(p)">
+                          {{ processingId() === p.id ? '…' : 'Valider la réception' }}
+                        </button>
+                        <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="closePanel()">Annuler</button>
+                      </div>
+                      <p class="pm-panel__hint">La réservation liée sera confirmée à la validation.</p>
+                    } @else if (panelKind() === 'refund') {
+                      <p class="pm-panel__title">Rembourser le paiement {{ p.reference }}</p>
+                      <div class="pm-panel__row">
+                        <input
+                          class="k-input pm-amount-input"
+                          type="number"
+                          [(ngModel)]="refundAmount"
+                          min="1"
+                          [max]="p.amount_xof"
+                          placeholder="Montant (FCFA)" />
+                        <button
+                          type="button"
+                          class="k-btn pm-btn pm-btn--danger"
+                          [disabled]="processingId() !== null"
+                          (click)="refund(p)">
+                          {{ processingId() === p.id ? '…' : 'Confirmer le remboursement' }}
+                        </button>
+                        <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="closePanel()">Annuler</button>
+                      </div>
+                      <p class="pm-panel__hint">Laissez le montant total pour un remboursement intégral (max {{ xof(p.amount_xof) }}).</p>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          } @empty {
+            <tr>
+              <td colspan="7" class="pm-empty">Aucun paiement ne correspond à ces filtres.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (lastPage() > 1) {
+      <nav class="pm-pager" aria-label="Pagination">
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === 1" (click)="goTo(page() - 1)">
+          ← Précédent
+        </button>
+        <span class="pm-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === lastPage()" (click)="goTo(page() + 1)">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+}
+
+<!-- ===================== ONGLET EXPORT COMPTABLE ===================== -->
+@if (tab() === 'export') {
+  <section class="pm-period">
+    <div class="pm-period__fields">
+      <label class="pm-period__field">
+        <span class="pm-period__label">Du</span>
+        <input class="k-input" type="date" name="exportFrom" [(ngModel)]="exportFrom" />
+      </label>
+      <label class="pm-period__field">
+        <span class="pm-period__label">Au</span>
+        <input class="k-input" type="date" name="exportTo" [(ngModel)]="exportTo" />
+      </label>
+      <button type="button" class="k-btn k-btn--primary" [disabled]="reportLoading()" (click)="loadReport()">
+        {{ reportLoading() ? 'Calcul…' : 'Calculer' }}
       </button>
-      <span class="pm-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
-      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === lastPage()" (click)="goTo(page() + 1)">
-        Suivant →
+    </div>
+    <div class="pm-period__presets">
+      <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="thisMonth()">Mois en cours</button>
+      <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="lastMonth()">Mois dernier</button>
+      <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="thisYear()">Année en cours</button>
+      <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="allTime()">Tout l’historique</button>
+    </div>
+  </section>
+
+  @if (reportError()) {
+    <p class="k-form-error" role="alert">{{ reportError() }}</p>
+  }
+
+  @if (reportLoading()) {
+    <p class="pm-state" role="status">Consolidation des flux de la période…</p>
+  } @else if (report(); as rep) {
+    <!-- Totaux de la période -->
+    <section class="pm-kpis" aria-label="Totaux de la période">
+      <article class="pm-kpi">
+        <p class="pm-kpi__label">Volume encaissable</p>
+        <p class="pm-kpi__value">{{ xof(rep.summary.gross_volume_xof) }}</p>
+        <p class="pm-kpi__hint">{{ rep.summary.active_bookings_count }} réservation(s) non annulée(s)</p>
+      </article>
+      <article class="pm-kpi pm-kpi--accent">
+        <p class="pm-kpi__label">Commission plateforme</p>
+        <p class="pm-kpi__value">{{ xof(rep.summary.commission_xof) }}</p>
+        <p class="pm-kpi__hint">Part Kaikun 360 sur la période</p>
+      </article>
+      <article class="pm-kpi">
+        <p class="pm-kpi__label">Reversements propriétaires</p>
+        <p class="pm-kpi__value">{{ xof(rep.summary.payouts_total_xof) }}</p>
+        <p class="pm-kpi__hint">{{ rep.summary.payouts_count }} reversement(s) effectué(s)</p>
+      </article>
+      <article class="pm-kpi">
+        <p class="pm-kpi__label">Lignes au grand livre</p>
+        <p class="pm-kpi__value">{{ rep.summary.bookings_count }}</p>
+        <p class="pm-kpi__hint">Annulations incluses (hors montants)</p>
+      </article>
+    </section>
+
+    <div class="pm-export-bar">
+      <p class="pm-export-bar__period">Période : <strong>{{ periodLabel() }}</strong></p>
+      <button
+        type="button"
+        class="k-btn k-btn--primary"
+        [disabled]="downloading() || rep.summary.bookings_count === 0"
+        (click)="downloadCsv()">
+        {{ downloading() ? 'Préparation…' : 'Télécharger le CSV' }}
       </button>
-    </nav>
+    </div>
+    <p class="pm-export-hint">
+      Le CSV reprend le <strong>grand livre des réservations</strong> (référence, date, type,
+      montant, commission, statut). Les reversements ci-dessous ne sont consultables qu’à l’écran.
+    </p>
+
+    <!-- Grand livre des réservations -->
+    <h2 class="pm-section-title">Grand livre des réservations</h2>
+    <div class="pm-table-wrap">
+      <table class="pm-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Montant</th>
+            <th>Commission</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of rep.bookings; track line.reference) {
+            <tr>
+              <td><span class="pm-ref">{{ line.reference }}</span></td>
+              <td><span class="pm-muted">{{ shortDate(line.date) }}</span></td>
+              <td>{{ typeLabel(line.type) }}</td>
+              <td><span class="pm-amount">{{ xof(line.amount_xof) }}</span></td>
+              <td><span class="pm-muted">{{ xof(line.commission_xof) }}</span></td>
+              <td><span class="pm-badge" [class]="statusClass(line.status)">{{ line.status }}</span></td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="pm-empty">Aucune réservation sur cette période.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Reversements propriétaires -->
+    <h2 class="pm-section-title">Reversements propriétaires effectués</h2>
+    <div class="pm-table-wrap">
+      <table class="pm-table">
+        <thead>
+          <tr>
+            <th>Référence</th>
+            <th>Payé le</th>
+            <th>Propriétaire</th>
+            <th>Période</th>
+            <th>Montant</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of rep.payouts; track line.reference) {
+            <tr>
+              <td><span class="pm-ref">{{ line.reference }}</span></td>
+              <td><span class="pm-muted">{{ shortDate(line.paid_at) }}</span></td>
+              <td>#{{ line.owner_id }}</td>
+              <td><span class="pm-muted">{{ line.period_label || '—' }}</span></td>
+              <td><span class="pm-amount">{{ xof(line.amount_xof) }}</span></td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="pm-empty">Aucun reversement effectué sur cette période.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 }

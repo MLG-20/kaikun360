@@ -176,8 +176,8 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   compteurs bruts `rents/incidents/expenses/payouts` surfacés dans les Resources,
   déjà comptés côté contrôleur admin).
 
-  **F7.3.a Fiche mandat PILOTABLE** (`features/backoffice/dossiers/mandate/`,
-  route `dossiers/mandats/:id`) : une ligne de l'onglet Gestion locative est
+  **F7.3.a Fiche mandat PILOTABLE** (`features/backoffice/rental/detail/`,
+  route `gestion-locative/:id` depuis F7.3.c) : une ligne de la liste est
   désormais **cliquable** et ouvre la fiche de pilotage — l'onglet reste une
   supervision, la fiche porte les actions, comme pour les comptes (F7.2.f) ou le
   team building (F7.2.h). Les six fonctions de la ligne CDC §6 y sont : **le
@@ -194,8 +194,8 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   réponse partielle laisserait des totaux faux à l'écran.
 
   **F7.3.b Fiche demande de construction**
-  (`features/backoffice/dossiers/construction/`, route
-  `dossiers/construction/:id`) : l'onglet Construction n'affichait qu'un tableau,
+  (`features/backoffice/construction/detail/`, route `construction/:id` depuis
+  F7.3.c) : la liste Construction n'affichait qu'un tableau,
   illisible pour un dossier de chantier dont l'essentiel — qui a demandé quoi, où
   en est le chantier, ce qui a été constaté sur place — ne tient pas dans une
   ligne. La fiche restitue **le demandeur** (nom + contact cliquable), **le
@@ -207,6 +207,26 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   devis ou d'affecter un prestataire BTP. Ce sont des trous **backend**
   identifiés à l'audit CDC ; l'écran les signale dans un encart plutôt que
   d'afficher un planning qu'on croirait pilotable.
+
+  **F7.3.d Export comptable** (onglet ajouté à `features/backoffice/payments/`) :
+  `GET /admin/reports/export` était livré et testé depuis B13.5 mais **aucun
+  écran ne l'appelait**. Il est branché ici, et non dans une rubrique de plus,
+  parce que l'export est une fonction du module *Paiements* du CDC §6. L'écran
+  passe donc à deux onglets — **Règlements** (l'existant) et **Export
+  comptable** : période libre (deux dates) + quatre raccourcis (mois en cours,
+  mois dernier, année, tout l'historique), **totaux de la période** en tuiles,
+  puis le **grand livre des réservations** et les **reversements effectués** en
+  tableaux, enfin le **téléchargement CSV** sur la même période (blob + lien
+  synthétique, comme l'export de la pointeuse en F7.1.h). Trois points à
+  connaître : le rapport est **affiché avant d'être téléchargé** (un bouton nu
+  obligerait à ouvrir le fichier pour savoir ce qu'il contient) ; il n'est
+  calculé qu'à la **première** ouverture de l'onglet puis conservé, l'agrégation
+  balayant toutes les réservations ; les dates sont formatées en **local** et non
+  via l'UTC, sinon le 1er du mois glisse d'un jour selon le fuseau. ⚠️ Le CSV
+  serveur ne contient **que les réservations** — l'écran l'écrit sous le bouton
+  au lieu de laisser croire à un export complet. ⚠️ L'écart entre « volume
+  encaissable » et « lignes au grand livre » est **voulu** : les montants
+  n'agrègent que les réservations non annulées.
   **F7.2.f Comptes & documents** (`features/backoffice/accounts/`) : couvre les
   modules CDC §6 *Utilisateurs* et *Documents*. Onglet **Comptes** : annuaire de
   tous les comptes (`GET /admin/users`, filtres rôle / statut / recherche) — chaque
