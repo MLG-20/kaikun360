@@ -27,8 +27,9 @@ class ContactController extends Controller
      * Coordonnées publiques du siège. GET /api/v1/contact-info (public).
      *
      * Expose le sous-ensemble affichable sur la page Contact (e-mail, téléphone,
-     * adresse, latitude/longitude pour la carte). Les valeurs proviennent des
-     * réglages (back-office) : rien n'est codé en dur côté frontend.
+     * adresse, latitude/longitude pour la carte) et, depuis F7.2.l, les
+     * **réseaux sociaux** du pied de page. Les valeurs proviennent des réglages
+     * (back-office) : rien n'est codé en dur côté frontend.
      */
     public function info(): JsonResponse
     {
@@ -38,7 +39,35 @@ class ContactController extends Controller
             'address' => Settings::get('contact.address'),
             'latitude' => Settings::get('contact.latitude'),
             'longitude' => Settings::get('contact.longitude'),
+            // Cast en objet : sans lui, un tableau PHP vide se sérialiserait en
+            // `[]` (tableau JSON) alors que le contrat côté frontend est une
+            // **map** réseau → URL. On garde `{}` dans tous les cas.
+            'social' => (object) $this->socialLinks(),
         ]]);
+    }
+
+    /**
+     * Réseaux sociaux renseignés, dans l'ordre d'affichage du pied de page.
+     *
+     * Les réseaux laissés vides sont **omis** : le frontend rend simplement ce
+     * qu'il reçoit, sans avoir à filtrer, et un réseau non ouvert n'apparaît
+     * jamais sous forme de lien mort.
+     *
+     * @return array<string, string>
+     */
+    private function socialLinks(): array
+    {
+        $networks = ['facebook', 'instagram', 'tiktok', 'linkedin', 'youtube'];
+
+        $links = [];
+        foreach ($networks as $network) {
+            $url = trim((string) Settings::get("social.{$network}", ''));
+            if ($url !== '') {
+                $links[$network] = $url;
+            }
+        }
+
+        return $links;
     }
 
     /**

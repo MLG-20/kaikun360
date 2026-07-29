@@ -3,6 +3,8 @@
 namespace App\Modules\TeamBuilding\Notifications;
 
 use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
+use App\Support\Notifications\NotificationEvent;
+use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,7 +26,12 @@ class NewTeamBuildingRequestNotification extends Notification implements ShouldQ
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // Alerte interne ; arbitrage par les réglages back-office (F7.2.l).
+        return NotificationSettings::channels(
+            NotificationEvent::TEAM_BUILDING_REQUEST,
+            $notifiable,
+            ['mail'],
+        );
     }
 
     public function toMail(object $notifiable): MailMessage

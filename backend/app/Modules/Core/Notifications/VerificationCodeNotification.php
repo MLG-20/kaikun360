@@ -32,6 +32,10 @@ class VerificationCodeNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
+        // ⚠️ Notification de SÉCURITÉ : volontairement EXCLUE du pilotage des
+        // notifications du back-office (F7.2.l). Couper ce canal condamnerait
+        // l'accès (2FA admin) et l'inscription — aucun réglage ne doit pouvoir
+        // le faire. Voir App\Support\Notifications\NotificationEvent.
         // Code destiné au téléphone → SMS ; sinon e-mail.
         return $this->channel === 'phone' ? ['sms'] : ['mail'];
     }

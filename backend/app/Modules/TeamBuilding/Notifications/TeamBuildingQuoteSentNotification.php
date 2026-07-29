@@ -3,6 +3,8 @@
 namespace App\Modules\TeamBuilding\Notifications;
 
 use App\Modules\TeamBuilding\Models\TeamBuildingQuote;
+use App\Support\Notifications\NotificationEvent;
+use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -31,7 +33,12 @@ class TeamBuildingQuoteSentNotification extends Notification implements ShouldQu
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        // Arbitrage par les réglages back-office (F7.2.l).
+        return NotificationSettings::channels(
+            NotificationEvent::TEAM_BUILDING_QUOTE,
+            $notifiable,
+            ['mail', 'database'],
+        );
     }
 
     public function toMail(object $notifiable): MailMessage

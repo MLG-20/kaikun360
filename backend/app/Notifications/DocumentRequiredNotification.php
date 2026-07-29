@@ -2,6 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Support\Notifications\NotificationEvent;
+use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -26,7 +28,12 @@ class DocumentRequiredNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return $notifiable->phone ? ['mail', 'sms'] : ['mail'];
+        // Canaux souhaités ; arbitrage final par les réglages back-office (F7.2.l).
+        return NotificationSettings::channels(
+            NotificationEvent::DOCUMENT_REQUIRED,
+            $notifiable,
+            ['mail', 'sms'],
+        );
     }
 
     public function toMail(object $notifiable): MailMessage

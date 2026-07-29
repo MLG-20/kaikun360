@@ -50,3 +50,48 @@ Le binding se fait dans `AppServiceProvider` ; le canal `sms` est enregistré vi
 
 > Testé via `Http::fake` (`tests/Feature/Notification/OrangeSmsProviderTest`) —
 > aucune clé réelle nécessaire pour la suite de tests.
+
+## Pilotage des canaux & des événements (F7.2.l)
+
+Ce dossier héberge aussi le **point de décision unique des canaux** :
+`NotificationSettings` et l'enum `NotificationEvent`.
+
+Avant F7.2.l, chaque notification codait ses canaux en dur dans son `via()` :
+l'équipe ne pouvait ni couper le SMS (facturé à l'envoi) ni calmer un événement
+trop bavard sans redéployer — alors que le CDC §6 range « notifications » dans
+le module *Paramètres*. Les 12 notifications d'exploitation appellent donc :
+
+```php
+public function via(object $notifiable): array
+{
+    return NotificationSettings::channels(
+        NotificationEvent::BOOKING_CONFIRMED,
+        $notifiable,
+        ['mail', 'sms', 'database'],   // canaux SOUHAITÉS
+    );
+}
+```
+
+Trois règles, dans cet ordre :
+
+1. **Événement coupé** (`notifications.events`) → tableau vide. Un `via()` vide
+   court-circuite l'envoi : rien ne part, pas même l'entrée `database`.
+2. **Canal coupé** (`notifications.email_enabled`, `notifications.sms_enabled`)
+   → le canal est retiré de la liste.
+3. **SMS sans numéro** → retiré. Cette vérification vivait dupliquée dans
+   plusieurs `via()` ; elle est désormais faite ici, une seule fois.
+
+Le canal `database` échappe aux coupures de canal : il ne coûte rien, alimente
+l'écran « Mes notifications » et constitue la trace de ce qui a été signalé.
+Seule la coupure de l'**événement** le supprime.
+
+Un événement absent de la configuration enregistrée est **actif** : ajouter une
+notification au code ne l'éteint jamais par surprise.
+
+> ⚠️ **Les notifications de sécurité ne passent pas par ce helper.**
+> `App\Modules\Core\Notifications\VerificationCodeNotification` (codes de
+> vérification, 2FA admin) garde ses canaux en dur : un réglage capable de
+> condamner l'accès au back-office et l'inscription ne doit pas exister.
+
+Les réglages sont administrés par l'écran back-office **Paramètres** (F7.2.l) ;
+les valeurs par défaut sont dans `SettingsRepository::DEFAULTS`.

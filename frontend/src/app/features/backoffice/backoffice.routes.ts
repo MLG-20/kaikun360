@@ -161,6 +161,16 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Dossier diaspora — Back-office Kaikun 360',
       },
       {
+        // F7.2.l — Paramètres & contenu : réglages (commissions, tarifs),
+        // notifications, pages & FAQ, référentiels (villes, catégories).
+        path: 'parametres',
+        loadComponent: () =>
+          import('./settings/backoffice-settings-page').then(
+            (m) => m.BackofficeSettingsPageComponent,
+          ),
+        title: 'Paramètres & contenu — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         loadComponent: () =>

@@ -21,7 +21,8 @@ type BoIcon =
   | 'globe'
   | 'users'
   | 'shield'
-  | 'clock';
+  | 'clock'
+  | 'sliders';
 
 /** Une rubrique de navigation du poste de commandement. */
 interface BoNavItem {
@@ -83,6 +84,7 @@ export class BackofficeLayoutComponent {
     { label: 'Avis & qualité', path: 'qualite', icon: 'star', ready: true },
     { label: 'Team building', path: 'team-building', icon: 'briefcase', ready: true },
     { label: 'Diaspora', path: 'diaspora', icon: 'globe', ready: true },
+    { label: 'Paramètres', path: 'parametres', icon: 'sliders', ready: true },
     { label: 'Équipe', path: 'equipe', icon: 'users', ready: true },
     { label: 'Permissions', path: 'permissions', icon: 'shield', ready: true },
     { label: 'Pointeuse', path: 'pointeuse', icon: 'clock', ready: true },

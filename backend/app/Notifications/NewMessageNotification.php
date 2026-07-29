@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Models\Message;
+use App\Support\Notifications\NotificationEvent;
+use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
@@ -29,7 +31,12 @@ class NewMessageNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        // Canal unique, mais l'équipe peut couper l'événement (F7.2.l).
+        return NotificationSettings::channels(
+            NotificationEvent::NEW_MESSAGE,
+            $notifiable,
+            ['database'],
+        );
     }
 
     /**

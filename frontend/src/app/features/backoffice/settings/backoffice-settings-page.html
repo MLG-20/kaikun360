@@ -1,0 +1,605 @@
+<header class="st-head">
+  <div>
+    <h1 class="st-title">Paramètres &amp; contenu</h1>
+    <p class="st-sub">
+      Réglages de la plateforme, notifications, contenu éditorial et référentiels.
+      Ces valeurs s’appliquent à tout le site sans redéploiement — commissions,
+      barème de construction, pages publiques, villes.
+    </p>
+  </div>
+</header>
+
+<!-- Onglets -->
+<div class="st-tabs" role="tablist">
+  <button
+    type="button"
+    class="st-tab"
+    role="tab"
+    [class.is-active]="tab() === 'settings'"
+    [attr.aria-selected]="tab() === 'settings'"
+    (click)="switchTab('settings')">
+    Réglages
+  </button>
+  <button
+    type="button"
+    class="st-tab"
+    role="tab"
+    [class.is-active]="tab() === 'notifications'"
+    [attr.aria-selected]="tab() === 'notifications'"
+    (click)="switchTab('notifications')">
+    Notifications
+  </button>
+  <button
+    type="button"
+    class="st-tab"
+    role="tab"
+    [class.is-active]="tab() === 'content'"
+    [attr.aria-selected]="tab() === 'content'"
+    (click)="switchTab('content')">
+    Contenu
+  </button>
+  <button
+    type="button"
+    class="st-tab"
+    role="tab"
+    [class.is-active]="tab() === 'reference'"
+    [attr.aria-selected]="tab() === 'reference'"
+    (click)="switchTab('reference')">
+    Référentiels
+  </button>
+</div>
+
+<!-- ===================== ONGLET RÉGLAGES ===================== -->
+@if (tab() === 'settings') {
+  @if (settingsLoading()) {
+    <p class="st-state" role="status">Chargement des paramètres…</p>
+  } @else if (settingsError()) {
+    <p class="st-state st-state--error" role="alert">
+      Impossible de charger les paramètres. Cet écran demande le droit « paramètres ».
+    </p>
+  } @else {
+    @if (settingsActionError()) {
+      <p class="st-state st-state--error" role="alert">{{ settingsActionError() }}</p>
+    }
+    @if (settingsMessage()) {
+      <p class="st-state st-state--ok" role="status">{{ settingsMessage() }}</p>
+    }
+
+    @for (group of ['commissions', 'general']; track group) {
+      <section class="st-card">
+        <h2 class="st-card-title">{{ groupLabel(group) }}</h2>
+        <div class="st-grid">
+          @for (field of fieldsOf(group); track field.key) {
+            <label class="st-field">
+              <span class="st-label">
+                {{ field.label }}
+                @if (!field.overridden) {
+                  <span class="st-tag" title="Aucune surcharge enregistrée : valeur par défaut du code">
+                    défaut
+                  </span>
+                }
+              </span>
+              <input
+                class="k-input"
+                [type]="field.type === 'number' ? 'number' : 'text'"
+                step="any"
+                [name]="field.key"
+                [ngModel]="draftValue(field.key)"
+                (ngModelChange)="setDraftValue(field.key, $event)" />
+              @if (field.hint) {
+                <span class="st-hint">{{ field.hint }}</span>
+              }
+            </label>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- Barème du simulateur de construction (« tarifs » du CDC) -->
+    <section class="st-card">
+      <h2 class="st-card-title">Barème du simulateur de construction</h2>
+      <p class="st-card-sub">
+        Alimente l’estimation de coût affichée aux clients. Les valeurs livrées sont
+        des ordres de grandeur : remplacez-les par vos chiffres validés.
+      </p>
+
+      @for (section of pricingSections(); track section) {
+        <div class="st-subsection">
+          <h3 class="st-subtitle">{{ pricingSectionLabel(section) }}</h3>
+          <div class="st-grid">
+            @for (field of pricingFieldsOf(section); track field.path) {
+              <label class="st-field">
+                <span class="st-label">{{ field.label }}</span>
+                <input
+                  class="k-input"
+                  type="number"
+                  step="any"
+                  [name]="field.path"
+                  [ngModel]="field.value"
+                  (ngModelChange)="setPricingValue(field.path, $event)" />
+              </label>
+            }
+          </div>
+        </div>
+      }
+    </section>
+
+    <div class="st-actions">
+      <button type="button" class="k-btn k-btn--primary" [disabled]="settingsSaving()" (click)="saveSettings()">
+        {{ settingsSaving() ? 'Enregistrement…' : 'Enregistrer les réglages' }}
+      </button>
+    </div>
+  }
+}
+
+<!-- ===================== ONGLET NOTIFICATIONS ===================== -->
+@if (tab() === 'notifications') {
+  @if (settingsLoading()) {
+    <p class="st-state" role="status">Chargement…</p>
+  } @else if (settingsError()) {
+    <p class="st-state st-state--error" role="alert">Impossible de charger les paramètres.</p>
+  } @else {
+    @if (notificationsError()) {
+      <p class="st-state st-state--error" role="alert">{{ notificationsError() }}</p>
+    }
+    @if (notificationsMessage()) {
+      <p class="st-state st-state--ok" role="status">{{ notificationsMessage() }}</p>
+    }
+
+    <section class="st-card">
+      <h2 class="st-card-title">Canaux d’envoi</h2>
+      <p class="st-card-sub">
+        Coupure globale d’un canal. Le SMS est facturé à l’envoi : le couper reste la
+        première économie. L’historique dans l’application (cloche « Mes notifications »)
+        n’est jamais coupé par ces interrupteurs.
+      </p>
+
+      <label class="st-switch">
+        <input type="checkbox" name="emailEnabled" [ngModel]="emailEnabled()" (ngModelChange)="emailEnabled.set($event)" />
+        <span class="st-switch-text">
+          <strong>E-mail</strong>
+          <em>Confirmations, devis, alertes internes.</em>
+        </span>
+      </label>
+
+      <label class="st-switch">
+        <input type="checkbox" name="smsEnabled" [ngModel]="smsEnabled()" (ngModelChange)="smsEnabled.set($event)" />
+        <span class="st-switch-text">
+          <strong>SMS</strong>
+          <em>Uniquement vers les comptes ayant un numéro renseigné.</em>
+        </span>
+      </label>
+
+      <p class="st-note">
+        🔒 Les codes de vérification et la double authentification ne sont pas
+        concernés : ils partent toujours, quel que soit ce réglage.
+      </p>
+    </section>
+
+    <section class="st-card">
+      <h2 class="st-card-title">Clients &amp; partenaires</h2>
+      @for (event of clientEvents(); track event.value) {
+        <label class="st-switch">
+          <input
+            type="checkbox"
+            [name]="event.value"
+            [ngModel]="event.enabled"
+            (ngModelChange)="toggleEvent(event.value, $event)" />
+          <span class="st-switch-text">
+            <strong>{{ event.label }}</strong>
+            <em>{{ event.description }}</em>
+          </span>
+        </label>
+      }
+    </section>
+
+    <section class="st-card">
+      <h2 class="st-card-title">Équipe Kaikun</h2>
+      @for (event of staffEvents(); track event.value) {
+        <label class="st-switch">
+          <input
+            type="checkbox"
+            [name]="event.value"
+            [ngModel]="event.enabled"
+            (ngModelChange)="toggleEvent(event.value, $event)" />
+          <span class="st-switch-text">
+            <strong>{{ event.label }}</strong>
+            <em>{{ event.description }}</em>
+          </span>
+        </label>
+      }
+    </section>
+
+    <div class="st-actions">
+      <button type="button" class="k-btn k-btn--primary" [disabled]="notificationsSaving()" (click)="saveNotifications()">
+        {{ notificationsSaving() ? 'Enregistrement…' : 'Enregistrer les notifications' }}
+      </button>
+    </div>
+  }
+}
+
+<!-- ===================== ONGLET CONTENU ===================== -->
+@if (tab() === 'content') {
+  <div class="st-subtabs">
+    <button type="button" class="st-subtab" [class.is-active]="contentTab() === 'pages'" (click)="switchContentTab('pages')">
+      Pages
+    </button>
+    <button type="button" class="st-subtab" [class.is-active]="contentTab() === 'faqs'" (click)="switchContentTab('faqs')">
+      FAQ
+    </button>
+  </div>
+
+  <!-- Pages -->
+  @if (contentTab() === 'pages') {
+    @if (pageActionError()) {
+      <p class="st-state st-state--error" role="alert">{{ pageActionError() }}</p>
+    }
+
+    @if (editingPage()) {
+      <section class="st-card">
+        <h2 class="st-card-title">{{ editingPage() === 'new' ? 'Nouvelle page' : 'Modifier la page' }}</h2>
+        <div class="st-grid">
+          <label class="st-field">
+            <span class="st-label">Identifiant d’URL (slug)</span>
+            <input class="k-input" type="text" name="pageSlug" [(ngModel)]="pageForm.slug" placeholder="mentions-legales" />
+            <span class="st-hint">Minuscules, chiffres et tirets. Adresse publique : /pages/{{ pageForm.slug || '…' }}</span>
+          </label>
+          <label class="st-field">
+            <span class="st-label">Titre</span>
+            <input class="k-input" type="text" name="pageTitle" [(ngModel)]="pageForm.title" />
+          </label>
+        </div>
+        <label class="st-field st-field--full">
+          <span class="st-label">Contenu</span>
+          <textarea class="k-input st-textarea" rows="12" name="pageBody" [(ngModel)]="pageForm.body"></textarea>
+        </label>
+        <label class="st-switch">
+          <input type="checkbox" name="pagePublished" [(ngModel)]="pageForm.is_published" />
+          <span class="st-switch-text">
+            <strong>Publiée</strong>
+            <em>Une page masquée renvoie une 404 sur le site public.</em>
+          </span>
+        </label>
+        <div class="st-actions">
+          <button type="button" class="k-btn k-btn--ghost" (click)="cancelPage()">Annuler</button>
+          <button type="button" class="k-btn k-btn--primary" (click)="savePage()">Enregistrer</button>
+        </div>
+      </section>
+    } @else {
+      <div class="st-actions st-actions--start">
+        <button type="button" class="k-btn k-btn--primary" (click)="newPage()">Nouvelle page</button>
+      </div>
+    }
+
+    @if (pagesLoading()) {
+      <p class="st-state" role="status">Chargement des pages…</p>
+    } @else if (pagesError()) {
+      <p class="st-state st-state--error" role="alert">Impossible de charger les pages.</p>
+    } @else {
+      <div class="st-table-wrap">
+        <table class="st-table">
+          <thead>
+            <tr>
+              <th>Titre</th>
+              <th>Slug</th>
+              <th>Statut</th>
+              <th>Modifiée le</th>
+              <th aria-label="Actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (page of pages(); track page.id) {
+              <tr>
+                <td><span class="st-strong">{{ page.title }}</span></td>
+                <td><code class="st-code">{{ page.slug }}</code></td>
+                <td>
+                  <span class="st-badge" [class.is-ok]="page.is_published" [class.is-off]="!page.is_published">
+                    {{ page.is_published ? 'Publiée' : 'Masquée' }}
+                  </span>
+                </td>
+                <td><span class="st-muted">{{ shortDate(page.updated_at) }}</span></td>
+                <td class="st-actions-cell">
+                  <div class="st-btns">
+                    <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="editPage(page)">Modifier</button>
+                    <button type="button" class="k-btn k-btn--sm k-btn--danger" (click)="deletePage(page)">Supprimer</button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="st-empty">Aucune page pour l’instant.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- FAQ -->
+  @if (contentTab() === 'faqs') {
+    @if (faqActionError()) {
+      <p class="st-state st-state--error" role="alert">{{ faqActionError() }}</p>
+    }
+
+    @if (editingFaq()) {
+      <section class="st-card">
+        <h2 class="st-card-title">{{ editingFaq() === 'new' ? 'Nouvelle entrée' : 'Modifier l’entrée' }}</h2>
+        <label class="st-field st-field--full">
+          <span class="st-label">Question</span>
+          <input class="k-input" type="text" name="faqQuestion" [(ngModel)]="faqForm.question" />
+        </label>
+        <label class="st-field st-field--full">
+          <span class="st-label">Réponse</span>
+          <textarea class="k-input st-textarea" rows="6" name="faqAnswer" [(ngModel)]="faqForm.answer"></textarea>
+        </label>
+        <div class="st-grid">
+          <label class="st-field">
+            <span class="st-label">Catégorie</span>
+            <input class="k-input" type="text" name="faqCategory" [(ngModel)]="faqForm.category" placeholder="Nuitées, Paiement…" />
+          </label>
+          <label class="st-field">
+            <span class="st-label">Position</span>
+            <input class="k-input" type="number" min="0" name="faqPosition" [(ngModel)]="faqForm.position" />
+            <span class="st-hint">Ordre d’affichage sur la page FAQ publique.</span>
+          </label>
+        </div>
+        <label class="st-switch">
+          <input type="checkbox" name="faqPublished" [(ngModel)]="faqForm.is_published" />
+          <span class="st-switch-text">
+            <strong>Publiée</strong>
+            <em>Une entrée masquée reste invisible du public.</em>
+          </span>
+        </label>
+        <div class="st-actions">
+          <button type="button" class="k-btn k-btn--ghost" (click)="cancelFaq()">Annuler</button>
+          <button type="button" class="k-btn k-btn--primary" (click)="saveFaq()">Enregistrer</button>
+        </div>
+      </section>
+    } @else {
+      <div class="st-actions st-actions--start">
+        <button type="button" class="k-btn k-btn--primary" (click)="newFaq()">Nouvelle entrée</button>
+      </div>
+    }
+
+    @if (faqsLoading()) {
+      <p class="st-state" role="status">Chargement de la FAQ…</p>
+    } @else if (faqsError()) {
+      <p class="st-state st-state--error" role="alert">Impossible de charger la FAQ.</p>
+    } @else {
+      <div class="st-table-wrap">
+        <table class="st-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Question</th>
+              <th>Catégorie</th>
+              <th>Statut</th>
+              <th aria-label="Actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (faq of faqs(); track faq.id) {
+              <tr>
+                <td><span class="st-muted">{{ faq.position ?? '—' }}</span></td>
+                <td>
+                  <span class="st-strong">{{ faq.question }}</span>
+                  <span class="st-place">{{ faq.answer }}</span>
+                </td>
+                <td><span class="st-muted">{{ faq.category || '—' }}</span></td>
+                <td>
+                  <span class="st-badge" [class.is-ok]="faq.is_published" [class.is-off]="!faq.is_published">
+                    {{ faq.is_published ? 'Publiée' : 'Masquée' }}
+                  </span>
+                </td>
+                <td class="st-actions-cell">
+                  <div class="st-btns">
+                    <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="editFaq(faq)">Modifier</button>
+                    <button type="button" class="k-btn k-btn--sm k-btn--danger" (click)="deleteFaq(faq)">Supprimer</button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="st-empty">Aucune entrée de FAQ pour l’instant.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+}
+
+<!-- ===================== ONGLET RÉFÉRENTIELS ===================== -->
+@if (tab() === 'reference') {
+  <section class="st-card">
+    <h2 class="st-card-title">Villes &amp; découpage administratif</h2>
+    <p class="st-card-sub">
+      Sélectionnez un département pour gérer ses communes. Les 14 régions sont une
+      nomenclature nationale : elles ne sont pas modifiables ici.
+    </p>
+
+    @if (departmentActionError()) {
+      <p class="st-state st-state--error" role="alert">{{ departmentActionError() }}</p>
+    }
+
+    @if (editingDepartment()) {
+      <div class="st-inline-form">
+        <input class="k-input" type="text" name="departmentName" [(ngModel)]="departmentForm.name" placeholder="Nom du département" />
+        <button type="button" class="k-btn k-btn--primary k-btn--sm" (click)="saveDepartment()">Enregistrer</button>
+        <button type="button" class="k-btn k-btn--ghost k-btn--sm" (click)="cancelDepartment()">Annuler</button>
+      </div>
+    }
+
+    @if (geoLoading()) {
+      <p class="st-state" role="status">Chargement du référentiel…</p>
+    } @else if (geoError()) {
+      <p class="st-state st-state--error" role="alert">Impossible de charger le référentiel géographique.</p>
+    } @else {
+      <div class="st-geo">
+        <!-- Arbre régions → départements -->
+        <div class="st-tree">
+          @for (region of regions(); track region.id) {
+            <div class="st-tree-region">
+              <button type="button" class="st-tree-toggle" (click)="toggleRegion(region)">
+                <span class="st-caret">{{ openRegionId() === region.id ? '▾' : '▸' }}</span>
+                <span class="st-tree-name">{{ region.name }}</span>
+                <span class="st-muted">{{ region.communes_count }} communes</span>
+              </button>
+
+              @if (openRegionId() === region.id) {
+                <ul class="st-tree-list">
+                  @for (department of region.departments; track department.id) {
+                    <li class="st-tree-item" [class.is-selected]="selectedDepartment()?.id === department.id">
+                      <button type="button" class="st-tree-link" (click)="selectDepartment(department)">
+                        {{ department.name }}
+                        <span class="st-muted">({{ department.communes_count }})</span>
+                      </button>
+                      <span class="st-tree-tools">
+                        <button type="button" class="st-mini" title="Renommer" (click)="editDepartment(department)">✎</button>
+                        <button type="button" class="st-mini st-mini--danger" title="Supprimer" (click)="deleteDepartment(department)">✕</button>
+                      </span>
+                    </li>
+                  }
+                </ul>
+                <button type="button" class="k-btn k-btn--sm k-btn--ghost st-add-dep" (click)="newDepartment(region)">
+                  + Département
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Communes du département sélectionné -->
+        <div class="st-communes">
+          @if (!selectedDepartment()) {
+            <p class="st-state">Choisissez un département dans l’arborescence pour voir ses communes.</p>
+          } @else {
+            <div class="st-communes-head">
+              <h3 class="st-subtitle">{{ selectedDepartment()!.name }} — {{ communesTotal() }} commune(s)</h3>
+              <div class="st-communes-tools">
+                <input
+                  class="k-input"
+                  type="search"
+                  name="communeSearch"
+                  [(ngModel)]="communeSearch"
+                  (keyup.enter)="applyCommuneSearch()"
+                  placeholder="Rechercher une commune…" />
+                <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="newCommune()">Nouvelle commune</button>
+              </div>
+            </div>
+
+            @if (communeActionError()) {
+              <p class="st-state st-state--error" role="alert">{{ communeActionError() }}</p>
+            }
+
+            @if (editingCommune()) {
+              <div class="st-inline-form">
+                <input class="k-input" type="text" name="communeName" [(ngModel)]="communeForm.name" placeholder="Nom de la commune" />
+                <input class="k-input" type="text" name="communeType" [(ngModel)]="communeForm.type" placeholder="Type (commune, commune d’arrondissement)" />
+                <button type="button" class="k-btn k-btn--primary k-btn--sm" (click)="saveCommune()">Enregistrer</button>
+                <button type="button" class="k-btn k-btn--ghost k-btn--sm" (click)="cancelCommune()">Annuler</button>
+              </div>
+            }
+
+            @if (communesLoading()) {
+              <p class="st-state" role="status">Chargement des communes…</p>
+            } @else {
+              <div class="st-table-wrap">
+                <table class="st-table">
+                  <thead>
+                    <tr>
+                      <th>Commune</th>
+                      <th>Type</th>
+                      <th>Rattachements</th>
+                      <th aria-label="Actions"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (commune of communes(); track commune.id) {
+                      <tr>
+                        <td><span class="st-strong">{{ commune.name }}</span></td>
+                        <td><span class="st-muted">{{ commune.type || '—' }}</span></td>
+                        <td>
+                          @if (commune.deletable) {
+                            <span class="st-muted">Aucun</span>
+                          } @else {
+                            <span class="st-badge is-warn">
+                              {{ commune.properties_count }} bien(s) · {{ commune.users_count }} compte(s)
+                            </span>
+                          }
+                        </td>
+                        <td class="st-actions-cell">
+                          <div class="st-btns">
+                            <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="editCommune(commune)">Renommer</button>
+                            <button
+                              type="button"
+                              class="k-btn k-btn--sm k-btn--danger"
+                              [disabled]="!commune.deletable"
+                              [title]="commune.deletable ? 'Supprimer' : 'Commune utilisée : suppression bloquée'"
+                              (click)="deleteCommune(commune)">
+                              Supprimer
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    } @empty {
+                      <tr>
+                        <td colspan="4" class="st-empty">Aucune commune dans ce département.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              @if (communesLastPage() > 1) {
+                <nav class="st-pager" aria-label="Pagination">
+                  <button type="button" class="k-btn k-btn--ghost k-btn--sm" [disabled]="communesPage() === 1" (click)="goToCommunes(communesPage() - 1)">
+                    ← Précédent
+                  </button>
+                  <span class="st-muted">Page {{ communesPage() }} / {{ communesLastPage() }}</span>
+                  <button type="button" class="k-btn k-btn--ghost k-btn--sm" [disabled]="communesPage() === communesLastPage()" (click)="goToCommunes(communesPage() + 1)">
+                    Suivant →
+                  </button>
+                </nav>
+              }
+            }
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <!-- Catégories : lecture seule, avec l'écart assumé -->
+  <section class="st-card">
+    <h2 class="st-card-title">Catégories</h2>
+    <p class="st-note st-note--warn">
+      ⚠️ Les catégories sont définies dans le code : elles pilotent la logique métier
+      (règles de validation, calcul de commission, filtres de recherche). Les rendre
+      modifiables depuis cette page demanderait de sortir cette logique du code —
+      chantier hors du périmètre de cet écran. Elles sont donc affichées en lecture
+      seule ; une nouvelle catégorie passe par une évolution technique.
+    </p>
+
+    @if (referenceLoading()) {
+      <p class="st-state" role="status">Chargement des nomenclatures…</p>
+    } @else {
+      <div class="st-cat-grid">
+        @for (group of categoryGroups(); track group.label) {
+          <div class="st-cat">
+            <h3 class="st-subtitle">{{ group.label }}</h3>
+            <ul class="st-cat-list">
+              @for (item of group.items; track item.value) {
+                <li>
+                  <span class="st-strong">{{ item.label }}</span>
+                  <code class="st-code">{{ item.value }}</code>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+    }
+  </section>
+}

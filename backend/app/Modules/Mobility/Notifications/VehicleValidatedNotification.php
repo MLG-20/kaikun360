@@ -3,6 +3,8 @@
 namespace App\Modules\Mobility\Notifications;
 
 use App\Modules\Mobility\Models\Vehicle;
+use App\Support\Notifications\NotificationEvent;
+use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,7 +26,12 @@ class VehicleValidatedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // Même événement « Offre validée » que le bien immobilier (F7.2.l).
+        return NotificationSettings::channels(
+            NotificationEvent::RESOURCE_VALIDATED,
+            $notifiable,
+            ['mail'],
+        );
     }
 
     public function toMail(object $notifiable): MailMessage

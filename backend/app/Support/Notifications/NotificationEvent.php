@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Support\Notifications;
+
+/**
+ * Catalogue des ÉVÉNEMENTS notifiables pilotables depuis le back-office
+ * (F7.2.l — CDC §6, module *Paramètres* : « … pages, FAQ, notifications »).
+ *
+ * Chaque classe de notification d'exploitation déclare l'événement dont elle
+ * relève ; l'équipe peut alors couper cet événement depuis l'écran Paramètres
+ * sans redéploiement (voir {@see NotificationSettings}).
+ *
+ * ⚠️ **Les notifications de SÉCURITÉ n'y figurent pas volontairement.** Les
+ * codes de vérification et la double authentification
+ * ({@see \App\Modules\Core\Notifications\VerificationCodeNotification}) ne sont
+ * PAS désactivables : les couper condamnerait l'accès au back-office et
+ * casserait l'inscription. Un réglage capable de verrouiller la plateforme
+ * n'a pas sa place dans une interface d'administration.
+ *
+ * Un événement ABSENT de la configuration enregistrée est considéré comme
+ * ACTIF : ajouter une notification au code ne l'éteint jamais par surprise.
+ */
+enum NotificationEvent: string
+{
+    // ---- Destinataire : le client / le propriétaire -----------------------
+    case BOOKING_CONFIRMED = 'booking_confirmed';
+    case QUOTE_RECEIVED = 'quote_received';
+    case DOCUMENT_REQUIRED = 'document_required';
+    case REQUEST_STATUS_CHANGED = 'request_status_changed';
+    case NEW_MESSAGE = 'new_message';
+    case RESOURCE_VALIDATED = 'resource_validated';
+    case TEAM_BUILDING_QUOTE = 'team_building_quote';
+
+    // ---- Destinataire : l'équipe Kaikun -----------------------------------
+    case NEW_REQUEST_TO_HANDLE = 'new_request_to_handle';
+    case RESOURCE_TO_VALIDATE = 'resource_to_validate';
+    case TEAM_BUILDING_REQUEST = 'team_building_request';
+
+    /**
+     * Libellé lisible, affiché dans la liste des interrupteurs.
+     */
+    public function label(): string
+    {
+        return match ($this) {
+            self::BOOKING_CONFIRMED => 'Confirmation de réservation',
+            self::QUOTE_RECEIVED => 'Devis reçu',
+            self::DOCUMENT_REQUIRED => 'Pièce justificative demandée',
+            self::REQUEST_STATUS_CHANGED => 'Changement de statut d’une demande',
+            self::NEW_MESSAGE => 'Nouveau message',
+            self::RESOURCE_VALIDATED => 'Offre validée (bien, véhicule)',
+            self::TEAM_BUILDING_QUOTE => 'Devis team building envoyé',
+            self::NEW_REQUEST_TO_HANDLE => 'Nouvelle demande à traiter',
+            self::RESOURCE_TO_VALIDATE => 'Nouvelle offre à valider',
+            self::TEAM_BUILDING_REQUEST => 'Nouvelle demande team building',
+        };
+    }
+
+    /**
+     * Précision affichée sous le libellé : à qui part la notification et quand.
+     */
+    public function description(): string
+    {
+        return match ($this) {
+            self::BOOKING_CONFIRMED => 'Au client, dès que le paiement de sa réservation est encaissé.',
+            self::QUOTE_RECEIVED => 'Au client, quand un devis lui est adressé.',
+            self::DOCUMENT_REQUIRED => 'À l’utilisateur, quand l’équipe réclame une pièce à son dossier.',
+            self::REQUEST_STATUS_CHANGED => 'Au demandeur, à chaque étape de sa demande (reçue, en vérification, confirmée…).',
+            self::NEW_MESSAGE => 'Au destinataire d’un message dans la messagerie interne.',
+            self::RESOURCE_VALIDATED => 'Au propriétaire ou au prestataire, quand son offre est approuvée et publiée.',
+            self::TEAM_BUILDING_QUOTE => 'À l’entreprise, quand son devis pack lui est envoyé.',
+            self::NEW_REQUEST_TO_HANDLE => 'À l’équipe, à l’arrivée d’une demande de service.',
+            self::RESOURCE_TO_VALIDATE => 'À l’équipe, quand un bien ou un véhicule est déposé et attend une décision.',
+            self::TEAM_BUILDING_REQUEST => 'À l’équipe, à l’arrivée d’une demande d’entreprise.',
+        };
+    }
+
+    /**
+     * Public visé — sert à regrouper les interrupteurs en deux blocs à l'écran.
+     */
+    public function audience(): string
+    {
+        return match ($this) {
+            self::NEW_REQUEST_TO_HANDLE,
+            self::RESOURCE_TO_VALIDATE,
+            self::TEAM_BUILDING_REQUEST => 'Équipe Kaikun',
+            default => 'Clients & partenaires',
+        };
+    }
+
+    /**
+     * Catalogue complet pour le back-office : `[{ value, label, description,
+     * audience, enabled }]`, l'état actif venant des réglages enregistrés.
+     *
+     * @return list<array{value: string, label: string, description: string, audience: string, enabled: bool}>
+     */
+    public static function catalog(): array
+    {
+        return array_map(fn (self $event) => [
+            'value' => $event->value,
+            'label' => $event->label(),
+            'description' => $event->description(),
+            'audience' => $event->audience(),
+            'enabled' => NotificationSettings::eventEnabled($event),
+        ], self::cases());
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function values(): array
+    {
+        return array_map(fn (self $event) => $event->value, self::cases());
+    }
+}

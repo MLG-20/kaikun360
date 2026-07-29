@@ -41,6 +41,28 @@ class SettingsRepository
         'contact.latitude' => ['value' => '14.78719077248399', 'type' => 'string', 'group' => 'general'],
         'contact.longitude' => ['value' => '-16.935049726312236', 'type' => 'string', 'group' => 'general'],
 
+        // Réseaux sociaux affichés dans le pied de page public (F7.2.l). Une
+        // grande partie de l'information passe désormais par ces canaux : ils
+        // doivent être pilotables par l'équipe, pas codés en dur dans le
+        // frontend. Valeur par défaut VIDE = réseau non affiché — on n'invente
+        // jamais un lien, un lien mort en pied de page est pire que rien.
+        // Exposés publiquement (sans les vides) par `GET /contact-info`.
+        'social.facebook' => ['value' => '', 'type' => 'string', 'group' => 'general'],
+        'social.instagram' => ['value' => '', 'type' => 'string', 'group' => 'general'],
+        'social.tiktok' => ['value' => '', 'type' => 'string', 'group' => 'general'],
+        'social.linkedin' => ['value' => '', 'type' => 'string', 'group' => 'general'],
+        'social.youtube' => ['value' => '', 'type' => 'string', 'group' => 'general'],
+
+        // Pilotage des notifications (F7.2.l — CDC §6 « Paramètres »). Coupures
+        // globales de canal, puis interrupteur par événement. La valeur par
+        // défaut `[]` signifie « tous les événements actifs » : consommée par
+        // App\Support\Notifications\NotificationSettings, qui considère toute
+        // clé absente comme active (une notification neuve n'est jamais muette
+        // par surprise). Les codes de sécurité/2FA échappent à ce pilotage.
+        'notifications.email_enabled' => ['value' => true, 'type' => 'boolean', 'group' => 'notifications'],
+        'notifications.sms_enabled' => ['value' => true, 'type' => 'boolean', 'group' => 'notifications'],
+        'notifications.events' => ['value' => [], 'type' => 'json', 'group' => 'notifications'],
+
         // Barème du simulateur de construction (B5.4, enrichi). Ces valeurs sont
         // des ORDRES DE GRANDEUR par défaut, destinés à être remplacés par
         // l'équipe (chiffres réels validés par des experts BTP) via le

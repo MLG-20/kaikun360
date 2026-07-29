@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 195 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 203 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -356,9 +356,17 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/admin/attendance/clock-in` | auth + `can:consulter:dashboard-admin` | `AttendanceController@clockIn` |
 | POST | `/admin/attendance/clock-out` | auth + `can:consulter:dashboard-admin` | `AttendanceController@clockOut` |
 | GET | `/admin/attendance/me` | auth + `can:consulter:dashboard-admin` | `AttendanceController@me` |
+| GET | `/admin/communes` | auth + `can:gerer:parametres` | `AdminGeoController@communes` |
+| POST | `/admin/communes` | auth + `can:gerer:parametres` | `AdminGeoController@storeCommune` |
+| PATCH | `/admin/communes/{commune}` | auth + `can:gerer:parametres` | `AdminGeoController@updateCommune` |
+| DELETE | `/admin/communes/{commune}` | auth + `can:gerer:parametres` | `AdminGeoController@destroyCommune` |
 | GET | `/admin/construction-requests` | auth + `can:consulter:dashboard-admin` | `AdminDossierController@constructionRequests` |
 | GET | `/admin/dashboard` | auth + `can:consulter:dashboard-admin` | `AdminDashboardController@show` |
 | GET | `/admin/documents` | auth + `can:gerer:utilisateurs` | `AdminDocumentController@index` |
+| POST | `/admin/departments` | auth + `can:gerer:parametres` | `AdminGeoController@storeDepartment` |
+| PATCH | `/admin/departments/{department}` | auth + `can:gerer:parametres` | `AdminGeoController@updateDepartment` |
+| DELETE | `/admin/departments/{department}` | auth + `can:gerer:parametres` | `AdminGeoController@destroyDepartment` |
+| GET | `/admin/geography` | auth + `can:gerer:parametres` | `AdminGeoController@tree` |
 | GET | `/admin/experiences` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@experiences` |
 | GET | `/admin/faqs` | auth + `can:gerer:parametres` | `FaqController@index` |
 | POST | `/admin/faqs` | auth + `can:gerer:parametres` | `FaqController@store` |

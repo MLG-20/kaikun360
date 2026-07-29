@@ -191,6 +191,41 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   (`GET /admin/mandates`), avec compteurs d'avancement (jalons/rapports côté
   construction ; loyers/incidents/dépenses/reversements côté mandat) — exploitées
   par l'écran back-office **Dossiers** (F7.2.e).
+  **Paramètres & contenu (F7.2.l — CDC §6, dernier des 14 modules)** :
+  - **Référentiel géographique éditable** (`AdminGeoController`) — les « villes »
+    du cahier des charges. Ce référentiel (14 régions, 46 départements, ~557
+    communes) était **figé** depuis ses seeders et exposé en lecture seule par
+    `GeoController`. Il devient maintenable : `GET /admin/geography`
+    (arborescence + compteurs), `GET|POST /admin/communes`,
+    `PATCH|DELETE /admin/communes/{id}`, et les mêmes verbes pour
+    `/admin/departments`. Deux garde-fous, car ces données sont référencées
+    ailleurs : les **régions restent en lecture seule** (nomenclature nationale),
+    et **aucune suppression en cascade silencieuse** — `properties.commune_id` /
+    `users.commune_id` sont en `nullOnDelete`, `communes.department_id` en
+    `cascadeOnDelete` : supprimer un élément encore rattaché renvoie **409** avec
+    le nombre d'objets qui le retiennent, au lieu d'effacer des localisations
+    (ou des dizaines de communes) sans le moindre signal.
+  - **Pilotage des notifications** (`App\Support\Notifications\NotificationSettings`
+    + enum `NotificationEvent`) — réglages `notifications.email_enabled`,
+    `notifications.sms_enabled`, `notifications.events`. Les canaux étaient codés
+    en dur dans chaque `via()` : impossible de couper le SMS (facturé à l'envoi)
+    ou de calmer un événement bavard sans redéployer. Les 12 notifications
+    d'exploitation passent désormais par un **point de décision unique** :
+    événement coupé → `via()` vide (Laravel n'envoie rien, pas même la trace en
+    base), canal coupé → canal retiré, SMS sans numéro → retiré (règle qui vivait
+    dupliquée). Le canal `database` n'est jamais coupé par les canaux : il est
+    gratuit et constitue la trace. ⚠️ **Les notifications de sécurité (codes de
+    vérification, 2FA) sont volontairement HORS de ce pilotage** — un réglage
+    capable de condamner l'accès n'a pas sa place dans une interface d'admin.
+  - **Réseaux sociaux** : réglages `social.facebook|instagram|tiktok|linkedin|youtube`
+    (groupe `general`), exposés au public par `GET /contact-info` sous la clé
+    `social` — **les réseaux vides sont omis**, le pied de page n'affiche donc
+    jamais de lien mort. `PATCH /admin/settings` refuse (**422**) une valeur non
+    vide qui n'est pas une URL `http(s)` complète : ces liens sont publics, une
+    faute de saisie y resterait visible et cliquable.
+  - **Catégories** : ⚠️ écart CDC assumé. Ce sont des **enums PHP** qui portent la
+    logique métier (règles de validation, calcul de commission, filtres) ;
+    `GET /admin/reference` les expose en lecture seule et l'écran l'explique.
 
 Couches **transversales** : demandes de service (machine à états stricte), devis
 génériques, réservations polymorphes, **messagerie générique** (conversations à

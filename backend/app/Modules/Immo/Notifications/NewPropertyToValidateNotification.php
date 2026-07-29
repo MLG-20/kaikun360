@@ -3,6 +3,8 @@
 namespace App\Modules\Immo\Notifications;
 
 use App\Modules\Immo\Models\Property;
+use App\Support\Notifications\NotificationEvent;
+use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,7 +26,12 @@ class NewPropertyToValidateNotification extends Notification implements ShouldQu
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // Alerte interne « Nouvelle offre à valider » (F7.2.l).
+        return NotificationSettings::channels(
+            NotificationEvent::RESOURCE_TO_VALIDATE,
+            $notifiable,
+            ['mail'],
+        );
     }
 
     public function toMail(object $notifiable): MailMessage

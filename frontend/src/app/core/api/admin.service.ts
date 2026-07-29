@@ -699,6 +699,156 @@ export interface CreateReportPayload {
   photos?: string[];
 }
 
+// --- Paramètres & contenu (F7.2.l) -------------------------------------------
+
+/** Type logique d'un réglage global (miroir de `SettingsRepository::DEFAULTS`). */
+export type SettingType = 'string' | 'float' | 'integer' | 'boolean' | 'json';
+
+/** Un réglage de la plateforme, avec sa valeur EFFECTIVE (défaut ou surcharge). */
+export interface PlatformSetting {
+  key: string;
+  value: unknown;
+  type: SettingType;
+  /** Regroupement d'affichage : general / commissions / construction / notifications. */
+  group: string | null;
+  /** `true` si une surcharge est enregistrée en base (sinon = valeur par défaut du code). */
+  overridden: boolean;
+}
+
+/** Un événement notifiable pilotable depuis les paramètres (miroir de `NotificationEvent`). */
+export interface NotificationEventOption {
+  value: string;
+  label: string;
+  description: string;
+  /** « Clients & partenaires » ou « Équipe Kaikun » — sert à grouper les interrupteurs. */
+  audience: string;
+  enabled: boolean;
+}
+
+/** Réponse de `GET /admin/settings` : réglages + catalogue des événements. */
+export interface SettingsSnapshot {
+  settings: PlatformSetting[];
+  notification_events: NotificationEventOption[];
+}
+
+/** Une entrée de FAQ (miroir de `FaqResource`). */
+export interface FaqEntry {
+  id: number;
+  question: string;
+  answer: string;
+  category: string | null;
+  position: number | null;
+  is_published: boolean;
+  updated_at: string | null;
+}
+
+/** Corps de création / mise à jour d'une entrée de FAQ. */
+export interface FaqPayload {
+  question?: string;
+  answer?: string;
+  category?: string | null;
+  position?: number;
+  is_published?: boolean;
+}
+
+/** Une page de contenu éditorial (miroir de `PageResource`). */
+export interface ContentPage {
+  id: number;
+  slug: string;
+  title: string;
+  body: string;
+  is_published: boolean;
+  updated_at: string | null;
+}
+
+/** Corps de création / mise à jour d'une page. */
+export interface PagePayload {
+  slug?: string;
+  title?: string;
+  body?: string;
+  is_published?: boolean;
+}
+
+/** Un département dans l'arborescence géographique. */
+export interface GeoDepartment {
+  id: number;
+  region_id: number;
+  name: string;
+  communes_count: number;
+}
+
+/** Une région et ses départements (`GET /admin/geography`). */
+export interface GeoRegion {
+  id: number;
+  name: string;
+  departments_count: number;
+  communes_count: number;
+  departments: GeoDepartment[];
+}
+
+/** Une commune administrable, avec son usage réel (`GET /admin/communes`). */
+export interface AdminCommune {
+  id: number;
+  name: string;
+  type: string | null;
+  department_id: number;
+  department_name: string | null;
+  region_id: number | null;
+  region_name: string | null;
+  /** Biens localisés dans cette commune. */
+  properties_count: number;
+  /** Comptes utilisateurs la déclarant. */
+  users_count: number;
+  /** Calculé côté serveur : `false` dès qu'un objet y est rattaché. */
+  deletable: boolean;
+}
+
+/** Filtres de la liste des communes. */
+export interface CommuneQuery {
+  department_id?: number;
+  region_id?: number;
+  q?: string;
+  page?: number;
+}
+
+/** Corps de création / mise à jour d'une commune. */
+export interface CommunePayload {
+  department_id?: number;
+  name?: string;
+  type?: string | null;
+}
+
+/** Corps de création / mise à jour d'un département. */
+export interface DepartmentPayload {
+  region_id?: number;
+  name?: string;
+}
+
+/** Une valeur de nomenclature (catégorie) en lecture seule. */
+export interface ReferenceItem {
+  value: string;
+  label: string;
+}
+
+/**
+ * Nomenclatures de référence (`GET /admin/reference`).
+ *
+ * ⚠️ Les catégories sont des **enums PHP** côté serveur : elles pilotent la
+ * logique métier (validation, commissions, filtres) et ne sont donc PAS
+ * éditables — l'écran Paramètres les affiche en lecture seule et le signale.
+ */
+export interface ReferenceCatalog {
+  categories: {
+    provider: ReferenceItem[];
+    property_type: ReferenceItem[];
+    service_type: ReferenceItem[];
+    vehicle_type: ReferenceItem[];
+  };
+  geography: {
+    regions: { id: number; name: string }[];
+  };
+}
+
 /**
  * Service d'accès à l'API du **back-office** (F7).
  *
@@ -1277,5 +1427,160 @@ export class AdminService {
     return this.http
       .post<ApiEnvelope<{ report: DiasporaReport }>>(`${this.api}/diaspora-projects/${id}/reports`, payload)
       .pipe(map((response) => response.data.report));
+  }
+
+  // --- Paramètres & contenu (F7.2.l) -----------------------------------------
+  //
+  // Tout ce bloc est gardé côté serveur par la permission `gerer:parametres`
+  // (gouvernance : déléguée par un super_admin uniquement), à l'exception de
+  // `reference()` qui se contente de `consulter:dashboard-admin`.
+
+  /** Réglages effectifs + catalogue des événements notifiables. GET /admin/settings */
+  settings(): Observable<SettingsSnapshot> {
+    return this.http
+      .get<ApiEnvelope<SettingsSnapshot>>(`${this.api}/admin/settings`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Enregistre un LOT de réglages. PATCH /admin/settings
+   *
+   * On n'envoie que les clés réellement modifiées : le serveur refuse toute clé
+   * inconnue (422) et ne touche pas aux autres.
+   */
+  updateSettings(settings: Record<string, unknown>): Observable<SettingsSnapshot> {
+    return this.http
+      .patch<ApiEnvelope<SettingsSnapshot>>(`${this.api}/admin/settings`, { settings })
+      .pipe(map((response) => response.data));
+  }
+
+  /** Nomenclatures de référence (catégories, régions), lecture seule. GET /admin/reference */
+  reference(): Observable<ReferenceCatalog> {
+    return this.http
+      .get<ApiEnvelope<ReferenceCatalog>>(`${this.api}/admin/reference`)
+      .pipe(map((response) => response.data));
+  }
+
+  // --- Contenu éditorial : FAQ ------------------------------------------------
+
+  /** Toutes les entrées de FAQ (publiées ET masquées). GET /admin/faqs */
+  faqs(): Observable<FaqEntry[]> {
+    return this.http
+      .get<ApiEnvelope<FaqEntry[]>>(`${this.api}/admin/faqs`)
+      .pipe(map((response) => response.data));
+  }
+
+  /** Crée une entrée de FAQ. POST /admin/faqs */
+  createFaq(payload: FaqPayload): Observable<FaqEntry> {
+    return this.http
+      .post<ApiEnvelope<{ faq: FaqEntry }>>(`${this.api}/admin/faqs`, payload)
+      .pipe(map((response) => response.data.faq));
+  }
+
+  /** Met à jour une entrée de FAQ. PATCH /admin/faqs/{id} */
+  updateFaq(id: number, payload: FaqPayload): Observable<FaqEntry> {
+    return this.http
+      .patch<ApiEnvelope<{ faq: FaqEntry }>>(`${this.api}/admin/faqs/${id}`, payload)
+      .pipe(map((response) => response.data.faq));
+  }
+
+  /** Supprime une entrée de FAQ. DELETE /admin/faqs/{id} */
+  deleteFaq(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/admin/faqs/${id}`);
+  }
+
+  // --- Contenu éditorial : pages ---------------------------------------------
+
+  /** Toutes les pages de contenu. GET /admin/pages */
+  pages(): Observable<ContentPage[]> {
+    return this.http
+      .get<ApiEnvelope<ContentPage[]>>(`${this.api}/admin/pages`)
+      .pipe(map((response) => response.data));
+  }
+
+  /** Crée une page. POST /admin/pages */
+  createPage(payload: PagePayload): Observable<ContentPage> {
+    return this.http
+      .post<ApiEnvelope<{ page: ContentPage }>>(`${this.api}/admin/pages`, payload)
+      .pipe(map((response) => response.data.page));
+  }
+
+  /**
+   * Met à jour une page. PATCH /admin/pages/{slug}
+   *
+   * ⚠️ Les pages sont résolues **par slug** côté serveur (`getRouteKeyName`) :
+   * on adresse donc toujours l'ANCIEN slug, y compris quand on le renomme.
+   */
+  updatePage(slug: string, payload: PagePayload): Observable<ContentPage> {
+    return this.http
+      .patch<ApiEnvelope<{ page: ContentPage }>>(`${this.api}/admin/pages/${slug}`, payload)
+      .pipe(map((response) => response.data.page));
+  }
+
+  /** Supprime une page. DELETE /admin/pages/{slug} */
+  deletePage(slug: string): Observable<void> {
+    return this.http.delete<void>(`${this.api}/admin/pages/${slug}`);
+  }
+
+  // --- Référentiel géographique (« villes ») ---------------------------------
+
+  /** Arborescence régions → départements (+ compteurs). GET /admin/geography */
+  geography(): Observable<GeoRegion[]> {
+    return this.http
+      .get<ApiEnvelope<{ regions: GeoRegion[] }>>(`${this.api}/admin/geography`)
+      .pipe(map((response) => response.data.regions));
+  }
+
+  /** Communes d'un département (ou recherche transverse). GET /admin/communes */
+  communes(query: CommuneQuery = {}): Observable<Paginated<AdminCommune>> {
+    let params = new HttpParams();
+    if (query.department_id) params = params.set('department_id', String(query.department_id));
+    if (query.region_id) params = params.set('region_id', String(query.region_id));
+    if (query.q) params = params.set('q', query.q);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<AdminCommune>>(`${this.api}/admin/communes`, { params });
+  }
+
+  /** Crée une commune. POST /admin/communes */
+  createCommune(payload: CommunePayload): Observable<AdminCommune> {
+    return this.http
+      .post<ApiEnvelope<{ commune: AdminCommune }>>(`${this.api}/admin/communes`, payload)
+      .pipe(map((response) => response.data.commune));
+  }
+
+  /** Renomme / reclasse une commune. PATCH /admin/communes/{id} */
+  updateCommune(id: number, payload: CommunePayload): Observable<AdminCommune> {
+    return this.http
+      .patch<ApiEnvelope<{ commune: AdminCommune }>>(`${this.api}/admin/communes/${id}`, payload)
+      .pipe(map((response) => response.data.commune));
+  }
+
+  /**
+   * Supprime une commune. DELETE /admin/communes/{id}
+   *
+   * Renvoie **409** si des biens ou des comptes y sont encore rattachés (la
+   * suppression effacerait leur localisation).
+   */
+  deleteCommune(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/admin/communes/${id}`);
+  }
+
+  /** Crée un département. POST /admin/departments */
+  createDepartment(payload: DepartmentPayload): Observable<GeoDepartment> {
+    return this.http
+      .post<ApiEnvelope<{ department: GeoDepartment }>>(`${this.api}/admin/departments`, payload)
+      .pipe(map((response) => response.data.department));
+  }
+
+  /** Renomme / rattache un département. PATCH /admin/departments/{id} */
+  updateDepartment(id: number, payload: DepartmentPayload): Observable<GeoDepartment> {
+    return this.http
+      .patch<ApiEnvelope<{ department: GeoDepartment }>>(`${this.api}/admin/departments/${id}`, payload)
+      .pipe(map((response) => response.data.department));
+  }
+
+  /** Supprime un département VIDE et inutilisé (409 sinon). DELETE /admin/departments/{id} */
+  deleteDepartment(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/admin/departments/${id}`);
   }
 }

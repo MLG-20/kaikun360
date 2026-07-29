@@ -3,6 +3,8 @@
 namespace App\Modules\Immo\Notifications;
 
 use App\Modules\Immo\Models\Property;
+use App\Support\Notifications\NotificationEvent;
+use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,7 +24,13 @@ class PropertyValidatedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // Arbitrage par les réglages back-office (F7.2.l) : événement « Offre
+        // validée », commun aux biens et aux véhicules.
+        return NotificationSettings::channels(
+            NotificationEvent::RESOURCE_VALIDATED,
+            $notifiable,
+            ['mail'],
+        );
     }
 
     public function toMail(object $notifiable): MailMessage

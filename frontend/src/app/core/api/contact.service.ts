@@ -27,6 +27,12 @@ export interface ContactInfo {
   address: string;
   latitude: string;
   longitude: string;
+  /**
+   * Réseaux sociaux renseignés au back-office, par clé (`facebook`,
+   * `instagram`, `tiktok`, `linkedin`, `youtube`). Les réseaux laissés vides
+   * sont **absents** de l'objet : rien à filtrer côté frontend.
+   */
+  social: Record<string, string>;
 }
 
 /**

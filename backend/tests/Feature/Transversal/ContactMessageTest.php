@@ -63,7 +63,27 @@ class ContactMessageTest extends TestCase
             ])
             // Adresse/coordonnées présentes (valeur exacte = réglage, non figée ici).
             ->assertJsonPath('data.contact.address', fn ($v) => is_string($v) && $v !== '')
-            ->assertJsonPath('data.contact.latitude', fn ($v) => is_string($v) && $v !== '');
+            ->assertJsonPath('data.contact.latitude', fn ($v) => is_string($v) && $v !== '')
+            // F7.2.l — Aucun réseau social n'est renseigné par défaut : le bloc
+            // existe mais reste VIDE (le pied de page n'affiche alors rien).
+            ->assertJsonPath('data.contact.social', []);
+    }
+
+    public function test_seuls_les_reseaux_sociaux_renseignes_sont_publies(): void
+    {
+        // F7.2.l — Les liens du pied de page viennent des réglages back-office.
+        $settings = app(\App\Support\SettingsRepository::class);
+        $settings->set('social.facebook', 'https://facebook.com/kaikun360');
+        $settings->set('social.tiktok', 'https://tiktok.com/@kaikun360');
+
+        $social = $this->getJson('/api/v1/contact-info')->assertOk()->json('data.contact.social');
+
+        // Les réseaux vides sont OMIS : le frontend n'a rien à filtrer et aucun
+        // lien mort ne peut apparaître dans le pied de page public.
+        $this->assertSame(
+            ['facebook' => 'https://facebook.com/kaikun360', 'tiktok' => 'https://tiktok.com/@kaikun360'],
+            $social,
+        );
     }
 
     public function test_le_message_de_contact_est_valide(): void

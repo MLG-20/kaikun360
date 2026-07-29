@@ -24,6 +24,7 @@ pour les actions sensibles (`gerer:utilisateurs`, `gerer:parametres`,
 | F7.1.a | Équipe back-office : annuaire, enrôlement, pilotage rôle/statut | ✅ |
 | F7.1.b | Délégation des dossiers par personne (« grant pur ») | ✅ |
 | F7.1.c | Pointeuse de l'équipe (entrée/sortie + feuille mensuelle) | ✅ |
+| F7.2.l | Paramètres & contenu : villes éditables + pilotage des notifications | ✅ |
 
 ## F7.1.a — Équipe back-office (« poste de commandement »)
 
@@ -402,3 +403,77 @@ servies par leurs contrôleurs d'origine) :
   prestataires** (`ProviderResource` : `rating_avg`/`rating_count`,
   `warnings_count`, `sanction_note`, `status`), filtres `status` + `q`. Les
   sanctions restent `PATCH /providers/{id}/warn|suspend` (module Pro).
+
+## F7.2.l — Paramètres & contenu (CDC §6, dernier des 14 modules)
+
+Complète B13.4 sur ses deux angles morts : les **villes** (référentiel figé) et
+les **notifications** (canaux codés en dur). Permission `gerer:parametres`.
+
+### Référentiel géographique éditable (`AdminGeoController`)
+
+Le référentiel — 14 régions, 46 départements, ~557 communes — était semé par
+`SenegalGeographySeeder` / `CommunesSeeder` et exposé en **lecture seule** par
+`App\Http\Controllers\GeoController` (sélecteurs en cascade du dépôt de bien).
+Le cahier des charges demande que l'équipe le maintienne elle-même.
+
+- `GET /admin/geography` — arborescence régions → départements en **un appel**,
+  avec `departments_count` et `communes_count` (le total région est la somme des
+  compteurs de ses départements : pas de requête supplémentaire). Les communes
+  ne sont pas incluses (~557 lignes) : elles se chargent à la demande.
+- `GET /admin/communes` — filtres `department_id`, `region_id` (via le
+  département parent : une commune ne porte pas de `region_id`), `q`. Chaque
+  ligne porte son **usage réel** (`properties_count`, `users_count`) et un
+  `deletable` calculé côté serveur — le front n'a pas à rejouer la règle.
+- `POST /admin/communes`, `PATCH|DELETE /admin/communes/{commune}`, et les mêmes
+  verbes sur `/admin/departments`.
+
+Deux principes de sûreté :
+
+1. **Les régions ne sont pas modifiables.** Nomenclature nationale stable ; les
+   ouvrir à l'écriture serait un risque disproportionné face au besoin.
+2. **Aucune suppression en cascade silencieuse.** `properties.commune_id` et
+   `users.commune_id` sont en `nullOnDelete` → supprimer une commune utilisée
+   effacerait la localisation des biens **sans erreur** ; `communes.department_id`
+   est en `cascadeOnDelete` → supprimer un département emporterait toutes ses
+   communes d'un coup. Les deux cas renvoient **409** avec le décompte de ce qui
+   retient l'élément. `AdminGeographyTest` couvre précisément ces refus.
+
+L'unicité est **locale** (nom unique dans le département / la région, comme en
+base) : le doublon renvoie **422** avec un message lisible, et un `PATCH` qui ne
+change que le `type` ne bute pas sur son propre nom.
+
+### Pilotage des notifications
+
+Réglages `notifications.email_enabled`, `notifications.sms_enabled` (booléens) et
+`notifications.events` (map `événement → bool`, groupe `notifications`), avec
+`GET /admin/settings` qui renvoie en plus `notification_events` — le catalogue
+`App\Support\Notifications\NotificationEvent` (valeur, libellé, description,
+public visé, état actif). Ce catalogue vit dans le **code**, pas en base : le
+back-office n'a pas à dupliquer ces libellés.
+
+Le point de décision est unique : `App\Support\Notifications\NotificationSettings::channels()`,
+appelé par le `via()` des **12 notifications d'exploitation**. Trois règles :
+événement coupé → aucun canal (un `via()` vide court-circuite l'envoi, pas même
+la trace en base) ; canal coupé → canal retiré ; SMS sans numéro → retiré (règle
+qui vivait dupliquée dans plusieurs `via()`). Le canal `database` n'est jamais
+coupé par les canaux : gratuit, il alimente « Mes notifications » et fait trace.
+
+Un événement **absent** de la configuration est **actif** : ajouter une
+notification au code ne l'éteint jamais par surprise. Corollaire : une clé
+inconnue serait ignorée en silence et laisserait croire à une coupure effective —
+`PATCH /admin/settings` la **refuse** donc explicitement (422), tout comme une
+valeur non booléenne ou un réglage `json` reçu sous forme de chaîne.
+
+> ⚠️ **Les notifications de sécurité sont hors de ce pilotage.**
+> `VerificationCodeNotification` (codes de vérification, 2FA admin) ne passe pas
+> par le helper : un réglage capable de condamner l'accès au back-office et
+> l'inscription n'a pas sa place dans une interface d'administration.
+
+### Catégories — écart CDC assumé
+
+`GET /admin/reference` reste en **lecture seule**. Les catégories sont des enums
+PHP (`ProviderCategory`, `PropertyType`, `ServiceType`, `VehicleType`) qui
+portent la logique métier : règles de validation, calcul de commission, filtres
+de recherche. Les rendre éditables demanderait de sortir cette logique du code —
+chantier transversal hors du périmètre de cet écran, signalé à l'utilisateur
+dans l'interface plutôt que masqué.

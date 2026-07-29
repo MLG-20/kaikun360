@@ -267,6 +267,38 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     encart, pas masqué. Les sanctions restent dans **Avis & qualité** (F7.2.g).
 
   Lecture seule, comme les écrans précédents.
+
+  **F7.2.l Paramètres & contenu** (`features/backoffice/settings/`, route
+  `/back-office/parametres`) : couvre le module CDC §6 *Paramètres* (« villes,
+  catégories, tarifs, commissions, pages, FAQ, notifications ») — **le dernier
+  des 14 modules**. Quatre onglets, parce que ces sept fonctions ne se pilotent
+  pas de la même façon.
+  - **Réglages** (`GET`/`PATCH /admin/settings`) : commissions & marges,
+    coordonnées publiques, et le **barème du simulateur de construction** (les
+    « tarifs »). Ce barème est un objet **imbriqué** : il est aplati en chemins
+    (`price_m2.extension`) et rendu champ par champ, sans que sa structure soit
+    codée en dur — une rubrique ajoutée côté serveur apparaît toute seule.
+    ⚠️ L'enregistrement n'envoie **que les clés modifiées** : tout envoyer
+    transformerait chaque valeur par défaut en surcharge en base, et un futur
+    ajustement du code n'aurait plus d'effet. Les réglages non surchargés portent
+    une étiquette « défaut ». Y figurent aussi les **réseaux sociaux**, rendus
+    par le **pied de page public** (`app-footer` lit `GET /contact-info`) : rien
+    n'est codé en dur dans le frontend, un réseau laissé vide n'apparaît pas.
+  - **Notifications** : deux interrupteurs de canal (SMS — facturé à l'envoi —,
+    e-mail) et un interrupteur **par événement**, groupés par destinataire
+    (clients & partenaires / équipe). Réellement branché : le serveur arbitre les
+    `via()` des notifications. ⚠️ Un encart rappelle que les **codes de sécurité
+    et la 2FA** ne sont pas concernés et partent toujours.
+  - **Contenu** : CRUD complet des **pages** éditoriales (`/admin/pages`) et de
+    la **FAQ** (`/admin/faqs`), publiées ou masquées. ⚠️ Les pages sont résolues
+    **par slug** côté serveur : un renommage adresse toujours l'ancien slug.
+  - **Référentiels** : les **villes** — arbre région → département, puis les
+    communes du département choisi, avec création / renommage / suppression. La
+    colonne *Rattachements* affiche l'usage réel (biens, comptes) et le bouton
+    Supprimer est **grisé** quand la commune est utilisée ; côté serveur la
+    suppression renvoie alors **409** avec le décompte. Et les **catégories**, en
+    **lecture seule** : ce sont des enums qui portent la logique métier — un
+    encart l'explique plutôt que de laisser croire à un écran incomplet.
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

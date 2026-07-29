@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Models\Quote;
+use App\Support\Notifications\NotificationEvent;
+use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -25,8 +27,12 @@ class QuoteReceivedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        // On ajoute `database` (écran « Mes notifications », F3.6) aux canaux existants.
-        return $notifiable->phone ? ['mail', 'sms', 'database'] : ['mail', 'database'];
+        // Canaux souhaités ; arbitrage final par les réglages back-office (F7.2.l).
+        return NotificationSettings::channels(
+            NotificationEvent::QUOTE_RECEIVED,
+            $notifiable,
+            ['mail', 'sms', 'database'],
+        );
     }
 
     public function toMail(object $notifiable): MailMessage

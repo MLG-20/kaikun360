@@ -5,6 +5,7 @@ use App\Modules\Admin\Http\Controllers\AdminCatalogController;
 use App\Modules\Admin\Http\Controllers\AdminDashboardController;
 use App\Modules\Admin\Http\Controllers\AdminDocumentController;
 use App\Modules\Admin\Http\Controllers\AdminDossierController;
+use App\Modules\Admin\Http\Controllers\AdminGeoController;
 use App\Modules\Admin\Http\Controllers\AdminPaymentController;
 use App\Modules\Admin\Http\Controllers\AdminProviderController;
 use App\Modules\Admin\Http\Controllers\AdminReviewController;
@@ -174,6 +175,20 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         Route::post('/pages', [PageController::class, 'store']);
         Route::patch('/pages/{page}', [PageController::class, 'update']);
         Route::delete('/pages/{page}', [PageController::class, 'destroy']);
+
+        // F7.2.l — Référentiel géographique éditable (« Villes » du CDC §6).
+        // Les régions restent en lecture seule (nomenclature nationale) : seuls
+        // les départements et les communes sont administrables.
+        Route::get('/geography', [AdminGeoController::class, 'tree']);
+
+        Route::get('/communes', [AdminGeoController::class, 'communes']);
+        Route::post('/communes', [AdminGeoController::class, 'storeCommune']);
+        Route::patch('/communes/{commune}', [AdminGeoController::class, 'updateCommune'])->whereNumber('commune');
+        Route::delete('/communes/{commune}', [AdminGeoController::class, 'destroyCommune'])->whereNumber('commune');
+
+        Route::post('/departments', [AdminGeoController::class, 'storeDepartment']);
+        Route::patch('/departments/{department}', [AdminGeoController::class, 'updateDepartment'])->whereNumber('department');
+        Route::delete('/departments/{department}', [AdminGeoController::class, 'destroyDepartment'])->whereNumber('department');
     });
 
     // F2.8.1 — Messages de contact : consultation & traitement par l'équipe.
