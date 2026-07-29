@@ -107,6 +107,11 @@ class DemoSeeder extends Seeder
             $this->command?->info('DemoSeeder : catalogues de démonstration déjà présents.');
         }
 
+        // Cas de contrôle de l'écran Mobilité (F7.2.j) : véhicules non conformes,
+        // offre « chauffeur », trajets en attente. Garde propre → s'ajoute même
+        // sur une base dont les catalogues existaient déjà.
+        $this->seedMobilitySupervision($provider);
+
         // Profil + missions prestataire de démonstration pour peupler l'espace
         // prestataire : le tableau de bord (F5.1 — le compte de démo avait le rôle
         // mais aucune ligne `Provider`, d'où un 404) et les missions reçues (F5.2 —
@@ -294,6 +299,66 @@ class DemoSeeder extends Seeder
     }
 
     /**
+     * Cas de contrôle de l'écran **Mobilité** du back-office (F7.2.j).
+     *
+     * La supervision n'a d'intérêt que si la flotte n'est pas uniformément
+     * publiée et conforme : sur une base où tout va bien, la colonne
+     * « Conformité » est verte partout et l'écran ne démontre rien. On sème donc
+     * les cas d'anomalie que l'équipe doit savoir repérer.
+     *
+     * Garde d'idempotence PROPRE (l'offre « chauffeur » n'est créée que par
+     * cette méthode) : la relance du seeder sur une base déjà peuplée ajoute ces
+     * cas sans doublon et sans exiger un `migrate:fresh`.
+     */
+    private function seedMobilitySupervision(User $provider): void
+    {
+        if (Vehicle::query()->where('type', VehicleType::CHAUFFEUR->value)->exists()) {
+            return;
+        }
+
+        // Mise à disposition d'un chauffeur (catégorie d'offre à part entière
+        // au cahier des charges, absente des types semés plus haut).
+        Vehicle::factory()->published()->create([
+            'provider_id' => $provider->id,
+            'type' => VehicleType::CHAUFFEUR->value,
+            'brand' => null,
+            'model' => null,
+            'capacity' => 1,
+            'caution_xof' => 0,
+        ]);
+
+        // Un bus en attente SANS assurance : l'agent doit voir le manquement.
+        $bus = Vehicle::factory()->create([
+            'provider_id' => $provider->id,
+            'type' => VehicleType::BUS->value,
+            'insurance_ref' => null,
+            'driver_identity' => null,
+        ]);
+
+        // Une pirogue en attente, conformité fluviale incomplète (pas de gilets,
+        // pas d'aptitude météo) : l'autre grille de contrôle.
+        Vehicle::factory()->pirogue()->create([
+            'provider_id' => $provider->id,
+        ]);
+
+        // Deux trajets en attente de validation : l'onglet « Trajets » montre
+        // tous les statuts, pas seulement les départs déjà publiés. Le premier
+        // est rattaché au bus ci-dessus — c'est le cas que l'agent doit voir :
+        // un départ annoncé sur un véhicule dont l'assurance manque encore.
+        MobilityService::factory()->create([
+            'provider_id' => $provider->id,
+            'vehicle_id' => $bus->id,
+            'departure' => 'Dakar',
+            'destination' => 'Ziguinchor',
+        ]);
+        MobilityService::factory()->create([
+            'provider_id' => $provider->id,
+        ]);
+
+        $this->command?->info('DemoSeeder : cas de supervision Mobilité créés (F7.2.j).');
+    }
+
+    /**
      * Crée les catalogues publics de démonstration (immobilier, nuitées,
      * transport, tourisme, mobilité) rattachés aux comptes de démo.
      */
@@ -359,6 +424,7 @@ class DemoSeeder extends Seeder
         Vehicle::factory()->pirogueConforme()->published()->create([
             'provider_id' => $provider->id,
         ]);
+
 
         // --- Tourisme : 5 expériences publiées ---
         TourismExperience::factory()->count(5)->published()->create([

@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 177 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 194 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -63,6 +63,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/auth/password/forgot` | public | `PasswordResetController@forgot` |
 | POST | `/auth/password/reset` | public | `PasswordResetController@reset` |
 | POST | `/auth/register` | public | `AuthController@register` |
+| POST | `/auth/two-factor` | public (jeton de session courte) | `AuthController@twoFactor` |
 | POST | `/auth/verify` | auth | `VerificationController@verify` |
 | POST | `/auth/verify/send` | auth | `VerificationController@send` |
 
@@ -165,6 +166,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/diaspora-projects` | auth | `DiasporaProjectController@store` |
 | GET | `/diaspora-projects/mine` | auth | `DiasporaProjectController@mine` |
 | GET | `/diaspora-projects/{project}` | auth | `DiasporaProjectController@show` |
+| PATCH | `/diaspora-projects/{project}` | auth (policy `update`) | `DiasporaProjectController@update` |
 | PATCH | `/diaspora-projects/{project}/assign` | auth | `DiasporaAssignmentController@assign` |
 | GET | `/diaspora-projects/{project}/reports` | auth | `DiasporaReportController@index` |
 | POST | `/diaspora-projects/{project}/reports` | auth | `DiasporaReportController@store` |
@@ -181,6 +183,8 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/team-building-requests/{teamBuildingRequest}` | auth | `TeamBuildingRequestController@show` |
 | GET | `/team-building-requests/{teamBuildingRequest}/quotes` | auth | `TeamBuildingQuoteController@index` |
 | POST | `/team-building-requests/{teamBuildingRequest}/quotes` | auth | `TeamBuildingQuoteController@compose` |
+| GET | `/team-building-requests/{teamBuildingRequest}/assignments` | auth (policy `manage`) | `TeamBuildingAssignmentController@index` |
+| POST | `/team-building-requests/{teamBuildingRequest}/assignments` | auth (policy `manage`) | `TeamBuildingAssignmentController@store` |
 
 ### Pro — prestataires
 
@@ -348,6 +352,10 @@ TypeScript miroir côté frontend Angular (phase F0).
 
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
+| GET | `/admin/attendance` | auth + `can:gerer:utilisateurs` | `AttendanceController@sheet` |
+| POST | `/admin/attendance/clock-in` | auth + `can:consulter:dashboard-admin` | `AttendanceController@clockIn` |
+| POST | `/admin/attendance/clock-out` | auth + `can:consulter:dashboard-admin` | `AttendanceController@clockOut` |
+| GET | `/admin/attendance/me` | auth + `can:consulter:dashboard-admin` | `AttendanceController@me` |
 | GET | `/admin/construction-requests` | auth + `can:consulter:dashboard-admin` | `AdminDossierController@constructionRequests` |
 | GET | `/admin/dashboard` | auth + `can:consulter:dashboard-admin` | `AdminDashboardController@show` |
 | GET | `/admin/documents` | auth + `can:gerer:utilisateurs` | `AdminDocumentController@index` |
@@ -359,6 +367,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/admin/contact-messages` | auth + `can:traiter:demandes` | `ContactController@index` |
 | PATCH | `/admin/contact-messages/{contactMessage}` | auth + `can:traiter:demandes` | `ContactController@update` |
 | GET | `/admin/mandates` | auth + `can:consulter:dashboard-admin` | `AdminDossierController@mandates` |
+| GET | `/admin/mobility-services` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@mobilityServices` |
 | GET | `/admin/pages` | auth + `can:gerer:parametres` | `PageController@index` |
 | POST | `/admin/pages` | auth + `can:gerer:parametres` | `PageController@store` |
 | DELETE | `/admin/pages/{page}` | auth + `can:gerer:parametres` | `PageController@destroy` |
@@ -367,16 +376,24 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/admin/payments/{payment}/confirm` | auth + `can:gerer:paiements` | `AdminPaymentController@confirm` |
 | POST | `/admin/payments/{payment}/refund` | auth + `can:gerer:paiements` | `AdminPaymentController@refund` |
 | GET | `/admin/properties` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@properties` |
+| GET | `/admin/providers` | auth + `can:valider:prestataire` | `AdminProviderController@index` |
 | GET | `/admin/queue` | auth + `can:consulter:dashboard-admin` | `ValidationQueueController@index` |
 | GET | `/admin/reference` | auth + `can:consulter:dashboard-admin` | `ReferenceController@index` |
 | GET | `/admin/reports/export` | auth + `can:gerer:paiements` | `ReportExportController@export` |
+| GET | `/admin/reviews` | auth + `can:moderer:avis` | `AdminReviewController@index` |
 | GET | `/admin/settings` | auth + `can:gerer:parametres` | `AdminSettingsController@index` |
 | PATCH | `/admin/settings` | auth + `can:gerer:parametres` | `AdminSettingsController@update` |
 | PATCH | `/admin/stay-bookings/{booking}/check-in` | auth + `can:gerer:nuitees` | `StayOperationsController@checkIn` |
 | PATCH | `/admin/stay-bookings/{booking}/check-out` | auth + `can:gerer:nuitees` | `StayOperationsController@checkOut` |
 | PATCH | `/admin/stay-bookings/{booking}/housekeeping` | auth + `can:gerer:nuitees` | `StayOperationsController@housekeeping` |
 | GET | `/admin/stays/calendar` | auth + `can:gerer:nuitees` | `StayOperationsController@calendar` |
+| GET | `/admin/team` | auth + `can:gerer:utilisateurs` | `AdminTeamController@index` |
+| POST | `/admin/team` | auth + `can:gerer:utilisateurs` | `AdminTeamController@store` |
+| PATCH | `/admin/team/{member}` | auth + `can:gerer:utilisateurs` | `AdminTeamController@update` |
+| GET | `/admin/team/{member}/permissions` | auth + `can:gerer:utilisateurs` (gouvernance super_admin) | `AdminTeamController@permissions` |
+| PUT | `/admin/team/{member}/permissions` | auth + `can:gerer:utilisateurs` (gouvernance super_admin) | `AdminTeamController@syncPermissions` |
 | GET | `/admin/users` | auth + `can:gerer:utilisateurs` | `AdminUserController@index` |
+| GET | `/admin/users/{user}` | auth + `can:gerer:utilisateurs` | `AdminUserController@show` |
 | PATCH | `/admin/users/{user}` | auth + `can:gerer:utilisateurs` | `AdminUserController@update` |
 | POST | `/admin/users/{user}/request-document` | auth + `can:gerer:utilisateurs` | `AdminUserController@requestDocument` |
 | PATCH | `/admin/validate/{type}/{id}` | auth + `can:consulter:dashboard-admin` | `ValidationQueueController@decide` |

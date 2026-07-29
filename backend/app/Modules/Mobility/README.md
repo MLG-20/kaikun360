@@ -96,6 +96,21 @@ Publiés par des prestataires, validés par un agent, réservables via `Booking`
 `VehiclePolicy` : `create` = prestataire/entreprise **vérifié** ; `update` =
 prestataire propriétaire ou admin (enregistrée dans `AppServiceProvider`).
 
+### Supervision back-office (F7.2.j)
+
+L'écran **Mobilité** du back-office est servi par le module **Admin**, pas par
+celui-ci : `GET /admin/vehicles` (flotte + conformité + prestataire) et
+`GET /admin/mobility-services` (départs tous statuts + remplissage). Deux points
+à connaître si l'on touche à ce module :
+
+- La grille de conformité affichée côté back-office **reprend celle du
+  `VehicleComplianceChecker`** ci-dessus (motorisé = assurance + identité du
+  chauffeur ; pirogue = gilets + météo + agrément). Faire évoluer le checker
+  sans mettre à jour l'écran désynchroniserait les deux.
+- `insurance_ref` et `driver_identity` ne sont **jamais** exposés par
+  `VehicleResource` (catalogue public) : ce sont des données de contrôle,
+  servies uniquement par `AdminVehicleResource` derrière les gardes admin.
+
 ---
 
 ## Réservation : commission & caution (phase B7.4)

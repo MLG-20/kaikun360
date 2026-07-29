@@ -142,6 +142,10 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         Route::get('/vehicles', [AdminCatalogController::class, 'vehicles']);
         Route::get('/experiences', [AdminCatalogController::class, 'experiences']);
 
+        // F7.2.j — Écran Mobilité : trajets programmés (tous statuts) avec le
+        // remplissage de chaque départ. La flotte réutilise /admin/vehicles.
+        Route::get('/mobility-services', [AdminCatalogController::class, 'mobilityServices']);
+
         Route::get('/construction-requests', [AdminDossierController::class, 'constructionRequests']);
         Route::get('/mandates', [AdminDossierController::class, 'mandates']);
     });

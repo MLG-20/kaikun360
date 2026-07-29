@@ -2,12 +2,15 @@
 
 namespace App\Modules\Admin\Http\Controllers;
 
+use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
+use App\Modules\Admin\Http\Resources\AdminMobilityServiceResource;
+use App\Modules\Admin\Http\Resources\AdminVehicleResource;
 use App\Modules\Explore\Http\Resources\ExperienceResource;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Immo\Http\Resources\PropertyResource;
 use App\Modules\Immo\Models\Property;
-use App\Modules\Mobility\Http\Resources\VehicleResource;
+use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -50,21 +53,78 @@ class AdminCatalogController extends Controller
 
     /**
      * Véhicules (tous statuts). GET /api/v1/admin/vehicles
+     *
+     * Sert à la fois l'écran Catalogues (F7.2.b, vue synthétique) et l'onglet
+     * « Flotte » de l'écran Mobilité (F7.2.j, vue de conformité) — d'où
+     * `AdminVehicleResource`, sur-ensemble du format public incluant assurance,
+     * chauffeur et drapeaux de conformité.
+     *
+     * Filtre supplémentaire `driver` (F7.2.j) : `1` = véhicules AVEC chauffeur,
+     * `0` = sans. Le cahier des charges traite la mise à disposition de
+     * chauffeurs comme une catégorie d'offre à part entière.
      */
     public function vehicles(Request $request): AnonymousResourceCollection
     {
         $vehicles = Vehicle::query()
+            ->with('provider')
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')->toString()))
             ->when($request->filled('provider_id'), fn ($q) => $q->where('provider_id', $request->integer('provider_id')))
+            ->when($request->filled('driver'), fn ($q) => $q->where('has_driver', $request->boolean('driver')))
             ->when($request->filled('q'), function ($q) use ($request) {
                 $term = '%'.$request->string('q')->toString().'%';
-                $q->where(fn ($w) => $w->where('brand', 'like', $term)->orWhere('model', 'like', $term));
+                $q->where(fn ($w) => $w->where('brand', 'like', $term)
+                    ->orWhere('model', 'like', $term)
+                    ->orWhere('reference', 'like', $term));
             })
             ->latest()
             ->paginate($this->perPage($request));
 
-        return VehicleResource::collection($vehicles);
+        return AdminVehicleResource::collection($vehicles);
+    }
+
+    /**
+     * Trajets programmés (tous statuts). GET /api/v1/admin/mobility-services
+     *
+     * Onglet « Trajets » de l'écran Mobilité (F7.2.j). Contrairement à la
+     * recherche publique (publiés uniquement, cache catalogue), on expose ici
+     * tous les statuts et on agrège le **remplissage** de chaque trajet :
+     * `seats_taken` = somme des participants des réservations non annulées,
+     * calculée en une seule requête (`withSum`) pour éviter un N+1.
+     *
+     * Filtres : statut, type, période (`from`/`to` sur la date de départ) et
+     * recherche libre sur départ / destination / référence.
+     */
+    public function mobilityServices(Request $request): AnonymousResourceCollection
+    {
+        // Statuts de réservation considérés comme annulés : ils ne consomment
+        // pas de place (source de vérité = l'enum, pas une liste recopiée).
+        $cancelled = array_map(
+            fn (BookingStatus $s) => $s->value,
+            array_filter(BookingStatus::cases(), fn (BookingStatus $s) => $s->estAnnulee()),
+        );
+
+        $services = MobilityService::query()
+            ->with(['provider', 'vehicle'])
+            ->withSum(
+                ['bookings as seats_taken' => fn ($q) => $q->whereNotIn('status', $cancelled)],
+                'guests'
+            )
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
+            ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')->toString()))
+            ->when($request->filled('provider_id'), fn ($q) => $q->where('provider_id', $request->integer('provider_id')))
+            ->when($request->filled('from'), fn ($q) => $q->whereDate('departure_at', '>=', $request->string('from')->toString()))
+            ->when($request->filled('to'), fn ($q) => $q->whereDate('departure_at', '<=', $request->string('to')->toString()))
+            ->when($request->filled('q'), function ($q) use ($request) {
+                $term = '%'.$request->string('q')->toString().'%';
+                $q->where(fn ($w) => $w->where('departure', 'like', $term)
+                    ->orWhere('destination', 'like', $term)
+                    ->orWhere('reference', 'like', $term));
+            })
+            ->orderByDesc('departure_at')
+            ->paginate($this->perPage($request));
+
+        return AdminMobilityServiceResource::collection($services);
     }
 
     /**

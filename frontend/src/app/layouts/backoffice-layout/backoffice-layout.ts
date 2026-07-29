@@ -10,6 +10,7 @@ type BoIcon =
   | 'grid'
   | 'check'
   | 'layers'
+  | 'car'
   | 'calendar'
   | 'card'
   | 'folder'
@@ -72,6 +73,7 @@ export class BackofficeLayoutComponent {
     { label: 'Vue d’ensemble', path: '', icon: 'grid', ready: true },
     { label: 'Validation', path: 'validation', icon: 'check', ready: true },
     { label: 'Catalogues', path: 'catalogues', icon: 'layers', ready: true },
+    { label: 'Mobilité', path: 'mobilite', icon: 'car', ready: true },
     { label: 'Nuitées', path: 'nuitees', icon: 'calendar', ready: true },
     { label: 'Paiements', path: 'paiements', icon: 'card', ready: true },
     { label: 'Dossiers', path: 'dossiers', icon: 'folder', ready: true },

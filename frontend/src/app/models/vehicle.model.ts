@@ -17,3 +17,29 @@ export interface Vehicle {
   status_label: string | null;
   published_at: string | null;
 }
+
+/**
+ * Véhicule vu depuis le **back-office** — miroir d'`AdminVehicleResource`
+ * (F7.2.j).
+ *
+ * Sur-ensemble de `Vehicle` : ajoute les champs de **contrôle de conformité**
+ * que le catalogue public ne montre pas (assurance, identité du chauffeur,
+ * gilets de sauvetage des pirogues, drapeaux météo/prestataire) et le
+ * prestataire propriétaire, pour que l'agent puisse le joindre en cas
+ * d'anomalie. Servi uniquement par `GET /admin/vehicles`.
+ */
+export interface AdminVehicle extends Vehicle {
+  /** Référence du contrat d'assurance (null = manquante → non conforme). */
+  insurance_ref: string | null;
+  /** Identité du chauffeur déclaré (null = non renseignée). */
+  driver_identity: string | null;
+  /** Gilets de sauvetage à bord (pirogues ; null hors transport fluvial). */
+  life_jackets_count: number | null;
+  /** Conformité météo (pirogues). */
+  weather_compliant: boolean | null;
+  /** Conformité du prestataire (pirogues). */
+  provider_compliant: boolean | null;
+  /** Le prestataire propriétaire (absent si non chargé). */
+  provider?: { id: number; name: string; email: string | null; phone: string | null } | null;
+  created_at: string | null;
+}

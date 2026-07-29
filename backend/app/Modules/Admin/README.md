@@ -320,6 +320,29 @@ catalogues publics limités aux publiés :
 `GET /admin/properties`, `GET /admin/vehicles`, `GET /admin/experiences`
 (filtres `status`, `type`, `owner_id`/`provider_id`, `q`).
 
+**Mobilité (F7.2.j)** — `consulter:dashboard-admin`. Le cahier des charges (§6)
+demande de piloter « véhicules, chauffeurs, pirogues, bus, disponibilités,
+assurances, capacités » : deux réalités distinctes, donc deux endpoints.
+
+- `GET /admin/vehicles` — la **flotte**. Sert désormais `AdminVehicleResource`,
+  **sur-ensemble** du format public : s'y ajoutent les champs de contrôle que le
+  catalogue public masque (`insurance_ref`, `driver_identity`,
+  `life_jackets_count`, `weather_compliant`, `provider_compliant`) et le
+  `provider` (nom + contact, pour joindre en cas d'anomalie). Filtre
+  supplémentaire **`driver=1|0`** (avec / sans chauffeur) ; la recherche `q`
+  porte aussi sur la `reference`. L'écran Catalogues (F7.2.b) consomme la même
+  route et ignore simplement les champs qu'il n'affiche pas.
+- `GET /admin/mobility-services` — les **départs programmés**, tous statuts
+  (la recherche publique, elle, ne rend que les publiés). Chaque ligne porte son
+  **remplissage** : `seats_taken` (somme des participants des réservations non
+  annulées, agrégée en **une** requête via `withSum` → pas de N+1) et
+  `seats_left` — les « disponibilités » du cahier. Filtres `status`, `type`,
+  `provider_id`, période `from`/`to` sur `departure_at`, et `q` (départ,
+  destination, référence).
+
+Les **statuts d'annulation** ne sont pas recopiés : ils sont dérivés de
+`BookingStatus::estAnnulee()`, source de vérité unique.
+
 **Dossiers de suivi** — `consulter:dashboard-admin` :
 `GET /admin/construction-requests` (toutes, +counts) et `GET /admin/mandates`
 (tous, property/owner + counts rents/incidents/expenses/payouts). Team building

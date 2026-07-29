@@ -146,7 +146,14 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
 - **Explore** — expériences touristiques, capacité, réservation, annulation/
   remboursement.
 - **Mobility** — véhicules (avec contrôle de conformité assurance/pirogue),
-  services de mobilité, commission & caution.
+  services de mobilité, commission & caution, et **supervision back-office**
+  (F7.2.j — CDC §6) servie par le module Admin : `GET /admin/vehicles` renvoie
+  désormais `AdminVehicleResource` (sur-ensemble du format public : assurance,
+  identité du chauffeur, gilets, drapeaux de conformité, prestataire ; filtre
+  `driver=1|0`) et `GET /admin/mobility-services` expose les départs tous
+  statuts avec leur **remplissage** (`seats_taken`/`seats_left` agrégés en une
+  requête via `withSum`, annulations dérivées de `BookingStatus::estAnnulee()`).
+  Les champs de contrôle restent **hors** du catalogue public.
 - **Diaspora** — projets pilotés par un agent (affectation auto au moins chargé),
   rapports d'avancement, et **pilotage back-office** (F7.2.i — CDC §6) : file
   priorisée filtrable + `PATCH /diaspora-projects/{id}` (statut et/ou priorité,

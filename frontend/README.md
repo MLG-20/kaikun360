@@ -220,6 +220,28 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   avancement chantier, reporting (photo/vidéo/mixte + commentaire + lien vidéo).
   Le pilotage est réservé à l'admin ou à l'agent affecté (garde serveur `update` /
   `assign`).
+
+  **F7.2.j Mobilité** (`features/backoffice/mobility/`, route `/back-office/mobilite`) :
+  couvre le module CDC §6 *Mobilité*. Le cahier des charges range sous un même
+  module deux réalités qui ne se pilotent pas pareil — d'où **deux onglets**
+  plutôt qu'un tableau unique.
+  - **Flotte** (`GET /admin/vehicles`, tous statuts) : les moyens de transport au
+    catalogue (voitures, bus, 4x4, pirogues, mise à disposition de chauffeur).
+    La colonne **Conformité** est la vraie valeur ajoutée : assurance manquante,
+    chauffeur non déclaré ou pirogue sans gilets sautent aux yeux, le détail des
+    manquements s'affichant en infobulle. Deux grilles distinctes, calquées sur
+    le `VehicleComplianceChecker` du backend — **motorisé** (assurance + identité
+    du chauffeur) vs **pirogue** (gilets + aptitude météo + agrément). Filtres :
+    catégorie, statut, **avec / sans chauffeur**, recherche.
+  - **Trajets programmés** (`GET /admin/mobility-services`, tous statuts) : les
+    départs datés réservés à la place, avec le **remplissage** de chacun — jauge
+    places prises / restantes et mention « Complet » (les « disponibilités » du
+    cahier) — plus le véhicule affecté et le prestataire opérateur. Filtres :
+    nature, statut, **période de départ**, recherche.
+
+  Écran en **lecture seule**, comme Catalogues (F7.2.b) et Dossiers (F7.2.e) : la
+  décision d'approbation reste concentrée dans l'écran **Validation** (F7.2.a),
+  point unique de décision. Celui-ci sert à *repérer* les anomalies.
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

@@ -4,12 +4,13 @@ import { Observable, map } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { Experience } from '../../models/experience.model';
+import { AdminMobilityService } from '../../models/mobility-service.model';
 import { Payment } from '../../models/payment.model';
 import { Property } from '../../models/property.model';
 import { Provider } from '../../models/provider.model';
 import { Review } from '../../models/review.model';
 import { User } from '../../models/user.model';
-import { Vehicle } from '../../models/vehicle.model';
+import { AdminVehicle } from '../../models/vehicle.model';
 import { ApiEnvelope } from './api-response.model';
 import { Paginated } from './pagination.model';
 
@@ -200,12 +201,19 @@ export interface ValidationQueueOverview {
 /** Décision de modération d'une ressource en attente. */
 export type ValidationDecision = 'approve' | 'reject';
 
-/** Filtres communs des catalogues de supervision (F7.2.b). */
+/** Filtres communs des catalogues de supervision (F7.2.b, étendus en F7.2.j). */
 export interface CatalogQuery {
   /** Statut exact (`en_attente_validation`, `publie`, `suspendu`, `rejete`, `archive`). */
   status?: string;
   /** Recherche plein-texte (titre / marque-modèle / destination selon le type). */
   q?: string;
+  /** Type de ressource (catégorie de véhicule, nature de trajet…). — F7.2.j */
+  type?: string;
+  /** Véhicules AVEC (`true`) ou SANS (`false`) chauffeur. — F7.2.j */
+  driver?: boolean;
+  /** Bornes de période sur la date de départ (trajets, `AAAA-MM-JJ`). — F7.2.j */
+  from?: string;
+  to?: string;
   page?: number;
 }
 
@@ -822,9 +830,26 @@ export class AdminService {
     });
   }
 
-  /** Véhicules, TOUS statuts (supervision). GET /admin/vehicles */
-  adminVehicles(query: CatalogQuery = {}): Observable<Paginated<Vehicle>> {
-    return this.http.get<Paginated<Vehicle>>(`${this.api}/admin/vehicles`, {
+  /**
+   * Véhicules, TOUS statuts (supervision). GET /admin/vehicles
+   *
+   * Sert l'écran Catalogues (F7.2.b) et l'onglet « Flotte » de l'écran Mobilité
+   * (F7.2.j) : le format renvoyé est `AdminVehicle`, sur-ensemble de `Vehicle`
+   * incluant les champs de conformité — Catalogues ignore simplement ceux
+   * qu'il n'affiche pas.
+   */
+  adminVehicles(query: CatalogQuery = {}): Observable<Paginated<AdminVehicle>> {
+    return this.http.get<Paginated<AdminVehicle>>(`${this.api}/admin/vehicles`, {
+      params: this.catalogParams(query),
+    });
+  }
+
+  /**
+   * Trajets programmés, TOUS statuts, avec le remplissage de chaque départ.
+   * GET /admin/mobility-services — onglet « Trajets » de l'écran Mobilité (F7.2.j).
+   */
+  adminMobilityServices(query: CatalogQuery = {}): Observable<Paginated<AdminMobilityService>> {
+    return this.http.get<Paginated<AdminMobilityService>>(`${this.api}/admin/mobility-services`, {
       params: this.catalogParams(query),
     });
   }
@@ -836,11 +861,21 @@ export class AdminService {
     });
   }
 
-  /** Construit les query params communs des catalogues (statut, recherche, page). */
+  /**
+   * Construit les query params communs des catalogues (statut, recherche,
+   * page) et ceux propres à la Mobilité (type, chauffeur, période).
+   *
+   * `driver` est un booléen : on teste explicitement `undefined` pour que
+   * « sans chauffeur » (`false`) parte bien dans l'URL au lieu d'être ignoré.
+   */
   private catalogParams(query: CatalogQuery): HttpParams {
     let params = new HttpParams();
     if (query.status) params = params.set('status', query.status);
     if (query.q) params = params.set('q', query.q);
+    if (query.type) params = params.set('type', query.type);
+    if (query.driver !== undefined) params = params.set('driver', query.driver ? '1' : '0');
+    if (query.from) params = params.set('from', query.from);
+    if (query.to) params = params.set('to', query.to);
     if (query.page) params = params.set('page', String(query.page));
     return params;
   }

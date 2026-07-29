@@ -12,7 +12,9 @@ HTTP et garantissent la cohérence front/back.
 | `Property` (+ `PropertyLocation`, `PropertyOwner`) | `PropertyResource` | Immo |
 | `Stay` | `StayResource` (embarque `Property`) | Stay |
 | `Vehicle` | `VehicleResource` | Mobility |
+| `AdminVehicle` | `AdminVehicleResource` | Admin (back-office, F7.2.j) |
 | `MobilityService` | `MobilityServiceResource` | Mobility |
+| `AdminMobilityService` | `AdminMobilityServiceResource` | Admin (back-office, F7.2.j) |
 | `Experience` | `ExperienceResource` | Explore |
 | `ServiceRequest` | `ServiceRequestResource` | transversal |
 | `Quote` | `QuoteResource` | transversal |
@@ -37,5 +39,10 @@ Import pratique via le barrel : `import { Property, Stay } from '../models';`
 - **Statuts / types / labels** = `string | null` (valeurs d'enums backend).
 - **Relations chargées conditionnellement** (`whenLoaded`) = propriété
   **optionnelle** (`?`), ex. `Stay.property`, `Review.author`.
+- **Vues back-office enrichies** = interface `Admin*` qui **étend** le modèle
+  public (`AdminVehicle extends Vehicle`), jamais des champs ajoutés au modèle
+  public. La distinction est volontaire : ces champs (n° d'assurance, identité
+  du chauffeur…) sont des données de **contrôle**, servies derrière les gardes
+  admin uniquement. Le type dit donc *où* la donnée est disponible.
 
 > Toute évolution d'une Resource côté Laravel doit être répercutée ici.

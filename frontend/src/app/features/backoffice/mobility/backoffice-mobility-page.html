@@ -1,0 +1,285 @@
+<header class="mob-head">
+  <div>
+    <h1 class="mob-title">Mobilité</h1>
+    <p class="mob-sub">
+      La flotte (véhicules, chauffeurs, pirogues, bus) et les départs programmés. Supervision en
+      lecture seule — l’approbation se fait dans l’écran Validation.
+    </p>
+  </div>
+</header>
+
+<!-- Onglets : deux réalités distinctes (moyens de transport / départs datés) -->
+<nav class="mob-tabs" aria-label="Mobilité">
+  <button
+    type="button"
+    class="mob-tab"
+    [class.is-active]="selected() === 'fleet'"
+    (click)="select('fleet')"
+  >
+    Flotte
+  </button>
+  <button
+    type="button"
+    class="mob-tab"
+    [class.is-active]="selected() === 'trips'"
+    (click)="select('trips')"
+  >
+    Trajets programmés
+  </button>
+</nav>
+
+<!-- Filtres (le jeu varie selon l'onglet) -->
+<section class="mob-filters">
+  <input
+    class="k-input mob-search"
+    type="search"
+    name="search"
+    [(ngModel)]="search"
+    (keyup.enter)="applyFilters()"
+    [placeholder]="
+      selected() === 'fleet'
+        ? 'Rechercher (marque, modèle, référence)…'
+        : 'Rechercher (départ, destination, référence)…'
+    "
+  />
+
+  <select
+    class="k-input"
+    name="type"
+    [(ngModel)]="type"
+    (change)="applyFilters()"
+    aria-label="Filtrer par type"
+  >
+    @for (opt of typeOptions(); track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+
+  <select
+    class="k-input"
+    name="status"
+    [(ngModel)]="status"
+    (change)="applyFilters()"
+    aria-label="Filtrer par statut"
+  >
+    @for (opt of statusOptions; track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+
+  @if (selected() === 'fleet') {
+    <select
+      class="k-input"
+      name="driver"
+      [(ngModel)]="driver"
+      (change)="applyFilters()"
+      aria-label="Filtrer par présence de chauffeur"
+    >
+      <option value="">Avec ou sans chauffeur</option>
+      <option value="1">Avec chauffeur</option>
+      <option value="0">Sans chauffeur</option>
+    </select>
+  } @else {
+    <label class="mob-period">
+      <span>Du</span>
+      <input class="k-input" type="date" name="from" [(ngModel)]="from" (change)="applyFilters()" />
+    </label>
+    <label class="mob-period">
+      <span>au</span>
+      <input class="k-input" type="date" name="to" [(ngModel)]="to" (change)="applyFilters()" />
+    </label>
+  }
+
+  <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
+</section>
+
+@if (loading()) {
+  <p class="mob-state" role="status">Chargement…</p>
+} @else if (error()) {
+  <p class="mob-state mob-state--error" role="alert">
+    Impossible de charger ces données. Réessayez.
+  </p>
+} @else {
+  <p class="mob-count">{{ total() }} élément(s)</p>
+
+  <!-- ONGLET FLOTTE : contrôle de conformité de chaque moyen de transport -->
+  @if (selected() === 'fleet') {
+    <div class="mob-table-wrap">
+      <table class="mob-table">
+        <thead>
+          <tr>
+            <th>Véhicule</th>
+            <th>Catégorie</th>
+            <th>Capacité</th>
+            <th>Chauffeur</th>
+            <th>Conformité</th>
+            <th>Prestataire</th>
+            <th>Tarif</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of vehicles(); track v.id) {
+            <tr>
+              <td>
+                <span class="mob-label">{{ vehicleLabel(v) }}</span>
+                <span class="mob-ref">{{ v.reference }}</span>
+              </td>
+              <td>
+                <span class="mob-muted">{{ v.type_label ?? '—' }}</span>
+              </td>
+              <td>
+                <span class="mob-seats">{{ v.capacity }}</span>
+                <span class="mob-muted"> place(s)</span>
+              </td>
+              <td>
+                @if (v.has_driver) {
+                  <span class="mob-driver">{{ v.driver_identity ?? 'Non déclaré' }}</span>
+                } @else {
+                  <span class="mob-muted">Sans chauffeur</span>
+                }
+              </td>
+              <td>
+                <span class="mob-badge" [class]="complianceClass(v)" [title]="complianceDetail(v)">
+                  {{ complianceLabel(v) }}
+                </span>
+                @if (v.insurance_ref) {
+                  <span class="mob-insurance">Assurance {{ v.insurance_ref }}</span>
+                }
+                @if (v.type === 'pirogue') {
+                  <span class="mob-insurance"> {{ v.life_jackets_count ?? 0 }} gilet(s) </span>
+                }
+              </td>
+              <td>
+                @if (v.provider) {
+                  <span class="mob-owner">{{ v.provider.name }}</span>
+                  <span class="mob-muted">{{ v.provider.phone ?? v.provider.email }}</span>
+                } @else {
+                  <span class="mob-muted">—</span>
+                }
+              </td>
+              <td>
+                <span class="mob-price">{{ xof(v.price_per_day_xof) }}</span>
+                <span class="mob-price__suffix"> / jour</span>
+                @if (v.caution_xof) {
+                  <span class="mob-muted">Caution {{ xof(v.caution_xof) }}</span>
+                }
+              </td>
+              <td>
+                <span class="mob-badge" [class]="statusClass(v.status)">
+                  {{ v.status_label ?? '—' }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="mob-empty">Aucun véhicule ne correspond à ces filtres.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ONGLET TRAJETS : départs datés et leur remplissage -->
+  @if (selected() === 'trips') {
+    <div class="mob-table-wrap">
+      <table class="mob-table">
+        <thead>
+          <tr>
+            <th>Trajet</th>
+            <th>Nature</th>
+            <th>Départ</th>
+            <th>Remplissage</th>
+            <th>Véhicule</th>
+            <th>Prestataire</th>
+            <th>Prix / place</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of trips(); track t.id) {
+            <tr>
+              <td>
+                <span class="mob-label">{{ t.departure }} → {{ t.destination }}</span>
+                <span class="mob-ref">{{ t.reference }}</span>
+              </td>
+              <td>
+                <span class="mob-muted">{{ t.type_label ?? '—' }}</span>
+              </td>
+              <td>
+                <span class="mob-muted">{{ dateTime(t.departure_at) }}</span>
+              </td>
+              <td>
+                <span class="mob-seats">{{ t.seats_taken }} / {{ t.capacity }}</span>
+                <span class="mob-gauge" [attr.aria-label]="fillRate(t) + ' % de remplissage'">
+                  <span
+                    class="mob-gauge__fill"
+                    [class]="fillClass(t)"
+                    [style.width.%]="fillRate(t)"
+                  ></span>
+                </span>
+                @if (t.seats_left === 0) {
+                  <span class="mob-full">Complet</span>
+                } @else {
+                  <span class="mob-muted">{{ t.seats_left }} place(s) restante(s)</span>
+                }
+              </td>
+              <td>
+                @if (t.vehicle) {
+                  <span class="mob-owner">{{ t.vehicle.label ?? t.vehicle.type_label }}</span>
+                  <span class="mob-ref">{{ t.vehicle.reference }}</span>
+                } @else {
+                  <span class="mob-muted">Non affecté</span>
+                }
+              </td>
+              <td>
+                @if (t.provider) {
+                  <span class="mob-owner">{{ t.provider.name }}</span>
+                  <span class="mob-muted">{{ t.provider.phone ?? t.provider.email }}</span>
+                } @else {
+                  <span class="mob-muted">—</span>
+                }
+              </td>
+              <td>
+                <span class="mob-price">{{ xof(t.price_xof) }}</span>
+              </td>
+              <td>
+                <span class="mob-badge" [class]="statusClass(t.status)">
+                  {{ t.status_label ?? '—' }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="mob-empty">Aucun trajet ne correspond à ces filtres.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Pagination (commune aux deux onglets) -->
+  @if (lastPage() > 1) {
+    <nav class="mob-pager" aria-label="Pagination">
+      <button
+        type="button"
+        class="k-btn k-btn--ghost"
+        [disabled]="page() === 1"
+        (click)="goTo(page() - 1)"
+      >
+        ← Précédent
+      </button>
+      <span class="mob-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+      <button
+        type="button"
+        class="k-btn k-btn--ghost"
+        [disabled]="page() === lastPage()"
+        (click)="goTo(page() + 1)"
+      >
+        Suivant →
+      </button>
+    </nav>
+  }
+}

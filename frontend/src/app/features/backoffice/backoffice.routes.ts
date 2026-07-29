@@ -50,6 +50,16 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Catalogues — Back-office Kaikun 360',
       },
       {
+        // F7.2.j — Mobilité : flotte (conformité assurance/chauffeur/pirogue)
+        // + départs programmés et leur remplissage.
+        path: 'mobilite',
+        loadComponent: () =>
+          import('./mobility/backoffice-mobility-page').then(
+            (m) => m.BackofficeMobilityPageComponent,
+          ),
+        title: 'Mobilité — Back-office Kaikun 360',
+      },
+      {
         // F7.2.c — Nuitées : calendrier des séjours + check-in/out + ménage.
         path: 'nuitees',
         loadComponent: () =>
