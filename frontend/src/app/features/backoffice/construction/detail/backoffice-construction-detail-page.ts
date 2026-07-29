@@ -5,8 +5,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import {
   AdminService,
+  ComposeQuoteLine,
   ConstructionDossier,
+  ConstructionLot,
   ConstructionMilestone,
+  ConstructionQuote,
   ConstructionReport,
   MilestonePayload,
 } from '../../../../core/api/admin.service';
@@ -104,6 +107,53 @@ export class BackofficeConstructionDetailPageComponent {
   protected milestoneForm = { name: '', planned_date: '' };
   protected readonly addingMilestone = signal(false);
 
+  // --- Devis de chantier (F7.3.e2) --------------------------------------------
+
+  protected readonly quotes = signal<ConstructionQuote[]>([]);
+  protected readonly quotesLoading = signal(false);
+  /** Devis dont les lignes sont dépliées (un seul à la fois). */
+  protected readonly openQuoteId = signal<number | null>(null);
+  /** Devis en cours d'envoi. */
+  protected readonly sendingQuoteId = signal<number | null>(null);
+
+  /** Composeur : lignes en cours de saisie. */
+  protected readonly composerOpen = signal(false);
+  protected readonly composerLines = signal<ComposeQuoteLine[]>([]);
+  protected composerMarginRate: number | null = null;
+  protected composerValidUntil = '';
+  protected readonly composing = signal(false);
+
+  /** Lots proposés, dans l'ordre d'exécution du chantier (miroir de l'enum). */
+  protected readonly lots: readonly { value: ConstructionLot; label: string }[] = [
+    { value: 'etudes', label: 'Études & permis' },
+    { value: 'terrassement', label: 'Terrassement' },
+    { value: 'fondations', label: 'Fondations' },
+    { value: 'gros_oeuvre', label: 'Gros œuvre' },
+    { value: 'charpente_couverture', label: 'Charpente & couverture' },
+    { value: 'menuiserie', label: 'Menuiserie' },
+    { value: 'plomberie', label: 'Plomberie' },
+    { value: 'electricite', label: 'Électricité' },
+    { value: 'finitions', label: 'Finitions' },
+    { value: 'amenagements_exterieurs', label: 'Aménagements extérieurs' },
+    { value: 'main_oeuvre', label: 'Main d’œuvre' },
+    { value: 'divers', label: 'Divers' },
+  ];
+
+  /** Unités courantes d'un devis BTP (saisie libre possible). */
+  protected readonly units = ['m2', 'm3', 'ml', 'u', 'forfait', 'jour'];
+
+  /**
+   * Sous-total du devis en cours de composition, recalculé à la saisie.
+   * Le serveur refait ce calcul à l'enregistrement — c'est lui qui fait foi ;
+   * ici c'est un aperçu, pour que l'agent voie où il en est.
+   */
+  protected readonly composerSubtotal = computed(() =>
+    this.composerLines().reduce(
+      (sum, line) => sum + Math.round((line.quantity || 0) * (line.unit_price_xof || 0)),
+      0,
+    ),
+  );
+
   /**
    * Avancement du chantier en pourcentage, d'après les jalons terminés.
    * `null` quand le dossier n'a aucun jalon (rien à jauger).
@@ -134,6 +184,7 @@ export class BackofficeConstructionDetailPageComponent {
         this.dossier.set(dossier);
         this.loading.set(false);
         this.loadReports();
+        this.loadQuotes();
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
@@ -208,6 +259,175 @@ export class BackofficeConstructionDetailPageComponent {
           this.actionError.set(this.messageFor(error));
         },
       });
+  }
+
+  // --- Devis : lecture & envoi -------------------------------------------------
+
+  protected loadQuotes(): void {
+    this.quotesLoading.set(true);
+    this.admin.constructionQuotes(this.requestId).subscribe({
+      next: (quotes) => {
+        this.quotes.set(quotes);
+        this.quotesLoading.set(false);
+      },
+      error: () => this.quotesLoading.set(false),
+    });
+  }
+
+  /** Déplie / replie les lignes d'un devis. */
+  protected toggleQuote(quote: ConstructionQuote): void {
+    this.openQuoteId.update((id) => (id === quote.id ? null : quote.id));
+  }
+
+  /** Seul un brouillon s'envoie (le serveur refuse le reste). */
+  protected canSend(quote: ConstructionQuote): boolean {
+    return quote.status === 'brouillon';
+  }
+
+  /** Envoie le devis au client. */
+  protected sendQuote(quote: ConstructionQuote): void {
+    if (this.sendingQuoteId() !== null) return;
+
+    this.sendingQuoteId.set(quote.id);
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+
+    this.admin.sendConstructionQuote(quote.id).subscribe({
+      next: (updated) => {
+        this.sendingQuoteId.set(null);
+        this.quotes.update((list) => list.map((q) => (q.id === updated.id ? updated : q)));
+        this.actionMessage.set(`Devis ${updated.reference} envoyé au client.`);
+        // L'envoi fait passer le DOSSIER en « devis envoyé » : contrairement aux
+        // jalons, l'en-tête de la fiche change → on la recharge.
+        this.load();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.sendingQuoteId.set(null);
+        this.actionError.set(this.messageFor(error));
+      },
+    });
+  }
+
+  // --- Devis : composition ----------------------------------------------------
+
+  protected toggleComposer(): void {
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+
+    const opening = !this.composerOpen();
+    this.composerOpen.set(opening);
+
+    // À l'ouverture, une première ligne vide : un devis vide n'a pas de sens et
+    // l'agent n'a pas à cliquer « ajouter » avant de pouvoir saisir.
+    if (opening && this.composerLines().length === 0) {
+      this.addComposerLine();
+    }
+  }
+
+  protected addComposerLine(): void {
+    this.composerLines.update((lines) => [
+      ...lines,
+      { lot: 'gros_oeuvre', label: '', unit: 'm2', quantity: 1, unit_price_xof: 0 },
+    ]);
+  }
+
+  protected removeComposerLine(index: number): void {
+    this.composerLines.update((lines) => lines.filter((_, i) => i !== index));
+  }
+
+  /**
+   * Met à jour un champ d'une ligne. Les signaux exigent un nouveau tableau : on
+   * ne mute pas la ligne en place, sinon `composerSubtotal` ne se recalculerait
+   * pas.
+   */
+  protected updateComposerLine(index: number, patch: Partial<ComposeQuoteLine>): void {
+    this.composerLines.update((lines) =>
+      lines.map((line, i) => (i === index ? { ...line, ...patch } : line)),
+    );
+  }
+
+  /** Montant d'une ligne (aperçu ; le serveur refait le calcul). */
+  protected lineAmount(line: ComposeQuoteLine): number {
+    return Math.round((line.quantity || 0) * (line.unit_price_xof || 0));
+  }
+
+  /**
+   * Marge de l'aperçu, ou `null` quand le taux est laissé vide : dans ce cas
+   * c'est le réglage `build.margin_rate` du back-office qui s'appliquera, et on
+   * ne le connaît pas ici — `GET /admin/settings` exige `gerer:parametres`, qu'un
+   * agent chantier n'a pas. Mieux vaut ne rien afficher qu'un chiffre faux.
+   */
+  protected composerMargin(): number | null {
+    if (this.composerMarginRate === null || this.composerMarginRate === undefined) return null;
+    return Math.round((this.composerSubtotal() * this.composerMarginRate) / 100);
+  }
+
+  protected composerTotal(): number | null {
+    const margin = this.composerMargin();
+    return margin === null ? null : this.composerSubtotal() + margin;
+  }
+
+  /** Chiffre le devis. */
+  protected composeQuote(): void {
+    const lines = this.composerLines();
+
+    if (!lines.length) {
+      this.actionError.set('Un devis doit contenir au moins une ligne.');
+      return;
+    }
+    if (lines.some((line) => !line.quantity || line.quantity <= 0)) {
+      this.actionError.set('Chaque ligne demande une quantité supérieure à zéro.');
+      return;
+    }
+
+    this.composing.set(true);
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+
+    this.admin
+      .composeConstructionQuote(this.requestId, {
+        lines: lines.map((line) => ({
+          ...line,
+          label: line.label?.trim() || undefined,
+          unit: line.unit?.trim() || undefined,
+        })),
+        margin_rate: this.composerMarginRate ?? undefined,
+        valid_until: this.composerValidUntil || undefined,
+      })
+      .subscribe({
+        next: (quote) => {
+          this.composing.set(false);
+          this.quotes.update((list) => [quote, ...list]);
+          this.composerLines.set([]);
+          this.composerMarginRate = null;
+          this.composerValidUntil = '';
+          this.composerOpen.set(false);
+          this.openQuoteId.set(quote.id);
+          this.actionMessage.set(
+            `Devis ${quote.reference} chiffré (${this.money(quote.total_xof)}). Il reste à l’envoyer au client.`,
+          );
+          // Le chiffrage fait passer le dossier « en étude » → en-tête à jour.
+          this.load();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.composing.set(false);
+          this.actionError.set(this.messageFor(error));
+        },
+      });
+  }
+
+  /** Classe CSS du badge de statut d'un devis. */
+  protected quoteClass(status: string | null): string {
+    switch (status) {
+      case 'accepte':
+        return 'is-ok';
+      case 'envoye':
+        return 'is-progress';
+      case 'refuse':
+        return 'is-off';
+      default:
+        return 'is-pending';
+    }
   }
 
   // --- Jalons : faire avancer -------------------------------------------------

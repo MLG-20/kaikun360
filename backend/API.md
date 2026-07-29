@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 203 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 212 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -157,6 +157,15 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/construction-requests/{constructionRequest}` | auth | `ConstructionRequestController@show` |
 | GET | `/construction-requests/{constructionRequest}/reports` | auth | `ConstructionRequestController@reports` |
 | POST | `/construction-requests/{constructionRequest}/reports` | auth + `can:gerer:chantiers` | `ConstructionReportController@store` |
+| POST | `/construction-requests/{constructionRequest}/milestones` | auth + `can:gerer:chantiers` | `ConstructionMilestoneController@store` |
+| PUT | `/construction-requests/{constructionRequest}/milestones/reorder` | auth + `can:gerer:chantiers` | `ConstructionMilestoneController@reorder` |
+| PATCH | `/construction-milestones/{milestone}` | auth + `can:gerer:chantiers` | `ConstructionMilestoneController@update` |
+| DELETE | `/construction-milestones/{milestone}` | auth + `can:gerer:chantiers` | `ConstructionMilestoneController@destroy` |
+| GET | `/construction-requests/{constructionRequest}/quotes` | auth (policy `view`) | `ConstructionQuoteController@index` |
+| POST | `/construction-requests/{constructionRequest}/quotes` | auth + `can:gerer:chantiers` | `ConstructionQuoteController@compose` |
+| PATCH | `/construction-quotes/{quote}/send` | auth + `can:gerer:chantiers` | `ConstructionQuoteController@send` |
+| PATCH | `/construction-quotes/{quote}/accept` | auth (policy `respond` — client) | `ConstructionQuoteController@accept` |
+| PATCH | `/construction-quotes/{quote}/refuse` | auth (policy `respond` — client) | `ConstructionQuoteController@refuse` |
 
 ### Diaspora
 

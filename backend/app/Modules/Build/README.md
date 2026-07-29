@@ -212,15 +212,61 @@ Tests : `tests/Feature/Build/ConstructionMilestonePilotageTest.php` (9 cas — d
 refus au client, effacement de la date à la réouverture, ordre étranger refusé).
 Aucune migration : la table `construction_milestones` existe depuis B5.3.
 
-> ⚠️ **Deux manques du CDC §6 *Construction* restent ouverts, côté serveur :**
-> 1. **Devis** — ⚠️ **correction d'un audit antérieur** : `ConstructionRequest::quotes`
->    **n'existe pas**. La table `quotes` (B11.3) pend sur `requests` (les demandes de
->    contact génériques), pas sur `construction_requests` : il n'y a donc rien à
->    « rebrancher », le devis de chantier est à créer (prévu F7.3.e2, sur le motif
->    des devis pack du team building).
-> 2. **Prestataires BTP** — aucun rattachement mission ↔ chantier, contrairement
->    au team building (`provider_missions.team_building_request_id`, F7.2.h) qui
->    fournit le motif à reprendre (prévu F7.3.e3).
+## Devis de chantier (F7.3.e2)
+
+Le CDC §6 attend des « demandes de devis ». La plateforme ne produisait qu'un
+**coût estimé** par le simulateur — utile pour cadrer un projet, mais ce n'est pas
+un devis : pas de ventilation par lot, aucun engagement, aucun cycle d'acceptation.
+
+⚠️ **Correction d'un audit antérieur** : `ConstructionRequest::quotes` n'existait
+pas et la table transversale `quotes` (B11.3) **ne pouvait pas servir** — elle pend
+sur `requests` (demandes de contact génériques) et ne porte qu'un montant global.
+Le devis de chantier a donc sa table, `construction_quotes`, sur le motif éprouvé
+des devis pack du team building (`team_building_quotes`, B9.2).
+
+- **Lignes ventilées par lot** (`ConstructionLot` : études, terrassement,
+  fondations, gros œuvre, charpente, menuiserie, plomberie, électricité, finitions,
+  extérieurs, main d'œuvre, divers) avec unité (m², m³, ml, u, forfait, jour) et
+  **quantité décimale** — 18,5 m³ de semelles se chiffrent, contrairement au team
+  building qui compte des participants entiers.
+- **Lignes triées à la composition dans l'ordre d'exécution** du chantier (ordre des
+  cas de l'enum) : un devis présenté dans l'ordre de saisie est illisible. Le tri
+  est fait une fois, puisque les lignes sont ensuite figées.
+- **Totaux FIGÉS** (sous-total, marge, total). Un devis envoyé ne doit plus bouger :
+  si le barème ou la marge change après coup, le document que le client a reçu reste
+  celui qu'il a reçu.
+- **Marge** = réglage `build.margin_rate` (défaut 15 %, groupe `commissions`),
+  surchargeable par requête. Pilotable au back-office comme celle du team building :
+  c'est un paramètre commercial, pas du code.
+- **Traçabilité** : `created_by` = l'agent qui a chiffré.
+
+**Partage des droits** — chiffrer et envoyer relèvent de `gerer:chantiers` ;
+**répondre** relève de la policy `respond`, réservée au **client**. Accepter un devis
+est son engagement financier : ni l'agent ni l'admin ne le prennent à sa place (même
+règle que `TeamBuildingRequestPolicy::accept`, où seule l'entreprise accepte).
+
+**Cycle & statuts du dossier.** L'enum `ConstructionRequestStatus` prévoyait
+`EN_ETUDE → DEVIS_ENVOYE → ACCEPTEE` depuis B5 sans que rien ne le pilote ; les devis
+l'alimentent enfin : composition → `EN_ETUDE`, envoi → `DEVIS_ENVOYE`, acceptation →
+`ACCEPTEE`. Deux garde-fous : un devis **complémentaire** sur un chantier accepté ou
+en cours **ne fait pas régresser** son statut, et un **refus** laisse le dossier en
+`DEVIS_ENVOYE` (un refus appelle un devis révisé, il n'annule pas la demande).
+Un devis déjà envoyé ne se renvoie pas (422) — un second envoi écraserait en silence
+la réponse du client. Seul un devis **envoyé** est acceptable ou refusable (422).
+
+Tests : `tests/Feature/Build/ConstructionQuoteTest.php` (12 cas).
+
+> ⚠️ **Manque restant du CDC §6 *Construction*, côté serveur : les prestataires
+> BTP.** Aucun rattachement mission ↔ chantier, contrairement au team building
+> (`provider_missions.team_building_request_id`, F7.2.h) qui fournit le motif à
+> reprendre (prévu F7.3.e3).
+>
+> ⚠️ **Écart d'interface signalé (F7.3.e2)** : `accept` / `refuse` sont livrés et
+> testés, mais **le client n'a aucun écran** pour répondre — l'espace client n'a pas
+> de suivi de ses demandes de construction (`features/build/` côté Angular n'est que
+> la page publique + simulateur). Un devis peut donc être envoyé sans que son
+> destinataire puisse le trancher autrement que par téléphone. À livrer comme les
+> écrans diaspora de F3.8.
 >
 > ⚠️ **Piège de test** : les jalons sont semés par le **contrôleur** `store`, pas
 > par la factory — une demande créée directement par le modèle n'en a aucun.

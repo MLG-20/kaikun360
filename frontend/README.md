@@ -216,8 +216,26 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   **pas rechargée** après une écriture sur un jalon — à la différence de la
   fiche mandat (F7.3.a) où les agrégats bougeaient : le serveur renvoie le jalon
   à jour et la jauge d'avancement est un `computed` local. ⚠️ Restent hors
-  périmètre, signalés dans un encart : les **devis** (F7.3.e2) et
-  l'**affectation de prestataires BTP** (F7.3.e3).
+  périmètre, signalé dans un encart : l'**affectation de prestataires BTP**
+  (F7.3.e3).
+
+  **F7.3.e2 — les devis de chantier.** Nouvelle carte *Devis* sur la fiche. Un
+  **composeur** ajoute des lignes ventilées par **lot** (12 corps d'état) avec
+  désignation, unité (liste suggérée, saisie libre), quantité décimale et prix
+  unitaire ; le montant de chaque ligne et le sous-total s'affichent à la saisie
+  (aperçu : c'est le serveur qui recalcule et fait foi). Chaque devis se déplie en
+  tableau lot par lot avec sous-total / marge / total, et un brouillon
+  s'**envoie au client** en un clic. Trois points à connaître : le champ **marge
+  laissé vide** signifie « taux du back-office » et l'aperçu n'affiche alors PAS de
+  total — `GET /admin/settings` exige `gerer:parametres`, qu'un agent chantier n'a
+  pas, donc afficher un taux deviné serait un chiffre faux ; les lignes du
+  composeur sont remplacées et non mutées, sinon le sous-total (`computed`) ne se
+  recalculerait pas ; et **la fiche EST rechargée** après un chiffrage ou un envoi
+  (contrairement aux jalons) parce que le statut du dossier change dans l'en-tête.
+  ⚠️ **Écart signalé** : accepter / refuser un devis appartient au **client**
+  (policy `respond`) — ce n'est donc pas exposé dans le back-office, et l'espace
+  client n'a **pas encore** d'écran de suivi de ses demandes de construction pour
+  le faire.
 
   **F7.3.d Export comptable** (onglet ajouté à `features/backoffice/payments/`) :
   `GET /admin/reports/export` était livré et testé depuis B13.5 mais **aucun

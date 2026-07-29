@@ -33,4 +33,18 @@ class ConstructionRequestPolicy
                 UserRole::ADMIN->value,
             ]);
     }
+
+    /**
+     * Répondre à un devis (accepter / refuser) : le CLIENT seul (F7.3.e2).
+     *
+     * Volontairement plus étroit que `view` : accepter un devis est un engagement
+     * financier du client. Ni l'agent ni l'admin ne le prennent à sa place — même
+     * règle que les devis pack du team building, où seule l'entreprise accepte
+     * (`TeamBuildingRequestPolicy::accept`). Le super_admin passe par Gate::before,
+     * ce qui reste voulu (compte de dépannage de la direction).
+     */
+    public function respond(User $user, ConstructionRequest $request): bool
+    {
+        return $user->id === $request->client_id;
+    }
 }

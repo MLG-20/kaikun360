@@ -54,6 +54,9 @@ class ConstructionRequestResource extends JsonResource
             // qui ne comptent pas → la clé n'apparaît simplement pas.
             'milestones_count' => $this->whenCounted('milestones'),
             'milestones' => ConstructionMilestoneResource::collection($this->whenLoaded('milestones')),
+            // Nombre de devis chiffrés (F7.3.e2) : la liste elle-même se charge à
+            // part, comme les comptes rendus.
+            'quotes_count' => $this->whenCounted('quotes'),
         ];
     }
 }

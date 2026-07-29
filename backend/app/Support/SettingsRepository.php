@@ -29,6 +29,9 @@ class SettingsRepository
     public const DEFAULTS = [
         'commission.default_rate' => ['value' => 12.0, 'type' => 'float', 'group' => 'commissions'],
         'teambuilding.margin_rate' => ['value' => 15.0, 'type' => 'float', 'group' => 'commissions'],
+        // Marge appliquée aux devis de chantier (F7.3.e2), pilotable au back-office
+        // comme celle du team building : c'est un paramètre commercial, pas du code.
+        'build.margin_rate' => ['value' => 15.0, 'type' => 'float', 'group' => 'commissions'],
         'platform.currency' => ['value' => 'XOF', 'type' => 'string', 'group' => 'general'],
         'support.email' => ['value' => 'support@kaikun360.sn', 'type' => 'string', 'group' => 'general'],
         'support.phone' => ['value' => '+221 33 000 00 00', 'type' => 'string', 'group' => 'general'],

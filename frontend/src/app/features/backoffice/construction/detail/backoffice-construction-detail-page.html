@@ -203,10 +203,196 @@
     </div>
 
     <p class="cs-note cs-note--warn">
-      ⚠️ Restent à livrer sur ce module : les <strong>devis</strong> et
-      l’<strong>affectation de prestataires BTP</strong>, prévus par le cahier des
-      charges. Ces deux manques sont identifiés et planifiés.
+      ⚠️ Reste à livrer sur ce module : l’<strong>affectation de prestataires BTP</strong>,
+      prévue par le cahier des charges. Ce manque est identifié et planifié.
     </p>
+  </section>
+
+  <!-- ============ DEVIS ============ -->
+  <section class="cs-card">
+    <div class="cs-card-head">
+      <h2 class="cs-card-title">Devis</h2>
+      <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleComposer()">
+        {{ composerOpen() ? 'Annuler' : 'Composer un devis' }}
+      </button>
+    </div>
+
+    <!-- Composeur : une ligne par poste, ventilée par lot -->
+    @if (composerOpen()) {
+      <div class="cs-quote-composer">
+        @for (line of composerLines(); track $index) {
+          <div class="cs-quote-line">
+            <label class="cs-field">
+              <span>Lot</span>
+              <select class="k-input" [value]="line.lot"
+                (change)="updateComposerLine($index, { lot: $any($event.target).value })">
+                @for (lot of lots; track lot.value) {
+                  <option [value]="lot.value">{{ lot.label }}</option>
+                }
+              </select>
+            </label>
+            <label class="cs-field">
+              <span>Désignation</span>
+              <input class="k-input" type="text" maxlength="255" [value]="line.label ?? ''"
+                placeholder="Ex. Semelles filantes"
+                (input)="updateComposerLine($index, { label: $any($event.target).value })" />
+            </label>
+            <label class="cs-field">
+              <span>Unité</span>
+              <input class="k-input" type="text" maxlength="30" list="cs-units" [value]="line.unit ?? ''"
+                (input)="updateComposerLine($index, { unit: $any($event.target).value })" />
+            </label>
+            <label class="cs-field">
+              <span>Quantité</span>
+              <input class="k-input" type="number" min="0.01" step="0.01" [value]="line.quantity"
+                (input)="updateComposerLine($index, { quantity: +$any($event.target).value })" />
+            </label>
+            <label class="cs-field">
+              <span>Prix unitaire</span>
+              <input class="k-input" type="number" min="0" step="1000" [value]="line.unit_price_xof"
+                (input)="updateComposerLine($index, { unit_price_xof: +$any($event.target).value })" />
+            </label>
+            <div class="cs-quote-line__amount">
+              <span class="cs-label">Montant</span>
+              <strong>{{ money(lineAmount(line)) }}</strong>
+            </div>
+            <button type="button" class="k-btn k-btn--ghost cs-btn cs-btn--danger"
+              [disabled]="composerLines().length === 1" (click)="removeComposerLine($index)">
+              Retirer
+            </button>
+          </div>
+        }
+
+        <!-- Unités courantes proposées, saisie libre conservée. -->
+        <datalist id="cs-units">
+          @for (unit of units; track unit) {
+            <option [value]="unit"></option>
+          }
+        </datalist>
+
+        <button type="button" class="k-btn k-btn--ghost cs-btn" (click)="addComposerLine()">
+          + Ajouter une ligne
+        </button>
+
+        <div class="cs-quote-totals">
+          <label class="cs-field">
+            <span>Marge (%)</span>
+            <input class="k-input" type="number" min="0" max="100" step="0.5"
+              [(ngModel)]="composerMarginRate" placeholder="Taux du back-office" />
+          </label>
+          <label class="cs-field">
+            <span>Valable jusqu’au</span>
+            <input class="k-input" type="date" [(ngModel)]="composerValidUntil" />
+          </label>
+
+          <dl class="cs-quote-preview">
+            <div><dt>Sous-total</dt><dd>{{ money(composerSubtotal()) }}</dd></div>
+            @if (composerMargin() !== null) {
+              <div><dt>Marge</dt><dd>{{ money(composerMargin()) }}</dd></div>
+              <div class="is-total"><dt>Total</dt><dd>{{ money(composerTotal()) }}</dd></div>
+            } @else {
+              <!-- Taux laissé vide : le réglage du back-office s'appliquera, et on
+                   ne le connaît pas ici (GET /admin/settings exige gerer:parametres). -->
+              <div><dt>Marge</dt><dd class="cs-muted">taux du back-office</dd></div>
+            }
+          </dl>
+
+          <button type="button" class="k-btn k-btn--primary cs-btn"
+            [disabled]="composing()" (click)="composeQuote()">
+            {{ composing() ? 'Chiffrage…' : 'Chiffrer le devis' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (quotesLoading()) {
+      <p class="cs-state" role="status">Chargement des devis…</p>
+    } @else if (quotes().length) {
+      <ul class="cs-quotes">
+        @for (quote of quotes(); track quote.id) {
+          <li class="cs-quote">
+            <div class="cs-quote__head">
+              <div>
+                <span class="cs-quote__ref">{{ quote.reference }}</span>
+                <span class="cs-quote__meta">
+                  {{ quote.lines.length }} ligne(s) · chiffré le {{ shortDate(quote.created_at) }}
+                  @if (quote.author?.name) { par {{ quote.author!.name }} }
+                  @if (quote.valid_until) { · valable jusqu’au {{ shortDate(quote.valid_until) }} }
+                </span>
+              </div>
+              <div class="cs-quote__right">
+                <strong class="cs-quote__total">{{ money(quote.total_xof) }}</strong>
+                <span class="cs-badge" [class]="quoteClass(quote.status)">
+                  {{ quote.status_label || quote.status }}
+                </span>
+              </div>
+            </div>
+
+            <div class="cs-quote__actions">
+              <button type="button" class="k-btn k-btn--ghost cs-btn" (click)="toggleQuote(quote)">
+                {{ openQuoteId() === quote.id ? 'Masquer le détail' : 'Voir le détail' }}
+              </button>
+              @if (canSend(quote)) {
+                <button type="button" class="k-btn k-btn--primary cs-btn"
+                  [disabled]="sendingQuoteId() !== null" (click)="sendQuote(quote)">
+                  {{ sendingQuoteId() === quote.id ? 'Envoi…' : 'Envoyer au client' }}
+                </button>
+              } @else if (quote.status === 'envoye') {
+                <span class="cs-muted">Envoyé le {{ shortDate(quote.sent_at) }} — réponse du client attendue</span>
+              } @else if (quote.status === 'accepte') {
+                <span class="cs-muted">Accepté le {{ shortDate(quote.accepted_at) }}</span>
+              }
+            </div>
+
+            @if (openQuoteId() === quote.id) {
+              <div class="cs-table-wrap">
+                <table class="cs-quote-table">
+                  <thead>
+                    <tr>
+                      <th>Lot</th>
+                      <th>Désignation</th>
+                      <th>Qté</th>
+                      <th>P.U.</th>
+                      <th>Montant</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (line of quote.lines; track $index) {
+                      <tr>
+                        <td>{{ line.lot_label }}</td>
+                        <td>{{ line.label }}</td>
+                        <td>{{ line.quantity }} {{ line.unit }}</td>
+                        <td>{{ money(line.unit_price_xof) }}</td>
+                        <td><strong>{{ money(line.amount_xof) }}</strong></td>
+                      </tr>
+                    }
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="4">Sous-total</td>
+                      <td>{{ money(quote.subtotal_xof) }}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="4">Marge ({{ quote.margin_rate }} %)</td>
+                      <td>{{ money(quote.margin_xof) }}</td>
+                    </tr>
+                    <tr class="is-total">
+                      <td colspan="4">Total</td>
+                      <td>{{ money(quote.total_xof) }}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="cs-state">
+        Aucun devis sur ce dossier. Le <strong>coût estimé</strong> plus haut vient du
+        simulateur : ce n’est pas un engagement chiffré.
+      </p>
+    }
   </section>
 
   <!-- ============ COMPTES RENDUS ============ -->

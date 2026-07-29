@@ -76,6 +76,18 @@ class ConstructionRequest extends Model
         return $this->hasMany(ConstructionMilestone::class)->orderBy('position');
     }
 
+    /**
+     * Les devis de chantier, du plus récent au plus ancien (F7.3.e2).
+     *
+     * ⚠️ À ne pas confondre avec la table transversale `quotes` (B11.3), qui pend
+     * sur les demandes de contact génériques (`requests`) et ne porte qu'un montant
+     * global : un devis de chantier est ventilé par lot.
+     */
+    public function quotes(): HasMany
+    {
+        return $this->hasMany(ConstructionQuote::class)->latest();
+    }
+
     protected static function newFactory(): ConstructionRequestFactory
     {
         return ConstructionRequestFactory::new();

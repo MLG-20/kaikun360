@@ -385,6 +385,72 @@ export interface ConstructionMilestone {
   actual_date: string | null;
 }
 
+/** Un lot (corps d'état) d'un devis de chantier — miroir de `ConstructionLot`. */
+export type ConstructionLot =
+  | 'etudes'
+  | 'terrassement'
+  | 'fondations'
+  | 'gros_oeuvre'
+  | 'charpente_couverture'
+  | 'menuiserie'
+  | 'plomberie'
+  | 'electricite'
+  | 'finitions'
+  | 'amenagements_exterieurs'
+  | 'main_oeuvre'
+  | 'divers';
+
+/**
+ * Une ligne de devis, telle que FIGÉE par le serveur à la composition (F7.3.e2).
+ * Le libellé du lot y est inclus : un devis est un document, pas une vue
+ * recalculée à l'affichage.
+ */
+export interface ConstructionQuoteLine {
+  lot: ConstructionLot;
+  lot_label: string;
+  label: string;
+  unit: string | null;
+  quantity: number;
+  unit_price_xof: number;
+  amount_xof: number;
+}
+
+/** Un devis de chantier (miroir de `ConstructionQuoteResource`). */
+export interface ConstructionQuote {
+  id: number;
+  reference: string;
+  construction_request_id: number;
+  lines: ConstructionQuoteLine[];
+  subtotal_xof: number;
+  margin_rate: number;
+  margin_xof: number;
+  total_xof: number;
+  valid_until: string | null;
+  status: 'brouillon' | 'envoye' | 'accepte' | 'refuse' | null;
+  status_label: string | null;
+  sent_at: string | null;
+  accepted_at: string | null;
+  created_at: string | null;
+  author?: { id: number | null; name: string | null };
+}
+
+/** Ligne saisie à la composition (le serveur calcule le montant et l'ordre). */
+export interface ComposeQuoteLine {
+  lot: ConstructionLot;
+  label?: string;
+  unit?: string;
+  quantity: number;
+  unit_price_xof: number;
+}
+
+/** Corps de la composition d'un devis de chantier. */
+export interface ComposeConstructionQuotePayload {
+  lines: ComposeQuoteLine[];
+  /** Omis → le réglage `build.margin_rate` du back-office s'applique. */
+  margin_rate?: number;
+  valid_until?: string;
+}
+
 /**
  * Champs modifiables d'un jalon (F7.3.e1). Tous facultatifs : le même type sert
  * l'ajout (où seul `name` est requis côté serveur) et le pilotage, qui exige au
@@ -1530,6 +1596,46 @@ export class AdminService {
       )
       .pipe(map((response) => response.data.milestones));
   }
+
+  // --- Devis de chantier (F7.3.e2) --------------------------------------------
+
+  /** Devis d'un chantier, du plus récent au plus ancien. GET …/quotes */
+  constructionQuotes(requestId: number): Observable<ConstructionQuote[]> {
+    return this.http
+      .get<{ data: ConstructionQuote[] }>(`${this.api}/construction-requests/${requestId}/quotes`)
+      .pipe(map((response) => response.data));
+  }
+
+  /** Chiffre un devis ventilé par lot (garde `gerer:chantiers`). POST …/quotes */
+  composeConstructionQuote(
+    requestId: number,
+    payload: ComposeConstructionQuotePayload,
+  ): Observable<ConstructionQuote> {
+    return this.http
+      .post<ApiEnvelope<{ quote: ConstructionQuote }>>(
+        `${this.api}/construction-requests/${requestId}/quotes`,
+        payload,
+      )
+      .pipe(map((response) => response.data.quote));
+  }
+
+  /**
+   * Envoie le devis au client. PATCH /construction-quotes/{id}/send
+   *
+   * Seul un brouillon est envoyable (422 sinon) : un second envoi écraserait en
+   * silence la réponse déjà donnée par le client.
+   */
+  sendConstructionQuote(quoteId: number): Observable<ConstructionQuote> {
+    return this.http
+      .patch<ApiEnvelope<{ quote: ConstructionQuote }>>(
+        `${this.api}/construction-quotes/${quoteId}/send`,
+        {},
+      )
+      .pipe(map((response) => response.data.quote));
+  }
+
+  // ⚠️ Accepter / refuser un devis n'est PAS exposé ici : c'est un geste du
+  // CLIENT (policy `respond`, côté espace client), pas du back-office.
 
   // --- Pilotage de la gestion locative (F7.3.a) ------------------------------
   //

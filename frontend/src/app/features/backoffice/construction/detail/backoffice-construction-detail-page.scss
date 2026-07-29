@@ -306,6 +306,186 @@
   }
 }
 
+// --- Devis de chantier (F7.3.e2) ---
+.cs-quote-composer {
+  padding: 14px;
+  margin-bottom: 18px;
+  background: var(--k-cream);
+  border-radius: var(--k-radius);
+}
+
+.cs-quote-line {
+  display: grid;
+  // Lot · désignation · unité · qté · P.U. · montant · retirer
+  grid-template-columns: 1.3fr 1.6fr 0.7fr 0.7fr 1fr auto auto;
+  gap: 8px;
+  align-items: end;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--k-line);
+
+  &__amount {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 110px;
+    text-align: right;
+  }
+
+  // Sur écran étroit, la ligne se replie en colonnes libres plutôt que de
+  // comprimer six champs à l'illisible.
+  @media (max-width: 1000px) {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+
+    &__amount {
+      text-align: left;
+    }
+  }
+}
+
+.cs-quote-totals {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--k-line);
+}
+
+.cs-quote-preview {
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.85rem;
+  }
+
+  dt,
+  dd {
+    margin: 0;
+    color: var(--k-muted);
+  }
+
+  .is-total {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--k-line);
+
+    dt,
+    dd {
+      color: var(--k-ink);
+      font-weight: 700;
+    }
+  }
+}
+
+.cs-quotes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cs-quote {
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 14px;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__ref {
+    display: block;
+    font-weight: 700;
+    color: var(--k-ink);
+  }
+
+  &__meta {
+    font-size: 0.78rem;
+    color: var(--k-muted);
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__total {
+    font-family: var(--k-font-display);
+    font-size: 1.05rem;
+    color: var(--k-ink);
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+}
+
+.cs-table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.cs-quote-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+  font-size: 0.85rem;
+
+  th,
+  td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--k-line);
+  }
+
+  th {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  // Les colonnes chiffrées se lisent alignées à droite.
+  td:nth-child(4),
+  td:nth-child(5),
+  th:nth-child(4),
+  th:nth-child(5) {
+    text-align: right;
+  }
+
+  tfoot td {
+    color: var(--k-muted);
+
+    &:last-child {
+      text-align: right;
+    }
+  }
+
+  tfoot .is-total td {
+    color: var(--k-ink);
+    font-weight: 700;
+    font-size: 0.92rem;
+  }
+}
+
 // --- Comptes rendus ---
 .cs-count {
   font-size: 0.8rem;
