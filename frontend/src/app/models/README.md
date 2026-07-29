@@ -16,6 +16,7 @@ HTTP et garantissent la cohérence front/back.
 | `MobilityService` | `MobilityServiceResource` | Mobility |
 | `AdminMobilityService` | `AdminMobilityServiceResource` | Admin (back-office, F7.2.j) |
 | `Experience` | `ExperienceResource` | Explore |
+| `AdminExperience` | `AdminExperienceResource` | Admin (back-office, F7.2.k) |
 | `ServiceRequest` | `ServiceRequestResource` | transversal |
 | `Quote` | `QuoteResource` | transversal |
 | `Booking` | `BookingResource` | transversal |

@@ -60,6 +60,16 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Mobilité — Back-office Kaikun 360',
       },
       {
+        // F7.2.k — Tourisme : circuits + remplissage, couverture par
+        // destination, partenaires guides & restaurants.
+        path: 'tourisme',
+        loadComponent: () =>
+          import('./tourism/backoffice-tourism-page').then(
+            (m) => m.BackofficeTourismPageComponent,
+          ),
+        title: 'Tourisme — Back-office Kaikun 360',
+      },
+      {
         // F7.2.c — Nuitées : calendrier des séjours + check-in/out + ménage.
         path: 'nuitees',
         loadComponent: () =>

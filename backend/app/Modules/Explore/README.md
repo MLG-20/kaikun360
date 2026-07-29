@@ -88,3 +88,27 @@ circuit) via le modèle transversal `Booking`.
 
 > 🔗 Le **remboursement effectif via PayTech** est déclenché en **B14** (ici on
 > calcule seulement l'éligibilité et le montant).
+
+---
+
+## Supervision back-office (F7.2.k)
+
+L'écran **Tourisme** du back-office est servi par le module **Admin**, pas par
+celui-ci : `GET /admin/experiences` (circuits tous statuts + remplissage +
+prestataire, via `AdminExperienceResource`) et `GET /admin/tourism/destinations`
+(couverture agrégée par destination). Trois points à connaître :
+
+- **La capacité est un total par circuit**, pas par session datée (contrairement
+  aux trajets du module Mobility). Le remplissage back-office cumule donc toutes
+  les réservations non annulées du circuit — même règle que
+  `ExperienceBookingService::seatsTaken()`, mais agrégée en une requête
+  (`withSum`) pour la liste.
+- **Les destinations ne sont pas une entité** : c'est la colonne
+  `tourism_experiences.destination`. La vue back-office les reconstruit par
+  `GROUP BY`. Modéliser un jour les destinations rendrait cet agrégat caduc.
+- **Guides et restaurants ne sont pas modélisés ici** : le cahier des charges
+  les cite (§6) mais le module ne les connaît que comme **inclusions** d'un
+  circuit (`inclusions.guide`, `inclusions.restauration`). Les partenaires réels
+  vivent dans le module **Pro** (`ProviderCategory::GUIDE` / `RESTAURATION`), et
+  **aucun lien guide ↔ circuit n'existe** — écart au cahier des charges signalé
+  à l'écran, à combler par un modèle d'affectation si le besoin se confirme.

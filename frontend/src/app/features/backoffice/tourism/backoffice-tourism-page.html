@@ -1,0 +1,358 @@
+<header class="tou-head">
+  <div>
+    <h1 class="tou-title">Tourisme</h1>
+    <p class="tou-sub">
+      Les circuits et leur remplissage, la couverture par destination, et les partenaires guides et
+      restaurants. Supervision en lecture seule — l’approbation se fait dans l’écran Validation.
+    </p>
+  </div>
+</header>
+
+<nav class="tou-tabs" aria-label="Tourisme">
+  <button
+    type="button"
+    class="tou-tab"
+    [class.is-active]="selected() === 'circuits'"
+    (click)="select('circuits')"
+  >
+    Circuits
+  </button>
+  <button
+    type="button"
+    class="tou-tab"
+    [class.is-active]="selected() === 'destinations'"
+    (click)="select('destinations')"
+  >
+    Destinations
+  </button>
+  <button
+    type="button"
+    class="tou-tab"
+    [class.is-active]="selected() === 'partners'"
+    (click)="select('partners')"
+  >
+    Guides &amp; restaurants
+  </button>
+</nav>
+
+<!-- Filtres (le jeu varie selon l'onglet) -->
+<section class="tou-filters">
+  <input
+    class="k-input tou-search"
+    type="search"
+    name="search"
+    [(ngModel)]="search"
+    (keyup.enter)="applyFilters()"
+    [placeholder]="
+      selected() === 'circuits'
+        ? 'Rechercher (titre, destination, référence)…'
+        : selected() === 'destinations'
+          ? 'Rechercher une destination…'
+          : 'Rechercher (nom commercial)…'
+    "
+  />
+
+  @if (selected() === 'circuits') {
+    <select
+      class="k-input"
+      name="status"
+      [(ngModel)]="status"
+      (change)="applyFilters()"
+      aria-label="Filtrer par statut"
+    >
+      @for (opt of statusOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+  }
+
+  @if (selected() === 'partners') {
+    <select
+      class="k-input"
+      name="category"
+      [(ngModel)]="category"
+      (change)="applyFilters()"
+      aria-label="Filtrer par catégorie"
+    >
+      @for (opt of categoryOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+    <select
+      class="k-input"
+      name="partnerStatus"
+      [(ngModel)]="status"
+      (change)="applyFilters()"
+      aria-label="Filtrer par statut"
+    >
+      @for (opt of partnerStatusOptions; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+  }
+
+  <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
+</section>
+
+<!-- Destination épinglée depuis l'onglet Destinations -->
+@if (selected() === 'circuits' && destination) {
+  <p class="tou-pin">
+    Circuits de <strong>{{ destination }}</strong>
+    <button type="button" class="tou-pin__clear" (click)="clearDestination()">
+      Retirer le filtre
+    </button>
+  </p>
+}
+
+@if (loading()) {
+  <p class="tou-state" role="status">Chargement…</p>
+} @else if (error()) {
+  <p class="tou-state tou-state--error" role="alert">
+    Impossible de charger ces données. Réessayez.
+  </p>
+} @else {
+  <p class="tou-count">{{ total() }} élément(s)</p>
+
+  <!-- ONGLET CIRCUITS -->
+  @if (selected() === 'circuits') {
+    <div class="tou-table-wrap">
+      <table class="tou-table">
+        <thead>
+          <tr>
+            <th>Circuit</th>
+            <th>Destination</th>
+            <th>Durée</th>
+            <th>Capacité groupe</th>
+            <th>Programme</th>
+            <th>Prestataire</th>
+            <th>Prix</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of circuits(); track c.id) {
+            <tr>
+              <td>
+                <span class="tou-label">{{ c.title }}</span>
+                <span class="tou-ref">{{ c.reference }}</span>
+              </td>
+              <td>
+                <span class="tou-muted">{{ c.destination }}</span>
+              </td>
+              <td>
+                <span class="tou-muted">{{ c.duration_days }} jour(s)</span>
+              </td>
+              <td>
+                <span class="tou-seats">{{ c.seats_taken }} / {{ c.capacity }}</span>
+                <span
+                  class="tou-gauge"
+                  [attr.aria-label]="fillRate(c.capacity, c.seats_taken) + ' % de remplissage'"
+                >
+                  <span
+                    class="tou-gauge__fill"
+                    [class]="fillClass(c.capacity, c.seats_taken)"
+                    [style.width.%]="fillRate(c.capacity, c.seats_taken)"
+                  ></span>
+                </span>
+                @if (c.seats_left === 0) {
+                  <span class="tou-full">Complet</span>
+                } @else {
+                  <span class="tou-muted">{{ c.seats_left }} place(s) restante(s)</span>
+                }
+              </td>
+              <td>
+                @if (programme(c).length) {
+                  <span class="tou-tags">
+                    @for (item of programme(c); track item) {
+                      <span class="tou-tag">{{ item }}</span>
+                    }
+                  </span>
+                } @else {
+                  <span class="tou-muted">Non renseigné</span>
+                }
+              </td>
+              <td>
+                @if (c.provider) {
+                  <span class="tou-owner">{{ c.provider.name }}</span>
+                  <span class="tou-muted">{{ c.provider.phone ?? c.provider.email }}</span>
+                } @else {
+                  <span class="tou-muted">—</span>
+                }
+              </td>
+              <td>
+                <span class="tou-price">{{ xof(c.price_xof) }}</span>
+              </td>
+              <td>
+                <span class="tou-badge" [class]="statusClass(c.status)">
+                  {{ c.status_label ?? '—' }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8" class="tou-empty">Aucun circuit ne correspond à ces filtres.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ONGLET DESTINATIONS -->
+  @if (selected() === 'destinations') {
+    <div class="tou-table-wrap">
+      <table class="tou-table">
+        <thead>
+          <tr>
+            <th>Destination</th>
+            <th>Circuits</th>
+            <th>Publiés</th>
+            <th>En attente</th>
+            <th>Capacité cumulée</th>
+            <th>Fourchette de prix</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of destinations(); track d.destination) {
+            <tr>
+              <td>
+                <span class="tou-label">{{ d.destination }}</span>
+              </td>
+              <td>
+                <span class="tou-seats">{{ d.circuits_count }}</span>
+              </td>
+              <td>
+                <span class="tou-badge is-ok">{{ d.published_count }}</span>
+              </td>
+              <td>
+                @if (d.pending_count) {
+                  <span class="tou-badge is-pending">{{ d.pending_count }}</span>
+                } @else {
+                  <span class="tou-muted">—</span>
+                }
+              </td>
+              <td>
+                <span class="tou-seats">{{ d.seats_taken }} / {{ d.capacity_total }}</span>
+                <span
+                  class="tou-gauge"
+                  [attr.aria-label]="
+                    fillRate(d.capacity_total, d.seats_taken) + ' % de remplissage'
+                  "
+                >
+                  <span
+                    class="tou-gauge__fill"
+                    [class]="fillClass(d.capacity_total, d.seats_taken)"
+                    [style.width.%]="fillRate(d.capacity_total, d.seats_taken)"
+                  ></span>
+                </span>
+                <span class="tou-muted">{{ d.seats_left }} place(s) restante(s)</span>
+              </td>
+              <td>
+                <span class="tou-price">{{ priceRange(d) }}</span>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="k-btn k-btn--ghost"
+                  (click)="openDestination(d.destination)"
+                >
+                  Voir les circuits
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="tou-empty">
+                Aucune destination ne correspond à cette recherche.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ONGLET GUIDES & RESTAURANTS -->
+  @if (selected() === 'partners') {
+    <p class="tou-note">
+      Les guides et restaurants ne sont pas des entités du catalogue touristique : la plateforme les
+      connaît comme <strong>catégories de prestataires</strong> de la marketplace, et comme simples
+      inclusions d’un circuit (colonne « Programme »). Aucun guide nommé n’est rattaché à un circuit
+      précis. Les sanctions se prennent dans l’écran Avis &amp; qualité.
+    </p>
+    <div class="tou-table-wrap">
+      <table class="tou-table">
+        <thead>
+          <tr>
+            <th>Partenaire</th>
+            <th>Catégorie</th>
+            <th>Note</th>
+            <th>Avertissements</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of partners(); track p.id) {
+            <tr>
+              <td>
+                <span class="tou-label">{{ p.business_name }}</span>
+                @if (p.bio) {
+                  <span class="tou-muted">{{ p.bio }}</span>
+                }
+              </td>
+              <td>
+                <span class="tou-muted">{{ p.category_label ?? '—' }}</span>
+              </td>
+              <td>
+                <span class="tou-price">{{ rating(p) }}</span>
+              </td>
+              <td>
+                @if (p.warnings_count) {
+                  <span class="tou-badge is-warn">{{ p.warnings_count }}</span>
+                  @if (p.sanction_note) {
+                    <span class="tou-muted">{{ p.sanction_note }}</span>
+                  }
+                } @else {
+                  <span class="tou-muted">Aucun</span>
+                }
+              </td>
+              <td>
+                <span class="tou-badge" [class]="partnerStatusClass(p.status)">
+                  {{ p.status_label ?? '—' }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="tou-empty">Aucun partenaire ne correspond à ces filtres.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Pagination (l'agrégat par destination n'est pas paginé) -->
+  @if (lastPage() > 1) {
+    <nav class="tou-pager" aria-label="Pagination">
+      <button
+        type="button"
+        class="k-btn k-btn--ghost"
+        [disabled]="page() === 1"
+        (click)="goTo(page() - 1)"
+      >
+        ← Précédent
+      </button>
+      <span class="tou-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+      <button
+        type="button"
+        class="k-btn k-btn--ghost"
+        [disabled]="page() === lastPage()"
+        (click)="goTo(page() + 1)"
+      >
+        Suivant →
+      </button>
+    </nav>
+  }
+}

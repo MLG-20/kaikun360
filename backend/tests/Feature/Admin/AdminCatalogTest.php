@@ -203,4 +203,110 @@ class AdminCatalogTest extends TestCase
             ->assertOk()
             ->assertJsonPath('meta.total', 2);
     }
+
+    /**
+     * F7.2.k — Le remplissage d'un circuit (« capacités groupes »). Rappel
+     * métier : une expérience n'a pas de date de départ, sa capacité est un
+     * total par circuit — le décompte cumule donc toutes ses réservations.
+     */
+    public function test_le_remplissage_d_un_circuit_ignore_les_reservations_annulees(): void
+    {
+        $experience = TourismExperience::factory()->create(['capacity' => 20]);
+
+        $this->bookExperience($experience, 6, BookingStatus::CONFIRMEE);
+        $this->bookExperience($experience, 4, BookingStatus::EN_ATTENTE);
+        $this->bookExperience($experience, 8, BookingStatus::ANNULEE_CLIENT);
+
+        Sanctum::actingAs($this->agent());
+
+        $this->getJson('/api/v1/admin/experiences')
+            ->assertOk()
+            ->assertJsonPath('data.0.capacity', 20)
+            ->assertJsonPath('data.0.seats_taken', 10)
+            ->assertJsonPath('data.0.seats_left', 10);
+    }
+
+    /**
+     * F7.2.k — Vue par destination : les destinations ne sont pas une entité en
+     * base mais une colonne, restituée par agrégation.
+     */
+    public function test_la_couverture_par_destination_est_agregee(): void
+    {
+        TourismExperience::factory()->create([
+            'destination' => 'Saly',
+            'status' => 'publie',
+            'capacity' => 10,
+            'price_xof' => 30_000,
+        ]);
+        TourismExperience::factory()->create([
+            'destination' => 'Saly',
+            'status' => 'en_attente_validation',
+            'capacity' => 15,
+            'price_xof' => 90_000,
+        ]);
+        TourismExperience::factory()->create([
+            'destination' => 'Saint-Louis',
+            'status' => 'publie',
+            'capacity' => 8,
+            'price_xof' => 50_000,
+        ]);
+
+        Sanctum::actingAs($this->agent());
+
+        $response = $this->getJson('/api/v1/admin/tourism/destinations')->assertOk();
+
+        // Trié par nombre de circuits décroissant → Saly en tête.
+        $response
+            ->assertJsonPath('data.destinations.0.destination', 'Saly')
+            ->assertJsonPath('data.destinations.0.circuits_count', 2)
+            ->assertJsonPath('data.destinations.0.published_count', 1)
+            ->assertJsonPath('data.destinations.0.pending_count', 1)
+            ->assertJsonPath('data.destinations.0.capacity_total', 25)
+            ->assertJsonPath('data.destinations.0.price_min', 30_000)
+            ->assertJsonPath('data.destinations.0.price_max', 90_000)
+            ->assertJsonPath('data.destinations.1.destination', 'Saint-Louis')
+            ->assertJsonPath('data.destinations.1.circuits_count', 1);
+    }
+
+    /**
+     * F7.2.k — Le remplissage par destination ne doit pas fausser les COUNT :
+     * il est calculé à part puis recollé (la jointure sur les réservations
+     * multiplierait les lignes du GROUP BY).
+     */
+    public function test_la_couverture_par_destination_compte_les_places_sans_fausser_les_totaux(): void
+    {
+        $experience = TourismExperience::factory()->create([
+            'destination' => 'Sine Saloum',
+            'capacity' => 12,
+        ]);
+        $this->bookExperience($experience, 3, BookingStatus::CONFIRMEE);
+        $this->bookExperience($experience, 2, BookingStatus::CONFIRMEE);
+        $this->bookExperience($experience, 5, BookingStatus::ANNULEE_CLIENT);
+
+        Sanctum::actingAs($this->agent());
+
+        $this->getJson('/api/v1/admin/tourism/destinations')
+            ->assertOk()
+            // Deux réservations retenues, mais UN seul circuit compté.
+            ->assertJsonPath('data.destinations.0.circuits_count', 1)
+            ->assertJsonPath('data.destinations.0.capacity_total', 12)
+            ->assertJsonPath('data.destinations.0.seats_taken', 5)
+            ->assertJsonPath('data.destinations.0.seats_left', 7);
+    }
+
+    /**
+     * Réserve `$guests` places sur un circuit, dans l'état donné.
+     */
+    private function bookExperience(TourismExperience $experience, int $guests, BookingStatus $status): void
+    {
+        $experience->bookings()->create([
+            'reference' => 'BK-'.fake()->unique()->bothify('######'),
+            'user_id' => User::factory()->create()->id,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->toDateString(),
+            'guests' => $guests,
+            'amount_xof' => $guests * $experience->price_xof,
+            'status' => $status->value,
+        ]);
+    }
 }

@@ -4,14 +4,18 @@ namespace App\Modules\Admin\Http\Controllers;
 
 use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
+use App\Modules\Admin\Http\Resources\AdminExperienceResource;
 use App\Modules\Admin\Http\Resources\AdminMobilityServiceResource;
 use App\Modules\Admin\Http\Resources\AdminVehicleResource;
-use App\Modules\Explore\Http\Resources\ExperienceResource;
+use App\Modules\Explore\Enums\ExperienceStatus;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Immo\Http\Resources\PropertyResource;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Support\ApiResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -97,12 +101,7 @@ class AdminCatalogController extends Controller
      */
     public function mobilityServices(Request $request): AnonymousResourceCollection
     {
-        // Statuts de réservation considérés comme annulés : ils ne consomment
-        // pas de place (source de vérité = l'enum, pas une liste recopiée).
-        $cancelled = array_map(
-            fn (BookingStatus $s) => $s->value,
-            array_filter(BookingStatus::cases(), fn (BookingStatus $s) => $s->estAnnulee()),
-        );
+        $cancelled = $this->cancelledBookingStatuses();
 
         $services = MobilityService::query()
             ->with(['provider', 'vehicle'])
@@ -129,19 +128,119 @@ class AdminCatalogController extends Controller
 
     /**
      * Circuits touristiques (tous statuts). GET /api/v1/admin/experiences
+     *
+     * Sert l'écran Catalogues (F7.2.b, vue synthétique) et l'onglet « Circuits »
+     * de l'écran Tourisme (F7.2.k, vue d'exploitation) — d'où
+     * `AdminExperienceResource`, sur-ensemble du format public incluant le
+     * remplissage et le prestataire.
+     *
+     * ⚠️ Une expérience n'a pas de date de départ : sa capacité est un **total
+     * par circuit** (B6.3). `seats_taken` cumule donc toutes ses réservations
+     * non annulées, agrégées en une requête (`withSum`) pour éviter un N+1.
+     *
+     * Filtre supplémentaire `destination` (F7.2.k) : correspondance exacte, pour
+     * croiser avec la vue par destination ci-dessous.
      */
     public function experiences(Request $request): AnonymousResourceCollection
     {
         $experiences = TourismExperience::query()
+            ->with('provider')
+            ->withSum(
+                ['bookings as seats_taken' => fn ($q) => $q->whereNotIn('status', $this->cancelledBookingStatuses())],
+                'guests'
+            )
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->when($request->filled('provider_id'), fn ($q) => $q->where('provider_id', $request->integer('provider_id')))
+            ->when($request->filled('destination'), fn ($q) => $q->where('destination', $request->string('destination')->toString()))
             ->when($request->filled('q'), function ($q) use ($request) {
                 $term = '%'.$request->string('q')->toString().'%';
-                $q->where(fn ($w) => $w->where('title', 'like', $term)->orWhere('destination', 'like', $term));
+                $q->where(fn ($w) => $w->where('title', 'like', $term)
+                    ->orWhere('destination', 'like', $term)
+                    ->orWhere('reference', 'like', $term));
             })
             ->latest()
             ->paginate($this->perPage($request));
 
-        return ExperienceResource::collection($experiences);
+        return AdminExperienceResource::collection($experiences);
+    }
+
+    /**
+     * Couverture touristique par destination. GET /api/v1/admin/tourism/destinations
+     *
+     * Onglet « Destinations » de l'écran Tourisme (F7.2.k). Le cahier des
+     * charges (§6) demande de piloter les **destinations**, qui ne sont pas une
+     * entité en base mais une **colonne** de `tourism_experiences` : on les
+     * restitue donc par agrégation, ce qui répond à la vraie question de
+     * l'équipe — quelles destinations sont couvertes, lesquelles n'ont que des
+     * circuits en attente, lesquelles sont saturées.
+     *
+     * Une seule requête groupée (aucun N+1), non paginée : le nombre de
+     * destinations distinctes reste de l'ordre de la dizaine. Le remplissage
+     * est calculé à part (jointure sur les réservations non annulées) puis
+     * recollé en mémoire, pour ne pas fausser les COUNT par la jointure.
+     */
+    public function tourismDestinations(Request $request): JsonResponse
+    {
+        $published = ExperienceStatus::PUBLIE->value;
+        $pending = ExperienceStatus::EN_ATTENTE_VALIDATION->value;
+
+        $rows = TourismExperience::query()
+            ->selectRaw('destination')
+            ->selectRaw('COUNT(*) as circuits_count')
+            ->selectRaw('SUM(status = ?) as published_count', [$published])
+            ->selectRaw('SUM(status = ?) as pending_count', [$pending])
+            ->selectRaw('SUM(capacity) as capacity_total')
+            ->selectRaw('MIN(price_xof) as price_min')
+            ->selectRaw('MAX(price_xof) as price_max')
+            ->when($request->filled('q'), fn ($q) => $q->where('destination', 'like', '%'.$request->string('q')->toString().'%'))
+            ->groupBy('destination')
+            ->orderByDesc('circuits_count')
+            ->get();
+
+        // Places occupées par destination, en une requête distincte : agrégée
+        // dans la même requête, la jointure sur `bookings` multiplierait les
+        // lignes et gonflerait COUNT(*) / SUM(capacity).
+        $taken = Booking::query()
+            ->where('bookable_type', TourismExperience::class)
+            ->whereNotIn('bookings.status', $this->cancelledBookingStatuses())
+            ->join('tourism_experiences', 'tourism_experiences.id', '=', 'bookings.bookable_id')
+            ->groupBy('tourism_experiences.destination')
+            ->selectRaw('tourism_experiences.destination as destination, SUM(bookings.guests) as seats')
+            ->pluck('seats', 'destination');
+
+        $destinations = $rows->map(function ($row) use ($taken) {
+            $capacity = (int) $row->capacity_total;
+            $seatsTaken = (int) ($taken[$row->destination] ?? 0);
+
+            return [
+                'destination' => $row->destination,
+                'circuits_count' => (int) $row->circuits_count,
+                'published_count' => (int) $row->published_count,
+                'pending_count' => (int) $row->pending_count,
+                'capacity_total' => $capacity,
+                'seats_taken' => $seatsTaken,
+                'seats_left' => max(0, $capacity - $seatsTaken),
+                'price_min' => (int) $row->price_min,
+                'price_max' => (int) $row->price_max,
+            ];
+        });
+
+        return ApiResponse::success(['destinations' => $destinations]);
+    }
+
+    /**
+     * Statuts de réservation valant annulation : ils ne consomment aucune place.
+     *
+     * Dérivés de l'enum (source de vérité unique) plutôt que recopiés, pour que
+     * l'ajout d'un motif d'annulation n'oublie aucun décompte.
+     *
+     * @return array<int, string>
+     */
+    private function cancelledBookingStatuses(): array
+    {
+        return array_map(
+            fn (BookingStatus $s) => $s->value,
+            array_filter(BookingStatus::cases(), fn (BookingStatus $s) => $s->estAnnulee()),
+        );
     }
 }

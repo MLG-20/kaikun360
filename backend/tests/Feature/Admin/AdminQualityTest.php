@@ -96,6 +96,50 @@ class AdminQualityTest extends TestCase
             ->assertJsonPath('data.0.status', 'suspendu');
     }
 
+    /**
+     * F7.2.k — Filtre par catégorie, multi-valeurs. C'est ce qui permet à
+     * l'écran Tourisme de restituer les **guides** et **restaurants** du cahier
+     * des charges : ce ne sont pas des entités du module Explore mais des
+     * catégories de prestataires.
+     */
+    public function test_la_liste_des_prestataires_filtre_par_categories_multiples(): void
+    {
+        Provider::factory()->create(['category' => 'guide']);
+        Provider::factory()->count(2)->create(['category' => 'restauration']);
+        Provider::factory()->create(['category' => 'artisanat']);
+
+        Sanctum::actingAs($this->agent());
+
+        $this->getJson('/api/v1/admin/providers?category=guide')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1);
+
+        $this->getJson('/api/v1/admin/providers?category=guide,restauration')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 3);
+    }
+
+    /**
+     * Une catégorie inconnue est ignorée dans une liste valide ; mais un filtre
+     * dont AUCUNE valeur n'est reconnue doit renvoyer une liste vide, jamais le
+     * catalogue entier (sinon une faute de frappe exposerait tout).
+     */
+    public function test_une_categorie_inconnue_ne_desactive_pas_le_filtre(): void
+    {
+        Provider::factory()->create(['category' => 'guide']);
+        Provider::factory()->create(['category' => 'artisanat']);
+
+        Sanctum::actingAs($this->agent());
+
+        $this->getJson('/api/v1/admin/providers?category=guide,inexistante')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1);
+
+        $this->getJson('/api/v1/admin/providers?category=inexistante')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 0);
+    }
+
     public function test_un_agent_sans_valider_prestataire_est_refuse_sur_la_liste(): void
     {
         Sanctum::actingAs($this->bareAgent());

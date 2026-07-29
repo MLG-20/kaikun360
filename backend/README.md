@@ -144,7 +144,15 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
 - **Build** — simulateur de coût de construction, jalons de chantier, rapports
   photo/vidéo polymorphes.
 - **Explore** — expériences touristiques, capacité, réservation, annulation/
-  remboursement.
+  remboursement, et **supervision back-office** (F7.2.k — CDC §6) servie par le
+  module Admin : `GET /admin/experiences` renvoie `AdminExperienceResource`
+  (remplissage `seats_taken`/`seats_left` via `withSum`, prestataire, filtre
+  `destination`) et `GET /admin/tourism/destinations` reconstruit la couverture
+  par destination en `GROUP BY` (les destinations sont une **colonne**, pas une
+  entité). ⚠️ Capacité = **total par circuit**, pas par session datée. Les
+  **guides** et **restaurants** du cahier des charges ne sont pas modélisés ici :
+  ce sont des catégories du module Pro + des drapeaux d'inclusion, sans lien
+  guide ↔ circuit (écart assumé, documenté).
 - **Mobility** — véhicules (avec contrôle de conformité assurance/pirogue),
   services de mobilité, commission & caution, et **supervision back-office**
   (F7.2.j — CDC §6) servie par le module Admin : `GET /admin/vehicles` renvoie

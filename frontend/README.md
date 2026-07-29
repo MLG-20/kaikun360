@@ -242,6 +242,31 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   Écran en **lecture seule**, comme Catalogues (F7.2.b) et Dossiers (F7.2.e) : la
   décision d'approbation reste concentrée dans l'écran **Validation** (F7.2.a),
   point unique de décision. Celui-ci sert à *repérer* les anomalies.
+
+  **F7.2.k Tourisme** (`features/backoffice/tourism/`, route `/back-office/tourisme`) :
+  couvre le module CDC §6 *Tourisme* (« circuits, destinations, programmes,
+  guides, restaurants, capacités groupes »). Ces six éléments ne vivent pas au
+  même endroit dans le modèle de données — d'où **trois onglets**.
+  - **Circuits** (`GET /admin/experiences`, tous statuts) : la **capacité
+    groupe** en jauge places prises / restantes, et le **programme** rendu par
+    les *inclusions* du circuit (Restauration, Guide, Transport…) en étiquettes.
+    ⚠️ Un circuit n'a **pas de date de départ** : la capacité est un total et le
+    remplissage cumule toutes ses réservations — à ne pas confondre avec le
+    remplissage d'un départ daté de l'écran Mobilité.
+  - **Destinations** (`GET /admin/tourism/destinations`) : vue **agrégée** —
+    nombre de circuits, publiés vs en attente, capacité cumulée, fourchette de
+    prix. Répond à la question de couverture : quelles destinations sont
+    servies, lesquelles n'ont que des circuits en attente. Un bouton
+    « Voir les circuits » bascule sur l'onglet Circuits filtré sur cette
+    destination — l'onglet est actionnable, pas seulement informatif.
+  - **Guides & restaurants** (`GET /admin/providers?category=guide,restauration`)
+    : ⚠️ ce ne sont **pas** des entités du catalogue touristique. La plateforme
+    ne les connaît que comme **catégories de prestataires** de la marketplace Pro
+    et comme drapeaux d'inclusion d'un circuit ; **aucun guide nommé n'est
+    rattaché à un circuit précis**. L'écart est signalé dans l'écran par un
+    encart, pas masqué. Les sanctions restent dans **Avis & qualité** (F7.2.g).
+
+  Lecture seule, comme les écrans précédents.
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

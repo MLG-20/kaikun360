@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { Experience } from '../../models/experience.model';
+import { AdminExperience } from '../../models/experience.model';
 import { AdminMobilityService } from '../../models/mobility-service.model';
 import { Payment } from '../../models/payment.model';
 import { Property } from '../../models/property.model';
@@ -214,7 +214,29 @@ export interface CatalogQuery {
   /** Bornes de période sur la date de départ (trajets, `AAAA-MM-JJ`). — F7.2.j */
   from?: string;
   to?: string;
+  /** Destination exacte (circuits touristiques). — F7.2.k */
+  destination?: string;
   page?: number;
+}
+
+/**
+ * Couverture touristique d'une destination (miroir de
+ * `GET /admin/tourism/destinations` — F7.2.k).
+ *
+ * Les destinations ne sont **pas** une entité en base : c'est une colonne de
+ * `tourism_experiences`, restituée ici par agrégation. D'où l'absence d'`id` —
+ * la clé métier est le libellé lui-même.
+ */
+export interface TourismDestination {
+  destination: string;
+  circuits_count: number;
+  published_count: number;
+  pending_count: number;
+  capacity_total: number;
+  seats_taken: number;
+  seats_left: number;
+  price_min: number;
+  price_max: number;
 }
 
 // --- Nuitées / exploitation (F7.2.c) ----------------------------------------
@@ -432,6 +454,15 @@ export interface ProviderQuery {
   status?: string;
   /** Recherche sur le nom commercial. */
   q?: string;
+  /**
+   * Catégories de prestataires, séparées par des virgules
+   * (`guide,restauration`). — F7.2.k
+   *
+   * C'est le mécanisme par lequel l'écran Tourisme restitue les **guides** et
+   * les **restaurants** du cahier des charges : ce ne sont pas des entités du
+   * module Explore mais des catégories de la marketplace Pro.
+   */
+  category?: string;
   page?: number;
 }
 
@@ -854,11 +885,32 @@ export class AdminService {
     });
   }
 
-  /** Expériences, TOUS statuts (supervision). GET /admin/experiences */
-  adminExperiences(query: CatalogQuery = {}): Observable<Paginated<Experience>> {
-    return this.http.get<Paginated<Experience>>(`${this.api}/admin/experiences`, {
+  /**
+   * Circuits, TOUS statuts (supervision). GET /admin/experiences
+   *
+   * Sert l'écran Catalogues (F7.2.b) et l'onglet « Circuits » de l'écran
+   * Tourisme (F7.2.k) : format `AdminExperience`, sur-ensemble d'`Experience`
+   * avec le remplissage et le prestataire.
+   */
+  adminExperiences(query: CatalogQuery = {}): Observable<Paginated<AdminExperience>> {
+    return this.http.get<Paginated<AdminExperience>>(`${this.api}/admin/experiences`, {
       params: this.catalogParams(query),
     });
+  }
+
+  /**
+   * Couverture par destination (agrégat, non paginé).
+   * GET /admin/tourism/destinations — onglet « Destinations » (F7.2.k).
+   */
+  adminTourismDestinations(q?: string): Observable<TourismDestination[]> {
+    let params = new HttpParams();
+    if (q) params = params.set('q', q);
+    return this.http
+      .get<ApiEnvelope<{ destinations: TourismDestination[] }>>(
+        `${this.api}/admin/tourism/destinations`,
+        { params },
+      )
+      .pipe(map((r) => r.data.destinations));
   }
 
   /**
@@ -876,6 +928,7 @@ export class AdminService {
     if (query.driver !== undefined) params = params.set('driver', query.driver ? '1' : '0');
     if (query.from) params = params.set('from', query.from);
     if (query.to) params = params.set('to', query.to);
+    if (query.destination) params = params.set('destination', query.destination);
     if (query.page) params = params.set('page', String(query.page));
     return params;
   }
@@ -1072,6 +1125,7 @@ export class AdminService {
     let params = new HttpParams();
     if (query.status) params = params.set('status', query.status);
     if (query.q) params = params.set('q', query.q);
+    if (query.category) params = params.set('category', query.category);
     if (query.page) params = params.set('page', String(query.page));
     return this.http.get<Paginated<Provider>>(`${this.api}/admin/providers`, { params });
   }

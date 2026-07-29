@@ -24,6 +24,25 @@ export interface Experience {
 }
 
 /**
+ * Circuit vu depuis le **back-office** — miroir d'`AdminExperienceResource`
+ * (F7.2.k).
+ *
+ * Sur-ensemble d'`Experience` : ajoute le **remplissage** du circuit (les
+ * « capacités groupes » du cahier des charges) et le prestataire opérateur.
+ * Servi uniquement par `GET /admin/experiences`.
+ *
+ * ⚠️ Un circuit n'a **pas de date de départ** : sa capacité est un total, et
+ * `seats_taken` cumule toutes ses réservations non annulées — ce n'est pas le
+ * remplissage d'une session datée (contrairement à `AdminMobilityService`).
+ */
+export interface AdminExperience extends Experience {
+  seats_taken: number;
+  seats_left: number;
+  provider?: { id: number; name: string; email: string | null; phone: string | null } | null;
+  created_at: string | null;
+}
+
+/**
  * Disponibilité d'une expérience — miroir de `GET /experiences/{id}/availability`.
  * Alimente l'affichage des places restantes sur la fiche (F2.4).
  */

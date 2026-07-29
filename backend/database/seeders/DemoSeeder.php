@@ -112,6 +112,10 @@ class DemoSeeder extends Seeder
         // sur une base dont les catalogues existaient déjà.
         $this->seedMobilitySupervision($provider);
 
+        // Cas de contrôle de l'écran Tourisme (F7.2.k) : guides & restaurant de
+        // la marketplace, circuits en attente. Garde propre, même principe.
+        $this->seedTourismSupervision($provider);
+
         // Profil + missions prestataire de démonstration pour peupler l'espace
         // prestataire : le tableau de bord (F5.1 — le compte de démo avait le rôle
         // mais aucune ligne `Provider`, d'où un 404) et les missions reçues (F5.2 —
@@ -296,6 +300,91 @@ class DemoSeeder extends Seeder
             'status' => $done ? 'effectue' : 'en_attente',
             'paid_at' => $done ? $month->endOfMonth() : null,
         ]);
+    }
+
+    /**
+     * Cas de contrôle de l'écran **Tourisme** du back-office (F7.2.k).
+     *
+     * Deux manques rendaient l'écran muet sur une base de démo : (1) tous les
+     * circuits semés sont publiés, donc l'onglet « Destinations » n'affichait
+     * jamais de circuit en attente ; (2) aucun prestataire de catégorie
+     * `guide`, donc l'onglet « Guides & restaurants » était quasi vide.
+     *
+     * Garde d'idempotence PROPRE (l'existence d'un prestataire `guide` sert de
+     * marqueur) : la relance du seeder complète une base déjà peuplée.
+     */
+    private function seedTourismSupervision(User $provider): void
+    {
+        if (Provider::query()->where('category', ProviderCategory::GUIDE->value)->exists()) {
+            return;
+        }
+
+        // Deux guides et un restaurant : de quoi rendre l'onglet partenaires
+        // représentatif, dont un guide encore en attente de validation.
+        // ⚠️ `providers.user_id` est UNIQUE (un profil marketplace par compte) :
+        // chaque partenaire a donc son propre compte de démonstration.
+        $partners = [
+            [
+                'email' => 'demo.guide.saloum@kaikun360.test',
+                'name' => 'Guides du Saloum',
+                'category' => ProviderCategory::GUIDE,
+                'bio' => 'Guides francophones et anglophones, spécialistes du delta du Saloum.',
+                'status' => ProviderStatus::VALIDE,
+                'rating_avg' => 4.8,
+                'rating_count' => 12,
+            ],
+            [
+                'email' => 'demo.guide.goree@kaikun360.test',
+                'name' => 'Gorée Découverte',
+                'category' => ProviderCategory::GUIDE,
+                'bio' => 'Visites guidées historiques de l\'île de Gorée.',
+                'status' => ProviderStatus::EN_ATTENTE,
+                'rating_avg' => null,
+                'rating_count' => 0,
+            ],
+            [
+                'email' => 'demo.restaurant.fatou@kaikun360.test',
+                'name' => 'Chez Fatou — Cuisine sénégalaise',
+                'category' => ProviderCategory::RESTAURATION,
+                'bio' => 'Restauration de groupe, spécialités thiéboudienne et yassa.',
+                'status' => ProviderStatus::VALIDE,
+                'rating_avg' => 4.2,
+                'rating_count' => 7,
+            ],
+        ];
+
+        foreach ($partners as $partner) {
+            $account = $this->demoUser($partner['email'], $partner['name'], 'prestataire');
+
+            Provider::create([
+                'user_id' => $account->id,
+                'business_name' => $partner['name'],
+                'category' => $partner['category']->value,
+                'bio' => $partner['bio'],
+                'status' => $partner['status']->value,
+                'validated_at' => $partner['status'] === ProviderStatus::VALIDE
+                    ? CarbonImmutable::now()->subMonth()
+                    : null,
+                'rating_avg' => $partner['rating_avg'],
+                'rating_count' => $partner['rating_count'],
+            ]);
+        }
+
+        // Deux circuits en attente de validation, sur une destination nouvelle
+        // et sur une destination déjà couverte : l'onglet « Destinations »
+        // montre ainsi les deux cas (destination neuve vs offre à compléter).
+        TourismExperience::factory()->create([
+            'provider_id' => $provider->id,
+            'destination' => 'Casamance',
+            'title' => 'Découverte de la Basse-Casamance',
+        ]);
+        TourismExperience::factory()->create([
+            'provider_id' => $provider->id,
+            'destination' => 'Gorée',
+            'title' => 'Gorée — visite mémorielle (nouveau circuit)',
+        ]);
+
+        $this->command?->info('DemoSeeder : cas de supervision Tourisme créés (F7.2.k).');
     }
 
     /**

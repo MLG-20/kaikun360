@@ -341,7 +341,41 @@ assurances, capacités » : deux réalités distinctes, donc deux endpoints.
   destination, référence).
 
 Les **statuts d'annulation** ne sont pas recopiés : ils sont dérivés de
-`BookingStatus::estAnnulee()`, source de vérité unique.
+`BookingStatus::estAnnulee()`, source de vérité unique
+(`AdminCatalogController::cancelledBookingStatuses()`).
+
+**Tourisme (F7.2.k)** — `consulter:dashboard-admin`. Le cahier des charges (§6)
+demande « circuits, destinations, programmes, guides, restaurants, capacités
+groupes ». Ces éléments ne vivent pas au même endroit dans le modèle :
+
+- `GET /admin/experiences` — les **circuits**. Sert désormais
+  `AdminExperienceResource` (sur-ensemble du format public) avec le
+  **remplissage** (`seats_taken`/`seats_left`, `withSum`) et le `provider`.
+  ⚠️ Un circuit n'a **pas de date de départ** : sa capacité est un **total par
+  circuit** (B6.3), le décompte cumule donc toutes ses réservations non
+  annulées — contrairement aux trajets de Mobilité, datés. Filtre
+  supplémentaire `destination` (exact) ; `q` porte aussi sur la `reference`.
+  Le **« programme »** est rendu par les `inclusions` (restauration, guide,
+  transport…), déjà portées par le modèle.
+- `GET /admin/tourism/destinations` — les **destinations**. Elles ne sont pas
+  une entité en base mais une **colonne** de `tourism_experiences` : on les
+  restitue par agrégation (`circuits_count`, `published_count`,
+  `pending_count`, `capacity_total`, `seats_taken`/`seats_left`,
+  `price_min`/`price_max`). Non paginé (une dizaine de destinations distinctes).
+  Le remplissage est calculé par une **requête séparée** puis recollé en
+  mémoire : agrégé dans la même requête, la jointure sur `bookings`
+  multiplierait les lignes et fausserait `COUNT(*)` / `SUM(capacity)`.
+- `GET /admin/providers?category=guide,restauration` — les **guides** et
+  **restaurants**. ⚠️ Ce ne sont **pas** des entités du module Explore : la
+  plateforme ne les connaît que comme **catégories de prestataires**
+  (`ProviderCategory`) et comme drapeaux d'inclusion d'un circuit. Le filtre
+  `category` accepte plusieurs valeurs séparées par une virgule ; une valeur
+  inconnue est ignorée, mais un filtre dont **aucune** valeur n'est valide
+  renvoie une liste vide (jamais le catalogue entier).
+
+> **Écart CDC assumé** : aucun rattachement d'un guide *nommé* à un circuit
+> précis n'existe en base. Le combler demanderait un modèle d'affectation
+> (guide ↔ circuit) — non livré en F7.2.k, signalé à l'écran.
 
 **Dossiers de suivi** — `consulter:dashboard-admin` :
 `GET /admin/construction-requests` (toutes, +counts) et `GET /admin/mandates`

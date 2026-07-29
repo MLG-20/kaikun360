@@ -146,6 +146,10 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         // remplissage de chaque départ. La flotte réutilise /admin/vehicles.
         Route::get('/mobility-services', [AdminCatalogController::class, 'mobilityServices']);
 
+        // F7.2.k — Écran Tourisme : couverture par destination (agrégat). Les
+        // circuits eux-mêmes réutilisent /admin/experiences.
+        Route::get('/tourism/destinations', [AdminCatalogController::class, 'tourismDestinations']);
+
         Route::get('/construction-requests', [AdminDossierController::class, 'constructionRequests']);
         Route::get('/mandates', [AdminDossierController::class, 'mandates']);
     });
