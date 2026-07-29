@@ -146,6 +146,10 @@ La répartition des travaux, l'échéancier et le délai sont **structurels**
 | Méthode | URL | Effet |
 |---|---|---|
 | POST | `/api/v1/construction-requests/{id}/reports` | publie un rapport (`created_by` = agent) |
+| POST | `/api/v1/construction-requests/{id}/milestones` | ajoute un jalon (F7.3.e1 ; `position` omise = fin de planning) |
+| PUT | `/api/v1/construction-requests/{id}/milestones/reorder` | réécrit l'ordre du planning (liste ordonnée d'identifiants) |
+| PATCH | `/api/v1/construction-milestones/{id}` | fait avancer / replanifie un jalon |
+| DELETE | `/api/v1/construction-milestones/{id}` | retire un jalon du planning |
 
 - **Policy** `ConstructionRequestPolicy` : `create` = tout authentifié ; `view` =
   client propriétaire **ou** agent/admin (super_admin via Gate::before). Enregistrée
@@ -179,15 +183,44 @@ pas dans une ligne. Une **fiche** consomme désormais les endpoints existants :
   liste.
 - **`created_at`** — un dossier de suivi se lit d'abord par son ancienneté.
 
-> ⚠️ **Trois manques du CDC §6 *Construction* restent ouverts, côté serveur :**
-> 1. **Faire avancer un jalon** — `ConstructionMilestoneService::seedDefault()`
->    les crée au dépôt, mais **aucun endpoint ne les met à jour**. Les jalons sont
->    donc en lecture seule à l'écran, qui le dit explicitement.
-> 2. **Devis** — `ConstructionRequest::quotes` n'est branché sur rien (la couche
->    transversale `Quote` de B11 existe, la jonction reste à faire).
-> 3. **Prestataires BTP** — aucun rattachement mission ↔ chantier, contrairement
+## Pilotage des jalons (F7.3.e1)
+
+Les jalons étaient semés au dépôt (`ConstructionMilestoneService::seedDefault()`)
+puis **figés** : aucun endpoint ne les touchait, alors que « jalons chantier » est
+une fonction explicite du CDC §6. `ConstructionMilestoneController` comble ce trou
+et sert les deux gestes du terrain — *faire avancer* (démarrer, achever, rouvrir)
+et *replanifier* (ajouter, renommer, redater, réordonner, retirer), car aucun
+chantier ne suit exactement le gabarit posé à la création.
+
+Trois règles portées par le serveur, à ne pas dupliquer côté client :
+
+- **Cohérence statut ↔ date réelle.** Passage à `termine` sans `actual_date` → date
+  du jour ; retour à `a_venir`/`en_cours` → `actual_date` **effacée**. Sans cela un
+  jalon rouvert resterait « en cours, achevé le … ».
+- **Réordonnancement par liste ordonnée d'identifiants**, en transaction, positions
+  réécrites `1..n`. Envoyer une position par jalon produirait un doublon transitoire
+  et un ordre indéterminé si la seconde écriture échouait.
+- **Ordre refusé en bloc (422)** si un identifiant n'appartient pas au chantier :
+  un planning à moitié réordonné est pire qu'un refus.
+
+Un `PATCH` sans aucun champ est refusé (422) plutôt que de renvoyer un succès qui
+n'a rien changé. La suppression **ne recompacte pas** les positions restantes :
+l'affichage trie par `position`, un trou est invisible, et recompacter obligerait à
+réécrire toute la liste à chaque retrait.
+
+Tests : `tests/Feature/Build/ConstructionMilestonePilotageTest.php` (9 cas — dont
+refus au client, effacement de la date à la réouverture, ordre étranger refusé).
+Aucune migration : la table `construction_milestones` existe depuis B5.3.
+
+> ⚠️ **Deux manques du CDC §6 *Construction* restent ouverts, côté serveur :**
+> 1. **Devis** — ⚠️ **correction d'un audit antérieur** : `ConstructionRequest::quotes`
+>    **n'existe pas**. La table `quotes` (B11.3) pend sur `requests` (les demandes de
+>    contact génériques), pas sur `construction_requests` : il n'y a donc rien à
+>    « rebrancher », le devis de chantier est à créer (prévu F7.3.e2, sur le motif
+>    des devis pack du team building).
+> 2. **Prestataires BTP** — aucun rattachement mission ↔ chantier, contrairement
 >    au team building (`provider_missions.team_building_request_id`, F7.2.h) qui
->    fournit le motif à reprendre.
+>    fournit le motif à reprendre (prévu F7.3.e3).
 >
 > ⚠️ **Piège de test** : les jalons sont semés par le **contrôleur** `store`, pas
 > par la factory — une demande créée directement par le modèle n'en a aucun.

@@ -248,6 +248,64 @@
   }
 }
 
+// --- Pilotage des jalons (F7.3.e1) ---
+.cs-step {
+  &__actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  &__panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    align-items: end;
+    margin-top: 10px;
+    padding: 12px;
+    background: var(--k-cream);
+    border-radius: var(--k-radius);
+  }
+}
+
+.cs-btn {
+  padding: 5px 11px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+
+  // Flèches de réordonnancement : carrées, pour ne pas être prises pour du texte.
+  &--icon {
+    padding: 5px 9px;
+    font-weight: 700;
+  }
+
+  &--danger {
+    color: var(--k-danger);
+
+    &:hover:not(:disabled) {
+      background: rgba(199, 59, 77, 0.08);
+    }
+  }
+}
+
+.cs-add {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--k-line);
+
+  &__form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    align-items: end;
+    margin-top: 12px;
+    padding: 14px;
+    background: var(--k-cream);
+    border-radius: var(--k-radius);
+  }
+}
+
 // --- Comptes rendus ---
 .cs-count {
   font-size: 0.8rem;

@@ -94,9 +94,10 @@
       </div>
     }
 
+    <!-- Les retours d'action (succès / erreur) sont affichés en tête de fiche. -->
     @if ((d.milestones ?? []).length) {
       <ol class="cs-timeline">
-        @for (milestone of d.milestones ?? []; track milestone.id) {
+        @for (milestone of d.milestones ?? []; track milestone.id; let first = $first, last = $last) {
           <li class="cs-step" [class]="milestoneClass(milestone.status)">
             <span class="cs-step__dot" aria-hidden="true"></span>
             <div class="cs-step__body">
@@ -106,21 +107,105 @@
                 · prévu {{ shortDate(milestone.planned_date) }}
                 @if (milestone.actual_date) { · réalisé {{ shortDate(milestone.actual_date) }} }
               </span>
+
+              <!-- Pilotage du jalon (F7.3.e1) : avancer, replanifier, déplacer. -->
+              <div class="cs-step__actions">
+                @if (milestone.status === 'a_venir') {
+                  <button type="button" class="k-btn k-btn--primary cs-btn"
+                    [disabled]="busyMilestoneId() !== null" (click)="startMilestone(milestone)">
+                    Démarrer
+                  </button>
+                }
+                @if (milestone.status === 'en_cours') {
+                  <button type="button" class="k-btn k-btn--primary cs-btn"
+                    [disabled]="busyMilestoneId() !== null" (click)="finishMilestone(milestone)">
+                    Achever
+                  </button>
+                }
+                @if (milestone.status === 'termine') {
+                  <button type="button" class="k-btn k-btn--ghost cs-btn"
+                    [disabled]="busyMilestoneId() !== null" (click)="reopenMilestone(milestone)">
+                    Rouvrir
+                  </button>
+                }
+                <button type="button" class="k-btn k-btn--ghost cs-btn"
+                  [disabled]="busyMilestoneId() !== null" (click)="toggleMilestoneEdit(milestone)">
+                  {{ editingMilestoneId() === milestone.id ? 'Fermer' : 'Modifier' }}
+                </button>
+                <button type="button" class="k-btn k-btn--ghost cs-btn cs-btn--icon"
+                  title="Monter dans le planning" aria-label="Monter dans le planning"
+                  [disabled]="first || busyMilestoneId() !== null" (click)="moveMilestone(milestone, -1)">
+                  ↑
+                </button>
+                <button type="button" class="k-btn k-btn--ghost cs-btn cs-btn--icon"
+                  title="Descendre dans le planning" aria-label="Descendre dans le planning"
+                  [disabled]="last || busyMilestoneId() !== null" (click)="moveMilestone(milestone, 1)">
+                  ↓
+                </button>
+                <button type="button" class="k-btn k-btn--ghost cs-btn cs-btn--danger"
+                  [disabled]="busyMilestoneId() !== null" (click)="removeMilestone(milestone)">
+                  Retirer
+                </button>
+              </div>
+
+              <!-- Panneau de replanification -->
+              @if (editingMilestoneId() === milestone.id) {
+                <div class="cs-step__panel">
+                  <label class="cs-field">
+                    <span>Nom de l’étape</span>
+                    <input class="k-input" type="text" maxlength="255" [(ngModel)]="milestoneEdit.name" />
+                  </label>
+                  <label class="cs-field">
+                    <span>Date prévue</span>
+                    <input class="k-input" type="date" [(ngModel)]="milestoneEdit.planned_date" />
+                  </label>
+                  <label class="cs-field">
+                    <span>Date réalisée</span>
+                    <input class="k-input" type="date" [(ngModel)]="milestoneEdit.actual_date" />
+                  </label>
+                  <button type="button" class="k-btn k-btn--primary cs-btn"
+                    [disabled]="busyMilestoneId() !== null" (click)="saveMilestoneEdit(milestone)">
+                    {{ busyMilestoneId() === milestone.id ? '…' : 'Enregistrer' }}
+                  </button>
+                </div>
+              }
             </div>
           </li>
         }
       </ol>
     } @else {
-      <p class="cs-state">Aucun jalon sur ce dossier.</p>
+      <p class="cs-state">Aucun jalon sur ce dossier — ajoutez la première étape du chantier.</p>
     }
 
+    <!-- Ajout d'un jalon : il part en FIN de planning (position calculée serveur). -->
+    <div class="cs-add">
+      <button type="button" class="k-btn k-btn--ghost cs-btn" (click)="toggleMilestoneForm()">
+        {{ milestoneFormOpen() ? 'Annuler' : '+ Ajouter un jalon' }}
+      </button>
+
+      @if (milestoneFormOpen()) {
+        <div class="cs-add__form">
+          <label class="cs-field">
+            <span>Nom de l’étape</span>
+            <input class="k-input" type="text" maxlength="255" [(ngModel)]="milestoneForm.name"
+              placeholder="Ex. Pose de la charpente" />
+          </label>
+          <label class="cs-field">
+            <span>Date prévue (facultative)</span>
+            <input class="k-input" type="date" [(ngModel)]="milestoneForm.planned_date" />
+          </label>
+          <button type="button" class="k-btn k-btn--primary cs-btn"
+            [disabled]="addingMilestone()" (click)="addMilestone()">
+            {{ addingMilestone() ? '…' : 'Ajouter' }}
+          </button>
+        </div>
+      }
+    </div>
+
     <p class="cs-note cs-note--warn">
-      ⚠️ Les jalons sont affichés en <strong>lecture seule</strong> : la plateforme
-      les crée au dépôt de la demande, mais aucun point d’accès ne permet encore de
-      les faire avancer. Il en va de même des <strong>devis</strong> et de
+      ⚠️ Restent à livrer sur ce module : les <strong>devis</strong> et
       l’<strong>affectation de prestataires BTP</strong>, prévus par le cahier des
-      charges. Ces trois manques sont identifiés et planifiés — l’écran les signale
-      plutôt que de laisser croire à un planning pilotable.
+      charges. Ces deux manques sont identifiés et planifiés.
     </p>
   </section>
 

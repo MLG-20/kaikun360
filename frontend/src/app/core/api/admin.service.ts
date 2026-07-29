@@ -386,6 +386,19 @@ export interface ConstructionMilestone {
 }
 
 /**
+ * Champs modifiables d'un jalon (F7.3.e1). Tous facultatifs : le même type sert
+ * l'ajout (où seul `name` est requis côté serveur) et le pilotage, qui exige au
+ * moins un champ — un PATCH vide est refusé (422).
+ */
+export interface MilestonePayload {
+  name?: string;
+  status?: 'a_venir' | 'en_cours' | 'termine';
+  position?: number;
+  planned_date?: string | null;
+  actual_date?: string | null;
+}
+
+/**
  * Un compte rendu de chantier (miroir de `ReportResource`).
  *
  * Le modèle `Report` est **polymorphe** et partagé avec la diaspora (B5/B8) :
@@ -1459,6 +1472,63 @@ export class AdminService {
         payload,
       )
       .pipe(map((response) => response.data.report));
+  }
+
+  // --- Pilotage des jalons de chantier (F7.3.e1) ------------------------------
+  //
+  // ⚠️ Routes du module Build (pas /admin), gardées par `gerer:chantiers` —
+  // comme la publication des comptes rendus. Elles n'existaient pas avant
+  // F7.3.e1 : les jalons étaient semés au dépôt puis figés.
+
+  /** Ajoute un jalon (position omise = fin de planning). POST …/milestones */
+  addMilestone(requestId: number, payload: MilestonePayload): Observable<ConstructionMilestone> {
+    return this.http
+      .post<ApiEnvelope<{ milestone: ConstructionMilestone }>>(
+        `${this.api}/construction-requests/${requestId}/milestones`,
+        payload,
+      )
+      .pipe(map((response) => response.data.milestone));
+  }
+
+  /**
+   * Fait avancer ou replanifie un jalon. PATCH /construction-milestones/{id}
+   *
+   * Le serveur maintient la cohérence statut ↔ date réelle (terminé sans date =
+   * daté du jour ; réouverture = date effacée) : inutile de la gérer côté écran.
+   */
+  updateMilestone(
+    milestoneId: number,
+    payload: MilestonePayload,
+  ): Observable<ConstructionMilestone> {
+    return this.http
+      .patch<ApiEnvelope<{ milestone: ConstructionMilestone }>>(
+        `${this.api}/construction-milestones/${milestoneId}`,
+        payload,
+      )
+      .pipe(map((response) => response.data.milestone));
+  }
+
+  /** Retire un jalon du planning. DELETE /construction-milestones/{id} */
+  deleteMilestone(milestoneId: number): Observable<void> {
+    return this.http
+      .delete<ApiEnvelope<{ deleted: boolean }>>(`${this.api}/construction-milestones/${milestoneId}`)
+      .pipe(map(() => undefined));
+  }
+
+  /**
+   * Réécrit l'ordre du planning. PUT …/milestones/reorder
+   *
+   * On envoie la liste ORDONNÉE des identifiants : un échange de deux positions
+   * en deux requêtes produirait un doublon transitoire, et un ordre indéterminé
+   * si la seconde échouait.
+   */
+  reorderMilestones(requestId: number, orderedIds: number[]): Observable<ConstructionMilestone[]> {
+    return this.http
+      .put<ApiEnvelope<{ milestones: ConstructionMilestone[] }>>(
+        `${this.api}/construction-requests/${requestId}/milestones/reorder`,
+        { milestones: orderedIds },
+      )
+      .pipe(map((response) => response.data.milestones));
   }
 
   // --- Pilotage de la gestion locative (F7.3.a) ------------------------------

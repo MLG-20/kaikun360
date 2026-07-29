@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Build\Http\Controllers\ConstructionMilestoneController;
 use App\Modules\Build\Http\Controllers\ConstructionReportController;
 use App\Modules\Build\Http\Controllers\ConstructionRequestController;
 use Illuminate\Support\Facades\Route;
@@ -32,4 +33,18 @@ Route::middleware('auth:sanctum')->prefix('construction-requests')->group(functi
 // --- Suivi de chantier par les agents (permission gerer:chantiers) ------------
 Route::middleware(['auth:sanctum', 'can:gerer:chantiers'])->prefix('construction-requests')->group(function () {
     Route::post('/{constructionRequest}/reports', [ConstructionReportController::class, 'store'])->whereNumber('constructionRequest');
+
+    // Jalons (F7.3.e1) : le planning se pilote depuis le chantier. La route de
+    // réordonnancement est déclarée AVANT rien de conflictuel, mais on la garde
+    // explicite pour la lisibilité — elle porte la liste ordonnée des jalons.
+    Route::post('/{constructionRequest}/milestones', [ConstructionMilestoneController::class, 'store'])->whereNumber('constructionRequest');
+    Route::put('/{constructionRequest}/milestones/reorder', [ConstructionMilestoneController::class, 'reorder'])->whereNumber('constructionRequest');
+});
+
+// --- Pilotage d'un jalon précis (F7.3.e1) ------------------------------------
+// Hors du préfixe `construction-requests` : l'identifiant du jalon suffit à le
+// retrouver, et l'agent agit dessus sans avoir à répéter celui du chantier.
+Route::middleware(['auth:sanctum', 'can:gerer:chantiers'])->prefix('construction-milestones')->group(function () {
+    Route::patch('/{milestone}', [ConstructionMilestoneController::class, 'update'])->whereNumber('milestone');
+    Route::delete('/{milestone}', [ConstructionMilestoneController::class, 'destroy'])->whereNumber('milestone');
 });

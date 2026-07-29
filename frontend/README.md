@@ -202,11 +202,22 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   projet** (avec l'**écart budget / estimation** mis en évidence : un projet
   sous-budgété part mal), **l'avancement** (jalons dans l'ordre + jauge) et les
   **comptes rendus** photo/vidéo, avec publication d'un nouveau compte rendu.
-  ⚠️ **Les jalons sont en lecture seule** : la plateforme les crée au dépôt mais
-  aucun endpoint ne permet de les faire avancer — pas plus que de gérer les
-  devis ou d'affecter un prestataire BTP. Ce sont des trous **backend**
-  identifiés à l'audit CDC ; l'écran les signale dans un encart plutôt que
-  d'afficher un planning qu'on croirait pilotable.
+  **F7.3.e1 — les jalons deviennent PILOTABLES.** Ils étaient semés au dépôt
+  puis figés, faute d'endpoint (trou backend comblé dans le module Build). La
+  timeline porte désormais deux gestes distincts, parce que ce sont deux
+  métiers : *faire avancer* (**Démarrer** / **Achever** / **Rouvrir** selon
+  l'état) et *replanifier* (**Modifier** nom + dates, **↑ ↓** pour déplacer,
+  **Retirer**, et un formulaire **+ Ajouter un jalon** qui part en fin de
+  planning). Deux points à connaître : la **cohérence statut ↔ date réelle est
+  tenue par le serveur** (achevé sans date = daté du jour, réouverture = date
+  effacée) et l'écran ne la refait pas ; le **réordonnancement envoie la liste
+  ordonnée complète** plutôt qu'une position par jalon, car échanger deux
+  positions en deux requêtes créerait un doublon transitoire. La fiche n'est
+  **pas rechargée** après une écriture sur un jalon — à la différence de la
+  fiche mandat (F7.3.a) où les agrégats bougeaient : le serveur renvoie le jalon
+  à jour et la jauge d'avancement est un `computed` local. ⚠️ Restent hors
+  périmètre, signalés dans un encart : les **devis** (F7.3.e2) et
+  l'**affectation de prestataires BTP** (F7.3.e3).
 
   **F7.3.d Export comptable** (onglet ajouté à `features/backoffice/payments/`) :
   `GET /admin/reports/export` était livré et testé depuis B13.5 mais **aucun
