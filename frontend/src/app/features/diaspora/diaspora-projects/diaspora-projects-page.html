@@ -56,3 +56,13 @@
     }
   }
 }
+
+<!--
+  F3.9 — Chantiers & devis du client.
+
+  Hors du `@switch` ci-dessus : ce bloc a son PROPRE chargement et son propre
+  état d'erreur. Un incident sur les projets diaspora ne doit pas emporter les
+  devis avec lui — le client doit pouvoir répondre à un devis même si l'autre
+  liste est en panne. Le bloc se masque tout seul quand il n'y a aucun chantier.
+-->
+<app-construction-quotes />

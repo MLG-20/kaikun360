@@ -1,0 +1,232 @@
+@switch (state()) {
+  @case ('loading') {
+    <p class="cq-state" role="status">Chargement de vos chantiers…</p>
+  }
+  @case ('error') {
+    <div class="cq-state cq-state--error">
+      <p>Impossible de charger vos chantiers pour le moment.</p>
+      <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+    </div>
+  }
+  @default {
+    <!-- Bloc entièrement masqué sans chantier : une section vide n'apprend rien. -->
+    @if (hasAnything()) {
+      <section class="cq">
+        <header class="cq-head">
+          <h2 class="cq-title">Mes chantiers &amp; devis</h2>
+          @if (awaitingCount() > 0) {
+            <span class="cq-badge">
+              {{ awaitingCount() }} devis en attente de votre réponse
+            </span>
+          }
+        </header>
+
+        <ul class="cq-list">
+          @for (request of requests(); track request.id) {
+            <li class="cq-item">
+              <div class="cq-item-head">
+                <div>
+                  <p class="cq-item-title">
+                    {{ request.objective_label || 'Chantier' }}
+                    @if (request.city) {
+                      <span class="cq-item-city">· {{ request.city }}</span>
+                    }
+                  </p>
+                  <p class="cq-item-ref">
+                    {{ request.reference }}
+                    @if (request.surface_m2) {
+                      · {{ request.surface_m2 }} m²
+                    }
+                  </p>
+                </div>
+                <span class="cq-status">{{ request.status_label || request.status }}</span>
+              </div>
+
+              @if (!request.quotes || request.quotes.length === 0) {
+                <p class="cq-none">
+                  Aucun devis reçu pour l’instant. Notre équipe vous prévient dès qu’un
+                  chiffrage est prêt.
+                </p>
+              } @else {
+                <ul class="cq-quotes">
+                  @for (quote of request.quotes; track quote.id) {
+                    <li class="cq-quote" [class.is-awaiting]="isAnswerable(quote)">
+                      <div class="cq-quote-head">
+                        <div>
+                          <p class="cq-quote-total">{{ fcfa(quote.total_xof) }}</p>
+                          <p class="cq-quote-ref">
+                            Devis {{ quote.reference }}
+                            @if (quote.sent_at) {
+                              · reçu le {{ quote.sent_at | date: 'dd/MM/yyyy' }}
+                            }
+                          </p>
+                        </div>
+                        <span class="cq-quote-status" [class]="'is-' + quote.status">
+                          {{ quote.status_label || quote.status }}
+                        </span>
+                      </div>
+
+                      @if (quote.valid_until) {
+                        <p class="cq-validity" [class.is-expired]="isExpired(quote)">
+                          @if (isExpired(quote)) {
+                            Validité dépassée le {{ quote.valid_until | date: 'dd/MM/yyyy' }} —
+                            contactez-nous, le montant peut avoir changé.
+                          } @else {
+                            Valable jusqu’au {{ quote.valid_until | date: 'dd/MM/yyyy' }}
+                          }
+                        </p>
+                      }
+
+                      <!-- Détail replié par défaut : le total d'abord, la preuve ensuite. -->
+                      <button
+                        type="button"
+                        class="cq-toggle"
+                        [attr.aria-expanded]="isExpanded(quote.id)"
+                        (click)="toggleDetail(quote.id)"
+                      >
+                        {{ isExpanded(quote.id) ? 'Masquer' : 'Voir' }} le détail
+                        ({{ quote.lines.length }} lignes)
+                      </button>
+
+                      @if (isExpanded(quote.id)) {
+                        <div class="cq-lines-wrap">
+                          <table class="cq-lines">
+                            <thead>
+                              <tr>
+                                <th scope="col">Lot</th>
+                                <th scope="col">Désignation</th>
+                                <th scope="col" class="is-num">Qté</th>
+                                <th scope="col" class="is-num">P.U.</th>
+                                <th scope="col" class="is-num">Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for (line of quote.lines; track $index) {
+                                <tr>
+                                  <td>{{ line.lot_label }}</td>
+                                  <td>{{ line.label || '—' }}</td>
+                                  <td class="is-num">
+                                    {{ line.quantity }} {{ unitLabels[line.unit] || line.unit }}
+                                  </td>
+                                  <td class="is-num">{{ fcfa(line.unit_price_xof) }}</td>
+                                  <td class="is-num">{{ fcfa(line.total_xof) }}</td>
+                                </tr>
+                              }
+                            </tbody>
+                            <tfoot>
+                              <tr>
+                                <td colspan="4">Sous-total</td>
+                                <td class="is-num">{{ fcfa(quote.subtotal_xof) }}</td>
+                              </tr>
+                              <tr>
+                                <td colspan="4">
+                                  Accompagnement Kaikun ({{ quote.margin_rate }} %)
+                                </td>
+                                <td class="is-num">{{ fcfa(quote.margin_xof) }}</td>
+                              </tr>
+                              <tr class="is-total">
+                                <td colspan="4">Total</td>
+                                <td class="is-num">{{ fcfa(quote.total_xof) }}</td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      }
+
+                      @if (actionError()?.id === quote.id) {
+                        <p class="cq-error" role="alert">{{ actionError()?.message }}</p>
+                      }
+
+                      @if (isAnswerable(quote)) {
+                        <!-- Deux temps : accepter un devis est un engagement financier. -->
+                        @if (isConfirming(quote.id, 'accept')) {
+                          <div class="cq-confirm" role="group">
+                            <p class="cq-confirm-text">
+                              Vous vous engagez sur un montant de
+                              <strong>{{ fcfa(quote.total_xof) }}</strong>. Confirmer ?
+                            </p>
+                            <div class="cq-actions">
+                              <button
+                                type="button"
+                                class="k-btn k-btn--primary"
+                                [disabled]="submitting() === quote.id"
+                                (click)="confirm(quote, 'accept')"
+                              >
+                                {{ submitting() === quote.id ? 'Enregistrement…' : 'Oui, j’accepte' }}
+                              </button>
+                              <button
+                                type="button"
+                                class="k-btn k-btn--ghost"
+                                [disabled]="submitting() === quote.id"
+                                (click)="cancelConfirm()"
+                              >
+                                Annuler
+                              </button>
+                            </div>
+                          </div>
+                        } @else if (isConfirming(quote.id, 'refuse')) {
+                          <div class="cq-confirm" role="group">
+                            <p class="cq-confirm-text">
+                              Refuser ce devis ? Votre projet reste ouvert : notre équipe
+                              vous proposera un chiffrage révisé.
+                            </p>
+                            <div class="cq-actions">
+                              <button
+                                type="button"
+                                class="k-btn k-btn--ghost cq-btn-danger"
+                                [disabled]="submitting() === quote.id"
+                                (click)="confirm(quote, 'refuse')"
+                              >
+                                {{ submitting() === quote.id ? 'Enregistrement…' : 'Oui, je refuse' }}
+                              </button>
+                              <button
+                                type="button"
+                                class="k-btn k-btn--ghost"
+                                [disabled]="submitting() === quote.id"
+                                (click)="cancelConfirm()"
+                              >
+                                Annuler
+                              </button>
+                            </div>
+                          </div>
+                        } @else {
+                          <div class="cq-actions">
+                            <button
+                              type="button"
+                              class="k-btn k-btn--primary"
+                              (click)="askConfirm(quote.id, 'accept')"
+                            >
+                              Accepter le devis
+                            </button>
+                            <button
+                              type="button"
+                              class="k-btn k-btn--ghost"
+                              (click)="askConfirm(quote.id, 'refuse')"
+                            >
+                              Refuser
+                            </button>
+                          </div>
+                        }
+                      } @else if (quote.status === 'accepte') {
+                        <p class="cq-answered">
+                          Devis accepté@if (quote.accepted_at) {
+                            le {{ quote.accepted_at | date: 'dd/MM/yyyy' }}
+                          }. Notre équipe lance le chantier.
+                        </p>
+                      } @else if (quote.status === 'refuse') {
+                        <p class="cq-answered">
+                          Devis refusé. Votre projet reste ouvert, un chiffrage révisé
+                          peut vous être proposé.
+                        </p>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+}

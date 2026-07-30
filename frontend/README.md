@@ -44,7 +44,22 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   pilotés à distance** (achat, construction, gestion locative) et consulte, pour
   chacun, la **chronologie des rapports** de suivi (photos, vidéo, commentaires
   datés) déposés par son référent Kaikun — le cœur de la promesse « confiance par
-  la preuve », et la mise en conformité du critère CDC §15. 👉 Détail :
+  la preuve », et la mise en conformité du critère CDC §15. La même rubrique
+  accueille depuis **F3.9** le bloc **« Mes chantiers & devis »**
+  (`shared/components/construction-quotes/`), où le client **accepte ou refuse un
+  devis de construction** — le chaînon qui manquait au cycle ouvert en F7.3.e2 :
+  l'équipe envoyait un devis ventilé par lot, mais aucun écran ne permettait d'y
+  répondre, et le dossier restait bloqué en « devis envoyé ». Composant
+  **autonome** (il charge son propre `GET /construction-requests/mine`, devis
+  inclus en un seul appel) et **placé hors du `@switch`** de la page : un
+  incident sur les projets diaspora ne doit pas empêcher de répondre à un devis.
+  Trois partis pris d'interface : **confirmation en deux temps** (accepter engage
+  des millions de francs, un clic malheureux sur un téléphone ne doit pas
+  suffire), **détail des lots replié** par défaut (le total d'abord, la preuve
+  ensuite) et **validité signalée sans bloquer le bouton** — c'est le serveur qui
+  tranche ce qui est acceptable, pas l'horloge du téléphone. ⚠️ Rattachement par
+  **client**, pas par projet (`diaspora_projects` n'a pas de clé vers
+  `construction_requests`). 👉 Détail :
   [`src/app/features/account/README.md`](src/app/features/account/README.md).
 - ✅ **L'espace propriétaire (F4, terminé)** : sous `/espace-proprietaire`,
   réservé au rôle « propriétaire ». Il réutilise **le même habillage** que

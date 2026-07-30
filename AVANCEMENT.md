@@ -95,6 +95,13 @@ et **suivre son avancement au fil des rapports** datés (photos, vidéo,
 commentaires) publiés par son référent Kaikun — le cœur de la promesse
 « confiance par la preuve ».
 
+C'est également là que le client **répond à un devis de chantier** : il reçoit
+une notification dès que l'équipe lui envoie un chiffrage, consulte le détail
+**lot par lot** (fondations, gros œuvre, plomberie…) avec le montant total et la
+date de validité, puis **accepte ou refuse** — l'acceptation étant confirmée en
+deux temps, parce qu'elle engage financièrement. Un refus n'annule rien : le
+projet reste ouvert et l'équipe propose un chiffrage révisé.
+
 ### 3.4 L'espace propriétaire — livré
 
 Espace dédié aux propriétaires de biens :
@@ -159,7 +166,7 @@ sécurité renforcé — c'est là que tout passe.
 
 ## 4. Qualité, confiance et expérience
 
-- **Fiabilité** : le moteur central est couvert par **plus de 660 tests
+- **Fiabilité** : le moteur central est couvert par **plus de 670 tests
   automatisés** qui vérifient à chaque évolution que rien n'est cassé.
 - **Sécurité** : accès par rôle strictement cloisonné (chaque espace est
   indépendant), documents privés servis par liens temporaires, journal

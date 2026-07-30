@@ -2,6 +2,7 @@
 
 namespace App\Modules\Build\Http\Resources;
 
+use App\Modules\Build\Models\ConstructionRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -11,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Les jalons sont embarqués lorsqu'ils ont été chargés (`whenLoaded`) ; le
  * nombre de rapports apparaît s'il a été compté (`withCount`).
  *
- * @mixin \App\Modules\Build\Models\ConstructionRequest
+ * @mixin ConstructionRequest
  */
 class ConstructionRequestResource extends JsonResource
 {
@@ -54,9 +55,15 @@ class ConstructionRequestResource extends JsonResource
             // qui ne comptent pas → la clé n'apparaît simplement pas.
             'milestones_count' => $this->whenCounted('milestones'),
             'milestones' => ConstructionMilestoneResource::collection($this->whenLoaded('milestones')),
-            // Nombre de devis chiffrés (F7.3.e2) : la liste elle-même se charge à
-            // part, comme les comptes rendus.
+            // Nombre de devis chiffrés (F7.3.e2).
             'quotes_count' => $this->whenCounted('quotes'),
+            // Les devis eux-mêmes, quand ils ont été chargés (F3.9). L'écran
+            // client liste les chantiers ET leurs devis : sans cette clé il
+            // faudrait un appel `/quotes` PAR chantier depuis le navigateur,
+            // soit un N+1 en requêtes HTTP — le pire endroit où en faire un, sur
+            // une connexion mobile sénégalaise. `whenLoaded` garde les autres
+            // vues (supervision back-office) strictement inchangées.
+            'quotes' => ConstructionQuoteResource::collection($this->whenLoaded('quotes')),
         ];
     }
 }

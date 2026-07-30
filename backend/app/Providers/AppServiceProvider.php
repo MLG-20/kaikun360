@@ -9,22 +9,11 @@ use App\Listeners\NotifyUserOfRequestStatusChange;
 use App\Models\Quote;
 use App\Models\Review;
 use App\Models\User;
-use App\Policies\QuotePolicy;
-use App\Policies\ReviewPolicy;
-use Illuminate\Support\Facades\Notification;
-use App\Support\Auth\GoogleIdTokenVerifier;
-use App\Support\Auth\GoogleTokenVerifier;
-use App\Support\Notifications\LogSmsProvider;
-use App\Support\Notifications\OrangeSmsProvider;
-use App\Support\Notifications\SmsChannel;
-use App\Support\Notifications\SmsProviderInterface;
-use App\Support\Notifications\TwilioSmsProvider;
-use App\Support\Payments\PaymentProviderInterface;
-use App\Support\Payments\PaytechProvider;
-use App\Support\Payments\PaytechWebhookVerifier;
-use App\Modules\Core\Enums\UserRole;
+use App\Modules\Build\Events\ConstructionQuoteSent;
+use App\Modules\Build\Listeners\NotifyClientOfConstructionQuote;
 use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Build\Policies\ConstructionRequestPolicy;
+use App\Modules\Core\Enums\UserRole;
 use App\Modules\Core\Policies\UserPolicy;
 use App\Modules\Diaspora\Models\DiasporaProject;
 use App\Modules\Diaspora\Policies\DiasporaProjectPolicy;
@@ -54,10 +43,23 @@ use App\Modules\TeamBuilding\Listeners\NotifyCompanyOfQuoteSent;
 use App\Modules\TeamBuilding\Listeners\StartOperationalFollowUp;
 use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
 use App\Modules\TeamBuilding\Policies\TeamBuildingRequestPolicy;
+use App\Policies\QuotePolicy;
+use App\Policies\ReviewPolicy;
+use App\Support\Auth\GoogleIdTokenVerifier;
+use App\Support\Auth\GoogleTokenVerifier;
+use App\Support\Notifications\LogSmsProvider;
+use App\Support\Notifications\OrangeSmsProvider;
+use App\Support\Notifications\SmsChannel;
+use App\Support\Notifications\SmsProviderInterface;
+use App\Support\Notifications\TwilioSmsProvider;
+use App\Support\Payments\PaymentProviderInterface;
+use App\Support\Payments\PaytechProvider;
+use App\Support\Payments\PaytechWebhookVerifier;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -108,7 +110,7 @@ class AppServiceProvider extends ServiceProvider
                 );
             }
 
-            return new LogSmsProvider();
+            return new LogSmsProvider;
         });
 
         // Vérificateur d'ID token Google (B19).
@@ -146,6 +148,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(VehicleValidated::class, NotifyProviderOfVehicleValidated::class);
         Event::listen(TeamBuildingRequestCreated::class, NotifyAdminsOfTeamBuildingRequest::class);
         Event::listen(QuoteSent::class, NotifyCompanyOfQuoteSent::class);
+        // F3.9 — Devis de CHANTIER envoyé au client (à ne pas confondre avec
+        // `QuoteSent`, qui est le devis pack du team building).
+        Event::listen(ConstructionQuoteSent::class, NotifyClientOfConstructionQuote::class);
         Event::listen(QuoteAccepted::class, StartOperationalFollowUp::class);
         Event::listen(RequestCreated::class, NotifyAvailableAgentsOfRequest::class);
         Event::listen(RequestStatusChanged::class, NotifyUserOfRequestStatusChange::class);

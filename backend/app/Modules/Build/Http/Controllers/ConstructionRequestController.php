@@ -4,6 +4,7 @@ namespace App\Modules\Build\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Build\Enums\ConstructionObjective;
+use App\Modules\Build\Enums\ConstructionQuoteStatus;
 use App\Modules\Build\Enums\ConstructionRequestStatus;
 use App\Modules\Build\Enums\ConstructionZone;
 use App\Modules\Build\Enums\FinishLevel;
@@ -70,6 +71,12 @@ class ConstructionRequestController extends Controller
     {
         $requests = ConstructionRequest::where('client_id', $request->user()->id)
             ->withCount('reports')
+            // F3.9 — Les devis voyagent avec le chantier : l'écran client doit
+            // pouvoir afficher « un devis vous attend » sans un aller-retour par
+            // dossier. Les BROUILLONS sont exclus ici comme ils le sont dans
+            // `ConstructionQuoteController::index` — un chiffrage en cours de
+            // composition n'est pas un document du client.
+            ->with(['quotes' => fn ($q) => $q->where('status', '!=', ConstructionQuoteStatus::BROUILLON->value)])
             ->latest()
             ->paginate(15);
 

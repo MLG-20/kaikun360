@@ -8,11 +8,13 @@ use App\Modules\Build\Enums\ConstructionLot;
 use App\Modules\Build\Enums\ConstructionQuoteStatus;
 use App\Modules\Build\Enums\ConstructionRequestStatus;
 use App\Modules\Build\Models\ConstructionRequest;
+use App\Modules\Build\Notifications\ConstructionQuoteSentNotification;
 use App\Modules\Build\Services\ConstructionQuoteComposer;
 use App\Modules\Core\Enums\UserRole;
 use App\Support\Settings;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -207,20 +209,93 @@ class ConstructionQuoteTest extends TestCase
         ])->assertForbidden();
     }
 
-    public function test_le_client_relit_les_devis_de_son_dossier(): void
+    public function test_le_client_relit_les_devis_qu_on_lui_a_envoyes_mais_pas_les_brouillons(): void
     {
+        // ⚠️ Ce test encodait l'inverse jusqu'en F3.9 : il composait un devis et
+        // vérifiait que le client le voyait AUSSITÔT. C'était le bug — un
+        // chiffrage en cours de composition, aux montants provisoires, était
+        // lisible par le client avant que l'équipe ne l'ait envoyé.
         $client = User::factory()->create();
         $request = ConstructionRequest::factory()->create(['client_id' => $client->id]);
 
         Sanctum::actingAs($this->agent());
-        $this->postJson("/api/v1/construction-requests/{$request->id}/quotes", [
+        $quoteId = $this->postJson("/api/v1/construction-requests/{$request->id}/quotes", [
             'lines' => $this->lines(),
-        ])->assertCreated();
+        ])->assertCreated()->json('data.quote.id');
+
+        // Brouillon : invisible pour le client…
+        Sanctum::actingAs($client);
+        $this->getJson("/api/v1/construction-requests/{$request->id}/quotes")
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+
+        // …mais visible pour l'équipe, qui est en train de le composer.
+        Sanctum::actingAs($this->agent());
+        $this->getJson("/api/v1/construction-requests/{$request->id}/quotes")
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+
+        // Une fois envoyé, le client le lit.
+        $this->patchJson("/api/v1/construction-quotes/{$quoteId}/send")->assertOk();
 
         Sanctum::actingAs($client);
         $this->getJson("/api/v1/construction-requests/{$request->id}/quotes")
             ->assertOk()
-            ->assertJsonCount(1, 'data');
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.status', 'envoye');
+    }
+
+    public function test_l_envoi_d_un_devis_previent_le_client(): void
+    {
+        // Sans cette notification, l'écran d'acceptation existe mais personne ne
+        // sait qu'il faut y aller : le devis pack du team building prévenait
+        // l'entreprise depuis B9.3, la construction avait été oubliée.
+        Notification::fake();
+
+        $client = User::factory()->create();
+        $request = ConstructionRequest::factory()->create(['client_id' => $client->id]);
+
+        Sanctum::actingAs($this->agent());
+        $quoteId = $this->postJson("/api/v1/construction-requests/{$request->id}/quotes", [
+            'lines' => $this->lines(),
+        ])->assertCreated()->json('data.quote.id');
+
+        // Composer ne notifie pas : le devis n'est pas encore un document du client.
+        Notification::assertNothingSent();
+
+        $this->patchJson("/api/v1/construction-quotes/{$quoteId}/send")->assertOk();
+
+        Notification::assertSentTo($client, ConstructionQuoteSentNotification::class);
+    }
+
+    public function test_la_liste_des_chantiers_du_client_porte_ses_devis(): void
+    {
+        // L'écran client liste les chantiers ET leurs devis : sans cette clé, il
+        // faudrait un appel HTTP par dossier depuis le navigateur.
+        $client = User::factory()->create();
+        $request = ConstructionRequest::factory()->create(['client_id' => $client->id]);
+
+        Sanctum::actingAs($this->agent());
+        $quoteId = $this->postJson("/api/v1/construction-requests/{$request->id}/quotes", [
+            'lines' => $this->lines(),
+        ])->assertCreated()->json('data.quote.id');
+
+        // Tant qu'il est en brouillon, il ne descend pas jusqu'au client.
+        Sanctum::actingAs($client);
+        $this->getJson('/api/v1/construction-requests/mine')
+            ->assertOk()
+            ->assertJsonCount(0, 'data.0.quotes');
+
+        Sanctum::actingAs($this->agent());
+        $this->patchJson("/api/v1/construction-quotes/{$quoteId}/send")->assertOk();
+
+        Sanctum::actingAs($client);
+        $this->getJson('/api/v1/construction-requests/mine')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.0.quotes')
+            ->assertJsonPath('data.0.quotes.0.status', 'envoye')
+            // Les totaux voyagent : l'écran affiche le montant sans second appel.
+            ->assertJsonPath('data.0.quotes.0.id', $quoteId);
     }
 
     public function test_un_tiers_ne_voit_pas_les_devis(): void

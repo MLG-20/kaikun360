@@ -56,3 +56,50 @@ rapports** ») restée sans interface — le backend l'exposait déjà.
   `DIASPORA_PROJECT_TYPES` / `DIASPORA_PRIORITIES`, méthodes `myProjects` /
   `createProject` / `project` / `reports`. Modèle `models/diaspora.model.ts`
   (`DiasporaProject`, `DiasporaReport`).
+
+---
+
+## F3.9 — « Mes chantiers & devis » (réponse du client à un devis de chantier)
+
+La rubrique accueille aussi le bloc **`shared/components/construction-quotes/`**
+(`app-construction-quotes`), monté en bas de la page « Mes projets diaspora ».
+
+**Pourquoi ici.** Placement décidé avec le porteur du produit : c'est la rubrique
+où vit le client qui fait construire à distance. Elle est ouverte à **tous** les
+clients (aucun filtrage diaspora dans `ACCOUNT_NAV`), donc un client résident y
+accède aussi — personne ne se retrouve sans moyen de répondre à son devis.
+
+**⚠️ Rattachement par CLIENT, pas par projet.** `diaspora_projects` n'a **aucune
+clé étrangère** vers `construction_requests` : ce sont deux dossiers parallèles
+du même client. Le bloc liste donc les chantiers du client (`GET
+/construction-requests/mine`), pas ceux « du projet diaspora ouvert ». Un client
+à deux chantiers voit ses deux devis dans la même section, chacun identifié par
+sa référence de chantier. Lier réellement les deux (migration + écran de
+rattachement au back-office) reste possible ; le composant se déplacerait sans
+être réécrit.
+
+**Ce que fait le composant.** Il est **autonome** : il charge lui-même ses
+données, avec son propre état de chargement et d'erreur, et il est placé **hors
+du `@switch`** de la page — un incident sur les projets diaspora ne doit pas
+empêcher de répondre à un devis. Il se **masque entièrement** quand le client n'a
+aucun chantier.
+
+**Partis pris d'interface**
+
+- **Confirmation en deux temps** avant d'accepter comme de refuser. Accepter
+  engage des millions de francs : un clic malheureux sur un téléphone ne doit pas
+  suffire. Refuser passe par la même étape — un refus accidentel enverrait
+  l'équipe refaire un chiffrage pour rien.
+- **Le montant domine** la carte (c'est ce sur quoi le client s'engage) ; le
+  **détail des lots est replié** par défaut, disponible pour qui vérifie.
+- **La validité est signalée, jamais bloquante** : un devis dépassé affiche un
+  avertissement mais garde ses boutons. C'est le **serveur** qui décide de ce qui
+  est acceptable, pas l'horloge du téléphone — un appareil mal réglé ne doit pas
+  priver quelqu'un de sa décision.
+- Un **422** (devis tranché ou renvoyé entre-temps) **recharge la liste** au lieu
+  de laisser un bouton mort.
+
+**Côté serveur** — `ConstructionService.mine()` renvoie les chantiers **devis
+inclus** (un seul appel ; sinon ce serait un appel HTTP par chantier), les
+**brouillons étant exclus côté serveur**. Réponses : `acceptQuote()` /
+`refuseQuote()`, réservées au client par la policy `respond`.

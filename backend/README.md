@@ -149,7 +149,20 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   jusqu'alors jamais relisables) et `MandateResource` expose les **clauses**
   (`terms`) du mandat, soit les « contrats » de la ligne CDC §6.
 - **Build** — simulateur de coût de construction, jalons de chantier, rapports
-  photo/vidéo polymorphes.
+  photo/vidéo polymorphes, **devis ventilés par lot** (F7.3.e2) et leur **réponse
+  par le client** (F3.9). Trois règles à ne pas défaire :
+  1. **Les brouillons ne descendent jamais jusqu'au client.** `ConstructionQuoteController::index`
+     et `ConstructionRequestController::mine` filtrent sur `status != brouillon`
+     pour qui n'a pas `gerer:chantiers`. Un chiffrage en cours de composition,
+     aux montants provisoires, n'est pas un document du client — le lui montrer
+     puis le changer détruit la confiance que la plateforme vend.
+  2. **L'envoi notifie le client** (`ConstructionQuoteSent` → `NotifyClientOfConstructionQuote`).
+     Sans cela l'écran de réponse existe mais personne n'y va : le statut
+     basculait en base, en silence. Réglage `QUOTE_RECEIVED` (partagé avec le
+     devis transversal, pour qu'une coupure au back-office soit cohérente).
+  3. **Répondre est réservé au CLIENT** (policy `respond`), plus étroit que
+     `view` : accepter un devis est son engagement financier, ni l'agent ni
+     l'admin ne le prennent à sa place.
 - **Explore** — expériences touristiques, capacité, réservation, annulation/
   remboursement, et **supervision back-office** (F7.2.k — CDC §6) servie par le
   module Admin : `GET /admin/experiences` renvoie `AdminExperienceResource`

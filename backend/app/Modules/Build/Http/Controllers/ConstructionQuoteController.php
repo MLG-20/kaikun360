@@ -5,6 +5,7 @@ namespace App\Modules\Build\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Build\Enums\ConstructionQuoteStatus;
 use App\Modules\Build\Enums\ConstructionRequestStatus;
+use App\Modules\Build\Events\ConstructionQuoteSent;
 use App\Modules\Build\Http\Requests\ComposeConstructionQuoteRequest;
 use App\Modules\Build\Http\Resources\ConstructionQuoteResource;
 use App\Modules\Build\Models\ConstructionQuote;
@@ -12,6 +13,7 @@ use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Build\Services\ConstructionQuoteComposer;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -39,14 +41,27 @@ class ConstructionQuoteController extends Controller
      *
      * Lecture ouverte au client propriétaire comme à l'équipe (policy `view`) :
      * le client doit pouvoir relire ce qu'on lui a envoyé.
+     *
+     * ⚠️ F3.9 — Les **brouillons sont masqués au client**. La règle manquait :
+     * la requête renvoyait toute la table, donc un chiffrage encore en cours de
+     * composition — montants provisoires, lots incomplets — était lisible par le
+     * client avant que l'équipe ne l'ait envoyé. C'est le contraire de ce que
+     * disait l'intention (« relire ce qu'on lui a **envoyé** »), et un devis
+     * qu'on découvre puis qui change est le meilleur moyen de perdre la
+     * confiance qu'on cherche à construire. L'équipe, elle, voit tout : c'est
+     * elle qui compose.
      */
-    public function index(ConstructionRequest $constructionRequest): AnonymousResourceCollection
+    public function index(Request $request, ConstructionRequest $constructionRequest): AnonymousResourceCollection
     {
         Gate::authorize('view', $constructionRequest);
 
-        return ConstructionQuoteResource::collection(
-            $constructionRequest->quotes()->with('author')->get()
-        );
+        $quotes = $constructionRequest->quotes()->with('author');
+
+        if (! $request->user()?->can('gerer:chantiers')) {
+            $quotes->where('status', '!=', ConstructionQuoteStatus::BROUILLON->value);
+        }
+
+        return ConstructionQuoteResource::collection($quotes->get());
     }
 
     /**
@@ -101,6 +116,12 @@ class ConstructionQuoteController extends Controller
                 'status' => ConstructionRequestStatus::DEVIS_ENVOYE->value,
             ]);
         }
+
+        // F3.9 — Prévenir le CLIENT. L'envoi ne se voyait nulle part : le statut
+        // basculait en base et le client devait deviner qu'un chiffrage
+        // l'attendait. Le devis pack du team building notifiait déjà l'entreprise
+        // depuis B9.3 ; la construction avait été oubliée.
+        ConstructionQuoteSent::dispatch($quote->fresh());
 
         return ApiResponse::success(['quote' => ConstructionQuoteResource::make($quote->fresh())]);
     }
