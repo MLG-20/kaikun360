@@ -34,7 +34,7 @@ class UserController extends Controller
         return ApiResponse::success([
             'user' => UserResource::make(
                 $request->user()->load(['profile', 'region', 'department', 'commune']),
-            ),
+            )->withPermissions(),
         ]);
     }
 
@@ -103,7 +103,7 @@ class UserController extends Controller
         }
 
         return ApiResponse::success([
-            'user' => UserResource::make($user->fresh()->load(['profile', 'region', 'department', 'commune'])),
+            'user' => UserResource::make($user->fresh()->load(['profile', 'region', 'department', 'commune']))->withPermissions(),
             // Canaux à re-vérifier : le front affiche la saisie du code.
             'verification' => [
                 'email_required' => $emailChanged,

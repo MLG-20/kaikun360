@@ -76,12 +76,23 @@ class TwoFactorAuthTest extends TestCase
         });
         $this->assertNotNull($code);
 
-        $this->postJson('/api/v1/auth/two-factor', [
+        $response = $this->postJson('/api/v1/auth/two-factor', [
             'login' => $admin->email,
             'code' => $code,
         ])
             ->assertOk()
             ->assertJsonStructure(['data' => ['user', 'token', 'expires_at']]);
+
+        // F7.4.e — La réponse de 2FA DOIT porter les permissions back-office.
+        // C'est le seul moment où le frontend apprend qui il est : il stocke cet
+        // utilisateur et en déduit les rubriques du rail. La première version
+        // les omettait ici (la requête de connexion n'est pas encore
+        // authentifiée, `$request->user()` y est null) → l'équipe arrivait dans
+        // un back-office amputé de la moitié de son menu.
+        $permissions = $response->json('data.user.permissions');
+        $this->assertIsArray($permissions, 'La connexion 2FA doit livrer les permissions');
+        $this->assertContains('gerer:paiements', $permissions);
+        $this->assertContains('gerer:parametres', $permissions);
 
         // Le jeton back-office porte une expiration (session courte).
         $this->assertDatabaseCount('personal_access_tokens', 1);

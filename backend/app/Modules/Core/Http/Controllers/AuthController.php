@@ -89,7 +89,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth')->plainTextToken;
 
         return ApiResponse::created([
-            'user' => UserResource::make($user->load('profile')),
+            'user' => UserResource::make($user->load('profile'))->withPermissions(),
             'token' => $token,
         ]);
     }
@@ -151,7 +151,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth')->plainTextToken;
 
         return ApiResponse::success([
-            'user' => UserResource::make($user->load('profile')),
+            'user' => UserResource::make($user->load('profile'))->withPermissions(),
             'token' => $token,
         ]);
     }
@@ -197,7 +197,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth')->plainTextToken;
 
         return ApiResponse::success([
-            'user' => UserResource::make($user->load('profile')),
+            'user' => UserResource::make($user->load('profile'))->withPermissions(),
             'token' => $token,
         ]);
     }
@@ -242,7 +242,7 @@ class AuthController extends Controller
         activity()->causedBy($user)->performedOn($user)->log('Connexion back-office (2FA validée)');
 
         return ApiResponse::success([
-            'user' => UserResource::make($user->load('profile')),
+            'user' => UserResource::make($user->load('profile'))->withPermissions(),
             'token' => $token,
             'expires_at' => now()->addMinutes(self::BACKOFFICE_TOKEN_TTL_MINUTES),
         ]);

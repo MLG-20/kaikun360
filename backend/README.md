@@ -205,11 +205,16 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   polymorphe, la même liste couvre chantiers et dossiers diaspora). ⚠️ Un mandat
   porte ses clauses en **texte** (`management_mandates.terms`) : il n'y a pas de
   contrat scanné téléversé, la ligne renvoie vers la fiche du mandat.
-  **Permissions exposées au frontend (F7.4.a)** : `UserResource` inclut les
-  permissions back-office effectives, mais **uniquement sur son propre compte et
-  seulement pour l'équipe** — la ressource sert aussi aux annuaires admin (une
-  requête de permissions par ligne = N+1) et les droits d'un collègue n'ont pas à
-  circuler dans une liste. Le **super_admin** est traité à part (`User::permissionsBackOffice()`) :
+  **Permissions exposées au frontend (F7.4.a)** : `UserResource::withPermissions()`
+  joint les permissions back-office effectives. C'est un **opt-in explicite**,
+  posé sur les seules réponses qui représentent le compte connecté (connexion,
+  inscription, Google, 2FA, vérification, `/users/me`, mise à jour de profil) et
+  sur aucune liste — la ressource sert aussi aux annuaires admin (une requête de
+  permissions par ligne = N+1) et les droits d'un collègue n'ont pas à circuler.
+  ⚠️ **Ne PAS revenir à une déduction du type `$request->user()->id === $this->id`**
+  (F7.4.e) : sur `/auth/login` et `/auth/two-factor` la requête n'est pas encore
+  authentifiée, `$request->user()` y vaut `null`, et le compte recevait un jeton
+  sans ses permissions — donc un rail amputé jusqu'au rechargement suivant. Le **super_admin** est traité à part (`User::permissionsBackOffice()`) :
   ses droits venant du `Gate::before`, il n'a aucune permission assignée et se
   serait retrouvé avec le rail le plus vide. Sert au cloisonnement du rail côté
   Angular ; les `can:` des routes `/admin/…` restent la sécurité réelle.

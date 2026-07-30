@@ -80,6 +80,6 @@ class VerificationController extends Controller
 
         activity()->causedBy($user)->performedOn($user)->log("Vérification du canal {$data['channel']}");
 
-        return ApiResponse::success(['user' => UserResource::make($user->load('profile'))]);
+        return ApiResponse::success(['user' => UserResource::make($user->load('profile'))->withPermissions()]);
     }
 }
