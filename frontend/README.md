@@ -446,6 +446,22 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     `/admin/…` sont inchangés et restent la vérité. Le tableau `permissions` du
     compte connecté (nouveau dans `UserResource`) n'est renseigné que pour
     l'équipe et que sur son propre compte.
+  **F7.4.d Ordre du rail aligné sur le CDC §6.** Le menu suivait l'ordre de
+  **construction** des tranches (F7.2.a, .b, .c…), qui n'avait de sens que pour
+  nous : l'équipe n'y retrouvait pas la liste du cahier des charges, et une
+  recette module par module obligeait à sauter d'un bout à l'autre du menu. Il
+  déroule désormais les **14 modules dans l'ordre du tableau « Module admin »**,
+  puis les trois rubriques du **§7** (Équipe, Permissions, Pointeuse), qui
+  relèvent du poste de commandement et non des modules métier. Deux
+  correspondances ne sont pas une ligne pour une : *Utilisateurs* (2) et
+  *Documents* (12) partagent la rubrique **Comptes** — les documents sont
+  indexés par compte, les séparer obligerait à chercher deux fois — et *Biens
+  immobiliers* (3) est servi par **Catalogues**, sa fonction « valider » étant
+  portée par la file transverse **Validation**. Cette dernière reste **en tête**
+  malgré son absence du §6 : c'est le premier écran ouvert chaque matin et la
+  fonction « valider » de quatre modules à la fois. ⚠️ Toute nouvelle rubrique
+  se range **à la place de son module**, pas en fin de liste : le client déroule
+  ce menu en face du §6 de son cahier.
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

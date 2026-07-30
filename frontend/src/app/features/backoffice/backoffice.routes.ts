@@ -23,6 +23,10 @@ import { permissionsFor } from './backoffice-permissions';
  *
  * Ce second étage répond au CDC §7 (« Agent Kaikun : accès financier limité ») ;
  * il ne remplace pas les `can:` du serveur, qui restent la sécurité réelle.
+ *
+ * ℹ️ L'ordre des routes ci-dessous est SANS effet (les chemins sont distincts) :
+ * l'ordre visible par l'équipe est celui du rail, aligné sur le tableau du
+ * CDC §6 depuis F7.4.d — voir `layouts/backoffice-layout/backoffice-layout.ts`.
  */
 export const BACKOFFICE_ROUTES: Routes = [
   {

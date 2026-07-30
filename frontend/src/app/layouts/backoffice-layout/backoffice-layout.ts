@@ -75,26 +75,69 @@ export class BackofficeLayoutComponent {
   /**
    * Rubriques du poste de commandement, TOUTES rubriques confondues.
    *
+   * **ORDRE = celui du tableau « Module admin » du CDC §6 (F7.4.d).** Le rail
+   * suivait jusqu'ici l'ordre de CONSTRUCTION des tranches (F7.2.a, .b, .c…),
+   * qui n'avait de sens que pour nous : à la lecture, l'équipe ne retrouvait
+   * pas la liste du cahier des charges, et une recette module par module
+   * obligeait à sauter d'un bout à l'autre du menu.
+   *
+   * ⚠️ En modifier l'ordre est un geste de RECETTE, pas de confort : le client
+   * déroule ce menu en face du §6 de son cahier. Toute nouvelle rubrique se
+   * range à la place de son module, pas en fin de liste.
+   *
+   * Deux correspondances ne sont pas une ligne pour une :
+   *   - le module 2 *Utilisateurs* et le module 12 *Documents* partagent la
+   *     rubrique **Comptes** (deux onglets d'un même écran) : les documents
+   *     sont indexés par compte, les séparer obligerait à chercher deux fois ;
+   *   - le module 3 *Biens immobiliers* est servi par **Catalogues** (voir,
+   *     corriger, archiver), sa fonction « valider » étant portée par la file
+   *     transverse **Validation**.
+   *
+   * Trois rubriques ne viennent pas du §6 mais du §7 (rôles et permissions) —
+   * c'est le poste de commandement de l'équipe, livré en F7.1. Elles ferment
+   * donc la liste, après les 14 modules métier.
+   *
    * ⚠️ Ne pas lire directement dans le template : c'est `visibleNav()` qui est
    * affiché, filtré par les permissions de la personne connectée.
    */
   private readonly nav: readonly BoNavItem[] = [
+    // CDC §6 — module 1 « Tableau de bord ».
     { label: 'Vue d’ensemble', path: '', icon: 'grid', ready: true },
+
+    // Hors §6 : file d'approbation TRANSVERSE (biens, véhicules, circuits,
+    // prestataires). Maintenue en tête malgré tout — c'est le premier écran
+    // ouvert chaque matin, et la fonction « valider » de quatre modules à la
+    // fois ; l'enterrer en bas de liste au nom de l'ordre du cahier coûterait
+    // plus qu'il ne rapporterait.
     { label: 'Validation', path: 'validation', icon: 'check', ready: true },
-    { label: 'Catalogues', path: 'catalogues', icon: 'layers', ready: true },
-    { label: 'Mobilité', path: 'mobilite', icon: 'car', ready: true },
-    { label: 'Tourisme', path: 'tourisme', icon: 'compass', ready: true },
-    { label: 'Nuitées', path: 'nuitees', icon: 'calendar', ready: true },
-    { label: 'Paiements', path: 'paiements', icon: 'card', ready: true },
-    // F7.3.c — L'écran « Dossiers » à onglets est scindé : construction et
-    // gestion locative sont deux métiers distincts, ils ont chacun leur rubrique.
-    { label: 'Construction', path: 'construction', icon: 'hammer', ready: true },
-    { label: 'Gestion locative', path: 'gestion-locative', icon: 'key', ready: true },
+
+    // CDC §6 — modules 2 « Utilisateurs » et 12 « Documents » (deux onglets).
     { label: 'Comptes', path: 'comptes', icon: 'id', ready: true },
-    { label: 'Avis & qualité', path: 'qualite', icon: 'star', ready: true },
+    // CDC §6 — module 3 « Biens immobiliers ».
+    { label: 'Catalogues', path: 'catalogues', icon: 'layers', ready: true },
+    // CDC §6 — module 4 « Nuitées ».
+    { label: 'Nuitées', path: 'nuitees', icon: 'calendar', ready: true },
+    // CDC §6 — module 5 « Gestion locative ».
+    { label: 'Gestion locative', path: 'gestion-locative', icon: 'key', ready: true },
+    // CDC §6 — module 6 « Construction ». (Scindé de « Dossiers » en F7.3.c :
+    // construction et gestion locative sont deux métiers distincts.)
+    { label: 'Construction', path: 'construction', icon: 'hammer', ready: true },
+    // CDC §6 — module 7 « Mobilité ».
+    { label: 'Mobilité', path: 'mobilite', icon: 'car', ready: true },
+    // CDC §6 — module 8 « Tourisme ».
+    { label: 'Tourisme', path: 'tourisme', icon: 'compass', ready: true },
+    // CDC §6 — module 9 « Team building ».
     { label: 'Team building', path: 'team-building', icon: 'briefcase', ready: true },
+    // CDC §6 — module 10 « Diaspora ».
     { label: 'Diaspora', path: 'diaspora', icon: 'globe', ready: true },
+    // CDC §6 — module 11 « Paiements ».
+    { label: 'Paiements', path: 'paiements', icon: 'card', ready: true },
+    // CDC §6 — module 13 « Avis et qualité ». (Le 12 est dans Comptes.)
+    { label: 'Avis & qualité', path: 'qualite', icon: 'star', ready: true },
+    // CDC §6 — module 14 « Paramètres ».
     { label: 'Paramètres', path: 'parametres', icon: 'sliders', ready: true },
+
+    // CDC §7 — poste de commandement de l'équipe (F7.1), hors des 14 modules.
     { label: 'Équipe', path: 'equipe', icon: 'users', ready: true },
     { label: 'Permissions', path: 'permissions', icon: 'shield', ready: true },
     { label: 'Pointeuse', path: 'pointeuse', icon: 'clock', ready: true },
