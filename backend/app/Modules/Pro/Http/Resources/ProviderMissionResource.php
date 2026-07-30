@@ -23,6 +23,11 @@ class ProviderMissionResource extends JsonResource
             'provider_id' => $this->provider_id,
             // Rattachement team building (F7.2.h) : null pour une mission ordinaire.
             'team_building_request_id' => $this->team_building_request_id,
+            // Rattachement chantier (F7.3.e3) : null pour une mission ordinaire.
+            'construction_request_id' => $this->construction_request_id,
+            // ⚠️ `category` porte une brique de pack pour une mission TB et un LOT
+            // BTP pour une mission de chantier : c'est la clé étrangère renseignée
+            // ci-dessus qui dit lequel des deux vocabulaires lire.
             'category' => $this->category,
             'title' => $this->title,
             'description' => $this->description,

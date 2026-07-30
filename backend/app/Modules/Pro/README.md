@@ -118,7 +118,22 @@ d'autrui 404, compte sans profil 404).
 ### Table `provider_missions`
 
 `provider_id`, `client_id?`, `title`, `description`, `amount_xof`,
-`commission_xof`, `status` (enum `MissionStatus`), `scheduled_at`.
+`commission_xof`, `status` (enum `MissionStatus`), `scheduled_at`,
+`team_building_request_id?` (F7.2.h), `construction_request_id?` (F7.3.e3),
+`category?`.
+
+> **Missions rattachées à un dossier.** Le team building et la construction ont
+> tous deux besoin d'« affecter des prestataires » (CDC §6). Plutôt que de
+> dupliquer la notion, ces modules **rattachent une mission** à leur dossier via
+> une clé étrangère facultative : la mission garde son cycle, sa commission figée
+> et sa remontée dans les revenus du prestataire. Les affectations passent alors
+> par leurs propres endpoints (`…/team-building-requests/{id}/assignments`,
+> `…/construction-requests/{id}/assignments`), pas par celui ci-dessous.
+>
+> ⚠️ **`category` est PARTAGÉE** : brique de pack pour une mission team building,
+> **lot BTP** (`ConstructionLot`) pour une mission de chantier. C'est la clé
+> étrangère renseignée qui dit quel vocabulaire lire. Une mission ordinaire a les
+> trois colonnes à `null` — les deux migrations sont purement additives.
 
 | Méthode | URL | Accès |
 |---|---|---|

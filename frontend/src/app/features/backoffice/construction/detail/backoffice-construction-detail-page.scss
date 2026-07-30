@@ -486,6 +486,18 @@
   }
 }
 
+// --- Affectation de prestataires BTP (F7.3.e3) ---
+.cs-assign-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--k-cream);
+  border-radius: var(--k-radius);
+}
+
 // --- Comptes rendus ---
 .cs-count {
   font-size: 0.8rem;

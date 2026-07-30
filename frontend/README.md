@@ -216,8 +216,8 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   **pas rechargée** après une écriture sur un jalon — à la différence de la
   fiche mandat (F7.3.a) où les agrégats bougeaient : le serveur renvoie le jalon
   à jour et la jauge d'avancement est un `computed` local. ⚠️ Restent hors
-  périmètre, signalé dans un encart : l'**affectation de prestataires BTP**
-  (F7.3.e3).
+  périmètre à ce stade, livré juste après : l'affectation de prestataires BTP
+  (F7.3.e3, ci-dessous).
 
   **F7.3.e2 — les devis de chantier.** Nouvelle carte *Devis* sur la fiche. Un
   **composeur** ajoute des lignes ventilées par **lot** (12 corps d'état) avec
@@ -236,6 +236,18 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   (policy `respond`) — ce n'est donc pas exposé dans le back-office, et l'espace
   client n'a **pas encore** d'écran de suivi de ses demandes de construction pour
   le faire.
+
+  **F7.3.e3 — les prestataires BTP.** Dernière carte de la fiche : la liste des
+  intervenants (lot, prestataire, date d'intervention, montant + commission,
+  statut de mission) et un formulaire d'affectation **par corps d'état**. Le
+  sélecteur ne propose que des prestataires **validés** (`GET /admin/providers?status=valide`)
+  — ⚠️ cet endpoint exige `valider:prestataire` : un compte qui ne l'a pas voit un
+  message explicite au lieu d'un sélecteur vide inexplicable. Affecter crée une
+  **mission Pro** rattachée au chantier, avec son cycle et sa commission figée ;
+  l'écran le dit sous le formulaire, pour qu'on ne prenne pas l'affectation pour
+  une simple étiquette. ⚠️ Le type `ProviderMissionItem.category` est devenu
+  l'**union** brique de pack | lot BTP — la colonne est partagée côté serveur ; la
+  fiche team building a été ajustée en conséquence (le compilateur l'a signalé).
 
   **F7.3.d Export comptable** (onglet ajouté à `features/backoffice/payments/`) :
   `GET /admin/reports/export` était livré et testé depuis B13.5 mais **aucun

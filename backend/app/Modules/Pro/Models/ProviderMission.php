@@ -3,6 +3,7 @@
 namespace App\Modules\Pro\Models;
 
 use App\Models\User;
+use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Pro\Enums\MissionStatus;
 use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
 use Database\Factories\ProviderMissionFactory;
@@ -25,6 +26,7 @@ class ProviderMission extends Model
         'provider_id',
         'client_id',
         'team_building_request_id',
+        'construction_request_id',
         'category',
         'title',
         'description',
@@ -63,6 +65,18 @@ class ProviderMission extends Model
     public function teamBuildingRequest(): BelongsTo
     {
         return $this->belongsTo(TeamBuildingRequest::class);
+    }
+
+    /**
+     * Chantier de construction d'origine (null pour une mission ordinaire) — F7.3.e3.
+     *
+     * ⚠️ `category` porte alors un **lot BTP** (`ConstructionLot`), là où elle
+     * porte une brique de pack pour une mission team building : c'est la clé
+     * étrangère renseignée qui dit quel vocabulaire lire.
+     */
+    public function constructionRequest(): BelongsTo
+    {
+        return $this->belongsTo(ConstructionRequest::class);
     }
 
     protected static function newFactory(): ProviderMissionFactory

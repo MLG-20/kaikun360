@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Modules\Build\Enums\ConstructionObjective;
 use App\Modules\Build\Enums\ConstructionRequestStatus;
 use App\Modules\Build\Enums\FinishLevel;
+use App\Modules\Pro\Models\ProviderMission;
 use Database\Factories\ConstructionRequestFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -86,6 +87,18 @@ class ConstructionRequest extends Model
     public function quotes(): HasMany
     {
         return $this->hasMany(ConstructionQuote::class)->latest();
+    }
+
+    /**
+     * Les prestataires BTP affectés au chantier, via leurs missions Pro (F7.3.e3).
+     *
+     * Même parti pris qu'en team building : pas de table d'affectation dédiée, on
+     * rattache une **mission** existante — elle porte le cycle, la commission et
+     * remonte dans les revenus du prestataire.
+     */
+    public function providerMissions(): HasMany
+    {
+        return $this->hasMany(ProviderMission::class)->latest();
     }
 
     protected static function newFactory(): ConstructionRequestFactory

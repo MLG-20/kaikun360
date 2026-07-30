@@ -264,7 +264,16 @@ export class BackofficeTeamBuildingDetailPageComponent {
   // --- Présentation -----------------------------------------------------------
 
   /** Libellé d'une catégorie de pack. */
-  protected categoryLabel(category: PackCategory | null): string {
+  /**
+   * Libellé d'une brique de pack.
+   *
+   * ⚠️ Accepte une chaîne quelconque depuis F7.3.e3 : la colonne `category` d'une
+   * mission est PARTAGÉE côté serveur (brique de pack ici, lot BTP pour une
+   * mission de chantier). Sur cet écran on ne voit que des missions team building,
+   * mais le type de `ProviderMissionItem` est désormais l'union des deux — et une
+   * valeur inconnue est rendue telle quelle plutôt que masquée.
+   */
+  protected categoryLabel(category: string | null): string {
     return this.categoryOptions.find((c) => c.value === category)?.label ?? category ?? '—';
   }
 

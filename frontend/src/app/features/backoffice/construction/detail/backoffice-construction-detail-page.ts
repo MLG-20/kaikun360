@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import {
   AdminService,
+  AssignConstructionProviderPayload,
   ComposeQuoteLine,
   ConstructionDossier,
   ConstructionLot,
@@ -12,7 +13,9 @@ import {
   ConstructionQuote,
   ConstructionReport,
   MilestonePayload,
+  ProviderMissionItem,
 } from '../../../../core/api/admin.service';
+import { Provider } from '../../../../models/provider.model';
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
 
 /**
@@ -142,6 +145,22 @@ export class BackofficeConstructionDetailPageComponent {
   /** Unités courantes d'un devis BTP (saisie libre possible). */
   protected readonly units = ['m2', 'm3', 'ml', 'u', 'forfait', 'jour'];
 
+  // --- Prestataires BTP affectés (F7.3.e3) -------------------------------------
+
+  protected readonly assignments = signal<ProviderMissionItem[]>([]);
+  protected readonly assignmentsLoading = signal(false);
+
+  /** Formulaire d'affectation (déplié à la demande). */
+  protected readonly assignFormOpen = signal(false);
+  protected assignForm = { provider_id: 0, lot: 'gros_oeuvre' as ConstructionLot, amount_xof: 0, scheduled_at: '' };
+  protected readonly assigning = signal(false);
+
+  /** Prestataires VALIDÉS proposés au sélecteur (chargés à l'ouverture). */
+  protected readonly providers = signal<Provider[]>([]);
+  protected readonly providersLoading = signal(false);
+  /** Vrai si le compte n'a pas le droit de lister les prestataires (403). */
+  protected readonly providersForbidden = signal(false);
+
   /**
    * Sous-total du devis en cours de composition, recalculé à la saisie.
    * Le serveur refait ce calcul à l'enregistrement — c'est lui qui fait foi ;
@@ -185,6 +204,7 @@ export class BackofficeConstructionDetailPageComponent {
         this.loading.set(false);
         this.loadReports();
         this.loadQuotes();
+        this.loadAssignments();
       },
       error: (error: HttpErrorResponse) => {
         this.loading.set(false);
@@ -259,6 +279,104 @@ export class BackofficeConstructionDetailPageComponent {
           this.actionError.set(this.messageFor(error));
         },
       });
+  }
+
+  // --- Prestataires BTP : lecture & affectation --------------------------------
+
+  protected loadAssignments(): void {
+    this.assignmentsLoading.set(true);
+    this.admin.constructionAssignments(this.requestId).subscribe({
+      next: (missions) => {
+        this.assignments.set(missions);
+        this.assignmentsLoading.set(false);
+      },
+      error: () => this.assignmentsLoading.set(false),
+    });
+  }
+
+  /**
+   * Ouvre le formulaire d'affectation et charge les prestataires VALIDÉS — seuls
+   * eux sont affectables (le serveur le refuse sinon).
+   *
+   * ⚠️ `GET /admin/providers` exige `valider:prestataire`. Un compte qui ne l'a
+   * pas verra un message clair au lieu d'un sélecteur vide inexplicable.
+   */
+  protected toggleAssignForm(): void {
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+
+    const opening = !this.assignFormOpen();
+    this.assignFormOpen.set(opening);
+
+    if (opening && this.providers().length === 0 && !this.providersForbidden()) {
+      this.providersLoading.set(true);
+      this.admin.adminProviders({ status: 'valide' }).subscribe({
+        next: (paginated) => {
+          this.providers.set(paginated.data);
+          this.providersLoading.set(false);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.providersLoading.set(false);
+          if (error.status === 403) this.providersForbidden.set(true);
+        },
+      });
+    }
+  }
+
+  /** Affecte le prestataire choisi au lot choisi. */
+  protected assignProvider(): void {
+    if (!this.assignForm.provider_id) {
+      this.actionError.set('Choisissez un prestataire à affecter.');
+      return;
+    }
+
+    this.assigning.set(true);
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+
+    const payload: AssignConstructionProviderPayload = {
+      provider_id: +this.assignForm.provider_id,
+      lot: this.assignForm.lot,
+      amount_xof: this.assignForm.amount_xof || 0,
+      scheduled_at: this.assignForm.scheduled_at || undefined,
+    };
+
+    this.admin.assignConstructionProvider(this.requestId, payload).subscribe({
+      next: (mission) => {
+        this.assigning.set(false);
+        this.assignments.update((list) => [mission, ...list]);
+        this.assignFormOpen.set(false);
+        this.assignForm = { provider_id: 0, lot: 'gros_oeuvre', amount_xof: 0, scheduled_at: '' };
+        this.actionMessage.set(
+          `${mission.provider?.business_name ?? 'Prestataire'} affecté — mission ${mission.reference} créée.`,
+        );
+      },
+      error: (error: HttpErrorResponse) => {
+        this.assigning.set(false);
+        this.actionError.set(this.messageFor(error));
+      },
+    });
+  }
+
+  /** Libellé du lot d'une mission (la colonne `category` porte le lot ici). */
+  protected lotLabel(category: string | null): string {
+    return this.lots.find((lot) => lot.value === category)?.label ?? category ?? '—';
+  }
+
+  /** Classe CSS du badge de statut d'une mission. */
+  protected missionClass(status: string | null): string {
+    switch (status) {
+      case 'terminee':
+        return 'is-ok';
+      case 'acceptee':
+      case 'en_cours':
+        return 'is-progress';
+      case 'refusee':
+      case 'annulee':
+        return 'is-off';
+      default:
+        return 'is-pending';
+    }
   }
 
   // --- Devis : lecture & envoi -------------------------------------------------

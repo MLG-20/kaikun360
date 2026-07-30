@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Build\Http\Controllers\ConstructionAssignmentController;
 use App\Modules\Build\Http\Controllers\ConstructionMilestoneController;
 use App\Modules\Build\Http\Controllers\ConstructionQuoteController;
 use App\Modules\Build\Http\Controllers\ConstructionReportController;
@@ -33,6 +34,10 @@ Route::middleware('auth:sanctum')->prefix('construction-requests')->group(functi
     // Devis du chantier (F7.3.e2) : lecture ouverte au client comme à l'équipe
     // (policy `view`) — le client doit pouvoir relire ce qu'on lui a envoyé.
     Route::get('/{constructionRequest}/quotes', [ConstructionQuoteController::class, 'index'])->whereNumber('constructionRequest');
+
+    // Prestataires BTP affectés (F7.3.e3) : lecture ouverte au client aussi — il a
+    // le droit de savoir qui intervient chez lui.
+    Route::get('/{constructionRequest}/assignments', [ConstructionAssignmentController::class, 'index'])->whereNumber('constructionRequest');
 });
 
 // --- Réponse du CLIENT à un devis de chantier (F7.3.e2) ----------------------
@@ -48,13 +53,16 @@ Route::middleware(['auth:sanctum', 'can:gerer:chantiers'])->prefix('construction
     Route::post('/{constructionRequest}/reports', [ConstructionReportController::class, 'store'])->whereNumber('constructionRequest');
 
     // Jalons (F7.3.e1) : le planning se pilote depuis le chantier. La route de
-    // réordonnancement est déclarée AVANT rien de conflictuel, mais on la garde
-    // explicite pour la lisibilité — elle porte la liste ordonnée des jalons.
+    // réordonnancement porte la liste ordonnée des jalons (et non une position par
+    // jalon, cf. ConstructionMilestoneController::reorder).
     Route::post('/{constructionRequest}/milestones', [ConstructionMilestoneController::class, 'store'])->whereNumber('constructionRequest');
     Route::put('/{constructionRequest}/milestones/reorder', [ConstructionMilestoneController::class, 'reorder'])->whereNumber('constructionRequest');
 
     // Chiffrage d'un devis (F7.3.e2).
     Route::post('/{constructionRequest}/quotes', [ConstructionQuoteController::class, 'compose'])->whereNumber('constructionRequest');
+
+    // Affectation d'un prestataire BTP à un lot (F7.3.e3).
+    Route::post('/{constructionRequest}/assignments', [ConstructionAssignmentController::class, 'store'])->whereNumber('constructionRequest');
 });
 
 // --- Envoi d'un devis au client (F7.3.e2, permission gerer:chantiers) ---------

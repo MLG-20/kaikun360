@@ -256,11 +256,38 @@ la réponse du client. Seul un devis **envoyé** est acceptable ou refusable (42
 
 Tests : `tests/Feature/Build/ConstructionQuoteTest.php` (12 cas).
 
-> ⚠️ **Manque restant du CDC §6 *Construction*, côté serveur : les prestataires
-> BTP.** Aucun rattachement mission ↔ chantier, contrairement au team building
-> (`provider_missions.team_building_request_id`, F7.2.h) qui fournit le motif à
-> reprendre (prévu F7.3.e3).
->
+## Prestataires BTP (F7.3.e3)
+
+Dernière exigence non couverte du module. Même parti pris qu'en F7.2.h : **pas de
+table d'affectation dédiée**, chaque affectation crée une **mission Pro** rattachée
+au chantier (`provider_missions.construction_request_id`, migration additive). Elle
+suit le cycle standard (affectée → acceptée → … → terminée), porte sa **commission
+figée** (`CommissionCalculator`) et remonte dans les revenus du prestataire.
+
+⚠️ La colonne `category` du team building est **réutilisée telle quelle** : elle
+porte une brique de pack pour une mission TB et un **lot** (`ConstructionLot`) pour
+une mission de chantier. C'est la clé étrangère renseignée qui dit quel vocabulaire
+lire — une seconde colonne aurait laissé l'une des deux vide sur chaque ligne.
+
+On affecte **par corps d'état**, pas au chantier en bloc : un chantier fait
+intervenir un maçon, un électricien et un plombier, chacun sur son lot, chacun avec
+son montant et sa commission. Le prestataire doit être **validé** (comme en TB).
+
+| Méthode | URL | Accès |
+|---|---|---|
+| GET | `/construction-requests/{id}/assignments` | policy `view` — **le client aussi** : il a le droit de savoir qui intervient chez lui |
+| POST | `/construction-requests/{id}/assignments` | `gerer:chantiers` |
+
+> ✅ **Écart CDC §7 évité ici** : la garde est une **permission**, pas un rôle. Un
+> `agent_kaikun` peut donc affecter un prestataire à un chantier — ce que le cahier
+> des charges lui confie. Le team building, lui, exige encore le rôle **admin**
+> dans ses policies (`view`/`manage`) et renvoie 403 à l'agent : écart connu,
+> toujours à trancher.
+
+Tests : `tests/Feature/Build/ConstructionAssignmentTest.php` (9 cas, dont la
+cohabitation de plusieurs corps d'état, le refus d'un prestataire non validé et la
+non-régression des missions ordinaires).
+
 > ⚠️ **Écart d'interface signalé (F7.3.e2)** : `accept` / `refuse` sont livrés et
 > testés, mais **le client n'a aucun écran** pour répondre — l'espace client n'a pas
 > de suivi de ses demandes de construction (`features/build/` côté Angular n'est que

@@ -443,6 +443,15 @@ export interface ComposeQuoteLine {
   unit_price_xof: number;
 }
 
+/** Corps d'affectation d'un prestataire BTP à un lot du chantier (F7.3.e3). */
+export interface AssignConstructionProviderPayload {
+  provider_id: number;
+  lot: ConstructionLot;
+  amount_xof: number;
+  title?: string;
+  scheduled_at?: string;
+}
+
 /** Corps de la composition d'un devis de chantier. */
 export interface ComposeConstructionQuotePayload {
   lines: ComposeQuoteLine[];
@@ -843,7 +852,15 @@ export interface ProviderMissionItem {
   reference: string;
   provider_id: number;
   team_building_request_id: number | null;
-  category: PackCategory | null;
+  /** Chantier d'origine (F7.3.e3) : null pour une mission ordinaire ou TB. */
+  construction_request_id: number | null;
+  /**
+   * ⚠️ Colonne PARTAGÉE côté serveur : une brique de pack pour une mission team
+   * building, un **lot BTP** pour une mission de chantier. C'est la clé étrangère
+   * renseignée (`team_building_request_id` / `construction_request_id`) qui dit
+   * lequel des deux vocabulaires lire.
+   */
+  category: PackCategory | ConstructionLot | null;
   title: string;
   description: string | null;
   amount_xof: number;
@@ -1636,6 +1653,36 @@ export class AdminService {
 
   // ⚠️ Accepter / refuser un devis n'est PAS exposé ici : c'est un geste du
   // CLIENT (policy `respond`, côté espace client), pas du back-office.
+
+  // --- Prestataires BTP affectés au chantier (F7.3.e3) ------------------------
+
+  /** Missions rattachées au chantier. GET …/assignments */
+  constructionAssignments(requestId: number): Observable<ProviderMissionItem[]> {
+    return this.http
+      .get<{ data: ProviderMissionItem[] }>(
+        `${this.api}/construction-requests/${requestId}/assignments`,
+      )
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Affecte un prestataire validé à un LOT du chantier (garde `gerer:chantiers`).
+   * POST …/assignments
+   *
+   * Crée une vraie mission Pro : cycle standard, commission figée, visible dans
+   * les revenus du prestataire — comme l'affectation team building (F7.2.h).
+   */
+  assignConstructionProvider(
+    requestId: number,
+    payload: AssignConstructionProviderPayload,
+  ): Observable<ProviderMissionItem> {
+    return this.http
+      .post<ApiEnvelope<{ mission: ProviderMissionItem }>>(
+        `${this.api}/construction-requests/${requestId}/assignments`,
+        payload,
+      )
+      .pipe(map((response) => response.data.mission));
+  }
 
   // --- Pilotage de la gestion locative (F7.3.a) ------------------------------
   //

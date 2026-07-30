@@ -395,6 +395,108 @@
     }
   </section>
 
+  <!-- ============ PRESTATAIRES BTP ============ -->
+  <section class="cs-card">
+    <div class="cs-card-head">
+      <h2 class="cs-card-title">Prestataires BTP</h2>
+      <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleAssignForm()">
+        {{ assignFormOpen() ? 'Annuler' : 'Affecter un prestataire' }}
+      </button>
+    </div>
+
+    @if (assignFormOpen()) {
+      <div class="cs-assign-form">
+        @if (providersForbidden()) {
+          <p class="k-form-error" role="alert">
+            Votre compte ne peut pas consulter l’annuaire des prestataires
+            (droit « valider prestataire » requis).
+          </p>
+        } @else {
+          <label class="cs-field">
+            <span>Prestataire (validés seulement)</span>
+            <select class="k-input" [(ngModel)]="assignForm.provider_id" [disabled]="providersLoading()">
+              <option [value]="0">{{ providersLoading() ? 'Chargement…' : '— Choisir —' }}</option>
+              @for (provider of providers(); track provider.id) {
+                <option [value]="provider.id">
+                  {{ provider.business_name }}@if (provider.category_label) { · {{ provider.category_label }} }
+                </option>
+              }
+            </select>
+          </label>
+          <label class="cs-field">
+            <span>Lot confié</span>
+            <select class="k-input" [(ngModel)]="assignForm.lot">
+              @for (lot of lots; track lot.value) {
+                <option [value]="lot.value">{{ lot.label }}</option>
+              }
+            </select>
+          </label>
+          <label class="cs-field">
+            <span>Montant de la mission</span>
+            <input class="k-input" type="number" min="0" step="10000" [(ngModel)]="assignForm.amount_xof" />
+          </label>
+          <label class="cs-field">
+            <span>Intervention prévue (facultative)</span>
+            <input class="k-input" type="date" [(ngModel)]="assignForm.scheduled_at" />
+          </label>
+          <button type="button" class="k-btn k-btn--primary cs-btn"
+            [disabled]="assigning()" (click)="assignProvider()">
+            {{ assigning() ? 'Affectation…' : 'Affecter' }}
+          </button>
+        }
+      </div>
+      <p class="cs-note">
+        L’affectation crée une <strong>mission</strong> au prestataire : il l’accepte ou la
+        refuse, puis la fait avancer. La commission plateforme est figée à l’affectation
+        et la mission remonte dans ses revenus.
+      </p>
+    }
+
+    @if (assignmentsLoading()) {
+      <p class="cs-state" role="status">Chargement des affectations…</p>
+    } @else if (assignments().length) {
+      <div class="cs-table-wrap">
+        <table class="cs-quote-table">
+          <thead>
+            <tr>
+              <th>Lot</th>
+              <th>Prestataire</th>
+              <th>Intervention</th>
+              <th>Montant</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (mission of assignments(); track mission.id) {
+              <tr>
+                <td>{{ lotLabel(mission.category) }}</td>
+                <td>
+                  <span class="cs-quote__ref">{{ mission.provider?.business_name || '—' }}</span>
+                  <span class="cs-quote__meta">{{ mission.reference }}</span>
+                </td>
+                <td><span class="cs-muted">{{ shortDate(mission.scheduled_at) }}</span></td>
+                <td>
+                  <strong>{{ money(mission.amount_xof) }}</strong>
+                  <span class="cs-quote__meta">commission {{ money(mission.commission_xof) }}</span>
+                </td>
+                <td>
+                  <span class="cs-badge" [class]="missionClass(mission.status)">
+                    {{ mission.status_label || mission.status }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="cs-state">
+        Aucun prestataire affecté. On affecte <strong>par corps d’état</strong> : un chantier
+        fait intervenir un maçon, un électricien, un plombier — chacun sur son lot.
+      </p>
+    }
+  </section>
+
   <!-- ============ COMPTES RENDUS ============ -->
   <section class="cs-card">
     <div class="cs-card-head">
