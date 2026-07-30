@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentKind;
 use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +25,7 @@ class Payment extends Model
         'provider',
         'amount_xof',
         'commission_xof',
+        'kind',
         'status',
         'mode',
         'provider_reference',
@@ -39,6 +41,7 @@ class Payment extends Model
         return [
             'amount_xof' => 'integer',
             'commission_xof' => 'integer',
+            'kind' => PaymentKind::class,
             'status' => PaymentStatus::class,
             'signature_verified' => 'boolean',
             'meta' => 'array',

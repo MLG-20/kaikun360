@@ -39,6 +39,42 @@ commission figés depuis la réservation), demande l'intention au PSP puis passe
 Panne du PSP → **502**. La confirmation n'arrive QUE par webhook vérifié (B14.3).
 `Booking::payments()` / `Booking::estPayee()` ajoutés.
 
+### Acomptes & soldes (F7.3.h)
+
+Dernière ligne non couverte du module *Paiements* du CDC §6. La table acceptait
+depuis B14 plusieurs règlements par réservation — sa migration cite « acompte,
+solde » — mais **rien ne les distinguait** et aucun reste à payer n'était calculé :
+devant un versement de 50 000 F sur une réservation de 180 000 F, impossible de
+dire s'il s'agissait d'un acompte ou d'une erreur.
+
+- **`payments.kind`** (enum `PaymentKind` : `integral` / `acompte` / `solde`),
+  défaut `integral` — tous les règlements antérieurs étaient complets, la colonne
+  est donc juste sur l'historique sans reprise de données.
+- **`amount_xof` facultatif** sur l'initiation : omis, le client règle **tout ce
+  qui reste dû** (comportement d'avant, préservé) ; fourni, c'est un versement
+  partiel, **plafonné au reste à payer** (422 au-delà — encaisser plus créerait un
+  trop-perçu à rembourser derrière).
+- **La nature est DÉDUITE du montant**, jamais saisie (`Booking::natureDuReglement`) :
+  ce qui laisse un reliquat est un acompte, ce qui solde après un premier versement
+  est un solde, ce qui règle tout d'un coup est intégral. Un libellé choisi à la
+  main finirait par mentir sur les chiffres.
+- **`Booking::montantPaye()` / `resteAPayer()`** : seuls les paiements `complete`
+  comptent (un règlement en attente de confirmation manuelle n'a rien apporté ; un
+  remboursement sort du calcul par son statut). Le reste à payer n'est **jamais
+  négatif** — un trop-perçu se règle par un remboursement, pas par une dette de la
+  plateforme envers le client.
+- ⚠️ **`Booking::estPayee()` a changé de sens** : il ne suffit plus d'un paiement
+  encaissé, il faut que le total couvre le montant — sans quoi un acompte
+  empêcherait le client de verser son solde.
+- **La commission ne se prend qu'une fois**, sur le règlement qui solde : la
+  répartir sur chaque acompte donnerait des arrondis qui ne retombent pas sur le
+  total. Un acompte porte donc `commission_xof = 0`.
+- `montantPaye()` utilise la relation **déjà chargée** quand elle l'est : sans
+  cela, afficher le reste dû sur une page de 20 paiements ferait 20 requêtes de
+  plus (`AdminPaymentController` pré-charge `booking.payments`).
+
+Tests : `tests/Feature/Payment/PartialPaymentTest.php` (10 cas).
+
 ## B14.3 — Webhook (sécurité)
 
 **`POST /api/v1/payments/webhook`** (public, signé). `PaytechWebhookVerifier`

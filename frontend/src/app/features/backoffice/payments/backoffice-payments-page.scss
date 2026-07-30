@@ -154,6 +154,13 @@
   color: var(--k-ink);
 }
 
+.pm-due {
+  display: block;
+  font-weight: 700;
+  color: var(--k-warning);
+  font-size: 0.88rem;
+}
+
 .pm-muted {
   color: var(--k-muted);
   font-size: 0.85rem;

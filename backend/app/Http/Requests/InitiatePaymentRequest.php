@@ -23,6 +23,10 @@ class InitiatePaymentRequest extends FormRequest
             'booking_id' => ['required', 'integer', 'exists:bookings,id'],
             // `paytech` (défaut) ou `manuel` (Phase 1 du cahier des charges).
             'mode' => ['sometimes', 'in:paytech,manuel'],
+            // F7.3.h — ACOMPTE : montant partiel. Omis, le client règle tout ce
+            // qu'il reste à payer. Le plafond (reste dû) est vérifié dans le
+            // contrôleur, qui seul connaît la réservation visée.
+            'amount_xof' => ['sometimes', 'integer', 'min:1'],
         ];
     }
 }

@@ -70,6 +70,8 @@
             <th>Référence</th>
             <th>Mode</th>
             <th>Montant</th>
+            <th>Nature</th>
+            <th>Reste dû</th>
             <th>Commission</th>
             <th>Statut</th>
             <th>Date</th>
@@ -87,6 +89,26 @@
               </td>
               <td><span class="pm-mode">{{ modeLabel(p.mode) }}</span></td>
               <td><span class="pm-amount">{{ xof(p.amount_xof) }}</span></td>
+              <!-- F7.3.h — acomptes & soldes -->
+              <td>
+                @if (p.kind && p.kind !== 'integral') {
+                  <span class="pm-badge" [class]="kindClass(p.kind)">{{ p.kind_label }}</span>
+                } @else {
+                  <span class="pm-muted">{{ p.kind_label || 'Intégral' }}</span>
+                }
+              </td>
+              <td>
+                @if (p.booking) {
+                  @if (p.booking.remaining_xof > 0) {
+                    <span class="pm-due">{{ xof(p.booking.remaining_xof) }}</span>
+                    <span class="pm-booking">sur {{ xof(p.booking.amount_xof) }}</span>
+                  } @else {
+                    <span class="pm-muted">Soldé</span>
+                  }
+                } @else {
+                  <span class="pm-muted">—</span>
+                }
+              </td>
               <td><span class="pm-muted">{{ xof(p.commission_xof) }}</span></td>
               <td><span class="pm-badge" [class]="statusClass(p.status)">{{ p.status_label || p.status }}</span></td>
               <td><span class="pm-muted">{{ shortDate(p.created_at) }}</span></td>
@@ -120,7 +142,7 @@
             <!-- Panneau d'action déplié sous la ligne concernée -->
             @if (openPanelId() === p.id) {
               <tr class="pm-panel-row">
-                <td colspan="7">
+                <td colspan="9">
                   <div class="pm-panel">
                     @if (actionError()) {
                       <p class="k-form-error" role="alert">{{ actionError() }}</p>
@@ -171,7 +193,7 @@
             }
           } @empty {
             <tr>
-              <td colspan="7" class="pm-empty">Aucun paiement ne correspond à ces filtres.</td>
+              <td colspan="9" class="pm-empty">Aucun paiement ne correspond à ces filtres.</td>
             </tr>
           }
         </tbody>

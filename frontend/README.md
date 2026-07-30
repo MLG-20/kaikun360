@@ -176,6 +176,11 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   de transaction) et **rembourser** total/partiel un paiement encaissé
   (`POST …/refund`, panneau avec montant). Les actions disponibles dépendent du
   mode/statut (manuel non encaissé → confirmable ; `complete` → remboursable).
+  **F7.3.h — acomptes & soldes** : deux colonnes de plus, la **nature** du
+  règlement (acompte en évidence, solde, intégral — déduite du montant côté
+  serveur) et le **reste dû** sur la réservation, montant restant sur le total.
+  Sans elles, un versement de 50 000 F sur une réservation de 180 000 F était
+  indistinguable d'une erreur de saisie.
   **F7.2.e Dossiers → F7.3.c : deux rubriques distinctes.** L'écran unique à
   onglets (`features/backoffice/dossiers/`) a été **scindé** en
   `features/backoffice/construction/` (route `construction`) et

@@ -39,7 +39,9 @@ class AdminPaymentController extends Controller
         $perPage = max(1, min(100, (int) $request->integer('per_page', 20)));
 
         $payments = Payment::query()
-            ->with('booking')
+            // F7.3.h : `booking.payments` pré-chargé pour calculer le reste à
+            // payer sans N+1 (cf. Booking::montantPaye).
+            ->with('booking.payments')
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->when($request->filled('booking_id'), fn ($q) => $q->where('booking_id', $request->integer('booking_id')))
             ->when($request->filled('reference'), function ($q) use ($request) {

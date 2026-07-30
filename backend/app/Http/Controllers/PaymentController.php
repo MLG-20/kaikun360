@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentKind;
 use App\Enums\PaymentStatus;
 use App\Http\Requests\InitiatePaymentRequest;
 use App\Http\Resources\PaymentResource;
@@ -52,13 +53,34 @@ class PaymentController extends Controller
             throw ValidationException::withMessages(['booking_id' => ['Cette réservation est déjà payée.']]);
         }
 
+        // F7.3.h — ACOMPTES & SOLDES. Montant omis = le client règle tout ce qui
+        // reste dû (comportement d'avant cette tranche, préservé). Montant fourni
+        // = versement partiel, plafonné au reste à payer : encaisser au-delà
+        // créerait un trop-perçu à rembourser derrière.
+        $reste = $booking->resteAPayer();
+        $montant = (int) ($request->validated()['amount_xof'] ?? $reste);
+
+        if ($montant > $reste) {
+            throw ValidationException::withMessages([
+                'amount_xof' => ["Il ne reste que {$reste} FCFA à régler sur cette réservation."],
+            ]);
+        }
+
+        // La nature (acompte / solde / intégral) est DÉDUITE du montant : un
+        // libellé saisi à la main finirait par mentir sur les chiffres.
+        $kind = $booking->natureDuReglement($montant);
+
         // Transaction locale (montant et commission figés depuis la réservation).
         $payment = Payment::create([
             'reference' => 'PAY-'.Str::upper(Str::random(12)),
             'booking_id' => $booking->id,
             'provider' => $mode === 'manuel' ? 'manuel' : 'paytech',
-            'amount_xof' => $booking->amount_xof,
-            'commission_xof' => $booking->commission_xof ?? 0,
+            'amount_xof' => $montant,
+            // La commission de la plateforme se prend UNE fois, sur le règlement
+            // qui solde la réservation : la répartir sur chaque acompte donnerait
+            // des arrondis qui ne retombent pas sur le total.
+            'commission_xof' => $kind === PaymentKind::ACOMPTE ? 0 : ($booking->commission_xof ?? 0),
+            'kind' => $kind->value,
             'status' => PaymentStatus::INITIE->value,
             'mode' => $mode,
         ]);
@@ -76,6 +98,8 @@ class PaymentController extends Controller
                     'pay_to' => $payTo,
                     'reference' => $payment->reference,
                     'message' => "Réglez {$payment->amount_xof} FCFA au numéro {$payTo} en indiquant la référence {$payment->reference}, puis confirmez par WhatsApp.",
+                    'kind' => $payment->kind?->value,
+                    'remaining_after_xof' => max(0, $reste - $montant),
                 ],
             ]);
         }

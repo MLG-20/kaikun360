@@ -30,6 +30,11 @@ type PaymentsTab = 'supervision' | 'export';
  *     a payé au numéro officiel, l'admin valide → la réservation est confirmée ;
  *   - **Rembourser** tout ou partie d'un paiement encaissé (`complete`).
  *
+ * **F7.3.h — acomptes & soldes.** La liste porte deux colonnes de plus : la
+ * **nature** du règlement (acompte / solde / intégral, déduite du montant côté
+ * serveur) et le **reste dû** sur la réservation. Sans elles, un versement de
+ * 50 000 F sur une réservation de 180 000 F était indistinguable d'une erreur.
+ *
  * L'écran reflète les garde-fous serveur (mode manuel requis pour confirmer,
  * statut `complete` requis pour rembourser) et rend les refus lisibles.
  *
@@ -398,6 +403,14 @@ export class BackofficePaymentsPageComponent {
       default:
         return 'is-pending';
     }
+  }
+
+  /**
+   * Classe du badge de nature (F7.3.h). Un acompte laisse un reliquat à
+   * percevoir : il se repère au premier coup d'œil.
+   */
+  protected kindClass(kind: string | null): string {
+    return kind === 'acompte' ? 'is-warn' : 'is-ok';
   }
 
   /** Libellé du mode de paiement. */

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\BookingStatus;
 use App\Enums\CautionStatus;
 use App\Enums\HousekeepingStatus;
+use App\Enums\PaymentKind;
 use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -103,10 +104,66 @@ class Booking extends Model
     }
 
     /**
-     * Vrai si la réservation a déjà un paiement encaissé (COMPLETE).
+     * Vrai si la réservation est **entièrement soldée** (F7.3.h).
+     *
+     * ⚠️ Le sens a changé : jusqu'ici, un seul paiement encaissé suffisait à
+     * considérer la réservation comme payée. Depuis l'ouverture des acomptes, il
+     * faut que le total encaissé couvre le montant — sans quoi un acompte
+     * empêcherait le client de verser son solde.
      */
     public function estPayee(): bool
     {
-        return $this->payments()->where('status', PaymentStatus::COMPLETE->value)->exists();
+        return $this->resteAPayer() <= 0;
+    }
+
+    /**
+     * Total réellement ENCAISSÉ sur la réservation (F7.3.h).
+     *
+     * Ne comptent que les paiements `complete` : un règlement initié ou en attente
+     * de confirmation manuelle n'a rien apporté. Les remboursements sortent donc
+     * naturellement du calcul (leur statut n'est plus `complete`).
+     */
+    public function montantPaye(): int
+    {
+        // Si la relation a été pré-chargée (listes du back-office), on calcule en
+        // mémoire : sans cela, afficher le reste dû sur une page de 20 paiements
+        // déclencherait 20 requêtes de plus.
+        $payments = $this->relationLoaded('payments')
+            ? $this->payments
+            : $this->payments()->get();
+
+        return (int) $payments
+            ->filter(fn (Payment $payment) => $payment->status === PaymentStatus::COMPLETE)
+            ->sum('amount_xof');
+    }
+
+    /**
+     * Reste à payer (jamais négatif) — le « solde » du CDC §6.
+     *
+     * Un trop-perçu ne devient pas une dette de la plateforme envers le client :
+     * il se règle par un remboursement, pas par un reste à payer négatif.
+     */
+    public function resteAPayer(): int
+    {
+        return max(0, (int) $this->amount_xof - $this->montantPaye());
+    }
+
+    /**
+     * Nature d'un règlement de ce montant, DÉDUITE de l'état de la réservation.
+     *
+     * Règle : ce qui laisse un reliquat est un acompte ; ce qui solde après un
+     * premier versement est un solde ; ce qui règle tout d'un coup est intégral.
+     * On la déduit plutôt que de la faire saisir — un libellé choisi à la main
+     * finirait par mentir sur les chiffres.
+     */
+    public function natureDuReglement(int $montant): PaymentKind
+    {
+        $dejaPaye = $this->montantPaye();
+
+        if ($montant < $this->resteAPayer()) {
+            return PaymentKind::ACOMPTE;
+        }
+
+        return $dejaPaye > 0 ? PaymentKind::SOLDE : PaymentKind::INTEGRAL;
     }
 }
