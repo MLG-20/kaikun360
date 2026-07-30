@@ -245,6 +245,12 @@ export interface TourismDestination {
 export type HousekeepingStatus = 'a_faire' | 'en_cours' | 'fait';
 
 /** Une réservation de nuitée dans le calendrier d'exploitation. */
+/**
+ * Sort de la caution d'une réservation (miroir de `CautionStatus`) — F7.3.f.
+ * Transversal : la location de véhicule l'utilise depuis B7.4.
+ */
+export type CautionStatus = 'retenue' | 'restituee' | 'perdue';
+
 export interface StayBooking {
   booking_id: number;
   reference: string;
@@ -257,9 +263,13 @@ export interface StayBooking {
   checked_in_at: string | null;
   checked_out_at: string | null;
   housekeeping_status: HousekeepingStatus | null;
+  /** Montant de la caution demandée par le logement (0 si aucune). */
+  caution_xof: number | null;
+  /** `null` = pas de caution ; sinon retenue → restituée | perdue (F7.3.f). */
+  caution_status: CautionStatus | null;
 }
 
-/** Résumé renvoyé après une transition (check-in/out, ménage) — partiel. */
+/** Résumé renvoyé après une transition (check-in/out, ménage, caution) — partiel. */
 export interface StayBookingSummary {
   booking_id: number;
   reference: string;
@@ -267,6 +277,8 @@ export interface StayBookingSummary {
   checked_in_at: string | null;
   checked_out_at: string | null;
   housekeeping_status: HousekeepingStatus | null;
+  caution_xof: number | null;
+  caution_status: CautionStatus | null;
 }
 
 /** Filtres du calendrier des nuitées (bornes sur la date d'arrivée). */
@@ -1418,6 +1430,26 @@ export class AdminService {
       .patch<ApiEnvelope<{ booking: StayBookingSummary }>>(
         `${this.api}/admin/stay-bookings/${bookingId}/housekeeping`,
         { status },
+      )
+      .pipe(map((response) => response.data.booking));
+  }
+
+  /**
+   * Tranche le sort de la caution après le départ.
+   * PATCH /admin/stay-bookings/{id}/caution
+   *
+   * Le serveur exige un départ enregistré, une caution encore retenue, et un
+   * **motif** pour la conserver (une caution perdue se justifie).
+   */
+  stayCaution(
+    bookingId: number,
+    status: 'restituee' | 'perdue',
+    reason?: string,
+  ): Observable<StayBookingSummary> {
+    return this.http
+      .patch<ApiEnvelope<{ booking: StayBookingSummary }>>(
+        `${this.api}/admin/stay-bookings/${bookingId}/caution`,
+        { status, reason },
       )
       .pipe(map((response) => response.data.booking));
   }

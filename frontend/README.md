@@ -152,6 +152,14 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   cycle **arrivée → départ → ménage** piloté par ligne (`PATCH
   /admin/stay-bookings/{id}/check-in|check-out|housekeeping`). Les boutons
   s'adaptent à l'étape du séjour (À venir / Sur place / Parti).
+  **F7.3.f — la caution** : colonne dédiée (montant + pastille retenue /
+  restituée / conservée) et, **une fois le départ enregistré**, deux gestes par
+  ligne — **Restituer** (immédiat) et **Conserver**, qui déplie une saisie de
+  **motif obligatoire**. Tant que le client est sur place, l'écran affiche
+  « à trancher après le départ » plutôt que des boutons qui échoueraient en 422 :
+  les règles sont tenues par le serveur, l'écran ne les duplique pas, il les
+  rend lisibles. Le motif part au journal d'audit avec le montant — il fait foi
+  en cas de contestation, et l'écran le dit sous le champ.
   **F7.2.d Paiements** (`features/backoffice/payments/`) : supervision
   (`GET /admin/payments`, filtres statut + référence) + deux actions sensibles —
   **confirmer** un règlement manuel Wave/OM (`POST …/confirm`, panneau avec preuve

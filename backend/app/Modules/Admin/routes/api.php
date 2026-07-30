@@ -161,6 +161,8 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         Route::patch('/stay-bookings/{booking}/check-in', [StayOperationsController::class, 'checkIn'])->whereNumber('booking');
         Route::patch('/stay-bookings/{booking}/check-out', [StayOperationsController::class, 'checkOut'])->whereNumber('booking');
         Route::patch('/stay-bookings/{booking}/housekeeping', [StayOperationsController::class, 'housekeeping'])->whereNumber('booking');
+        // Sort de la caution en fin de séjour (F7.3.f) : restituée ou conservée.
+        Route::patch('/stay-bookings/{booking}/caution', [StayOperationsController::class, 'caution'])->whereNumber('booking');
     });
 
     // B13.4 — Contenu éditorial : FAQ & pages (édition). Lecture publique

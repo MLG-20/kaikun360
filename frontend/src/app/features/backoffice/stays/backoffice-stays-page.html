@@ -39,6 +39,7 @@
           <th>Voyageurs</th>
           <th>Exploitation</th>
           <th>Ménage</th>
+          <th>Caution</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -87,6 +88,38 @@
               }
             </td>
             <td>
+              @if (b.caution_xof) {
+                <span class="st-amount">{{ xof(b.caution_xof) }}</span>
+                <span class="st-pill" [class]="cautionClass(b.caution_status)">
+                  {{ cautionLabel(b.caution_status) }}
+                </span>
+                @if (canSettleCaution(b)) {
+                  <div class="st-caution-actions">
+                    <button
+                      type="button"
+                      class="k-btn k-btn--ghost st-btn"
+                      [disabled]="processingId() !== null"
+                      (click)="restoreCaution(b)">
+                      Restituer
+                    </button>
+                    <button
+                      type="button"
+                      class="k-btn k-btn--ghost st-btn st-btn--danger"
+                      [disabled]="processingId() !== null"
+                      (click)="toggleCautionPanel(b)">
+                      {{ cautionPanelId() === b.booking_id ? 'Annuler' : 'Conserver' }}
+                    </button>
+                  </div>
+                } @else if (b.caution_status === 'retenue') {
+                  <!-- Le serveur exige le départ : on le dit plutôt que d'afficher
+                       des boutons qui échoueraient en 422. -->
+                  <span class="st-muted">à trancher après le départ</span>
+                }
+              } @else {
+                <span class="st-muted">Aucune</span>
+              }
+            </td>
+            <td>
               @switch (phase(b)) {
                 @case ('a_venir') {
                   <button
@@ -112,9 +145,43 @@
               }
             </td>
           </tr>
+
+          @if (cautionPanelId() === b.booking_id) {
+            <tr class="st-panel-row">
+              <td colspan="7">
+                <div class="st-panel">
+                  <p class="st-panel__title">
+                    Conserver la caution de {{ xof(b.caution_xof) }} — {{ b.reference }}
+                  </p>
+                  <div class="st-panel__row">
+                    <input
+                      class="k-input"
+                      type="text"
+                      maxlength="500"
+                      [(ngModel)]="cautionReason"
+                      placeholder="Motif (dégât constaté, devis de remise en état…)" />
+                    <button
+                      type="button"
+                      class="k-btn st-btn st-btn--danger"
+                      [disabled]="processingId() !== null"
+                      (click)="keepCaution(b)">
+                      {{ processingId() === b.booking_id ? '…' : 'Confirmer la retenue' }}
+                    </button>
+                    <button type="button" class="k-btn k-btn--ghost st-btn" (click)="closeCautionPanel()">
+                      Annuler
+                    </button>
+                  </div>
+                  <p class="st-panel__hint">
+                    Le motif est enregistré au journal d’audit avec le montant : il fait foi
+                    en cas de contestation.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          }
         } @empty {
           <tr>
-            <td colspan="6" class="st-empty">Aucun séjour sur cette période.</td>
+            <td colspan="7" class="st-empty">Aucun séjour sur cette période.</td>
           </tr>
         }
       </tbody>

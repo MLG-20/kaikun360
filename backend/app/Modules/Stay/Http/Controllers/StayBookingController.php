@@ -3,6 +3,7 @@
 namespace App\Modules\Stay\Http\Controllers;
 
 use App\Enums\BookingStatus;
+use App\Enums\CautionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BookingResource;
 use App\Modules\Stay\Http\Requests\StoreStayBookingRequest;
@@ -96,6 +97,12 @@ class StayBookingController extends Controller
             'guests' => $data['guests'],
             'amount_xof' => $nights * $stay->price_per_night_xof,
             'caution_xof' => $stay->caution_xof,
+            // F7.3.f — la caution était RECOPIÉE sans jamais être suivie : son
+            // statut restait `null` pour une nuitée, là où la location de véhicule
+            // le renseigne depuis B7.4. Sans cet état, impossible de savoir au
+            // départ si la caution est encore due au client. Elle est retenue dès
+            // la réservation (et `null` si le logement n'en demande pas).
+            'caution_status' => $stay->caution_xof > 0 ? CautionStatus::RETENUE->value : null,
             'status' => BookingStatus::EN_ATTENTE->value, // en attente de paiement (B14)
         ]);
 

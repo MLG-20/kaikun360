@@ -308,6 +308,36 @@ réservées aux réservations de type Stay (sinon **422**).
 - `PATCH /admin/stay-bookings/{booking}/check-out` — départ (exige une arrivée,
   double → 422) ; bascule le ménage sur `a_faire`.
 - `PATCH /admin/stay-bookings/{booking}/housekeeping` — statut de ménage.
+- `PATCH /admin/stay-bookings/{booking}/caution` — **sort de la caution** (F7.3.f) :
+  `restituee` ou `perdue`.
+
+### Caution des nuitées (F7.3.f)
+
+La caution était **recopiée** sur la réservation (`bookings.caution_xof`) mais son
+statut restait `null` pour un séjour : ni retenue, ni restitution, alors que la
+location de véhicule pilote ce cycle depuis B7.4 et que l'enum `CautionStatus` était
+déjà pensée transversale. Le module *Nuitées* du CDC §6 était donc incomplet.
+
+- **Retenue à la réservation** : `StayBookingController@store` renseigne désormais
+  `caution_status = retenue` dès qu'un logement demande une caution (`null` sinon —
+  il n'y a rien à rendre).
+- **Tranchée au départ**, depuis le back-office. Trois garde-fous côté serveur :
+  **départ enregistré exigé** (restituer avant le départ n'a pas de sens ; conserver
+  pendant le séjour, c'est trancher avant l'état des lieux — le ménage, lui, n'est
+  pas attendu), **caution encore retenue** (on ne rejoue pas une décision), et
+  **motif obligatoire pour la conserver** (un litige est possible ; la restitution
+  n'a rien à justifier).
+- **Tracée** au journal d'audit avec le motif et le montant (« Caution restituée » /
+  « Caution conservée »).
+- `caution_xof` et `caution_status` sont exposés dans le calendrier et dans le
+  résumé d'opération — sans eux l'écran ne peut ni afficher la caution ni savoir
+  s'il reste une décision à prendre.
+
+Tests : `tests/Feature/Admin/StayCautionTest.php` (10 cas).
+
+> ⚠️ **Pas de restitution partielle** : l'enum n'a que trois états (retenue,
+> restituée, perdue), comme pour les véhicules. Retenir une partie de la caution
+> demanderait un montant retenu en base — décision produit non prise.
 
 **Matrice de rôles (policies différenciées)** — verrouillée par test
 (`BackOfficeRoleMatrixTest`) :

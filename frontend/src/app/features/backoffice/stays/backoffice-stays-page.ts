@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 import {
   AdminService,
+  CautionStatus,
   HousekeepingStatus,
   StayBooking,
   StayBookingSummary,
@@ -24,6 +25,14 @@ interface HousekeepingOption {
  * **enregistrer l'arrivée** (check-in), **enregistrer le départ** (check-out, qui
  * déclenche le ménage), puis **suivre le ménage** (à faire → en cours → fait).
  * Garde serveur `gerer:nuitees` : un agent sans ce droit reçoit un 403 lisible.
+ *
+ * **F7.3.f — la caution.** Elle était recopiée sur la réservation sans jamais être
+ * suivie (statut `null` pour un séjour, là où la location de véhicule le renseigne
+ * depuis B7.4) : ni retenue, ni restitution. Elle est désormais **retenue** dès la
+ * réservation et se tranche ici, **après le départ** — restituée, ou conservée avec
+ * un **motif obligatoire** (une caution perdue se justifie, un litige est possible).
+ * Ces règles sont tenues par le serveur ; l'écran n'affiche les boutons qu'au bon
+ * moment plutôt que de les dupliquer.
  */
 @Component({
   selector: 'app-backoffice-stays-page',
@@ -51,6 +60,10 @@ export class BackofficeStaysPageComponent {
   protected readonly processingId = signal<number | null>(null);
   /** Message d'erreur d'une action (403 / 422). */
   protected readonly actionError = signal<string | null>(null);
+
+  /** Ligne dont le panneau « conserver la caution » est ouvert (saisie du motif). */
+  protected readonly cautionPanelId = signal<number | null>(null);
+  protected cautionReason = '';
 
   /** Statuts de ménage possibles. */
   protected readonly housekeepingOptions: readonly HousekeepingOption[] = [
@@ -117,8 +130,83 @@ export class BackofficeStaysPageComponent {
     this.run(b, this.admin.stayHousekeeping(b.booking_id, status));
   }
 
+  // --- Caution (F7.3.f) -------------------------------------------------------
+
+  /** La caution ne se tranche qu'après le départ, et une seule fois. */
+  protected canSettleCaution(b: StayBooking): boolean {
+    return b.caution_status === 'retenue' && b.checked_out_at !== null;
+  }
+
+  /** Restitue la caution au client (rien à justifier). */
+  protected restoreCaution(b: StayBooking): void {
+    this.closeCautionPanel();
+    this.run(b, this.admin.stayCaution(b.booking_id, 'restituee'));
+  }
+
+  /** Ouvre / referme la saisie du motif de retenue. */
+  protected toggleCautionPanel(b: StayBooking): void {
+    this.actionError.set(null);
+    this.cautionReason = '';
+    this.cautionPanelId.update((id) => (id === b.booking_id ? null : b.booking_id));
+  }
+
+  protected closeCautionPanel(): void {
+    this.cautionPanelId.set(null);
+    this.cautionReason = '';
+  }
+
+  /** Conserve la caution — motif exigé (le serveur le refuse sinon). */
+  protected keepCaution(b: StayBooking): void {
+    const reason = this.cautionReason.trim();
+    if (!reason) {
+      this.actionError.set('Indiquez le motif de la retenue de la caution.');
+      return;
+    }
+    this.run(b, this.admin.stayCaution(b.booking_id, 'perdue', reason), () =>
+      this.closeCautionPanel(),
+    );
+  }
+
+  /** Libellé du sort de la caution. */
+  protected cautionLabel(status: CautionStatus | null): string {
+    switch (status) {
+      case 'retenue':
+        return 'Retenue';
+      case 'restituee':
+        return 'Restituée';
+      case 'perdue':
+        return 'Conservée';
+      default:
+        return '—';
+    }
+  }
+
+  /** Classe CSS du badge de caution. */
+  protected cautionClass(status: CautionStatus | null): string {
+    switch (status) {
+      case 'restituee':
+        return 'is-ok';
+      case 'perdue':
+        return 'is-off';
+      case 'retenue':
+        return 'is-pending';
+      default:
+        return '';
+    }
+  }
+
+  /** Montant formaté en FCFA. */
+  protected xof(value: number | null): string {
+    if (!value) return '—';
+    return new Intl.NumberFormat('fr-FR').format(value) + ' F';
+  }
+
   /** Exécute une transition puis fusionne le résumé dans la ligne. */
-  private run(b: StayBooking, request$: ReturnType<AdminService['stayCheckIn']>): void {
+  private run(
+    b: StayBooking,
+    request$: ReturnType<AdminService['stayCheckIn']>,
+    after?: () => void,
+  ): void {
     if (this.processingId() !== null) return;
 
     this.processingId.set(b.booking_id);
@@ -128,6 +216,7 @@ export class BackofficeStaysPageComponent {
       next: (summary) => {
         this.processingId.set(null);
         this.mergeSummary(summary);
+        after?.();
       },
       error: (error: HttpErrorResponse) => {
         this.processingId.set(null);
@@ -150,6 +239,8 @@ export class BackofficeStaysPageComponent {
               checked_in_at: summary.checked_in_at,
               checked_out_at: summary.checked_out_at,
               housekeeping_status: summary.housekeeping_status,
+              caution_xof: summary.caution_xof,
+              caution_status: summary.caution_status,
             }
           : b,
       ),

@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 214 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 215 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -405,6 +405,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | PATCH | `/admin/stay-bookings/{booking}/check-in` | auth + `can:gerer:nuitees` | `StayOperationsController@checkIn` |
 | PATCH | `/admin/stay-bookings/{booking}/check-out` | auth + `can:gerer:nuitees` | `StayOperationsController@checkOut` |
 | PATCH | `/admin/stay-bookings/{booking}/housekeeping` | auth + `can:gerer:nuitees` | `StayOperationsController@housekeeping` |
+| PATCH | `/admin/stay-bookings/{booking}/caution` | auth + `can:gerer:nuitees` | `StayOperationsController@caution` |
 | GET | `/admin/stays/calendar` | auth + `can:gerer:nuitees` | `StayOperationsController@calendar` |
 | GET | `/admin/tourism/destinations` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@tourismDestinations` |
 | GET | `/admin/team` | auth + `can:gerer:utilisateurs` | `AdminTeamController@index` |

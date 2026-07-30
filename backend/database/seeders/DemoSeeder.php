@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Enums\BookingStatus;
+use App\Enums\CautionStatus;
+use App\Enums\HousekeepingStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\RequestStatus;
 use App\Enums\ServiceType;
@@ -970,9 +972,28 @@ class DemoSeeder extends Seeder
             'guests' => 2,
             'amount_xof' => 180_000,
             'caution_xof' => 100_000,
+            // F7.3.f : caution bloquée dès la réservation, comme le fait désormais
+            // le contrôleur de réservation.
+            'caution_status' => CautionStatus::RETENUE->value,
         ]);
         // Réglée par PayTech, encaissée → remboursable dans le back-office.
         $this->payFor($nuitee, 'paytech', PaymentStatus::COMPLETE);
+
+        // Un séjour TERMINÉ dont la caution reste à trancher : c'est le seul état
+        // où le back-office peut la restituer ou la conserver (F7.3.f). Sans lui,
+        // l'écran Nuitées ne montre aucune décision à prendre.
+        $sejourPasse = $this->makeBooking($client, $stay, BookingStatus::TERMINEE, [
+            'start_date' => now()->subDays(6)->toDateString(),
+            'end_date' => now()->subDays(3)->toDateString(),
+            'guests' => 2,
+            'amount_xof' => 180_000,
+            'caution_xof' => 100_000,
+            'caution_status' => CautionStatus::RETENUE->value,
+            'checked_in_at' => now()->subDays(6),
+            'checked_out_at' => now()->subDays(3),
+            'housekeeping_status' => HousekeepingStatus::FAIT->value,
+        ]);
+        $this->payFor($sejourPasse, 'paytech', PaymentStatus::COMPLETE);
 
         // Une location de véhicule confirmée à venir (annulable côté client).
         $vehicule = $this->makeBooking($client, $vehicles[0], BookingStatus::CONFIRMEE, [
