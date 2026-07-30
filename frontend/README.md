@@ -146,7 +146,17 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   supervision (`GET /admin/properties|vehicles|experiences`) avec onglets
   Biens / Véhicules / Expériences, affichant **tous les statuts** (et pas
   seulement le publié comme le catalogue public), filtres statut + recherche,
-  pagination. Lecture seule — l'approbation reste dans l'écran Validation.
+  pagination. L'approbation reste dans l'écran Validation.
+  **F7.3.g — les biens y deviennent modifiables** (dette CDC §15). Deux gestes
+  par ligne, **onglet Biens uniquement** : **Corriger** (panneau intitulé / prix
+  / description) et **Archiver** (motif facultatif) — ou **Sortir d'archive**
+  pour une annonce archivée. Trois points à connaître : la **description laissée
+  vide n'est pas envoyée** (la liste ne la transporte pas — l'envoyer vide
+  effacerait un texte existant) ; la page est **rechargée** après écriture, car
+  un changement de statut peut faire sortir la ligne du filtre courant ; et
+  sortir de l'archive renvoie le bien **en file de validation**, ce que l'écran
+  annonce. Les panneaux rappellent que le bien **reste à son propriétaire** et
+  que localisation, photos et reste du dossier se modifient depuis son espace.
   **F7.2.c Nuitées** (`features/backoffice/stays/`) : exploitation hôtelière —
   calendrier des séjours (`GET /admin/stays/calendar`), filtre par période, et
   cycle **arrivée → départ → ménage** piloté par ligne (`PATCH

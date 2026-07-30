@@ -7,6 +7,7 @@ use App\Modules\Admin\Http\Controllers\AdminDocumentController;
 use App\Modules\Admin\Http\Controllers\AdminDossierController;
 use App\Modules\Admin\Http\Controllers\AdminGeoController;
 use App\Modules\Admin\Http\Controllers\AdminPaymentController;
+use App\Modules\Admin\Http\Controllers\AdminPropertyController;
 use App\Modules\Admin\Http\Controllers\AdminProviderController;
 use App\Modules\Admin\Http\Controllers\AdminReviewController;
 use App\Modules\Admin\Http\Controllers\AdminSettingsController;
@@ -142,6 +143,19 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         Route::get('/properties', [AdminCatalogController::class, 'properties']);
         Route::get('/vehicles', [AdminCatalogController::class, 'vehicles']);
         Route::get('/experiences', [AdminCatalogController::class, 'experiences']);
+
+        // F7.3.g — Dette CDC §15 « un admin peut modifier » : correction et
+        // archivage d'un bien depuis le back-office. Garde `valider:bien` (celui
+        // qui publie ou rejette une annonce peut en corriger le titre). PAS de
+        // création ni de réattribution : le bien reste à son propriétaire.
+        Route::middleware('can:valider:bien')->group(function () {
+            Route::patch('/properties/{property}', [AdminPropertyController::class, 'update'])
+                ->whereNumber('property');
+            Route::patch('/properties/{property}/archive', [AdminPropertyController::class, 'archive'])
+                ->whereNumber('property');
+            Route::patch('/properties/{property}/restore', [AdminPropertyController::class, 'restore'])
+                ->whereNumber('property');
+        });
 
         // F7.2.j — Écran Mobilité : trajets programmés (tous statuts) avec le
         // remplissage de chaque départ. La flotte réutilise /admin/vehicles.

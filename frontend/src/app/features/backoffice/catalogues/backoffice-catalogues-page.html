@@ -38,6 +38,13 @@
   <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
 </section>
 
+@if (actionDone()) {
+  <p class="k-form-info" role="status">{{ actionDone() }}</p>
+}
+@if (actionError() && openRowId() === null) {
+  <p class="k-form-error" role="alert">{{ actionError() }}</p>
+}
+
 <!-- Liste -->
 @if (loading()) {
   <p class="cat-state" role="status">Chargement du catalogue…</p>
@@ -54,6 +61,9 @@
           <th>Propriétaire</th>
           <th>Prix</th>
           <th>Date</th>
+          @if (canEdit()) {
+            <th>Action</th>
+          }
         </tr>
       </thead>
       <tbody>
@@ -82,10 +92,118 @@
               }
             </td>
             <td><span class="cat-muted">{{ shortDate(row.date) }}</span></td>
+
+            <!-- F7.3.g : correction et archivage, réservés aux biens. -->
+            @if (canEdit()) {
+              <td>
+                <div class="cat-actions">
+                  <button
+                    type="button"
+                    class="k-btn k-btn--ghost cat-btn"
+                    [disabled]="savingId() !== null"
+                    (click)="openEdit(row)">
+                    Corriger
+                  </button>
+                  @if (row.status === 'archive') {
+                    <button
+                      type="button"
+                      class="k-btn k-btn--ghost cat-btn"
+                      [disabled]="savingId() !== null"
+                      (click)="restore(row)">
+                      {{ savingId() === row.id ? '…' : 'Sortir d’archive' }}
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="k-btn k-btn--ghost cat-btn cat-btn--danger"
+                      [disabled]="savingId() !== null"
+                      (click)="openArchive(row)">
+                      Archiver
+                    </button>
+                  }
+                </div>
+              </td>
+            }
           </tr>
+
+          <!-- Panneau déplié sous la ligne concernée -->
+          @if (openRowId() === row.id) {
+            <tr class="cat-panel-row">
+              <td [attr.colspan]="canEdit() ? 6 : 5">
+                <div class="cat-panel">
+                  @if (actionError()) {
+                    <p class="k-form-error" role="alert">{{ actionError() }}</p>
+                  }
+
+                  @if (panelKind() === 'edit') {
+                    <p class="cat-panel__title">Corriger l’annonce</p>
+                    <div class="cat-panel__grid">
+                      <label class="cat-field">
+                        <span>Intitulé public</span>
+                        <input class="k-input" type="text" maxlength="255" [(ngModel)]="editForm.title" />
+                      </label>
+                      <label class="cat-field">
+                        <span>Prix (FCFA)</span>
+                        <input class="k-input" type="number" min="0" step="1000" [(ngModel)]="editForm.price_xof" />
+                      </label>
+                      <label class="cat-field cat-field--wide">
+                        <span>Description (laissée vide = inchangée)</span>
+                        <input class="k-input" type="text" [(ngModel)]="editForm.description"
+                          placeholder="Ne remplacer que si le texte actuel pose problème" />
+                      </label>
+                    </div>
+                    <div class="cat-panel__row">
+                      <button
+                        type="button"
+                        class="k-btn k-btn--primary cat-btn"
+                        [disabled]="savingId() !== null"
+                        (click)="saveEdit(row)">
+                        {{ savingId() === row.id ? '…' : 'Enregistrer' }}
+                      </button>
+                      <button type="button" class="k-btn k-btn--ghost cat-btn" (click)="closePanel()">
+                        Annuler
+                      </button>
+                    </div>
+                    <p class="cat-panel__hint">
+                      Le bien reste à son propriétaire ; la correction est tracée au journal
+                      d’audit avec l’avant / après. Localisation, photos et reste du dossier
+                      se modifient depuis l’espace du propriétaire.
+                    </p>
+                  } @else if (panelKind() === 'archive') {
+                    <p class="cat-panel__title">Archiver l’annonce</p>
+                    <div class="cat-panel__row">
+                      <input
+                        class="k-input"
+                        type="text"
+                        maxlength="500"
+                        [(ngModel)]="archiveReason"
+                        placeholder="Motif (doublon, bien vendu, contenu non conforme…) — facultatif" />
+                      <button
+                        type="button"
+                        class="k-btn cat-btn cat-btn--danger"
+                        [disabled]="savingId() !== null"
+                        (click)="archive(row)">
+                        {{ savingId() === row.id ? '…' : 'Confirmer l’archivage' }}
+                      </button>
+                      <button type="button" class="k-btn k-btn--ghost cat-btn" (click)="closePanel()">
+                        Annuler
+                      </button>
+                    </div>
+                    <p class="cat-panel__hint">
+                      L’annonce sort du catalogue sans rien supprimer : réservations et
+                      documents restent intacts. Pour la remettre en ligne, elle repassera
+                      par la file de validation.
+                    </p>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
         } @empty {
           <tr>
-            <td colspan="5" class="cat-empty">Aucun élément ne correspond à ces filtres.</td>
+            <td [attr.colspan]="canEdit() ? 6 : 5" class="cat-empty">
+              Aucun élément ne correspond à ces filtres.
+            </td>
           </tr>
         }
       </tbody>

@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 215 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 218 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -395,6 +395,9 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/admin/payments/{payment}/confirm` | auth + `can:gerer:paiements` | `AdminPaymentController@confirm` |
 | POST | `/admin/payments/{payment}/refund` | auth + `can:gerer:paiements` | `AdminPaymentController@refund` |
 | GET | `/admin/properties` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@properties` |
+| PATCH | `/admin/properties/{property}` | auth + `can:valider:bien` | `AdminPropertyController@update` |
+| PATCH | `/admin/properties/{property}/archive` | auth + `can:valider:bien` | `AdminPropertyController@archive` |
+| PATCH | `/admin/properties/{property}/restore` | auth + `can:valider:bien` | `AdminPropertyController@restore` |
 | GET | `/admin/providers` | auth + `can:valider:prestataire` | `AdminProviderController@index` |
 | GET | `/admin/queue` | auth + `can:consulter:dashboard-admin` | `ValidationQueueController@index` |
 | GET | `/admin/reference` | auth + `can:consulter:dashboard-admin` | `ReferenceController@index` |

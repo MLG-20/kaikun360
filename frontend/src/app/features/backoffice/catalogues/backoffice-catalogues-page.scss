@@ -213,3 +213,82 @@
     color: var(--k-muted);
   }
 }
+
+// --- Correction / archivage d'un bien (F7.3.g) ---
+.cat-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cat-btn {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+
+  // Archiver retire une annonce du catalogue : le geste se signale.
+  &--danger {
+    color: var(--k-danger);
+
+    &:hover:not(:disabled) {
+      background: rgba(199, 59, 77, 0.08);
+    }
+  }
+}
+
+.cat-panel-row td {
+  background: var(--k-cream);
+}
+
+.cat-panel {
+  padding: 6px 2px;
+
+  &__title {
+    margin: 0 0 10px;
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.9rem;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  &__row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+
+    .k-input {
+      flex: 1;
+      min-width: 240px;
+    }
+  }
+
+  &__hint {
+    margin: 10px 0 0;
+    font-size: 0.8rem;
+    color: var(--k-muted);
+    max-width: 78ch;
+  }
+}
+
+.cat-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  span {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+}

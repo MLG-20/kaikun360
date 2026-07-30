@@ -281,6 +281,21 @@ export interface StayBookingSummary {
   caution_status: CautionStatus | null;
 }
 
+/**
+ * Champs corrigeables d'un bien depuis le back-office (F7.3.g).
+ *
+ * Sous-ensemble volontaire de ce que le propriétaire peut éditer : ce que
+ * l'équipe corrige en pratique (intitulé public, prix, description). La
+ * localisation, les médias et le reste restent au formulaire du propriétaire.
+ * ⚠️ Le **statut** n'en fait pas partie — il relève de la file de validation et
+ * de l'archivage, qui tracent chacun leur décision.
+ */
+export interface AdminPropertyPatch {
+  title?: string;
+  price_xof?: number | null;
+  description?: string | null;
+}
+
 /** Filtres du calendrier des nuitées (bornes sur la date d'arrivée). */
 export interface StayCalendarQuery {
   from?: string;
@@ -1307,6 +1322,42 @@ export class AdminService {
     return this.http
       .patch<ApiEnvelope<unknown>>(`${this.api}/admin/validate/${type}/${id}`, body)
       .pipe(map(() => undefined));
+  }
+
+  // --- Correction & archivage d'un bien (F7.3.g) ------------------------------
+  //
+  // Dette CDC §15 « un admin peut modifier » : valider et publier existaient
+  // depuis B2.4, corriger et archiver n'avaient aucune route back-office.
+  // Garde `valider:bien`. PAS de création ni de réattribution : le bien reste à
+  // son propriétaire (périmètre arbitré).
+
+  /** Corrige les champs d'un bien. PATCH /admin/properties/{id} */
+  adminUpdateProperty(id: number, payload: AdminPropertyPatch): Observable<Property> {
+    return this.http
+      .patch<ApiEnvelope<{ property: Property }>>(`${this.api}/admin/properties/${id}`, payload)
+      .pipe(map((response) => response.data.property));
+  }
+
+  /** Sort une annonce du catalogue sans rien supprimer. PATCH …/archive */
+  adminArchiveProperty(id: number, reason?: string): Observable<Property> {
+    return this.http
+      .patch<ApiEnvelope<{ property: Property }>>(`${this.api}/admin/properties/${id}/archive`, {
+        reason,
+      })
+      .pipe(map((response) => response.data.property));
+  }
+
+  /**
+   * Sort un bien de l'archive. PATCH …/restore
+   *
+   * ⚠️ Le serveur le renvoie **en attente de validation**, jamais directement
+   * publié : un bien archivé pour contenu problématique ne doit pas revenir en
+   * ligne d'un clic.
+   */
+  adminRestoreProperty(id: number): Observable<Property> {
+    return this.http
+      .patch<ApiEnvelope<{ property: Property }>>(`${this.api}/admin/properties/${id}/restore`, {})
+      .pipe(map((response) => response.data.property));
   }
 
   // --- Catalogues (F7.2.b) ----------------------------------------------------

@@ -358,6 +358,41 @@ catalogues publics limités aux publiés :
 `GET /admin/properties`, `GET /admin/vehicles`, `GET /admin/experiences`
 (filtres `status`, `type`, `owner_id`/`provider_id`, `q`).
 
+### Correction & archivage d'un bien (F7.3.g)
+
+Solde la **dette CDC §15** (« un admin peut modifier ») et la ligne §6 *Biens
+immobiliers* : valider et publier existaient (B2.4), **modifier** et **archiver**
+n'avaient aucune route back-office. Garde **`valider:bien`** — celui à qui l'on
+confie déjà la publication ou le rejet d'une annonce peut en corriger le titre
+(ce qui ouvre le geste à l'`agent_kaikun`, conformément au CDC §7, plutôt que de
+reproduire l'écart de rôle du team building).
+
+| Méthode | URL | Effet |
+|---|---|---|
+| PATCH | `/admin/properties/{property}` | corrige les champs (règles du propriétaire réutilisées via `AdminUpdatePropertyRequest`) |
+| PATCH | `/admin/properties/{property}/archive` | sort l'annonce du catalogue (motif facultatif, tracé) |
+| PATCH | `/admin/properties/{property}/restore` | la renvoie **en file de validation** |
+
+- **Périmètre arbitré** : corriger et archiver, tout étant tracé. **Ni création**
+  à la place d'un propriétaire, **ni réattribution** à un autre compte —
+  réattribuer change qui touche les loyers, cela ne se rattrape pas d'un clic.
+  Le bien reste à son propriétaire (test dédié).
+- Le **statut n'est pas modifiable par la correction** : il relève de la file de
+  validation et de l'archivage, qui tracent chacun leur décision.
+- **Sortir d'archive ne republie pas** : le bien repasse `en_attente_validation`.
+  Un bien archivé pour contenu problématique ne doit pas revenir en ligne d'un clic.
+- Trace d'audit « Correction de bien (back-office) » avec l'**avant/après** du
+  titre et du prix — plus fine que la modification par le propriétaire, parce
+  qu'elle porte sur le bien d'un tiers.
+- ⚠️ Le propriétaire **n'est pas notifié** (même comportement que le rejet, B2.4).
+  Une notification serait un ajout à part entière.
+
+Tests : `tests/Feature/Admin/AdminPropertyEditTest.php` (10 cas).
+
+> ℹ️ Un **admin** pouvait déjà corriger un bien via `PATCH /properties/{property}`
+> (policy `update` = propriétaire **ou** rôle admin, B2.3) : ce qui manquait, c'était
+> l'archivage, l'ouverture du geste par permission, et l'interface.
+
 **Mobilité (F7.2.j)** — `consulter:dashboard-admin`. Le cahier des charges (§6)
 demande de piloter « véhicules, chauffeurs, pirogues, bus, disponibilités,
 assurances, capacités » : deux réalités distinctes, donc deux endpoints.

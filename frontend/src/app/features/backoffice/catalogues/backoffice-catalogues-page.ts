@@ -2,7 +2,10 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 
-import { AdminService, CatalogQuery } from '../../../core/api/admin.service';
+import { HttpErrorResponse } from '@angular/common/http';
+
+import { AdminPropertyPatch, AdminService, CatalogQuery } from '../../../core/api/admin.service';
+import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { Paginated } from '../../../core/api/pagination.model';
 import { Experience } from '../../../models/experience.model';
 import { Property } from '../../../models/property.model';
@@ -46,8 +49,23 @@ interface StatusOption {
  * Contrairement aux catalogues publics (limités aux ressources publiées), cette
  * vue expose **TOUS les statuts** (brouillon, en attente, publié, suspendu,
  * rejeté, archivé) des biens, véhicules et expériences, pour que l'équipe
- * supervise l'ensemble de l'offre. Lecture seule : la validation/publication se
- * fait dans l'écran **Validation** (F7.2.a). Filtres : statut + recherche.
+ * supervise l'ensemble de l'offre. La validation/publication reste dans l'écran
+ * **Validation** (F7.2.a). Filtres : statut + recherche.
+ *
+ * **F7.3.g — les BIENS deviennent modifiables ici** (dette CDC §15 « un admin peut
+ * modifier »). Deux gestes par ligne, réservés à l'onglet Biens :
+ *  - **corriger** l'intitulé public, le prix et la description — ce que l'équipe
+ *    reprend en pratique sur une annonce mal saisie ; la localisation, les médias
+ *    et le reste restent au formulaire du propriétaire ;
+ *  - **archiver** l'annonce (et l'en sortir), ce qui la retire du catalogue sans
+ *    rien supprimer : réservations et documents restent intacts.
+ *
+ * Périmètre arbitré : ni création à la place d'un propriétaire, ni réattribution
+ * à un autre compte — réattribuer change qui touche les loyers. Le bien reste à
+ * son propriétaire, et chaque geste est tracé au journal d'audit.
+ *
+ * ⚠️ Sortir de l'archive renvoie le bien **en file de validation**, jamais
+ * directement en ligne : c'est le serveur qui l'impose, l'écran l'annonce.
  *
  * Endpoints : `GET /admin/properties|vehicles|experiences` (déjà livrés en B13,
  * garde `consulter:dashboard-admin`).
@@ -94,8 +112,135 @@ export class BackofficeCataloguesPageComponent {
     { value: 'archive', label: 'Archivé' },
   ];
 
+  // --- Correction / archivage d'un bien (F7.3.g) -------------------------------
+
+  /** Ligne dont le panneau d'action est ouvert. */
+  protected readonly openRowId = signal<number | null>(null);
+  /** Nature du panneau : correction ou archivage. */
+  protected readonly panelKind = signal<'edit' | 'archive' | null>(null);
+  /** Ligne en cours d'écriture (verrouille ses boutons). */
+  protected readonly savingId = signal<number | null>(null);
+
+  /** Saisies des panneaux. */
+  protected editForm: AdminPropertyPatch = { title: '', price_xof: null, description: '' };
+  protected archiveReason = '';
+
+  protected readonly actionError = signal<string | null>(null);
+  protected readonly actionDone = signal<string | null>(null);
+
   constructor() {
     this.load();
+  }
+
+  /** Les gestes d'édition ne concernent que les biens. */
+  protected canEdit(): boolean {
+    return this.selected() === 'property';
+  }
+
+  /** Ouvre la correction d'une ligne (préremplie). */
+  protected openEdit(row: CatalogRow): void {
+    this.resetPanels();
+    this.editForm = {
+      title: row.label,
+      price_xof: row.priceXof,
+      // La liste ne transporte pas la description : laissée vide, elle n'est pas
+      // envoyée — on ne risque donc pas d'effacer un texte existant.
+      description: '',
+    };
+    this.panelKind.set('edit');
+    this.openRowId.set(row.id);
+  }
+
+  /** Ouvre l'archivage (ou la sortie d'archive) d'une ligne. */
+  protected openArchive(row: CatalogRow): void {
+    this.resetPanels();
+    this.panelKind.set('archive');
+    this.openRowId.set(row.id);
+  }
+
+  protected closePanel(): void {
+    this.openRowId.set(null);
+    this.panelKind.set(null);
+  }
+
+  private resetPanels(): void {
+    this.archiveReason = '';
+    this.actionError.set(null);
+    this.actionDone.set(null);
+  }
+
+  /** Enregistre la correction. */
+  protected saveEdit(row: CatalogRow): void {
+    const title = (this.editForm.title ?? '').trim();
+    if (!title) {
+      this.actionError.set('Le bien a besoin d’un intitulé.');
+      return;
+    }
+
+    const payload: AdminPropertyPatch = { title, price_xof: this.editForm.price_xof ?? null };
+    const description = (this.editForm.description ?? '').trim();
+    // Champ laissé vide = non touché : on ne remplace pas une description par du vide.
+    if (description) payload.description = description;
+
+    this.write(row, this.admin.adminUpdateProperty(row.id, payload), 'Bien corrigé.');
+  }
+
+  /** Archive l'annonce (motif facultatif, tracé). */
+  protected archive(row: CatalogRow): void {
+    this.write(
+      row,
+      this.admin.adminArchiveProperty(row.id, this.archiveReason.trim() || undefined),
+      'Bien archivé — il ne paraît plus au catalogue.',
+    );
+  }
+
+  /** Sort l'annonce de l'archive : elle repasse en file de validation. */
+  protected restore(row: CatalogRow): void {
+    this.write(
+      row,
+      this.admin.adminRestoreProperty(row.id),
+      'Bien sorti d’archive : il repasse en file de validation.',
+    );
+  }
+
+  /** Exécute une écriture puis recharge la page (statut et filtres peuvent bouger). */
+  private write(
+    row: CatalogRow,
+    request$: ReturnType<AdminService['adminRestoreProperty']>,
+    done: string,
+  ): void {
+    if (this.savingId() !== null) return;
+
+    this.savingId.set(row.id);
+    this.actionError.set(null);
+    this.actionDone.set(null);
+
+    request$.subscribe({
+      next: () => {
+        this.savingId.set(null);
+        this.closePanel();
+        this.actionDone.set(done);
+        // Un changement de statut peut faire sortir la ligne du filtre courant :
+        // on recharge plutôt que de rafistoler la ligne à l'écran.
+        this.load();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.savingId.set(null);
+        this.actionError.set(this.messageFor(error));
+      },
+    });
+  }
+
+  private messageFor(error: HttpErrorResponse): string {
+    if (error.status === 403) {
+      return 'Action réservée aux comptes disposant du droit « valider un bien ».';
+    }
+    if (error.status === 422) {
+      const body = error.error as ValidationErrorBody | null;
+      const first = body?.errors ? Object.values(body.errors)[0]?.[0] : null;
+      return first ?? body?.message ?? 'Action impossible dans cet état.';
+    }
+    return 'Opération impossible pour le moment. Réessayez.';
   }
 
   /** Sélectionne un onglet et recharge (les filtres sont conservés). */
