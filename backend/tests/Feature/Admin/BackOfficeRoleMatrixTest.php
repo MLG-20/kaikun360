@@ -77,4 +77,57 @@ class BackOfficeRoleMatrixTest extends TestCase
         $this->assertTrue($superAdmin->can('gerer:utilisateurs'));
         $this->assertTrue($superAdmin->can('permission:totalement-inventee'));
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | F7.4.a — Permissions exposées au frontend (cloisonnement du rail)
+    |--------------------------------------------------------------------------
+    */
+
+    public function test_l_equipe_recoit_ses_permissions_sur_son_propre_compte(): void
+    {
+        $agent = $this->withRole(UserRole::AGENT_KAIKUN->value);
+        $agent->givePermissionTo(['valider:bien', 'gerer:nuitees']);
+
+        $response = $this->actingAs($agent->fresh())->getJson('/api/v1/users/me');
+
+        $response->assertOk();
+        $permissions = $response->json('data.user.permissions');
+
+        $this->assertContains('consulter:dashboard-admin', $permissions, 'Accès de base porté par le rôle');
+        $this->assertContains('valider:bien', $permissions);
+        $this->assertContains('gerer:nuitees', $permissions);
+        // Ce qui n'est pas délégué ne doit pas apparaître : c'est ce tableau qui
+        // décide des rubriques affichées au rail du back-office.
+        $this->assertNotContains('gerer:paiements', $permissions);
+        $this->assertNotContains('valider:vehicule', $permissions);
+    }
+
+    public function test_le_super_admin_recoit_le_catalogue_complet(): void
+    {
+        // Cas particulier à ne pas perdre : le super_admin n'a aucune permission
+        // ASSIGNÉE (il passe par Gate::before). Sans traitement dédié, le compte
+        // le plus puissant se retrouverait avec le rail le plus vide.
+        $superAdmin = $this->withRole(UserRole::SUPER_ADMIN->value);
+
+        $permissions = $this->actingAs($superAdmin)
+            ->getJson('/api/v1/users/me')
+            ->assertOk()
+            ->json('data.user.permissions');
+
+        foreach (['gerer:paiements', 'gerer:parametres', 'gerer:utilisateurs', 'valider:bien'] as $permission) {
+            $this->assertContains($permission, $permissions);
+        }
+    }
+
+    public function test_un_compte_hors_equipe_n_a_aucune_permission_exposee(): void
+    {
+        $client = $this->withRole(UserRole::CLIENT->value);
+
+        $this->actingAs($client)
+            ->getJson('/api/v1/users/me')
+            ->assertOk()
+            // Clé ABSENTE (et non pas vide) : rien à exposer hors back-office.
+            ->assertJsonMissingPath('data.user.permissions');
+    }
 }

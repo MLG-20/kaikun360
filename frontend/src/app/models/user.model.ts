@@ -22,6 +22,12 @@ export interface User {
   status_label: string | null;
   /** Noms des rôles Spatie, ex. ["client"]. */
   roles: string[];
+  /**
+   * Permissions back-office effectives (F7.4.a) — présent UNIQUEMENT sur son
+   * propre compte et seulement pour l'équipe (agent / admin / super_admin).
+   * Absent partout ailleurs, d'où l'optionnalité.
+   */
+  permissions?: string[];
   /** Présent uniquement si chargé côté backend (->load('profile')). */
   profile?: Profile;
   email_verified_at: string | null;

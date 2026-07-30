@@ -5,7 +5,7 @@
 > construire**. Le détail technique complet est tenu à jour dans le
 > [`README.md`](README.md) (journal de bord) et la documentation de chaque module.
 >
-> _Dernière mise à jour : 26 juillet 2026._
+> _Dernière mise à jour : 30 juillet 2026._
 
 ---
 
@@ -34,13 +34,14 @@ Le projet se compose de deux briques :
 | **Espace propriétaire** | ✅ **Terminé** | Biens, dépôt/édition, photos, gestion locative, documents. |
 | **Espace prestataire** | ✅ **Terminé** | Profil, certifications, disponibilités, missions, avis, revenus **et dépôt d'offres réservables** (véhicules & circuits). |
 | **Espace entreprise** | ✅ **Terminé** | Demandes groupées (team building, séminaires) et suivi des devis. |
-| **Back-office d'administration** | ⏳ À venir | L'outil interne de pilotage de Kaikun 360. |
+| **Back-office d'administration** | ✅ **Terminé** | L'outil interne de pilotage : les 14 modules attendus au cahier des charges, avec délégation des droits employé par employé. |
 | **Finitions (référencement, performance)** | ⏳ À venir | Optimisations finales avant mise en ligne publique. |
 
-**En résumé :** toute la partie **visible du grand public** et les **quatre
-espaces personnels** (client, propriétaire, prestataire et entreprise) sont
-livrés et fonctionnels, sur un moteur central déjà complet. Restent l'outil
-d'administration interne (back-office) et les finitions.
+**En résumé :** toute la partie **visible du grand public**, les **quatre
+espaces personnels** (client, propriétaire, prestataire et entreprise) et
+l'**outil d'administration interne** sont livrés et fonctionnels, sur un moteur
+central complet. Il ne reste que les **finitions** (référencement, performance,
+accessibilité) avant la mise en ligne.
 
 ---
 
@@ -128,11 +129,37 @@ Espace dédié aux entreprises, ONG, écoles et institutions : dépôt d'une
 **demande groupée** (team building, séminaire) avec participants, lieu, dates et
 budget, **suivi des demandes et des devis**, messagerie et profil.
 
+### 3.7 Le back-office d'administration — livré
+
+L'outil interne de l'équipe Kaikun, conçu comme une **salle de contrôle** à part
+entière : son propre accès, sa propre identité visuelle, et un niveau de
+sécurité renforcé — c'est là que tout passe.
+
+- **Connexion en deux étapes** (mot de passe + code envoyé par e-mail) et
+  **session courte** pour tous les comptes d'administration.
+- **Poste de commandement de l'équipe** : annuaire des employés, enrôlement d'un
+  nouvel agent par invitation, et **pointeuse** (entrée/sortie, feuille de
+  présence mensuelle, export).
+- **Délégation des droits dossier par dossier** : un agent ne reçoit *que* ce
+  qu'on lui confie. Chacun ne voit dans son menu que les rubriques qui lui sont
+  ouvertes — un agent chargé des séjours n'a ni les paiements ni les réglages
+  sous les yeux.
+- **Les 14 domaines du cahier des charges**, chacun avec son écran et ses
+  actions : tableau de bord, comptes & documents, biens immobiliers, nuitées,
+  gestion locative, construction, mobilité, tourisme, team building, diaspora,
+  paiements, avis & qualité, paramètres & contenu.
+- Quelques exemples concrets de ce que l'équipe fait depuis cet outil : valider
+  ou refuser une annonce (et corriger une annonce mal saisie, ou l'archiver),
+  enregistrer une arrivée et un départ de séjour puis trancher la caution,
+  encaisser un loyer et préparer un reversement, chiffrer un chantier lot par
+  lot et y affecter les artisans, confirmer un paiement Wave/Orange Money,
+  modérer un avis, sortir l'**export comptable** de la période.
+
 ---
 
 ## 4. Qualité, confiance et expérience
 
-- **Fiabilité** : le moteur central est couvert par **près de 500 tests
+- **Fiabilité** : le moteur central est couvert par **plus de 660 tests
   automatisés** qui vérifient à chaque évolution que rien n'est cassé.
 - **Sécurité** : accès par rôle strictement cloisonné (chaque espace est
   indépendant), documents privés servis par liens temporaires, journal
@@ -149,13 +176,15 @@ budget, **suivi des demandes et des devis**, messagerie et profil.
 
 ## 5. Ce qu'il reste à construire (feuille de route)
 
-Dans l'ordre prévu :
+1. **Finitions** — référencement (SEO), performance et accessibilité avant la
+   mise en ligne publique. C'est la dernière étape de développement.
 
-1. **Back-office d'administration** — l'outil interne de Kaikun 360 (validation
-   des biens et prestataires, gestion des demandes, paiements, contenus…). Toute
-   la logique existe déjà côté moteur ; il reste à construire l'interface.
-2. **Finitions** — référencement (SEO), performance et accessibilité avant la
-   mise en ligne publique.
+Quelques points volontairement laissés de côté, arbitrés en cours de route et
+signalés directement dans les écrans concernés (aucun ne bloque l'exploitation) :
+la création d'un bien *à la place* d'un propriétaire et son transfert à un autre
+compte ; le rattachement d'un guide nommé à un circuit précis ; la modification
+des catégories de services (elles portent des règles de calcul) ; la restitution
+*partielle* d'une caution ; le dépôt d'un contrat de mandat scanné.
 
 ---
 

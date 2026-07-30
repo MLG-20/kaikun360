@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
 import { AdminService, DashboardSnapshot } from '../../../core/api/admin.service';
 
@@ -23,7 +24,21 @@ export class BackofficeOverviewPageComponent {
   protected readonly loading = signal(true);
   protected readonly error = signal(false);
 
+  /**
+   * Arrive-t-on ici après un refus de rubrique ? (F7.4.a)
+   *
+   * Le `permissionGuard` renvoie sur cette page avec `?acces=refuse`. Sans ce
+   * message, quelqu'un qui ouvre une URL mise en favori — ou un lien reçu d'un
+   * collègue mieux doté — se retrouverait sur la Vue d'ensemble sans comprendre
+   * pourquoi, et croirait à un bug plutôt qu'à un droit manquant.
+   */
+  protected readonly accesRefuse = signal(false);
+
   constructor() {
+    if (inject(ActivatedRoute).snapshot.queryParamMap.get('acces') === 'refuse') {
+      this.accesRefuse.set(true);
+    }
+
     this.admin.dashboard().subscribe({
       next: (data) => {
         this.snapshot.set(data);

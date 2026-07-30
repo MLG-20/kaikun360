@@ -12,7 +12,7 @@
     </a>
 
     <nav class="bo-nav" aria-label="Navigation du back-office">
-      @for (item of nav; track item.path) {
+      @for (item of visibleNav(); track item.path) {
         @if (item.ready) {
           <a
             class="bo-nav__link"

@@ -128,4 +128,50 @@ class TeamBuildingAssignmentTest extends TestCase
             ->assertJsonPath('data.request.provider_missions.0.category', 'restauration')
             ->assertJsonPath('data.request.provider_missions.0.provider.business_name', $provider->business_name);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | F7.4.b — L'agent Kaikun affecte, comme le CDC §7 le prévoit
+    |--------------------------------------------------------------------------
+    */
+
+    public function test_un_agent_a_qui_on_a_delegue_les_demandes_peut_affecter_un_prestataire(): void
+    {
+        // Le CDC §7 confie « traitement demandes, validation de base,
+        // affectation prestataire » à l'agent. Les policies exigeaient le RÔLE
+        // admin : la file s'ouvrait à l'agent mais chaque fiche répondait 403.
+        // La garde est désormais la PERMISSION `traiter:demandes`.
+        $agent = User::factory()->create();
+        $agent->assignRole(UserRole::AGENT_KAIKUN->value);
+        $agent->givePermissionTo('traiter:demandes');
+
+        $request = TeamBuildingRequest::factory()->create();
+        $provider = Provider::factory()->validated()->create();
+
+        Sanctum::actingAs($agent->fresh());
+
+        // Il consulte la fiche…
+        $this->getJson("/api/v1/team-building-requests/{$request->id}")->assertOk();
+
+        // …et affecte réellement un prestataire.
+        $this->postJson("/api/v1/team-building-requests/{$request->id}/assignments", [
+            'provider_id' => $provider->id,
+            'category' => 'animation',
+            'amount_xof' => 250_000,
+        ])->assertCreated();
+    }
+
+    public function test_un_agent_sans_delegation_reste_hors_de_la_fiche(): void
+    {
+        // Le « grant pur » de F7.1.b tient : l'accès au back-office ne donne
+        // rien par lui-même, tant que le dossier n'est pas délégué.
+        $agent = User::factory()->create();
+        $agent->assignRole(UserRole::AGENT_KAIKUN->value);
+
+        $request = TeamBuildingRequest::factory()->create();
+
+        Sanctum::actingAs($agent);
+
+        $this->getJson("/api/v1/team-building-requests/{$request->id}")->assertForbidden();
+    }
 }

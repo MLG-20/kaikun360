@@ -784,7 +784,16 @@ export interface ProviderQuery {
  * Familles de pièces exposées par la vue documentaire transverse
  * (miroir de `AdminDocumentController::TYPES`).
  */
-export type DocumentType = 'kyc' | 'property' | 'certification' | 'payout_proof';
+export type DocumentType =
+  | 'kyc'
+  | 'property'
+  | 'certification'
+  | 'payout_proof'
+  // F7.4.c — les deux familles qui manquaient à la ligne CDC §6 « Documents »
+  // (« Mandats, contrats, … rapports ») : elles existaient en base sans être
+  // rattachées à la vue documentaire.
+  | 'mandate'
+  | 'report';
 
 /** Compteurs de la vue d'ensemble documentaire (GET /admin/documents sans `type`). */
 export type DocumentsOverview = Record<DocumentType, number>;

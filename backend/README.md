@@ -198,6 +198,21 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   (`GET /admin/mandates`), avec compteurs d'avancement (jalons/rapports côté
   construction ; loyers/incidents/dépenses/reversements côté mandat) — exploitées
   par l'écran back-office **Dossiers** (F7.2.e).
+  **Gestion documentaire transverse** (`AdminDocumentController`) — les **six**
+  familles de la ligne CDC §6 « Documents » depuis F7.4.c : pièces d'identité
+  (KYC), documents de biens, certifications prestataires, preuves de reversement,
+  **mandats/contrats** et **rapports de suivi** (le modèle `Report` étant
+  polymorphe, la même liste couvre chantiers et dossiers diaspora). ⚠️ Un mandat
+  porte ses clauses en **texte** (`management_mandates.terms`) : il n'y a pas de
+  contrat scanné téléversé, la ligne renvoie vers la fiche du mandat.
+  **Permissions exposées au frontend (F7.4.a)** : `UserResource` inclut les
+  permissions back-office effectives, mais **uniquement sur son propre compte et
+  seulement pour l'équipe** — la ressource sert aussi aux annuaires admin (une
+  requête de permissions par ligne = N+1) et les droits d'un collègue n'ont pas à
+  circuler dans une liste. Le **super_admin** est traité à part (`User::permissionsBackOffice()`) :
+  ses droits venant du `Gate::before`, il n'a aucune permission assignée et se
+  serait retrouvé avec le rail le plus vide. Sert au cloisonnement du rail côté
+  Angular ; les `can:` des routes `/admin/…` restent la sécurité réelle.
   **Paramètres & contenu (F7.2.l — CDC §6, dernier des 14 modules)** :
   - **Référentiel géographique éditable** (`AdminGeoController`) — les « villes »
     du cahier des charges. Ce référentiel (14 régions, 46 départements, ~557

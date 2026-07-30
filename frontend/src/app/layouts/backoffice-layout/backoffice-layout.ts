@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter } from 'rxjs/operators';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { permissionsFor } from '../../features/backoffice/backoffice-permissions';
 
 /** Clé d'icône du rail (rendue en SVG inline dans le template). */
 type BoIcon =
@@ -71,8 +72,13 @@ export class BackofficeLayoutComponent {
     return 'Équipe';
   });
 
-  /** Rubriques du poste de commandement (F7.1 : Vue d'ensemble → Pointeuse ; F7.2 : Validation, Catalogues). */
-  protected readonly nav: readonly BoNavItem[] = [
+  /**
+   * Rubriques du poste de commandement, TOUTES rubriques confondues.
+   *
+   * ⚠️ Ne pas lire directement dans le template : c'est `visibleNav()` qui est
+   * affiché, filtré par les permissions de la personne connectée.
+   */
+  private readonly nav: readonly BoNavItem[] = [
     { label: 'Vue d’ensemble', path: '', icon: 'grid', ready: true },
     { label: 'Validation', path: 'validation', icon: 'check', ready: true },
     { label: 'Catalogues', path: 'catalogues', icon: 'layers', ready: true },
@@ -93,6 +99,26 @@ export class BackofficeLayoutComponent {
     { label: 'Permissions', path: 'permissions', icon: 'shield', ready: true },
     { label: 'Pointeuse', path: 'pointeuse', icon: 'clock', ready: true },
   ];
+
+  /**
+   * Rubriques réellement AFFICHÉES, filtrées par les permissions (F7.4.a).
+   *
+   * Le cahier des charges §7 limite l'agent Kaikun à un « accès financier
+   * limité » : lui présenter Paiements, Comptes ou Paramètres dans son menu
+   * pour qu'il s'y heurte à un 403 était trompeur. Le rail ne montre plus que
+   * les portes qui s'ouvrent.
+   *
+   * La table de correspondance est **partagée avec les routes** (`permissionsFor`)
+   * : une rubrique masquée est aussi une route gardée, jamais l'un sans l'autre.
+   * Un `computed` suffit — le signal `user` porte les permissions, le rail se
+   * recalcule donc tout seul si le compte change (déconnexion / re-connexion).
+   */
+  protected readonly visibleNav = computed(() =>
+    this.nav.filter((item) => {
+      const required = permissionsFor(item.path);
+      return required.length === 0 || this.auth.hasAnyPermission([...required]);
+    }),
+  );
 
   /** Tiroir ouvert ? (petit écran uniquement ; rail permanent en desktop). */
   protected readonly sidebarOpen = signal(false);

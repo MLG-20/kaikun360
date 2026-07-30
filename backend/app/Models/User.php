@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Modules\Admin\Enums\AdminPermission;
+use App\Modules\Core\Enums\UserRole;
 use App\Modules\Core\Enums\UserStatus;
 use App\Modules\Core\Models\Profile;
 use App\Modules\Core\Models\UserDocument;
@@ -115,5 +117,48 @@ class User extends Authenticatable
     public function commune(): BelongsTo
     {
         return $this->belongsTo(Commune::class);
+    }
+
+    /**
+     * Le compte appartient-il à l'ÉQUIPE Kaikun (back-office) ?
+     *
+     * Trois rôles seulement ouvrent la salle de contrôle ; tout le reste
+     * (client, propriétaire, prestataire, entreprise) en est exclu.
+     */
+    public function estStaff(): bool
+    {
+        return $this->hasAnyRole([
+            UserRole::AGENT_KAIKUN->value,
+            UserRole::ADMIN->value,
+            UserRole::SUPER_ADMIN->value,
+        ]);
+    }
+
+    /**
+     * Permissions back-office RÉELLEMENT applicables à ce compte (F7.4.a).
+     *
+     * Sert au frontend à n'afficher au rail que les rubriques que la personne
+     * peut ouvrir. C'est un confort d'interface, PAS la sécurité : chaque route
+     * `/admin/…` reste gardée par son `can:` côté serveur — le rail masqué
+     * évite le mur de 403, il ne le remplace pas.
+     *
+     * ⚠️ Le super_admin est traité à part : ses droits ne viennent pas de
+     * `getAllPermissions()` (il n'en a aucune d'assignée) mais du `Gate::before`
+     * de l'AppServiceProvider qui autorise tout. Sans ce cas particulier, le
+     * compte le plus puissant se retrouverait avec le rail le plus vide.
+     *
+     * @return array<int, string>
+     */
+    public function permissionsBackOffice(): array
+    {
+        if (! $this->estStaff()) {
+            return [];
+        }
+
+        if ($this->hasRole(UserRole::SUPER_ADMIN->value)) {
+            return array_map(fn (AdminPermission $p) => $p->value, AdminPermission::cases());
+        }
+
+        return $this->getAllPermissions()->pluck('name')->values()->all();
     }
 }

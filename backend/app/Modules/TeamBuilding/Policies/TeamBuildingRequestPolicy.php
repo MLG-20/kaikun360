@@ -3,7 +3,6 @@
 namespace App\Modules\TeamBuilding\Policies;
 
 use App\Models\User;
-use App\Modules\Core\Enums\UserRole;
 use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
 
 /**
@@ -29,15 +28,23 @@ class TeamBuildingRequestPolicy
     public function view(User $user, TeamBuildingRequest $request): bool
     {
         return $user->id === $request->company_id
-            || $user->hasRole(UserRole::ADMIN->value);
+            || $user->can('traiter:demandes');
     }
 
     /**
-     * Composer / envoyer un devis : back-office (admin).
+     * Composer / envoyer un devis, affecter les prestataires : back-office.
+     *
+     * ⚠️ F7.4.b — garde passée du RÔLE `admin` à la PERMISSION
+     * `traiter:demandes`. Le CDC §7 confie « traitement demandes » et
+     * « affectation prestataire » à l'agent Kaikun : avec l'ancienne règle, la
+     * file des demandes entreprises s'ouvrait bien à lui (la route est gardée
+     * `consulter:dashboard-admin`) mais chaque fiche répondait 403 — un écran
+     * visible et inutilisable. L'admin détient la permission via son rôle : son
+     * accès est inchangé.
      */
     public function manage(User $user, TeamBuildingRequest $request): bool
     {
-        return $user->hasRole(UserRole::ADMIN->value);
+        return $user->can('traiter:demandes');
     }
 
     /**

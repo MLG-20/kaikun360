@@ -188,6 +188,26 @@ export class AuthService {
     return roles.some((role) => this.hasRole(role));
   }
 
+  /**
+   * L'utilisateur détient-il cette permission back-office ? (F7.4.a)
+   *
+   * Le tableau `permissions` n'est renseigné par le serveur que pour l'équipe,
+   * et uniquement sur son propre compte (cf. `UserResource`). Pour tout autre
+   * profil il est absent → `false`, ce qui est le bon défaut.
+   *
+   * ⚠️ Confort d'affichage, PAS un contrôle de sécurité : la vérité reste le
+   * `can:` de chaque route serveur. On s'en sert pour ne pas proposer une
+   * rubrique qui répondrait 403.
+   */
+  hasPermission(permission: string): boolean {
+    return this.userSignal()?.permissions?.includes(permission) ?? false;
+  }
+
+  /** L'utilisateur détient-il au moins une des permissions ? */
+  hasAnyPermission(permissions: string[]): boolean {
+    return permissions.some((permission) => this.hasPermission(permission));
+  }
+
   /** Appel commun login/register/google : POST, puis stockage jeton + utilisateur. */
   private authenticate(
     url: string,

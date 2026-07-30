@@ -104,6 +104,11 @@ export class BackofficeAccountsPageComponent {
     { type: 'property', label: 'Documents de biens', hint: 'Titres, plans, diagnostics' },
     { type: 'certification', label: 'Certifications', hint: 'Prestataires vérifiés' },
     { type: 'payout_proof', label: 'Preuves de reversement', hint: 'Propriétaires payés' },
+    // F7.4.c — Les deux familles ajoutées pour couvrir toute la ligne CDC.
+    // « Sans fichier joint » est dit explicitement plutôt que laissé deviner :
+    // un mandat porte ses clauses en texte, pas en PDF signé.
+    { type: 'mandate', label: 'Mandats & contrats', hint: 'Clauses en fiche, sans fichier joint' },
+    { type: 'report', label: 'Rapports de suivi', hint: 'Chantiers & dossiers diaspora' },
   ];
 
   constructor() {

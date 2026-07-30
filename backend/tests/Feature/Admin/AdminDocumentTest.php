@@ -2,8 +2,10 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\Report;
 use App\Models\User;
 use App\Modules\Core\Enums\UserRole;
+use App\Modules\Manage\Models\ManagementMandate;
 use App\Modules\Manage\Models\OwnerPayout;
 use App\Modules\Pro\Models\ProviderCertification;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -74,5 +76,40 @@ class AdminDocumentTest extends TestCase
         Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
 
         $this->getJson('/api/v1/admin/documents?type=inexistant')->assertStatus(404);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | F7.4.c — Les six familles du CDC §6 (module Documents)
+    |--------------------------------------------------------------------------
+    */
+
+    public function test_les_mandats_et_les_rapports_figurent_dans_la_vue_documentaire(): void
+    {
+        // « Mandats, contrats, preuves, pièces, rapports, pièces prestataires » :
+        // les deux dernières familles manquaient alors qu'elles existaient en base.
+        $mandate = ManagementMandate::factory()->create();
+        Report::factory()->count(2)->create();
+
+        Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
+
+        $this->getJson('/api/v1/admin/documents')
+            ->assertOk()
+            ->assertJsonPath('data.documents.mandate', 1)
+            ->assertJsonPath('data.documents.report', 2);
+
+        // Le mandat s'intitule par sa référence : une ligne « MND-0007 » nue
+        // serait inutilisable dans un écran qui sert à retrouver un contrat.
+        $this->getJson('/api/v1/admin/documents?type=mandate')
+            ->assertOk()
+            ->assertJsonPath('data.0.doc_type', 'mandate')
+            ->assertJsonPath('data.0.subject_id', $mandate->id)
+            // Pas de fichier joint : les clauses vivent dans la fiche du mandat.
+            ->assertJsonPath('data.0.original_name', null);
+
+        $this->getJson('/api/v1/admin/documents?type=report')
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.doc_type', 'report');
     }
 }

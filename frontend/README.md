@@ -423,6 +423,29 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     suppression renvoie alors **409** avec le décompte. Et les **catégories**, en
     **lecture seule** : ce sont des enums qui portent la logique métier — un
     encart l'explique plutôt que de laisser croire à un écran incomplet.
+  **F7.4.a Cloisonnement du rail par permission** (`features/backoffice/backoffice-permissions.ts`,
+  `core/guards/permission.guard.ts`) : jusque-là un seul `roleGuard` « staff »
+  gardait la racine `/back-office` et les **16 rubriques s'affichaient pour tout
+  le monde** — c'est le serveur qui refusait à l'ouverture. Sûr, mais contraire
+  au CDC §7 qui promet à l'agent un « accès financier limité » : il voyait
+  Paiements, Export comptable et Permissions dans son menu pour s'y heurter à un
+  403. Le rail (`visibleNav()`) ne montre plus que les portes qui s'ouvrent, et
+  chaque route porte le `permissionGuard` correspondant.
+  - **Une seule table de correspondance**, partagée par le rail ET les routes.
+    C'est le point à ne pas casser : deux listes qui divergent produisent soit un
+    lien invisible mais atteignable à l'URL, soit un lien cliquable qui rebondit.
+  - **Les écrans de supervision en lecture seule restent ouverts à toute
+    l'équipe** (Catalogues, Mobilité, Tourisme) : voir sans pouvoir agir est
+    précisément le métier d'un agent qui prépare un dossier. **Diaspora** aussi,
+    sa fiche étant gardée côté serveur par « l'agent AFFECTÉ ou un admin » —
+    exiger une permission ici fermerait la porte à celui qui doit entrer.
+  - Un refus **renvoie à la Vue d'ensemble avec un message** (`?acces=refuse`)
+    plutôt qu'en silence : une URL en favori qui rebondit sans un mot se lit
+    comme un bug, pas comme un droit manquant.
+  - ⚠️ **Confort d'interface, PAS la sécurité** : les `can:` des routes
+    `/admin/…` sont inchangés et restent la vérité. Le tableau `permissions` du
+    compte connecté (nouveau dans `UserResource`) n'est renseigné que pour
+    l'équipe et que sur son propre compte.
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

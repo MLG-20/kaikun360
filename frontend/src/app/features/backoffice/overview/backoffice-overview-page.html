@@ -3,6 +3,14 @@
   <p class="ov-sub">Photographie en temps réel de l’activité de la plateforme.</p>
 </header>
 
+@if (accesRefuse()) {
+  <!-- F7.4.a — Rubrique fermée : on explique le refus plutôt que de rebondir en silence. -->
+  <p class="ov-state ov-state--denied" role="alert">
+    Cette rubrique ne fait pas partie des dossiers qui vous sont confiés. Demandez
+    à un administrateur de vous la déléguer depuis l’écran <strong>Permissions</strong>.
+  </p>
+}
+
 @if (loading()) {
   <p class="ov-state" role="status">Chargement des indicateurs…</p>
 } @else if (error()) {
