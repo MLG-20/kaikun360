@@ -1,0 +1,311 @@
+// =============================================================================
+// Revue média du back-office (F8.1) — vignettes + plein écran + modération.
+// =============================================================================
+
+:host {
+  display: block;
+}
+
+.mr-empty {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--k-radius-sm);
+  border: 1px dashed var(--k-line);
+  background: var(--k-cream);
+  color: var(--k-muted);
+  font-size: 0.82rem;
+}
+
+.mr-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mr-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  // Galerie complète (dossier) : vignettes plus grandes, en grille souple.
+  &:not(&--compact) .mr-thumb {
+    width: 132px;
+    height: 100px;
+  }
+}
+
+.mr-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  // Un média masqué reste visible pour l'agent, mais nettement dévalorisé :
+  // il ne doit jamais être confondu avec une photo qui partira en ligne.
+  &.is-hidden .mr-thumb {
+    opacity: 0.4;
+    filter: grayscale(1);
+  }
+}
+
+.mr-thumb {
+  position: relative;
+  width: 84px;
+  height: 64px;
+  padding: 0;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  overflow: hidden;
+  background: var(--k-cream);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--k-brand);
+    transform: translateY(-1px);
+    outline: none;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__badge {
+    position: absolute;
+    left: 4px;
+    bottom: 4px;
+    padding: 1px 6px;
+    border-radius: var(--k-radius-pill);
+    background: rgba(3, 12, 28, 0.72);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+
+    &--off {
+      left: auto;
+      right: 4px;
+      background: var(--k-danger);
+    }
+  }
+
+  &__tag {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--k-muted);
+  }
+}
+
+.mr-video {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  color: var(--k-navy);
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.mr-item--more {
+  justify-content: center;
+}
+
+.mr-more {
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 64px;
+  border: 1px dashed var(--k-line);
+  border-radius: var(--k-radius-sm);
+  color: var(--k-muted);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.mr-toggle {
+  border: 1px solid var(--k-line);
+  background: #fff;
+  border-radius: var(--k-radius-pill);
+  padding: 2px 9px;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: var(--k-brand);
+    color: var(--k-brand);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.mr-counts {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--k-muted);
+
+  &__hidden {
+    color: var(--k-danger);
+    font-weight: 600;
+  }
+}
+
+.mr-error {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--k-danger);
+}
+
+// --- PLEIN ÉCRAN -------------------------------------------------------------
+.mr-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 120; // au-dessus du rail (50) et de la barre du back-office (30)
+  display: grid;
+  place-items: center;
+  padding: 24px;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    background: rgba(3, 12, 28, 0.82);
+    backdrop-filter: blur(3px);
+    cursor: zoom-out;
+  }
+
+  &__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: min(1100px, 100%);
+    max-height: 100%;
+  }
+
+  &__head,
+  &__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    color: #fff;
+  }
+
+  &__title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__close {
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+  }
+
+  &__stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  &__img {
+    max-width: 100%;
+    max-height: 68vh;
+    border-radius: var(--k-radius);
+    display: block;
+  }
+
+  &__video {
+    padding: 28px 34px;
+    border-radius: var(--k-radius);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+  }
+
+  &__meta {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.75);
+  }
+}
+
+.mr-flag {
+  padding: 1px 8px;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-danger);
+  font-size: 0.66rem;
+}
+
+.mr-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  &--prev {
+    left: -52px;
+  }
+
+  &--next {
+    right: -52px;
+  }
+}
+
+// Sur écran étroit, les flèches reviennent à l'intérieur de l'image.
+@media (max-width: 900px) {
+  .mr-nav--prev {
+    left: 6px;
+  }
+
+  .mr-nav--next {
+    right: 6px;
+  }
+}

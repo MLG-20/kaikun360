@@ -68,6 +68,29 @@ class ValidationQueueController extends Controller
     }
 
     /**
+     * Dossier complet d'un élément en attente. GET /api/v1/admin/queue/{type}/{id}
+     *
+     * Écran de revue AVANT publication (F8.1) : galerie média entière (médias
+     * masqués compris), déposant et caractéristiques du type. Contrairement à
+     * `decide`, on n'exige pas ici la permission fine du type : consulter un
+     * dossier n'est pas le modérer, et l'accès back-office est déjà filtré par
+     * la permission de route `consulter:dashboard-admin`.
+     *
+     * L'élément n'a pas à être encore en attente : un agent doit pouvoir
+     * rouvrir un dossier qu'il vient de trancher pour vérifier son geste.
+     */
+    public function show(string $type, string $id, ValidatorRegistry $registry): JsonResponse
+    {
+        $validator = $registry->for($type); // 404 si type inconnu
+        $model = $validator->find($id);     // 404 si introuvable
+
+        return ApiResponse::success([
+            'entry' => $validator->toDetail($model),
+            'is_pending' => $validator->isPending($model),
+        ]);
+    }
+
+    /**
      * Valide ou refuse une ressource. PATCH /api/v1/admin/validate/{type}/{id}
      *
      * Corps : { "decision": "approve"|"reject", "reason"?: string }

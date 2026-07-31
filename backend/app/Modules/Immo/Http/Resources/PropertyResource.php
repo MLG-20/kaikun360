@@ -60,6 +60,18 @@ class PropertyResource extends JsonResource
                 $this->relationLoaded('media'),
                 fn () => $this->media->first()?->resolveUrl(),
             ),
+            // Compteurs de supervision (F8.1), présents seulement quand la
+            // requête back-office les a agrégés (`withCount`). Permettent de
+            // repérer une annonce publiée sans visuel, ou dont des photos ont
+            // été masquées par la modération.
+            'media_count' => $this->when(
+                $this->media_count !== null,
+                fn () => (int) $this->media_count,
+            ),
+            'media_hidden_count' => $this->when(
+                $this->media_hidden_count !== null,
+                fn () => (int) $this->media_hidden_count,
+            ),
             // Config « nuitées » — présente seulement pour la gestion privée
             // (chargée par PropertyManagementController) : permet à la fiche et
             // au formulaire d'édition du propriétaire de connaître le mode de

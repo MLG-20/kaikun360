@@ -1,0 +1,127 @@
+<!--
+  Revue média (F8.1). L'absence de photo est signalée explicitement : publier
+  une annonce sans visuel sur le site vitrine est presque toujours une erreur,
+  l'agent doit le voir plutôt que de deviner un cadre vide.
+-->
+@if (isEmpty()) {
+  <p class="mr-empty">Aucun média déposé — rien à montrer sur le site vitrine.</p>
+} @else {
+  <div class="mr-bar" [class.mr-bar--compact]="compact()">
+    <ul class="mr-grid" [class.mr-grid--compact]="compact()">
+      @for (item of items(); track item.id; let i = $index) {
+        <li class="mr-item" [class.is-hidden]="item.is_hidden">
+          <button
+            type="button"
+            class="mr-thumb"
+            (click)="open(i)"
+            [attr.aria-label]="'Agrandir : ' + altFor(i)">
+            @if (item.type === 'video') {
+              <!-- Une vidéo est une URL externe : pas de vignette à afficher,
+                   on montre une tuile « lecture » explicite. -->
+              <span class="mr-video" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M8 5.5v13l10-6.5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="mr-thumb__tag">Vidéo</span>
+            } @else {
+              <img [src]="item.url" [alt]="altFor(i)" loading="lazy" />
+            }
+
+            @if (item.is_primary) {
+              <span class="mr-thumb__badge">Couverture</span>
+            }
+            @if (item.is_hidden) {
+              <span class="mr-thumb__badge mr-thumb__badge--off">Masqué</span>
+            }
+          </button>
+
+          @if (canModerate()) {
+            <button
+              type="button"
+              class="mr-toggle"
+              [disabled]="moderatingId() === item.id"
+              (click)="toggleHidden(item)">
+              {{ item.is_hidden ? 'Réafficher' : 'Masquer' }}
+            </button>
+          }
+        </li>
+      }
+
+      @if (overflow() > 0) {
+        <li class="mr-item mr-item--more" aria-hidden="true">
+          <span class="mr-more">+{{ overflow() }}</span>
+        </li>
+      }
+    </ul>
+
+    <p class="mr-counts">
+      {{ media().images }} photo(s) · {{ media().videos }} vidéo(s)
+      @if (media().hidden > 0) {
+        <span class="mr-counts__hidden">· {{ media().hidden }} masqué(s)</span>
+      }
+    </p>
+  </div>
+
+  @if (error()) {
+    <p class="mr-error" role="alert">{{ error() }}</p>
+  }
+}
+
+<!-- ============ PLEIN ÉCRAN ============ -->
+@if (opened(); as item) {
+  <div class="mr-lightbox" role="dialog" aria-modal="true" aria-label="Média en plein écran">
+    <button type="button" class="mr-lightbox__backdrop" (click)="close()" aria-label="Fermer"></button>
+
+    <div class="mr-lightbox__inner">
+      <header class="mr-lightbox__head">
+        <span class="mr-lightbox__title">
+          {{ item.original_name || item.reference }}
+          @if (item.is_hidden) {
+            <span class="mr-flag">Masqué</span>
+          }
+        </span>
+        <button type="button" class="mr-lightbox__close" (click)="close()" aria-label="Fermer">✕</button>
+      </header>
+
+      <div class="mr-lightbox__stage">
+        @if (items().length > 1) {
+          <button type="button" class="mr-nav mr-nav--prev" (click)="step(-1)" aria-label="Média précédent">‹</button>
+        }
+
+        @if (item.type === 'video') {
+          <!-- Vidéo hébergée ailleurs (YouTube…) : on ne l'incruste pas, on
+               ouvre le lien dans un onglet — l'agent garde sa file intacte. -->
+          <a class="mr-lightbox__video" [href]="item.url" target="_blank" rel="noopener noreferrer">
+            Ouvrir la vidéo dans un nouvel onglet ↗
+          </a>
+        } @else {
+          <img class="mr-lightbox__img" [src]="item.url" [alt]="item.original_name || 'Média'" />
+        }
+
+        @if (items().length > 1) {
+          <button type="button" class="mr-nav mr-nav--next" (click)="step(1)" aria-label="Média suivant">›</button>
+        }
+      </div>
+
+      <footer class="mr-lightbox__foot">
+        <span class="mr-lightbox__meta">
+          {{ (openedAt() ?? 0) + 1 }} / {{ items().length }}
+          @if (weight(item.size_bytes)) {
+            · {{ weight(item.size_bytes) }}
+          }
+        </span>
+
+        @if (canModerate()) {
+          <button
+            type="button"
+            class="k-btn k-btn--sm"
+            [class.k-btn--ghost]="!item.is_hidden"
+            [class.k-btn--primary]="item.is_hidden"
+            [disabled]="moderatingId() === item.id"
+            (click)="toggleHidden(item)">
+            {{ item.is_hidden ? 'Réafficher ce média' : 'Masquer ce média' }}
+          </button>
+        }
+      </footer>
+    </div>
+  </div>
+}

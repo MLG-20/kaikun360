@@ -144,6 +144,39 @@
   font-size: 0.74rem;
 }
 
+// --- Colonne Médias (F8.1) ---------------------------------------------------
+// Mène au dossier de revue, où l'agent examine les visuels et peut en masquer.
+.cat-media {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  text-decoration: none;
+
+  &:hover .cat-media__count,
+  &:hover .cat-media__none {
+    text-decoration: underline;
+  }
+
+  &__count {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--k-brand);
+  }
+
+  // Une annonce sans aucun visuel est une anomalie, pas une valeur neutre :
+  // sur le site vitrine, elle s'affiche vide au client.
+  &__none {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--k-danger);
+  }
+
+  &__hidden {
+    font-size: 0.72rem;
+    color: var(--k-muted);
+  }
+}
+
 .cat-owner {
   color: var(--k-ink);
   font-size: 0.9rem;

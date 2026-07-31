@@ -63,6 +63,16 @@ interface ResourceValidator
     public function toEntry(Model $model): array;
 
     /**
+     * Dossier COMPLET d'un élément, pour l'écran de revue avant publication
+     * (F8.1) : l'entrée de file, la galerie média entière (masqués compris) et
+     * les caractéristiques propres au type que l'agent doit contrôler avant de
+     * publier sur le site vitrine (prix, localisation, description…).
+     *
+     * @return array<string, mixed>
+     */
+    public function toDetail(Model $model): array;
+
+    /**
      * Valide (publie) l'élément. Peut lever une ValidationException (ex. véhicule
      * dont la conformité est incomplète).
      *

@@ -55,6 +55,19 @@ class AdminExperienceResource extends JsonResource
             'seats_taken' => $taken,
             'seats_left' => max(0, $capacity - $taken),
 
+            // --- Médias (F8.1) : compteurs de supervision, présents seulement
+            // quand la requête les a agrégés (`withCount`). Permettent de
+            // repérer une annonce publiée sans visuel, ou dont des photos ont
+            // été masquées par la modération.
+            'media_count' => $this->when(
+                $this->media_count !== null,
+                fn () => (int) $this->media_count,
+            ),
+            'media_hidden_count' => $this->when(
+                $this->media_hidden_count !== null,
+                fn () => (int) $this->media_hidden_count,
+            ),
+
             // --- Prestataire opérateur (pour joindre en cas d'anomalie).
             'provider' => $this->whenLoaded('provider', fn () => [
                 'id' => $this->provider->id,

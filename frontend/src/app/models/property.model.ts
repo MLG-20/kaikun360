@@ -34,6 +34,15 @@ export interface Property {
    * encore de photo — le front retombe alors sur sa vignette de repli.
    */
   photo_url?: string | null;
+
+  /**
+   * Compteurs de médias (F8.1), fournis par les listes back-office uniquement.
+   *
+   * Servent à repérer dans le catalogue de supervision une annonce publiée
+   * SANS visuel, ou dont des photos ont été masquées par la modération.
+   */
+  media_count?: number;
+  media_hidden_count?: number;
   /**
    * Nombre de pièces justificatives rattachées au bien. Présent uniquement sur
    * la liste « Mes biens » (`GET /properties/mine`, via `withCount`) : alimente

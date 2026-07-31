@@ -28,7 +28,8 @@ class ExperienceValidator implements ResourceValidator
     public function pendingQuery(): Builder
     {
         return TourismExperience::query()
-            ->with('provider') // évite le N+1 : le déposant est affiché dans la file.
+            // Évite le N+1 : déposant ET galerie sont affichés dans la file.
+            ->with(['provider', 'allMedia'])
             ->where('status', ExperienceStatus::EN_ATTENTE_VALIDATION->value)
             ->oldest();
     }
@@ -59,6 +60,32 @@ class ExperienceValidator implements ResourceValidator
             'owner_id' => $model->provider_id,
             'owner' => OwnerEntry::from($model->provider),
             'submitted_at' => $model->created_at,
+            // F8.1 — l'agent doit VOIR ce qu'il publie avant de trancher.
+            'media' => MediaEntry::summary($model),
+        ];
+    }
+
+    public function toDetail(Model $model): array
+    {
+        /** @var TourismExperience $model */
+        $model->loadMissing(['provider', 'allMedia']);
+
+        return [
+            ...$this->toEntry($model),
+            // Galerie ENTIÈRE (pas l'aperçu de la file) : c'est ici que l'agent
+            // examine chaque photo avant de publier sur le site vitrine.
+            'media' => MediaEntry::summary($model, null),
+            'fields' => [
+                'Destination' => $model->destination,
+                'Durée (jours)' => $model->duration_days,
+                'Prix' => $model->price_xof,
+                'Capacité' => $model->capacity,
+                'Description' => $model->description,
+                // `inclusions` est casté en tableau : on l'aplatit pour l'affichage.
+                'Inclusions' => is_array($model->inclusions)
+                    ? implode(' · ', $model->inclusions)
+                    : $model->inclusions,
+            ],
         ];
     }
 

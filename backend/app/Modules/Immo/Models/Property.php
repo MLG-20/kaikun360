@@ -3,6 +3,7 @@
 namespace App\Modules\Immo\Models;
 
 use App\Models\Commune;
+use App\Models\Concerns\HasMedia;
 use App\Models\Department;
 use App\Models\Region;
 use App\Models\User;
@@ -16,7 +17,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
  * Bien immobilier (module Immo).
@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Property extends Model
 {
     use HasFactory;
+    use HasMedia;
 
     /**
      * Invalide le cache des catalogues à chaque écriture (B17.2). Le catalogue
@@ -97,25 +98,6 @@ class Property extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(PropertyDocument::class);
-    }
-
-    /**
-     * Photos du bien (médias polymorphes, couche transversale B12.1).
-     *
-     * Triées pour l'affichage : **l'image principale d'abord** (`is_primary`),
-     * puis l'ordre choisi par le propriétaire (`position`). Seuls les médias
-     * visibles sont renvoyés — un média masqué (modération) disparaît des
-     * annonces sans être supprimé.
-     *
-     * Des photos nettes sont déterminantes pour la confiance des clients : le
-     * catalogue public et la fiche s'appuient sur cette relation.
-     */
-    public function media(): MorphMany
-    {
-        return $this->morphMany(\App\Models\Media::class, 'mediable')
-            ->visible()
-            ->orderByDesc('is_primary')
-            ->orderBy('position');
     }
 
     /**

@@ -30,7 +30,8 @@ class PropertyValidator implements ResourceValidator
     public function pendingQuery(): Builder
     {
         return Property::query()
-            ->with('owner') // évite le N+1 : le déposant est affiché dans la file.
+            // Évite le N+1 : déposant ET galerie sont affichés dans la file.
+            ->with(['owner', 'allMedia'])
             ->where('status', PropertyStatus::EN_ATTENTE_VALIDATION->value)
             ->oldest();
     }
@@ -61,6 +62,31 @@ class PropertyValidator implements ResourceValidator
             'owner_id' => $model->owner_id,
             'owner' => OwnerEntry::from($model->owner),
             'submitted_at' => $model->created_at,
+            // F8.1 — l'agent doit VOIR ce qu'il publie avant de trancher.
+            'media' => MediaEntry::summary($model),
+        ];
+    }
+
+    public function toDetail(Model $model): array
+    {
+        /** @var Property $model */
+        $model->loadMissing(['owner', 'allMedia', 'region', 'department', 'commune']);
+
+        return [
+            ...$this->toEntry($model),
+            // Galerie ENTIÈRE (pas l'aperçu de la file) : c'est ici que l'agent
+            // examine chaque photo avant de publier sur le site vitrine.
+            'media' => MediaEntry::summary($model, null),
+            'fields' => [
+                'Type' => $model->type?->label() ?? $model->type,
+                'Prix' => $model->price_xof,
+                'Description' => $model->description,
+                'Région' => $model->region?->name,
+                'Département' => $model->department?->name,
+                'Commune' => $model->commune?->name,
+                'Adresse' => $model->address,
+                'Zone touristique' => $model->tourist_zone ? 'Oui' : 'Non',
+            ],
         ];
     }
 

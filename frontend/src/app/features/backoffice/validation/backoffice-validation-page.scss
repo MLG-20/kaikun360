@@ -158,7 +158,10 @@
 .vl-item {
   display: grid;
   grid-template-columns: 1fr auto;
-  align-items: center;
+  // Depuis F8.1 la colonne principale porte aussi la bande de vignettes : les
+  // actions s'alignent en haut plutôt que de flotter au milieu d'une carte
+  // devenue haute.
+  align-items: start;
   gap: 12px;
   padding: 16px 18px;
   background: #fff;
@@ -190,6 +193,9 @@
     display: flex;
     gap: 8px;
     flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 320px; // trois actions : on autorise le retour à la ligne
   }
 
   @media (max-width: 560px) {
@@ -273,9 +279,21 @@
   }
 }
 
+// F8.1 — Bande de vignettes sous le déposant, dans la colonne principale.
+.vl-media {
+  display: block;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--k-line);
+}
+
 .vl-btn {
   padding: 8px 16px;
   font-size: 0.85rem;
+  // « Examiner le dossier » est un lien : il doit s'aligner sur les boutons.
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 
   &--danger {
     background: var(--k-danger);

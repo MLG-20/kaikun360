@@ -176,6 +176,64 @@ export interface QueueEntry {
   /** Déposant : identité + contact (null si le compte a été supprimé). */
   owner: QueueOwner | null;
   submitted_at: string | null;
+  /**
+   * Galerie de la ressource (F8.1) — miroir de `MediaEntry::summary()`.
+   *
+   * Toujours présente, même pour les prestataires qui n'ont pas de galerie
+   * (total à 0), pour que la file ait la même forme d'un onglet à l'autre.
+   */
+  media: QueueMedia;
+}
+
+/** Un média normalisé pour le back-office (miroir de `MediaEntry::from()`). */
+export interface QueueMediaItem {
+  id: number;
+  reference: string;
+  type: 'image' | 'video';
+  /** URL publique (fichier stocké) ou URL externe (vidéo). */
+  url: string | null;
+  original_name: string | null;
+  mime_type: string | null;
+  size_bytes: number | null;
+  is_primary: boolean;
+  position: number;
+  status: 'actif' | 'masque';
+  status_label: string;
+  /** Masqué par la modération : reste visible en back-office, pas au public. */
+  is_hidden: boolean;
+}
+
+/**
+ * Résumé de galerie : compteurs + vignettes.
+ *
+ * Dans la file, `items` est borné à un aperçu ; sur le dossier complet, il
+ * contient toute la galerie, médias masqués compris.
+ */
+export interface QueueMedia {
+  total: number;
+  images: number;
+  videos: number;
+  /** Nombre de médias écartés par un agent. */
+  hidden: number;
+  items: QueueMediaItem[];
+}
+
+/**
+ * Dossier complet d'un élément à valider (F8.1) — `GET /admin/queue/{type}/{id}`.
+ *
+ * L'entrée de file, enrichie de la galerie ENTIÈRE et des caractéristiques
+ * propres au type que l'agent doit contrôler avant publication.
+ */
+export interface QueueEntryDetail extends QueueEntry {
+  /** Caractéristiques à contrôler, déjà libellées par le serveur. */
+  fields: Record<string, string | number | boolean | null>;
+}
+
+/** Réponse du dossier complet : l'élément et son actionnabilité. */
+export interface QueueDetailResponse {
+  entry: QueueEntryDetail;
+  /** Faux si l'élément a déjà été tranché : on affiche sans permettre d'agir. */
+  is_pending: boolean;
 }
 
 /** Le déposant d'une ressource en attente (miroir de `OwnerEntry`). */
@@ -1310,6 +1368,37 @@ export class AdminService {
       .set('page', String(page))
       .set('per_page', String(perPage));
     return this.http.get<Paginated<QueueEntry>>(`${this.api}/admin/queue`, { params });
+  }
+
+  /**
+   * Dossier complet d'un élément à valider (F8.1).
+   * GET /admin/queue/{type}/{id}
+   *
+   * Renvoie la galerie ENTIÈRE (médias masqués compris) et les caractéristiques
+   * du type : c'est l'écran où l'agent vérifie ce qu'il s'apprête à publier sur
+   * le site vitrine. Consultable même après décision, pour revoir son geste.
+   */
+  validationDetail(type: ValidationType, id: number): Observable<QueueDetailResponse> {
+    return this.http
+      .get<ApiEnvelope<QueueDetailResponse>>(`${this.api}/admin/queue/${type}/${id}`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Masque ou réaffiche un média (F8.1).
+   * PATCH /admin/media/{id}/status
+   *
+   * Permet d'écarter une photo floue ou hors sujet et de publier le reste de
+   * l'annonce, plutôt que de tout refuser et renvoyer le déposant à zéro. Le
+   * média n'est pas supprimé : il sort des annonces publiques. L'API exige la
+   * permission de validation du type parent → 403 sans mandat.
+   */
+  moderateMedia(id: number, hidden: boolean): Observable<QueueMediaItem> {
+    return this.http
+      .patch<ApiEnvelope<{ media: QueueMediaItem }>>(`${this.api}/admin/media/${id}/status`, {
+        status: hidden ? 'masque' : 'actif',
+      })
+      .pipe(map((response) => response.data.media));
   }
 
   /**

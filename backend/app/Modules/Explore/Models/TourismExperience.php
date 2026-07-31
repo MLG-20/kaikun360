@@ -3,6 +3,7 @@
 namespace App\Modules\Explore\Models;
 
 use App\Models\Booking;
+use App\Models\Concerns\HasMedia;
 use App\Models\User;
 use App\Modules\Explore\Enums\ExperienceStatus;
 use App\Support\Cache\CatalogCache;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class TourismExperience extends Model
 {
     use HasFactory;
+    use HasMedia;
 
     /**
      * Invalide le cache du catalogue des expériences à chaque écriture (B17.2).

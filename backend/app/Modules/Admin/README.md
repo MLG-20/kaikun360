@@ -179,7 +179,7 @@ qui **réutilise** les événements et services de son module :
   (aperçu de 15 éléments par type) ;
 - `?type=vehicle&per_page=20` → liste paginée normalisée d'un seul type.
 
-Entrée de file normalisée : `{ type, id, reference, label, owner_id, owner, submitted_at }`.
+Entrée de file normalisée : `{ type, id, reference, label, owner_id, owner, submitted_at, media }`.
 Le champ **`owner`** (F7.2.a) porte l'identité + le contact du **déposant**
 (`{ id, name, email, phone }`, ou `null` si le compte a disparu) — biens : le
 propriétaire ; véhicules/expériences : le prestataire ; prestataires : le
@@ -193,6 +193,56 @@ Autorisation en deux temps : accès back-office (`consulter:dashboard-admin` sur
 la route) **puis** permission fine selon le `{type}` (vérifiée dans le
 contrôleur). Garde-fous : type inconnu → **404** ; élément déjà validé/refusé →
 **422** (`decision`) ; conformité véhicule incomplète → **422** (`compliance`).
+
+## F8.1 — Revue des médias avant publication
+
+**Le manque comblé :** jusqu'ici la file ne transportait que le libellé et le
+déposant. Un agent validait donc une annonce **sans jamais avoir vu ses
+photos**, et la publiait ainsi sur le site vitrine. Trois ajouts :
+
+**1. La galerie dans la file.** Chaque entrée porte désormais `media`, produit
+par le helper `Validation\MediaEntry` (pendant d'`OwnerEntry`) :
+
+```
+media: { total, images, videos, hidden, items[] }
+items[]: { id, reference, type, url, original_name, mime_type, size_bytes,
+           is_primary, position, status, status_label, is_hidden }
+```
+
+`items` est **borné à 4 vignettes** dans la file (`MediaEntry::PREVIEW`) —
+`total` reste le compte réel. Eager-loading de `allMedia` dans `pendingQuery()`
+(anti N+1). Les prestataires n'étant pas illustrables (absents de
+`Media::TYPES`), leur `media` est vide mais **présent** : la file garde la même
+forme d'un onglet à l'autre.
+
+**2. `GET /api/v1/admin/queue/{type}/{id}`** — dossier complet, pour les cas
+douteux : `{ entry, is_pending }` où `entry` ajoute la galerie **entière** et
+`fields`, un dictionnaire libellé → valeur propre au type (prix, localisation,
+description pour un bien ; assurance, chauffeur, gilets pour un véhicule…),
+produit par `toDetail()` sur chaque validateur. Consultable **même après
+décision** (`is_pending` à faux) : un agent doit pouvoir rouvrir un dossier
+qu'il vient de trancher. Garde `consulter:dashboard-admin` seulement —
+consulter n'est pas modérer.
+
+**3. `PATCH /api/v1/admin/media/{media}/status`** — corps `{ "status":
+"actif"|"masque" }`. Écarter **une** photo floue ou hors sujet plutôt que de
+refuser toute l'annonce et renvoyer le déposant à zéro. Le média n'est pas
+supprimé : il sort de `media()` (public) mais reste dans `allMedia()`
+(back-office), sans quoi l'agent ne pourrait jamais le rétablir. Autorisation :
+la **permission fine du type parent** (`valider:bien` pour la photo d'un
+bien) — qui peut publier une ressource peut arbitrer ce qu'elle montre. Média
+orphelin ou rattaché à un type non validable → **403**.
+
+Les listes de supervision (`/admin/properties`, `/admin/vehicles`,
+`/admin/experiences`) exposent en plus `media_count` et `media_hidden_count`
+(`withCount`), pour repérer depuis la liste une annonce **publiée sans aucun
+visuel** — anomalie visible par les clients.
+
+> **Dette B12 rattrapée ici.** Seul `Property` portait une relation `media()`.
+> `Vehicle` (« galerie média sera branchée en B12 ») et `TourismExperience`
+> acceptaient déjà des dépôts via `POST media/upload` sans qu'aucune relation
+> ne les relise. Les trois modèles utilisent désormais le trait
+> `App\Models\Concerns\HasMedia` (`media()` public / `allMedia()` modération).
 
 ## B13.3 — Gestion des comptes utilisateurs
 

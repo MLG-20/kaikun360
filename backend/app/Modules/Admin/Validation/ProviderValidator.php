@@ -65,6 +65,26 @@ class ProviderValidator implements ResourceValidator
             'owner_id' => $model->user_id,
             'owner' => OwnerEntry::from($model->user),
             'submitted_at' => $model->created_at,
+            // Un prestataire n'est pas une ressource illustrable (absent de
+            // `Media::TYPES`) : galerie toujours vide, mais la clé reste
+            // présente pour que la file ait la même forme d'un onglet à l'autre.
+            'media' => MediaEntry::summary($model),
+        ];
+    }
+
+    public function toDetail(Model $model): array
+    {
+        /** @var Provider $model */
+        $model->loadMissing('user');
+
+        return [
+            ...$this->toEntry($model),
+            'fields' => [
+                'Catégorie' => $model->category?->label() ?? $model->category,
+                'Présentation' => $model->bio,
+                'Avertissements' => $model->warnings_count,
+                'Note de sanction' => $model->sanction_note,
+            ],
         ];
     }
 

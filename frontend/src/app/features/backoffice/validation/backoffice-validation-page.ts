@@ -1,7 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
+import { MediaReviewComponent } from '../shared/media-review/media-review';
 import {
   AdminService,
   QueueEntry,
@@ -35,7 +37,7 @@ interface TypeMeta {
  */
 @Component({
   selector: 'app-backoffice-validation-page',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink, MediaReviewComponent],
   templateUrl: './backoffice-validation-page.html',
   styleUrl: './backoffice-validation-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -214,6 +216,17 @@ export class BackofficeValidationPageComponent {
       if (this.page() > 1) this.page.update((p) => p - 1);
       this.loadList();
     }
+  }
+
+  /**
+   * Lien vers le dossier complet d'un élément (F8.1).
+   *
+   * La file suffit pour un cas évident ; dès qu'il y a un doute, l'agent ouvre
+   * le dossier pour voir toute la galerie, masquer une photo au besoin et lire
+   * les caractéristiques avant de publier sur le site vitrine.
+   */
+  protected detailLink(entry: QueueEntry): unknown[] {
+    return ['/back-office', 'validation', entry.type, entry.id];
   }
 
   /** Formate une date de soumission (jour + heure courts). */

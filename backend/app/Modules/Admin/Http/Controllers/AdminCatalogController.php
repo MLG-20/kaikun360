@@ -44,6 +44,9 @@ class AdminCatalogController extends Controller
     {
         $properties = Property::query()
             ->with(['region', 'department', 'commune', 'owner'])
+            // F8.1 — compteur de médias : repérer d'un coup d'œil une annonce
+            // publiée SANS photo, ou dont des visuels ont été masqués.
+            ->withCount(['allMedia as media_count', 'allMedia as media_hidden_count' => fn ($q) => $q->where('status', 'masque')])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')->toString()))
             ->when($request->filled('region_id'), fn ($q) => $q->where('region_id', $request->integer('region_id')))
@@ -71,6 +74,8 @@ class AdminCatalogController extends Controller
     {
         $vehicles = Vehicle::query()
             ->with('provider')
+            // F8.1 — voir plus haut : compteur de médias pour la supervision.
+            ->withCount(['allMedia as media_count', 'allMedia as media_hidden_count' => fn ($q) => $q->where('status', 'masque')])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->string('type')->toString()))
             ->when($request->filled('provider_id'), fn ($q) => $q->where('provider_id', $request->integer('provider_id')))
@@ -145,6 +150,8 @@ class AdminCatalogController extends Controller
     {
         $experiences = TourismExperience::query()
             ->with('provider')
+            // F8.1 — voir plus haut : compteur de médias pour la supervision.
+            ->withCount(['allMedia as media_count', 'allMedia as media_hidden_count' => fn ($q) => $q->where('status', 'masque')])
             ->withSum(
                 ['bookings as seats_taken' => fn ($q) => $q->whereNotIn('status', $this->cancelledBookingStatuses())],
                 'guests'

@@ -36,7 +36,8 @@ class VehicleValidator implements ResourceValidator
     public function pendingQuery(): Builder
     {
         return Vehicle::query()
-            ->with('provider') // évite le N+1 : le déposant est affiché dans la file.
+            // Évite le N+1 : déposant ET galerie sont affichés dans la file.
+            ->with(['provider', 'allMedia'])
             ->where('status', VehicleStatus::EN_ATTENTE_VALIDATION->value)
             ->oldest();
     }
@@ -67,6 +68,34 @@ class VehicleValidator implements ResourceValidator
             'owner_id' => $model->provider_id,
             'owner' => OwnerEntry::from($model->provider),
             'submitted_at' => $model->created_at,
+            // F8.1 — l'agent doit VOIR ce qu'il publie avant de trancher.
+            'media' => MediaEntry::summary($model),
+        ];
+    }
+
+    public function toDetail(Model $model): array
+    {
+        /** @var Vehicle $model */
+        $model->loadMissing(['provider', 'allMedia']);
+
+        return [
+            ...$this->toEntry($model),
+            // Galerie ENTIÈRE (pas l'aperçu de la file) : c'est ici que l'agent
+            // examine chaque photo avant de publier sur le site vitrine.
+            'media' => MediaEntry::summary($model, null),
+            'fields' => [
+                'Type' => $model->type?->label() ?? $model->type,
+                'Prix par jour' => $model->price_per_day_xof,
+                'Caution' => $model->caution_xof,
+                'Capacité' => $model->capacity,
+                'Avec chauffeur' => $model->has_driver ? 'Oui' : 'Non',
+                'Description' => $model->description,
+                // Conformité : ces champs conditionnent l'approbation côté
+                // métier (VehicleComplianceChecker), l'agent doit les voir.
+                'Assurance' => $model->insurance_ref,
+                'Identité du chauffeur' => $model->driver_identity,
+                'Gilets de sauvetage' => $model->life_jackets_count,
+            ],
         ];
     }
 

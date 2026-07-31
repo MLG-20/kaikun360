@@ -123,12 +123,32 @@ recu → verification → visite → devis → negociation → cloture
   `Gate::authorize('update', $mediable)` (PropertyPolicy / VehiclePolicy /
   ExperiencePolicy). Aucune logique de propriété dupliquée.
 
+### Relations côté ressource — trait `Concerns\HasMedia` (F8.1)
+
+Toute classe de `Media::TYPES` utilise le trait `App\Models\Concerns\HasMedia`,
+qui expose **deux** relations volontairement distinctes :
+
+| Relation | Contenu | Usage |
+|---|---|---|
+| `media()` | médias **actifs** seulement, `is_primary` en tête puis `position` | catalogue et fiche **publics** |
+| `allMedia()` | **tous** les médias, masqués compris | **back-office** (modération) |
+
+`allMedia()` ne doit jamais être exposée sur une route publique : elle contient
+précisément ce qu'un agent a choisi de retirer des annonces. Réciproquement, un
+écran de modération bâti sur `media()` empêcherait de **rétablir** une photo
+masquée, qui aurait disparu de la vue de l'agent lui-même.
+
+> Historiquement seul `Property` portait cette relation : `Vehicle` et
+> `TourismExperience` acceptaient des dépôts via `POST media/upload` qu'aucun
+> écran ne pouvait relire (dette « sera branchée en B12 »). Corrigé en F8.1.
+
 ### Endpoints (B12.1)
 
 | Méthode | URL | Accès |
 |---|---|---|
 | POST | `/api/v1/media/upload` | propriétaire de la ressource (policy `update`) |
 | DELETE | `/api/v1/media/{media}` | idem ; média orphelin → admin uniquement |
+| PATCH | `/api/v1/admin/media/{media}/status` | **modération** (F8.1) : masquer / réafficher, permission de validation du type parent |
 
 - **Compression** : à l'upload, les images sont redimensionnées (largeur max
   1600 px) et recompressées en **JPEG q80** par `App\Services\ImageProcessor`

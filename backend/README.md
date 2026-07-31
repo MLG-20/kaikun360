@@ -245,6 +245,25 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   polymorphe, la même liste couvre chantiers et dossiers diaspora). ⚠️ Un mandat
   porte ses clauses en **texte** (`management_mandates.terms`) : il n'y a pas de
   contrat scanné téléversé, la ligne renvoie vers la fiche du mandat.
+  **Revue des médias avant publication (F8.1)** — la file de validation ne
+  portait que le libellé et le déposant : un agent publiait une annonce sur le
+  site vitrine **sans avoir vu une seule photo**. Chaque entrée de file porte
+  désormais `media` (`Validation\MediaEntry`, pendant d'`OwnerEntry`) : compteurs
+  + aperçu de 4 vignettes, avec eager-loading d'`allMedia` dans `pendingQuery()`.
+  Deux routes s'ajoutent : `GET /admin/queue/{type}/{id}` (dossier complet —
+  galerie entière, masqués compris, et `fields` propres au type via `toDetail()`,
+  consultable **même après décision** pour revoir son geste) et
+  `PATCH /admin/media/{media}/status` (masquer/réafficher **une** photo au lieu
+  de refuser toute l'annonce). Le média masqué n'est pas supprimé : il quitte
+  `media()` sans quitter `allMedia()`. Autorisation de la modération : la
+  permission de validation du **type parent** (`valider:bien`…), pas un droit
+  générique — qui publie une ressource arbitre ce qu'elle montre. Les listes de
+  supervision exposent en plus `media_count` / `media_hidden_count` (`withCount`)
+  pour repérer une annonce publiée sans visuel.
+  ⚠️ **Dette B12 soldée ici** : seul `Property` avait une relation `media()`.
+  `Vehicle` (commentaire « sera branchée en B12 ») et `TourismExperience`
+  acceptaient déjà des dépôts via `POST media/upload` qu'aucune relation ne
+  relisait. Les trois utilisent le trait `App\Models\Concerns\HasMedia`.
   **Permissions exposées au frontend (F7.4.a)** : `UserResource::withPermissions()`
   joint les permissions back-office effectives. C'est un **opt-in explicite**,
   posé sur les seules réponses qui représentent le compte connecté (connexion,

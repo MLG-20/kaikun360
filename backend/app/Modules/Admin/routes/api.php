@@ -15,6 +15,7 @@ use App\Modules\Admin\Http\Controllers\AdminTeamController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
 use App\Modules\Admin\Http\Controllers\AttendanceController;
 use App\Modules\Admin\Http\Controllers\FaqController;
+use App\Modules\Admin\Http\Controllers\MediaModerationController;
 use App\Modules\Admin\Http\Controllers\PageController;
 use App\Modules\Admin\Http\Controllers\ReferenceController;
 use App\Modules\Admin\Http\Controllers\ReportExportController;
@@ -47,9 +48,24 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/queue', [ValidationQueueController::class, 'index'])
         ->middleware('can:consulter:dashboard-admin');
 
+    // F8.1 — Dossier complet d'un élément : galerie média (masqués compris),
+    // déposant et caractéristiques du type. L'agent doit VOIR ce qu'il publie
+    // sur le site vitrine avant de trancher.
+    Route::get('/queue/{type}/{id}', [ValidationQueueController::class, 'show'])
+        ->where('type', '[a-z]+')
+        ->whereNumber('id')
+        ->middleware('can:consulter:dashboard-admin');
+
     Route::patch('/validate/{type}/{id}', [ValidationQueueController::class, 'decide'])
         ->where('type', '[a-z]+')
         ->whereNumber('id')
+        ->middleware('can:consulter:dashboard-admin');
+
+    // F8.1 — Modération photo par photo : écarter une image floue ou hors sujet
+    // sans refuser toute l'annonce. La permission fine du type parent est
+    // vérifiée dans le contrôleur (valider:bien pour la photo d'un bien…).
+    Route::patch('/media/{media}/status', [MediaModerationController::class, 'update'])
+        ->whereNumber('media')
         ->middleware('can:consulter:dashboard-admin');
 
     // F7.1.a — Équipe back-office (« poste de commandement ») : annuaire des

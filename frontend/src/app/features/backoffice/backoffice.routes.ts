@@ -56,6 +56,19 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Validation — Back-office Kaikun 360',
       },
       {
+        // F8.1 — Dossier de validation : galerie média complète, modération
+        // photo par photo et caractéristiques, AVANT publication sur le site
+        // vitrine. Même permission que la file dont il est le détail.
+        path: 'validation/:type/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('validation') },
+        loadComponent: () =>
+          import('./validation/detail/backoffice-validation-detail-page').then(
+            (m) => m.BackofficeValidationDetailPageComponent,
+          ),
+        title: 'Dossier de validation — Back-office Kaikun 360',
+      },
+      {
         // F7.2.b — Catalogues : navigateur de supervision (biens / véhicules /
         // expériences), tous statuts, en lecture seule.
         path: 'catalogues',

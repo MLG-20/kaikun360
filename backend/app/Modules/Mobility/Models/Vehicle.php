@@ -3,6 +3,7 @@
 namespace App\Modules\Mobility\Models;
 
 use App\Models\Booking;
+use App\Models\Concerns\HasMedia;
 use App\Models\User;
 use App\Modules\Mobility\Enums\VehicleStatus;
 use App\Modules\Mobility\Enums\VehicleType;
@@ -19,11 +20,13 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  *
  * Appartient à un prestataire, n'apparaît dans la recherche qu'une fois publié
  * (validé par un agent). Réservable via le modèle transversal Booking. La
- * galerie média (morphMany) sera branchée en B12.
+ * galerie média est branchée via le trait HasMedia (F8.1) : les dépôts étaient
+ * déjà acceptés par `POST media/upload`, plus rien ne les relisait.
  */
 class Vehicle extends Model
 {
     use HasFactory;
+    use HasMedia;
 
     /**
      * Invalide le cache du catalogue des véhicules à chaque écriture (B17.2).

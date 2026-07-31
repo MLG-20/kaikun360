@@ -21,6 +21,14 @@ export interface Experience {
   status_label: string | null;
   published_at: string | null;
   seats_left?: number;
+  /**
+   * Compteurs de médias (F8.1), fournis par les listes back-office uniquement.
+   *
+   * Servent à repérer dans le catalogue de supervision une annonce publiée
+   * SANS visuel, ou dont des photos ont été masquées par la modération.
+   */
+  media_count?: number;
+  media_hidden_count?: number;
 }
 
 /**

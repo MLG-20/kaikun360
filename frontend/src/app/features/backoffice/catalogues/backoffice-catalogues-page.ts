@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 
 import { HttpErrorResponse } from '@angular/common/http';
@@ -35,6 +36,10 @@ interface CatalogRow {
   priceXof: number | null;
   priceSuffix: string;
   date: string | null;
+  /** Nombre de médias déposés (F8.1) — 0 sur une annonce sans visuel. */
+  mediaCount: number;
+  /** Dont masqués par la modération. */
+  mediaHidden: number;
 }
 
 /** Une option de filtre par statut. */
@@ -72,7 +77,7 @@ interface StatusOption {
  */
 @Component({
   selector: 'app-backoffice-catalogues-page',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './backoffice-catalogues-page.html',
   styleUrl: './backoffice-catalogues-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -311,6 +316,8 @@ export class BackofficeCataloguesPageComponent {
         priceXof: p.price_xof,
         priceSuffix: '',
         date: p.published_at ?? p.created_at,
+        mediaCount: p.media_count ?? 0,
+        mediaHidden: p.media_hidden_count ?? 0,
       };
     }
     if (type === 'vehicle') {
@@ -325,6 +332,8 @@ export class BackofficeCataloguesPageComponent {
         priceXof: v.price_per_day_xof,
         priceSuffix: '/ jour',
         date: v.published_at,
+        mediaCount: v.media_count ?? 0,
+        mediaHidden: v.media_hidden_count ?? 0,
       };
     }
     const e = item as Experience;
@@ -338,7 +347,20 @@ export class BackofficeCataloguesPageComponent {
       priceXof: e.price_xof,
       priceSuffix: '',
       date: e.published_at,
+      mediaCount: e.media_count ?? 0,
+      mediaHidden: e.media_hidden_count ?? 0,
     };
+  }
+
+  /**
+   * Lien vers le dossier de revue des médias (F8.1).
+   *
+   * Réutilise l'écran de validation, qui reste consultable quel que soit le
+   * statut : c'est là qu'on examine les visuels et qu'on masque une photo,
+   * y compris sur une annonce DÉJÀ publiée — le cas qui presse le plus.
+   */
+  protected mediaLink(row: CatalogRow): unknown[] {
+    return ['/back-office', 'validation', this.selected(), row.id];
   }
 
   /** Libellé lisible d'un statut (repli quand la Resource n'en fournit pas). */

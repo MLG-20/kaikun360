@@ -58,6 +58,7 @@
         <tr>
           <th>Élément</th>
           <th>Statut</th>
+          <th>Médias</th>
           <th>Propriétaire</th>
           <th>Prix</th>
           <th>Date</th>
@@ -77,6 +78,23 @@
             </td>
             <td>
               <span class="cat-badge" [class]="statusClass(row.status)">{{ row.statusLabel }}</span>
+            </td>
+            <!--
+              F8.1 — Accès à la revue des médias. Une annonce PUBLIÉE sans
+              aucun visuel est signalée en rouge : c'est une anomalie visible
+              par les clients sur le site vitrine, pas un détail de saisie.
+            -->
+            <td>
+              <a class="cat-media" [routerLink]="mediaLink(row)">
+                @if (row.mediaCount === 0) {
+                  <span class="cat-media__none">Aucun média</span>
+                } @else {
+                  <span class="cat-media__count">{{ row.mediaCount }} média(s)</span>
+                  @if (row.mediaHidden > 0) {
+                    <span class="cat-media__hidden">{{ row.mediaHidden }} masqué(s)</span>
+                  }
+                }
+              </a>
             </td>
             <td>
               @if (row.ownerName) {
@@ -129,7 +147,7 @@
           <!-- Panneau déplié sous la ligne concernée -->
           @if (openRowId() === row.id) {
             <tr class="cat-panel-row">
-              <td [attr.colspan]="canEdit() ? 6 : 5">
+              <td [attr.colspan]="canEdit() ? 7 : 6">
                 <div class="cat-panel">
                   @if (actionError()) {
                     <p class="k-form-error" role="alert">{{ actionError() }}</p>
@@ -201,7 +219,7 @@
           }
         } @empty {
           <tr>
-            <td [attr.colspan]="canEdit() ? 6 : 5" class="cat-empty">
+            <td [attr.colspan]="canEdit() ? 7 : 6" class="cat-empty">
               Aucun élément ne correspond à ces filtres.
             </td>
           </tr>

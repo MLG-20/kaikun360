@@ -1,0 +1,129 @@
+@if (loading()) {
+  <p class="vd-state" role="status">Chargement du dossier…</p>
+} @else if (error() || !entry()) {
+  <p class="vd-state vd-state--error" role="alert">
+    Dossier introuvable ou inaccessible.
+    <a routerLink="/back-office/validation">Retour à la file</a>
+  </p>
+} @else if (entry(); as e) {
+  <a class="vd-back" routerLink="/back-office/validation">← Retour à la file</a>
+
+  <header class="vd-head">
+    <div>
+      <span class="vd-kind">{{ typeLabel() }}</span>
+      <h1 class="vd-title">{{ e.label }}</h1>
+      <p class="vd-sub">
+        @if (e.reference) {
+          <span class="vd-ref">{{ e.reference }}</span> ·
+        }
+        Soumis le {{ submittedAt(e.submitted_at) }}
+      </p>
+    </div>
+
+    <!--
+      Les actions n'apparaissent que si l'élément est ENCORE en attente. Un
+      dossier déjà tranché reste consultable (l'agent vérifie son geste) mais
+      n'est plus actionnable — l'API le refuserait de toute façon en 422.
+    -->
+    @if (isPending()) {
+      <div class="vd-actions">
+        <button
+          type="button"
+          class="k-btn k-btn--primary"
+          [disabled]="processing()"
+          (click)="approve()">
+          {{ processing() ? '…' : 'Valider et publier' }}
+        </button>
+        <button
+          type="button"
+          class="k-btn k-btn--ghost"
+          [disabled]="processing()"
+          (click)="rejecting.set(!rejecting())">
+          Refuser
+        </button>
+      </div>
+    } @else {
+      <span class="vd-done">Dossier déjà traité</span>
+    }
+  </header>
+
+  @if (rejecting() && isPending()) {
+    <div class="vd-reject">
+      <input
+        type="text"
+        class="k-input"
+        [(ngModel)]="reason"
+        maxlength="500"
+        placeholder="Motif du refus (facultatif, tracé dans le journal)…" />
+      <button
+        type="button"
+        class="k-btn vd-btn--danger"
+        [disabled]="processing()"
+        (click)="reject()">
+        Confirmer le refus
+      </button>
+    </div>
+  }
+
+  @if (actionError()) {
+    <p class="vd-state vd-state--error" role="alert">{{ actionError() }}</p>
+  }
+
+  <div class="vd-grid">
+    <!-- ============ GALERIE ============ -->
+    <section class="vd-card vd-card--media">
+      <header class="vd-card__head">
+        <h2 class="vd-card__title">Médias déposés</h2>
+        <p class="vd-card__hint">
+          Vérifiez chaque visuel AVANT publication. Une photo floue ou hors
+          sujet peut être masquée sans refuser toute l'annonce : elle sort du
+          site vitrine sans être supprimée.
+        </p>
+      </header>
+
+      <app-media-review
+        [media]="e.media"
+        [label]="e.label"
+        [canModerate]="true"
+        (moderated)="onModerated()" />
+    </section>
+
+    <!-- ============ DÉPOSANT ============ -->
+    <section class="vd-card">
+      <h2 class="vd-card__title">Déposant</h2>
+      @if (e.owner; as owner) {
+        <dl class="vd-facts">
+          <div><dt>Nom</dt><dd>{{ owner.name }}</dd></div>
+          @if (owner.email) {
+            <div>
+              <dt>E-mail</dt>
+              <dd><a [href]="'mailto:' + owner.email">{{ owner.email }}</a></dd>
+            </div>
+          }
+          @if (owner.phone) {
+            <div>
+              <dt>Téléphone</dt>
+              <dd><a [href]="'tel:' + owner.phone">{{ owner.phone }}</a></dd>
+            </div>
+          }
+        </dl>
+      } @else {
+        <p class="vd-muted">Déposant introuvable (compte supprimé).</p>
+      }
+    </section>
+
+    <!-- ============ CARACTÉRISTIQUES ============ -->
+    <section class="vd-card">
+      <h2 class="vd-card__title">Caractéristiques</h2>
+      @if (fields().length) {
+        <dl class="vd-facts">
+          @for (field of fields(); track field.label) {
+            <div><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div>
+          }
+        </dl>
+      } @else {
+        <p class="vd-muted">Aucune caractéristique renseignée.</p>
+      }
+    </section>
+  </div>
+}

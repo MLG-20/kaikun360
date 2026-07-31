@@ -1,0 +1,199 @@
+// =============================================================================
+// Dossier de validation (F8.1) — revue complète avant publication.
+// =============================================================================
+
+:host {
+  display: block;
+  max-width: 1160px;
+}
+
+.vd-back {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--k-brand);
+  }
+}
+
+.vd-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.vd-kind {
+  display: inline-block;
+  padding: 2px 10px;
+  margin-bottom: 6px;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-brand-050);
+  color: var(--k-brand-600);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.vd-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.vd-sub {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+.vd-ref {
+  font-family: var(--k-font-mono);
+  font-size: 0.78rem;
+}
+
+.vd-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vd-done {
+  align-self: center;
+  padding: 6px 14px;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-cream);
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.vd-reject {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  .k-input {
+    flex: 1;
+    min-width: 260px;
+  }
+}
+
+.vd-btn--danger {
+  background: var(--k-danger);
+  color: #fff;
+  border-color: transparent;
+}
+
+.vd-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+  margin-bottom: 16px;
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+// --- Grille du dossier -------------------------------------------------------
+.vd-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.vd-card {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 18px 20px;
+
+  // La galerie occupe toute la première colonne, sur les deux rangées.
+  &--media {
+    grid-row: span 2;
+  }
+
+  &__head {
+    margin-bottom: 14px;
+  }
+
+  &__title {
+    font-family: var(--k-font-display);
+    font-weight: 700;
+    font-size: 1.02rem;
+    color: var(--k-ink);
+    margin: 0 0 4px;
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--k-muted);
+    max-width: 62ch;
+  }
+}
+
+.vd-facts {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--k-ink);
+    word-break: break-word;
+
+    a {
+      color: var(--k-brand);
+    }
+  }
+}
+
+.vd-muted {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .vd-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vd-card--media {
+    grid-row: auto;
+  }
+}

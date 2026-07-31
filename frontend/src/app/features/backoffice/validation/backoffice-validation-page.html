@@ -85,9 +85,24 @@
                 }
               </span>
             </div>
+
+            <!--
+              F8.1 — Revue média avant publication. Sans cette bande, l'agent
+              publiait sur le site vitrine sans avoir vu une seule photo. La
+              modération fine se fait sur le dossier complet, pas ici : la file
+              est un écran d'abattage, on y juge d'un coup d'œil.
+            -->
+            <app-media-review
+              class="vl-media"
+              [media]="e.media"
+              [label]="e.label"
+              [compact]="true" />
           </div>
 
           <div class="vl-item__actions">
+            <a class="k-btn k-btn--ghost vl-btn" [routerLink]="detailLink(e)">
+              Examiner le dossier
+            </a>
             <button
               type="button"
               class="k-btn k-btn--primary vl-btn"

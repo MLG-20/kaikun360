@@ -503,6 +503,41 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   fonction « valider » de quatre modules à la fois. ⚠️ Toute nouvelle rubrique
   se range **à la place de son module**, pas en fin de liste : le client déroule
   ce menu en face du §6 de son cahier.
+  **F8.1 Barre horizontale réellement fixe.** Le shell est calé sur la hauteur du
+  viewport (`height: 100dvh` + `overflow: hidden` sur `.bo-app`) et **seule**
+  `.bo-main` défile. Auparavant le `min-height: 100vh` laissait la colonne
+  grandir avec le contenu : c'est le document entier qui défilait, emportant
+  l'en-tête. Le piège à connaître si l'on retouche cette grille est le
+  `min-height: auto` par défaut des enfants flex — sans `min-height: 0` sur
+  `.bo-body`, la zone de contenu refuse de créer son propre ascenseur.
+  **F8.1 Les listes deviennent des écrans de triage.** Gestion locative et
+  Construction affichaient **10 colonnes**, Diaspora et Team-building 9, Comptes
+  8 — dans 1160 px de large, avec un `min-width: 960px` sur la table : défilement
+  horizontal permanent et libellés cassés sur trois lignes. Or **chaque ligne
+  ouvre une fiche** : une liste sert à *reconnaître et prioriser*, pas à tout
+  afficher. Ramenées à 4–5 colonnes (`table-layout: fixed` + largeurs en %), avec
+  les données regroupées par sens dans des cellules empilées — la référence en
+  mono au-dessus du libellé, la localité sous le nom d'une personne plutôt qu'en
+  colonne à comparer — et un « Voir → » qui s'allume au survol.
+  - ⚠️ **Vérifier la fiche avant de couper une colonne.** Chaque champ retiré
+    (dépenses, reversements, coût estimé, vérification d'un compte…) a été
+    contrôlé présent sur la fiche correspondante. Une colonne supprimée sans ce
+    contrôle est une donnée devenue inatteignable.
+  - Les styles `ds-` / `tb-` / `ac-` sont des **quasi-copies** d'un écran à
+    l'autre : la même correction a dû être appliquée cinq fois. Un partiel SCSS
+    commun éviterait la dérive (chantier non engagé).
+  **F8.1 Revue des médias avant publication** (`features/backoffice/shared/media-review/`).
+  Un agent validait une annonce **sans jamais voir ses photos**. Le composant
+  `app-media-review` sert les trois écrans : bande de vignettes **compacte** dans
+  la file, galerie complète **avec modération** sur le dossier
+  (`/back-office/validation/:type/:id`), et lien depuis la colonne *Médias* du
+  catalogue. Visionneuse plein écran au clavier (←/→, Échap).
+  - Un média **masqué reste affiché**, grisé et étiqueté : le cacher aussi à
+    l'agent l'empêcherait de le rétablir.
+  - `canModerate` est à **faux par défaut** — l'API refuse sans la permission du
+    type parent, autant ne pas proposer un geste qui rebondira.
+  - La colonne *Médias* du catalogue signale **en rouge** une annonce publiée
+    sans aucun visuel : c'est une anomalie vue par les clients, pas un détail.
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au
