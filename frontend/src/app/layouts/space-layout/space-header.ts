@@ -59,8 +59,23 @@ export class SpaceHeaderComponent {
   /** Utilisateur connecté (nom, e-mail/téléphone, initiale). */
   protected readonly user = this.auth.user;
 
-  /** Initiale affichée dans la pastille avatar. */
+  /** Initiale affichée dans la pastille avatar, à défaut d'image. */
   protected readonly initial = computed(() => (this.user()?.name ?? '?').trim()[0] ?? '?');
+
+  /**
+   * Photo de profil / logo d'entreprise (F8.0), `null` tant qu'aucune image
+   * n'a été déposée — la pastille retombe alors sur l'initiale.
+   *
+   * Lu sur `AuthService.user`, que la page « Mon profil » met à jour après un
+   * dépôt : l'en-tête reflète donc la nouvelle image immédiatement, sans
+   * rechargement.
+   */
+  protected readonly avatarUrl = computed(() => this.user()?.profile?.avatar_url ?? null);
+
+  /** `logo` pour une entreprise : l'image se pose dans un cadre, pas en rond. */
+  protected readonly avatarIsLogo = computed(
+    () => this.user()?.profile?.avatar_kind === 'logo',
+  );
 
   /** État du menu utilisateur déroulant (distinct du tiroir latéral). */
   protected readonly userMenuOpen = signal(false);

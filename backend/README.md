@@ -135,6 +135,20 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   super_admin** avec jeton back-office à expiration courte (F7.1.d),
   vérification par code, récupération de compte, profils, documents KYC sur disque
   privé (téléchargement par URL signée), 8 rôles / permissions fines.
+  **Photo de profil / logo d'entreprise (F8.0)** — `POST` / `DELETE
+  /users/me/avatar`, colonne `profiles.avatar_path`. Une seule colonne pour les
+  deux usages : `Profile::avatarKind()` renvoie `logo` pour un profil
+  *entreprise*, `photo` sinon, et c'est cette valeur (exposée par
+  `ProfileResource`) qui dit à l'interface quoi demander. ⚠️ **Disque PUBLIC**,
+  contrairement au KYC : une image affichée en permanence ne peut pas dépendre
+  d'une URL signée qui expirerait en pleine session. La contrepartie est une
+  validation stricte — **image matricielle uniquement** (`image` + `mimes`, donc
+  ni PDF ni SVG, ce dernier pouvant porter du script), 100×100 à 4000×4000 px,
+  2 Mo max. Un remplacement **supprime l'ancien fichier**, et
+  `AccountAnonymizer` **efface la photo** (fichier compris) : un visage servi
+  publiquement après suppression du compte serait une fuite. Les deux routes
+  renvoient l'utilisateur **complet**, pour que le front n'ait qu'une source de
+  vérité à rafraîchir. Nécessite `php artisan storage:link` sur l'environnement.
 - **Immo** — catalogue public filtrable, dépôt de biens, validation par un agent,
   documents, comparaison (les favoris sont devenus transversaux, tous univers).
 - **Stay** — catalogue de nuitées, disponibilité, réservation anti-double-booking,
@@ -197,6 +211,19 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   certifications), disponibilités, charte qualité, validation, missions &
   commission, **avis reçus** (avis sur ses ressources + avis directs après mission,
   `GET /providers/reviews`) et notation agrégée à partir de ces avis.
+  **Justificatif de certification (F8.0)** — `POST /providers/certifications`
+  accepte désormais un **fichier** (multipart, champ `file`, PDF/JPG/PNG ≤ 5 Mo),
+  stocké sur le **disque privé** et relu par URL **signée** 10 minutes
+  (`GET /providers/certifications/{id}/download`, route hors `auth:sanctum` — la
+  signature fait foi, comme pour le KYC). Solde une dette de B6 : `file_path`
+  existait sans qu'aucun contrôleur n'accepte de fichier, donc la colonne
+  fichier du back-office était structurellement vide. Colonnes ajoutées :
+  `disk`, `original_name`, `mime_type`, `size` (alignement sur `user_documents`).
+  Supprimer une certification **supprime le scan**. ⚠️ La pièce est **facultative**
+  (déclarer maintenant, scanner plus tard) : `has_file` distingue « pas de pièce »
+  de « pièce à contrôler». ⚠️ `download_url` n'est exposée que sur des réponses
+  authentifiées — les certifications ne sont chargées que sur `/providers/mine`,
+  l'inscription et l'admin, **jamais dans le catalogue public**.
 - **Admin** — tableau de bord KPI, file de validation générique, gestion des
   comptes, paramétrage (commissions/tarifs/FAQ/pages), export comptable JSON/CSV,
   supervision des paiements (remboursements + confirmation manuelle Wave/OM).

@@ -98,6 +98,37 @@ export class ProfilePageComponent {
   protected readonly uploadError = signal<string | null>(null);
   protected readonly uploadDone = signal(false);
 
+  // ─────────────── Photo de profil / logo d'entreprise (F8.0) ───────────────
+  //
+  // Un seul bloc pour les quatre espaces : la page « Mon profil » est montée
+  // dans chacun d'eux (client, propriétaire, prestataire, entreprise). C'est le
+  // backend qui dit s'il attend une PHOTO ou un LOGO (`profile.avatar_kind`),
+  // via le type de profil — l'interface ne le redevine pas depuis le rôle.
+
+  /** `photo` (personne) ou `logo` (entreprise). Défaut prudent : photo. */
+  protected readonly avatarKind = computed(() => this.user()?.profile?.avatar_kind ?? 'photo');
+
+  /** URL publique de l'image courante, `null` si le compte n'en a pas. */
+  protected readonly avatarUrl = computed(() => this.user()?.profile?.avatar_url ?? null);
+
+  /** Libellés adaptés — « Votre logo » ne se dit pas à une personne. */
+  protected readonly avatarLabel = computed(() =>
+    this.avatarKind() === 'logo' ? 'Logo de l’entreprise' : 'Photo de profil',
+  );
+  protected readonly avatarHint = computed(() =>
+    this.avatarKind() === 'logo'
+      ? 'Votre logo identifie votre entreprise auprès des clients, sur vos devis et dans vos échanges.'
+      : 'Votre photo permet aux personnes avec qui vous échangez de vous identifier d’un coup d’œil.',
+  );
+
+  /** Initiale affichée tant qu'aucune image n'a été déposée. */
+  protected readonly avatarInitial = computed(
+    () => this.user()?.name?.trim()?.charAt(0)?.toUpperCase() ?? '?',
+  );
+
+  protected readonly avatarUploading = signal(false);
+  protected readonly avatarError = signal<string | null>(null);
+
   // — Sécurité (mot de passe) —
   protected readonly passwordForm = this.fb.nonNullable.group({
     current_password: ['', [Validators.required]],
@@ -365,6 +396,84 @@ export class ProfilePageComponent {
       return;
     }
     this.uploadError.set('Le dépôt a échoué. Merci de réessayer.');
+  }
+
+  // ──────────────── Photo de profil / logo d'entreprise (F8.0) ────────────────
+
+  /**
+   * Dépôt immédiat dès qu'une image est choisie.
+   *
+   * Pas de bouton « Envoyer » séparé, contrairement aux pièces justificatives :
+   * là-bas il faut d'abord choisir le TYPE de pièce, ici il n'y a rien à
+   * paramétrer. Un second écran ne servirait qu'à ajouter un clic.
+   */
+  protected onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    // Le champ est remis à zéro tout de suite : sans ça, rechoisir LE MÊME
+    // fichier après une erreur ne déclencherait aucun événement `change`.
+    input.value = '';
+
+    if (!file || this.avatarUploading()) {
+      return;
+    }
+
+    this.avatarUploading.set(true);
+    this.avatarError.set(null);
+
+    this.account.uploadAvatar(file).subscribe({
+      next: (user) => {
+        this.avatarUploading.set(false);
+        this.applyUser(user);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.avatarUploading.set(false);
+        const body = error.error as ValidationErrorBody | null;
+        this.avatarError.set(
+          body?.errors?.['avatar']?.[0] ??
+            body?.message ??
+            'L’image n’a pas pu être envoyée. Merci de réessayer.',
+        );
+      },
+    });
+  }
+
+  /** Retire l'image (avec confirmation : l'action est immédiate et visible). */
+  protected removeAvatar(): void {
+    if (this.avatarUploading()) {
+      return;
+    }
+    const quoi = this.avatarKind() === 'logo' ? 'votre logo' : 'votre photo de profil';
+    if (typeof window !== 'undefined' && !window.confirm(`Retirer ${quoi} ?`)) {
+      return;
+    }
+
+    this.avatarUploading.set(true);
+    this.avatarError.set(null);
+
+    this.account.deleteAvatar().subscribe({
+      next: (user) => {
+        this.avatarUploading.set(false);
+        this.applyUser(user);
+      },
+      error: () => {
+        this.avatarUploading.set(false);
+        this.avatarError.set('Le retrait a échoué. Merci de réessayer.');
+      },
+    });
+  }
+
+  /**
+   * Range l'utilisateur renvoyé par l'API dans les DEUX états qui l'affichent.
+   *
+   * `AuthService` alimente l'en-tête de l'espace (l'avatar y est visible en
+   * permanence) : ne mettre à jour que l'état local de la page laisserait
+   * l'ancienne image en haut à droite jusqu'au prochain rechargement.
+   */
+  private applyUser(user: User): void {
+    this.user.set(user);
+    this.auth.setCurrentUser(user);
   }
 
   // ─────────────────────────── Sécurité (mot de passe) ───────────────────────────

@@ -89,6 +89,24 @@
             @if (cert.issuer) {
               <span class="svc-cert-issuer">{{ cert.issuer }}</span>
             }
+            <!-- Justificatif (F8.0). Le distinguo compte : sans pièce, l'agent
+                 n'a rien à contrôler et la certification restera « En
+                 vérification » indéfiniment. On le dit clairement plutôt que
+                 de laisser le prestataire attendre. -->
+            @if (cert.has_file) {
+              <a
+                class="svc-cert-file"
+                [href]="cert.download_url"
+                target="_blank"
+                rel="noopener"
+              >
+                {{ cert.original_name }}
+              </a>
+            } @else {
+              <span class="svc-cert-file svc-cert-file--missing">
+                Aucun justificatif joint
+              </span>
+            }
           </span>
           <span
             class="svc-cert-state"
@@ -119,6 +137,19 @@
       <label for="cert-issuer">Organisme émetteur (facultatif)</label>
       <input id="cert-issuer" type="text" formControlName="issuer" maxlength="255" placeholder="Ministère, compagnie…" />
     </div>
+    <!-- Justificatif (F8.0) : facultatif, mais c'est LUI que l'agent contrôle. -->
+    <div class="svc-field svc-field--grow">
+      <label for="cert-file">Justificatif (facultatif)</label>
+      <input
+        id="cert-file"
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+        (change)="onCertFileSelected($event)"
+      />
+      @if (certFile(); as f) {
+        <span class="svc-cert-picked">{{ f.name }}</span>
+      }
+    </div>
     <button type="submit" class="k-btn k-btn--ghost" [disabled]="addingCert()">
       {{ addingCert() ? 'Ajout…' : 'Ajouter' }}
     </button>
@@ -129,6 +160,8 @@
   }
   <p class="svc-cert-hint">
     Les documents ajoutés sont « En vérification » : un agent Kaikun les contrôle
-    avant de les marquer « Vérifiée ».
+    avant de les marquer « Vérifiée ». <strong>Sans justificatif joint, l’agent
+    n’a rien à contrôler</strong> — joignez le scan (PDF, JPG ou PNG, 5 Mo
+    maximum) pour que votre certification puisse être validée.
   </p>
 }

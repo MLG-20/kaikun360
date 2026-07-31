@@ -111,7 +111,14 @@ class AdminDocumentController extends Controller
                     'subject_type' => 'provider',
                     'subject_id' => $c->provider_id,
                     'label' => $c->name.($c->issuer ? ' — '.$c->issuer : ''),
-                    'original_name' => $c->file_path,
+                    // F8.0 — la colonne fichier était structurellement vide :
+                    // elle affichait `file_path`, que rien ne renseignait
+                    // (aucun contrôleur n'acceptait de fichier). Le dépôt réel
+                    // est désormais branché ; on montre le nom d'ORIGINE, seul
+                    // lisible par l'agent — `file_path` est un nom aléatoire.
+                    // Reste `null` quand la certification est déclarée sans
+                    // pièce, cas légitime que l'écran distingue.
+                    'original_name' => $c->original_name,
                     'status' => $c->verified ? 'verifie' : 'non_verifie',
                     'created_at' => $c->created_at,
                 ],

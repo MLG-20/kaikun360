@@ -144,6 +144,29 @@
   color: var(--k-muted);
 }
 
+// Justificatif joint (F8.0) : lien de téléchargement, ou mention explicite de
+// son absence — un blanc laisserait croire que la pièce a bien été reçue.
+.svc-cert-file {
+  font-size: 0.82rem;
+  color: var(--k-brand);
+  text-decoration: underline;
+  overflow-wrap: anywhere; // les noms de scan sont souvent interminables
+}
+
+.svc-cert-file--missing {
+  color: var(--k-muted);
+  font-style: italic;
+  text-decoration: none;
+}
+
+// Nom du fichier sélectionné, avant envoi.
+.svc-cert-picked {
+  margin-top: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  overflow-wrap: anywhere;
+}
+
 .svc-cert-state {
   flex: 0 0 auto;
   font-size: 0.78rem;

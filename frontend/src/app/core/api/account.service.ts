@@ -121,4 +121,31 @@ export class AccountService {
       .post<ApiEnvelope<{ document: UserDocument }>>(`${this.api}/users/me/documents`, form)
       .pipe(map((res) => res.data.document));
   }
+
+  /**
+   * Dépose (ou remplace) la photo de profil / le logo d'entreprise (F8.0).
+   *
+   * Envoi **multipart**, champ `avatar` : comme pour les pièces justificatives,
+   * on passe un `FormData` sans forcer d'en-tête (le navigateur pose le
+   * `Content-Type` et le boundary).
+   *
+   * Renvoie l'utilisateur COMPLET et non la seule URL : l'appelant le pousse
+   * dans `AuthService.setCurrentUser()`, ce qui rafraîchit d'un coup l'en-tête
+   * de l'espace et la page profil. Une seule source de vérité pour le compte
+   * connecté, pas un champ recollé à la main dans deux états locaux.
+   */
+  uploadAvatar(file: File): Observable<User> {
+    const form = new FormData();
+    form.append('avatar', file);
+    return this.http
+      .post<ApiEnvelope<{ user: User }>>(`${this.api}/users/me/avatar`, form)
+      .pipe(map((res) => res.data.user));
+  }
+
+  /** Retire la photo / le logo. Idempotent côté backend. */
+  deleteAvatar(): Observable<User> {
+    return this.http
+      .delete<ApiEnvelope<{ user: User }>>(`${this.api}/users/me/avatar`)
+      .pipe(map((res) => res.data.user));
+  }
 }

@@ -41,6 +41,19 @@ export interface User {
 export interface Profile {
   type: string | null;
   type_label: string | null;
+  /**
+   * URL PUBLIQUE de la photo de profil (ou du logo d'entreprise), `null` tant
+   * que le compte n'en a pas déposé — l'interface retombe alors sur l'initiale
+   * du nom. Contrairement aux pièces justificatives, l'URL n'est pas signée :
+   * une image affichée en permanence ne doit pas expirer en pleine session.
+   */
+  avatar_url: string | null;
+  /**
+   * `photo` (client, propriétaire, prestataire, diaspora) ou `logo`
+   * (entreprise). Même colonne côté backend ; ce drapeau dit à l'interface
+   * quoi DEMANDER et comment afficher l'image (portrait rond / logo encadré).
+   */
+  avatar_kind: 'photo' | 'logo';
   verification_status: string | null;
   preferences: Record<string, unknown> | null;
 }

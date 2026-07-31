@@ -50,7 +50,20 @@
           [attr.aria-expanded]="userMenuOpen()"
           aria-label="Menu du compte"
         >
-          <span class="acc-avatar" aria-hidden="true">{{ initial() }}</span>
+          <!-- Photo / logo si le compte en a déposé un (F8.0), sinon l'initiale.
+               `aria-hidden` dans les deux cas : le nom du compte est juste à
+               côté, l'image n'apporte rien de plus au lecteur d'écran. -->
+          @if (avatarUrl(); as url) {
+            <img
+              class="acc-avatar acc-avatar--img"
+              [class.acc-avatar--logo]="avatarIsLogo()"
+              [src]="url"
+              alt=""
+              aria-hidden="true"
+            />
+          } @else {
+            <span class="acc-avatar" aria-hidden="true">{{ initial() }}</span>
+          }
           <span class="acc-user-name">{{ user()?.name }}</span>
           <svg class="acc-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

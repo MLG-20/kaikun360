@@ -157,6 +157,21 @@
   text-transform: uppercase;
 }
 
+// Variante « vraie image » (F8.0) : mêmes dimensions que la pastille à
+// initiale, pour que l'en-tête ne bouge pas d'un pixel au dépôt d'une photo.
+.acc-avatar--img {
+  object-fit: cover; // portrait : on remplit le cercle quitte à rogner
+  background: var(--k-line);
+}
+
+// Un logo d'entreprise ne se rogne pas en rond : cadre arrondi et image
+// entière, sur fond blanc (beaucoup de logos ont un fond transparent).
+.acc-avatar--logo {
+  border-radius: 8px;
+  object-fit: contain;
+  background: #fff;
+}
+
 .acc-user-name {
   font-weight: 600;
   font-size: 0.92rem;

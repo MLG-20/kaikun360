@@ -50,7 +50,9 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   **cochent automatiquement** et qui **disparaît** une fois tout fait, et des
   **tuiles** vers chaque rubrique. Le rappel de vérification autrefois séparé est
   désormais **l'étape 1 de la checklist** (plus de double nudge).
-- **La rubrique Profil (F3.2 / F3.2b)** — [`profile/`](profile) : **identité &
+- **La rubrique Profil (F3.2 / F3.2b / F8.0)** — [`profile/`](profile) : en tête,
+  la **photo de profil** — ou le **logo**, pour un compte entreprise (F8.0) —
+  puis **identité &
   coordonnées** (nom, **e-mail et téléphone modifiables** — un changement
   déclenche une **re-vérification** avec saisie du code sur place ; **adresse**
   + **localisation en cascade** Région → Département → Commune), **pièces
@@ -170,8 +172,19 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   (email/phone_verified_at) et `profileComplete` (téléphone + une localisation) ;
   la section se retire quand `allStepsDone`. Le bandeau `.account-verify` n'est
   plus utilisé ici (fondu dans l'étape 1).
-- **`profile/`** — `ProfilePageComponent` (F3.2 / F3.2b, route enfant `profil`) :
-  recharge le profil frais (`GET /users/me`) au montage ; édite identité **et
+- **`profile/`** — `ProfilePageComponent` (F3.2 / F3.2b / F8.0, route enfant
+  `profil`) : recharge le profil frais (`GET /users/me`) au montage ;
+  **photo de profil / logo d'entreprise (F8.0)** en tête de page —
+  `POST`/`DELETE /users/me/avatar`, dépôt **immédiat** au choix du fichier (pas
+  de bouton « Envoyer » séparé : contrairement aux pièces justificatives, il n'y
+  a pas de *type* à choisir, un second clic n'apporterait rien). La page est
+  montée dans les **quatre** espaces : c'est le backend qui dit s'il attend une
+  photo ou un logo (`profile.avatar_kind`), l'interface ne le devine pas depuis
+  le rôle. Le champ fichier est **remis à zéro dès la sélection**, sinon
+  rechoisir le même fichier après une erreur ne déclencherait aucun `change`.
+  Après un dépôt, `applyUser()` range l'utilisateur renvoyé dans l'état local
+  **et** dans `AuthService` — sans quoi l'ancienne image resterait dans
+  l'en-tête jusqu'au prochain rechargement. Ensuite : édite identité **et
   coordonnées** (`PATCH /users/me`, erreurs 422 par champ). **E-mail / téléphone
   (F3.2b)** : un changement renvoie `verification.{email,phone}_required` → un
   **panneau de saisie de code** apparaît (réutilise `AuthService.verify` /

@@ -14,6 +14,24 @@ export interface ProviderCertification {
   name: string;
   issuer: string | null;
   verified: boolean;
+  /**
+   * Un justificatif a-t-il été joint ? (F8.0)
+   *
+   * La pièce est FACULTATIVE : on peut déclarer sa certification tout de suite
+   * et revenir déposer le scan plus tard. L'interface doit donc distinguer
+   * « pas de pièce » de « pièce en cours de vérification ».
+   */
+  has_file: boolean;
+  /** Nom du fichier tel que déposé (`file_path` est un nom aléatoire). */
+  original_name: string | null;
+  mime_type: string | null;
+  size: number | null;
+  /**
+   * URL SIGNÉE et temporaire (10 min) de téléchargement, `null` sans pièce.
+   * Le justificatif vit sur le disque privé : ne jamais tenter d'y accéder
+   * autrement, et ne pas mettre ce lien en cache.
+   */
+  download_url: string | null;
 }
 
 /**

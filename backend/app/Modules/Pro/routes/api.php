@@ -30,6 +30,18 @@ Route::middleware('auth:sanctum')->prefix('providers')->group(function () {
     Route::post('/certifications', [ProviderProfileController::class, 'storeCertification']);
     Route::delete('/certifications/{certification}', [ProviderProfileController::class, 'destroyCertification'])
         ->whereNumber('certification');
+});
+
+// Téléchargement d'un justificatif de certification (F8.0) : hors du groupe
+// `auth:sanctum`, l'accès est prouvé par la SIGNATURE de l'URL (valable 10 min,
+// produite par ProviderCertificationResource). Le nom de route doit rester
+// identique à celui utilisé par la ressource.
+Route::get('providers/certifications/{certification}/download', [ProviderProfileController::class, 'downloadCertification'])
+    ->name('providers.certifications.download')
+    ->whereNumber('certification')
+    ->middleware('signed');
+
+Route::middleware('auth:sanctum')->prefix('providers')->group(function () {
 
     // Disponibilités du prestataire (F5.4) : planning hebdomadaire + indispos.
     // Déclarées AVANT `/{provider}/missions` : `availability` n'est pas numérique

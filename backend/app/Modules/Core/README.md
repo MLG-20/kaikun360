@@ -218,6 +218,8 @@ En dev (`MAIL_MAILER=log`/`array`), le code n'est pas réellement envoyé.
 | GET | `/api/v1/users/me/documents` | `auth:sanctum` | Lister ses pièces |
 | POST | `/api/v1/users/me/documents` | `auth:sanctum` | Déposer une pièce (`type` + `file`) |
 | GET | `/api/v1/users/me/documents/{document}/download` | **URL signée** | Télécharger un fichier |
+| POST | `/api/v1/users/me/avatar` | `auth:sanctum` | Déposer / remplacer sa photo (ou son logo) — multipart, champ `avatar` |
+| DELETE | `/api/v1/users/me/avatar` | `auth:sanctum` | Retirer sa photo (idempotent) |
 | GET | `/api/v1/users/me/notifications` | `auth:sanctum` | Lister ses notifications (paginé) + `unread_count` |
 | GET | `/api/v1/users/me/notifications/unread-count` | `auth:sanctum` | Nombre de non-lues (pastille) |
 | PATCH | `/api/v1/users/me/notifications/read-all` | `auth:sanctum` | Marquer toutes ses non-lues comme lues |
@@ -233,6 +235,34 @@ En dev (`MAIL_MAILER=log`/`array`), le code n'est pas réellement envoyé.
 > département pour compatibilité. Le **mot de passe** se change via un endpoint
 > dédié exigeant le mot de passe actuel (`current_password:sanctum`) et révoquant
 > les autres jetons d'accès.
+
+> **Photo de profil / logo d'entreprise (F8.0).** `AvatarController` + colonne
+> `profiles.avatar_path`. **Une seule colonne pour deux usages** :
+> `Profile::avatarKind()` renvoie `logo` pour un profil *entreprise* et `photo`
+> sinon ; `ProfileResource` expose `avatar_url` + `avatar_kind`, et c'est ce
+> drapeau — pas le rôle — qui dit à l'interface quoi demander. Dupliquer la
+> colonne aurait imposé de choisir laquelle lire à chaque lecture.
+>
+> ⚠️ **Disque PUBLIC (`Profile::AVATAR_DISK`), à l'inverse du KYC.** Une image
+> affichée en permanence (en-tête de l'espace, fiche prestataire) ne peut pas
+> dépendre d'une URL signée : elle casserait au bout de 10 minutes, en pleine
+> page. La contrepartie est une validation stricte dans `UpdateAvatarRequest` —
+> `image` **en plus de** `mimes` (le contenu réel est vérifié, pas l'extension),
+> **ni PDF ni SVG** (ce dernier peut embarquer du script et serait servi tel
+> quel), 100×100 à 4000×4000 px, 2 Mo. Rien de sensible n'y est déposé : les
+> pièces d'identité restent sur le disque privé (`user_documents`).
+>
+> Trois règles que les tests verrouillent : un **remplacement supprime l'ancien
+> fichier** (sinon un orphelin par changement de photo, jamais nettoyé) ; le
+> `DELETE` est **idempotent** (un double clic n'est pas une erreur — le compte
+> est déjà sans image) ; et `AccountAnonymizer` **efface la photo, fichier
+> compris** (un visage servi publiquement après suppression du compte serait une
+> fuite). Les deux routes renvoient l'utilisateur **complet** plutôt que la seule
+> URL, pour que le frontend n'ait qu'une source de vérité à rafraîchir.
+>
+> ⚙️ **Déploiement** : nécessite `php artisan storage:link`.
+>
+> Tests : `tests/Feature/Core/UserAvatarTest.php` (10 cas).
 
 > **Centre de notifications (F3.6).** Le canal `database` de Laravel alimente
 > l'écran « Mes notifications » de l'espace client. Chaque flux métier

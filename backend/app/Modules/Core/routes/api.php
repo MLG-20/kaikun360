@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Core\Http\Controllers\AuthController;
+use App\Modules\Core\Http\Controllers\AvatarController;
 use App\Modules\Core\Http\Controllers\DocumentController;
 use App\Modules\Core\Http\Controllers\NotificationController;
 use App\Modules\Core\Http\Controllers\PasswordResetController;
@@ -70,6 +71,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/users/me/documents', [DocumentController::class, 'index']);
     Route::post('/users/me/documents', [DocumentController::class, 'store']);
+
+    // Photo de profil / logo d'entreprise (F8.0). Multipart, champ `avatar`.
+    // POST fait aussi office de remplacement (l'ancien fichier est supprimé) :
+    // pas de PUT séparé pour une ressource qui n'existe qu'à zéro ou un exemplaire.
+    Route::post('/users/me/avatar', [AvatarController::class, 'store']);
+    Route::delete('/users/me/avatar', [AvatarController::class, 'destroy']);
 
     // Notifications "base de données" de l'espace client (F3.6).
     // Les routes fixes (unread-count, read-all) sont déclarées AVANT la route

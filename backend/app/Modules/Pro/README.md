@@ -26,7 +26,18 @@ services publics (Explore B6, Mobility B7).
 ### Table `provider_certifications`
 
 `provider_id`, `name`, `issuer`, `file_path` (disque privé), `verified` — les
-justificatifs fournis à l'inscription.
+justificatifs fournis à l'inscription. Depuis **F8.0**, la table porte aussi les
+métadonnées du fichier, alignées sur `user_documents` : `disk`, `original_name`,
+`mime_type`, `size`.
+
+> ⚠️ **Dette soldée en F8.0.** `file_path` existait depuis B6 mais n'était
+> **jamais renseignée** : aucun contrôleur n'acceptait de fichier, « Mes
+> services » se contentait de *déclarer* une certification (nom + organisme).
+> Symptôme visible au back-office (Comptes → Documents) : une **colonne fichier
+> structurellement vide** pour toutes les certifications, alors que le CDC §6
+> les compte parmi les « pièces prestataires » à contrôler. L'écran affichait
+> d'ailleurs `file_path` — un nom aléatoire généré par Laravel, illisible pour
+> l'agent — d'où l'ajout d'`original_name`.
 
 ### Modèles
 
@@ -93,19 +104,46 @@ n'y a donc pas de policy à invoquer.
 - `storeCertification` (**POST** `/providers/certifications`) — 201. La
   certification est créée avec `verified => false` **explicite** : le défaut SQL
   ne s'applique pas à l'instance renvoyée, la Resource sérialiserait `null`.
+  Accepte depuis **F8.0** un **justificatif** (multipart, champ `file`) rangé
+  sous `certifications/{provider_id}` sur le **disque privé**, avec ses
+  métadonnées. Le champ `file` est retiré du tableau avant l'insertion : ce
+  n'est pas une colonne, Eloquent tenterait d'écrire un `UploadedFile`.
 - `destroyCertification` (**DELETE** `/providers/certifications/{id}`) —
   cloisonnement par `abort_unless($certification->provider_id === $provider->id, 404)`.
+  Supprime **aussi le fichier** (`deleteFile()`) : le laisser serait conserver
+  une pièce personnelle que plus rien ne référence.
+- `downloadCertification` (**GET** `/providers/certifications/{id}/download`) —
+  route **hors `auth:sanctum`**, protégée par le middleware `signed` : la
+  signature fait foi, exactement comme pour les pièces KYC. L'URL est produite
+  par `ProviderCertificationResource` et vaut **10 minutes**.
 
 FormRequests : `UpdateProviderProfileRequest` (mêmes règles que l'inscription hors
-certifications) et `StoreCertificationRequest` (`name` requis, `issuer` facultatif ;
+certifications) et `StoreCertificationRequest` (`name` requis, `issuer` facultatif,
+`file` facultatif en PDF/JPG/PNG ≤ 5 Mo ;
 `verified` **n'est pas** acceptée en entrée — la vérification est une action agent).
+
+> ⚠️ **Le justificatif reste facultatif — décision produit, pas un oubli.** Un
+> prestataire doit pouvoir déclarer sa certification tout de suite et revenir
+> déposer le scan une fois numérisé. `has_file` permet au back-office et à
+> l'écran « Mes services » de distinguer « pas de pièce » de « pièce à
+> contrôler » ; l'interface prévient qu'**une certification sans justificatif
+> restera « En vérification »**, faute de quoi le prestataire attendrait une
+> validation qui ne peut pas venir.
+>
+> ⚠️ **`download_url` ne fuit pas dans le catalogue public** : les certifications
+> ne sont chargées (`whenLoaded`) que sur `/providers/mine`, l'inscription et les
+> écrans admin. Toute nouvelle route publique qui ferait `load('certifications')`
+> exposerait des liens de téléchargement — à vérifier avant d'en ajouter une.
 
 Routes déclarées dans le groupe `providers` : segments **non numériques**
 (`mine`, `certifications`) → aucune collision avec `/{provider}/…` (`whereNumber`).
 
 Tests : `tests/Feature/Pro/ProviderProfileTest.php` (7 cas — mise à jour, statut
 inchangé, catégorie invalide 422, ajout non vérifié, suppression, suppression
-d'autrui 404, compte sans profil 404).
+d'autrui 404, compte sans profil 404) et
+`tests/Feature/Pro/ProviderCertificationFileTest.php` (8 cas — dépôt du fichier,
+pièce facultative, format refusé, téléchargement signé, URL non signée 403, URL
+expirée 403, suppression du fichier, nom visible au back-office).
 
 ### Policy
 

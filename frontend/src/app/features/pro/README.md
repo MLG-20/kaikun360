@@ -64,9 +64,20 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
   présentation — formulaire réactif enregistré par `PUT /providers/mine`) et les
   **documents de certification** (liste avec pastille Vérifiée / En vérification,
   suppression avec confirmation via `DELETE /providers/certifications/{id}`, et
-  formulaire d'ajout `POST /providers/certifications`). Deux règles rappelées à
-  l'écran : enregistrer une modification **ne relance pas la validation**, et une
-  certification ajoutée reste « En vérification » jusqu'à revue back-office. Gère
+  formulaire d'ajout `POST /providers/certifications`). Depuis **F8.0**, chaque
+  certification porte son **justificatif** : champ fichier facultatif au
+  formulaire d'ajout (PDF/JPG/PNG ≤ 5 Mo), et dans la liste soit un **lien de
+  téléchargement** (URL signée 10 min, `download_url`) soit la mention explicite
+  « Aucun justificatif joint » — un blanc laisserait croire que la pièce a été
+  reçue. Le `File` vit **hors du `FormGroup`** (un `<input type="file">` ne se
+  pilote pas par `formControlName` : sa valeur est un chemin factice) et
+  `resetCertFileInput()` vide le champ natif après un ajout réussi, que
+  `certForm.reset()` ne touche pas. Un **422 est affiché tel quel** (format,
+  taille) : un message générique ferait réessayer le même fichier trop lourd en
+  boucle. Trois règles rappelées à
+  l'écran : enregistrer une modification **ne relance pas la validation**, une
+  certification ajoutée reste « En vérification » jusqu'à revue back-office, et
+  **sans justificatif joint l'agent n'a rien à contrôler**. Gère
   les mêmes cas que le tableau de bord — chargement, échec réseau, et le **404
   « pas encore de profil »** (→ `/pro/inscription`).
 - **`offers/`** — dépôt des **offres réservables** du prestataire (F5.6),

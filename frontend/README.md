@@ -36,7 +36,7 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   référencement Google et pour un premier affichage rapide). Voir « SSR » ci-dessous.
 - ✅ **L'espace client (F3)** : l'espace personnel de la personne connectée, sous
   `/mon-espace` (menu latéral sombre, en-tête épuré). Ses écrans sont en
-  place — tableau de bord, **profil** (identité, coordonnées, sécurité, pièces),
+  place — tableau de bord, **profil** (photo, identité, coordonnées, sécurité, pièces),
   **mes demandes** (liste + détail cliquable), **réservations** (liste + détail cliquable), **favoris** (tous univers, avec le cœur du
   catalogue pour les ajouter), **notifications** et **messagerie** (conversations
   + fil de discussion avec réponse). **« Projets diaspora »** (F3.8 —
@@ -61,6 +61,19 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   **client**, pas par projet (`diaspora_projects` n'a pas de clé vers
   `construction_requests`). 👉 Détail :
   [`src/app/features/account/README.md`](src/app/features/account/README.md).
+- 🖼️ **Identité visuelle du compte (F8.0), commune aux quatre espaces** : la page
+  **« Mon profil »** étant montée dans chacun d'eux, un seul bloc suffit — le
+  client, le propriétaire et le prestataire y déposent leur **photo**,
+  l'entreprise son **LOGO**. L'interface ne le devine pas depuis le rôle : le
+  backend le dit (`profile.avatar_kind`), et les libellés, le cadrage
+  (portrait rond `object-fit: cover` / logo encadré `contain` sur fond blanc) et
+  le texte d'aide suivent. L'image remplace l'initiale dans l'**en-tête de
+  l'espace** (`layouts/space-layout/space-header`) et s'y met à jour **sans
+  rechargement** : le dépôt renvoie l'utilisateur complet, que la page pousse
+  dans `AuthService.setCurrentUser()` — source unique du compte connecté, plutôt
+  que deux états locaux à recoller. Sans image, on retombe sur l'initiale et
+  **jamais sur une silhouette générique**, qui laisserait croire à tort qu'une
+  photo a été déposée.
 - ✅ **L'espace propriétaire (F4, terminé)** : sous `/espace-proprietaire`,
   réservé au rôle « propriétaire ». Il réutilise **le même habillage** que
   l'espace client (menu latéral sombre + en-tête épuré), désormais **généralisé
@@ -107,7 +120,13 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   `POST/DELETE /providers/certifications…`) : édition du **descriptif du service**
   (raison sociale, catégorie, présentation) et gestion des **documents de
   certification** — enregistrer ne relance pas la validation, un document ajouté
-  reste « En vérification ». **« Avis reçus »** (F5.5 — `GET /providers/reviews`) :
+  reste « En vérification ». Depuis **F8.0**, chaque certification peut porter
+  son **justificatif** (PDF/JPG/PNG ≤ 5 Mo) : le champ fichier est facultatif,
+  la liste affiche soit un lien de téléchargement (URL signée, 10 min) soit
+  « Aucun justificatif joint », et l'aide dit franchement que **sans pièce,
+  l'agent n'a rien à contrôler**. Envoi en `FormData` **seulement** quand un
+  fichier est joint : `FormData` ne transporte que du texte, un organisme absent
+  y arriverait en chaîne vide au lieu de `null`. **« Avis reçus »** (F5.5 — `GET /providers/reviews`) :
   les avis publiés qui concernent le prestataire, réunissant ceux laissés sur ses
   **ressources** (véhicules, expériences) et les **avis directs** déposés après une
   mission — une **synthèse de notation** (note moyenne, total, histogramme de

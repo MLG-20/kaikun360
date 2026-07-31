@@ -14,6 +14,68 @@
     Impossible de charger votre profil pour le moment. Merci de réessayer plus tard.
   </p>
 } @else if (user(); as u) {
+  <!-- ============ 0. Photo de profil / logo d'entreprise (F8.0) ============ -->
+  <!-- Placé EN TÊTE : c'est ce qui identifie le compte, avant même son nom.
+       Le libellé s'adapte au type de profil (une entreprise dépose un logo). -->
+  <section class="pf-card pf-avatar-card" aria-labelledby="pf-avatar-title">
+    <header class="pf-card-head">
+      <h2 id="pf-avatar-title" class="pf-card-title">{{ avatarLabel() }}</h2>
+      <p class="pf-card-sub">{{ avatarHint() }}</p>
+    </header>
+
+    <div class="pf-avatar-row">
+      <div
+        class="pf-avatar"
+        [class.pf-avatar--logo]="avatarKind() === 'logo'"
+      >
+        @if (avatarUrl(); as url) {
+          <img [src]="url" [alt]="avatarLabel() + ' de ' + u.name" />
+        } @else {
+          <!-- Repli sur l'initiale : jamais d'image générique, qui ferait
+               croire à tort qu'une photo a été déposée. -->
+          <span class="pf-avatar-initial" aria-hidden="true">{{ avatarInitial() }}</span>
+        }
+      </div>
+
+      <div class="pf-avatar-actions">
+        @if (avatarError(); as msg) {
+          <p class="k-form-error" role="alert">{{ msg }}</p>
+        }
+
+        <label class="k-btn k-btn--primary pf-avatar-pick" [class.is-busy]="avatarUploading()">
+          {{
+            avatarUploading()
+              ? 'Envoi…'
+              : avatarUrl()
+                ? 'Changer l’image'
+                : 'Choisir une image'
+          }}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onAvatarSelected($event)"
+            [disabled]="avatarUploading()"
+          />
+        </label>
+
+        @if (avatarUrl()) {
+          <button
+            type="button"
+            class="k-btn k-btn--ghost"
+            (click)="removeAvatar()"
+            [disabled]="avatarUploading()"
+          >
+            Retirer
+          </button>
+        }
+
+        <p class="pf-avatar-help">
+          JPG, PNG ou WEBP · 2 Mo maximum · 100 × 100 pixels minimum.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- ===================== 1. Identité & coordonnées ===================== -->
   <section class="pf-card" aria-labelledby="pf-identity-title">
     <header class="pf-card-head">

@@ -33,8 +33,13 @@ class AccountAnonymizer
                 $document->delete();
             }
 
-            // 2) Profil : préférences et données personnelles neutralisées.
-            $user->profile?->update(['preferences' => null]);
+            // 2) Profil : préférences neutralisées, et surtout PHOTO EFFACÉE.
+            // Un visage est la donnée personnelle la plus directe qui soit, et
+            // l'avatar vit sur le disque PUBLIC : le laisser en place laisserait
+            // une URL toujours servie après l'anonymisation. Le fichier part du
+            // disque, la colonne repasse à null.
+            $user->profile?->deleteAvatarFile();
+            $user->profile?->update(['preferences' => null, 'avatar_path' => null]);
 
             // 3) Identité : neutralisée, e-mail rendu unique et non nominatif.
             $user->forceFill([

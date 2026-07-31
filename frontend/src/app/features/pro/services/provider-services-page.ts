@@ -78,6 +78,13 @@ export class ProviderServicesPageComponent {
     issuer: [''],
   });
 
+  /**
+   * Justificatif joint (F8.0). Hors du `FormGroup` à dessein : un `<input
+   * type="file">` ne se pilote pas par `formControlName` (sa valeur est un
+   * chemin factice, pas le fichier), et le `File` doit voyager en `FormData`.
+   */
+  protected readonly certFile = signal<File | null>(null);
+
   /** Nombre de certifications vérifiées (pour un compteur d'aide). */
   protected readonly verifiedCount = computed(
     () => this.certifications().filter((c) => c.verified).length,
@@ -160,6 +167,13 @@ export class ProviderServicesPageComponent {
     }
   }
 
+  /** Mémorise le justificatif choisi (envoyé à la validation du formulaire). */
+  protected onCertFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.certFile.set(input.files?.[0] ?? null);
+    this.certError.set(null);
+  }
+
   /** Ajoute une certification (POST /providers/certifications). */
   protected addCert(): void {
     if (this.addingCert() || this.certForm.invalid) {
@@ -171,18 +185,47 @@ export class ProviderServicesPageComponent {
     this.certError.set(null);
 
     this.providers
-      .addCertification({ name: raw.name ?? '', issuer: raw.issuer?.trim() || null })
+      .addCertification({
+        name: raw.name ?? '',
+        issuer: raw.issuer?.trim() || null,
+        file: this.certFile(),
+      })
       .subscribe({
         next: (res) => {
           this.certifications.update((list) => [...list, res.data.certification]);
           this.certForm.reset({ name: '', issuer: '' });
+          this.certFile.set(null);
+          this.resetCertFileInput();
           this.addingCert.set(false);
         },
-        error: () => {
+        error: (err: HttpErrorResponse) => {
           this.addingCert.set(false);
-          this.certError.set("La certification n'a pas pu être ajoutée.");
+          // Un 422 porte le vrai motif (format, taille) : le montrer plutôt
+          // qu'un message générique qui laisserait le prestataire réessayer
+          // le même fichier trop lourd en boucle.
+          const first = err?.error?.errors
+            ? (Object.values(err.error.errors)[0] as string[])[0]
+            : null;
+          this.certError.set(first ?? "La certification n'a pas pu être ajoutée.");
         },
       });
+  }
+
+  /**
+   * Vide le champ fichier natif après un ajout réussi.
+   *
+   * `certForm.reset()` ne le touche pas (il n'y est pas), et sans ce nettoyage
+   * le nom du fichier précédent resterait affiché par le navigateur, laissant
+   * croire qu'il sera joint à la certification suivante.
+   */
+  private resetCertFileInput(): void {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    const input = document.getElementById('cert-file') as HTMLInputElement | null;
+    if (input) {
+      input.value = '';
+    }
   }
 
   /** Supprime une certification (avec confirmation). */

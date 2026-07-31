@@ -31,10 +31,28 @@ export type ProviderCategory =
   | 'artisanat'
   | 'autre';
 
-/** Une certification proposée à l'inscription (nom + organisme facultatif). */
-export interface ProviderCertificationInput {
+/**
+ * Une certification DÉCLARÉE (nom + organisme facultatif), sans pièce jointe.
+ *
+ * C'est la forme utilisée à l'inscription prestataire, dont le corps part en
+ * **JSON** : un `File` glissé là serait sérialisé en `{}` et perdu sans erreur.
+ * Le justificatif se dépose depuis « Mes services » (cf. `ProviderCertificationInput`).
+ */
+export interface ProviderCertificationDeclaration {
   name: string;
   issuer?: string | null;
+}
+
+/**
+ * Une certification ajoutée depuis « Mes services », justificatif compris.
+ */
+export interface ProviderCertificationInput extends ProviderCertificationDeclaration {
+  /**
+   * Justificatif (PDF/JPG/PNG, 5 Mo max) — FACULTATIF (F8.0). Absent, la
+   * certification est simplement « déclarée » : le back-office la verra sans
+   * pièce à contrôler, ce qui est un état légitime.
+   */
+  file?: File | null;
 }
 
 /**
@@ -46,7 +64,9 @@ export interface RegisterProviderPayload {
   business_name: string;
   category: ProviderCategory;
   bio?: string | null;
-  certifications?: ProviderCertificationInput[];
+  // Déclarations seules : l'inscription part en JSON, elle ne peut pas porter
+  // de fichier. Le scan se dépose ensuite depuis « Mes services ».
+  certifications?: ProviderCertificationDeclaration[];
 }
 
 /**
@@ -105,18 +125,37 @@ export class ProviderService {
   /**
    * POST /providers/certifications — ajoute une certification (créée « non
    * vérifiée » ; la vérification est une action back-office).
+   *
+   * Deux formats d'envoi selon qu'un justificatif est joint (F8.0) :
+   *   - **avec fichier** → `FormData` (multipart), sans en-tête forcé ;
+   *   - **sans fichier** → JSON, comme avant.
+   *
+   * On ne passe pas systématiquement par `FormData` : celui-ci ne transporte
+   * que du texte, un `issuer` absent y arriverait en chaîne vide au lieu de
+   * `null`, et le backend enregistrerait un organisme vide plutôt que rien.
    */
   addCertification(
     input: ProviderCertificationInput,
   ): Observable<ApiEnvelope<{ certification: ProviderCertification }>> {
-    const body: Record<string, unknown> = { name: input.name.trim() };
-    if (input.issuer && input.issuer.trim() !== '') {
-      body['issuer'] = input.issuer.trim();
+    const name = input.name.trim();
+    const issuer = input.issuer?.trim() || null;
+    const url = `${this.api}/providers/certifications`;
+
+    if (input.file) {
+      const form = new FormData();
+      form.append('name', name);
+      if (issuer !== null) {
+        form.append('issuer', issuer);
+      }
+      form.append('file', input.file);
+      return this.http.post<ApiEnvelope<{ certification: ProviderCertification }>>(url, form);
     }
-    return this.http.post<ApiEnvelope<{ certification: ProviderCertification }>>(
-      `${this.api}/providers/certifications`,
-      body,
-    );
+
+    const body: Record<string, unknown> = { name };
+    if (issuer !== null) {
+      body['issuer'] = issuer;
+    }
+    return this.http.post<ApiEnvelope<{ certification: ProviderCertification }>>(url, body);
   }
 
   /** DELETE /providers/certifications/{id} — supprime une certification. */
