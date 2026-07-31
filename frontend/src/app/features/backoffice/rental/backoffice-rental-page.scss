@@ -70,17 +70,27 @@
   box-shadow: var(--k-shadow);
 }
 
+// Quatre colonnes seulement (F8.1) : la table tient dans la largeur utile, donc
+// plus de défilement horizontal ni de libellés cassés en trois lignes. Le
+// `min-width` réduit ne sert plus que sur très petit écran.
 .ds-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 960px;
+  table-layout: fixed;
+  min-width: 620px;
+
+  // Répartition : l'identification du mandat prend la place, le statut se serre.
+  th:nth-child(1) { width: 34%; }
+  th:nth-child(2) { width: 22%; }
+  th:nth-child(3) { width: 26%; }
+  th:nth-child(4) { width: 18%; }
 
   th,
   td {
     text-align: left;
-    padding: 13px 16px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--k-line);
-    vertical-align: middle;
+    vertical-align: top; // cellules empilées : tout s'aligne sur la 1re ligne
   }
 
   th {
@@ -96,18 +106,22 @@
   }
 }
 
+// La référence surmonte le nom du bien : en mono et en discret, elle se lit
+// comme un matricule sans voler la vedette au libellé.
 .ds-ref {
   display: block;
-  font-weight: 600;
-  color: var(--k-ink);
-  font-size: 0.88rem;
+  font-family: var(--k-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--k-muted);
+  margin-bottom: 3px;
 }
 
 .ds-strong {
   display: block;
   font-weight: 600;
   color: var(--k-ink);
-  font-size: 0.88rem;
+  font-size: 0.9rem;
 }
 
 .ds-place {
@@ -122,20 +136,18 @@
 }
 
 .ds-amount {
+  display: block;
   font-weight: 700;
   color: var(--k-ink);
-}
-
-.ds-muted {
-  color: var(--k-muted);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 // --- Puces d'avancement ---
 .ds-chips {
-  display: inline-flex;
+  display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  margin-top: 6px;
 }
 
 .ds-chip {
@@ -220,4 +232,24 @@
     background: var(--k-brand-050);
     outline: none;
   }
+
+  // L'invite « Voir → » ne s'allume qu'au survol : présente pour signaler que
+  // la ligne est cliquable, discrète pour ne pas bruiter la colonne statut.
+  &:hover .ds-open,
+  &:focus-visible .ds-open {
+    color: var(--k-brand);
+  }
+}
+
+// Colonne statut : badge puis invite d'ouverture, empilés.
+.ds-status-cell {
+  white-space: nowrap;
+}
+
+.ds-open {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--k-muted);
 }

@@ -37,41 +37,46 @@
   <p class="tb-count">{{ total() }} dossier(s) — les plus prioritaires en tête, cliquez pour ouvrir</p>
   <div class="tb-table-wrap">
     <table class="tb-table">
+      <!--
+        Liste de TRIAGE (F8.1) : cinq colonnes au lieu de neuf. Le type de
+        projet et le pays de résidence rejoignent la cellule d'identification,
+        le budget se range sous l'agent affecté — priorité et statut restent
+        seuls en colonne, ce sont eux qu'on balaie du regard pour arbitrer.
+      -->
       <thead>
         <tr>
           <th>Dossier</th>
           <th>Client</th>
-          <th>Type</th>
-          <th>Résidence</th>
-          <th>Budget</th>
+          <th>Suivi</th>
           <th>Priorité</th>
-          <th>Agent</th>
           <th>Statut</th>
-          <th aria-label="Ouvrir"></th>
         </tr>
       </thead>
       <tbody>
         @for (p of rows(); track p.id) {
           <tr class="tb-row" tabindex="0" (click)="open(p)" (keyup.enter)="open(p)">
             <td>
-              <span class="tb-name">{{ p.reference }}</span>
-              <span class="tb-id">#{{ p.id }}</span>
+              <span class="tb-id">{{ p.reference }}</span>
+              <span class="tb-name">{{ p.project_type_label || 'Projet diaspora' }}</span>
+              <span class="tb-place">Réside : {{ p.residence_country || '—' }}</span>
             </td>
             <td>
               <span class="tb-strong">{{ p.client?.name || '—' }}</span>
               <span class="tb-place">{{ p.client?.email || 'Contact inconnu' }}</span>
             </td>
-            <td><span class="tb-muted">{{ p.project_type_label || '—' }}</span></td>
-            <td><span class="tb-muted">{{ p.residence_country || '—' }}</span></td>
-            <td><span class="tb-muted">{{ xof(p.budget_xof) }}</span></td>
+            <td>
+              <span class="tb-strong">{{ p.agent?.name || 'Non affecté' }}</span>
+              <span class="tb-place">Budget {{ xof(p.budget_xof) }}</span>
+            </td>
             <td><span class="tb-badge" [class]="priorityClass(p.priority)">{{ p.priority_label || p.priority || '—' }}</span></td>
-            <td><span class="tb-muted">{{ p.agent?.name || 'Non affecté' }}</span></td>
-            <td><span class="tb-badge" [class]="statusClass(p.status)">{{ p.status_label || p.status || '—' }}</span></td>
-            <td class="tb-actions-cell"><span class="tb-open" aria-hidden="true">Voir →</span></td>
+            <td class="tb-status-cell">
+              <span class="tb-badge" [class]="statusClass(p.status)">{{ p.status_label || p.status || '—' }}</span>
+              <span class="tb-open" aria-hidden="true">Voir →</span>
+            </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="9" class="tb-empty">Aucun dossier ne correspond à ces filtres.</td>
+            <td colspan="5" class="tb-empty">Aucun dossier ne correspond à ces filtres.</td>
           </tr>
         }
       </tbody>

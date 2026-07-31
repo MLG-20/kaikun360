@@ -75,14 +75,21 @@
 .tb-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 960px;
+  table-layout: fixed;
+  min-width: 700px;
+
+  th:nth-child(1) { width: 24%; }
+  th:nth-child(2) { width: 26%; }
+  th:nth-child(3) { width: 20%; }
+  th:nth-child(4) { width: 13%; }
+  th:nth-child(5) { width: 17%; }
 
   th,
   td {
     text-align: left;
-    padding: 13px 16px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--k-line);
-    vertical-align: middle;
+    vertical-align: top; // cellules empilées : tout s'aligne sur la 1re ligne
   }
 
   th {
@@ -109,13 +116,23 @@
     outline: none;
   }
 
-  &:hover .tb-open {
+  // L'invite « Voir → » ne s'allume qu'au survol : présente pour signaler que
+  // la ligne est cliquable, discrète pour ne pas bruiter la colonne statut.
+  &:hover .tb-open,
+  &:focus-visible .tb-open {
     color: var(--k-brand);
   }
 }
 
+// Colonne statut : badge puis invite d'ouverture, empilés.
+.tb-status-cell {
+  white-space: nowrap;
+}
+
 .tb-open {
-  font-size: 0.82rem;
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--k-muted);
   white-space: nowrap;
@@ -125,13 +142,17 @@
   display: block;
   font-weight: 600;
   color: var(--k-ink);
-  font-size: 0.88rem;
+  font-size: 0.9rem;
 }
 
+// Référence, placée AU-DESSUS du libellé : en mono et en discret, elle se lit
+// comme un matricule sans voler la vedette à la période de l'événement.
 .tb-id {
   display: block;
-  margin-top: 2px;
-  font-size: 0.74rem;
+  margin-bottom: 3px;
+  font-family: var(--k-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
   color: var(--k-muted);
 }
 
@@ -149,11 +170,6 @@
   color: var(--k-muted);
 }
 
-.tb-muted {
-  color: var(--k-muted);
-  font-size: 0.85rem;
-}
-
 .tb-role {
   display: inline-block;
   padding: 2px 9px;
@@ -169,11 +185,6 @@
   text-align: center;
   color: var(--k-muted);
   padding: 26px;
-}
-
-.tb-actions-cell {
-  text-align: right;
-  white-space: nowrap;
 }
 
 // --- Badge de statut ---

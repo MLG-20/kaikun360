@@ -31,17 +31,18 @@
   <p class="ds-count">{{ total() }} mandat(s) de gestion</p>
   <div class="ds-table-wrap">
     <table class="ds-table">
+      <!--
+        Liste de TRIAGE, pas de consultation (F8.1) : la ligne ne porte que de
+        quoi reconnaître et prioriser un mandat. Dépenses, reversements et
+        détail des incidents ne sont PAS ici — ils vivent sur la fiche, qui est
+        l'écran de pilotage. Empiler dix colonnes forçait un défilement
+        horizontal et cassait les libellés sur trois lignes.
+      -->
       <thead>
         <tr>
-          <th>Référence</th>
-          <th>Bien</th>
+          <th>Mandat</th>
           <th>Propriétaire</th>
-          <th>Commission</th>
-          <th>Période</th>
-          <th>Loyers</th>
-          <th>Dépenses</th>
-          <th>Reversements</th>
-          <th>Incidents</th>
+          <th>Activité</th>
           <th>Statut</th>
         </tr>
       </thead>
@@ -49,37 +50,35 @@
         @for (m of rows(); track m.id) {
           <!-- La ligne mène à la fiche PILOTABLE du mandat (F7.3.a). -->
           <tr class="ds-row" tabindex="0" (click)="open(m)" (keyup.enter)="open(m)">
-            <td><span class="ds-ref">{{ m.reference }}</span></td>
             <td>
+              <span class="ds-ref">{{ m.reference }}</span>
               <span class="ds-strong">{{ m.property.title || '—' }}</span>
               <span class="ds-place">{{ placeOf(m) }}</span>
             </td>
-            <td>{{ m.property.owner.name || '—' }}</td>
-            <td><span class="ds-muted">{{ rate(m.commission_rate) }}</span></td>
             <td>
-              <span class="ds-muted">{{ shortDate(m.start_date) }}</span>
-              <span class="ds-place">→ {{ shortDate(m.end_date) }}</span>
+              <span class="ds-strong">{{ m.property.owner.name || '—' }}</span>
+              <span class="ds-place">depuis le {{ shortDate(m.start_date) }}</span>
             </td>
             <td>
-              <span class="ds-amount">{{ xof(m.summary.loyers_payes_xof) }}</span>
+              <span class="ds-amount">{{ xof(m.summary.loyers_payes_xof) }} perçus</span>
               @if (m.summary.loyers_impayes_xof > 0) {
                 <span class="ds-place ds-place--warn">{{ xof(m.summary.loyers_impayes_xof) }} impayés</span>
               }
-            </td>
-            <td><span class="ds-muted">{{ xof(m.summary.depenses_xof) }}</span></td>
-            <td><span class="ds-muted">{{ xof(m.summary.reversements_xof) }}</span></td>
-            <td>
+              <span class="ds-place">commission {{ rate(m.commission_rate) }}</span>
               @if (m.summary.incidents_ouverts > 0) {
-                <span class="ds-chip ds-chip--warn">{{ m.summary.incidents_ouverts }} ouvert(s)</span>
-              } @else {
-                <span class="ds-muted">—</span>
+                <span class="ds-chips">
+                  <span class="ds-chip ds-chip--warn">{{ m.summary.incidents_ouverts }} incident(s) ouvert(s)</span>
+                </span>
               }
             </td>
-            <td><span class="ds-badge" [class]="statusClass(m.status)">{{ m.status_label || m.status }}</span></td>
+            <td class="ds-status-cell">
+              <span class="ds-badge" [class]="statusClass(m.status)">{{ m.status_label || m.status }}</span>
+              <span class="ds-open" aria-hidden="true">Voir →</span>
+            </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="10" class="ds-empty">Aucun mandat de gestion ne correspond à ce filtre.</td>
+            <td colspan="4" class="ds-empty">Aucun mandat de gestion ne correspond à ce filtre.</td>
           </tr>
         }
       </tbody>

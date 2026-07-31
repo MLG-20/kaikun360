@@ -249,14 +249,6 @@ export class BackofficeAccountsPageComponent {
     }
   }
 
-  /** Vérification e-mail/téléphone en une puce lisible. */
-  protected verifiedLabel(user: User): string {
-    const parts: string[] = [];
-    if (user.email_verified_at) parts.push('e-mail');
-    if (user.phone_verified_at) parts.push('téléphone');
-    return parts.length ? parts.join(' · ') : 'non vérifié';
-  }
-
   /** Date courte (jour/mois/année). */
   protected shortDate(iso: string | null): string {
     if (!iso) return '—';

@@ -106,7 +106,7 @@
 .ac-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 940px;
+  min-width: 700px;
 
   th,
   td {
@@ -129,6 +129,21 @@
   }
 }
 
+// Répartition propre à la LISTE DES COMPTES (F8.1). Scopée par ce modificateur
+// car l'onglet « Documents » réutilise `.ac-table` avec d'autres colonnes.
+.ac-table--accounts {
+  table-layout: fixed;
+
+  th:nth-child(1) { width: 30%; }
+  th:nth-child(2) { width: 28%; }
+  th:nth-child(3) { width: 21%; }
+  th:nth-child(4) { width: 21%; } // statut : « En attente de vérification » y tient
+
+  td {
+    vertical-align: top; // cellules empilées : tout s'aligne sur la 1re ligne
+  }
+}
+
 // Ligne cliquable → ouvre la fiche détaillée.
 .ac-row {
   cursor: pointer;
@@ -140,13 +155,28 @@
     outline: none;
   }
 
-  &:hover .ac-open {
+  // L'invite « Voir → » ne s'allume qu'au survol : présente pour signaler que
+  // la ligne est cliquable, discrète pour ne pas bruiter la colonne statut.
+  &:hover .ac-open,
+  &:focus-visible .ac-open {
     color: var(--k-brand);
   }
 }
 
+// Colonne statut : badge puis invite d'ouverture, empilés. Pas de `nowrap` ici —
+// un libellé long comme « En attente de vérification » doit pouvoir passer à la
+// ligne dans son badge plutôt que de déborder de la cellule.
+.ac-status-cell {
+  .ac-badge {
+    white-space: normal;
+  }
+}
+
 .ac-open {
-  font-size: 0.82rem;
+  display: block;
+  margin-top: 6px;
+  white-space: nowrap;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--k-muted);
   white-space: nowrap;
@@ -155,7 +185,7 @@
 // --- Vignette du compte dans la liste (F8.0) --------------------------------
 .ac-account {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.6rem;
   min-width: 0;
 }
@@ -195,13 +225,6 @@
   font-weight: 600;
   color: var(--k-ink);
   font-size: 0.88rem;
-}
-
-.ac-id {
-  display: block;
-  margin-top: 2px;
-  font-size: 0.74rem;
-  color: var(--k-muted);
 }
 
 .ac-strong {
@@ -247,11 +270,6 @@
   text-align: center;
   color: var(--k-muted);
   padding: 26px;
-}
-
-.ac-actions-cell {
-  text-align: right;
-  white-space: nowrap;
 }
 
 // --- Badge de statut ---

@@ -60,17 +60,21 @@
   } @else {
     <p class="ac-count">{{ total() }} compte(s) — cliquez sur une ligne pour ouvrir la fiche</p>
     <div class="ac-table-wrap">
-      <table class="ac-table">
+      <!--
+        Liste de TRIAGE (F8.1) : cinq colonnes au lieu de huit. La localité
+        rejoint le nom (c'est un attribut de la personne, pas un critère qu'on
+        compare colonne par colonne) et la date d'inscription se range sous le
+        rôle. La colonne « Vérification » a été retirée : la fiche du compte en
+        donne le détail complet (profil, e-mail, téléphone), là où la liste n'en
+        montrait qu'un résumé d'un mot.
+      -->
+      <table class="ac-table ac-table--accounts">
         <thead>
           <tr>
             <th>Compte</th>
             <th>Contact</th>
             <th>Rôle</th>
-            <th>Localité</th>
-            <th>Vérification</th>
-            <th>Inscription</th>
             <th>Statut</th>
-            <th aria-label="Ouvrir"></th>
           </tr>
         </thead>
         <tbody>
@@ -96,7 +100,7 @@
                   }
                   <span class="ac-account__meta">
                     <span class="ac-name">{{ u.name }}</span>
-                    <span class="ac-id">#{{ u.id }}</span>
+                    <span class="ac-place">{{ u.city || u.commune || 'Localité inconnue' }}</span>
                   </span>
                 </span>
               </td>
@@ -104,16 +108,18 @@
                 <span class="ac-strong">{{ u.email || '—' }}</span>
                 <span class="ac-place">{{ u.phone || 'Pas de téléphone' }}</span>
               </td>
-              <td><span class="ac-role">{{ roleLabel(u) }}</span></td>
-              <td><span class="ac-muted">{{ u.city || u.commune || '—' }}</span></td>
-              <td><span class="ac-muted">{{ verifiedLabel(u) }}</span></td>
-              <td><span class="ac-muted">{{ shortDate(u.created_at) }}</span></td>
-              <td><span class="ac-badge" [class]="statusClass(u.status)">{{ u.status_label || u.status || '—' }}</span></td>
-              <td class="ac-actions-cell"><span class="ac-open" aria-hidden="true">Voir →</span></td>
+              <td>
+                <span class="ac-role">{{ roleLabel(u) }}</span>
+                <span class="ac-place">inscrit le {{ shortDate(u.created_at) }}</span>
+              </td>
+              <td class="ac-status-cell">
+                <span class="ac-badge" [class]="statusClass(u.status)">{{ u.status_label || u.status || '—' }}</span>
+                <span class="ac-open" aria-hidden="true">Voir →</span>
+              </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="8" class="ac-empty">Aucun compte ne correspond à ces filtres.</td>
+              <td colspan="4" class="ac-empty">Aucun compte ne correspond à ces filtres.</td>
             </tr>
           }
         </tbody>

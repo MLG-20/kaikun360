@@ -38,16 +38,17 @@
   <p class="ds-count">{{ total() }} demande(s) de construction</p>
   <div class="ds-table-wrap">
     <table class="ds-table">
+      <!--
+        Liste de TRIAGE (F8.1) : quatre colonnes au lieu de dix. Le coût estimé,
+        la surface détaillée et le niveau de finition restent sur la fiche du
+        dossier, où l'agent les compare aux devis — les empiler ici imposait un
+        défilement horizontal pour aucun gain de décision.
+      -->
       <thead>
         <tr>
-          <th>Référence</th>
+          <th>Dossier</th>
           <th>Demandeur</th>
-          <th>Objectif</th>
-          <th>Ville</th>
-          <th>Surface</th>
-          <th>Budget</th>
-          <th>Coût estimé</th>
-          <th>Finition</th>
+          <th>Projet</th>
           <th>Avancement</th>
           <th>Statut</th>
         </tr>
@@ -56,30 +57,35 @@
         @for (r of rows(); track r.id) {
           <!-- La ligne mène à la fiche détaillée du dossier (F7.3.b). -->
           <tr class="ds-row" tabindex="0" (click)="open(r)" (keyup.enter)="open(r)">
-            <td><span class="ds-ref">{{ r.reference }}</span></td>
+            <td>
+              <span class="ds-ref">{{ r.reference }}</span>
+              <span class="ds-strong">{{ r.objective_label || 'Projet de construction' }}</span>
+              <span class="ds-place">{{ r.city || 'Ville non précisée' }}</span>
+            </td>
             <td>
               <span class="ds-strong">{{ r.client?.name || '—' }}</span>
               @if (r.client?.phone) {
                 <span class="ds-place">{{ r.client!.phone }}</span>
               }
             </td>
-            <td>{{ r.objective_label || '—' }}</td>
-            <td>{{ r.city || '—' }}</td>
-            <td><span class="ds-muted">{{ surface(r.surface_m2) }}</span></td>
-            <td><span class="ds-amount">{{ xof(r.budget_xof) }}</span></td>
-            <td><span class="ds-muted">{{ xof(r.estimated_cost_xof) }}</span></td>
-            <td>{{ r.finish_level_label || '—' }}</td>
+            <td>
+              <span class="ds-amount">{{ xof(r.budget_xof) }}</span>
+              <span class="ds-place">{{ surface(r.surface_m2) }} · {{ r.finish_level_label || 'finition à définir' }}</span>
+            </td>
             <td>
               <span class="ds-chips">
                 <span class="ds-chip" title="Comptes rendus de chantier">{{ r.reports_count ?? 0 }} rapp.</span>
                 <span class="ds-chip" title="Jalons du planning">{{ r.milestones_count ?? 0 }} jalons</span>
               </span>
             </td>
-            <td><span class="ds-badge" [class]="statusClass(r.status)">{{ r.status_label || r.status }}</span></td>
+            <td class="ds-status-cell">
+              <span class="ds-badge" [class]="statusClass(r.status)">{{ r.status_label || r.status }}</span>
+              <span class="ds-open" aria-hidden="true">Voir →</span>
+            </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="10" class="ds-empty">Aucune demande de construction ne correspond à ces filtres.</td>
+            <td colspan="5" class="ds-empty">Aucune demande de construction ne correspond à ces filtres.</td>
           </tr>
         }
       </tbody>
