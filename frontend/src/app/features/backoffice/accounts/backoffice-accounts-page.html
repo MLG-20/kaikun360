@@ -77,8 +77,28 @@
           @for (u of rows(); track u.id) {
             <tr class="ac-row" tabindex="0" (click)="openAccount(u)" (keyup.enter)="openAccount(u)">
               <td>
-                <span class="ac-name">{{ u.name }}</span>
-                <span class="ac-id">#{{ u.id }}</span>
+                <!-- Vignette du compte (F8.0) : reconnaître une personne d'un
+                     coup d'œil dans une liste de plusieurs centaines de lignes.
+                     Repli sur l'initiale, jamais sur une silhouette générique —
+                     l'agent doit voir qui a déposé une photo et qui non. -->
+                <span class="ac-account">
+                  @if (u.profile?.avatar_url; as url) {
+                    <img
+                      class="ac-avatar ac-avatar--img"
+                      [class.ac-avatar--logo]="u.profile.avatar_kind === 'logo'"
+                      [src]="url"
+                      alt=""
+                      aria-hidden="true"
+                      loading="lazy"
+                    />
+                  } @else {
+                    <span class="ac-avatar" aria-hidden="true">{{ initial(u.name) }}</span>
+                  }
+                  <span class="ac-account__meta">
+                    <span class="ac-name">{{ u.name }}</span>
+                    <span class="ac-id">#{{ u.id }}</span>
+                  </span>
+                </span>
               </td>
               <td>
                 <span class="ac-strong">{{ u.email || '—' }}</span>

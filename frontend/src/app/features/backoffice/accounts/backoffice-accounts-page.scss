@@ -152,6 +152,44 @@
   white-space: nowrap;
 }
 
+// --- Vignette du compte dans la liste (F8.0) --------------------------------
+.ac-account {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.ac-account__meta {
+  min-width: 0; // sans ça, un nom long fait déborder la cellule
+}
+
+.ac-avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--k-brand), var(--k-navy));
+}
+
+.ac-avatar--img {
+  object-fit: cover;
+  background: var(--k-line);
+}
+
+.ac-avatar--logo {
+  border-radius: 7px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid var(--k-line);
+}
+
 .ac-name {
   display: block;
   font-weight: 600;

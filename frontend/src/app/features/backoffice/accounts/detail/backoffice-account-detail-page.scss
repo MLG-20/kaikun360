@@ -67,6 +67,22 @@
   background: linear-gradient(135deg, var(--k-brand), var(--k-navy));
 }
 
+// Variante « vraie image » (F8.0) : mêmes dimensions que la pastille à
+// initiale, pour que l'en-tête de la fiche ne bouge pas selon les comptes.
+.ad-avatar--img {
+  object-fit: cover; // portrait : on remplit le cercle
+  background: var(--k-line);
+}
+
+// Un logo d'entreprise garde ses proportions et son fond clair : le rogner en
+// rond couperait le nom de la société, souvent inclus dans le logo.
+.ad-avatar--logo {
+  border-radius: 10px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid var(--k-line);
+}
+
 .ad-name {
   font-family: var(--k-font-display);
   font-weight: 700;

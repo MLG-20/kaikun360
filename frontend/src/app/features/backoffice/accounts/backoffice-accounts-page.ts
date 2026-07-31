@@ -221,6 +221,11 @@ export class BackofficeAccountsPageComponent {
 
   // --- Présentation -----------------------------------------------------------
 
+  /** Initiale de repli quand le compte n'a pas déposé de photo (F8.0). */
+  protected initial(name: string | null): string {
+    return name?.trim()?.charAt(0)?.toUpperCase() ?? '?';
+  }
+
   /** Libellé lisible du rôle principal d'un compte. */
   protected roleLabel(user: User): string {
     const primary = user.roles[0];

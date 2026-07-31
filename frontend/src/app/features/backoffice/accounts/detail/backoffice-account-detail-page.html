@@ -9,7 +9,19 @@
 } @else if (user(); as u) {
   <!-- En-tête -->
   <header class="ad-head">
-    <span class="ad-avatar">{{ initial(u.name) }}</span>
+    <!-- Photo / logo du compte (F8.0), à la place de l'initiale. Repli sur
+         l'initiale si le compte n'a rien déposé : l'agent doit pouvoir le
+         constater, notamment avant de valider une pièce d'identité. -->
+    @if (u.profile?.avatar_url; as url) {
+      <img
+        class="ad-avatar ad-avatar--img"
+        [class.ad-avatar--logo]="u.profile.avatar_kind === 'logo'"
+        [src]="url"
+        [alt]="'Photo de ' + u.name"
+      />
+    } @else {
+      <span class="ad-avatar">{{ initial(u.name) }}</span>
+    }
     <div class="ad-head__meta">
       <h1 class="ad-name">{{ u.name }}</h1>
       <p class="ad-sub">

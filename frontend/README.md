@@ -334,7 +334,14 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   activer / suspendre / désactiver, **rôle**, **demande de pièce**
   `POST …/request-document` — le tout avec les garde-fous serveur reflétés), la
   liste des **pièces déposées** (KYC) et l'**historique** du compte (timeline du
-  journal d'audit Spatie — exigence CDC « historique »). Onglet **Documents** :
+  journal d'audit Spatie — exigence CDC « historique »). Depuis **F8.0**, la
+  **photo du compte** (ou son logo) s'affiche en **vignette dans l'annuaire** et
+  en grand dans l'en-tête de la fiche — reconnaître une personne d'un coup d'œil
+  dans une liste de plusieurs centaines de lignes, et voir son visage au moment
+  de contrôler sa pièce d'identité. Aucun changement backend n'a été nécessaire :
+  les deux endpoints chargeaient déjà `profile`, et `ProfileResource` expose
+  `avatar_url`. Repli sur l'initiale, **jamais sur une silhouette générique** :
+  l'agent doit pouvoir distinguer « pas de photo » de « photo déposée ». Onglet **Documents** :
   vue transverse (`GET /admin/documents`) — compteurs par famille (KYC, documents
   de biens, certifications, preuves de reversement) puis liste normalisée paginée,
   en lecture seule.
