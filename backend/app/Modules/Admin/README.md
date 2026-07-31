@@ -599,3 +599,69 @@ portent la logique métier : règles de validation, calcul de commission, filtre
 de recherche. Les rendre éditables demanderait de sortir cette logique du code —
 chantier transversal hors du périmètre de cet écran, signalé à l'utilisateur
 dans l'interface plutôt que masqué.
+
+## F8.2 — Les fiches de dossier
+
+**Le manque comblé :** cinq écrans du back-office (Nuitées, Mobilité, Tourisme,
+Paiements, Avis & qualité) n'étaient que des **listes**. Toute l'information
+tenait en colonnes — jusqu'à neuf — et la décision se prenait sur une ligne de
+tableau. Or une ligne ne peut porter ni un contexte, ni une preuve, ni une liste
+de personnes. Sept points d'accès de détail sont donc ajoutés, chacun gardé par
+**la même permission que la liste dont il est le détail**.
+
+| Route | Ce que la liste ne pouvait pas dire | Garde |
+| --- | --- | --- |
+| `GET /admin/stay-bookings/{booking}` | l'argent du séjour (encaissé / reste dû, règlements un par un), l'hôte, le journal où figure le motif d'une caution conservée | `gerer:nuitees` |
+| `GET /admin/vehicles/{vehicle}` | ce que le véhicule **engage** : locations et départs programmés à venir (`is_upcoming`) | `consulter:dashboard-admin` |
+| `GET /admin/mobility-services/{service}` | **qui** sont les passagers d'un départ, joignables, avec leur solde dû | `consulter:dashboard-admin` |
+| `GET /admin/experiences/{experience}` | le programme (inclusions) et les participants d'un circuit | `consulter:dashboard-admin` |
+| `GET /admin/providers/{provider}` | les avis **en clair**, les certifications, le motif des sanctions | `valider:prestataire` |
+| `GET /admin/payments/{payment}` | les **preuves** d'encaissement et l'échéancier complet de la réservation | `gerer:paiements` |
+| `GET /admin/reviews/{review}` | le **contexte** : les autres avis publiés de la ressource notée | `moderer:avis` |
+
+Toutes sont en **lecture seule** : les gestes restent aux routes d'action déjà
+en place (`PATCH stay-bookings/{id}/…`, `POST payments/{id}/refund`,
+`PATCH reviews/{id}/moderate`), qui portent les règles et la traçabilité.
+
+### La fiche paiement — l'écran le plus sensible
+
+Confirmer à tort crédite une réservation jamais payée ; rembourser à tort fait
+sortir de l'argent réel. La fiche transporte donc ce que `PaymentResource`
+n'expose **pas** — et ne doit pas exposer, puisqu'elle sert aussi l'espace
+client : `provider_reference`, `signature_verified`, la référence Wave/OM saisie
+à la confirmation manuelle (`meta.manual_proof_reference`) et le montant déjà
+remboursé. Ces champs sont construits **dans le contrôleur**, derrière
+`gerer:paiements`, jamais dans la Resource partagée.
+
+Elle renvoie aussi `can_confirm` / `can_refund` : **le serveur dit ce qu'il
+accepterait**, l'écran se contente d'obéir. Sans cela le frontend redéclarait les
+règles du module de paiement (mode manuel requis, statut `complete` requis) et
+finissait par en diverger — un bouton affiché à tort ne produit qu'un 422
+incompréhensible.
+
+> ⚠️ `gerer:paiements` relève de la **gouvernance** (CDC §7, « Agent Kaikun :
+> accès financier limité ») : un agent de terrain, même pleinement outillé par
+> `AdminPermission::operational()`, ne l'a pas. Les tests de cette fiche passent
+> par un compte à qui elle est explicitement déléguée.
+
+### La fiche avis — modérer, c'est arbitrer
+
+`context` porte les autres avis **publiés** de la même ressource, leur moyenne et
+le nombre de plaintes déjà en ligne. C'est ce qui change la nature de la
+décision : une plainte isolée au milieu de quinze avis à cinq étoiles est un
+texte à modérer ; la troisième plainte identique du mois est un problème de
+prestataire, et relève de la sanction. Les avis rejetés sont **exclus** du
+contexte (ils ne sont plus visibles du public) et l'avis en cours d'examen ne se
+compte pas lui-même.
+
+### Mutualisations
+
+`Validation\MediaEntry` et `Validation\OwnerEntry`, écrits pour la file de
+validation (F8.1), servent maintenant les fiches véhicule, circuit et séjour :
+même forme de galerie et de contact d'un dossier à l'autre. La lecture du journal
+d'audit est mutualisée dans `AdminCatalogController::activityOf()`.
+
+⚠️ **Une réservation dont la ressource a disparu reste consultable.** Le séjour a
+eu lieu, le règlement a été encaissé : la fiche renvoie `stay: null` (ou
+« Ressource retirée ») plutôt qu'un 404. Un dossier financier qui s'évanouit avec
+son bien est ingérable en cas de litige.

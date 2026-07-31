@@ -6,11 +6,15 @@ use App\Enums\CautionStatus;
 use App\Enums\HousekeepingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Payment;
+use App\Modules\Admin\Validation\MediaEntry;
+use App\Modules\Admin\Validation\OwnerEntry;
 use App\Modules\Stay\Models\Stay;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Spatie\Activitylog\Models\Activity;
 
 /**
  * Exploitation des nuitées côté back-office (B13.6) : calendrier global,
@@ -68,6 +72,118 @@ class StayOperationsController extends Controller
         ]);
 
         return ApiResponse::paginated($bookings);
+    }
+
+    /**
+     * Dossier complet d'un séjour. GET /api/v1/admin/stay-bookings/{booking}
+     *
+     * **F8.2.a — pourquoi une fiche.** Le calendrier est une vue d'exploitation :
+     * il dit *qui arrive quand* et rien de plus. Dès qu'un client appelle (« ma
+     * caution ? », « j'ai déjà payé l'acompte »), l'agent devait sauter d'écran en
+     * écran — Paiements pour l'argent, Comptes pour le client, Catalogues pour le
+     * bien — sans jamais voir le séjour d'un seul tenant. Cette fiche rassemble
+     * les quatre faces d'un séjour :
+     *   1. **le séjour** (dates, nuits, voyageurs, phase d'exploitation) ;
+     *   2. **le logement** (bien, localisation, capacité, tarif, photos) et son
+     *      **hôte**, joignable ;
+     *   3. **le client** et **l'argent** (montant, encaissé, reste à payer, les
+     *      paiements un par un) ;
+     *   4. **la trace** : le journal d'audit du séjour — c'est là qu'apparaît le
+     *      motif d'une caution conservée, qui fait foi en cas de contestation.
+     *
+     * Lecture seule : les gestes (arrivée, départ, ménage, caution) restent aux
+     * routes PATCH déjà en place, que la fiche appelle comme le fait la liste.
+     */
+    public function show(Booking $booking): JsonResponse
+    {
+        $this->assertStay($booking);
+
+        // Le bien porte le titre, la localisation et les photos ; la nuitée porte
+        // les règles d'exploitation (capacité, horaires, tarif). Chargement en un
+        // seul passage pour ne pas multiplier les requêtes.
+        $stay = Stay::with(['property.owner', 'property.region', 'property.department', 'property.commune', 'property.allMedia'])
+            ->find($booking->bookable_id);
+
+        $property = $stay?->property;
+
+        $payments = $booking->payments()->latest()->get()->map(fn (Payment $payment) => [
+            'id' => $payment->id,
+            'reference' => $payment->reference,
+            'amount_xof' => $payment->amount_xof,
+            'kind' => $payment->kind?->value,
+            'kind_label' => $payment->kind?->label(),
+            'status' => $payment->status->value,
+            'status_label' => $payment->status->label(),
+            'mode' => $payment->mode,
+            'provider' => $payment->provider,
+            'created_at' => $payment->created_at,
+        ]);
+
+        // Journal d'audit du séjour : décisions de caution (avec leur motif) et
+        // toute autre action tracée sur la réservation. 30 dernières entrées.
+        $activity = Activity::query()
+            ->where('subject_type', $booking->getMorphClass())
+            ->where('subject_id', $booking->id)
+            ->with('causer')
+            ->latest()
+            ->limit(30)
+            ->get()
+            ->map(fn (Activity $entry) => [
+                'id' => $entry->id,
+                'description' => $entry->description,
+                'causer_name' => $entry->causer?->name,
+                'properties' => $entry->properties,
+                'created_at' => $entry->created_at,
+            ]);
+
+        return ApiResponse::success([
+            'booking' => [
+                'booking_id' => $booking->id,
+                'reference' => $booking->reference,
+                'status' => $booking->status->value,
+                'start_date' => $booking->start_date?->toDateString(),
+                'end_date' => $booking->end_date?->toDateString(),
+                // Le nombre de nuits n'est stocké nulle part : il se déduit des
+                // bornes, et c'est l'unité de facturation du module.
+                'nights' => $booking->start_date && $booking->end_date
+                    ? max(0, $booking->start_date->diffInDays($booking->end_date))
+                    : null,
+                'guests' => $booking->guests,
+                'amount_xof' => $booking->amount_xof,
+                'commission_xof' => $booking->commission_xof,
+                'paid_xof' => $booking->montantPaye(),
+                'remaining_xof' => $booking->resteAPayer(),
+                'created_at' => $booking->created_at,
+                'cancelled_at' => $booking->cancelled_at,
+                'checked_in_at' => $booking->checked_in_at,
+                'checked_out_at' => $booking->checked_out_at,
+                'housekeeping_status' => $booking->housekeeping_status?->value,
+                'caution_xof' => $booking->caution_xof,
+                'caution_status' => $booking->caution_status?->value,
+            ],
+            'client' => OwnerEntry::from($booking->user),
+            // Un bien peut avoir été retiré depuis la réservation : la fiche doit
+            // rester consultable (le séjour, lui, a bien eu lieu).
+            'stay' => $stay === null ? null : [
+                'stay_id' => $stay->id,
+                'property_id' => $property?->id,
+                'property_title' => $property?->title,
+                'property_type' => $property?->type?->value,
+                'address' => $property?->address,
+                'commune' => $property?->commune?->name,
+                'department' => $property?->department?->name,
+                'region' => $property?->region?->name,
+                'capacity' => $stay->capacity,
+                'price_per_night_xof' => $stay->price_per_night_xof,
+                'check_in_time' => $stay->check_in_time,
+                'check_out_time' => $stay->check_out_time,
+                'is_active' => $stay->is_active,
+                'host' => OwnerEntry::from($property?->owner),
+                'media' => $property === null ? null : MediaEntry::summary($property),
+            ],
+            'payments' => $payments,
+            'activity' => $activity,
+        ]);
     }
 
     /**

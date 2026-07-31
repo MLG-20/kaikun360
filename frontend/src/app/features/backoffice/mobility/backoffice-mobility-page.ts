@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 
 import { AdminService, CatalogQuery } from '../../../core/api/admin.service';
 import { Paginated } from '../../../core/api/pagination.model';
 import { AdminMobilityService } from '../../../models/mobility-service.model';
 import { AdminVehicle } from '../../../models/vehicle.model';
+import { complianceClass, complianceDetail, complianceLabel } from './vehicle-compliance';
 
 /** Onglet courant : la flotte (véhicules) ou les départs programmés. */
 type MobilityTab = 'fleet' | 'trips';
@@ -15,12 +17,6 @@ interface SelectOption {
   value: string;
   label: string;
 }
-
-/**
- * Verdict de conformité d'un véhicule, tel qu'affiché dans la colonne dédiée.
- * `pending` = contrôle non applicable (type sans exigence renseignée).
- */
-type ComplianceVerdict = 'ok' | 'ko' | 'partial';
 
 /**
  * Écran **Mobilité** du back-office (F7.2.j) — module CDC §6 « Mobilité ».
@@ -43,12 +39,19 @@ type ComplianceVerdict = 'ok' | 'ko' | 'partial';
  * l'approbation d'un véhicule reste dans l'écran **Validation** (F7.2.a), qui
  * est le point unique de décision. Cet écran-ci sert à *repérer* les anomalies.
  *
+ * **F8.2.b — les colonnes ont fondu (8 → 4 par onglet).** Le tarif, la caution,
+ * le prestataire, le véhicule affecté sont des éléments de dossier : les lire en
+ * balayant une liste ne sert à rien, et leur place est dans la **fiche**
+ * (`mobilite/vehicule/:id`, `mobilite/trajet/:id`), où ils côtoient ce qui leur
+ * donne du sens — l'engagement d'un véhicule, la liste des passagers d'un
+ * départ. La liste garde ce qu'elle sait faire : repérer.
+ *
  * Endpoints : `GET /admin/vehicles` et `GET /admin/mobility-services`
  * (garde `consulter:dashboard-admin`).
  */
 @Component({
   selector: 'app-backoffice-mobility-page',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './backoffice-mobility-page.html',
   styleUrl: './backoffice-mobility-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -194,75 +197,12 @@ export class BackofficeMobilityPageComponent {
   }
 
   // --- Conformité de la flotte -----------------------------------------------
+  // La grille de contrôle vit dans `vehicle-compliance.ts`, partagée avec la
+  // fiche du véhicule (F8.2.b) : la liste et la fiche ne peuvent pas diverger.
 
-  /**
-   * Verdict de conformité d'un véhicule.
-   *
-   * Les exigences diffèrent selon le moyen de transport (cf.
-   * `VehicleComplianceChecker`, B7.3) : une **pirogue** relève du fluvial
-   * (gilets de sauvetage, aptitude météo, prestataire agréé) tandis qu'un
-   * transport **motorisé** relève de l'assurance et de l'identité du chauffeur.
-   * On applique donc deux grilles distinctes plutôt qu'une case unique.
-   */
-  protected compliance(v: AdminVehicle): ComplianceVerdict {
-    const checks =
-      v.type === 'pirogue'
-        ? [
-            (v.life_jackets_count ?? 0) > 0,
-            v.weather_compliant === true,
-            v.provider_compliant === true,
-          ]
-        : [!!v.insurance_ref, !v.has_driver || !!v.driver_identity];
-
-    const passed = checks.filter(Boolean).length;
-    if (passed === checks.length) return 'ok';
-    if (passed === 0) return 'ko';
-    return 'partial';
-  }
-
-  /** Libellé du verdict de conformité. */
-  protected complianceLabel(v: AdminVehicle): string {
-    switch (this.compliance(v)) {
-      case 'ok':
-        return 'Conforme';
-      case 'partial':
-        return 'Incomplet';
-      default:
-        return 'Non conforme';
-    }
-  }
-
-  /** Classe CSS du badge de conformité. */
-  protected complianceClass(v: AdminVehicle): string {
-    switch (this.compliance(v)) {
-      case 'ok':
-        return 'is-ok';
-      case 'partial':
-        return 'is-warn';
-      default:
-        return 'is-off';
-    }
-  }
-
-  /**
-   * Détail des manquements d'un véhicule, en clair, pour l'infobulle : l'agent
-   * doit savoir QUOI réclamer au prestataire, pas seulement qu'il manque
-   * quelque chose.
-   */
-  protected complianceDetail(v: AdminVehicle): string {
-    const missing: string[] = [];
-
-    if (v.type === 'pirogue') {
-      if (!(v.life_jackets_count ?? 0)) missing.push('gilets de sauvetage');
-      if (v.weather_compliant !== true) missing.push('aptitude météo');
-      if (v.provider_compliant !== true) missing.push('agrément prestataire');
-    } else {
-      if (!v.insurance_ref) missing.push('assurance');
-      if (v.has_driver && !v.driver_identity) missing.push('identité du chauffeur');
-    }
-
-    return missing.length ? 'Manque : ' + missing.join(', ') : 'Toutes les pièces sont déclarées.';
-  }
+  protected readonly complianceLabel = complianceLabel;
+  protected readonly complianceClass = complianceClass;
+  protected readonly complianceDetail = complianceDetail;
 
   // --- Remplissage des trajets -----------------------------------------------
 
@@ -299,12 +239,6 @@ export class BackofficeMobilityPageComponent {
   /** Intitulé lisible d'un véhicule (marque + modèle, ou repli sur le type). */
   protected vehicleLabel(v: AdminVehicle): string {
     return [v.brand, v.model].filter(Boolean).join(' ') || (v.type_label ?? 'Véhicule');
-  }
-
-  /** Montant formaté en FCFA (ou tiret si absent). */
-  protected xof(value: number | null): string {
-    if (value === null || value === undefined) return '—';
-    return new Intl.NumberFormat('fr-FR').format(value) + ' F';
   }
 
   /** Date + heure courtes (les départs se jouent à l'heure près). */

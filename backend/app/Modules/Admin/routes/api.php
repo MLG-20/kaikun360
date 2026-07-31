@@ -119,7 +119,19 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // restent servies par leurs contrôleurs d'origine (transversal / module Pro).
     Route::get('/reviews', [AdminReviewController::class, 'index'])
         ->middleware('can:moderer:avis');
+    // F8.2.d — Dossier d'un avis : commentaire entier, auteur, et les autres
+    // avis publiés de la même ressource — le contexte qui dit si c'est un cas
+    // isolé ou un problème répété.
+    Route::get('/reviews/{review}', [AdminReviewController::class, 'show'])
+        ->whereNumber('review')
+        ->middleware('can:moderer:avis');
     Route::get('/providers', [AdminProviderController::class, 'index'])
+        ->middleware('can:valider:prestataire');
+    // F8.2.c — Fiche d'un prestataire : identité, certifications, avis reçus en
+    // clair et journal des sanctions. Deux chiffres (note, avertissements) ne
+    // suffisent pas à décider.
+    Route::get('/providers/{provider}', [AdminProviderController::class, 'show'])
+        ->whereNumber('provider')
         ->middleware('can:valider:prestataire');
 
     // B13.4 — Paramétrage global (commissions, tarifs, coordonnées).
@@ -139,6 +151,10 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // B14.4 — Supervision & remboursement des paiements.
     Route::middleware('can:gerer:paiements')->group(function () {
         Route::get('/payments', [AdminPaymentController::class, 'index']);
+        // F8.2.d — Dossier d'un règlement : preuves (référence PSP, signature,
+        // preuve Wave/OM), réservation payée, échéancier complet et journal.
+        Route::get('/payments/{payment}', [AdminPaymentController::class, 'show'])
+            ->whereNumber('payment');
         Route::post('/payments/{payment}/refund', [AdminPaymentController::class, 'refund'])
             ->whereNumber('payment')
             ->middleware('throttle:payment');
@@ -177,9 +193,21 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         // remplissage de chaque départ. La flotte réutilise /admin/vehicles.
         Route::get('/mobility-services', [AdminCatalogController::class, 'mobilityServices']);
 
+        // F8.2.b — Fiches de l'écran Mobilité : un véhicule (conformité pièce à
+        // pièce, engagements en cours) et un départ (liste des passagers).
+        Route::get('/vehicles/{vehicle}', [AdminCatalogController::class, 'vehicle'])
+            ->whereNumber('vehicle');
+        Route::get('/mobility-services/{service}', [AdminCatalogController::class, 'mobilityService'])
+            ->whereNumber('service');
+
         // F7.2.k — Écran Tourisme : couverture par destination (agrégat). Les
         // circuits eux-mêmes réutilisent /admin/experiences.
         Route::get('/tourism/destinations', [AdminCatalogController::class, 'tourismDestinations']);
+
+        // F8.2.c — Fiche d'un circuit : programme, prestataire, photos et la
+        // liste des participants que la ligne de tableau ne peut pas porter.
+        Route::get('/experiences/{experience}', [AdminCatalogController::class, 'experience'])
+            ->whereNumber('experience');
 
         Route::get('/construction-requests', [AdminDossierController::class, 'constructionRequests']);
         Route::get('/mandates', [AdminDossierController::class, 'mandates']);
@@ -188,6 +216,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // B13.6 — Exploitation des nuitées : calendrier + check-in/out + ménage.
     Route::middleware('can:gerer:nuitees')->group(function () {
         Route::get('/stays/calendar', [StayOperationsController::class, 'calendar']);
+        // F8.2.a — Fiche d'un séjour : le dossier complet (logement, hôte, client,
+        // argent, journal) que le calendrier ne peut pas porter ligne à ligne.
+        Route::get('/stay-bookings/{booking}', [StayOperationsController::class, 'show'])->whereNumber('booking');
         Route::patch('/stay-bookings/{booking}/check-in', [StayOperationsController::class, 'checkIn'])->whereNumber('booking');
         Route::patch('/stay-bookings/{booking}/check-out', [StayOperationsController::class, 'checkOut'])->whereNumber('booking');
         Route::patch('/stay-bookings/{booking}/housekeeping', [StayOperationsController::class, 'housekeeping'])->whereNumber('booking');

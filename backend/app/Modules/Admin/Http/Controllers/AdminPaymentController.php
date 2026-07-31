@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\ValidationException;
+use Spatie\Activitylog\Models\Activity;
 
 /**
  * Supervision et remboursement des paiements par le back-office (B14.4).
@@ -52,6 +53,150 @@ class AdminPaymentController extends Controller
             ->paginate($perPage);
 
         return PaymentResource::collection($payments);
+    }
+
+    /**
+     * Dossier complet d'un paiement. GET /api/v1/admin/payments/{payment}
+     *
+     * **F8.2.d — l'écran le plus sensible du back-office.** Un règlement est ce
+     * qui fait tourner la plateforme : le confirmer à tort crédite une
+     * réservation jamais payée, le rembourser à tort sort de l'argent réel. Ces
+     * deux gestes se prenaient depuis une ligne de tableau, sans jamais voir ce
+     * qui les justifie.
+     *
+     * La fiche rassemble les quatre choses qu'un agent doit avoir sous les yeux :
+     *   1. **la transaction** — montant, nature, mode, statut, et surtout les
+     *      éléments de PREUVE : référence PSP, signature vérifiée, référence de
+     *      la transaction Wave/OM saisie à la confirmation manuelle, montant déjà
+     *      remboursé. Sans eux, « confirmer » est un acte de foi ;
+     *   2. **la réservation** qu'il paie — la ressource, les dates, le client ;
+     *   3. **l'échéancier complet** : TOUS les règlements de cette réservation.
+     *      Un acompte isolé ne dit rien ; le même acompte à côté d'un solde déjà
+     *      encaissé et d'un remboursement partiel raconte une autre histoire ;
+     *   4. **le journal** — qui a confirmé, qui a remboursé, de combien, quand.
+     *
+     * ⚠️ `signature_verified` et `meta` ne sont PAS exposés par
+     * `PaymentResource` (servie aussi à l'espace client) : ce sont des données de
+     * contrôle. Elles sont construites ici, derrière la garde `gerer:paiements`.
+     */
+    public function show(Payment $payment): JsonResponse
+    {
+        $payment->load(['booking.payments', 'booking.user', 'booking.bookable']);
+
+        $booking = $payment->booking;
+        $meta = $payment->meta ?? [];
+
+        // L'échéancier : tous les règlements de la MÊME réservation, celui-ci
+        // compris. C'est le seul angle depuis lequel un acompte a du sens.
+        $siblings = $booking === null ? collect() : $booking->payments
+            ->sortByDesc('created_at')
+            ->values()
+            ->map(fn (Payment $p) => [
+                'id' => $p->id,
+                'reference' => $p->reference,
+                'amount_xof' => $p->amount_xof,
+                'kind_label' => $p->kind?->label(),
+                'status' => $p->status->value,
+                'status_label' => $p->status->label(),
+                'mode' => $p->mode,
+                'created_at' => $p->created_at,
+                // Marque la ligne courante : l'agent doit se situer dans la série.
+                'is_current' => $p->id === $payment->id,
+            ]);
+
+        return ApiResponse::success([
+            'payment' => [
+                'id' => $payment->id,
+                'reference' => $payment->reference,
+                'booking_id' => $payment->booking_id,
+                'amount_xof' => $payment->amount_xof,
+                'commission_xof' => $payment->commission_xof,
+                'kind' => $payment->kind?->value,
+                'kind_label' => $payment->kind?->label(),
+                'status' => $payment->status->value,
+                'status_label' => $payment->status->label(),
+                'mode' => $payment->mode,
+                'provider' => $payment->provider,
+                'created_at' => $payment->created_at,
+                'updated_at' => $payment->updated_at,
+
+                // --- Éléments de preuve (back-office uniquement).
+                'provider_reference' => $payment->provider_reference,
+                'signature_verified' => (bool) $payment->signature_verified,
+                'manual_proof_reference' => $meta['manual_proof_reference'] ?? null,
+                'refunded_amount_xof' => $meta['refunded_amount_xof'] ?? null,
+
+                // --- Ce que l'agent a le droit de faire, décidé par le SERVEUR.
+                // L'écran n'a pas à réinventer ces règles : il affiche ce que
+                // l'API accepterait, et rien d'autre.
+                'can_confirm' => $payment->mode === 'manuel'
+                    && $payment->status !== PaymentStatus::COMPLETE,
+                'can_refund' => $payment->status === PaymentStatus::COMPLETE,
+            ],
+            'booking' => $booking === null ? null : [
+                'id' => $booking->id,
+                'reference' => $booking->reference,
+                'resource_type' => class_basename($booking->bookable_type),
+                'resource_label' => $this->bookableLabel($booking),
+                'start_date' => $booking->start_date?->toDateString(),
+                'end_date' => $booking->end_date?->toDateString(),
+                'guests' => $booking->guests,
+                'status' => $booking->status->value,
+                'amount_xof' => $booking->amount_xof,
+                'paid_xof' => $booking->montantPaye(),
+                'remaining_xof' => $booking->resteAPayer(),
+                'client' => $booking->user === null ? null : [
+                    'id' => $booking->user->id,
+                    'name' => $booking->user->name,
+                    'email' => $booking->user->email,
+                    'phone' => $booking->user->phone,
+                ],
+            ],
+            'siblings' => $siblings,
+            'activity' => Activity::query()
+                ->where('subject_type', $payment->getMorphClass())
+                ->where('subject_id', $payment->id)
+                ->with('causer')
+                ->latest()
+                ->limit(30)
+                ->get()
+                ->map(fn (Activity $entry) => [
+                    'id' => $entry->id,
+                    'description' => $entry->description,
+                    'causer_name' => $entry->causer?->name,
+                    'properties' => $entry->properties,
+                    'created_at' => $entry->created_at,
+                ]),
+        ]);
+    }
+
+    /**
+     * Intitulé lisible de la ressource réservée, quel qu'en soit le type.
+     *
+     * Les quatre réservables n'ont pas le même champ d'intitulé (un trajet n'a
+     * pas de titre, il a un départ et une destination) : on prend le premier
+     * présent plutôt que d'écrire un `match` sur les classes, qui casserait au
+     * prochain type réservable.
+     */
+    private function bookableLabel(\App\Models\Booking $booking): string
+    {
+        $resource = $booking->bookable;
+
+        if ($resource === null) {
+            return 'Ressource retirée';
+        }
+
+        if (! empty($resource->departure) && ! empty($resource->destination)) {
+            return $resource->departure.' → '.$resource->destination;
+        }
+
+        return $resource->title
+            ?? $resource->business_name
+            ?? $resource->name
+            // Une nuitée n'a pas de titre : le sien est celui de son bien.
+            ?? $resource->property?->title
+            ?? trim(($resource->brand ?? '').' '.($resource->model ?? ''))
+            ?: '#'.$booking->bookable_id;
     }
 
     /**

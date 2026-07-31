@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import {
   AccountingQuery,
@@ -24,19 +25,25 @@ type PaymentsTab = 'supervision' | 'export';
  * Écran **Paiements** du back-office (F7.2.d) — supervision financière.
  *
  * Liste tous les paiements (`GET /admin/payments`) avec filtres statut +
- * référence. Deux actions sensibles (permission `gerer:paiements`, limitées par
- * un throttle côté serveur) :
- *   - **Confirmer** un règlement **manuel** Wave/OM (Phase 1 du CDC) : le client
- *     a payé au numéro officiel, l'admin valide → la réservation est confirmée ;
- *   - **Rembourser** tout ou partie d'un paiement encaissé (`complete`).
+ * référence (permission `gerer:paiements`, limitée par un throttle serveur).
  *
- * **F7.3.h — acomptes & soldes.** La liste porte deux colonnes de plus : la
- * **nature** du règlement (acompte / solde / intégral, déduite du montant côté
- * serveur) et le **reste dû** sur la réservation. Sans elles, un versement de
- * 50 000 F sur une réservation de 180 000 F était indistinguable d'une erreur.
+ * **F8.2.d — les deux gestes ne sont plus au même endroit.** L'écran portait
+ * neuf colonnes et les deux actions sensibles ; elles n'ont pourtant pas le même
+ * poids :
+ *   - **Confirmer** un règlement manuel Wave/OM reste ICI. C'est le geste du
+ *     quotidien : le client a payé au numéro officiel, l'admin valide, la
+ *     réservation est confirmée. Il ne demande aucune information que la ligne
+ *     ne porte pas déjà.
+ *   - **Rembourser** a déménagé dans la **fiche du règlement**
+ *     (`paiements/:id`). Sortir de l'argent est irréversible et ne se décide pas
+ *     depuis une ligne de tableau : il faut la réservation, l'échéancier complet
+ *     et les preuves d'encaissement sous les yeux. C'est là qu'elles sont.
  *
- * L'écran reflète les garde-fous serveur (mode manuel requis pour confirmer,
- * statut `complete` requis pour rembourser) et rend les refus lisibles.
+ * La commission, la nature du règlement et le reste dû ont suivi le même chemin
+ * (9 colonnes → 5) : ce sont des éléments de dossier, pas de balayage. Seule la
+ * nature (acompte / solde) reste en liste, car elle change la lecture du montant
+ * lui-même — un versement de 50 000 F sur une réservation de 180 000 F n'est
+ * une anomalie que si l'on ignore que c'est un acompte (F7.3.h).
  *
  * **Onglet « Export comptable » (F7.3.d)** — CDC §6 module 11 : le endpoint
  * `GET /admin/reports/export` existait depuis B13.5 sans aucune interface. Il est
@@ -46,7 +53,7 @@ type PaymentsTab = 'supervision' | 'export';
  */
 @Component({
   selector: 'app-backoffice-payments-page',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './backoffice-payments-page.html',
   styleUrl: './backoffice-payments-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,13 +75,10 @@ export class BackofficePaymentsPageComponent {
 
   /** Ligne en cours d'action (verrouille ses boutons). */
   protected readonly processingId = signal<number | null>(null);
-  /** Ligne dont le panneau (confirmation ou remboursement) est ouvert. */
+  /** Ligne dont le panneau de confirmation est ouvert. */
   protected readonly openPanelId = signal<number | null>(null);
-  /** Nature du panneau ouvert. */
-  protected readonly panelKind = signal<'confirm' | 'refund' | null>(null);
-  /** Saisie du panneau : preuve Wave/OM (confirm) ou montant (refund). */
+  /** Référence de la transaction Wave/OM, saisie comme preuve. */
   protected proofReference = '';
-  protected refundAmount: number | null = null;
 
   protected readonly actionError = signal<string | null>(null);
   protected readonly actionDone = signal<string | null>(null);
@@ -168,37 +172,17 @@ export class BackofficePaymentsPageComponent {
     return p.mode === 'manuel' && p.status !== 'complete';
   }
 
-  /** Seul un paiement encaissé est remboursable. */
-  protected canRefund(p: Payment): boolean {
-    return p.status === 'complete';
-  }
-
   /** Ouvre le panneau de confirmation manuelle d'une ligne. */
   protected openConfirm(p: Payment): void {
-    this.resetPanelInputs();
-    this.panelKind.set('confirm');
-    this.openPanelId.set(p.id);
-  }
-
-  /** Ouvre le panneau de remboursement d'une ligne (montant prérempli = total). */
-  protected openRefund(p: Payment): void {
-    this.resetPanelInputs();
-    this.refundAmount = p.amount_xof;
-    this.panelKind.set('refund');
+    this.proofReference = '';
+    this.actionError.set(null);
+    this.actionDone.set(null);
     this.openPanelId.set(p.id);
   }
 
   /** Ferme le panneau ouvert. */
   protected closePanel(): void {
     this.openPanelId.set(null);
-    this.panelKind.set(null);
-  }
-
-  private resetPanelInputs(): void {
-    this.proofReference = '';
-    this.refundAmount = null;
-    this.actionError.set(null);
-    this.actionDone.set(null);
   }
 
   /** Confirme un règlement manuel Wave/OM. */
@@ -214,34 +198,6 @@ export class BackofficePaymentsPageComponent {
         this.replace(updated);
         this.closePanel();
         this.actionDone.set(`Paiement ${updated.reference} confirmé. La réservation est validée.`);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.processingId.set(null);
-        this.actionError.set(this.messageFor(err));
-      },
-    });
-  }
-
-  /** Rembourse tout ou partie d'un paiement encaissé. */
-  protected refund(p: Payment): void {
-    if (this.processingId() !== null) return;
-
-    const amount = this.refundAmount ?? undefined;
-    if (amount !== undefined && (amount < 1 || amount > p.amount_xof)) {
-      this.actionError.set('Le montant doit être compris entre 1 et le montant payé.');
-      return;
-    }
-
-    this.processingId.set(p.id);
-    this.actionError.set(null);
-    this.actionDone.set(null);
-
-    this.admin.refundPayment(p.id, amount).subscribe({
-      next: (updated) => {
-        this.processingId.set(null);
-        this.replace(updated);
-        this.closePanel();
-        this.actionDone.set(`Remboursement de ${updated.reference} effectué.`);
       },
       error: (err: HttpErrorResponse) => {
         this.processingId.set(null);

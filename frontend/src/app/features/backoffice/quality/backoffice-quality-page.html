@@ -62,13 +62,17 @@
     <p class="ql-count">{{ reviewsTotal() }} avis</p>
     <div class="ql-table-wrap">
       <table class="ql-table">
+        <!--
+          F8.2.d — Cinq colonnes. L'auteur et la date rejoignent la ressource ;
+          le commentaire reste visible mais tronqué, car un avis ne se modère
+          pas sur son texte seul : il se lit dans sa fiche, à côté des autres
+          avis de la même ressource.
+        -->
         <thead>
           <tr>
-            <th>Auteur</th>
             <th>Ressource</th>
             <th>Note</th>
             <th>Commentaire</th>
-            <th>Déposé le</th>
             <th>Statut</th>
             <th aria-label="Actions"></th>
           </tr>
@@ -76,14 +80,17 @@
         <tbody>
           @for (r of reviews(); track r.id) {
             <tr>
-              <td>{{ r.author?.name || '—' }}</td>
               <td>
-                <span class="ql-strong">{{ r.resource_label }}</span>
+                <a class="ql-strong ql-link" [routerLink]="['/back-office', 'qualite', 'avis', r.id]">
+                  {{ r.resource_label }}
+                </a>
                 <span class="ql-place">{{ resourceTypeLabel(r.resource_type) }}</span>
+                <span class="ql-muted">
+                  {{ r.author?.name || 'Auteur supprimé' }} · {{ shortDate(r.created_at) }}
+                </span>
               </td>
               <td><span class="ql-stars" [attr.aria-label]="r.rating + ' sur 5'">{{ stars(r.rating) }}</span></td>
               <td><span class="ql-comment">{{ r.comment || '—' }}</span></td>
-              <td><span class="ql-muted">{{ shortDate(r.created_at) }}</span></td>
               <td><span class="ql-badge" [class]="reviewStatusClass(r.status)">{{ r.status_label || r.status }}</span></td>
               <td class="ql-actions-cell">
                 @if (r.status === 'en_attente') {
@@ -91,14 +98,15 @@
                     <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="moderate(r, 'publie')">Publier</button>
                     <button type="button" class="k-btn k-btn--sm k-btn--danger" (click)="moderate(r, 'rejete')">Rejeter</button>
                   </div>
-                } @else {
-                  <span class="ql-muted">—</span>
                 }
+                <a class="ql-open" [routerLink]="['/back-office', 'qualite', 'avis', r.id]">
+                  Ouvrir le dossier →
+                </a>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="7" class="ql-empty">Aucun avis ne correspond à ces filtres.</td>
+              <td colspan="5" class="ql-empty">Aucun avis ne correspond à ces filtres.</td>
             </tr>
           }
         </tbody>
@@ -149,10 +157,14 @@
     <p class="ql-count">{{ providersTotal() }} prestataire(s)</p>
     <div class="ql-table-wrap">
       <table class="ql-table">
+        <!--
+          F8.2.d — La catégorie rejoint le nom, et le motif de sanction quitte la
+          cellule : tronqué, il ne défend rien. Il se lit en entier dans la fiche
+          du prestataire, avec les avis qui l'ont motivé.
+        -->
         <thead>
           <tr>
             <th>Prestataire</th>
-            <th>Catégorie</th>
             <th>Note</th>
             <th>Avertissements</th>
             <th>Statut</th>
@@ -163,12 +175,14 @@
           @for (p of providers(); track p.id) {
             <tr [class.is-expanded]="expandedProviderId() === p.id">
               <td>
-                <span class="ql-strong">{{ p.business_name }}</span>
+                <a class="ql-strong ql-link" [routerLink]="['/back-office', 'prestataire', p.id]">
+                  {{ p.business_name }}
+                </a>
+                <span class="ql-muted">{{ p.category_label || p.category || '—' }}</span>
                 @if (p.sanction_note) {
-                  <span class="ql-place ql-place--warn">Sanction : {{ p.sanction_note }}</span>
+                  <span class="ql-place ql-place--warn">Sous sanction</span>
                 }
               </td>
-              <td><span class="ql-muted">{{ p.category_label || p.category || '—' }}</span></td>
               <td><span class="ql-muted">{{ ratingLabel(p) }}</span></td>
               <td>
                 @if (p.warnings_count > 0) {
@@ -186,12 +200,15 @@
                   (click)="toggleSanction(p)">
                   {{ expandedProviderId() === p.id ? 'Fermer' : 'Sanctionner' }}
                 </button>
+                <a class="ql-open" [routerLink]="['/back-office', 'prestataire', p.id]">
+                  Ouvrir la fiche →
+                </a>
               </td>
             </tr>
 
             @if (expandedProviderId() === p.id) {
               <tr class="ql-panel-row">
-                <td colspan="6">
+                <td colspan="5">
                   <div class="ql-panel">
                     <label class="ql-panel__label" [attr.for]="'reason-' + p.id">Motif (obligatoire)</label>
                     <textarea
@@ -212,7 +229,7 @@
             }
           } @empty {
             <tr>
-              <td colspan="6" class="ql-empty">Aucun prestataire ne correspond à ces filtres.</td>
+              <td colspan="5" class="ql-empty">Aucun prestataire ne correspond à ces filtres.</td>
             </tr>
           }
         </tbody>

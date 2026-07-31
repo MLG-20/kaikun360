@@ -1,0 +1,191 @@
+@if (loading()) {
+  <p class="bo-state" role="status">Chargement du partenaire…</p>
+} @else if (error() || !dossier()) {
+  <!--
+    Cette fiche est gardée côté serveur par `valider:prestataire`, plus étroit
+    que l'accès à l'écran Tourisme : un agent peut voir la liste des partenaires
+    sans pouvoir ouvrir leur dossier. Le message le dit, plutôt que de laisser
+    croire à une donnée disparue.
+  -->
+  <p class="bo-state bo-state--error" role="alert">
+    Partenaire introuvable, ou dossier non accessible avec vos droits (l'ouverture
+    d'un dossier prestataire demande la délégation « valider : prestataire »).
+    <a routerLink="/back-office/qualite">Retour à Avis &amp; qualité</a>
+  </p>
+} @else if (dossier(); as d) {
+  <!--
+    Retour par l'HISTORIQUE, pas par un lien fixe : cette fiche s'ouvre depuis
+    l'onglet « Guides & restaurants » du Tourisme comme depuis Avis & qualité.
+    Un lien en dur renverrait la moitié des agents sur le mauvais écran.
+  -->
+  <app-back-link label="Retour" fallback="/back-office/qualite" />
+
+  <header class="bo-head">
+    <div>
+      <span class="bo-kind">{{ d.provider.category_label ?? 'Partenaire' }}</span>
+      <h1 class="bo-title">{{ d.provider.business_name }}</h1>
+      <p class="bo-sub">
+        @if (rating(); as r) {
+          <span class="bo-stars">{{ stars(+r.avg) }}</span>
+          {{ r.avg }} / 5 sur {{ r.count }} avis
+        } @else {
+          Aucun avis reçu
+        }
+      </p>
+    </div>
+
+    <div class="bo-badges">
+      <span class="bo-badge" [class]="statusClass(d.provider.status)">
+        {{ d.provider.status_label ?? '—' }}
+      </span>
+    </div>
+  </header>
+
+  <!--
+    La sanction en cours passe avant tout : son motif est ce qui se dit à
+    l'intéressé quand il rappelle.
+  -->
+  @if (d.provider.warnings_count) {
+    <p class="bo-stake" role="note">
+      <strong>{{ d.provider.warnings_count }} avertissement(s)</strong> au compteur.
+      @if (d.provider.sanction_note) {
+        Motif retenu : « {{ d.provider.sanction_note }} ».
+      }
+      Les sanctions se prennent dans l'écran Avis &amp; qualité.
+    </p>
+  }
+
+  <div class="bo-grid">
+    <!-- ============ L'ENSEIGNE ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">L'enseigne</h2>
+      <dl class="bo-facts">
+        <div><dt>Nom commercial</dt><dd>{{ d.provider.business_name }}</dd></div>
+        <div><dt>Catégorie</dt><dd>{{ d.provider.category_label ?? '—' }}</dd></div>
+        <div><dt>Validé le</dt><dd>{{ shortDate(d.provider.validated_at) }}</dd></div>
+      </dl>
+
+      @if (d.provider.bio) {
+        <h3 class="bo-block__title">Présentation</h3>
+        <p class="bo-desc">{{ d.provider.bio }}</p>
+      }
+
+      <h3 class="bo-block__title">Contact</h3>
+      @if (d.account; as account) {
+        <dl class="bo-facts">
+          <div><dt>Compte</dt><dd>{{ account.name }}</dd></div>
+          @if (account.email) {
+            <div>
+              <dt>E-mail</dt>
+              <dd><a [href]="'mailto:' + account.email">{{ account.email }}</a></dd>
+            </div>
+          }
+          @if (account.phone) {
+            <div>
+              <dt>Téléphone</dt>
+              <dd><a [href]="'tel:' + account.phone">{{ account.phone }}</a></dd>
+            </div>
+          }
+        </dl>
+        <a class="bo-link" [routerLink]="['/back-office', 'comptes', account.id]">
+          Voir sa fiche compte →
+        </a>
+      } @else {
+        <p class="bo-muted">Compte introuvable (supprimé).</p>
+      }
+    </section>
+
+    <!-- ============ CERTIFICATIONS ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">Certifications</h2>
+      @if (d.provider.certifications?.length) {
+        <ul class="bo-certs">
+          @for (cert of d.provider.certifications; track cert.id) {
+            <li class="bo-cert">
+              <span class="bo-cert__name">{{ cert.name }}</span>
+              @if (cert.issuer) {
+                <span class="bo-muted">délivrée par {{ cert.issuer }}</span>
+              }
+              <span class="bo-badge" [class]="cert.verified ? 'is-ok' : 'is-pending'">
+                {{ cert.verified ? 'Vérifiée' : 'À vérifier' }}
+              </span>
+              <!--
+                La pièce est facultative (F8.0) : « pas de justificatif » et
+                « justificatif en cours de vérification » ne sont pas la même
+                situation, et l'agent doit pouvoir les distinguer.
+              -->
+              @if (cert.has_file && cert.download_url) {
+                <a class="bo-link" [href]="cert.download_url" target="_blank" rel="noopener">
+                  Télécharger le justificatif →
+                </a>
+              } @else {
+                <span class="bo-muted">Aucun justificatif déposé</span>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">Aucune certification déclarée.</p>
+      }
+    </section>
+
+    <!-- ============ AVIS ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">
+        Avis reçus
+        @if (negativeReviews().length) {
+          <span class="bo-muted">
+            — dont {{ negativeReviews().length }} à 1 ou 2 étoiles
+          </span>
+        }
+      </h2>
+      @if (d.reviews.length) {
+        <ul class="bo-reviews">
+          @for (review of d.reviews; track review.id) {
+            <li class="bo-review" [class.is-negative]="review.rating <= 2">
+              <div class="bo-review__head">
+                <span class="bo-stars">{{ stars(review.rating) }}</span>
+                <span class="bo-review__author">{{ review.author_name || 'Client supprimé' }}</span>
+                <span class="bo-muted">{{ shortDate(review.created_at) }}</span>
+                @if (review.status !== 'publie') {
+                  <span class="bo-badge is-pending">Non publié</span>
+                }
+              </div>
+              @if (review.comment) {
+                <p class="bo-review__comment">« {{ review.comment }} »</p>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">
+          Aucun avis reçu. La note affichée ailleurs ne repose alors sur rien : ne
+          sanctionnez pas sur cette base.
+        </p>
+      }
+    </section>
+
+    <!-- ============ JOURNAL ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Journal</h2>
+      @if (d.activity.length) {
+        <ul class="bo-activity">
+          @for (entry of d.activity; track entry.id) {
+            <li class="bo-activity__item">
+              <span class="bo-activity__date">{{ dateTime(entry.created_at) }}</span>
+              <span class="bo-activity__desc">{{ entry.description }}</span>
+              @if (entry.causer_name) {
+                <span class="bo-muted">par {{ entry.causer_name }}</span>
+              }
+              @if (entry.properties?.['reason']) {
+                <span class="bo-activity__reason">« {{ entry.properties['reason'] }} »</span>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">Aucune décision tracée sur ce partenaire pour l'instant.</p>
+      }
+    </section>
+  </div>
+}

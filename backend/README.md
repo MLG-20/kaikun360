@@ -260,6 +260,30 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   générique — qui publie une ressource arbitre ce qu'elle montre. Les listes de
   supervision exposent en plus `media_count` / `media_hidden_count` (`withCount`)
   pour repérer une annonce publiée sans visuel.
+  **Les fiches de dossier (F8.2)** — cinq écrans n'étaient que des listes :
+  Nuitées, Mobilité, Tourisme, Paiements, Avis & qualité. Sept points d'accès de
+  détail les complètent (`GET /admin/stay-bookings/{id}`, `/admin/vehicles/{id}`,
+  `/admin/mobility-services/{id}`, `/admin/experiences/{id}`,
+  `/admin/providers/{id}`, `/admin/payments/{id}`, `/admin/reviews/{id}`),
+  chacun gardé par **la permission de sa liste** et en **lecture seule** — les
+  gestes restent aux routes d'action, qui portent les règles et la trace.
+  Deux méritent l'attention. **Le paiement** transporte ce que `PaymentResource`
+  n'expose pas et ne doit pas exposer (elle sert aussi l'espace client) :
+  `provider_reference`, `signature_verified`, la preuve Wave/OM et le montant
+  déjà remboursé — construits dans le contrôleur, derrière `gerer:paiements`. Il
+  renvoie en plus `can_confirm` / `can_refund` : **le serveur dit ce qu'il
+  accepterait**, au lieu de laisser le frontend redéclarer les règles du module
+  de paiement et en diverger. ⚠️ `gerer:paiements` est une permission de
+  **gouvernance** (CDC §7, « accès financier limité ») : un agent de terrain ne
+  l'a pas, même avec `AdminPermission::operational()`. **L'avis** porte son
+  `context` — les autres avis *publiés* de la ressource notée, leur moyenne, le
+  nombre de plaintes : une plainte isolée est un texte à modérer, la troisième du
+  mois est un problème de prestataire. `MediaEntry` et `OwnerEntry` (F8.1) sont
+  réutilisés par les fiches véhicule, circuit et séjour.
+  ⚠️ **Une réservation dont la ressource a disparu reste consultable** (`stay:
+  null`, « Ressource retirée ») plutôt que 404 : le séjour a eu lieu, le règlement
+  a été encaissé, et un dossier financier qui s'évanouit avec son bien est
+  ingérable en cas de litige. 18 tests.
   ⚠️ **Dette B12 soldée ici** : seul `Property` avait une relation `media()`.
   `Vehicle` (commentaire « sera branchée en B12 ») et `TourismExperience`
   acceptaient déjà des dépôts via `POST media/upload` qu'aucune relation ne

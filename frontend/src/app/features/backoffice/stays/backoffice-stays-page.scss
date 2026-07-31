@@ -77,7 +77,8 @@
 .st-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 780px;
+  // Quatre colonnes depuis F8.2.a : la table tient à l'écran.
+  min-width: 620px;
 
   th,
   td {
@@ -100,10 +101,18 @@
   }
 }
 
+// Devenu un lien vers la fiche du séjour (F8.2.a) : il garde l'allure d'un
+// titre de ligne, et ne se souligne qu'au survol.
 .st-property {
   display: block;
   font-weight: 600;
   color: var(--k-ink);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--k-brand);
+    text-decoration: underline;
+  }
 }
 
 .st-ref {
@@ -130,9 +139,13 @@
   white-space: nowrap;
 }
 
+// Le nombre de voyageurs a rejoint la colonne des dates (F8.2.a) : c'est un
+// complément du séjour, pas une colonne à lui seul.
 .st-guests {
-  font-weight: 600;
-  color: var(--k-ink);
+  display: block;
+  margin-top: 3px;
+  font-size: 0.78rem;
+  color: var(--k-muted);
 }
 
 .st-muted {
@@ -187,78 +200,60 @@
   }
 }
 
-// --- Caution (F7.3.f) ---
-.st-amount {
-  display: block;
-  font-weight: 700;
-  color: var(--k-ink);
-  font-size: 0.88rem;
-  margin-bottom: 4px;
-}
-
-.st-caution-actions {
+// --- Ménage & caution : état seulement (F8.2.a) ---
+// Étiquettes discrètes, volontairement plus légères que la pastille d'étape :
+// elles informent, elles n'appellent pas au clic — le geste est dans la fiche.
+.st-tags {
   display: flex;
-  gap: 6px;
   flex-wrap: wrap;
+  gap: 5px;
   margin-top: 6px;
 }
 
-.st-panel-row td {
-  background: var(--k-cream);
-}
-
-.st-panel {
-  padding: 6px 2px;
-
-  &__title {
-    margin: 0 0 10px;
-    font-weight: 600;
-    color: var(--k-ink);
-    font-size: 0.9rem;
-  }
-
-  &__row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-
-    .k-input {
-      flex: 1;
-      min-width: 240px;
-    }
-  }
-
-  &__hint {
-    margin: 10px 0 0;
-    font-size: 0.8rem;
-    color: var(--k-muted);
-  }
-}
-
-.st-select {
-  padding: 7px 10px;
-  border: 1px solid var(--k-line-strong);
+.st-tag {
+  padding: 2px 8px;
   border-radius: var(--k-radius-sm);
-  background: #fff;
-  font: inherit;
-  font-size: 0.85rem;
-  color: var(--k-ink);
-  cursor: pointer;
+  background: var(--k-cream);
+  color: var(--k-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.12);
+    color: var(--k-green-600);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.1);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+  }
 }
 
 .st-btn {
   padding: 8px 16px;
   font-size: 0.85rem;
   white-space: nowrap;
+}
 
-  // Retenir une caution est le geste lourd de cet écran : il se signale.
-  &--danger {
-    color: var(--k-danger);
+// Second chemin vers le dossier, pour la ligne déjà terminée : le titre du
+// séjour n'est pas le seul point d'entrée.
+.st-open {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--k-brand);
+  text-decoration: none;
+  white-space: nowrap;
 
-    &:hover:not(:disabled) {
-      background: rgba(199, 59, 77, 0.08);
-    }
+  &:hover {
+    text-decoration: underline;
   }
 }
 

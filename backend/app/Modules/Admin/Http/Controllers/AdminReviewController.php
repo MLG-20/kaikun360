@@ -68,6 +68,86 @@ class AdminReviewController extends Controller
     }
 
     /**
+     * Dossier d'un avis. GET /api/v1/admin/reviews/{review}
+     *
+     * **F8.2.d — modérer, c'est arbitrer, pas trier.** La file affiche un
+     * commentaire tronqué dans une cellule ; publier ou rejeter sur cette base
+     * revient à jouer à pile ou face. Deux éléments manquent, et ce sont eux qui
+     * tranchent :
+     *
+     *   - **le contexte de la ressource** : les autres avis déjà publiés sur
+     *     elle. Une plainte isolée au milieu de quinze avis à cinq étoiles n'est
+     *     pas un signal ; la troisième plainte identique en un mois en est un.
+     *     C'est la différence entre modérer un texte et repérer un problème réel.
+     *   - **l'auteur et sa réservation** : le commentaire complet, non tronqué,
+     *     et de quoi vérifier que l'avis émane bien d'un client servi.
+     *
+     * La décision elle-même reste servie par
+     * `PATCH /reviews/{review}/moderate`, qui la trace.
+     */
+    public function show(Review $review): JsonResponse
+    {
+        $review->load(['author', 'reviewable']);
+
+        // Les autres avis PUBLIÉS de la même ressource : le contexte qui dit si
+        // ce commentaire est un cas isolé ou le énième du même genre.
+        $siblings = Review::query()
+            ->where('reviewable_type', $review->reviewable_type)
+            ->where('reviewable_id', $review->reviewable_id)
+            ->where('id', '!=', $review->id)
+            ->where('status', ReviewStatus::PUBLIE->value)
+            ->with('author')
+            ->latest()
+            ->limit(20)
+            ->get()
+            ->map(fn (Review $other) => [
+                'id' => $other->id,
+                'rating' => $other->rating,
+                'comment' => $other->comment,
+                'author_name' => $other->author?->name,
+                'created_at' => $other->created_at?->toIso8601String(),
+            ]);
+
+        $published = $siblings->count();
+        $ratings = $siblings->pluck('rating');
+
+        return ApiResponse::success([
+            'review' => [
+                'id' => $review->id,
+                'reference' => $review->reference,
+                'rating' => $review->rating,
+                'comment' => $review->comment,
+                'status' => $review->status?->value,
+                'status_label' => $review->status?->label(),
+                'created_at' => $review->created_at?->toIso8601String(),
+                'author' => $review->author
+                    ? [
+                        'id' => $review->author->id,
+                        'name' => $review->author->name,
+                        'email' => $review->author->email,
+                        'phone' => $review->author->phone,
+                    ]
+                    : null,
+            ],
+            'resource' => [
+                'type' => array_search($review->reviewable_type, Review::TYPES, true) ?: 'ressource',
+                'label' => $this->resourceLabel($review),
+                'id' => $review->reviewable_id,
+                // Un avis sur un PRESTATAIRE ouvre sa fiche : c'est là que la
+                // sanction se décide. Les autres types n'ont pas cette bascule.
+                'is_provider' => $review->reviewable_type === Review::TYPES['provider'],
+            ],
+            'context' => [
+                'published_count' => $published,
+                'average' => $published > 0 ? round($ratings->avg(), 1) : null,
+                // Avis publiés à 1 ou 2 étoiles : le signal que l'on cherche.
+                'negative_count' => $ratings->filter(fn (int $r) => $r <= 2)->count(),
+                'reviews' => $siblings,
+            ],
+        ]);
+    }
+
+    /**
      * Libellé lisible de la ressource notée, robuste au type (bien / véhicule /
      * expérience / prestataire) : on prend le premier champ d'intitulé présent.
      */

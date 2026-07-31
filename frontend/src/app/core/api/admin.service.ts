@@ -277,6 +277,132 @@ export interface CatalogQuery {
   page?: number;
 }
 
+// --- Fiches Mobilité (F8.2.b) -----------------------------------------------
+
+/** Une location de véhicule, dans la fiche du véhicule. */
+export interface VehicleDossierBooking {
+  booking_id: number;
+  reference: string;
+  client_name: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  guests: number;
+  amount_xof: number | null;
+  status: string;
+}
+
+/**
+ * Un départ programmé porté par un véhicule, dans sa fiche.
+ *
+ * `is_upcoming` sépare ce qui est **engagé** (départs à venir, qu'une
+ * suspension mettrait par terre) de l'historique.
+ */
+export interface VehicleDossierTrip {
+  id: number;
+  reference: string;
+  departure: string;
+  destination: string;
+  departure_at: string | null;
+  capacity: number;
+  seats_taken: number;
+  seats_left: number;
+  status: string | null;
+  status_label: string | null;
+  is_upcoming: boolean;
+}
+
+/** Fiche d'un véhicule (F8.2.b) — `GET /admin/vehicles/{id}`. */
+export interface VehicleDossier {
+  vehicle: AdminVehicle;
+  /** Galerie complète (lecture : la modération reste au dossier de validation). */
+  media: QueueMedia;
+  bookings: VehicleDossierBooking[];
+  trips: VehicleDossierTrip[];
+  activity: AccountActivity[];
+}
+
+/**
+ * Un passager d'un départ programmé (fiche trajet, F8.2.b).
+ *
+ * Les réservations annulées sont **listées** (`is_cancelled`) sans compter dans
+ * le remplissage : une annulation de la veille explique un départ à moitié vide.
+ */
+export interface TripDossierPassenger {
+  booking_id: number;
+  reference: string;
+  client_name: string | null;
+  client_email: string | null;
+  client_phone: string | null;
+  guests: number;
+  amount_xof: number | null;
+  paid_xof: number;
+  remaining_xof: number;
+  status: string;
+  is_cancelled: boolean;
+  created_at: string | null;
+}
+
+/** Fiche d'un départ programmé (F8.2.b) — `GET /admin/mobility-services/{id}`. */
+export interface TripDossier {
+  trip: AdminMobilityService;
+  passengers: TripDossierPassenger[];
+  activity: AccountActivity[];
+}
+
+// --- Fiches Tourisme (F8.2.c) -----------------------------------------------
+
+/**
+ * Un participant à un circuit (fiche circuit, F8.2.c).
+ *
+ * Comme pour un départ de mobilité, les réservations annulées restent listées
+ * (`is_cancelled`) sans compter dans le remplissage.
+ */
+export interface CircuitParticipant {
+  booking_id: number;
+  reference: string;
+  client_name: string | null;
+  client_email: string | null;
+  client_phone: string | null;
+  guests: number;
+  start_date: string | null;
+  amount_xof: number | null;
+  paid_xof: number;
+  remaining_xof: number;
+  status: string;
+  is_cancelled: boolean;
+}
+
+/** Fiche d'un circuit (F8.2.c) — `GET /admin/experiences/{id}`. */
+export interface CircuitDossier {
+  experience: AdminExperience;
+  media: QueueMedia;
+  participants: CircuitParticipant[];
+  activity: AccountActivity[];
+}
+
+/** Un avis reçu par un prestataire, en clair (fiche partenaire, F8.2.c). */
+export interface PartnerReview {
+  id: number;
+  rating: number;
+  comment: string | null;
+  author_name: string | null;
+  status: string | null;
+  created_at: string | null;
+}
+
+/**
+ * Fiche d'un partenaire (F8.2.c) — `GET /admin/providers/{id}`.
+ *
+ * `account` est le compte utilisateur derrière l'enseigne : c'est lui qu'on
+ * appelle quand la note se dégrade.
+ */
+export interface PartnerDossier {
+  provider: Provider;
+  account: QueueOwner | null;
+  reviews: PartnerReview[];
+  activity: AccountActivity[];
+}
+
 /**
  * Couverture touristique d'une destination (miroir de
  * `GET /admin/tourism/destinations` — F7.2.k).
@@ -354,11 +480,214 @@ export interface AdminPropertyPatch {
   description?: string | null;
 }
 
+/**
+ * Le séjour lui-même, dans sa fiche (F8.2.a) — `GET /admin/stay-bookings/{id}`.
+ *
+ * Sur-ensemble de `StayBooking` : la ligne de calendrier ne portait ni l'argent,
+ * ni les horodatages de création/annulation, que la fiche affiche.
+ */
+export interface StayDossierBooking {
+  booking_id: number;
+  reference: string;
+  status: string;
+  start_date: string | null;
+  end_date: string | null;
+  /** Nombre de nuits, déduit des bornes par le serveur (unité de facturation). */
+  nights: number | null;
+  guests: number;
+  amount_xof: number | null;
+  commission_xof: number | null;
+  /** Total réellement encaissé (acomptes compris). */
+  paid_xof: number;
+  /** Ce qu'il reste à verser (0 si soldé). */
+  remaining_xof: number;
+  created_at: string | null;
+  cancelled_at: string | null;
+  checked_in_at: string | null;
+  checked_out_at: string | null;
+  housekeeping_status: HousekeepingStatus | null;
+  caution_xof: number | null;
+  caution_status: CautionStatus | null;
+}
+
+/** Le logement réservé et son hôte, dans la fiche de séjour (F8.2.a). */
+export interface StayDossierStay {
+  stay_id: number;
+  property_id: number | null;
+  property_title: string | null;
+  property_type: string | null;
+  address: string | null;
+  commune: string | null;
+  department: string | null;
+  region: string | null;
+  capacity: number | null;
+  price_per_night_xof: number | null;
+  check_in_time: string | null;
+  check_out_time: string | null;
+  is_active: boolean;
+  /** Le propriétaire du bien — joignable depuis la fiche. */
+  host: QueueOwner | null;
+  /** Galerie du bien (lecture : la modération se fait au dossier de validation). */
+  media: QueueMedia | null;
+}
+
+/** Un règlement rattaché au séjour (acompte, solde, remboursement). */
+export interface StayDossierPayment {
+  id: number;
+  reference: string;
+  amount_xof: number;
+  kind: string | null;
+  kind_label: string | null;
+  status: string;
+  status_label: string;
+  mode: string | null;
+  provider: string | null;
+  created_at: string | null;
+}
+
+/**
+ * Dossier complet d'un séjour (F8.2.a) — `GET /admin/stay-bookings/{id}`.
+ *
+ * `stay` vaut `null` quand le bien a été retiré depuis : le séjour a bien eu
+ * lieu, sa fiche reste consultable.
+ */
+export interface StayDossier {
+  booking: StayDossierBooking;
+  client: QueueOwner | null;
+  stay: StayDossierStay | null;
+  payments: StayDossierPayment[];
+  /** Journal d'audit du séjour (motif d'une caution conservée, notamment). */
+  activity: AccountActivity[];
+}
+
 /** Filtres du calendrier des nuitées (bornes sur la date d'arrivée). */
 export interface StayCalendarQuery {
   from?: string;
   to?: string;
   page?: number;
+}
+
+// --- Fiche paiement (F8.2.d) ------------------------------------------------
+
+/**
+ * La transaction, dans sa fiche — `GET /admin/payments/{id}`.
+ *
+ * Sur-ensemble de `Payment` : porte les **éléments de preuve** que la Resource
+ * publique n'expose pas (elle sert aussi l'espace client) et les deux drapeaux
+ * d'action calculés par le serveur.
+ */
+export interface PaymentDossierPayment {
+  id: number;
+  reference: string;
+  booking_id: number | null;
+  amount_xof: number;
+  commission_xof: number | null;
+  kind: string | null;
+  kind_label: string | null;
+  status: string;
+  status_label: string;
+  mode: string | null;
+  provider: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  /** Référence de la transaction chez le PSP. */
+  provider_reference: string | null;
+  /** Signature du webhook PSP vérifiée : sans elle, l'encaissement n'est pas prouvé. */
+  signature_verified: boolean;
+  /** Référence Wave/OM saisie lors d'une confirmation manuelle (preuve). */
+  manual_proof_reference: string | null;
+  /** Montant déjà remboursé, s'il y en a un. */
+  refunded_amount_xof: number | null;
+  /**
+   * Ce que l'API accepterait, décidé par le SERVEUR. L'écran n'a pas à
+   * réinventer ces règles : il affiche les boutons que l'API honorerait.
+   */
+  can_confirm: boolean;
+  can_refund: boolean;
+}
+
+/** La réservation payée, dans la fiche du paiement. */
+export interface PaymentDossierBooking {
+  id: number;
+  reference: string;
+  /** Nom court du modèle réservé (`Stay`, `Vehicle`, `TourismExperience`…). */
+  resource_type: string;
+  resource_label: string;
+  start_date: string | null;
+  end_date: string | null;
+  guests: number;
+  status: string;
+  amount_xof: number | null;
+  paid_xof: number;
+  remaining_xof: number;
+  client: QueueOwner | null;
+}
+
+/** Un règlement de la même réservation (échéancier). */
+export interface PaymentDossierSibling {
+  id: number;
+  reference: string;
+  amount_xof: number;
+  kind_label: string | null;
+  status: string;
+  status_label: string;
+  mode: string | null;
+  created_at: string | null;
+  /** Vrai pour le règlement dont on consulte la fiche. */
+  is_current: boolean;
+}
+
+/** Dossier complet d'un règlement (F8.2.d) — `GET /admin/payments/{id}`. */
+export interface PaymentDossier {
+  payment: PaymentDossierPayment;
+  booking: PaymentDossierBooking | null;
+  /** Tous les règlements de la réservation, celui-ci compris. */
+  siblings: PaymentDossierSibling[];
+  activity: AccountActivity[];
+}
+
+// --- Fiche avis (F8.2.d) ----------------------------------------------------
+
+/** Un avis publié sur la même ressource (contexte de modération). */
+export interface ReviewContextEntry {
+  id: number;
+  rating: number;
+  comment: string | null;
+  author_name: string | null;
+  created_at: string | null;
+}
+
+/**
+ * Dossier d'un avis (F8.2.d) — `GET /admin/reviews/{id}`.
+ *
+ * `context` est ce qui manque à la file pour trancher : une plainte isolée au
+ * milieu de quinze avis à cinq étoiles n'est pas un signal, la troisième
+ * plainte identique du mois en est un.
+ */
+export interface ReviewDossier {
+  review: {
+    id: number;
+    reference: string | null;
+    rating: number;
+    comment: string | null;
+    status: string | null;
+    status_label: string | null;
+    created_at: string | null;
+    author: QueueOwner | null;
+  };
+  resource: {
+    type: string;
+    label: string;
+    id: number;
+    /** Un avis sur un prestataire ouvre sa fiche : c'est là que la sanction se décide. */
+    is_provider: boolean;
+  };
+  context: {
+    published_count: number;
+    average: number | null;
+    negative_count: number;
+    reviews: ReviewContextEntry[];
+  };
 }
 
 // --- Paiements (F7.2.d) -----------------------------------------------------
@@ -1492,6 +1821,30 @@ export class AdminService {
   }
 
   /**
+   * Fiche d'un véhicule (F8.2.b). GET /admin/vehicles/{id}
+   *
+   * La liste dit qu'un véhicule n'est pas conforme ; la fiche dit ce qu'il
+   * engage — locations en cours, départs programmés à venir — et qui joindre.
+   */
+  vehicleDossier(id: number): Observable<VehicleDossier> {
+    return this.http
+      .get<ApiEnvelope<VehicleDossier>>(`${this.api}/admin/vehicles/${id}`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Fiche d'un départ programmé (F8.2.b). GET /admin/mobility-services/{id}
+   *
+   * La liste donne le remplissage (« 12 / 15 ») ; la fiche donne **qui** sont
+   * ces douze, avec de quoi les joindre et ce qu'ils doivent encore.
+   */
+  tripDossier(id: number): Observable<TripDossier> {
+    return this.http
+      .get<ApiEnvelope<TripDossier>>(`${this.api}/admin/mobility-services/${id}`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
    * Circuits, TOUS statuts (supervision). GET /admin/experiences
    *
    * Sert l'écran Catalogues (F7.2.b) et l'onglet « Circuits » de l'écran
@@ -1502,6 +1855,31 @@ export class AdminService {
     return this.http.get<Paginated<AdminExperience>>(`${this.api}/admin/experiences`, {
       params: this.catalogParams(query),
     });
+  }
+
+  /**
+   * Fiche d'un circuit (F8.2.c). GET /admin/experiences/{id}
+   *
+   * Le tableau dit qu'un circuit est rempli à 12/15 ; la fiche dit **qui part**
+   * et ce que le circuit promet (son programme).
+   */
+  circuitDossier(id: number): Observable<CircuitDossier> {
+    return this.http
+      .get<ApiEnvelope<CircuitDossier>>(`${this.api}/admin/experiences/${id}`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Fiche d'un partenaire (F8.2.c). GET /admin/providers/{id}
+   *
+   * Une note et un compteur d'avertissements ne suffisent pas à décider : la
+   * fiche donne les avis en clair, les certifications et le motif des sanctions.
+   * Garde serveur `valider:prestataire`.
+   */
+  partnerDossier(id: number): Observable<PartnerDossier> {
+    return this.http
+      .get<ApiEnvelope<PartnerDossier>>(`${this.api}/admin/providers/${id}`)
+      .pipe(map((response) => response.data));
   }
 
   /**
@@ -1548,6 +1926,19 @@ export class AdminService {
     if (query.to) params = params.set('to', query.to);
     if (query.page) params = params.set('page', String(query.page));
     return this.http.get<Paginated<StayBooking>>(`${this.api}/admin/stays/calendar`, { params });
+  }
+
+  /**
+   * Dossier complet d'un séjour (F8.2.a). GET /admin/stay-bookings/{id}
+   *
+   * Le calendrier reste la vue d'exploitation ; cette fiche répond aux questions
+   * qui obligeaient l'agent à changer d'écran (l'argent, le client, l'hôte, le
+   * motif d'une caution conservée). Même garde serveur que la liste.
+   */
+  stayDossier(bookingId: number): Observable<StayDossier> {
+    return this.http
+      .get<ApiEnvelope<StayDossier>>(`${this.api}/admin/stay-bookings/${bookingId}`)
+      .pipe(map((response) => response.data));
   }
 
   /** Enregistre l'arrivée. PATCH /admin/stay-bookings/{id}/check-in */
@@ -1613,6 +2004,32 @@ export class AdminService {
     if (query.booking_id) params = params.set('booking_id', String(query.booking_id));
     if (query.page) params = params.set('page', String(query.page));
     return this.http.get<Paginated<Payment>>(`${this.api}/admin/payments`, { params });
+  }
+
+  /**
+   * Dossier complet d'un règlement (F8.2.d). GET /admin/payments/{id}
+   *
+   * L'écran le plus sensible du back-office : confirmer à tort crédite une
+   * réservation jamais payée, rembourser à tort sort de l'argent réel. La fiche
+   * transporte les **preuves** (référence PSP, signature vérifiée, preuve
+   * Wave/OM), la réservation payée, l'**échéancier complet** et le journal.
+   */
+  paymentDossier(id: number): Observable<PaymentDossier> {
+    return this.http
+      .get<ApiEnvelope<PaymentDossier>>(`${this.api}/admin/payments/${id}`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Dossier d'un avis (F8.2.d). GET /admin/reviews/{id}
+   *
+   * Apporte le commentaire entier et surtout le **contexte** : les autres avis
+   * publiés de la même ressource, sans lesquels modérer revient à trier.
+   */
+  reviewDossier(id: number): Observable<ReviewDossier> {
+    return this.http
+      .get<ApiEnvelope<ReviewDossier>>(`${this.api}/admin/reviews/${id}`)
+      .pipe(map((response) => response.data));
   }
 
   /**

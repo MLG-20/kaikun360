@@ -1,0 +1,215 @@
+@if (loading()) {
+  <p class="bo-state" role="status">Chargement du véhicule…</p>
+} @else if (error() || !dossier()) {
+  <p class="bo-state bo-state--error" role="alert">
+    Véhicule introuvable ou inaccessible.
+    <a routerLink="/back-office/mobilite">Retour à la flotte</a>
+  </p>
+} @else if (dossier(); as d) {
+  <a class="bo-back" routerLink="/back-office/mobilite">← Retour à la flotte</a>
+
+  <header class="bo-head">
+    <div>
+      <span class="bo-kind">{{ d.vehicle.type_label ?? 'Véhicule' }}</span>
+      <h1 class="bo-title">{{ label() }}</h1>
+      <p class="bo-sub">
+        <span class="bo-ref">{{ d.vehicle.reference }}</span> ·
+        {{ d.vehicle.capacity }} place(s) ·
+        {{ d.vehicle.has_driver ? 'avec chauffeur' : 'sans chauffeur' }}
+      </p>
+    </div>
+
+    <div class="bo-badges">
+      <span class="bo-badge" [class]="verdictClass()">{{ verdictLabel() }}</span>
+      <span class="bo-badge" [class]="statusClass(d.vehicle.status)">
+        {{ d.vehicle.status_label ?? '—' }}
+      </span>
+    </div>
+  </header>
+
+  <!--
+    L'engagement passe avant tout le reste : c'est l'information qui change la
+    décision. Un véhicule non conforme qui porte des départs vendus ne se
+    suspend pas d'un clic, il se remplace.
+  -->
+  @if (upcomingTrips().length) {
+    <p class="bo-stake" role="note">
+      Ce véhicule porte <strong>{{ upcomingTrips().length }} départ(s) à venir</strong>, dont
+      <strong>{{ seatsAtStake() }} place(s) déjà vendue(s)</strong>. Le retirer du service
+      suppose de les réaffecter.
+    </p>
+  }
+
+  <div class="bo-grid">
+    <!-- ============ CONFORMITÉ ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">Conformité</h2>
+      <ul class="bo-checks">
+        @for (check of checks(); track check.label) {
+          <li class="bo-check" [class.is-missing]="!check.passed">
+            <span class="bo-check__mark" aria-hidden="true">{{ check.passed ? '✓' : '✗' }}</span>
+            <span class="bo-check__label">{{ check.label }}</span>
+            <span class="bo-check__value">
+              {{ check.value || (check.passed ? 'Déclarée' : 'Manquante') }}
+            </span>
+          </li>
+        }
+      </ul>
+      <p class="bo-hint">
+        La grille dépend du moyen de transport : une pirogue relève du fluvial
+        (gilets, météo, agrément), un motorisé de l'assurance et du chauffeur.
+      </p>
+    </section>
+
+    <!-- ============ PRESTATAIRE & COMMERCIAL ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">Prestataire</h2>
+      @if (d.vehicle.provider; as provider) {
+        <dl class="bo-facts">
+          <div><dt>Nom</dt><dd>{{ provider.name }}</dd></div>
+          @if (provider.email) {
+            <div>
+              <dt>E-mail</dt>
+              <dd><a [href]="'mailto:' + provider.email">{{ provider.email }}</a></dd>
+            </div>
+          }
+          @if (provider.phone) {
+            <div>
+              <dt>Téléphone</dt>
+              <dd><a [href]="'tel:' + provider.phone">{{ provider.phone }}</a></dd>
+            </div>
+          }
+        </dl>
+        <a class="bo-link" [routerLink]="['/back-office', 'comptes', provider.id]">
+          Voir sa fiche compte →
+        </a>
+      } @else {
+        <p class="bo-muted">Prestataire introuvable (compte supprimé).</p>
+      }
+
+      <h3 class="bo-block__title">Conditions</h3>
+      <dl class="bo-facts">
+        <div><dt>Tarif</dt><dd>{{ xof(d.vehicle.price_per_day_xof) }} / jour</dd></div>
+        <div><dt>Caution</dt><dd>{{ xof(d.vehicle.caution_xof) }}</dd></div>
+        <div><dt>Mis en ligne le</dt><dd>{{ shortDate(d.vehicle.published_at) }}</dd></div>
+      </dl>
+
+      @if (d.vehicle.description) {
+        <h3 class="bo-block__title">Description</h3>
+        <p class="bo-desc">{{ d.vehicle.description }}</p>
+      }
+    </section>
+
+    <!-- ============ DÉPARTS PROGRAMMÉS ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Départs programmés</h2>
+      @if (d.trips.length) {
+        <div class="bo-table-wrap">
+          <table class="bo-table">
+            <thead>
+              <tr>
+                <th>Trajet</th>
+                <th>Départ</th>
+                <th>Remplissage</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (trip of d.trips; track trip.id) {
+                <tr [class.is-past]="!trip.is_upcoming">
+                  <td>
+                    <a
+                      class="bo-cell-link"
+                      [routerLink]="['/back-office', 'mobilite', 'trajet', trip.id]">
+                      {{ trip.departure }} → {{ trip.destination }}
+                    </a>
+                    <span class="bo-cell-ref">{{ trip.reference }}</span>
+                  </td>
+                  <td>
+                    {{ dateTime(trip.departure_at) }}
+                    @if (!trip.is_upcoming) {
+                      <span class="bo-muted">passé</span>
+                    }
+                  </td>
+                  <td>{{ trip.seats_taken }} / {{ trip.capacity }}</td>
+                  <td>
+                    <span class="bo-badge" [class]="statusClass(trip.status)">
+                      {{ trip.status_label ?? '—' }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="bo-muted">Ce véhicule ne porte aucun départ programmé.</p>
+      }
+    </section>
+
+    <!-- ============ LOCATIONS ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Locations</h2>
+      @if (d.bookings.length) {
+        <div class="bo-table-wrap">
+          <table class="bo-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Période</th>
+                <th>Montant</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of d.bookings; track b.booking_id) {
+                <tr>
+                  <td>
+                    <span class="bo-cell-strong">{{ b.client_name || 'Compte supprimé' }}</span>
+                    <span class="bo-cell-ref">{{ b.reference }}</span>
+                  </td>
+                  <td>{{ shortDate(b.start_date) }} → {{ shortDate(b.end_date) }}</td>
+                  <td>{{ xof(b.amount_xof) }}</td>
+                  <td>{{ bookingStatusLabel(b.status) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="bo-muted">Ce véhicule n'a jamais été loué.</p>
+      }
+    </section>
+
+    <!-- ============ PHOTOS ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Photos</h2>
+      <!--
+        Galerie en LECTURE : savoir de quoi on parle au prestataire. La
+        modération photo par photo reste au dossier de validation, qui est
+        l'écran de la décision de publication.
+      -->
+      <app-media-review [media]="d.media" [label]="label()" [compact]="true" />
+    </section>
+
+    <!-- ============ JOURNAL ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Journal</h2>
+      @if (d.activity.length) {
+        <ul class="bo-activity">
+          @for (entry of d.activity; track entry.id) {
+            <li class="bo-activity__item">
+              <span class="bo-activity__date">{{ dateTime(entry.created_at) }}</span>
+              <span class="bo-activity__desc">{{ entry.description }}</span>
+              @if (entry.causer_name) {
+                <span class="bo-muted">par {{ entry.causer_name }}</span>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">Aucune décision tracée sur ce véhicule pour l'instant.</p>
+      }
+    </section>
+  </div>
+}

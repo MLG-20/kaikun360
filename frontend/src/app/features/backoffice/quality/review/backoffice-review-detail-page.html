@@ -1,0 +1,167 @@
+@if (loading()) {
+  <p class="bo-state" role="status">Chargement de l'avis…</p>
+} @else if (error() || !dossier()) {
+  <p class="bo-state bo-state--error" role="alert">
+    Avis introuvable ou inaccessible.
+    <a routerLink="/back-office/qualite">Retour à la file de modération</a>
+  </p>
+} @else if (dossier(); as d) {
+  <a class="bo-back" routerLink="/back-office/qualite">← Retour à la file de modération</a>
+
+  <header class="bo-head">
+    <div>
+      <span class="bo-kind">{{ resourceTypeLabel(d.resource.type) }}</span>
+      <h1 class="bo-title">{{ d.resource.label }}</h1>
+      <p class="bo-sub">
+        <span class="bo-stars">{{ stars(d.review.rating) }}</span>
+        {{ d.review.rating }} / 5 ·
+        déposé le {{ shortDate(d.review.created_at) }}
+        @if (d.review.author) {
+          par {{ d.review.author.name }}
+        }
+      </p>
+    </div>
+
+    <div class="bo-badges">
+      <span class="bo-badge" [class]="statusClass(d.review.status)">
+        {{ d.review.status_label || d.review.status }}
+      </span>
+
+      <!--
+        Les boutons ne s'affichent que sur un avis ENCORE en attente. Un avis
+        tranché reste consultable — l'agent vérifie son geste — mais n'est plus
+        actionnable, l'API le refuserait de toute façon.
+      -->
+      @if (d.review.status === 'en_attente') {
+        <button
+          type="button"
+          class="k-btn k-btn--primary"
+          [disabled]="processing()"
+          (click)="moderate('publie')">
+          {{ processing() ? '…' : 'Publier' }}
+        </button>
+        <button
+          type="button"
+          class="k-btn bo-btn--danger"
+          [disabled]="processing()"
+          (click)="moderate('rejete')">
+          Rejeter
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (actionError()) {
+    <p class="bo-state bo-state--error" role="alert">{{ actionError() }}</p>
+  }
+
+  <!--
+    Le signal qui change la nature de la décision : ce n'est plus un texte à
+    modérer, c'est un problème qui se répète. Affiché avant tout le reste.
+  -->
+  @if (d.context.negative_count >= 2) {
+    <p class="bo-stake bo-stake--alert" role="note">
+      <strong>{{ d.context.negative_count }} avis négatifs déjà publiés</strong> sur cette
+      ressource (moyenne {{ d.context.average }}/5 sur {{ d.context.published_count }} avis).
+      Ce n'est plus un cas isolé.
+      @if (d.resource.is_provider) {
+        La suite relève de la sanction, pas de la modération.
+      }
+    </p>
+  }
+
+  <div class="bo-grid">
+    <!-- ============ L'AVIS ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">L'avis</h2>
+      <!-- Commentaire ENTIER : c'est tout l'objet de cette page. -->
+      @if (d.review.comment) {
+        <p class="bo-review__comment">« {{ d.review.comment }} »</p>
+      } @else {
+        <p class="bo-muted">
+          Note sans commentaire. Il n'y a rien à modérer dans le texte : la décision
+          porte sur la seule légitimité de la note.
+        </p>
+      }
+
+      <dl class="bo-facts">
+        <div><dt>Note</dt><dd>{{ d.review.rating }} / 5</dd></div>
+        <div><dt>Déposé le</dt><dd>{{ shortDate(d.review.created_at) }}</dd></div>
+        @if (d.review.reference) {
+          <div><dt>Référence</dt><dd>{{ d.review.reference }}</dd></div>
+        }
+      </dl>
+    </section>
+
+    <!-- ============ L'AUTEUR & LA RESSOURCE ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">L'auteur</h2>
+      @if (d.review.author; as author) {
+        <dl class="bo-facts">
+          <div><dt>Nom</dt><dd>{{ author.name }}</dd></div>
+          @if (author.email) {
+            <div>
+              <dt>E-mail</dt>
+              <dd><a [href]="'mailto:' + author.email">{{ author.email }}</a></dd>
+            </div>
+          }
+          @if (author.phone) {
+            <div>
+              <dt>Téléphone</dt>
+              <dd><a [href]="'tel:' + author.phone">{{ author.phone }}</a></dd>
+            </div>
+          }
+        </dl>
+        <a class="bo-link" [routerLink]="['/back-office', 'comptes', author.id]">
+          Voir sa fiche compte →
+        </a>
+      } @else {
+        <p class="bo-muted">Auteur introuvable (compte supprimé).</p>
+      }
+
+      <h3 class="bo-block__title">La ressource notée</h3>
+      <dl class="bo-facts">
+        <div><dt>Type</dt><dd>{{ resourceTypeLabel(d.resource.type) }}</dd></div>
+        <div><dt>Intitulé</dt><dd>{{ d.resource.label }}</dd></div>
+      </dl>
+      @if (d.resource.is_provider) {
+        <a class="bo-link" [routerLink]="['/back-office', 'prestataire', d.resource.id]">
+          Ouvrir la fiche du prestataire →
+        </a>
+      }
+    </section>
+
+    <!-- ============ LE CONTEXTE ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">
+        Ce que disent les autres avis
+        @if (d.context.published_count) {
+          <span class="bo-muted">
+            — {{ d.context.published_count }} publié(s), moyenne {{ d.context.average }}/5
+          </span>
+        }
+      </h2>
+      @if (d.context.reviews.length) {
+        <ul class="bo-reviews">
+          @for (other of d.context.reviews; track other.id) {
+            <li class="bo-review" [class.is-negative]="other.rating <= 2">
+              <div class="bo-review__head">
+                <span class="bo-stars">{{ stars(other.rating) }}</span>
+                <span class="bo-review__author">{{ other.author_name || 'Client supprimé' }}</span>
+                <span class="bo-muted">{{ shortDate(other.created_at) }}</span>
+              </div>
+              @if (other.comment) {
+                <p class="bo-review__comment">« {{ other.comment }} »</p>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">
+          Aucun autre avis publié sur cette ressource : celui-ci sera le premier, et
+          fera donc à lui seul sa réputation.
+        </p>
+      }
+    </section>
+  </div>
+}

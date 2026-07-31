@@ -1,0 +1,210 @@
+@if (loading()) {
+  <p class="bo-state" role="status">Chargement du départ…</p>
+} @else if (error() || !dossier()) {
+  <p class="bo-state bo-state--error" role="alert">
+    Départ introuvable ou inaccessible.
+    <a routerLink="/back-office/mobilite">Retour aux trajets</a>
+  </p>
+} @else if (dossier(); as d) {
+  <a class="bo-back" routerLink="/back-office/mobilite">← Retour aux trajets</a>
+
+  <header class="bo-head">
+    <div>
+      <span class="bo-kind">{{ d.trip.type_label ?? 'Départ programmé' }}</span>
+      <h1 class="bo-title">{{ d.trip.departure }} → {{ d.trip.destination }}</h1>
+      <p class="bo-sub">
+        <span class="bo-ref">{{ d.trip.reference }}</span> ·
+        Départ le {{ dateTime(d.trip.departure_at) }}
+        @if (isPast()) {
+          · <span>départ passé</span>
+        }
+      </p>
+    </div>
+
+    <div class="bo-badges">
+      <span class="bo-badge" [class]="statusClass(d.trip.status)">
+        {{ d.trip.status_label ?? '—' }}
+      </span>
+    </div>
+  </header>
+
+  <!--
+    La surréservation passe avant tout : le trajet et le véhicule ont chacun
+    leur capacité, et rien ne garantit que la seconde couvre la première.
+    Découvrir l'écart à l'embarquement serait le pire moment.
+  -->
+  @if (overbooked()) {
+    <p class="bo-stake bo-stake--alert" role="alert">
+      <strong>{{ overbooked() }} place(s) vendue(s) de trop</strong> pour le véhicule affecté
+      ({{ d.trip.vehicle?.capacity }} sièges). Réaffectez un véhicule plus grand ou
+      recontactez des passagers avant le départ.
+    </p>
+  }
+
+  <div class="bo-grid">
+    <!-- ============ LE DÉPART ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">Le départ</h2>
+      <dl class="bo-facts">
+        <div><dt>Nature</dt><dd>{{ d.trip.type_label ?? '—' }}</dd></div>
+        <div><dt>Départ</dt><dd>{{ dateTime(d.trip.departure_at) }}</dd></div>
+        <div><dt>Prix / place</dt><dd>{{ xof(d.trip.price_xof) }}</dd></div>
+        <div><dt>Capacité annoncée</dt><dd>{{ d.trip.capacity }} place(s)</dd></div>
+      </dl>
+
+      <h3 class="bo-block__title">Remplissage</h3>
+      <p class="bo-fill">
+        <strong>{{ d.trip.seats_taken }} / {{ d.trip.capacity }}</strong>
+        @if (d.trip.seats_left === 0) {
+          <span class="bo-badge is-ok">Complet</span>
+        } @else {
+          <span class="bo-muted">{{ d.trip.seats_left }} place(s) restante(s)</span>
+        }
+      </p>
+      <span class="bo-gauge" [attr.aria-label]="fillRate() + ' % de remplissage'">
+        <span class="bo-gauge__fill" [style.width.%]="fillRate()"></span>
+      </span>
+
+      @if (totalDue() > 0) {
+        <p class="bo-hint">
+          <span class="bo-due">{{ xof(totalDue()) }}</span> restent à encaisser sur les
+          passagers attendus.
+        </p>
+      }
+
+      @if (d.trip.description) {
+        <h3 class="bo-block__title">Description</h3>
+        <p class="bo-desc">{{ d.trip.description }}</p>
+      }
+    </section>
+
+    <!-- ============ VÉHICULE & OPÉRATEUR ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">Véhicule &amp; opérateur</h2>
+      @if (d.trip.vehicle; as vehicle) {
+        <dl class="bo-facts">
+          <div>
+            <dt>Véhicule</dt>
+            <dd>
+              <a [routerLink]="['/back-office', 'mobilite', 'vehicule', vehicle.id]">
+                {{ vehicle.label || vehicle.type_label || 'Véhicule' }}
+              </a>
+            </dd>
+          </div>
+          <div><dt>Référence</dt><dd>{{ vehicle.reference }}</dd></div>
+          <div><dt>Sièges</dt><dd>{{ vehicle.capacity }}</dd></div>
+        </dl>
+      } @else {
+        <p class="bo-muted">
+          Aucun véhicule affecté à ce départ. Tant qu'il n'en a pas, personne ne sait
+          avec quoi il partira.
+        </p>
+      }
+
+      <h3 class="bo-block__title">Prestataire</h3>
+      @if (d.trip.provider; as provider) {
+        <dl class="bo-facts">
+          <div><dt>Nom</dt><dd>{{ provider.name }}</dd></div>
+          @if (provider.email) {
+            <div>
+              <dt>E-mail</dt>
+              <dd><a [href]="'mailto:' + provider.email">{{ provider.email }}</a></dd>
+            </div>
+          }
+          @if (provider.phone) {
+            <div>
+              <dt>Téléphone</dt>
+              <dd><a [href]="'tel:' + provider.phone">{{ provider.phone }}</a></dd>
+            </div>
+          }
+        </dl>
+        <a class="bo-link" [routerLink]="['/back-office', 'comptes', provider.id]">
+          Voir sa fiche compte →
+        </a>
+      } @else {
+        <p class="bo-muted">Prestataire introuvable (compte supprimé).</p>
+      }
+    </section>
+
+    <!-- ============ PASSAGERS ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">
+        Passagers
+        <span class="bo-muted">— {{ expected().length }} réservation(s) attendue(s)</span>
+      </h2>
+      @if (d.passengers.length) {
+        <div class="bo-table-wrap">
+          <table class="bo-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Contact</th>
+                <th>Places</th>
+                <th>Reste à payer</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of d.passengers; track p.booking_id) {
+                <tr [class.is-cancelled]="p.is_cancelled">
+                  <td>
+                    <span class="bo-cell-strong">{{ p.client_name || 'Compte supprimé' }}</span>
+                    <span class="bo-cell-ref">{{ p.reference }}</span>
+                  </td>
+                  <td>
+                    @if (p.client_phone) {
+                      <a [href]="'tel:' + p.client_phone">{{ p.client_phone }}</a>
+                    }
+                    @if (p.client_email) {
+                      <span class="bo-cell-ref">{{ p.client_email }}</span>
+                    }
+                    @if (!p.client_phone && !p.client_email) {
+                      <span class="bo-muted">—</span>
+                    }
+                  </td>
+                  <td>{{ p.guests }}</td>
+                  <td>
+                    @if (p.is_cancelled) {
+                      <span class="bo-muted">—</span>
+                    } @else if (p.remaining_xof > 0) {
+                      <span class="bo-due">{{ xof(p.remaining_xof) }}</span>
+                    } @else {
+                      <span class="bo-muted">Soldé</span>
+                    }
+                  </td>
+                  <td>{{ bookingStatusLabel(p.status) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="bo-hint">
+          Les réservations annulées restent listées, barrées : c'est ce qui explique
+          un départ soudain à moitié vide.
+        </p>
+      } @else {
+        <p class="bo-muted">Aucune réservation sur ce départ.</p>
+      }
+    </section>
+
+    <!-- ============ JOURNAL ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Journal</h2>
+      @if (d.activity.length) {
+        <ul class="bo-activity">
+          @for (entry of d.activity; track entry.id) {
+            <li class="bo-activity__item">
+              <span class="bo-activity__date">{{ dateTime(entry.created_at) }}</span>
+              <span class="bo-activity__desc">{{ entry.description }}</span>
+              @if (entry.causer_name) {
+                <span class="bo-muted">par {{ entry.causer_name }}</span>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">Aucune décision tracée sur ce départ pour l'instant.</p>
+      }
+    </section>
+  </div>
+}

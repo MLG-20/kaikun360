@@ -145,7 +145,8 @@
 .tou-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 980px;
+  // Quatre à cinq colonnes depuis F8.2.c : la table tient à l'écran.
+  min-width: 680px;
 
   th,
   td {
@@ -169,10 +170,32 @@
   }
 }
 
+// Devenu un lien vers la fiche (F8.2.c) — sauf pour une destination, qui n'est
+// pas une entité et n'a donc pas de fiche : là, le style s'applique à un span.
 .tou-label {
   display: block;
   font-weight: 600;
   color: var(--k-ink);
+  text-decoration: none;
+}
+
+a.tou-label:hover {
+  color: var(--k-brand);
+  text-decoration: underline;
+}
+
+// Second chemin vers la fiche, depuis la colonne de statut.
+.tou-open {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--k-brand);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .tou-ref {
@@ -184,12 +207,6 @@
   color: var(--k-navy-2);
   font-weight: 600;
   font-size: 0.74rem;
-}
-
-.tou-owner {
-  display: block;
-  color: var(--k-ink);
-  font-size: 0.9rem;
 }
 
 .tou-muted {
@@ -216,19 +233,12 @@
 }
 
 // --- Programme : les inclusions actives du circuit ---
-.tou-tags {
+// Compteurs publiés / en attente, groupés sous le nombre de circuits (F8.2.c).
+.tou-counts {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-}
-
-.tou-tag {
-  padding: 2px 9px;
-  border-radius: var(--k-radius-pill);
-  background: var(--k-brand-050);
-  color: var(--k-brand-600);
-  font-size: 0.75rem;
-  font-weight: 600;
+  margin-top: 4px;
 }
 
 // --- Jauge de remplissage ---

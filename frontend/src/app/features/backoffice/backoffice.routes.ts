@@ -93,6 +93,29 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Mobilité — Back-office Kaikun 360',
       },
       {
+        // F8.2.b — Fiche d'un véhicule : conformité pièce à pièce, photos,
+        // locations et départs programmés qu'il porte.
+        path: 'mobilite/vehicule/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('mobilite') },
+        loadComponent: () =>
+          import('./mobility/vehicle/backoffice-vehicle-detail-page').then(
+            (m) => m.BackofficeVehicleDetailPageComponent,
+          ),
+        title: 'Véhicule — Back-office Kaikun 360',
+      },
+      {
+        // F8.2.b — Fiche d'un départ programmé : sa liste de passagers.
+        path: 'mobilite/trajet/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('mobilite') },
+        loadComponent: () =>
+          import('./mobility/trip/backoffice-trip-detail-page').then(
+            (m) => m.BackofficeTripDetailPageComponent,
+          ),
+        title: 'Départ programmé — Back-office Kaikun 360',
+      },
+      {
         // F7.2.k — Tourisme : circuits + remplissage, couverture par
         // destination, partenaires guides & restaurants.
         path: 'tourisme',
@@ -105,6 +128,36 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Tourisme — Back-office Kaikun 360',
       },
       {
+        // F8.2.c — Fiche d'un circuit : programme, prestataire, photos et la
+        // liste des participants.
+        path: 'tourisme/circuit/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('tourisme') },
+        loadComponent: () =>
+          import('./tourism/circuit/backoffice-circuit-detail-page').then(
+            (m) => m.BackofficeCircuitDetailPageComponent,
+          ),
+        title: 'Circuit — Back-office Kaikun 360',
+      },
+      {
+        // F8.2.c — Fiche d'un PRESTATAIRE : avis en clair, certifications,
+        // sanctions et leur motif.
+        //
+        // Route de premier niveau, et non `tourisme/partenaire/:id` : elle est
+        // ouverte depuis l'onglet « Guides & restaurants » du Tourisme ET depuis
+        // Avis & qualité, qui parlent des mêmes prestataires. La garde de route
+        // porte donc la permission de sanction (`qualite`), celle qu'exige le
+        // serveur — pas celle de l'écran d'où l'on vient.
+        path: 'prestataire/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('qualite') },
+        loadComponent: () =>
+          import('./providers/backoffice-partner-detail-page').then(
+            (m) => m.BackofficePartnerDetailPageComponent,
+          ),
+        title: 'Prestataire — Back-office Kaikun 360',
+      },
+      {
         // F7.2.c — Nuitées : calendrier des séjours + check-in/out + ménage.
         path: 'nuitees',
         canActivate: [permissionGuard],
@@ -112,6 +165,18 @@ export const BACKOFFICE_ROUTES: Routes = [
         loadComponent: () =>
           import('./stays/backoffice-stays-page').then((m) => m.BackofficeStaysPageComponent),
         title: 'Nuitées — Back-office Kaikun 360',
+      },
+      {
+        // F8.2.a — Fiche d'un séjour : logement + hôte, client, argent (encaissé
+        // / reste à payer), caution et journal. Même permission que le calendrier.
+        path: 'nuitees/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('nuitees') },
+        loadComponent: () =>
+          import('./stays/detail/backoffice-stay-detail-page').then(
+            (m) => m.BackofficeStayDetailPageComponent,
+          ),
+        title: 'Séjour — Back-office Kaikun 360',
       },
       {
         // F7.2.d — Paiements : supervision + confirmation manuelle Wave/OM + remboursement.
@@ -123,6 +188,18 @@ export const BACKOFFICE_ROUTES: Routes = [
             (m) => m.BackofficePaymentsPageComponent,
           ),
         title: 'Paiements — Back-office Kaikun 360',
+      },
+      {
+        // F8.2.d — Dossier d'un règlement : preuves d'encaissement, réservation
+        // payée, échéancier, journal. C'est ICI que se rembourse un paiement.
+        path: 'paiements/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('paiements') },
+        loadComponent: () =>
+          import('./payments/detail/backoffice-payment-detail-page').then(
+            (m) => m.BackofficePaymentDetailPageComponent,
+          ),
+        title: 'Règlement — Back-office Kaikun 360',
       },
       {
         // F7.3.c — Construction : l'ancien écran « Dossiers » à onglets est
@@ -202,6 +279,18 @@ export const BACKOFFICE_ROUTES: Routes = [
             (m) => m.BackofficeQualityPageComponent,
           ),
         title: 'Avis & qualité — Back-office Kaikun 360',
+      },
+      {
+        // F8.2.d — Dossier d'un avis : commentaire entier, auteur, et les autres
+        // avis publiés de la ressource — le contexte qui fait la décision.
+        path: 'qualite/avis/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('qualite') },
+        loadComponent: () =>
+          import('./quality/review/backoffice-review-detail-page').then(
+            (m) => m.BackofficeReviewDetailPageComponent,
+          ),
+        title: 'Avis — Back-office Kaikun 360',
       },
       {
         // F7.2.h — Team building : file des demandes entreprises + fiche

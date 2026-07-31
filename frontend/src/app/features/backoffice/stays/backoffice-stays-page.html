@@ -32,14 +32,19 @@
   <p class="st-count">{{ total() }} séjour(s)</p>
   <div class="st-table-wrap">
     <table class="st-table">
+      <!--
+        F8.2.a — Quatre colonnes, pas sept. La liste répond à « qui arrive
+        quand, et que dois-je faire maintenant » ; le ménage, la caution et
+        l'argent vivent désormais dans la fiche du séjour, où ils se pilotent
+        avec leur contexte. Le ménage et la caution restent visibles ici en
+        pastilles : les VOIR d'un coup d'œil est le rôle d'un calendrier, les
+        TRANCHER est celui du dossier.
+      -->
       <thead>
         <tr>
           <th>Séjour</th>
           <th>Dates</th>
-          <th>Voyageurs</th>
           <th>Exploitation</th>
-          <th>Ménage</th>
-          <th>Caution</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -47,14 +52,18 @@
         @for (b of bookings(); track b.booking_id) {
           <tr>
             <td>
-              <span class="st-property">{{ b.property_title || 'Bien retiré' }}</span>
+              <!-- F8.2.a — Le titre ouvre le dossier : l'agent au téléphone y
+                   trouve l'argent, le client et l'hôte sans changer d'écran. -->
+              <a class="st-property" [routerLink]="['/back-office', 'nuitees', b.booking_id]">
+                {{ b.property_title || 'Bien retiré' }}
+              </a>
               <span class="st-ref">{{ b.reference }}</span>
               <span class="st-status">{{ statusLabel(b.status) }}</span>
             </td>
             <td>
               <span class="st-dates">{{ shortDate(b.start_date) }} → {{ shortDate(b.end_date) }}</span>
+              <span class="st-guests">{{ b.guests }} voyageur(s)</span>
             </td>
-            <td><span class="st-guests">{{ b.guests }}</span></td>
             <td>
               @switch (phase(b)) {
                 @case ('a_venir') {
@@ -69,55 +78,16 @@
                   <span class="st-time">Départ&nbsp;: {{ shortTime(b.checked_out_at) }}</span>
                 }
               }
-            </td>
-            <td>
-              @if (b.checked_out_at) {
-                <select
-                  class="st-select"
-                  [disabled]="processingId() !== null"
-                  (change)="setHousekeeping(b, $any($event.target).value)"
-                  aria-label="Statut du ménage">
-                  @for (opt of housekeepingOptions; track opt.value) {
-                    <option [value]="opt.value" [selected]="b.housekeeping_status === opt.value">
-                      {{ opt.label }}
-                    </option>
-                  }
-                </select>
-              } @else {
-                <span class="st-muted">—</span>
-              }
-            </td>
-            <td>
-              @if (b.caution_xof) {
-                <span class="st-amount">{{ xof(b.caution_xof) }}</span>
-                <span class="st-pill" [class]="cautionClass(b.caution_status)">
-                  {{ cautionLabel(b.caution_status) }}
-                </span>
-                @if (canSettleCaution(b)) {
-                  <div class="st-caution-actions">
-                    <button
-                      type="button"
-                      class="k-btn k-btn--ghost st-btn"
-                      [disabled]="processingId() !== null"
-                      (click)="restoreCaution(b)">
-                      Restituer
-                    </button>
-                    <button
-                      type="button"
-                      class="k-btn k-btn--ghost st-btn st-btn--danger"
-                      [disabled]="processingId() !== null"
-                      (click)="toggleCautionPanel(b)">
-                      {{ cautionPanelId() === b.booking_id ? 'Annuler' : 'Conserver' }}
-                    </button>
-                  </div>
-                } @else if (b.caution_status === 'retenue') {
-                  <!-- Le serveur exige le départ : on le dit plutôt que d'afficher
-                       des boutons qui échoueraient en 422. -->
-                  <span class="st-muted">à trancher après le départ</span>
+              <span class="st-tags">
+                @if (b.checked_out_at) {
+                  <span class="st-tag">Ménage&nbsp;: {{ housekeepingLabel(b.housekeeping_status) }}</span>
                 }
-              } @else {
-                <span class="st-muted">Aucune</span>
-              }
+                @if (b.caution_xof) {
+                  <span class="st-tag" [class]="cautionClass(b.caution_status)">
+                    Caution&nbsp;: {{ cautionLabel(b.caution_status) }}
+                  </span>
+                }
+              </span>
             </td>
             <td>
               @switch (phase(b)) {
@@ -143,45 +113,14 @@
                   <span class="st-muted">Terminé</span>
                 }
               }
+              <a class="st-open" [routerLink]="['/back-office', 'nuitees', b.booking_id]">
+                Ouvrir le dossier →
+              </a>
             </td>
           </tr>
-
-          @if (cautionPanelId() === b.booking_id) {
-            <tr class="st-panel-row">
-              <td colspan="7">
-                <div class="st-panel">
-                  <p class="st-panel__title">
-                    Conserver la caution de {{ xof(b.caution_xof) }} — {{ b.reference }}
-                  </p>
-                  <div class="st-panel__row">
-                    <input
-                      class="k-input"
-                      type="text"
-                      maxlength="500"
-                      [(ngModel)]="cautionReason"
-                      placeholder="Motif (dégât constaté, devis de remise en état…)" />
-                    <button
-                      type="button"
-                      class="k-btn st-btn st-btn--danger"
-                      [disabled]="processingId() !== null"
-                      (click)="keepCaution(b)">
-                      {{ processingId() === b.booking_id ? '…' : 'Confirmer la retenue' }}
-                    </button>
-                    <button type="button" class="k-btn k-btn--ghost st-btn" (click)="closeCautionPanel()">
-                      Annuler
-                    </button>
-                  </div>
-                  <p class="st-panel__hint">
-                    Le motif est enregistré au journal d’audit avec le montant : il fait foi
-                    en cas de contestation.
-                  </p>
-                </div>
-              </td>
-            </tr>
-          }
         } @empty {
           <tr>
-            <td colspan="7" class="st-empty">Aucun séjour sur cette période.</td>
+            <td colspan="4" class="st-empty">Aucun séjour sur cette période.</td>
           </tr>
         }
       </tbody>

@@ -1,0 +1,312 @@
+@if (loading()) {
+  <p class="bo-state" role="status">Chargement du séjour…</p>
+} @else if (error() || !dossier()) {
+  <p class="bo-state bo-state--error" role="alert">
+    Séjour introuvable ou inaccessible.
+    <a routerLink="/back-office/nuitees">Retour au calendrier</a>
+  </p>
+} @else if (dossier(); as d) {
+  <a class="bo-back" routerLink="/back-office/nuitees">← Retour au calendrier</a>
+
+  <header class="bo-head">
+    <div>
+      <span class="bo-kind">Séjour</span>
+      <h1 class="bo-title">{{ d.stay?.property_title || 'Bien retiré' }}</h1>
+      <p class="bo-sub">
+        <span class="bo-ref">{{ d.booking.reference }}</span> ·
+        {{ shortDate(d.booking.start_date) }} → {{ shortDate(d.booking.end_date) }} ·
+        {{ d.booking.nights }} nuit(s) · {{ d.booking.guests }} voyageur(s)
+      </p>
+    </div>
+
+    <!--
+      Les gestes d'exploitation, au même endroit que la lecture : l'agent qui
+      ouvre le dossier pour comprendre n'a pas à revenir à la liste pour agir.
+      Le serveur reste seul juge de l'ordre des transitions.
+    -->
+    <div class="bo-actions">
+      <span class="bo-badge" [class]="'bo-badge--' + phase()">
+        @switch (phase()) {
+          @case ('a_venir') { À venir }
+          @case ('sur_place') { Sur place }
+          @case ('parti') { Parti }
+        }
+      </span>
+
+      @switch (phase()) {
+        @case ('a_venir') {
+          <button
+            type="button"
+            class="k-btn k-btn--primary"
+            [disabled]="processing()"
+            (click)="checkIn()">
+            {{ processing() ? '…' : "Enregistrer l'arrivée" }}
+          </button>
+        }
+        @case ('sur_place') {
+          <button
+            type="button"
+            class="k-btn k-btn--primary"
+            [disabled]="processing()"
+            (click)="checkOut()">
+            {{ processing() ? '…' : 'Enregistrer le départ' }}
+          </button>
+        }
+      }
+    </div>
+  </header>
+
+  @if (actionError()) {
+    <p class="bo-state bo-state--error" role="alert">{{ actionError() }}</p>
+  }
+
+  <div class="bo-grid">
+    <!-- ============ LE SÉJOUR ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">Le séjour</h2>
+      <dl class="bo-facts">
+        <div><dt>Statut</dt><dd>{{ statusLabel(d.booking.status) }}</dd></div>
+        <div><dt>Arrivée</dt><dd>{{ shortDate(d.booking.start_date) }}</dd></div>
+        <div><dt>Départ</dt><dd>{{ shortDate(d.booking.end_date) }}</dd></div>
+        <div><dt>Nuits</dt><dd>{{ d.booking.nights ?? '—' }}</dd></div>
+        <div><dt>Voyageurs</dt><dd>{{ d.booking.guests }}</dd></div>
+        <div><dt>Réservé le</dt><dd>{{ shortTime(d.booking.created_at) }}</dd></div>
+        <div><dt>Arrivée constatée</dt><dd>{{ shortTime(d.booking.checked_in_at) }}</dd></div>
+        <div><dt>Départ constaté</dt><dd>{{ shortTime(d.booking.checked_out_at) }}</dd></div>
+        @if (d.booking.cancelled_at) {
+          <div><dt>Annulé le</dt><dd>{{ shortTime(d.booking.cancelled_at) }}</dd></div>
+        }
+      </dl>
+
+      <!-- Ménage : déclenché par le départ, il n'a pas de sens avant. -->
+      <div class="bo-block">
+        <h3 class="bo-block__title">Ménage</h3>
+        @if (d.booking.checked_out_at) {
+          <select
+            class="bo-select"
+            [disabled]="processing()"
+            (change)="setHousekeeping($any($event.target).value)"
+            aria-label="Statut du ménage">
+            @for (opt of housekeepingOptions; track opt.value) {
+              <option [value]="opt.value" [selected]="d.booking.housekeeping_status === opt.value">
+                {{ opt.label }}
+              </option>
+            }
+          </select>
+        } @else {
+          <p class="bo-muted">Le ménage se déclenche au départ du client.</p>
+        }
+      </div>
+    </section>
+
+    <!-- ============ LE CLIENT ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">Le client</h2>
+      @if (d.client; as client) {
+        <dl class="bo-facts">
+          <div><dt>Nom</dt><dd>{{ client.name }}</dd></div>
+          @if (client.email) {
+            <div>
+              <dt>E-mail</dt>
+              <dd><a [href]="'mailto:' + client.email">{{ client.email }}</a></dd>
+            </div>
+          }
+          @if (client.phone) {
+            <div>
+              <dt>Téléphone</dt>
+              <dd><a [href]="'tel:' + client.phone">{{ client.phone }}</a></dd>
+            </div>
+          }
+        </dl>
+        <a class="bo-link" [routerLink]="['/back-office', 'comptes', client.id]">
+          Voir sa fiche compte →
+        </a>
+      } @else {
+        <p class="bo-muted">Client introuvable (compte supprimé).</p>
+      }
+    </section>
+
+    <!-- ============ L'ARGENT ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">L'argent</h2>
+      <dl class="bo-facts">
+        <div><dt>Montant du séjour</dt><dd>{{ xof(d.booking.amount_xof) }}</dd></div>
+        <div><dt>Commission Kaikun</dt><dd>{{ xof(d.booking.commission_xof) }}</dd></div>
+        <div><dt>Encaissé</dt><dd>{{ xof(d.booking.paid_xof) }}</dd></div>
+        <div>
+          <dt>Reste à payer</dt>
+          <dd [class.bo-due]="d.booking.remaining_xof > 0">{{ xof(d.booking.remaining_xof) }}</dd>
+        </div>
+      </dl>
+
+      <h3 class="bo-block__title">Règlements</h3>
+      @if (d.payments.length) {
+        <ul class="bo-payments">
+          @for (p of d.payments; track p.id) {
+            <li class="bo-payment">
+              <span class="bo-payment__amount">{{ xof(p.amount_xof) }}</span>
+              <span class="bo-payment__kind">{{ p.kind_label || '—' }}</span>
+              <span class="bo-payment__status">{{ p.status_label }}</span>
+              <span class="bo-payment__meta">
+                {{ p.mode || p.provider || '—' }} · {{ shortTime(p.created_at) }}
+              </span>
+              <span class="bo-payment__ref">{{ p.reference }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">Aucun règlement enregistré sur ce séjour.</p>
+      }
+    </section>
+
+    <!-- ============ LA CAUTION ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">La caution</h2>
+      @if (d.booking.caution_xof) {
+        <dl class="bo-facts">
+          <div><dt>Montant</dt><dd>{{ xof(d.booking.caution_xof) }}</dd></div>
+          <div>
+            <dt>Sort</dt>
+            <dd>
+              <span class="bo-badge" [class]="cautionClass(d.booking.caution_status)">
+                {{ cautionLabel(d.booking.caution_status) }}
+              </span>
+            </dd>
+          </div>
+        </dl>
+
+        @if (canSettleCaution()) {
+          <div class="bo-caution-actions">
+            <button
+              type="button"
+              class="k-btn k-btn--primary"
+              [disabled]="processing()"
+              (click)="restoreCaution()">
+              Restituer au client
+            </button>
+            <button
+              type="button"
+              class="k-btn k-btn--ghost bo-btn--danger"
+              [disabled]="processing()"
+              (click)="toggleCautionPanel()">
+              {{ keepingCaution() ? 'Annuler' : 'Conserver' }}
+            </button>
+          </div>
+
+          @if (keepingCaution()) {
+            <div class="bo-panel">
+              <input
+                class="k-input"
+                type="text"
+                maxlength="500"
+                [(ngModel)]="cautionReason"
+                placeholder="Motif (dégât constaté, devis de remise en état…)" />
+              <button
+                type="button"
+                class="k-btn bo-btn--danger"
+                [disabled]="processing()"
+                (click)="keepCaution()">
+                {{ processing() ? '…' : 'Confirmer la retenue' }}
+              </button>
+              <p class="bo-panel__hint">
+                Le motif est enregistré au journal d’audit avec le montant : il fait foi
+                en cas de contestation.
+              </p>
+            </div>
+          }
+        } @else if (d.booking.caution_status === 'retenue') {
+          <!-- Le serveur exige le départ : on le dit plutôt que d'afficher des
+               boutons qui échoueraient en 422. -->
+          <p class="bo-muted">Le sort de la caution se décide après le départ du client.</p>
+        }
+      } @else {
+        <p class="bo-muted">Ce logement ne demande pas de caution.</p>
+      }
+    </section>
+
+    <!-- ============ LE LOGEMENT ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Le logement</h2>
+      @if (d.stay; as stay) {
+        <dl class="bo-facts">
+          <div><dt>Bien</dt><dd>{{ stay.property_title || '—' }}</dd></div>
+          @if (location()) {
+            <div><dt>Localisation</dt><dd>{{ location() }}</dd></div>
+          }
+          <div><dt>Capacité</dt><dd>{{ stay.capacity ?? '—' }} personne(s)</dd></div>
+          <div><dt>Tarif</dt><dd>{{ xof(stay.price_per_night_xof) }} / nuit</dd></div>
+          <div><dt>Horaires</dt><dd>{{ stay.check_in_time || '—' }} → {{ stay.check_out_time || '—' }}</dd></div>
+          <div>
+            <dt>Ouvert à la réservation</dt>
+            <dd>{{ stay.is_active ? 'Oui' : 'Non' }}</dd>
+          </div>
+        </dl>
+
+        <h3 class="bo-block__title">L'hôte</h3>
+        @if (stay.host; as host) {
+          <dl class="bo-facts">
+            <div><dt>Nom</dt><dd>{{ host.name }}</dd></div>
+            @if (host.email) {
+              <div>
+                <dt>E-mail</dt>
+                <dd><a [href]="'mailto:' + host.email">{{ host.email }}</a></dd>
+              </div>
+            }
+            @if (host.phone) {
+              <div>
+                <dt>Téléphone</dt>
+                <dd><a [href]="'tel:' + host.phone">{{ host.phone }}</a></dd>
+              </div>
+            }
+          </dl>
+          <a class="bo-link" [routerLink]="['/back-office', 'comptes', host.id]">
+            Voir sa fiche compte →
+          </a>
+        } @else {
+          <p class="bo-muted">Propriétaire introuvable (compte supprimé).</p>
+        }
+
+        <!--
+          Galerie en LECTURE : savoir à quoi ressemble le logement dont on parle
+          au client. La modération photo par photo reste au dossier de
+          validation, qui est l'écran de la décision de publication.
+        -->
+        @if (stay.media; as media) {
+          <h3 class="bo-block__title">Le logement en images</h3>
+          <app-media-review
+            [media]="media"
+            [label]="stay.property_title || 'Logement'"
+            [compact]="true" />
+        }
+      } @else {
+        <p class="bo-muted">
+          Le logement a été retiré depuis. Le séjour, lui, a bien eu lieu : son dossier
+          reste consultable.
+        </p>
+      }
+    </section>
+
+    <!-- ============ LE JOURNAL ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Journal du séjour</h2>
+      @if (d.activity.length) {
+        <ul class="bo-activity">
+          @for (entry of d.activity; track entry.id) {
+            <li class="bo-activity__item">
+              <span class="bo-activity__date">{{ shortTime(entry.created_at) }}</span>
+              <span class="bo-activity__desc">{{ entry.description }}</span>
+              @if (entry.causer_name) {
+                <span class="bo-activity__by">par {{ entry.causer_name }}</span>
+              }
+              @if (entry.properties?.['reason']) {
+                <span class="bo-activity__reason">« {{ entry.properties['reason'] }} »</span>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">Aucune décision tracée sur ce séjour pour l'instant.</p>
+      }
+    </section>
+  </div>
+}

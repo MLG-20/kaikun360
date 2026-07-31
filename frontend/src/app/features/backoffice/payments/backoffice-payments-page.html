@@ -65,14 +65,17 @@
     <p class="pm-count">{{ total() }} paiement(s)</p>
     <div class="pm-table-wrap">
       <table class="pm-table">
+        <!--
+          F8.2.d — Cinq colonnes, pas neuf. La commission, la nature du
+          règlement et le reste dû de la réservation sont des éléments de
+          dossier : ils se lisent dans la fiche, à côté de l'échéancier complet
+          qui leur donne un sens. La liste garde ce qu'elle sait faire — repérer
+          un règlement à confirmer.
+        -->
         <thead>
           <tr>
             <th>Référence</th>
-            <th>Mode</th>
             <th>Montant</th>
-            <th>Nature</th>
-            <th>Reste dû</th>
-            <th>Commission</th>
             <th>Statut</th>
             <th>Date</th>
             <th>Action</th>
@@ -82,34 +85,22 @@
           @for (p of payments(); track p.id) {
             <tr>
               <td>
-                <span class="pm-ref">{{ p.reference }}</span>
+                <a class="pm-ref pm-ref--link" [routerLink]="['/back-office', 'paiements', p.id]">
+                  {{ p.reference }}
+                </a>
                 @if (p.booking_id) {
                   <span class="pm-booking">Résa #{{ p.booking_id }}</span>
                 }
+                <span class="pm-mode">{{ modeLabel(p.mode) }}</span>
               </td>
-              <td><span class="pm-mode">{{ modeLabel(p.mode) }}</span></td>
-              <td><span class="pm-amount">{{ xof(p.amount_xof) }}</span></td>
-              <!-- F7.3.h — acomptes & soldes -->
               <td>
+                <span class="pm-amount">{{ xof(p.amount_xof) }}</span>
+                <!-- F7.3.h — acompte / solde : la nature reste ici, elle change
+                     la lecture du montant lui-même. -->
                 @if (p.kind && p.kind !== 'integral') {
                   <span class="pm-badge" [class]="kindClass(p.kind)">{{ p.kind_label }}</span>
-                } @else {
-                  <span class="pm-muted">{{ p.kind_label || 'Intégral' }}</span>
                 }
               </td>
-              <td>
-                @if (p.booking) {
-                  @if (p.booking.remaining_xof > 0) {
-                    <span class="pm-due">{{ xof(p.booking.remaining_xof) }}</span>
-                    <span class="pm-booking">sur {{ xof(p.booking.amount_xof) }}</span>
-                  } @else {
-                    <span class="pm-muted">Soldé</span>
-                  }
-                } @else {
-                  <span class="pm-muted">—</span>
-                }
-              </td>
-              <td><span class="pm-muted">{{ xof(p.commission_xof) }}</span></td>
               <td><span class="pm-badge" [class]="statusClass(p.status)">{{ p.status_label || p.status }}</span></td>
               <td><span class="pm-muted">{{ shortDate(p.created_at) }}</span></td>
               <td>
@@ -123,18 +114,15 @@
                       Confirmer
                     </button>
                   }
-                  @if (canRefund(p)) {
-                    <button
-                      type="button"
-                      class="k-btn k-btn--ghost pm-btn"
-                      [disabled]="processingId() !== null"
-                      (click)="openRefund(p)">
-                      Rembourser
-                    </button>
-                  }
-                  @if (!canConfirm(p) && !canRefund(p)) {
-                    <span class="pm-muted">—</span>
-                  }
+                  <!--
+                    F8.2.d — Plus de bouton « Rembourser » ici : sortir de
+                    l'argent est irréversible et ne se décide pas depuis une
+                    ligne de tableau, sans la réservation ni l'échéancier sous
+                    les yeux. Le geste vit désormais dans la fiche.
+                  -->
+                  <a class="pm-open" [routerLink]="['/back-office', 'paiements', p.id]">
+                    Ouvrir le dossier →
+                  </a>
                 </div>
               </td>
             </tr>
@@ -142,58 +130,41 @@
             <!-- Panneau d'action déplié sous la ligne concernée -->
             @if (openPanelId() === p.id) {
               <tr class="pm-panel-row">
-                <td colspan="9">
+                <td colspan="5">
                   <div class="pm-panel">
                     @if (actionError()) {
                       <p class="k-form-error" role="alert">{{ actionError() }}</p>
                     }
-                    @if (panelKind() === 'confirm') {
-                      <p class="pm-panel__title">Confirmer un règlement manuel (Wave / Orange Money)</p>
-                      <div class="pm-panel__row">
-                        <input
-                          class="k-input"
-                          type="text"
-                          [(ngModel)]="proofReference"
-                          maxlength="255"
-                          placeholder="Référence de la transaction Wave/OM (preuve, facultatif)…" />
-                        <button
-                          type="button"
-                          class="k-btn k-btn--primary pm-btn"
-                          [disabled]="processingId() !== null"
-                          (click)="confirm(p)">
-                          {{ processingId() === p.id ? '…' : 'Valider la réception' }}
-                        </button>
-                        <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="closePanel()">Annuler</button>
-                      </div>
-                      <p class="pm-panel__hint">La réservation liée sera confirmée à la validation.</p>
-                    } @else if (panelKind() === 'refund') {
-                      <p class="pm-panel__title">Rembourser le paiement {{ p.reference }}</p>
-                      <div class="pm-panel__row">
-                        <input
-                          class="k-input pm-amount-input"
-                          type="number"
-                          [(ngModel)]="refundAmount"
-                          min="1"
-                          [max]="p.amount_xof"
-                          placeholder="Montant (FCFA)" />
-                        <button
-                          type="button"
-                          class="k-btn pm-btn pm-btn--danger"
-                          [disabled]="processingId() !== null"
-                          (click)="refund(p)">
-                          {{ processingId() === p.id ? '…' : 'Confirmer le remboursement' }}
-                        </button>
-                        <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="closePanel()">Annuler</button>
-                      </div>
-                      <p class="pm-panel__hint">Laissez le montant total pour un remboursement intégral (max {{ xof(p.amount_xof) }}).</p>
-                    }
+                    <p class="pm-panel__title">Confirmer un règlement manuel (Wave / Orange Money)</p>
+                    <div class="pm-panel__row">
+                      <input
+                        class="k-input"
+                        type="text"
+                        [(ngModel)]="proofReference"
+                        maxlength="255"
+                        placeholder="Référence de la transaction Wave/OM (preuve, facultatif)…" />
+                      <button
+                        type="button"
+                        class="k-btn k-btn--primary pm-btn"
+                        [disabled]="processingId() !== null"
+                        (click)="confirm(p)">
+                        {{ processingId() === p.id ? '…' : 'Valider la réception' }}
+                      </button>
+                      <button type="button" class="k-btn k-btn--ghost pm-btn" (click)="closePanel()">
+                        Annuler
+                      </button>
+                    </div>
+                    <p class="pm-panel__hint">
+                      La réservation liée sera confirmée à la validation. Pour rembourser,
+                      ouvrez le dossier du règlement.
+                    </p>
                   </div>
                 </td>
               </tr>
             }
           } @empty {
             <tr>
-              <td colspan="9" class="pm-empty">Aucun paiement ne correspond à ces filtres.</td>
+              <td colspan="5" class="pm-empty">Aucun paiement ne correspond à ces filtres.</td>
             </tr>
           }
         </tbody>

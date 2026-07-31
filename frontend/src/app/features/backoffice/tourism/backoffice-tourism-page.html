@@ -117,15 +117,18 @@
   @if (selected() === 'circuits') {
     <div class="tou-table-wrap">
       <table class="tou-table">
+        <!--
+          F8.2.c — Quatre colonnes, pas huit. Le programme, le prestataire et le
+          prix sont des éléments de dossier : ils ont rejoint la fiche du
+          circuit, où ils côtoient la liste des participants qui leur donne du
+          sens. La liste garde ce qu'elle sait faire — repérer un circuit qui se
+          remplit mal, ou qui attend depuis trop longtemps sa validation.
+        -->
         <thead>
           <tr>
             <th>Circuit</th>
             <th>Destination</th>
-            <th>Durée</th>
             <th>Capacité groupe</th>
-            <th>Programme</th>
-            <th>Prestataire</th>
-            <th>Prix</th>
             <th>Statut</th>
           </tr>
         </thead>
@@ -133,14 +136,14 @@
           @for (c of circuits(); track c.id) {
             <tr>
               <td>
-                <span class="tou-label">{{ c.title }}</span>
+                <a class="tou-label" [routerLink]="['/back-office', 'tourisme', 'circuit', c.id]">
+                  {{ c.title }}
+                </a>
                 <span class="tou-ref">{{ c.reference }}</span>
+                <span class="tou-muted">{{ c.duration_days }} jour(s)</span>
               </td>
               <td>
                 <span class="tou-muted">{{ c.destination }}</span>
-              </td>
-              <td>
-                <span class="tou-muted">{{ c.duration_days }} jour(s)</span>
               </td>
               <td>
                 <span class="tou-seats">{{ c.seats_taken }} / {{ c.capacity }}</span>
@@ -161,36 +164,17 @@
                 }
               </td>
               <td>
-                @if (programme(c).length) {
-                  <span class="tou-tags">
-                    @for (item of programme(c); track item) {
-                      <span class="tou-tag">{{ item }}</span>
-                    }
-                  </span>
-                } @else {
-                  <span class="tou-muted">Non renseigné</span>
-                }
-              </td>
-              <td>
-                @if (c.provider) {
-                  <span class="tou-owner">{{ c.provider.name }}</span>
-                  <span class="tou-muted">{{ c.provider.phone ?? c.provider.email }}</span>
-                } @else {
-                  <span class="tou-muted">—</span>
-                }
-              </td>
-              <td>
-                <span class="tou-price">{{ xof(c.price_xof) }}</span>
-              </td>
-              <td>
                 <span class="tou-badge" [class]="statusClass(c.status)">
                   {{ c.status_label ?? '—' }}
                 </span>
+                <a class="tou-open" [routerLink]="['/back-office', 'tourisme', 'circuit', c.id]">
+                  Ouvrir la fiche →
+                </a>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="8" class="tou-empty">Aucun circuit ne correspond à ces filtres.</td>
+              <td colspan="4" class="tou-empty">Aucun circuit ne correspond à ces filtres.</td>
             </tr>
           }
         </tbody>
@@ -202,12 +186,17 @@
   @if (selected() === 'destinations') {
     <div class="tou-table-wrap">
       <table class="tou-table">
+        <!--
+          F8.2.c — Publiés et en attente tiennent dans la colonne « Circuits » :
+          ce sont trois façons de compter la même chose. Cet onglet reste une
+          vue agrégée SANS fiche — une destination n'est pas une entité en base,
+          juste une colonne des circuits. Sa « fiche », c'est l'onglet Circuits
+          filtré, ce que fait déjà le bouton de droite.
+        -->
         <thead>
           <tr>
             <th>Destination</th>
             <th>Circuits</th>
-            <th>Publiés</th>
-            <th>En attente</th>
             <th>Capacité cumulée</th>
             <th>Fourchette de prix</th>
             <th></th>
@@ -221,16 +210,12 @@
               </td>
               <td>
                 <span class="tou-seats">{{ d.circuits_count }}</span>
-              </td>
-              <td>
-                <span class="tou-badge is-ok">{{ d.published_count }}</span>
-              </td>
-              <td>
-                @if (d.pending_count) {
-                  <span class="tou-badge is-pending">{{ d.pending_count }}</span>
-                } @else {
-                  <span class="tou-muted">—</span>
-                }
+                <span class="tou-counts">
+                  <span class="tou-badge is-ok">{{ d.published_count }} publié(s)</span>
+                  @if (d.pending_count) {
+                    <span class="tou-badge is-pending">{{ d.pending_count }} en attente</span>
+                  }
+                </span>
               </td>
               <td>
                 <span class="tou-seats">{{ d.seats_taken }} / {{ d.capacity_total }}</span>
@@ -263,7 +248,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="7" class="tou-empty">
+              <td colspan="5" class="tou-empty">
                 Aucune destination ne correspond à cette recherche.
               </td>
             </tr>
@@ -283,10 +268,14 @@
     </p>
     <div class="tou-table-wrap">
       <table class="tou-table">
+        <!--
+          F8.2.c — La catégorie rejoint le nom, le motif de sanction rejoint la
+          fiche : il se lit en entier, avec les avis qui l'ont motivé, pas
+          tronqué dans une cellule.
+        -->
         <thead>
           <tr>
             <th>Partenaire</th>
-            <th>Catégorie</th>
             <th>Note</th>
             <th>Avertissements</th>
             <th>Statut</th>
@@ -296,12 +285,9 @@
           @for (p of partners(); track p.id) {
             <tr>
               <td>
-                <span class="tou-label">{{ p.business_name }}</span>
-                @if (p.bio) {
-                  <span class="tou-muted">{{ p.bio }}</span>
-                }
-              </td>
-              <td>
+                <a class="tou-label" [routerLink]="['/back-office', 'prestataire', p.id]">
+                  {{ p.business_name }}
+                </a>
                 <span class="tou-muted">{{ p.category_label ?? '—' }}</span>
               </td>
               <td>
@@ -310,9 +296,6 @@
               <td>
                 @if (p.warnings_count) {
                   <span class="tou-badge is-warn">{{ p.warnings_count }}</span>
-                  @if (p.sanction_note) {
-                    <span class="tou-muted">{{ p.sanction_note }}</span>
-                  }
                 } @else {
                   <span class="tou-muted">Aucun</span>
                 }
@@ -321,11 +304,16 @@
                 <span class="tou-badge" [class]="partnerStatusClass(p.status)">
                   {{ p.status_label ?? '—' }}
                 </span>
+                <a
+                  class="tou-open"
+                  [routerLink]="['/back-office', 'prestataire', p.id]">
+                  Ouvrir la fiche →
+                </a>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="5" class="tou-empty">Aucun partenaire ne correspond à ces filtres.</td>
+              <td colspan="4" class="tou-empty">Aucun partenaire ne correspond à ces filtres.</td>
             </tr>
           }
         </tbody>

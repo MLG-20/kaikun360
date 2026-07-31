@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { AdminService, CatalogQuery, TourismDestination } from '../../../core/api/admin.service';
 import { AdminExperience } from '../../../models/experience.model';
 import { Provider } from '../../../models/provider.model';
+import { programmeOf } from './circuit-programme';
 
 /** Onglet courant. */
 type TourismTab = 'circuits' | 'destinations' | 'partners';
@@ -43,10 +45,21 @@ interface SelectOption {
  * Lecture seule, comme Catalogues (F7.2.b) et Mobilité (F7.2.j) : l'approbation
  * d'un circuit reste dans l'écran **Validation** (F7.2.a) et les sanctions
  * prestataires dans **Avis & qualité** (F7.2.g).
+ *
+ * **F8.2.c — les colonnes ont fondu.** Circuits 8 → 4, partenaires 5 → 4,
+ * destinations 7 → 5. Le programme, le prestataire, le prix, le motif de
+ * sanction sont passés en **fiche** (`tourisme/circuit/:id`,
+ * `tourisme/partenaire/:id`) : un motif de sanction tronqué dans une cellule ne
+ * sert à personne, il se lit en entier avec les avis qui l'ont motivé.
+ *
+ * L'onglet **Destinations** reste sans fiche, et c'est volontaire : une
+ * destination n'est pas une entité en base, juste une colonne des circuits. Sa
+ * « fiche », c'est l'onglet Circuits filtré — ce que fait déjà « Voir les
+ * circuits ».
  */
 @Component({
   selector: 'app-backoffice-tourism-page',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './backoffice-tourism-page.html',
   styleUrl: './backoffice-tourism-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -221,38 +234,10 @@ export class BackofficeTourismPageComponent {
   }
 
   // --- Programme (inclusions) -------------------------------------------------
+  // La lecture des inclusions vit dans `circuit-programme.ts`, partagée avec la
+  // fiche du circuit (F8.2.c) : les deux écrans lisent le même programme.
 
-  /**
-   * Inclusions actives d'un circuit, en libellés lisibles — le « programme » au
-   * sens du cahier des charges.
-   *
-   * Le backend renvoie `[]` (tableau vide) quand rien n'est renseigné et un
-   * objet `{ clé: booléen }` sinon : les deux formes sont traitées.
-   */
-  protected programme(circuit: AdminExperience): string[] {
-    const inclusions = circuit.inclusions;
-    if (!inclusions || Array.isArray(inclusions)) return [];
-
-    return Object.entries(inclusions)
-      .filter(([, included]) => included === true)
-      .map(([key]) => this.inclusionLabel(key));
-  }
-
-  /** Libellé d'une clé d'inclusion (repli : la clé telle quelle). */
-  private inclusionLabel(key: string): string {
-    switch (key) {
-      case 'restauration':
-        return 'Restauration';
-      case 'guide':
-        return 'Guide';
-      case 'transport':
-        return 'Transport';
-      case 'hebergement':
-        return 'Hébergement';
-      default:
-        return key;
-    }
-  }
+  protected readonly programme = programmeOf;
 
   // --- Remplissage -----------------------------------------------------------
 

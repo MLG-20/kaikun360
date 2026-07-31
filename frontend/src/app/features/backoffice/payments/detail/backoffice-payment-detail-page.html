@@ -1,0 +1,326 @@
+@if (loading()) {
+  <p class="bo-state" role="status">Chargement du règlement…</p>
+} @else if (error() || !dossier()) {
+  <p class="bo-state bo-state--error" role="alert">
+    Règlement introuvable ou inaccessible.
+    <a routerLink="/back-office/paiements">Retour aux paiements</a>
+  </p>
+} @else if (dossier(); as d) {
+  <a class="bo-back" routerLink="/back-office/paiements">← Retour aux paiements</a>
+
+  <header class="bo-head">
+    <div>
+      <span class="bo-kind">{{ d.payment.kind_label || 'Règlement' }}</span>
+      <h1 class="bo-title">{{ xof(d.payment.amount_xof) }}</h1>
+      <p class="bo-sub">
+        <span class="bo-ref">{{ d.payment.reference }}</span> ·
+        {{ modeLabel(d.payment.mode) }} ·
+        {{ dateTime(d.payment.created_at) }}
+      </p>
+    </div>
+
+    <div class="bo-badges">
+      <span class="bo-badge" [class]="statusClass(d.payment.status)">
+        {{ d.payment.status_label }}
+      </span>
+
+      <!--
+        Les deux gestes n'apparaissent que si le SERVEUR les accepterait
+        (`can_confirm` / `can_refund`) : l'écran ne redéclare pas les règles du
+        module de paiement, il les suit. Un bouton affiché à tort ne produirait
+        qu'un 422 incompréhensible.
+      -->
+      @if (d.payment.can_confirm) {
+        <button
+          type="button"
+          class="k-btn k-btn--primary"
+          [disabled]="processing()"
+          (click)="openPanel('confirm')">
+          {{ panel() === 'confirm' ? 'Annuler' : 'Confirmer la réception' }}
+        </button>
+      }
+      @if (d.payment.can_refund) {
+        <button
+          type="button"
+          class="k-btn k-btn--ghost bo-btn--danger"
+          [disabled]="processing()"
+          (click)="openPanel('refund')">
+          {{ panel() === 'refund' ? 'Annuler' : 'Rembourser' }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (actionDone()) {
+    <p class="bo-state" role="status">{{ actionDone() }}</p>
+  }
+  @if (actionError()) {
+    <p class="bo-state bo-state--error" role="alert">{{ actionError() }}</p>
+  }
+
+  <!-- Encaissement non prouvé : ce qu'un contrôle comptable cherchera -->
+  @if (unproven()) {
+    <p class="bo-stake bo-stake--alert" role="note">
+      <strong>Encaissement non prouvé.</strong> Ce règlement est marqué complété sans
+      signature PSP vérifiée ni référence de transaction Wave/Orange Money. Rien ne
+      l'atteste en dehors de l'enregistrement lui-même — pensez à saisir la preuve.
+    </p>
+  }
+
+  <!-- Panneau de saisie du geste en cours -->
+  @if (panel() === 'confirm') {
+    <section class="bo-panel">
+      <p class="bo-panel__title">Confirmer un règlement reçu sur Wave / Orange Money</p>
+      <div class="bo-panel__row">
+        <input
+          class="k-input"
+          type="text"
+          maxlength="255"
+          [(ngModel)]="proofReference"
+          placeholder="Référence de la transaction Wave/OM (preuve)…" />
+        <button
+          type="button"
+          class="k-btn k-btn--primary"
+          [disabled]="processing()"
+          (click)="confirm()">
+          {{ processing() ? '…' : 'Valider la réception' }}
+        </button>
+        <button type="button" class="k-btn k-btn--ghost" (click)="closePanel()">Annuler</button>
+      </div>
+      <p class="bo-panel__hint">
+        La réservation liée sera confirmée. La référence de transaction est conservée
+        comme preuve : sans elle, plus rien n'atteste l'encaissement.
+      </p>
+    </section>
+  }
+
+  @if (panel() === 'refund') {
+    <section class="bo-panel bo-panel--danger">
+      <p class="bo-panel__title">Rembourser le règlement {{ d.payment.reference }}</p>
+      <div class="bo-panel__row">
+        <input
+          class="k-input bo-amount-input"
+          type="number"
+          min="1"
+          [max]="d.payment.amount_xof"
+          [(ngModel)]="refundAmount"
+          placeholder="Montant (FCFA)" />
+        <button
+          type="button"
+          class="k-btn bo-btn--danger"
+          [disabled]="processing()"
+          (click)="refund()">
+          {{ processing() ? '…' : 'Confirmer le remboursement' }}
+        </button>
+        <button type="button" class="k-btn k-btn--ghost" (click)="closePanel()">Annuler</button>
+      </div>
+      <p class="bo-panel__hint">
+        Geste <strong>irréversible</strong> : les fonds repartent chez le client via le
+        prestataire de paiement. Maximum {{ xof(d.payment.amount_xof) }}. L'opération est
+        tracée au journal avec son montant et votre nom.
+      </p>
+    </section>
+  }
+
+  <div class="bo-grid">
+    <!-- ============ LA TRANSACTION ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">La transaction</h2>
+      <dl class="bo-facts">
+        <div><dt>Montant</dt><dd>{{ xof(d.payment.amount_xof) }}</dd></div>
+        <div><dt>Commission</dt><dd>{{ xof(d.payment.commission_xof) }}</dd></div>
+        <div><dt>Nature</dt><dd>{{ d.payment.kind_label || 'Intégral' }}</dd></div>
+        <div><dt>Mode</dt><dd>{{ modeLabel(d.payment.mode) }}</dd></div>
+        <div><dt>Prestataire</dt><dd>{{ d.payment.provider || '—' }}</dd></div>
+        <div><dt>Enregistré le</dt><dd>{{ dateTime(d.payment.created_at) }}</dd></div>
+        <div><dt>Dernier mouvement</dt><dd>{{ dateTime(d.payment.updated_at) }}</dd></div>
+        @if (shareOfBooking() !== null) {
+          <div>
+            <dt>Part de la réservation</dt>
+            <dd>{{ shareOfBooking() }} %</dd>
+          </div>
+        }
+      </dl>
+    </section>
+
+    <!-- ============ LES PREUVES ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">Les preuves</h2>
+      <!--
+        Le cœur de cette fiche. « Complété » n'est pas une preuve : c'est un
+        statut en base. Ce qui prouve, c'est la signature du webhook PSP ou la
+        référence de la transaction Wave/OM. On les montre comme des points de
+        contrôle, dans la même grammaire que la conformité d'un véhicule.
+      -->
+      <ul class="bo-checks">
+        <li class="bo-check" [class.is-missing]="!d.payment.signature_verified">
+          <span class="bo-check__mark" aria-hidden="true">
+            {{ d.payment.signature_verified ? '✓' : '✗' }}
+          </span>
+          <span class="bo-check__label">Signature PSP vérifiée</span>
+          <span class="bo-check__value">
+            {{ d.payment.signature_verified ? 'Notification authentifiée' : 'Non vérifiée' }}
+          </span>
+        </li>
+        <li class="bo-check" [class.is-missing]="!d.payment.provider_reference">
+          <span class="bo-check__mark" aria-hidden="true">
+            {{ d.payment.provider_reference ? '✓' : '✗' }}
+          </span>
+          <span class="bo-check__label">Référence PSP</span>
+          <span class="bo-check__value">{{ d.payment.provider_reference || 'Absente' }}</span>
+        </li>
+        @if (d.payment.mode === 'manuel') {
+          <li class="bo-check" [class.is-missing]="!d.payment.manual_proof_reference">
+            <span class="bo-check__mark" aria-hidden="true">
+              {{ d.payment.manual_proof_reference ? '✓' : '✗' }}
+            </span>
+            <span class="bo-check__label">Preuve Wave / Orange Money</span>
+            <span class="bo-check__value">
+              {{ d.payment.manual_proof_reference || 'Non saisie' }}
+            </span>
+          </li>
+        }
+      </ul>
+
+      @if (d.payment.refunded_amount_xof) {
+        <h3 class="bo-block__title">Remboursement</h3>
+        <p class="bo-desc">
+          <span class="bo-due">{{ xof(d.payment.refunded_amount_xof) }}</span> remboursés sur
+          {{ xof(d.payment.amount_xof) }}. Le détail figure au journal, en bas de page.
+        </p>
+      }
+    </section>
+
+    <!-- ============ LA RÉSERVATION PAYÉE ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">La réservation payée</h2>
+      @if (d.booking; as booking) {
+        <dl class="bo-facts">
+          <div><dt>Référence</dt><dd>{{ booking.reference }}</dd></div>
+          <div><dt>Type</dt><dd>{{ resourceTypeLabel(booking.resource_type) }}</dd></div>
+          <div><dt>Ressource</dt><dd>{{ booking.resource_label }}</dd></div>
+          <div>
+            <dt>Dates</dt>
+            <dd>{{ shortDate(booking.start_date) }} → {{ shortDate(booking.end_date) }}</dd>
+          </div>
+          <div><dt>Personnes</dt><dd>{{ booking.guests }}</dd></div>
+          <div><dt>Statut</dt><dd>{{ bookingStatusLabel(booking.status) }}</dd></div>
+          <div><dt>Montant total</dt><dd>{{ xof(booking.amount_xof) }}</dd></div>
+          <div><dt>Encaissé</dt><dd>{{ xof(booking.paid_xof) }}</dd></div>
+          <div>
+            <dt>Reste à payer</dt>
+            <dd [class.bo-due]="booking.remaining_xof > 0">{{ xof(booking.remaining_xof) }}</dd>
+          </div>
+        </dl>
+
+        <h3 class="bo-block__title">Le client</h3>
+        @if (booking.client; as client) {
+          <dl class="bo-facts">
+            <div><dt>Nom</dt><dd>{{ client.name }}</dd></div>
+            @if (client.email) {
+              <div>
+                <dt>E-mail</dt>
+                <dd><a [href]="'mailto:' + client.email">{{ client.email }}</a></dd>
+              </div>
+            }
+            @if (client.phone) {
+              <div>
+                <dt>Téléphone</dt>
+                <dd><a [href]="'tel:' + client.phone">{{ client.phone }}</a></dd>
+              </div>
+            }
+          </dl>
+          <a class="bo-link" [routerLink]="['/back-office', 'comptes', client.id]">
+            Voir sa fiche compte →
+          </a>
+        } @else {
+          <p class="bo-muted">Client introuvable (compte supprimé).</p>
+        }
+      } @else {
+        <p class="bo-muted">
+          Ce règlement n'est rattaché à aucune réservation. C'est anormal : signalez-le
+          plutôt que de le confirmer.
+        </p>
+      }
+    </section>
+
+    <!-- ============ L'ÉCHÉANCIER ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">
+        Échéancier de la réservation
+        <span class="bo-muted">— {{ d.siblings.length }} règlement(s)</span>
+      </h2>
+      @if (d.siblings.length) {
+        <div class="bo-table-wrap">
+          <table class="bo-table">
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Nature</th>
+                <th>Montant</th>
+                <th>Mode</th>
+                <th>Statut</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of d.siblings; track s.id) {
+                <tr>
+                  <td>
+                    @if (s.is_current) {
+                      <span class="bo-cell-strong">{{ s.reference }}</span>
+                      <span class="bo-cell-ref">règlement consulté</span>
+                    } @else {
+                      <a class="bo-cell-link" [routerLink]="['/back-office', 'paiements', s.id]">
+                        {{ s.reference }}
+                      </a>
+                    }
+                  </td>
+                  <td>{{ s.kind_label || 'Intégral' }}</td>
+                  <td>{{ xof(s.amount_xof) }}</td>
+                  <td>{{ modeLabel(s.mode) }}</td>
+                  <td>
+                    <span class="bo-badge" [class]="statusClass(s.status)">{{ s.status_label }}</span>
+                  </td>
+                  <td>{{ dateTime(s.created_at) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="bo-hint">
+          Un acompte isolé ne veut rien dire : c'est à côté des autres règlements de la
+          même réservation qu'il se lit.
+        </p>
+      } @else {
+        <p class="bo-muted">Aucun autre règlement sur cette réservation.</p>
+      }
+    </section>
+
+    <!-- ============ LE JOURNAL ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Journal</h2>
+      @if (d.activity.length) {
+        <ul class="bo-activity">
+          @for (entry of d.activity; track entry.id) {
+            <li class="bo-activity__item">
+              <span class="bo-activity__date">{{ dateTime(entry.created_at) }}</span>
+              <span class="bo-activity__desc">{{ entry.description }}</span>
+              @if (entry.causer_name) {
+                <span class="bo-muted">par {{ entry.causer_name }}</span>
+              }
+              @if (entry.properties?.['amount_xof']) {
+                <span class="bo-muted">— {{ xof(+entry.properties['amount_xof']) }}</span>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">
+          Aucune intervention de l'équipe sur ce règlement : il n'a été ni confirmé à la
+          main, ni remboursé.
+        </p>
+      }
+    </section>
+  </div>
+}

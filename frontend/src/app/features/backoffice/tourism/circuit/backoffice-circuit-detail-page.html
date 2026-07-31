@@ -1,0 +1,213 @@
+@if (loading()) {
+  <p class="bo-state" role="status">Chargement du circuit…</p>
+} @else if (error() || !dossier()) {
+  <p class="bo-state bo-state--error" role="alert">
+    Circuit introuvable ou inaccessible.
+    <a routerLink="/back-office/tourisme">Retour aux circuits</a>
+  </p>
+} @else if (dossier(); as d) {
+  <a class="bo-back" routerLink="/back-office/tourisme">← Retour aux circuits</a>
+
+  <header class="bo-head">
+    <div>
+      <span class="bo-kind">{{ d.experience.destination }}</span>
+      <h1 class="bo-title">{{ d.experience.title }}</h1>
+      <p class="bo-sub">
+        <span class="bo-ref">{{ d.experience.reference }}</span> ·
+        {{ d.experience.duration_days }} jour(s) ·
+        {{ xof(d.experience.price_xof) }} par personne
+      </p>
+    </div>
+
+    <div class="bo-badges">
+      <span class="bo-badge" [class]="statusClass(d.experience.status)">
+        {{ d.experience.status_label ?? '—' }}
+      </span>
+    </div>
+  </header>
+
+  <div class="bo-grid">
+    <!-- ============ LE CIRCUIT ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">Le circuit</h2>
+      <dl class="bo-facts">
+        <div><dt>Destination</dt><dd>{{ d.experience.destination }}</dd></div>
+        <div><dt>Durée</dt><dd>{{ d.experience.duration_days }} jour(s)</dd></div>
+        <div><dt>Prix / personne</dt><dd>{{ xof(d.experience.price_xof) }}</dd></div>
+        <div><dt>Capacité groupe</dt><dd>{{ d.experience.capacity }} place(s)</dd></div>
+      </dl>
+
+      <h3 class="bo-block__title">Remplissage</h3>
+      <p class="bo-fill">
+        <strong>{{ d.experience.seats_taken }} / {{ d.experience.capacity }}</strong>
+        @if (d.experience.seats_left === 0) {
+          <span class="bo-badge is-ok">Complet</span>
+        } @else {
+          <span class="bo-muted">{{ d.experience.seats_left }} place(s) restante(s)</span>
+        }
+      </p>
+      <span class="bo-gauge" [attr.aria-label]="fillRate() + ' % de remplissage'">
+        <span class="bo-gauge__fill" [style.width.%]="fillRate()"></span>
+      </span>
+      <!--
+        Rappel qui évite un contresens : un circuit n'a pas de date de départ,
+        sa capacité est un TOTAL et le remplissage cumule toutes les
+        réservations — ce n'est pas le remplissage d'une session datée.
+      -->
+      <p class="bo-hint">
+        Un circuit n'a pas de date de départ : cette capacité est un total, et le
+        remplissage cumule toutes les réservations non annulées.
+      </p>
+
+      @if (totalDue() > 0) {
+        <p class="bo-hint">
+          <span class="bo-due">{{ xof(totalDue()) }}</span> restent à encaisser sur les
+          participants attendus.
+        </p>
+      }
+    </section>
+
+    <!-- ============ PROGRAMME & PRESTATAIRE ============ -->
+    <section class="bo-card">
+      <h2 class="bo-card__title">Programme</h2>
+      @if (programme().length) {
+        <ul class="bo-tags">
+          @for (item of programme(); track item) {
+            <li class="bo-tag">{{ item }}</li>
+          }
+        </ul>
+        <p class="bo-hint">
+          Ce que le circuit promet, tel que le prestataire l'a déclaré : c'est ce sur
+          quoi la plateforme s'engage auprès des participants.
+        </p>
+      } @else {
+        <p class="bo-muted">
+          Programme non renseigné — le circuit ne dit pas ce qui est compris dans son
+          prix.
+        </p>
+      }
+
+      <h3 class="bo-block__title">Prestataire</h3>
+      @if (d.experience.provider; as provider) {
+        <dl class="bo-facts">
+          <div><dt>Nom</dt><dd>{{ provider.name }}</dd></div>
+          @if (provider.email) {
+            <div>
+              <dt>E-mail</dt>
+              <dd><a [href]="'mailto:' + provider.email">{{ provider.email }}</a></dd>
+            </div>
+          }
+          @if (provider.phone) {
+            <div>
+              <dt>Téléphone</dt>
+              <dd><a [href]="'tel:' + provider.phone">{{ provider.phone }}</a></dd>
+            </div>
+          }
+        </dl>
+        <a class="bo-link" [routerLink]="['/back-office', 'comptes', provider.id]">
+          Voir sa fiche compte →
+        </a>
+      } @else {
+        <p class="bo-muted">Prestataire introuvable (compte supprimé).</p>
+      }
+
+      @if (d.experience.description) {
+        <h3 class="bo-block__title">Description</h3>
+        <p class="bo-desc">{{ d.experience.description }}</p>
+      }
+    </section>
+
+    <!-- ============ PARTICIPANTS ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">
+        Participants
+        <span class="bo-muted">— {{ expected().length }} réservation(s) attendue(s)</span>
+      </h2>
+      @if (d.participants.length) {
+        <div class="bo-table-wrap">
+          <table class="bo-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Contact</th>
+                <th>Places</th>
+                <th>Date souhaitée</th>
+                <th>Reste à payer</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of d.participants; track p.booking_id) {
+                <tr [class.is-cancelled]="p.is_cancelled">
+                  <td>
+                    <span class="bo-cell-strong">{{ p.client_name || 'Compte supprimé' }}</span>
+                    <span class="bo-cell-ref">{{ p.reference }}</span>
+                  </td>
+                  <td>
+                    @if (p.client_phone) {
+                      <a [href]="'tel:' + p.client_phone">{{ p.client_phone }}</a>
+                    }
+                    @if (p.client_email) {
+                      <span class="bo-cell-ref">{{ p.client_email }}</span>
+                    }
+                    @if (!p.client_phone && !p.client_email) {
+                      <span class="bo-muted">—</span>
+                    }
+                  </td>
+                  <td>{{ p.guests }}</td>
+                  <td>{{ shortDate(p.start_date) }}</td>
+                  <td>
+                    @if (p.is_cancelled) {
+                      <span class="bo-muted">—</span>
+                    } @else if (p.remaining_xof > 0) {
+                      <span class="bo-due">{{ xof(p.remaining_xof) }}</span>
+                    } @else {
+                      <span class="bo-muted">Soldé</span>
+                    }
+                  </td>
+                  <td>{{ bookingStatusLabel(p.status) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="bo-hint">
+          Les réservations annulées restent listées, barrées : elles ne comptent pas
+          dans le remplissage mais expliquent son évolution.
+        </p>
+      } @else {
+        <p class="bo-muted">Aucune réservation sur ce circuit.</p>
+      }
+    </section>
+
+    <!-- ============ PHOTOS ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Photos</h2>
+      <!--
+        Galerie en LECTURE : la modération photo par photo reste au dossier de
+        validation, qui est l'écran de la décision de publication.
+      -->
+      <app-media-review [media]="d.media" [label]="d.experience.title" [compact]="true" />
+    </section>
+
+    <!-- ============ JOURNAL ============ -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Journal</h2>
+      @if (d.activity.length) {
+        <ul class="bo-activity">
+          @for (entry of d.activity; track entry.id) {
+            <li class="bo-activity__item">
+              <span class="bo-activity__date">{{ dateTime(entry.created_at) }}</span>
+              <span class="bo-activity__desc">{{ entry.description }}</span>
+              @if (entry.causer_name) {
+                <span class="bo-muted">par {{ entry.causer_name }}</span>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">Aucune décision tracée sur ce circuit pour l'instant.</p>
+      }
+    </section>
+  </div>
+}

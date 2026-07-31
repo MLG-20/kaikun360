@@ -106,15 +106,18 @@
   @if (selected() === 'fleet') {
     <div class="mob-table-wrap">
       <table class="mob-table">
+        <!--
+          F8.2.b — Quatre colonnes, pas huit. Le tarif, la caution et le
+          prestataire ont rejoint la fiche du véhicule : ce sont des éléments de
+          dossier, pas de balayage. Reste ce qui fait la valeur de cet onglet —
+          repérer d'un coup d'œil un moyen de transport qui ne devrait pas
+          rouler.
+        -->
         <thead>
           <tr>
             <th>Véhicule</th>
-            <th>Catégorie</th>
             <th>Capacité</th>
-            <th>Chauffeur</th>
             <th>Conformité</th>
-            <th>Prestataire</th>
-            <th>Tarif</th>
             <th>Statut</th>
           </tr>
         </thead>
@@ -122,19 +125,17 @@
           @for (v of vehicles(); track v.id) {
             <tr>
               <td>
-                <span class="mob-label">{{ vehicleLabel(v) }}</span>
+                <a class="mob-label" [routerLink]="['/back-office', 'mobilite', 'vehicule', v.id]">
+                  {{ vehicleLabel(v) }}
+                </a>
                 <span class="mob-ref">{{ v.reference }}</span>
-              </td>
-              <td>
                 <span class="mob-muted">{{ v.type_label ?? '—' }}</span>
               </td>
               <td>
                 <span class="mob-seats">{{ v.capacity }}</span>
                 <span class="mob-muted"> place(s)</span>
-              </td>
-              <td>
                 @if (v.has_driver) {
-                  <span class="mob-driver">{{ v.driver_identity ?? 'Non déclaré' }}</span>
+                  <span class="mob-driver">{{ v.driver_identity ?? 'Chauffeur non déclaré' }}</span>
                 } @else {
                   <span class="mob-muted">Sans chauffeur</span>
                 }
@@ -143,37 +144,20 @@
                 <span class="mob-badge" [class]="complianceClass(v)" [title]="complianceDetail(v)">
                   {{ complianceLabel(v) }}
                 </span>
-                @if (v.insurance_ref) {
-                  <span class="mob-insurance">Assurance {{ v.insurance_ref }}</span>
-                }
-                @if (v.type === 'pirogue') {
-                  <span class="mob-insurance"> {{ v.life_jackets_count ?? 0 }} gilet(s) </span>
-                }
-              </td>
-              <td>
-                @if (v.provider) {
-                  <span class="mob-owner">{{ v.provider.name }}</span>
-                  <span class="mob-muted">{{ v.provider.phone ?? v.provider.email }}</span>
-                } @else {
-                  <span class="mob-muted">—</span>
-                }
-              </td>
-              <td>
-                <span class="mob-price">{{ xof(v.price_per_day_xof) }}</span>
-                <span class="mob-price__suffix"> / jour</span>
-                @if (v.caution_xof) {
-                  <span class="mob-muted">Caution {{ xof(v.caution_xof) }}</span>
-                }
+                <span class="mob-insurance">{{ complianceDetail(v) }}</span>
               </td>
               <td>
                 <span class="mob-badge" [class]="statusClass(v.status)">
                   {{ v.status_label ?? '—' }}
                 </span>
+                <a class="mob-open" [routerLink]="['/back-office', 'mobilite', 'vehicule', v.id]">
+                  Ouvrir la fiche →
+                </a>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="8" class="mob-empty">Aucun véhicule ne correspond à ces filtres.</td>
+              <td colspan="4" class="mob-empty">Aucun véhicule ne correspond à ces filtres.</td>
             </tr>
           }
         </tbody>
@@ -185,15 +169,16 @@
   @if (selected() === 'trips') {
     <div class="mob-table-wrap">
       <table class="mob-table">
+        <!--
+          F8.2.b — Quatre colonnes ici aussi : le véhicule affecté, l'opérateur
+          et le prix par place se lisent dans la fiche du départ, avec la liste
+          des passagers qui leur donne du sens.
+        -->
         <thead>
           <tr>
             <th>Trajet</th>
-            <th>Nature</th>
             <th>Départ</th>
             <th>Remplissage</th>
-            <th>Véhicule</th>
-            <th>Prestataire</th>
-            <th>Prix / place</th>
             <th>Statut</th>
           </tr>
         </thead>
@@ -201,10 +186,10 @@
           @for (t of trips(); track t.id) {
             <tr>
               <td>
-                <span class="mob-label">{{ t.departure }} → {{ t.destination }}</span>
+                <a class="mob-label" [routerLink]="['/back-office', 'mobilite', 'trajet', t.id]">
+                  {{ t.departure }} → {{ t.destination }}
+                </a>
                 <span class="mob-ref">{{ t.reference }}</span>
-              </td>
-              <td>
                 <span class="mob-muted">{{ t.type_label ?? '—' }}</span>
               </td>
               <td>
@@ -226,33 +211,17 @@
                 }
               </td>
               <td>
-                @if (t.vehicle) {
-                  <span class="mob-owner">{{ t.vehicle.label ?? t.vehicle.type_label }}</span>
-                  <span class="mob-ref">{{ t.vehicle.reference }}</span>
-                } @else {
-                  <span class="mob-muted">Non affecté</span>
-                }
-              </td>
-              <td>
-                @if (t.provider) {
-                  <span class="mob-owner">{{ t.provider.name }}</span>
-                  <span class="mob-muted">{{ t.provider.phone ?? t.provider.email }}</span>
-                } @else {
-                  <span class="mob-muted">—</span>
-                }
-              </td>
-              <td>
-                <span class="mob-price">{{ xof(t.price_xof) }}</span>
-              </td>
-              <td>
                 <span class="mob-badge" [class]="statusClass(t.status)">
                   {{ t.status_label ?? '—' }}
                 </span>
+                <a class="mob-open" [routerLink]="['/back-office', 'mobilite', 'trajet', t.id]">
+                  Ouvrir la fiche →
+                </a>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="8" class="mob-empty">Aucun trajet ne correspond à ces filtres.</td>
+              <td colspan="4" class="mob-empty">Aucun trajet ne correspond à ces filtres.</td>
             </tr>
           }
         </tbody>

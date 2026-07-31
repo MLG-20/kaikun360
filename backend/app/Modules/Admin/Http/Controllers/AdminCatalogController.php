@@ -8,6 +8,7 @@ use App\Models\Booking;
 use App\Modules\Admin\Http\Resources\AdminExperienceResource;
 use App\Modules\Admin\Http\Resources\AdminMobilityServiceResource;
 use App\Modules\Admin\Http\Resources\AdminVehicleResource;
+use App\Modules\Admin\Validation\MediaEntry;
 use App\Modules\Explore\Enums\ExperienceStatus;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Immo\Http\Resources\PropertyResource;
@@ -15,9 +16,12 @@ use App\Modules\Immo\Models\Property;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Support\ApiResponse;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Collection;
+use Spatie\Activitylog\Models\Activity;
 
 /**
  * Navigateur back-office des catalogues (B13.7.1).
@@ -93,6 +97,86 @@ class AdminCatalogController extends Controller
     }
 
     /**
+     * Fiche d'un véhicule. GET /api/v1/admin/vehicles/{vehicle}
+     *
+     * **F8.2.b — pourquoi une fiche.** L'onglet Flotte signale qu'un véhicule
+     * n'est pas conforme ; il ne dit pas quoi en faire. Or la décision dépend de
+     * ce que la ligne ne montre pas : ce véhicule roule-t-il *déjà* (locations en
+     * cours, départs programmés à venir) ? qui appeler ? à quoi ressemble-t-il ?
+     *
+     * La fiche répond en rassemblant : le **contrôle de conformité** pièce par
+     * pièce (la grille dépend du moyen de transport — pirogue ou motorisé), le
+     * **prestataire** joignable, les **photos**, les **locations** passées et à
+     * venir, les **départs programmés** qui l'utilisent, et le **journal**.
+     *
+     * L'engagement à venir est le vrai enjeu : suspendre un véhicule qui porte
+     * trois départs pleins n'est pas le même geste que suspendre un véhicule au
+     * repos. Lecture seule, comme tout cet écran : la décision de publication
+     * reste à la file de validation, qui la trace.
+     */
+    public function vehicle(Vehicle $vehicle): JsonResponse
+    {
+        $vehicle->load(['provider', 'allMedia'])
+            ->loadCount(['allMedia as media_count', 'allMedia as media_hidden_count' => fn ($q) => $q->where('status', 'masque')]);
+
+        $cancelled = $this->cancelledBookingStatuses();
+
+        // Locations de ce véhicule : les 20 dernières, le client avec.
+        $bookings = Booking::query()
+            ->where('bookable_type', Vehicle::class)
+            ->where('bookable_id', $vehicle->id)
+            ->with('user:id,name,email,phone')
+            ->orderByDesc('start_date')
+            ->limit(20)
+            ->get()
+            ->map(fn (Booking $b) => [
+                'booking_id' => $b->id,
+                'reference' => $b->reference,
+                'client_name' => $b->user?->name,
+                'start_date' => $b->start_date?->toDateString(),
+                'end_date' => $b->end_date?->toDateString(),
+                'guests' => $b->guests,
+                'amount_xof' => $b->amount_xof,
+                'status' => $b->status->value,
+            ]);
+
+        // Départs programmés portés par ce véhicule, avec leur remplissage : ce
+        // que l'équipe engagerait à annuler en cas de suspension.
+        $trips = MobilityService::query()
+            ->where('vehicle_id', $vehicle->id)
+            ->withSum(
+                ['bookings as seats_taken' => fn ($q) => $q->whereNotIn('status', $cancelled)],
+                'guests'
+            )
+            ->orderByDesc('departure_at')
+            ->limit(20)
+            ->get()
+            ->map(fn (MobilityService $s) => [
+                'id' => $s->id,
+                'reference' => $s->reference,
+                'departure' => $s->departure,
+                'destination' => $s->destination,
+                'departure_at' => $s->departure_at?->toIso8601String(),
+                'capacity' => (int) $s->capacity,
+                'seats_taken' => (int) ($s->seats_taken ?? 0),
+                'seats_left' => max(0, (int) $s->capacity - (int) ($s->seats_taken ?? 0)),
+                'status' => $s->status?->value,
+                'status_label' => $s->status?->label(),
+                // Un départ passé n'engage plus rien : la fiche le signale pour
+                // que l'agent ne compte que ce qui est encore devant lui.
+                'is_upcoming' => $s->departure_at !== null && $s->departure_at->isFuture(),
+            ]);
+
+        return ApiResponse::success([
+            'vehicle' => AdminVehicleResource::make($vehicle),
+            'media' => MediaEntry::summary($vehicle),
+            'bookings' => $bookings,
+            'trips' => $trips,
+            'activity' => $this->activityOf($vehicle),
+        ]);
+    }
+
+    /**
      * Trajets programmés (tous statuts). GET /api/v1/admin/mobility-services
      *
      * Onglet « Trajets » de l'écran Mobilité (F7.2.j). Contrairement à la
@@ -129,6 +213,133 @@ class AdminCatalogController extends Controller
             ->paginate($this->perPage($request));
 
         return AdminMobilityServiceResource::collection($services);
+    }
+
+    /**
+     * Fiche d'un trajet programmé. GET /api/v1/admin/mobility-services/{service}
+     *
+     * **F8.2.b.** La liste donne le remplissage d'un départ (« 12 / 15 ») ; la
+     * fiche donne **qui** sont ces douze. C'est la différence entre superviser et
+     * exploiter : un départ qui approche se prépare avec la liste des passagers
+     * en main — noms, places, joignabilité, et qui n'a pas fini de payer.
+     *
+     * S'y ajoutent le **véhicule affecté** (avec sa capacité, pour repérer une
+     * surréservation) et le **prestataire** opérateur. Les réservations annulées
+     * sont écartées du décompte mais **restent listées, marquées comme telles** :
+     * une annulation de la veille explique un départ soudain à moitié vide.
+     */
+    public function mobilityService(MobilityService $service): JsonResponse
+    {
+        $service->load(['provider', 'vehicle'])
+            ->loadSum(
+                ['bookings as seats_taken' => fn ($q) => $q->whereNotIn('status', $this->cancelledBookingStatuses())],
+                'guests'
+            );
+
+        $passengers = $service->bookings()
+            ->with('user:id,name,email,phone')
+            ->latest()
+            ->get()
+            ->map(fn (Booking $b) => [
+                'booking_id' => $b->id,
+                'reference' => $b->reference,
+                'client_name' => $b->user?->name,
+                'client_email' => $b->user?->email,
+                'client_phone' => $b->user?->phone,
+                'guests' => $b->guests,
+                'amount_xof' => $b->amount_xof,
+                'paid_xof' => $b->montantPaye(),
+                'remaining_xof' => $b->resteAPayer(),
+                'status' => $b->status->value,
+                'is_cancelled' => $b->status->estAnnulee(),
+                'created_at' => $b->created_at?->toIso8601String(),
+            ]);
+
+        return ApiResponse::success([
+            'trip' => AdminMobilityServiceResource::make($service),
+            'passengers' => $passengers,
+            'activity' => $this->activityOf($service),
+        ]);
+    }
+
+    /**
+     * Fiche d'un circuit touristique. GET /api/v1/admin/experiences/{experience}
+     *
+     * **F8.2.c.** L'onglet Circuits dit qu'un circuit est rempli à 12/15 ; il ne
+     * dit pas **qui part**, ni ce que le circuit promet. Or les deux vont
+     * ensemble : un circuit qui annonce « guide francophone + déjeuner » engage
+     * la plateforme auprès de douze personnes nommées.
+     *
+     * La fiche réunit donc le **programme** (les inclusions, telles que le
+     * prestataire les a déclarées), le **prestataire** joignable, les **photos**,
+     * et la liste des **participants** — avec ce que chacun doit encore.
+     *
+     * ⚠️ Une expérience n'a **pas de date de départ** (B6.3) : sa capacité est un
+     * total par circuit, et `seats_taken` cumule toutes ses réservations non
+     * annulées. La fiche affiche donc un remplissage global, pas un départ daté.
+     */
+    public function experience(TourismExperience $experience): JsonResponse
+    {
+        $cancelled = $this->cancelledBookingStatuses();
+
+        $experience->load(['provider', 'allMedia'])
+            ->loadCount(['allMedia as media_count', 'allMedia as media_hidden_count' => fn ($q) => $q->where('status', 'masque')])
+            ->loadSum(
+                ['bookings as seats_taken' => fn ($q) => $q->whereNotIn('status', $cancelled)],
+                'guests'
+            );
+
+        $participants = $experience->bookings()
+            ->with('user:id,name,email,phone')
+            ->latest()
+            ->get()
+            ->map(fn (Booking $b) => [
+                'booking_id' => $b->id,
+                'reference' => $b->reference,
+                'client_name' => $b->user?->name,
+                'client_email' => $b->user?->email,
+                'client_phone' => $b->user?->phone,
+                'guests' => $b->guests,
+                'start_date' => $b->start_date?->toDateString(),
+                'amount_xof' => $b->amount_xof,
+                'paid_xof' => $b->montantPaye(),
+                'remaining_xof' => $b->resteAPayer(),
+                'status' => $b->status->value,
+                'is_cancelled' => $b->status->estAnnulee(),
+            ]);
+
+        return ApiResponse::success([
+            'experience' => AdminExperienceResource::make($experience),
+            'media' => MediaEntry::summary($experience),
+            'participants' => $participants,
+            'activity' => $this->activityOf($experience),
+        ]);
+    }
+
+    /**
+     * Les 30 dernières entrées du journal d'audit portant sur un modèle (F8.2.b).
+     *
+     * Mutualisé entre les fiches : une décision tracée (suspension, correction)
+     * doit rester lisible là où l'on consulte la ressource concernée.
+     *
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     */
+    private function activityOf(Model $model): Collection
+    {
+        return Activity::query()
+            ->where('subject_type', $model->getMorphClass())
+            ->where('subject_id', $model->getKey())
+            ->with('causer')
+            ->latest()
+            ->limit(30)
+            ->get()
+            ->map(fn (Activity $entry) => [
+                'id' => $entry->id,
+                'description' => $entry->description,
+                'causer_name' => $entry->causer?->name,
+                'properties' => $entry->properties,
+                'created_at' => $entry->created_at,
+            ]);
     }
 
     /**

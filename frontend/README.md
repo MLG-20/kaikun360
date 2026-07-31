@@ -538,6 +538,51 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     type parent, autant ne pas proposer un geste qui rebondira.
   - La colonne *Médias* du catalogue signale **en rouge** une annonce publiée
     sans aucun visuel : c'est une anomalie vue par les clients, pas un détail.
+  **F8.2 Les cinq derniers écrans reçoivent leurs fiches.** Nuitées, Mobilité,
+  Tourisme, Paiements et Avis & qualité n'étaient que des listes : la décision se
+  prenait sur une ligne de tableau, qui ne peut porter ni contexte, ni preuve, ni
+  liste de personnes. Sept pages `:id` s'ajoutent — séjour, véhicule, départ
+  programmé, circuit, prestataire, règlement, avis — et les listes retombent à
+  4–5 colonnes (Nuitées 7→4, Mobilité 8→4 par onglet, Circuits 8→4, Paiements
+  9→5, Avis 7→5), avec la même règle qu'en F8.1 : **rien n'est coupé sans avoir
+  été vérifié présent sur la fiche**.
+  - **Une seule feuille de style pour toutes les fiches**
+    ([`shared/dossier.scss`](src/app/features/backoffice/shared/dossier.scss),
+    préfixe `bo-`). C'est la dette signalée en F8.1 (« les styles `ds-`/`tb-`/`ac-`
+    sont des quasi-copies ») traitée avant qu'elle ne se reproduise : deux
+    feuilles jumelles étaient déjà nées (mobilité, tourisme) et une troisième
+    s'annonçait. Une fiche en appelle une autre — d'un paiement vers sa
+    réservation, d'un avis vers son prestataire — elles doivent se ressembler,
+    sinon l'agent croit avoir changé d'application.
+  - **Ce qui se décide où.** Le pilotage fin quitte les listes pour les fiches,
+    avec leur contexte : le ménage et la caution d'un séjour, le **remboursement**
+    d'un règlement. Restent en liste les gestes du quotidien qui ne demandent
+    aucune information supplémentaire : arrivée/départ d'un séjour, confirmation
+    d'un règlement Wave/OM. Un remboursement est irréversible : il ne se décide
+    pas depuis un tableau sans voir la réservation.
+  - **Le serveur décide de ce qui est possible.** La fiche paiement affiche ses
+    boutons d'après `can_confirm` / `can_refund` renvoyés par l'API, au lieu de
+    redéclarer les règles du module de paiement (mode manuel requis, statut
+    `complete` requis) et de finir par en diverger.
+  - **Les règles métier partagées entre liste et fiche sont extraites**, sans quoi
+    les deux écrans divergent : la grille de conformité d'un véhicule
+    ([`mobility/vehicle-compliance.ts`](src/app/features/backoffice/mobility/vehicle-compliance.ts),
+    pirogue vs motorisé) et la lecture du programme d'un circuit
+    ([`tourism/circuit-programme.ts`](src/app/features/backoffice/tourism/circuit-programme.ts)).
+    ⚠️ Cette dernière a évité un bug réel : `inclusions` est un **objet
+    `{clé: booléen}`**, pas un tableau — une fiche qui le lisait comme un tableau
+    aurait affiché « programme non renseigné » sur tous les circuits.
+  - **La fiche prestataire n'appartient à aucun écran** : ouverte depuis Tourisme
+    (« Guides & restaurants ») *et* depuis Avis & qualité, elle vit dans
+    [`providers/`](src/app/features/backoffice/providers/) sous la route de premier
+    niveau `/back-office/prestataire/:id`, et son retour passe par
+    `app-back-link` (historique) — un lien en dur renverrait la moitié des agents
+    sur le mauvais écran.
+  - ⚠️ **La garde de route porte la permission qu'exige le SERVEUR**, pas celle de
+    l'écran d'où l'on vient : la fiche prestataire est gardée par `qualite`
+    (l'API impose `valider:prestataire`), pas par `tourisme`. Un agent qui voit la
+    liste sans pouvoir ouvrir les dossiers lit un message qui le lui dit, au lieu
+    de croire à une donnée disparue.
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

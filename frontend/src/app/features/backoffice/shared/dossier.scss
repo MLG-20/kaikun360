@@ -1,0 +1,706 @@
+// =============================================================================
+// Fiches du back-office (F8.2) — feuille de style COMMUNE à tous les dossiers :
+// séjour, véhicule, départ, circuit, partenaire, paiement, avis.
+//
+// Une fiche en appelle une autre — d'un paiement vers sa réservation, d'un avis
+// vers son prestataire, d'un véhicule vers ses départs. Elles doivent se
+// ressembler au pixel près, sinon l'agent croit avoir changé d'application.
+// D'où un fichier unique, référencé par chaque composant via `styleUrl` :
+// Angular l'encapsule séparément pour chacun.
+//
+// Grammaire reprise du dossier de validation (F8.1) : cartes blanches sur le
+// fond du shell, faits en dt/dd, tableaux internes sobres. Préfixe `bo-`
+// (back-office dossier) — neutre, car aucun écran n'en est propriétaire.
+// =============================================================================
+
+:host {
+  display: block;
+  max-width: 1160px;
+}
+
+.bo-back {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--k-brand);
+  }
+}
+
+.bo-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.bo-kind {
+  display: inline-block;
+  padding: 2px 10px;
+  margin-bottom: 6px;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-brand-050);
+  color: var(--k-brand-600);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bo-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.bo-sub {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 0.85rem;
+}
+
+.bo-ref {
+  font-family: var(--k-font-mono);
+  font-size: 0.78rem;
+}
+
+.bo-badges,
+.bo-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bo-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-cream);
+  color: var(--k-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &.is-warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+  }
+}
+
+// Bandeau d'engagement : ce qui se casse si l'on retire la ressource du service.
+// Volontairement en tête de page, avant les cartes — c'est l'information qui
+// change la décision.
+.bo-stake {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: var(--k-radius);
+  background: rgba(216, 135, 24, 0.1);
+  border: 1px solid rgba(216, 135, 24, 0.3);
+  color: var(--k-ink);
+  font-size: 0.88rem;
+
+  // Surréservation : ce n'est plus un avertissement, c'est une erreur à corriger
+  // avant le départ.
+  &--alert {
+    background: rgba(199, 59, 77, 0.08);
+    border-color: rgba(199, 59, 77, 0.35);
+  }
+}
+
+// --- Jauge de remplissage ----------------------------------------------------
+.bo-fill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: var(--k-ink);
+}
+
+.bo-gauge {
+  display: block;
+  height: 8px;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-sand);
+  overflow: hidden;
+
+  &__fill {
+    display: block;
+    height: 100%;
+    border-radius: var(--k-radius-pill);
+    background: var(--k-brand);
+  }
+}
+
+.bo-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+  margin-bottom: 16px;
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+// --- Panneau d'action (confirmation, remboursement, modération) --------------
+// Posé sous l'en-tête, pas dans une carte : le geste en cours doit dominer la
+// page tant qu'il n'est pas tranché.
+.bo-panel {
+  margin-bottom: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  background: #fff;
+  box-shadow: var(--k-shadow);
+
+  // Geste irréversible (remboursement) : le cadre le dit avant le bouton.
+  &--danger {
+    border-color: rgba(199, 59, 77, 0.35);
+    background: rgba(199, 59, 77, 0.04);
+  }
+
+  &__title {
+    margin: 0 0 12px;
+    font-weight: 700;
+    color: var(--k-ink);
+    font-size: 0.95rem;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+
+    .k-input {
+      flex: 1;
+      min-width: 240px;
+    }
+  }
+
+  &__hint {
+    margin: 10px 0 0;
+    font-size: 0.8rem;
+    color: var(--k-muted);
+    max-width: 78ch;
+  }
+}
+
+.bo-amount-input {
+  max-width: 200px;
+}
+
+.bo-btn--danger {
+  background: var(--k-danger);
+  color: #fff;
+  border-color: transparent;
+
+  &.k-btn--ghost {
+    background: none;
+    color: var(--k-danger);
+    border-color: var(--k-line);
+
+    &:hover:not(:disabled) {
+      background: rgba(199, 59, 77, 0.08);
+    }
+  }
+}
+
+// --- Grille ------------------------------------------------------------------
+.bo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.bo-card {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 18px 20px;
+
+  // Les listes (départs, locations, passagers) prennent toute la largeur.
+  &--wide {
+    grid-column: 1 / -1;
+  }
+
+  &__title {
+    font-family: var(--k-font-display);
+    font-weight: 700;
+    font-size: 1.02rem;
+    color: var(--k-ink);
+    margin: 0 0 14px;
+  }
+}
+
+.bo-facts {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 16px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--k-ink);
+    word-break: break-word;
+
+    a {
+      color: var(--k-brand);
+    }
+  }
+}
+
+.bo-block__title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--k-muted);
+  font-weight: 700;
+  margin: 18px 0 8px;
+}
+
+.bo-desc {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--k-ink);
+  line-height: 1.55;
+}
+
+.bo-hint,
+.bo-muted {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 0.82rem;
+}
+
+.bo-hint {
+  margin-top: 12px;
+  max-width: 62ch;
+}
+
+.bo-link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--k-brand);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// --- Contrôle de conformité, pièce par pièce ---------------------------------
+.bo-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bo-check {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--k-radius-sm);
+  background: rgba(56, 167, 116, 0.08);
+
+  // Une pièce manquante se voit : c'est ce que l'agent vient réclamer.
+  &.is-missing {
+    background: rgba(199, 59, 77, 0.08);
+  }
+
+  &__mark {
+    font-weight: 700;
+    color: var(--k-green-600);
+  }
+
+  &.is-missing &__mark {
+    color: var(--k-danger);
+  }
+
+  &__label {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+
+  &__value {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--k-muted);
+    text-align: right;
+  }
+}
+
+// --- Programme d'un circuit (inclusions) -------------------------------------
+.bo-tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bo-tag {
+  padding: 4px 12px;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-brand-050);
+  color: var(--k-brand-600);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+// --- Certifications d'un partenaire ------------------------------------------
+.bo-certs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bo-cert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-cream);
+
+  &__name {
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.88rem;
+  }
+
+  .bo-link {
+    margin-top: 0;
+    flex-basis: 100%;
+  }
+}
+
+// --- Avis reçus ---------------------------------------------------------------
+.bo-stars {
+  color: var(--k-gold);
+  letter-spacing: 0.05em;
+}
+
+.bo-reviews {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bo-review {
+  padding: 12px 14px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  background: #fff;
+
+  // Un avis à une ou deux étoiles est ce qui motive une sanction : il se repère.
+  &.is-negative {
+    background: rgba(199, 59, 77, 0.05);
+    border-color: rgba(199, 59, 77, 0.25);
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+  }
+
+  &__author {
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.86rem;
+  }
+
+  &__comment {
+    margin: 8px 0 0;
+    font-size: 0.86rem;
+    color: var(--k-ink);
+    line-height: 1.55;
+  }
+}
+
+// Motif d'une décision tracée (sanction) : il fait foi, il se lit en entier.
+.bo-activity__reason {
+  flex-basis: 100%;
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  font-style: italic;
+}
+
+// --- Tableaux internes (départs, locations, passagers) -----------------------
+.bo-table-wrap {
+  overflow-x: auto;
+}
+
+.bo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+
+  th {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    border-bottom: 1px solid var(--k-line);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px;
+    border-bottom: 1px solid var(--k-line);
+    color: var(--k-ink);
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  // Ce qui est derrière nous s'efface : seul l'engagement à venir compte.
+  tr.is-past td,
+  tr.is-cancelled td {
+    color: var(--k-muted);
+  }
+
+  tr.is-cancelled {
+    text-decoration: line-through;
+    text-decoration-color: var(--k-line-strong);
+  }
+}
+
+.bo-cell-link {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--k-brand);
+    text-decoration: underline;
+  }
+}
+
+.bo-cell-strong {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.bo-cell-ref {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--k-font-mono);
+  font-size: 0.7rem;
+  color: var(--k-muted);
+}
+
+.bo-due {
+  color: var(--k-danger);
+  font-weight: 700;
+}
+
+// --- Phase d'exploitation d'un séjour (fiche nuitée) -------------------------
+// Modificateurs de `.bo-badge` : un séjour n'a pas un statut mais une ÉTAPE
+// (à venir → sur place → parti), et le vocabulaire de couleur doit la suivre.
+.bo-badge {
+  &--a_venir {
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+  }
+
+  &--sur_place {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &--parti {
+    background: var(--k-cream);
+    color: var(--k-muted);
+  }
+}
+
+// Bloc secondaire dans une carte (ménage d'un séjour, conditions…).
+.bo-block {
+  margin-top: 16px;
+}
+
+.bo-select {
+  padding: 7px 10px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  background: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--k-ink);
+  cursor: pointer;
+}
+
+// --- Règlements listés dans une fiche (séjour) -------------------------------
+.bo-payments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bo-payment {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-cream);
+
+  &__amount {
+    font-weight: 700;
+    color: var(--k-ink);
+    font-size: 0.9rem;
+  }
+
+  &__kind,
+  &__status {
+    font-size: 0.78rem;
+    color: var(--k-muted);
+    font-weight: 600;
+  }
+
+  &__meta {
+    font-size: 0.76rem;
+    color: var(--k-muted);
+  }
+
+  &__ref {
+    flex-basis: 100%;
+    font-family: var(--k-font-mono);
+    font-size: 0.72rem;
+    color: var(--k-muted);
+  }
+}
+
+// Gestes de fin de séjour (restituer / conserver la caution).
+.bo-caution-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+// --- Journal -----------------------------------------------------------------
+.bo-activity {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__item {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--k-line);
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+  }
+
+  &__date {
+    font-size: 0.76rem;
+    color: var(--k-muted);
+    min-width: 130px;
+  }
+
+  &__desc {
+    font-size: 0.86rem;
+    color: var(--k-ink);
+    font-weight: 600;
+  }
+
+  &__by {
+    font-size: 0.78rem;
+    color: var(--k-muted);
+  }
+}
+
+@media (max-width: 900px) {
+  .bo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bo-card--wide {
+    grid-column: auto;
+  }
+}
