@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Booking;
+use App\Support\Mail\BrandedMail;
 use App\Support\Notifications\NotificationEvent;
 use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
@@ -38,12 +39,33 @@ class BookingConfirmedNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('Réservation confirmée — Kaikun 360')
-            ->greeting('Bonjour,')
-            ->line("Votre réservation « {$this->booking->reference} » est confirmée.")
-            ->line("Montant : {$this->booking->amount_xof} FCFA.")
-            ->line('Merci de votre confiance.');
+        // Un e-mail de confirmation est un document que l'on GARDE : le client le
+        // retrouvera dans sa boîte des semaines plus tard, à l'arrivée. Il doit
+        // donc contenir tout ce dont il aura besoin ce jour-là — dates, montant,
+        // référence — sans avoir à se reconnecter.
+        return BrandedMail::make()
+            ->subject('Votre réservation est confirmée')
+            ->preheader("Réservation {$this->booking->reference} confirmée. Conservez cet e-mail.")
+            ->eyebrow('Réservation')
+            ->tone('success')
+            ->heading('C\'est confirmé.')
+            ->intro(
+                'Votre paiement a bien été encaissé et votre réservation est enregistrée. Voici votre récapitulatif — conservez cet e-mail, il fait office de justificatif.'
+            )
+            ->facts([
+                'Référence' => $this->booking->reference,
+                'Arrivée' => BrandedMail::date($this->booking->start_date),
+                'Départ' => BrandedMail::date($this->booking->end_date),
+                'Voyageurs' => $this->booking->guests ? (string) $this->booking->guests : null,
+                'Montant réglé' => BrandedMail::money($this->booking->amount_xof),
+                'Caution' => BrandedMail::money($this->booking->caution_xof),
+            ])
+            ->action('Voir ma réservation', '/mon-espace/reservations')
+            ->note('Un imprévu ? Les conditions d\'annulation et le contact de votre hôte figurent dans le détail de la réservation, depuis votre espace.')
+            ->outro('Merci de votre confiance — et excellent séjour.')
+            ->forRecipient($notifiable)
+            ->reason('Vous recevez cet e-mail car vous avez effectué une réservation sur Kaikun 360.')
+            ->toMailMessage();
     }
 
     public function toSms(object $notifiable): string

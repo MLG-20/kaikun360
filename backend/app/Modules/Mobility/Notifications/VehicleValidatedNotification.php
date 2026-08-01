@@ -3,6 +3,7 @@
 namespace App\Modules\Mobility\Notifications;
 
 use App\Modules\Mobility\Models\Vehicle;
+use App\Support\Mail\BrandedMail;
 use App\Support\Notifications\NotificationEvent;
 use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
@@ -36,9 +37,22 @@ class VehicleValidatedNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('Votre véhicule est en ligne — Kaikun 360')
-            ->line("Votre véhicule « {$this->vehicle->reference} » a été validé.")
-            ->line('Il apparaît désormais dans la recherche.');
+        return BrandedMail::make()
+            ->subject('Votre véhicule est en ligne')
+            ->preheader("Véhicule {$this->vehicle->reference} validé : il apparaît dans la recherche.")
+            ->eyebrow('Publication')
+            ->tone('success')
+            ->heading('Votre véhicule est en ligne.')
+            ->intro('Nous avons vérifié la conformité de votre véhicule et de vos documents. Il apparaît désormais dans les résultats de recherche et peut être réservé.')
+            ->facts([
+                'Référence' => $this->vehicle->reference,
+                'Type' => $this->vehicle->type?->label(),
+                'Validé le' => BrandedMail::date(now()),
+            ])
+            ->action('Gérer mes offres', '/espace-prestataire/offres')
+            ->note('Pensez à tenir vos disponibilités à jour : un calendrier juste évite les annulations, qui pèsent sur votre note et sur vos revenus.')
+            ->forRecipient($notifiable)
+            ->reason('Vous recevez cet e-mail car vous proposez un véhicule sur Kaikun 360.')
+            ->toMailMessage();
     }
 }

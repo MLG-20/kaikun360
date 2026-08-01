@@ -3,6 +3,7 @@
 namespace App\Modules\Mobility\Notifications;
 
 use App\Modules\Mobility\Models\Vehicle;
+use App\Support\Mail\BrandedMail;
 use App\Support\Notifications\NotificationEvent;
 use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
@@ -36,9 +37,21 @@ class NewVehicleToValidateNotification extends Notification implements ShouldQue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('Nouveau véhicule à valider — Kaikun 360')
-            ->line("Un nouveau véhicule a été déposé : « {$this->vehicle->reference} » ({$this->vehicle->type->label()}).")
-            ->line('Merci de vérifier sa conformité dans la file de validation.');
+        return BrandedMail::make()
+            ->subject('Nouveau véhicule à valider')
+            ->preheader("Véhicule {$this->vehicle->reference} en attente de contrôle de conformité.")
+            ->eyebrow('File de validation')
+            ->tone('premium')
+            ->heading('Un véhicule attend votre validation.')
+            ->intro('Un prestataire vient de déposer un véhicule. Il reste hors des résultats de recherche tant que sa conformité n\'a pas été vérifiée (assurance, visite technique, carte grise).')
+            ->facts([
+                'Référence' => $this->vehicle->reference,
+                'Type' => $this->vehicle->type?->label(),
+                'Déposé le' => BrandedMail::date($this->vehicle->created_at),
+            ])
+            ->action('Ouvrir la file de validation', '/back-office/mobilite')
+            ->forRecipient($notifiable)
+            ->reason('Vous recevez cet e-mail en tant que membre de l\'équipe Kaikun 360.')
+            ->toMailMessage();
     }
 }

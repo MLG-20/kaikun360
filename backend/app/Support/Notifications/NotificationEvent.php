@@ -23,6 +23,7 @@ namespace App\Support\Notifications;
 enum NotificationEvent: string
 {
     // ---- Destinataire : le client / le propriétaire -----------------------
+    case ACCOUNT_WELCOME = 'account_welcome';
     case BOOKING_CONFIRMED = 'booking_confirmed';
     case QUOTE_RECEIVED = 'quote_received';
     case DOCUMENT_REQUIRED = 'document_required';
@@ -42,6 +43,7 @@ enum NotificationEvent: string
     public function label(): string
     {
         return match ($this) {
+            self::ACCOUNT_WELCOME => 'E-mail de bienvenue',
             self::BOOKING_CONFIRMED => 'Confirmation de réservation',
             self::QUOTE_RECEIVED => 'Devis reçu',
             self::DOCUMENT_REQUIRED => 'Pièce justificative demandée',
@@ -61,6 +63,7 @@ enum NotificationEvent: string
     public function description(): string
     {
         return match ($this) {
+            self::ACCOUNT_WELCOME => 'Au nouvel inscrit, une seule fois, quand son compte devient actif. Le contenu s’adapte au profil (client, propriétaire, prestataire, entreprise, diaspora).',
             self::BOOKING_CONFIRMED => 'Au client, dès que le paiement de sa réservation est encaissé.',
             self::QUOTE_RECEIVED => 'Au client, quand un devis lui est adressé.',
             self::DOCUMENT_REQUIRED => 'À l’utilisateur, quand l’équipe réclame une pièce à son dossier.',

@@ -3,8 +3,10 @@
 namespace Tests\Feature\Core;
 
 use App\Models\User;
+use App\Modules\Core\Enums\ProfileType;
 use App\Modules\Core\Enums\UserStatus;
 use App\Modules\Core\Notifications\VerificationCodeNotification;
+use App\Modules\Core\Notifications\WelcomeNotification;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -79,6 +81,45 @@ class VerificationTest extends TestCase
         $user->refresh();
         $this->assertNotNull($user->email_verified_at);
         $this->assertSame(UserStatus::ACTIF, $user->status);
+    }
+
+    /**
+     * L'e-mail de bienvenue part À L'ACTIVATION, pas à l'inscription : deux
+     * e-mails simultanés à la seconde zéro noieraient le code de vérification,
+     * qui est le seul message utile à cet instant.
+     */
+    public function test_l_email_de_bienvenue_part_a_l_activation_et_pas_avant(): void
+    {
+        [$token, $user, $code] = $this->inscrireEtCapturerCode();
+
+        // À l'inscription : seulement le code, aucun message d'accueil.
+        Notification::assertNotSentTo($user, WelcomeNotification::class);
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/auth/verify', ['channel' => 'email', 'code' => $code])
+            ->assertOk();
+
+        // Après vérification : l'accueil part, adapté au profil choisi.
+        Notification::assertSentTo(
+            $user,
+            WelcomeNotification::class,
+            fn (WelcomeNotification $n) => $n->profileType === ProfileType::CLIENT,
+        );
+    }
+
+    /**
+     * Garde-fou : rejouer la vérification (double clic, page rechargée) ne doit
+     * pas déclencher un second message d'accueil.
+     */
+    public function test_l_email_de_bienvenue_n_est_pas_renvoye_deux_fois(): void
+    {
+        [$token, $user, $code] = $this->inscrireEtCapturerCode();
+
+        $headers = ['Authorization' => "Bearer {$token}"];
+        $this->withHeaders($headers)->postJson('/api/v1/auth/verify', ['channel' => 'email', 'code' => $code]);
+        $this->withHeaders($headers)->postJson('/api/v1/auth/verify', ['channel' => 'email', 'code' => $code]);
+
+        Notification::assertSentToTimes($user, WelcomeNotification::class, 1);
     }
 
     public function test_un_mauvais_code_est_refuse(): void

@@ -65,6 +65,7 @@ ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 - [Structure du projet](#structure-du-projet)
 - [Conventions d'API](#conventions-dapi)
 - [Sécurité, rôles & RGPD](#sécurité-rôles--rgpd)
+- [E-mails transactionnels](#e-mails-transactionnels)
 - [Performance](#performance)
 - [Installation & démarrage](#installation--démarrage)
 - [Configuration (.env)](#configuration-env)
@@ -421,6 +422,8 @@ backend/
 │   ├── migrations/      # 52 migrations (55 tables)
 │   ├── schema/          # Dump de schéma MySQL (accélère les tests)
 │   └── seeders/         # Rôles/permissions, référentiel géographique
+├── resources/views/
+│   └── emails/          # Gabarit unique des e-mails (HTML + texte brut)
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
 ├── API.md               # Référence des 177 endpoints
@@ -463,6 +466,31 @@ Détail complet : [`app/Support/README.md`](app/Support/README.md) et
   de montant).
 - **RGPD** : anonymisation du compte sur demande (`DELETE /users/me`) — voir
   [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md).
+
+---
+
+## E-mails transactionnels
+
+L'e-mail est le **seul canal de communication réellement maîtrisé** de la
+plateforme. Kaikun 360 vendant de la *confiance* sur un marché où la méfiance est
+la règle, ces messages sont traités comme un élément de produit à part entière —
+pas comme une notification technique.
+
+**20 e-mails**, tous issus d'un gabarit unique de marque (charte du site :
+bleu `#0348FB`, navy `#03193F`, or `#D3AE52`, crème `#F7F4EB`).
+
+| Point | Mise en œuvre |
+| --- | --- |
+| Un seul gabarit | `resources/views/emails/branded.blade.php` — aucun autre HTML d'e-mail dans le projet |
+| HTML **et** texte brut | Générés des mêmes données. Le HTML seul est un signal de spam, et certains clients n'affichent que le texte |
+| Accueil personnalisé | `WelcomeNotification` — un message distinct par profil (client, diaspora, propriétaire, prestataire, entreprise), envoyé **à l'activation** du compte |
+| Liens toujours valides | `SpaceLink` résout l'espace privé du destinataire (4 espaces distincts côté Angular) |
+| Compatibilité | Tables, styles inline, aucune image distante, bouton « à toute épreuve » Outlook, responsive + mode sombre |
+| Relecture | `http://127.0.0.1:8000/apercu-emails` — les 20 e-mails dans le navigateur, données fictives, **aucun envoi** (local uniquement) |
+| Relecture en conditions réelles | `php artisan mail:apercu <adresse>` — envoie les 20 e-mails (données fictives) dans une vraie boîte de réception |
+
+Détail complet, règles de rédaction et ajout d'un e-mail :
+[`app/Support/Mail/README.md`](app/Support/Mail/README.md).
 
 ---
 
@@ -529,6 +557,8 @@ Clés principales (voir `.env.example` pour la liste exhaustive) :
 | `CACHE_STORE=redis` | Cache des catalogues |
 | `QUEUE_CONNECTION=redis` | Notifications asynchrones |
 | `SMS_PROVIDER` | Canal SMS (`log` par défaut, `twilio` en prod) |
+| `FRONTEND_URL` | **URL publique du site Angular** — sert à construire les liens des e-mails. À ne pas confondre avec `APP_URL`, qui désigne l'API. |
+| `BRAND_SUPPORT_EMAIL` / `BRAND_SUPPORT_PHONE` / `BRAND_ADDRESS` | Coordonnées affichées en pied des e-mails (délivrabilité + confiance) |
 | `PAYTECH_BASE_URL` / `PAYTECH_API_KEY` / `PAYTECH_API_SECRET` / `PAYTECH_ENV` / `PAYTECH_IPN_URL` | Paiement PayTech — `env` = `test` \| `prod`, l'IPN doit être **publique et HTTPS** (tunnel ngrok en local). ⚠️ Pas de « signing key » : l'`API_SECRET` signe aussi les notifications. |
 | `CORS_ALLOWED_ORIGINS` | Origines autorisées (front Angular) |
 
@@ -560,6 +590,8 @@ php artisan test
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |
+| [`app/Support/Mail/README.md`](app/Support/Mail/README.md) | **E-mails transactionnels** : gabarit de marque, rédaction, aperçu navigateur |
+| [`app/Support/Notifications/README.md`](app/Support/Notifications/README.md) | Canal SMS (Orange/Sonatel, Twilio) |
 | `app/Modules/<Module>/README.md` | Logique métier de chaque module |
 | [`app/Enums/README.md`](app/Enums/README.md) · [`app/Models/README.md`](app/Models/README.md) | Enums & modèles transverses |
 

@@ -3,6 +3,7 @@
 namespace App\Modules\Build\Notifications;
 
 use App\Modules\Build\Models\ConstructionQuote;
+use App\Support\Mail\BrandedMail;
 use App\Support\Notifications\NotificationEvent;
 use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
@@ -47,11 +48,28 @@ class ConstructionQuoteSentNotification extends Notification implements ShouldQu
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('Votre devis de chantier — Kaikun 360')
-            ->line("Le devis « {$this->quote->reference} » vous a été envoyé.")
-            ->line("Montant total : {$this->quote->total_xof} XOF.")
-            ->line('Connectez-vous à votre espace pour l’accepter ou le refuser.');
+        // Un devis de chantier engage des sommes importantes et se décide
+        // rarement seul : on insiste donc sur le détail par lot et sur la
+        // possibilité d'en discuter, plutôt que d'asséner un total.
+        return BrandedMail::make()
+            ->subject('Votre devis de chantier est prêt')
+            ->preheader("Devis {$this->quote->reference} : détail par lot et montant total.")
+            ->eyebrow('Construction')
+            ->heading('Votre devis de chantier est prêt.')
+            ->intro(
+                'Nous avons chiffré votre projet lot par lot — gros œuvre, second œuvre, finitions — à partir des éléments que vous nous avez transmis. Rien n\'est engagé tant que vous n\'avez pas accepté.'
+            )
+            ->facts([
+                'Référence' => $this->quote->reference,
+                'Sous-total' => BrandedMail::money($this->quote->subtotal_xof),
+                'Montant total' => BrandedMail::money($this->quote->total_xof),
+                'Valable jusqu\'au' => BrandedMail::date($this->quote->valid_until),
+            ])
+            ->action('Consulter le détail du devis', '/mon-espace/demandes')
+            ->note('Le détail ligne par ligne est consultable dans votre espace. Un poste vous semble surdimensionné ou incomplet ? Répondez à cet e-mail : nous réajustons le chiffrage avec vous, sans engagement.')
+            ->forRecipient($notifiable)
+            ->reason('Vous recevez cet e-mail car un devis a été établi pour votre projet de construction.')
+            ->toMailMessage();
     }
 
     /**

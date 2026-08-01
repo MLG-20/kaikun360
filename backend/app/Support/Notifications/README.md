@@ -1,5 +1,9 @@
 # Notifications — canal SMS
 
+> **Le canal e-mail est documenté à part** :
+> [`app/Support/Mail/README.md`](../Mail/README.md) — gabarit de marque,
+> règles de rédaction, aperçu navigateur des 20 messages.
+
 Ce dossier fournit un **canal de notification `sms`** branché sur une abstraction
 (`SmsProviderInterface`), pour que le code métier ne dépende jamais d'un
 fournisseur concret (B16.1 / B18.2).

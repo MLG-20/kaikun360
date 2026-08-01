@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Models\ServiceRequest;
+use App\Support\Mail\BrandedMail;
+use App\Support\Mail\SpaceLink;
 use App\Support\Notifications\NotificationEvent;
 use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
@@ -38,9 +40,25 @@ class RequestStatusChangedNotification extends Notification implements ShouldQue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('Votre demande a avancé — Kaikun 360')
-            ->line("Votre demande « {$this->request->reference} » est passée au statut : {$this->request->status->label()}.");
+        // Le silence est ce qui inquiète le plus un client qui a payé ou déposé
+        // un dossier. Cet e-mail existe pour le rompre : il dit où en est le
+        // dossier, et surtout qui doit jouer le coup suivant.
+        return BrandedMail::make()
+            ->subject('Votre demande a avancé')
+            ->preheader("Demande {$this->request->reference} : {$this->request->status->label()}.")
+            ->eyebrow('Suivi de demande')
+            ->heading('Votre demande a avancé.')
+            ->intro('Nous vous tenons informé à chaque étape, sans que vous ayez à relancer. Voici le point sur votre dossier.')
+            ->facts([
+                'Référence' => $this->request->reference,
+                'Service' => $this->request->service_type?->label(),
+                'Nouveau statut' => $this->request->status->label(),
+            ])
+            ->action('Suivre ma demande', SpaceLink::requests($notifiable))
+            ->note('L\'historique complet de votre demande — échanges, documents, décisions — reste consultable à tout moment depuis votre espace.')
+            ->forRecipient($notifiable)
+            ->reason('Vous recevez cet e-mail car vous suivez une demande sur Kaikun 360.')
+            ->toMailMessage();
     }
 
     /**

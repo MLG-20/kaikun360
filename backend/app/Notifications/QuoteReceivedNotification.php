@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Models\Quote;
+use App\Support\Mail\BrandedMail;
+use App\Support\Mail\SpaceLink;
 use App\Support\Notifications\NotificationEvent;
 use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
@@ -37,12 +39,24 @@ class QuoteReceivedNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('Nouveau devis — Kaikun 360')
-            ->greeting('Bonjour,')
-            ->line("Un devis « {$this->quote->reference} » vous a été proposé.")
-            ->line("Montant : {$this->quote->amount_xof} FCFA.")
-            ->line('Connectez-vous pour l\'accepter ou le refuser.');
+        // Un devis appelle une DÉCISION : le montant et le bouton doivent sauter
+        // aux yeux. On précise aussi que le prix est ferme — c'est la question
+        // que tout le monde se pose en découvrant un chiffre.
+        return BrandedMail::make()
+            ->subject('Votre devis est prêt')
+            ->preheader('Un devis vous a été adressé. À accepter ou à refuser depuis votre espace.')
+            ->eyebrow('Devis')
+            ->heading('Votre devis est prêt.')
+            ->intro('Nous avons étudié votre demande et chiffré la prestation. Vous pouvez l\'accepter ou la refuser en un clic — rien n\'est engagé tant que vous ne l\'avez pas validée.')
+            ->facts([
+                'Référence' => $this->quote->reference,
+                'Montant proposé' => BrandedMail::money($this->quote->amount_xof),
+            ])
+            ->action('Consulter le devis', SpaceLink::requests($notifiable))
+            ->note('Le montant est ferme : il couvre l\'intégralité de la prestation décrite, sans frais ajouté en cours de route. Une ligne vous semble discutable ? Répondez à cet e-mail, nous en reparlons.')
+            ->forRecipient($notifiable)
+            ->reason('Vous recevez cet e-mail car un devis a été établi pour l\'une de vos demandes.')
+            ->toMailMessage();
     }
 
     public function toSms(object $notifiable): string

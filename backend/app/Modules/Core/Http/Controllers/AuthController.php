@@ -10,6 +10,7 @@ use App\Modules\Core\Enums\UserStatus;
 use App\Modules\Core\Http\Requests\LoginRequest;
 use App\Modules\Core\Http\Requests\RegisterRequest;
 use App\Modules\Core\Http\Resources\UserResource;
+use App\Modules\Core\Notifications\WelcomeNotification;
 use App\Modules\Core\Services\VerificationService;
 use App\Support\ApiResponse;
 use App\Support\Auth\GoogleTokenVerifier;
@@ -146,6 +147,10 @@ class AuthController extends Controller
             activity()->causedBy($user)->performedOn($user)
                 ->withProperties(['via' => 'google'])
                 ->log('Inscription');
+
+            // Google a déjà vérifié l'adresse : le compte naît ACTIF, donc
+            // l'accueil part tout de suite (il n'y a pas d'étape de code ici).
+            $user->notify(new WelcomeNotification(ProfileType::CLIENT));
         }
 
         $token = $user->createToken('auth')->plainTextToken;

@@ -3,6 +3,7 @@
 namespace App\Modules\TeamBuilding\Notifications;
 
 use App\Modules\TeamBuilding\Models\TeamBuildingQuote;
+use App\Support\Mail\BrandedMail;
 use App\Support\Notifications\NotificationEvent;
 use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
@@ -43,11 +44,27 @@ class TeamBuildingQuoteSentNotification extends Notification implements ShouldQu
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('Votre devis team building — Kaikun 360')
-            ->line("Un devis « {$this->quote->reference} » vous a été envoyé.")
-            ->line("Montant total : {$this->quote->total_xof} XOF.")
-            ->line('Connectez-vous pour l\'accepter.');
+        // Destinataire : une ENTREPRISE. Le décideur a besoin d'un chiffre net,
+        // d'un document opposable et d'un interlocuteur — dans cet ordre.
+        return BrandedMail::make()
+            ->subject('Votre devis team building est prêt')
+            ->preheader("Devis {$this->quote->reference} : hébergement, restauration, transport et animation réunis.")
+            ->eyebrow('Team building')
+            ->heading('Votre devis est prêt.')
+            ->intro(
+                'Nous avons assemblé votre événement : hébergement, restauration, transport et animation réunis en une seule proposition, chiffrée poste par poste.'
+            )
+            ->facts([
+                'Référence' => $this->quote->reference,
+                'Sous-total prestations' => BrandedMail::money($this->quote->subtotal_xof),
+                'Montant total' => BrandedMail::money($this->quote->total_xof),
+            ])
+            ->action('Consulter le devis', '/espace-entreprise/demandes')
+            ->note('Besoin d\'ajuster le nombre de participants, les dates ou un poste précis ? Votre interlocuteur Kaikun reprend le chiffrage avec vous — le devis reste modifiable jusqu\'à votre validation.')
+            ->outro('Une facture conforme, avec le détail par poste de dépense, vous sera adressée après acceptation.')
+            ->forRecipient($notifiable)
+            ->reason('Vous recevez cet e-mail car votre entreprise a sollicité un devis sur Kaikun 360.')
+            ->toMailMessage();
     }
 
     /**

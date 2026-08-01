@@ -3,6 +3,7 @@
 namespace App\Modules\Immo\Notifications;
 
 use App\Modules\Immo\Models\Property;
+use App\Support\Mail\BrandedMail;
 use App\Support\Notifications\NotificationEvent;
 use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
@@ -36,9 +37,24 @@ class NewPropertyToValidateNotification extends Notification implements ShouldQu
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('Nouveau bien à valider — Kaikun 360')
-            ->line("Un nouveau bien a été déposé : « {$this->property->title} ».")
-            ->line('Merci de le vérifier dans la file de validation.');
+        // Alerte interne : c'est le point de contrôle qui fait tout notre
+        // positionnement. Rien ne se publie sans être passé par ici.
+        return BrandedMail::make()
+            ->subject('Nouveau bien à valider')
+            ->preheader("« {$this->property->title} » attend une décision de l'équipe.")
+            ->eyebrow('File de validation')
+            ->tone('premium')
+            ->heading('Un bien attend votre validation.')
+            ->intro('Un propriétaire vient de déposer une annonce. Elle reste invisible du public tant que le dossier n\'a pas été contrôlé.')
+            ->facts([
+                'Bien' => $this->property->title,
+                'Type' => $this->property->type?->label(),
+                'Prix demandé' => BrandedMail::money($this->property->price_xof),
+                'Déposé le' => BrandedMail::date($this->property->created_at),
+            ])
+            ->action('Ouvrir la file de validation', '/back-office/validation')
+            ->forRecipient($notifiable)
+            ->reason('Vous recevez cet e-mail en tant que membre de l\'équipe Kaikun 360.')
+            ->toMailMessage();
     }
 }

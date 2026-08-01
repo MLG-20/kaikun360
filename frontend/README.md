@@ -693,6 +693,28 @@ sessions (utile sur un poste partagé). Au démarrage, la session est réhydrat�
 puis **revalidée** auprès du serveur (`GET /users/me`) : un jeton révoqué ferme
 la session.
 
+### Les e-mails renvoient vers ces routes — à ne pas casser
+
+Les e-mails transactionnels (bienvenue, confirmation de réservation, pièce
+manquante…) contiennent des **liens qui pointent directement dans ce site**. Ils
+sont construits côté backend par `app/Support/Mail/SpaceLink.php`, qui connaît
+les **quatre espaces connectés** :
+
+| Profil | Espace |
+| --- | --- |
+| Client, Diaspora | `/mon-espace` |
+| Propriétaire | `/espace-proprietaire` |
+| Prestataire | `/espace-prestataire` |
+| Entreprise | `/espace-entreprise` |
+
+Sont également visés : `/back-office…` (alertes internes),
+`/pages/politique-confidentialite` et `/pages/mentions-legales` (pied de page).
+
+> ⚠️ **Renommer une de ces routes casse des liens déjà partis dans des boîtes de
+> réception**, que l'on ne peut plus corriger. En cas de changement : mettre à
+> jour `SpaceLink` **et** prévoir une redirection depuis l'ancienne adresse.
+> Les liens s'appuient sur `FRONTEND_URL` (`.env` du backend).
+
 ---
 
 ## Détails techniques

@@ -3,8 +3,10 @@
 namespace App\Modules\Core\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Core\Enums\ProfileType;
 use App\Modules\Core\Enums\UserStatus;
 use App\Modules\Core\Http\Resources\UserResource;
+use App\Modules\Core\Notifications\WelcomeNotification;
 use App\Modules\Core\Services\VerificationService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -72,11 +74,21 @@ class VerificationController extends Controller
         $user->{$column} = now();
 
         // Le compte devient actif dès que l'e-mail (canal principal) est vérifié.
+        // On mémorise ce basculement : c'est LUI qui déclenche l'e-mail de
+        // bienvenue, et il ne se produit qu'une fois dans la vie du compte.
+        $justActivated = false;
         if ($user->email_verified_at && $user->status === UserStatus::EN_ATTENTE_VERIFICATION) {
             $user->status = UserStatus::ACTIF;
+            $justActivated = true;
         }
 
         $user->save();
+
+        // Accueil personnalisé selon le profil, envoyé APRÈS l'activation (et
+        // donc jamais en même temps que le code de vérification).
+        if ($justActivated) {
+            $user->notify(new WelcomeNotification($user->profile?->type ?? ProfileType::CLIENT));
+        }
 
         activity()->causedBy($user)->performedOn($user)->log("Vérification du canal {$data['channel']}");
 
