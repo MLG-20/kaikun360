@@ -232,6 +232,29 @@ export const routes: Routes = [
         title: 'Contact — Kaikun 360',
       },
       {
+        // F8.6 — Retour de PayTech. PUBLIQUES et hors espace client, à dessein :
+        // le client revient d'un autre domaine, parfois longtemps après ; une
+        // garde de rôle le renverrait vers la connexion juste après avoir payé.
+        // ⚠️ Ces pages ne prouvent RIEN — seul l'IPN signé confirme un
+        // encaissement. Elles n'affichent aucune donnée de réservation.
+        path: 'paiement/succes',
+        data: { succeeded: true },
+        loadComponent: () =>
+          import('./features/content/payment-return/payment-return-page').then(
+            (m) => m.PaymentReturnPageComponent,
+          ),
+        title: 'Paiement reçu — Kaikun 360',
+      },
+      {
+        path: 'paiement/annule',
+        data: { succeeded: false },
+        loadComponent: () =>
+          import('./features/content/payment-return/payment-return-page').then(
+            (m) => m.PaymentReturnPageComponent,
+          ),
+        title: 'Paiement interrompu — Kaikun 360',
+      },
+      {
         // Pages de contenu éditorial adressées par slug (F2.8) : À propos,
         // mentions légales, CGU, politique de confidentialité… Le titre de
         // l'onglet est affiné par le composant une fois la page chargée.

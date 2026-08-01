@@ -28,6 +28,9 @@ class BookingController extends Controller
             ->with(['bookable' => fn (MorphTo $morphTo) => $morphTo->morphWith([
                 Stay::class => ['property'],
             ])])
+            // F8.6 — l'état de règlement exposé par la ressource lit les
+            // paiements : sans ce chargement, 15 réservations = 15 requêtes.
+            ->with('payments')
             ->latest()
             ->paginate(15);
 
@@ -49,7 +52,7 @@ class BookingController extends Controller
         // Charge le bookable (et le bien d'une nuitée) pour le libellé lisible.
         $booking->load(['bookable' => fn (MorphTo $morphTo) => $morphTo->morphWith([
             Stay::class => ['property'],
-        ])]);
+        ]), 'payments']);
 
         return ApiResponse::success(['booking' => BookingResource::make($booking)]);
     }

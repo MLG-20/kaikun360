@@ -348,6 +348,35 @@ Money).
 
 ---
 
+### Le client peut enfin payer (F8.6)
+
+⚠️ **Le cycle de paiement était complet des deux côtés, sauf en son milieu.** Le
+backend savait initier un règlement depuis B14, le back-office savait les
+superviser depuis F7.2, le PSP a été réaligné en F8.5 — mais **aucun écran du
+site n'appelait `POST /payments/initiate`**. Un client pouvait réserver une
+nuitée et n'avait ensuite aucun moyen de payer.
+
+`BookingResource` expose désormais l'état de règlement, sans quoi aucun écran ne
+pouvait le demander :
+
+| Champ | Sens |
+|---|---|
+| `paid_xof` | total **encaissé** (paiements `complete` seulement) |
+| `remaining_xof` | reste dû |
+| `is_paid` | la réservation est soldée |
+| `payable` | ni annulée, ni soldée → un règlement est possible |
+
+⚠️ **`payments` doit être en eager loading** partout où l'on sérialise une liste
+de réservations : `montantPaye()` interroge la relation, donc 15 réservations
+sans ce chargement = 15 requêtes de plus. `BookingController::my()` et `show()`
+le font.
+
+⚠️ **Un paiement n'est jamais confirmé par le retour du client.** Les pages
+`/paiement/succes` et `/paiement/annule` ne sont que des atterrissages : seul
+l'IPN signé, reçu de serveur à serveur, fait passer la réservation à
+« confirmée ». Elles n'affichent donc aucune donnée de réservation et ne
+déclenchent rien — n'importe qui peut en taper l'adresse.
+
 ### Commission plateforme — un seul taux, fixé par la direction (F8.4)
 
 La commission de Kaikun n'est **jamais codée en dur**. Elle vient du back-office

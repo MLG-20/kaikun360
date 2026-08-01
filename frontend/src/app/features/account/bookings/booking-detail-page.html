@@ -92,6 +92,27 @@
           }
         </dl>
 
+        <!--
+          F8.6 — Règlement. La fiche restait muette sur l'argent : le client
+          voyait un montant, sans savoir s'il l'avait payé ni comment le payer.
+        -->
+        @if (bk.payable) {
+          <div class="bd-pay">
+            <div class="bd-pay__amounts">
+              <span class="bd-pay__label">Reste à payer</span>
+              <strong class="bd-pay__value">{{ amount(bk.remaining_xof) }}</strong>
+              @if (bk.paid_xof > 0) {
+                <span class="bd-pay__paid">{{ amount(bk.paid_xof) }} déjà réglé</span>
+              }
+            </div>
+            <a class="k-btn k-btn--primary" [routerLink]="['/mon-espace/reservations', bk.id, 'paiement']">
+              Régler ma réservation
+            </a>
+          </div>
+        } @else if (bk.is_paid) {
+          <p class="bd-paid">✓ Réservation intégralement réglée.</p>
+        }
+
         <!-- L'annulation se fait depuis la liste « Mes réservations ». -->
         @if (bk.cancellable) {
           <p class="bd-hint k-muted">

@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Transversal;
 
+use App\Enums\PaymentStatus;
 use App\Models\Booking;
+use App\Models\Payment;
 use App\Models\Quote;
 use App\Models\ServiceRequest;
 use App\Models\User;
@@ -140,6 +142,108 @@ class QuoteAndBookingTest extends TestCase
         $this->getJson('/api/v1/bookings/my')
             ->assertOk()
             ->assertJsonCount(2, 'data');
+    }
+
+    /**
+     * F8.6 — l'API dit enfin ce qu'il reste à payer.
+     *
+     * Elle ne le disait pas : aucun écran ne pouvait donc proposer de régler, et
+     * un client pouvait réserver sans jamais avoir de moyen de payer.
+     */
+    public function test_l_etat_de_reglement_est_expose(): void
+    {
+        $user = User::factory()->create();
+        $booking = $this->bookingFor($user); // 100 000 FCFA
+
+        Sanctum::actingAs($user);
+
+        $this->getJson("/api/v1/bookings/{$booking->id}")
+            ->assertOk()
+            ->assertJsonPath('data.booking.paid_xof', 0)
+            ->assertJsonPath('data.booking.remaining_xof', 100_000)
+            ->assertJsonPath('data.booking.is_paid', false)
+            ->assertJsonPath('data.booking.payable', true);
+    }
+
+    /**
+     * Seuls les paiements ENCAISSÉS comptent : un règlement Wave en attente de
+     * confirmation n'a rien apporté et ne doit pas réduire le reste dû.
+     */
+    public function test_un_paiement_en_attente_ne_reduit_pas_le_reste_du(): void
+    {
+        $user = User::factory()->create();
+        $booking = $this->bookingFor($user);
+
+        Payment::create([
+            'reference' => 'PAY-ATTENTE',
+            'booking_id' => $booking->id,
+            'amount_xof' => 40_000,
+            'status' => PaymentStatus::EN_ATTENTE->value,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->getJson("/api/v1/bookings/{$booking->id}")
+            ->assertOk()
+            ->assertJsonPath('data.booking.paid_xof', 0)
+            ->assertJsonPath('data.booking.remaining_xof', 100_000);
+    }
+
+    public function test_un_acompte_encaisse_reduit_le_reste_du(): void
+    {
+        $user = User::factory()->create();
+        $booking = $this->bookingFor($user);
+
+        Payment::create([
+            'reference' => 'PAY-ACOMPTE',
+            'booking_id' => $booking->id,
+            'amount_xof' => 40_000,
+            'status' => PaymentStatus::COMPLETE->value,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->getJson("/api/v1/bookings/{$booking->id}")
+            ->assertOk()
+            ->assertJsonPath('data.booking.paid_xof', 40_000)
+            ->assertJsonPath('data.booking.remaining_xof', 60_000)
+            ->assertJsonPath('data.booking.is_paid', false)
+            ->assertJsonPath('data.booking.payable', true);
+    }
+
+    public function test_une_reservation_soldee_n_est_plus_payable(): void
+    {
+        $user = User::factory()->create();
+        $booking = $this->bookingFor($user);
+
+        Payment::create([
+            'reference' => 'PAY-SOLDE',
+            'booking_id' => $booking->id,
+            'amount_xof' => 100_000,
+            'status' => PaymentStatus::COMPLETE->value,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->getJson("/api/v1/bookings/{$booking->id}")
+            ->assertOk()
+            ->assertJsonPath('data.booking.is_paid', true)
+            ->assertJsonPath('data.booking.payable', false);
+    }
+
+    /** Une réservation annulée ne se règle pas, même si elle reste due. */
+    public function test_une_reservation_annulee_n_est_pas_payable(): void
+    {
+        $user = User::factory()->create();
+        $booking = $this->bookingFor($user);
+        $booking->update(['status' => 'annulee_client']);
+
+        Sanctum::actingAs($user);
+
+        $this->getJson("/api/v1/bookings/{$booking->id}")
+            ->assertOk()
+            ->assertJsonPath('data.booking.remaining_xof', 100_000)
+            ->assertJsonPath('data.booking.payable', false);
     }
 
     public function test_bookings_my_expose_le_type_et_l_annulabilite(): void

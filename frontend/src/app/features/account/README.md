@@ -296,3 +296,38 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
 - Le **jeton est en mémoire seule** (décision F2.9) : au rechargement complet de
   la page, la session est perdue et le guard renvoie vers la connexion — normal
   pour une zone privée.
+
+## Régler une réservation (F8.6)
+
+| Route | Écran |
+|---|---|
+| `/mon-espace/reservations/:id/paiement` | Règlement d'une réservation |
+| `/paiement/succes` · `/paiement/annule` | Retour de PayTech (**publiques**, hors espace) |
+
+⚠️ **Ce chaînon manquait entièrement.** Le backend savait initier un paiement
+depuis B14 et le back-office les supervisait depuis F7.2, mais **aucun écran du
+site n'appelait `POST /payments/initiate`** : un client pouvait réserver sans
+jamais pouvoir payer.
+
+**Un écran dédié, pas un bouton dans une liste.** Payer engage de l'argent :
+l'utilisateur voit le total, ce qu'il a déjà versé et le reste dû avant qu'on ne
+le sorte du site. Un bouton posé sur une carte de liste ferait partir un client
+d'un clic malheureux — la fiche réservation n'affiche donc qu'un rappel du reste
+dû et un lien vers cet écran.
+
+**Deux moyens.** *En ligne* : le serveur crée la demande et renvoie une URL ; on
+quitte l'application (`window.location.assign`, ce n'est pas une navigation
+Angular). *Wave / Orange Money* : aucun appel au PSP, le serveur renvoie la
+marche à suivre — le numéro vient du paramétrage back-office, **jamais écrit en
+dur** — et un agent confirmera l'encaissement.
+
+**L'acompte** est proposé parce que le backend le gère : le montant est plafonné
+au reste dû **côté serveur**. Quand le client solde tout, le montant est **omis**
+de la requête : le serveur recalcule alors le reste dû lui-même, ce qui évite
+qu'un paiement arrivé entre-temps ne fasse échouer le règlement.
+
+⚠️ **Les pages de retour sont publiques et hors espace client, à dessein** : le
+client revient d'un autre domaine, parfois longtemps après. Une garde de rôle le
+renverrait vers la connexion juste après avoir payé. Elles n'affichent aucune
+donnée de réservation et **n'affirment jamais que le paiement est acquis** — une
+redirection de navigateur ne prouve rien, seul l'IPN signé fait foi.

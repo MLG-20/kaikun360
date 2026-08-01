@@ -1,0 +1,244 @@
+// =============================================================================
+// Régler une réservation (F8.6)
+//
+// Écran d'engagement financier : la hiérarchie place le RESTE À PAYER au-dessus
+// de tout le reste, puis les choix, puis le bouton. L'utilisateur doit savoir
+// combien il envoie avant qu'on ne le sorte du site.
+// =============================================================================
+
+:host {
+  display: block;
+}
+
+.pay-card {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+}
+
+// --- Récapitulatif -----------------------------------------------------------
+
+.pay-recap__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.pay-kind {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--k-muted);
+}
+
+.pay-item {
+  margin: 4px 0 0;
+  font-family: var(--k-font-display);
+  font-size: 1.15rem;
+  color: var(--k-ink);
+}
+
+.pay-ref {
+  font-family: var(--k-font-mono);
+  font-size: 0.78rem;
+  color: var(--k-muted);
+}
+
+.pay-amounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  margin: 0;
+  background: var(--k-line);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  overflow: hidden;
+
+  > div {
+    background: var(--k-white);
+    padding: 14px 16px;
+  }
+
+  dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-muted);
+    margin-bottom: 4px;
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--k-font-display);
+    font-size: 1.1rem;
+    color: var(--k-ink);
+  }
+
+  // Le reste dû est LA donnée de l'écran : elle se distingue des deux autres.
+  .is-due {
+    background: var(--k-brand-050);
+
+    dd {
+      color: var(--k-brand-600);
+      font-size: 1.3rem;
+    }
+  }
+}
+
+// --- Choix -------------------------------------------------------------------
+
+.pay-section-title {
+  margin: 0 0 12px;
+  font-family: var(--k-font-display);
+  font-size: 1rem;
+  color: var(--k-ink);
+}
+
+.pay-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.pay-mode {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: var(--k-line-strong);
+  }
+
+  &.is-active {
+    border-color: var(--k-brand);
+    background: var(--k-brand-050);
+  }
+
+  input {
+    margin-top: 3px;
+    accent-color: var(--k-brand);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    strong {
+      color: var(--k-ink);
+      font-size: 0.92rem;
+    }
+
+    em {
+      font-style: normal;
+      color: var(--k-muted);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+  }
+}
+
+.pay-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 320px;
+  margin-bottom: 18px;
+
+  > span:first-child {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+}
+
+.pay-hint {
+  font-size: 0.78rem;
+  color: var(--k-muted);
+}
+
+// --- Passage à l'acte --------------------------------------------------------
+
+.pay-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 18px;
+  border-top: 1px solid var(--k-line);
+}
+
+.pay-total {
+  font-size: 0.9rem;
+  color: var(--k-muted);
+
+  strong {
+    font-family: var(--k-font-display);
+    font-size: 1.15rem;
+    color: var(--k-ink);
+  }
+}
+
+// --- Règlement manuel --------------------------------------------------------
+
+.pay-card--manual {
+  border-left: 4px solid var(--k-green);
+}
+
+.pay-steps {
+  margin: 0 0 16px;
+  padding-left: 1.3em;
+  color: var(--k-ink);
+  font-size: 0.92rem;
+  line-height: 1.7;
+
+  li + li {
+    margin-top: 8px;
+  }
+}
+
+.pay-phone {
+  color: var(--k-brand);
+  font-weight: 700;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.pay-code {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--k-cream);
+  font-family: var(--k-font-mono);
+  font-size: 0.85rem;
+  color: var(--k-ink);
+}
+
+.pay-note {
+  margin: 14px 0 0;
+  color: var(--k-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+
+  &--warn {
+    padding: 10px 14px;
+    border-radius: var(--k-radius-sm);
+    background: rgba(216, 135, 24, 0.1);
+    color: var(--k-ink);
+  }
+}

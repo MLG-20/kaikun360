@@ -1,0 +1,57 @@
+<section class="k-wrap pr-wrap">
+  @if (succeeded()) {
+    <div class="pr-card pr-card--ok">
+      <span class="pr-icon" aria-hidden="true">✓</span>
+      <h1 class="pr-title">Merci, nous avons bien reçu votre paiement</h1>
+
+      <!--
+        On n'écrit JAMAIS « paiement confirmé » ici : cette page est atteinte par
+        une redirection du navigateur, que n'importe qui peut provoquer. Seule la
+        notification signée de PayTech, reçue de serveur à serveur, fait foi.
+      -->
+      <p class="pr-text">
+        Votre règlement est en cours de vérification auprès de notre prestataire.
+        <strong>La confirmation de votre réservation arrive dans quelques instants</strong>,
+        et vous en serez notifié. Vous pouvez suivre son état à tout moment
+        depuis votre espace.
+      </p>
+
+      @if (reference(); as ref) {
+        <p class="pr-ref">
+          Référence de votre règlement : <code>{{ ref }}</code>
+        </p>
+      }
+
+      <div class="pr-actions">
+        <a class="k-btn k-btn--primary" routerLink="/mon-espace/reservations">
+          Voir mes réservations
+        </a>
+        <a class="k-btn k-btn--ghost" routerLink="/">Retour à l’accueil</a>
+      </div>
+    </div>
+  } @else {
+    <div class="pr-card pr-card--cancel">
+      <span class="pr-icon" aria-hidden="true">↩</span>
+      <h1 class="pr-title">Paiement interrompu</h1>
+
+      <p class="pr-text">
+        Vous avez quitté la page de paiement avant la fin, ou l’opération a été
+        annulée. <strong>Rien n’a été débité</strong> et votre réservation est
+        conservée : vous pouvez reprendre le règlement quand vous le souhaitez.
+      </p>
+
+      @if (reference(); as ref) {
+        <p class="pr-ref">
+          Référence du règlement interrompu : <code>{{ ref }}</code>
+        </p>
+      }
+
+      <div class="pr-actions">
+        <a class="k-btn k-btn--primary" routerLink="/mon-espace/reservations">
+          Reprendre le règlement
+        </a>
+        <a class="k-btn k-btn--ghost" routerLink="/contact">Contacter le support</a>
+      </div>
+    </div>
+  }
+</section>

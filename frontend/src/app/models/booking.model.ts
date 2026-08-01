@@ -27,4 +27,14 @@ export interface Booking {
   cancelled_at: string | null;
   created_at: string | null;
   cancellable: boolean;
+
+  // --- État de règlement (F8.6) ---------------------------------------------
+  // Le client pouvait réserver sans jamais pouvoir payer : l'API ne disait pas
+  // ce qui restait dû. `paid_xof` ne compte que les paiements ENCAISSÉS — un
+  // règlement Wave en attente de confirmation n'a rien apporté.
+  paid_xof: number;
+  remaining_xof: number;
+  is_paid: boolean;
+  /** Faux si la réservation est annulée ou déjà soldée. */
+  payable: boolean;
 }

@@ -15,3 +15,52 @@
   margin: 0;
   font-size: 0.92rem;
 }
+
+// --- Règlement (F8.6) --------------------------------------------------------
+// La fiche restait muette sur l'argent : un montant s'affichait, sans dire s'il
+// était payé ni comment le payer. Ce bloc porte les deux.
+.bd-pay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding: 16px 18px;
+  border-radius: var(--k-radius-sm);
+  background: var(--k-brand-050);
+
+  &__amounts {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-muted);
+  }
+
+  &__value {
+    font-family: var(--k-font-display);
+    font-size: 1.25rem;
+    color: var(--k-brand-600);
+  }
+
+  &__paid {
+    font-size: 0.78rem;
+    color: var(--k-muted);
+  }
+}
+
+.bd-paid {
+  margin-top: 18px;
+  padding: 12px 16px;
+  border-radius: var(--k-radius-sm);
+  background: rgba(56, 167, 116, 0.12);
+  color: var(--k-green-600);
+  font-size: 0.88rem;
+  font-weight: 600;
+}

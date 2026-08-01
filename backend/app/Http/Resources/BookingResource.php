@@ -46,6 +46,18 @@ class BookingResource extends JsonResource
             'guests' => $this->guests,
             'amount_xof' => $this->amount_xof,
             'commission_xof' => $this->commission_xof,
+            // --- État de règlement (F8.6) -----------------------------------
+            // Le client pouvait réserver sans jamais pouvoir payer : l'API ne
+            // disait pas ce qui restait dû, donc aucun écran ne pouvait le
+            // demander. `montantPaye()` ne compte que les paiements ENCAISSÉS.
+            // ⚠️ Requiert `payments` en eager loading côté contrôleur, sinon une
+            // liste de 15 réservations déclenche 15 requêtes de plus.
+            'paid_xof' => $this->montantPaye(),
+            'remaining_xof' => $this->resteAPayer(),
+            'is_paid' => $this->estPayee(),
+            // Peut-on lancer un règlement ? Une réservation annulée ne se paie
+            // pas, une réservation soldée non plus.
+            'payable' => ! ($this->status?->estAnnulee() ?? false) && $this->resteAPayer() > 0,
             'caution_xof' => $this->caution_xof,
             'caution_status' => $this->caution_status?->value,
             'cancelled_at' => $this->cancelled_at,

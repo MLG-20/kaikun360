@@ -1,0 +1,201 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/mon-espace/reservations" />
+  <p class="account-eyebrow">Règlement</p>
+  <h1 class="account-title">Régler ma réservation</h1>
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="pf-state" role="status">Chargement de votre réservation…</p>
+  }
+  @case ('notfound') {
+    <p class="pf-state pf-state--error" role="alert">Cette réservation est introuvable.</p>
+  }
+  @case ('forbidden') {
+    <p class="pf-state pf-state--error" role="alert">Cette réservation ne vous appartient pas.</p>
+  }
+  @case ('failed') {
+    <p class="pf-state pf-state--error" role="alert">
+      Impossible de charger cette réservation pour le moment. Merci de réessayer plus tard.
+    </p>
+  }
+
+  @case ('ready') {
+    @if (booking(); as bk) {
+      <!-- Ce qu'on doit, avant tout choix : payer engage de l'argent. -->
+      <article class="pay-card">
+        <header class="pay-recap__head">
+          <div>
+            <span class="pay-kind">{{ bk.type_label }}</span>
+            <h2 class="pay-item">{{ bk.item_label || bk.reference }}</h2>
+          </div>
+          <span class="pay-ref">{{ bk.reference }}</span>
+        </header>
+
+        <dl class="pay-amounts">
+          <div>
+            <dt>Montant total</dt>
+            <dd>{{ money(bk.amount_xof) }}</dd>
+          </div>
+          <div>
+            <dt>Déjà réglé</dt>
+            <dd>{{ money(bk.paid_xof) }}</dd>
+          </div>
+          <div class="is-due">
+            <dt>Reste à payer</dt>
+            <dd>{{ money(bk.remaining_xof) }}</dd>
+          </div>
+        </dl>
+
+        @if (bk.caution_xof) {
+          <p class="pay-note">
+            Une caution de <strong>{{ money(bk.caution_xof) }}</strong> est retenue
+            sur cette réservation. Elle vous est restituée après votre séjour, selon
+            les conditions d’annulation.
+          </p>
+        }
+      </article>
+
+      @if (!bk.payable) {
+        <!-- Rien à régler : on le dit, plutôt que d'afficher un formulaire inerte. -->
+        <p class="pf-state" role="status">
+          @if (bk.is_paid) {
+            Cette réservation est intégralement réglée. Merci !
+          } @else {
+            Cette réservation est annulée : elle ne peut plus être réglée.
+          }
+          <a routerLink="/mon-espace/reservations">Retour à mes réservations</a>
+        </p>
+      } @else if (instructions(); as ins) {
+        <!--
+          Règlement Wave / Orange Money : aucun appel au PSP. Le serveur a composé
+          la marche à suivre — le numéro vient du paramétrage back-office, jamais
+          d'une valeur écrite en dur ici.
+        -->
+        <article class="pay-card pay-card--manual">
+          <h2 class="pay-section-title">À faire maintenant</h2>
+          <ol class="pay-steps">
+            <li>
+              Envoyez <strong>{{ money(amountToPay()) }}</strong>
+              par <strong>{{ ins.method }}</strong> au numéro
+              <a class="pay-phone" [href]="'tel:' + ins.pay_to">{{ ins.pay_to }}</a>.
+            </li>
+            <li>
+              Indiquez la référence <code class="pay-code">{{ ins.reference }}</code>
+              dans le motif du transfert — c’est elle qui permet de rattacher votre
+              versement à cette réservation.
+            </li>
+            <li>Confirmez par WhatsApp ; un conseiller valide l’encaissement.</li>
+          </ol>
+
+          @if (ins.remaining_after_xof > 0) {
+            <p class="pay-note">
+              Il restera <strong>{{ money(ins.remaining_after_xof) }}</strong> à régler
+              après ce versement.
+            </p>
+          }
+
+          <p class="pay-note pay-note--warn">
+            ⚠️ Votre réservation ne sera confirmée qu’une fois le versement
+            <strong>constaté par notre équipe</strong>. Vous serez notifié.
+          </p>
+
+          <a class="k-btn k-btn--ghost" routerLink="/mon-espace/reservations">
+            Retour à mes réservations
+          </a>
+        </article>
+      } @else {
+        <!-- Choix du moyen et du montant. -->
+        <article class="pay-card">
+          <h2 class="pay-section-title">Comment souhaitez-vous régler ?</h2>
+
+          <div class="pay-modes" role="radiogroup" aria-label="Moyen de règlement">
+            <label class="pay-mode" [class.is-active]="mode === 'paytech'">
+              <input type="radio" name="mode" value="paytech" [(ngModel)]="mode" />
+              <span class="pay-mode__body">
+                <strong>Paiement en ligne</strong>
+                <em>Carte bancaire, Orange Money ou Wave — immédiat et sécurisé.</em>
+              </span>
+            </label>
+
+            <label class="pay-mode" [class.is-active]="mode === 'manuel'">
+              <input type="radio" name="mode" value="manuel" [(ngModel)]="mode" />
+              <span class="pay-mode__body">
+                <strong>Transfert Wave / Orange Money</strong>
+                <em>Vous transférez au numéro Kaikun ; un conseiller valide.</em>
+              </span>
+            </label>
+          </div>
+
+          <h2 class="pay-section-title">Quel montant ?</h2>
+
+          <div class="pay-modes" role="radiogroup" aria-label="Montant du règlement">
+            <label class="pay-mode" [class.is-active]="!partial">
+              <input type="radio" name="part" [value]="false" [(ngModel)]="partial" />
+              <span class="pay-mode__body">
+                <strong>Tout régler — {{ money(bk.remaining_xof) }}</strong>
+                <em>Solde la réservation.</em>
+              </span>
+            </label>
+
+            <label class="pay-mode" [class.is-active]="partial">
+              <input type="radio" name="part" [value]="true" [(ngModel)]="partial" />
+              <span class="pay-mode__body">
+                <strong>Verser un acompte</strong>
+                <em>Le reste sera à régler plus tard.</em>
+              </span>
+            </label>
+          </div>
+
+          @if (partial) {
+            <label class="pay-field">
+              <span>Montant de l’acompte (FCFA)</span>
+              <input
+                class="k-input"
+                type="number"
+                name="partialAmount"
+                min="1"
+                [max]="bk.remaining_xof"
+                step="1000"
+                [(ngModel)]="partialAmount" />
+              <span class="pay-hint">
+                Maximum {{ money(bk.remaining_xof) }} — le reste dû.
+              </span>
+            </label>
+          }
+
+          @if (error()) {
+            <p class="pf-state pf-state--error" role="alert">{{ error() }}</p>
+          }
+
+          <div class="pay-actions">
+            <span class="pay-total">
+              À payer maintenant : <strong>{{ money(amountToPay()) }}</strong>
+            </span>
+            <button
+              type="button"
+              class="k-btn k-btn--primary"
+              [disabled]="sending() || amountToPay() <= 0"
+              (click)="pay()">
+              @if (sending()) {
+                Ouverture du paiement…
+              } @else if (mode === 'paytech') {
+                Payer {{ money(amountToPay()) }} en ligne
+              } @else {
+                Obtenir les instructions
+              }
+            </button>
+          </div>
+
+          @if (mode === 'paytech') {
+            <p class="pay-note">
+              Vous allez être redirigé vers <strong>PayTech</strong>, notre
+              prestataire de paiement, pour saisir vos coordonnées. Kaikun 360 ne
+              conserve jamais votre numéro de carte.
+            </p>
+          }
+        </article>
+      }
+    }
+  }
+}

@@ -1,0 +1,88 @@
+// =============================================================================
+// Retour de PayTech (F8.6) — page d'atterrissage après le paiement.
+//
+// Sobre et rassurante : le client vient d'engager de l'argent sur un autre
+// domaine, il doit comprendre en une seconde où il en est.
+// =============================================================================
+
+:host {
+  display: block;
+}
+
+.pr-wrap {
+  padding: 64px 0 96px;
+  display: flex;
+  justify-content: center;
+}
+
+.pr-card {
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-lg);
+  box-shadow: var(--k-shadow-lg);
+  padding: 44px 36px;
+}
+
+.pr-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  font-size: 1.7rem;
+  margin-bottom: 18px;
+
+  .pr-card--ok & {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  .pr-card--cancel & {
+    background: rgba(216, 135, 24, 0.14);
+    color: var(--k-warning);
+  }
+}
+
+.pr-title {
+  margin: 0 0 14px;
+  font-family: var(--k-font-display);
+  font-size: 1.5rem;
+  line-height: 1.25;
+  color: var(--k-ink);
+}
+
+.pr-text {
+  margin: 0 0 18px;
+  color: var(--k-muted);
+  font-size: 0.95rem;
+  line-height: 1.7;
+
+  strong {
+    color: var(--k-ink);
+  }
+}
+
+.pr-ref {
+  margin: 0 0 22px;
+  font-size: 0.82rem;
+  color: var(--k-muted);
+
+  code {
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--k-cream);
+    font-family: var(--k-font-mono);
+    color: var(--k-ink);
+  }
+}
+
+.pr-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}

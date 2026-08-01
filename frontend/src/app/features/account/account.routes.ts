@@ -60,6 +60,15 @@ export const ACCOUNT_ROUTES: Routes = [
         title: 'Ma réservation — Kaikun 360',
       },
       {
+        // F8.6 — Régler une réservation. Écran DÉDIÉ et non un bouton dans une
+        // liste : payer engage de l'argent, le client doit voir ce qu'il doit
+        // avant qu'on ne le sorte du site vers le prestataire de paiement.
+        path: 'reservations/:id/paiement',
+        loadComponent: () =>
+          import('./bookings/booking-payment-page').then((m) => m.BookingPaymentPageComponent),
+        title: 'Régler ma réservation — Kaikun 360',
+      },
+      {
         // F3.8 — Projets diaspora : liste des dossiers pilotés à distance
         // (GET /diaspora-projects/mine).
         path: 'diaspora',

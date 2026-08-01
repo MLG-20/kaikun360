@@ -82,8 +82,10 @@ class PaytechProvider implements PaymentProviderInterface
             'command_name' => $this->itemName($payment),
             'env' => $this->env,
             'ipn_url' => $this->ipnUrl,
-            'success_url' => $this->successUrl,
-            'cancel_url' => $this->cancelUrl,
+            // La référence voyage avec l'URL de retour : sans elle, le client
+            // retombe sur une page qui ne sait pas de quel règlement elle parle.
+            'success_url' => $this->returnUrl($this->successUrl, $payment),
+            'cancel_url' => $this->returnUrl($this->cancelUrl, $payment),
             'custom_field' => $custom,
         ], static fn ($value) => $value !== null && $value !== ''));
 
@@ -192,6 +194,22 @@ class PaytechProvider implements PaymentProviderInterface
             ?? '');
 
         return PaymentStatus::fromPaytech($raw);
+    }
+
+    /**
+     * URL de retour porteuse de la référence du règlement.
+     *
+     * ⚠️ Cette référence sert seulement à AFFICHER le bon dossier au retour :
+     * elle ne prouve rien. Un client qui ouvrirait l'URL de succès à la main ne
+     * doit rien pouvoir déclencher — seul l'IPN signé confirme un encaissement.
+     */
+    private function returnUrl(?string $base, Payment $payment): ?string
+    {
+        if (empty($base)) {
+            return null;
+        }
+
+        return $base.(str_contains($base, '?') ? '&' : '?').'ref='.urlencode($payment->reference);
     }
 
     /**
