@@ -1,9 +1,6 @@
 // Les styles de mise en page du formulaire (.auth-head, .auth-form, .auth-link…)
 // sont globaux et partagés par toutes les pages auth : voir src/styles/_auth.scss.
 
-// Conteneur où Google injecte son bouton officiel : on le centre.
-.google-btn-host {
-  display: flex;
-  justify-content: center;
-}
+// (`.google-btn-host` est passé en global en F8.7 : voir src/styles/_auth.scss —
+// la page d'inscription l'utilise aussi depuis qu'elle propose Google.)
 

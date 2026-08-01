@@ -132,6 +132,15 @@
   </button>
 </form>
 
+<!-- Inscription Google (F8.7) : affichée seulement si l'identifiant client est
+     configuré (`environment.googleClientId`). Google dessine lui-même son
+     bouton officiel dans ce conteneur — on ne redessine jamais le sien, sa
+     charte l'interdit. -->
+@if (googleEnabled) {
+  <div class="auth-divider"><span>ou</span></div>
+  <div #googleBtn class="google-btn-host"></div>
+}
+
 <p class="auth-alt">
   Déjà inscrit ?
   <a class="auth-link" routerLink="/auth/connexion">Se connecter</a>

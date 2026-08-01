@@ -1,11 +1,21 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  NgZone,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { RegisterPayload } from '../../../../core/auth/auth.types';
+import { GoogleIdentityService } from '../../../../core/auth/google-identity.service';
 import { PasswordRevealDirective } from '../../../../shared/directives/password-reveal.directive';
 
 /** Un choix de profil proposé à l'inscription (onboarding, CDC §5.2). */
@@ -23,6 +33,17 @@ interface ProfileOption {
  * coordonnées et mot de passe. En cas de succès, `AuthService.register` ouvre la session (jeton en
  * mémoire). Le backend renvoie **422** avec des erreurs par champ (e-mail ou
  * téléphone déjà utilisés…) : elles sont affichées sous les champs concernés.
+ *
+ * **F8.7 — Google était absent de cet écran.** Le bouton n'existait que sur la
+ * page de connexion. Or c'est à l'inscription qu'il sert le plus : « continuer
+ * avec Google » évite de choisir un mot de passe de plus. Côté serveur, la même
+ * route `POST /auth/google` crée le compte s'il n'existe pas encore — il n'y a
+ * donc rien de neuf à brancher, seulement un bouton à poser.
+ *
+ * ⚠️ Un compte créé par Google n'a **pas de profil choisi** : le sélecteur de
+ * casquette ci-dessus ne s'applique qu'à l'inscription par formulaire. C'est
+ * assumé — le serveur retient « client » par défaut, et l'utilisateur change de
+ * profil depuis son espace.
  */
 @Component({
   selector: 'app-register-page',
@@ -31,10 +52,17 @@ interface ProfileOption {
   styleUrl: './register-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RegisterPageComponent {
+export class RegisterPageComponent implements AfterViewInit {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly google = inject(GoogleIdentityService);
+  private readonly zone = inject(NgZone);
+
+  /** L'inscription Google est-elle proposée (identifiant client configuré) ? */
+  protected readonly googleEnabled = this.google.isEnabled;
+  /** Emplacement où Google dessine son bouton officiel. */
+  private readonly googleBtn = viewChild<ElementRef<HTMLElement>>('googleBtn');
 
   /**
    * Les 4 profils correspondant aux espaces (valeurs = enum ProfileType backend).
@@ -85,6 +113,42 @@ export class RegisterPageComponent {
   /** Message d'erreur serveur pour un champ donné (ou null). */
   protected serverError(field: string): string | null {
     return this.fieldErrors()[field] ?? null;
+  }
+
+  /** Après l'affichage : si Google est activé, on y dessine son bouton officiel. */
+  ngAfterViewInit(): void {
+    const host = this.googleBtn()?.nativeElement;
+    if (host) {
+      void this.google.renderButton(host, (idToken) => this.onGoogleToken(idToken));
+    }
+  }
+
+  /**
+   * Reçoit le jeton d'identité Google et ouvre la session via le backend (la
+   * route crée le compte s'il n'existe pas).
+   *
+   * Le callback vient d'un script externe, donc HORS de la zone Angular : sans
+   * `zone.run`, ni la navigation ni l'affichage ne se mettraient à jour.
+   */
+  private onGoogleToken(idToken: string): void {
+    this.zone.run(() => {
+      this.submitting.set(true);
+      this.formError.set(null);
+
+      this.auth.loginWithGoogle(idToken).subscribe({
+        next: () => {
+          void this.router.navigateByUrl('/mon-espace');
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submitting.set(false);
+          this.formError.set(
+            error.status === 401
+              ? 'La connexion Google a échoué. Réessayez.'
+              : 'Inscription Google impossible pour le moment. Réessayez dans un instant.',
+          );
+        },
+      });
+    });
   }
 
   protected submit(): void {

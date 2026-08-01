@@ -89,6 +89,15 @@
   background: var(--k-line);
 }
 
+// Conteneur où Google injecte son bouton officiel : on le centre.
+// ⚠️ Global depuis F8.7 : il était encapsulé dans la page de connexion, si bien
+// que le même bouton posé sur l'inscription serait arrivé SANS style. Deux pages
+// s'en servent désormais — connexion et inscription.
+.google-btn-host {
+  display: flex;
+  justify-content: center;
+}
+
 @media (max-width: 480px) {
   .auth-row {
     grid-template-columns: 1fr;
