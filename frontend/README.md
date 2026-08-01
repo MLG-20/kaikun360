@@ -583,6 +583,76 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     (l'API impose `valider:prestataire`), pas par `tourisme`. Un agent qui voit la
     liste sans pouvoir ouvrir les dossiers lit un message qui le lui dit, au lieu
     de croire à une donnée disparue.
+  **F8.3 Les fiches anciennes cessent d'être des piles.** F8.1 et F8.2 ont traité
+  les écrans **trop pauvres** (une ligne de tableau pour décider). Restait le
+  défaut inverse, sur les cinq fiches livrées avant : **chantier** (585 l. de
+  gabarit), **mandat**, **compte**, **team-building**, **diaspora**. Elles avaient
+  toute l'information — empilée à plat, cinq à sept cartes de même poids visuel,
+  dont des tableaux de douze lignes. Sur un mandat, un incident critique ouvert et
+  un reversement jamais exécuté se lisaient au même niveau que les clauses du
+  contrat, six écrans plus bas. L'agent avait tout sous les yeux et ne voyait rien.
+  Trois briques, et **aucune donnée ajoutée** — uniquement remontée :
+  - **Le bandeau « ce qui appelle une décision »**
+    ([`shared/fiche-signals/`](src/app/features/backoffice/shared/fiche-signals/)) :
+    les signaux déjà présents dans la page, mais dispersés, remontés en tête avec
+    un bouton qui **conduit à la section qui les explique** (et déplie le volet au
+    passage). `alerte` = bloqué ou part de travers, `vigilance` = à suivre.
+    Chaque fiche calcule ses propres signaux ; le composant ne fait que présenter.
+    - ⚠️ **Sans signal, aucun bandeau.** Un encadré « rien à signaler » sur un
+      dossier sain deviendrait du bruit qu'on apprend à ignorer — et avec lui, les
+      vrais signaux. C'est aussi pourquoi aucun signal n'est allumé en permanence :
+      le statut d'une pièce KYC ne bougeant jamais côté serveur, la fiche compte
+      alerte sur *pièces déposées + profil non vérifié*, pas sur « pièce en attente ».
+  - **La bande de chiffres clés** (`.bo-keys`) : ces montants ne se lisent jamais
+    seuls, c'est leur **rapport** qui décide. Un chantier vendu 12 M et engagé à
+    13 M perd de l'argent — information qu'aucune des deux cartes distantes ne
+    donnait, chacune ayant raison de son côté.
+  - **Les volets repliables** (`.bo-fold`, `<details>` natif — ouverture au
+    clavier, zéro JavaScript) pour l'archive : devis, prestataires, comptes rendus,
+    pièces, historique. **Replier n'est pas cacher** : le résumé du volet porte ce
+    qu'on venait y chercher (combien, pour quel montant, depuis quand), et un volet
+    se déplie **d'office quand un geste y est en attente** (devis en brouillon,
+    impayé échu, brique de pack sans prestataire, dossier diaspora sans rapport).
+  - **L'ordre de lecture suit l'ordre de décision** : sur les fiches compte et
+    diaspora, le bloc de pilotage passe **devant** l'identité du client — on
+    n'ouvre pas ces fiches pour relire une adresse.
+  - Les deux SCSS communs vivent dans
+    [`shared/fiche-blocks.scss`](src/app/features/backoffice/shared/fiche-blocks.scss),
+    ajouté aux `styleUrls` des cinq fiches (Angular l'encapsule pour chacune).
+    Le bandeau, lui, est un vrai composant : il porte du comportement.
+    ⚠️ Cette factorisation a été faite **après la deuxième fiche**, pas après la
+    cinquième — la dette de quasi-copies signalée en F8.1 s'était déjà rouverte.
+  - Au passage, deux mensonges d'écran corrigés : la fiche chantier annonçait
+    l'affectation de prestataires BTP comme « reste à livrer » alors que la section
+    la livrait juste en dessous ; la fiche compte affichait le code brut de l'enum
+    de vérification (« non_verifie »), lisible par un développeur, pas par un agent.
+
+  **F8.3 Le contenu éditorial s'écrit sans taper de balises.**
+  Le corps d'une page (`/pages/:slug`) est stocké en HTML et rendu via
+  `[innerHTML]` ; le back-office n'offrait qu'un `<textarea>`. Pour écrire les
+  mentions légales, un agent devait taper `<h2>`, `<p>`, `<ul><li>` à la main —
+  ou tout obtenir en un seul bloc sur le site public.
+  [`shared/components/rich-text-editor/`](src/app/shared/components/rich-text-editor/)
+  remplace la saisie de balises par des boutons, **sans changer le format
+  stocké** : les pages déjà en base s'ouvrent sans conversion et le rendu public
+  n'a pas bougé.
+  - **Aucune dépendance** : `contenteditable` + `execCommand` (vieux mais
+    universels) plutôt que ~150 Ko au premier chargement du site pour six boutons.
+    Implémente `ControlValueAccessor` → s'utilise avec `[(ngModel)]` comme un
+    champ ordinaire.
+  - **Assainissement à la source, par liste blanche**
+    ([`rich-text.sanitizer.ts`](src/app/shared/components/rich-text-editor/rich-text.sanitizer.ts),
+    15 tests) : le collé depuis Word est nettoyé **à l'entrée**, pas seulement au
+    rendu. Ce qui n'est pas dans la liste est **déballé** (on garde le texte, on
+    jette la balise) — on ne perd jamais la rédaction de l'agent. L'assainisseur
+    est **idempotent** : une page rouverte dix fois reste identique.
+  - La vue « code HTML » **reste accessible** : elle ne sert plus à écrire, mais
+    la retirer aurait été une régression pour qui sait s'en servir.
+  - ⚠️ **La FAQ garde son `<textarea>`**, volontairement : la page publique rend
+    la réponse en `{{ answer }}`, pas en HTML. Y mettre l'éditeur riche ferait
+    apparaître les balises en clair sur le site. (Les retours à la ligne saisis
+    sont désormais conservés, via `white-space: pre-line`.)
+
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

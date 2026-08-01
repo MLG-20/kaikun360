@@ -15,6 +15,7 @@ import {
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { Provider } from '../../../../models/provider.model';
+import { FicheFlag, FicheSignalsComponent } from '../../shared/fiche-signals/fiche-signals';
 
 /** Option de catégorie de pack (partagée devis ↔ affectation). */
 interface CategoryOption {
@@ -48,9 +49,10 @@ interface DraftLine {
  */
 @Component({
   selector: 'app-backoffice-team-building-detail-page',
-  imports: [FormsModule],
+  imports: [FormsModule, FicheSignalsComponent],
   templateUrl: './backoffice-team-building-detail-page.html',
-  styleUrl: './backoffice-team-building-detail-page.scss',
+  // Briques communes des fiches hiérarchisées en F8.3 (chiffres clés, volets).
+  styleUrls: ['./backoffice-team-building-detail-page.scss', '../../shared/fiche-blocks.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BackofficeTeamBuildingDetailPageComponent {
@@ -211,6 +213,127 @@ export class BackofficeTeamBuildingDetailPageComponent {
   protected canSend(quote: TeamBuildingQuote): boolean {
     return quote.status === 'brouillon';
   }
+
+  // --- Ce qui appelle une décision (F8.3) --------------------------------------
+
+  /** Missions du dossier, hors annulées / refusées. */
+  protected readonly missionsOfActive = computed(() =>
+    this.missionsOf().filter((mission) => mission.status !== 'annulee' && mission.status !== 'refusee'),
+  );
+
+  /** Total engagé auprès des prestataires : ce que le pack coûte réellement. */
+  protected readonly committed = computed(() =>
+    this.missionsOfActive().reduce((sum, mission) => sum + (mission.amount_xof || 0), 0),
+  );
+
+  /** Devis accepté par l'entreprise : le montant qui fait foi. */
+  protected readonly acceptedQuote = computed<TeamBuildingQuote | null>(
+    () => this.request()?.quotes.find((quote) => quote.status === 'accepte') ?? null,
+  );
+
+  /** Un devis composé attend d'être envoyé. */
+  protected readonly hasDraftQuote = computed(
+    () => this.request()?.quotes.some((quote) => quote.status === 'brouillon') ?? false,
+  );
+
+  /** Marge réelle du pack : ce que l'entreprise paie moins ce qu'on engage. */
+  protected readonly margin = computed<number | null>(() => {
+    const accepted = this.acceptedQuote();
+    return accepted ? accepted.total_xof - this.committed() : null;
+  });
+
+  /**
+   * Briques du devis accepté auxquelles aucun prestataire n'est affecté.
+   *
+   * C'est l'angle mort du pack : un devis vendu « hébergement + traiteur +
+   * animation » dont seule l'animation est pourvue paraît complet dans les deux
+   * tableaux de la fiche — il faut les confronter pour voir le trou.
+   */
+  protected readonly unstaffedCategories = computed<string[]>(() => {
+    const accepted = this.acceptedQuote();
+    if (!accepted) {
+      return [];
+    }
+    const staffed = new Set(this.missionsOfActive().map((mission) => mission.category));
+    const sold = new Set(accepted.lines.map((line) => line.category));
+    return [...sold].filter((category) => !staffed.has(category)).map((c) => this.categoryLabel(c));
+  });
+
+  /**
+   * **Le bandeau qui manquait.** Trois cartes, deux tableaux et deux
+   * formulaires : le devis jamais envoyé et la brique sans prestataire étaient
+   * lisibles — à condition de croiser soi-même deux tableaux distants.
+   */
+  protected readonly flags = computed<FicheFlag[]>(() => {
+    const req = this.request();
+    if (!req) {
+      return [];
+    }
+    const flags: FicheFlag[] = [];
+
+    if (this.hasDraftQuote()) {
+      flags.push({
+        level: 'alerte',
+        text: 'Un devis est composé mais n’a jamais été envoyé à l’entreprise.',
+        anchor: 'tb-devis',
+        cta: 'Envoyer',
+      });
+    }
+
+    const unstaffed = this.unstaffedCategories();
+    if (unstaffed.length) {
+      flags.push({
+        level: 'alerte',
+        text: `Pack accepté : ${unstaffed.length} brique(s) sans prestataire (${unstaffed.join(', ')}).`,
+        anchor: 'tb-prestataires',
+        cta: 'Affecter',
+      });
+    }
+
+    // Le pack coûte plus cher qu'il n'a été vendu.
+    const margin = this.margin();
+    if (margin !== null && margin < 0) {
+      flags.push({
+        level: 'alerte',
+        text: `Marge négative : ${this.xof(this.committed())} engagés pour un pack vendu ${this.xof(this.acceptedQuote()!.total_xof)}.`,
+        anchor: 'tb-prestataires',
+        cta: 'Vérifier',
+      });
+    }
+
+    // L'événement commence, et rien n'est validé.
+    const start = req.start_date;
+    if (start && start.slice(0, 10) < new Date().toISOString().slice(0, 10) && !this.acceptedQuote()) {
+      flags.push({
+        level: 'alerte',
+        text: `Période commencée le ${this.shortDate(start)} sans devis accepté.`,
+        anchor: 'tb-demande',
+        cta: 'Voir la demande',
+      });
+    }
+
+    if (!req.quotes.length) {
+      flags.push({
+        level: 'vigilance',
+        text: 'Aucun devis composé pour cette demande.',
+        anchor: 'tb-devis',
+        cta: 'Composer',
+      });
+    }
+
+    // Le devis dépasse ce que l'entreprise avait annoncé pouvoir mettre.
+    const proposed = this.acceptedQuote() ?? req.quotes[0] ?? null;
+    if (proposed && req.budget_xof && proposed.total_xof > req.budget_xof) {
+      flags.push({
+        level: 'vigilance',
+        text: `Devis (${this.xof(proposed.total_xof)}) supérieur au budget indicatif annoncé (${this.xof(req.budget_xof)}).`,
+        anchor: 'tb-devis',
+        cta: 'Voir le devis',
+      });
+    }
+
+    return flags;
+  });
 
   // --- Affectation prestataires -----------------------------------------------
 

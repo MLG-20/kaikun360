@@ -249,10 +249,25 @@
             <input class="k-input" type="text" name="pageTitle" [(ngModel)]="pageForm.title" />
           </label>
         </div>
-        <label class="st-field st-field--full">
-          <span class="st-label">Contenu</span>
-          <textarea class="k-input st-textarea" rows="12" name="pageBody" [(ngModel)]="pageForm.body"></textarea>
-        </label>
+        <!--
+          Éditeur riche (F8.3) : le corps part en `[innerHTML]` sur le site
+          public. Avec un `<textarea>`, écrire une page imposait de taper les
+          balises à la main — ou de tout obtenir en un seul bloc. Le format
+          stocké est inchangé : les pages déjà en base s'ouvrent telles quelles.
+        -->
+        <div class="st-field st-field--full">
+          <span class="st-label">Contenu de la page</span>
+          <app-rich-text-editor
+            name="pageBody"
+            ariaLabel="Contenu de la page"
+            placeholder="Rédigez le texte de la page. Utilisez « T1 » pour les titres de section."
+            [rows]="12"
+            [(ngModel)]="pageForm.body" />
+          <span class="st-hint">
+            Mise en forme par les boutons — aucune balise à saisir. Le collé
+            depuis Word est nettoyé automatiquement.
+          </span>
+        </div>
         <label class="st-switch">
           <input type="checkbox" name="pagePublished" [(ngModel)]="pageForm.is_published" />
           <span class="st-switch-text">
@@ -332,6 +347,14 @@
         <label class="st-field st-field--full">
           <span class="st-label">Réponse</span>
           <textarea class="k-input st-textarea" rows="6" name="faqAnswer" [(ngModel)]="faqForm.answer"></textarea>
+          <!--
+            Volontairement en texte brut, contrairement au corps d'une page :
+            la FAQ publique affiche `{{ '{{' }} answer {{ '}}' }}`, pas du HTML. Y mettre
+            l'éditeur riche ferait apparaître les balises en clair sur le site.
+          -->
+          <span class="st-hint">
+            Texte simple, sans mise en forme. Les retours à la ligne sont conservés.
+          </span>
         </label>
         <div class="st-grid">
           <label class="st-field">

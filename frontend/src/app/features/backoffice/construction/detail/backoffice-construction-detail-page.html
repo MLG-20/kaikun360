@@ -29,47 +29,91 @@
     <p class="cs-state cs-state--ok" role="status">{{ actionMessage() }}</p>
   }
 
-  <!-- ============ LE DEMANDEUR ============ -->
-  <section class="cs-card cs-client">
-    <div>
-      <span class="cs-label">Demandeur</span>
-      <p class="cs-client-name">{{ d.client?.name || 'Client inconnu' }}</p>
+  <!--
+    ============ CE QUI APPELLE UNE DÉCISION (F8.3) ============
+    Les six cartes de la fiche pesaient le même poids : rien ne disait par où
+    commencer. Ce bandeau ne contient aucune donnée nouvelle — il remonte celles
+    qui changent la conduite du dossier, et mène à la section qui les explique.
+  -->
+  <app-fiche-signals [flags]="flags()" subject="dossier" />
+
+  <!--
+    ============ CHIFFRES CLÉS ============
+    L'argent du dossier tenait dans deux cartes distantes : budget/estimation en
+    haut, devis et engagements prestataires plus bas. Or c'est leur *rapport*
+    qui se lit — un chantier vendu 12 M et engagé à 13 M perd de l'argent.
+  -->
+  <section class="bo-keys" aria-label="Chiffres clés">
+    <div class="bo-key">
+      <span class="bo-key__label">Budget annoncé</span>
+      <strong class="bo-key__value">{{ money(d.budget_xof) }}</strong>
     </div>
-    <div class="cs-client-contact">
-      @if (d.client?.phone) {
-        <a class="cs-link" [href]="'tel:' + d.client!.phone">{{ d.client!.phone }}</a>
+    <div class="bo-key">
+      <span class="bo-key__label">Coût estimé</span>
+      <strong class="bo-key__value">{{ money(d.estimated_cost_xof) }}</strong>
+      @if (budgetGap(d); as gap) {
+        <span class="bo-key__hint" [class.is-alert]="gap < 0">
+          {{ gap < 0 ? '−' : '+' }}{{ money(gap < 0 ? -gap : gap) }} vs budget
+        </span>
       }
-      @if (d.client?.email) {
-        <a class="cs-link" [href]="'mailto:' + d.client!.email">{{ d.client!.email }}</a>
+    </div>
+    <div class="bo-key">
+      <span class="bo-key__label">Devis accepté</span>
+      @if (acceptedQuote(); as quote) {
+        <strong class="bo-key__value">{{ money(quote.total_xof) }}</strong>
+        <span class="bo-key__hint">{{ quote.reference }}</span>
+      } @else {
+        <strong class="bo-key__value is-muted">—</strong>
+        <span class="bo-key__hint">aucun devis accepté</span>
       }
-      @if (!d.client?.phone && !d.client?.email) {
-        <span class="cs-muted">Aucun contact renseigné</span>
-      }
+    </div>
+    <div class="bo-key">
+      <span class="bo-key__label">Engagé prestataires</span>
+      <strong class="bo-key__value">{{ committed() ? money(committed()) : '—' }}</strong>
+      <span class="bo-key__hint">{{ assignments().length }} mission(s)</span>
+    </div>
+    <div class="bo-key">
+      <span class="bo-key__label">Avancement</span>
+      <strong class="bo-key__value">
+        {{ progress() === null ? '—' : progress() + ' %' }}
+      </strong>
+      <span class="bo-key__hint">
+        {{ (d.milestones ?? []).length }} jalon(s)@if (lateMilestones().length) { · {{ lateMilestones().length }} en retard }
+      </span>
     </div>
   </section>
 
-  <!-- ============ LE PROJET ============ -->
-  <section class="cs-card">
-    <h2 class="cs-card-title">Le projet</h2>
+  <!-- ============ LE PROJET (+ le demandeur, qui tient sur une ligne) ============ -->
+  <section class="cs-card" id="cs-projet">
+    <div class="cs-card-head">
+      <h2 class="cs-card-title">Le projet</h2>
+      <!--
+        Le demandeur occupait une carte entière pour trois informations. Sa
+        place est ici : on ne consulte un contact qu'en lisant le projet.
+      -->
+      <p class="cs-client-inline">
+        <strong>{{ d.client?.name || 'Client inconnu' }}</strong>
+        @if (d.client?.phone) {
+          · <a class="cs-link" [href]="'tel:' + d.client!.phone">{{ d.client!.phone }}</a>
+        }
+        @if (d.client?.email) {
+          · <a class="cs-link" [href]="'mailto:' + d.client!.email">{{ d.client!.email }}</a>
+        }
+        @if (!d.client?.phone && !d.client?.email) {
+          · <span class="cs-muted">aucun contact renseigné</span>
+        }
+      </p>
+    </div>
+    <!--
+      Budget et coût estimé ont quitté cette liste : ils sont dans les chiffres
+      clés, au-dessus, où leur écart se lit d'un coup d'œil.
+    -->
     <dl class="cs-facts">
       <div><dt>Objectif</dt><dd>{{ d.objective_label || '—' }}</dd></div>
       <div><dt>Ville</dt><dd>{{ d.city || '—' }}</dd></div>
       <div><dt>Surface</dt><dd>{{ d.surface_m2 ? d.surface_m2 + ' m²' : '—' }}</dd></div>
       <div><dt>Finition</dt><dd>{{ d.finish_level_label || '—' }}</dd></div>
-      <div><dt>Budget annoncé</dt><dd>{{ money(d.budget_xof) }}</dd></div>
-      <div><dt>Coût estimé</dt><dd>{{ money(d.estimated_cost_xof) }}</dd></div>
     </dl>
-
-    <!-- L'écart budget/estimation est le premier signal d'un dossier mal parti. -->
-    @if (budgetGap(d); as gap) {
-      <p class="cs-gap" [class.is-alert]="gap < 0">
-        @if (gap < 0) {
-          ⚠️ Budget inférieur de <strong>{{ money(-gap) }}</strong> à l’estimation.
-        } @else {
-          Marge de <strong>{{ money(gap) }}</strong> entre le budget annoncé et l’estimation.
-        }
-      </p>
-    }
 
     @if (d.description) {
       <div class="cs-desc">
@@ -80,7 +124,8 @@
   </section>
 
   <!-- ============ AVANCEMENT / JALONS ============ -->
-  <section class="cs-card">
+  <!-- Seule section jamais repliée : c'est le poste de pilotage du chantier. -->
+  <section class="cs-card" id="cs-avancement">
     <div class="cs-card-head">
       <h2 class="cs-card-title">Avancement du chantier</h2>
       @if (progress() !== null) {
@@ -101,7 +146,13 @@
           <li class="cs-step" [class]="milestoneClass(milestone.status)">
             <span class="cs-step__dot" aria-hidden="true"></span>
             <div class="cs-step__body">
-              <span class="cs-step__name">{{ milestone.name }}</span>
+              <span class="cs-step__name">
+                {{ milestone.name }}
+                <!-- Le retard se voit sur l'étape, pas seulement dans le bandeau. -->
+                @if (isLate(milestone)) {
+                  <span class="bo-late">en retard</span>
+                }
+              </span>
               <span class="cs-step__meta">
                 {{ milestone.status_label || milestone.status }}
                 · prévu {{ shortDate(milestone.planned_date) }}
@@ -202,16 +253,37 @@
       }
     </div>
 
-    <p class="cs-note cs-note--warn">
-      ⚠️ Reste à livrer sur ce module : l’<strong>affectation de prestataires BTP</strong>,
-      prévue par le cahier des charges. Ce manque est identifié et planifié.
-    </p>
   </section>
 
-  <!-- ============ DEVIS ============ -->
-  <section class="cs-card">
+  <!--
+    ============ DEVIS ============
+    Repliée par défaut, comme les deux sections suivantes : le résumé du volet
+    porte ce qu'on venait y chercher (combien de devis, lequel fait foi), et on
+    ne déplie que pour agir. Exception — un devis en brouillon rouvre la
+    section d'office : il y a un geste en attente.
+  -->
+  <details class="cs-card bo-fold" id="cs-devis" [open]="hasDraftQuote()">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Devis</span>
+      <span class="bo-fold__digest">
+        @if (quotesLoading()) {
+          chargement…
+        } @else if (quotes().length) {
+          {{ quotes().length }} devis
+          @if (acceptedQuote(); as accepted) {
+            · accepté {{ money(accepted.total_xof) }}
+          } @else if (hasDraftQuote()) {
+            · <span class="is-alert">brouillon à envoyer</span>
+          }
+        } @else {
+          aucun devis
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
     <div class="cs-card-head">
-      <h2 class="cs-card-title">Devis</h2>
+      <h2 class="cs-card-title bo-sr-only">Devis</h2>
       <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleComposer()">
         {{ composerOpen() ? 'Annuler' : 'Composer un devis' }}
       </button>
@@ -393,12 +465,27 @@
         simulateur : ce n’est pas un engagement chiffré.
       </p>
     }
-  </section>
+    </div>
+  </details>
 
   <!-- ============ PRESTATAIRES BTP ============ -->
-  <section class="cs-card">
+  <details class="cs-card bo-fold" id="cs-prestataires">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Prestataires BTP</span>
+      <span class="bo-fold__digest">
+        @if (assignmentsLoading()) {
+          chargement…
+        } @else if (assignments().length) {
+          {{ assignments().length }} mission(s) · {{ money(committed()) }} engagés
+        } @else {
+          aucun prestataire affecté
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
     <div class="cs-card-head">
-      <h2 class="cs-card-title">Prestataires BTP</h2>
+      <h2 class="cs-card-title bo-sr-only">Prestataires BTP</h2>
       <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleAssignForm()">
         {{ assignFormOpen() ? 'Annuler' : 'Affecter un prestataire' }}
       </button>
@@ -495,12 +582,27 @@
         fait intervenir un maçon, un électricien, un plombier — chacun sur son lot.
       </p>
     }
-  </section>
+    </div>
+  </details>
 
   <!-- ============ COMPTES RENDUS ============ -->
-  <section class="cs-card">
+  <details class="cs-card bo-fold" id="cs-comptes-rendus">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Comptes rendus de chantier</span>
+      <span class="bo-fold__digest">
+        @if (reportsLoading()) {
+          chargement…
+        } @else if (reportsTotal()) {
+          {{ reportsTotal() }} constat(s) · dernier le {{ shortDate(lastReportDate()) }}
+        } @else {
+          aucun constat publié
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
     <div class="cs-card-head">
-      <h2 class="cs-card-title">Comptes rendus de chantier</h2>
+      <h2 class="cs-card-title bo-sr-only">Comptes rendus de chantier</h2>
       <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleReportForm()">
         {{ reportFormOpen() ? 'Annuler' : 'Publier un compte rendu' }}
       </button>
@@ -541,8 +643,7 @@
     @if (reportsLoading()) {
       <p class="cs-state" role="status">Chargement des comptes rendus…</p>
     } @else {
-      <p class="cs-count">{{ reportsTotal() }} compte(s) rendu(s)</p>
-
+      <!-- Le compteur est passé dans le résumé du volet : plus besoin ici. -->
       @for (report of reports(); track report.id) {
         <article class="cs-report">
           <div class="cs-report__head">
@@ -581,5 +682,6 @@
         </nav>
       }
     }
-  </section>
+    </div>
+  </details>
 }

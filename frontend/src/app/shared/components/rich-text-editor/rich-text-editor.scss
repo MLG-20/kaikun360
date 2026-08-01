@@ -1,0 +1,243 @@
+// =============================================================================
+// Éditeur de texte enrichi (F8.3)
+//
+// La zone de saisie affiche le contenu **tel qu'il paraîtra** sur le site
+// public : mêmes proportions de titres, mêmes puces. C'est tout l'objet du
+// composant — l'agent juge sa page dans l'éditeur, sans aller la vérifier.
+// =============================================================================
+
+:host {
+  display: block;
+}
+
+.rte {
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-white);
+  overflow: hidden;
+
+  &:focus-within {
+    border-color: var(--k-brand);
+    box-shadow: 0 0 0 3px var(--k-brand-050);
+  }
+
+  &.is-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+// --- Barre d'outils ---------------------------------------------------------
+
+.rte-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--k-line);
+  background: var(--k-cream);
+}
+
+// Séparateur discret entre familles de commandes (bloc / caractère / listes).
+.rte-group {
+  display: flex;
+  gap: 2px;
+
+  & + .rte-group {
+    margin-left: 4px;
+    padding-left: 6px;
+    border-left: 1px solid var(--k-line-strong);
+  }
+}
+
+.rte-tool {
+  min-width: 32px;
+  height: 30px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--k-ink);
+  font-family: var(--k-font-body);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--k-white);
+    border-color: var(--k-line-strong);
+  }
+
+  &.is-on {
+    background: var(--k-brand-050);
+    border-color: var(--k-brand);
+    color: var(--k-brand-600);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// Les boutons de style portent le style qu'ils appliquent : plus rapide à
+// reconnaître qu'une icône à décoder.
+.rte-tool--bold {
+  font-weight: 800;
+}
+.rte-tool--italic {
+  font-style: italic;
+}
+.rte-tool--underline {
+  text-decoration: underline;
+}
+
+.rte-source-toggle {
+  margin-left: auto;
+  padding: 5px 10px;
+  border: 1px solid var(--k-line-strong);
+  border-radius: var(--k-radius-pill);
+  background: var(--k-white);
+  color: var(--k-muted);
+  font-family: var(--k-font-mono);
+  font-size: 0.72rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--k-ink);
+  }
+
+  &.is-on {
+    background: var(--k-navy);
+    border-color: var(--k-navy);
+    color: var(--k-white);
+  }
+}
+
+// --- Barre d'adresse du lien ------------------------------------------------
+
+.rte-linkbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--k-line);
+  background: var(--k-brand-050);
+}
+
+.rte-linkbar-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+.rte-linkbar-input {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+// --- Zone de saisie ---------------------------------------------------------
+
+.rte-surface-wrap {
+  position: relative;
+}
+
+.rte-surface {
+  padding: 14px 16px;
+  outline: none;
+  color: var(--k-ink);
+  font-family: var(--k-font-body);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  overflow-y: auto;
+  max-height: 60vh;
+
+  // Aperçu fidèle du rendu public (`.content-prose`).
+  :first-child {
+    margin-top: 0;
+  }
+
+  p {
+    margin: 0 0 0.9em;
+  }
+
+  h2 {
+    margin: 1.4em 0 0.5em;
+    font-family: var(--k-font-display);
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+
+  h3 {
+    margin: 1.2em 0 0.4em;
+    font-family: var(--k-font-display);
+    font-size: 1.1rem;
+  }
+
+  h4 {
+    margin: 1.1em 0 0.4em;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  ul,
+  ol {
+    margin: 0 0 0.9em;
+    padding-left: 1.4em;
+  }
+
+  li {
+    margin-bottom: 0.3em;
+  }
+
+  blockquote {
+    margin: 0 0 0.9em;
+    padding: 2px 0 2px 14px;
+    border-left: 3px solid var(--k-gold);
+    color: var(--k-muted);
+    font-style: italic;
+  }
+
+  a {
+    color: var(--k-brand);
+    text-decoration: underline;
+  }
+}
+
+.rte-placeholder {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  color: var(--k-muted);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+// --- Vue « code HTML » ------------------------------------------------------
+
+.rte-source {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  outline: none;
+  resize: vertical;
+  background: var(--k-navy);
+  color: #d7e3ff;
+  font-family: var(--k-font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  tab-size: 2;
+}
+
+.rte-hint {
+  margin: 0;
+  padding: 8px 12px;
+  border-top: 1px solid var(--k-line);
+  background: var(--k-cream);
+  color: var(--k-muted);
+  font-size: 0.78rem;
+}

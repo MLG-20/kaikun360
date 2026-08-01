@@ -17,6 +17,7 @@ import {
 } from '../../../../core/api/admin.service';
 import { Provider } from '../../../../models/provider.model';
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
+import { FicheFlag, FicheSignalsComponent } from '../../shared/fiche-signals/fiche-signals';
 
 /**
  * Fiche **demande de construction** du back-office (F7.3.b) — CDC §6
@@ -49,14 +50,19 @@ import { ValidationErrorBody } from '../../../../core/api/api-response.model';
  * la jauge d'avancement est un `computed` local. Rien d'autre à l'écran ne dépend
  * des jalons, donc recharger toute la fiche serait un aller-retour pour rien.
  *
- * ⚠️ Restent hors périmètre de cette tranche : les **devis** (F7.3.e2) et
- * l'**affectation de prestataires BTP** (F7.3.e3).
+ * **F8.3 — la fiche cesse d'être une pile.** Six cartes de même poids : rien ne
+ * disait par où commencer. Un bandeau de signaux ouvre désormais la fiche, une
+ * bande de chiffres clés confronte budget / estimation / devis accepté /
+ * engagements, et les trois sections d'archive (devis, prestataires, comptes
+ * rendus) se replient derrière un résumé chiffré.
  */
 @Component({
   selector: 'app-backoffice-construction-detail-page',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, FicheSignalsComponent],
   templateUrl: './backoffice-construction-detail-page.html',
-  styleUrl: './backoffice-construction-detail-page.scss',
+  // La feuille des volets repliables est COMMUNE aux fiches hiérarchisées en
+  // F8.3 : Angular l'encapsule pour chacune, le style ne se recopie pas.
+  styleUrls: ['./backoffice-construction-detail-page.scss', '../../shared/fiche-blocks.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BackofficeConstructionDetailPageComponent {
@@ -183,6 +189,168 @@ export class BackofficeConstructionDetailPageComponent {
     const done = milestones.filter((milestone) => milestone.status === 'termine').length;
     return Math.round((done / milestones.length) * 100);
   });
+
+  // --- Ce qui appelle une décision (F8.3) --------------------------------------
+
+  /**
+   * Total engagé auprès des prestataires (missions non annulées).
+   * Confronté au devis accepté, c'est la marge réelle du chantier.
+   */
+  protected readonly committed = computed(() =>
+    this.assignments()
+      .filter((mission) => mission.status !== 'annulee' && mission.status !== 'refusee')
+      .reduce((sum, mission) => sum + (mission.amount_xof || 0), 0),
+  );
+
+  /**
+   * Un devis attend d'être envoyé. Seule condition qui déplie le volet « Devis »
+   * d'office : il y a un geste en attente, pas une archive à consulter.
+   */
+  protected readonly hasDraftQuote = computed(() =>
+    this.quotes().some((quote) => quote.status === 'brouillon'),
+  );
+
+  /** Devis accepté par le client, s'il y en a un : le montant qui fait foi. */
+  protected readonly acceptedQuote = computed<ConstructionQuote | null>(
+    () => this.quotes().find((quote) => quote.status === 'accepte') ?? null,
+  );
+
+  /** Jalons dont la date prévue est passée sans que l'étape soit achevée. */
+  protected readonly lateMilestones = computed(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return (this.dossier()?.milestones ?? []).filter(
+      (milestone) =>
+        milestone.status !== 'termine' &&
+        !!milestone.planned_date &&
+        milestone.planned_date.slice(0, 10) < today,
+    );
+  });
+
+  /**
+   * **Le bandeau qui manquait.** Six cartes de même poids : l'agent devait les
+   * parcourir toutes pour découvrir qu'un devis chiffré dormait sans avoir été
+   * envoyé, ou qu'un chantier vendu n'avait aucun prestataire. Ces signaux ne
+   * s'ajoutent pas au dossier — ils y étaient déjà, dispersés. On les remonte.
+   *
+   * `alerte` = le dossier est bloqué ou part de travers ; `vigilance` = à
+   * surveiller. Aucun signal n'est inventé : chacun se relit dans la section
+   * vers laquelle il renvoie.
+   */
+  protected readonly flags = computed<FicheFlag[]>(() => {
+    const dossier = this.dossier();
+    if (!dossier) {
+      return [];
+    }
+    const flags: FicheFlag[] = [];
+
+    // Un devis chiffré mais jamais envoyé bloque tout le cycle : le client
+    // attend un prix, l'équipe croit l'avoir transmis.
+    const drafts = this.quotes().filter((quote) => quote.status === 'brouillon');
+    if (drafts.length) {
+      flags.push({
+        level: 'alerte',
+        text: `${drafts.length} devis chiffré${drafts.length > 1 ? 's' : ''} jamais envoyé au client.`,
+        anchor: 'cs-devis',
+        cta: 'Voir les devis',
+      });
+    }
+
+    // Chantier vendu, mais personne sur le terrain.
+    if (this.acceptedQuote() && !this.assignments().length) {
+      flags.push({
+        level: 'alerte',
+        text: 'Devis accepté par le client, aucun prestataire affecté.',
+        anchor: 'cs-prestataires',
+        cta: 'Affecter',
+      });
+    }
+
+    // Le planning a décroché du réel.
+    const late = this.lateMilestones();
+    if (late.length) {
+      flags.push({
+        level: 'alerte',
+        text: `${late.length} étape${late.length > 1 ? 's' : ''} en retard sur le planning (${late[0].name}${late.length > 1 ? '…' : ''}).`,
+        anchor: 'cs-avancement',
+        cta: 'Replanifier',
+      });
+    }
+
+    // Le devis engage plus que ce que le client a accepté de payer.
+    const accepted = this.acceptedQuote();
+    if (accepted && this.committed() > accepted.total_xof) {
+      flags.push({
+        level: 'alerte',
+        text: `Engagements prestataires (${this.money(this.committed())}) supérieurs au devis accepté (${this.money(accepted.total_xof)}).`,
+        anchor: 'cs-prestataires',
+        cta: 'Vérifier',
+      });
+    }
+
+    // Signal historique de la carte « Le projet », désormais en tête.
+    const gap = this.budgetGap(dossier);
+    if (gap !== null && gap < 0) {
+      flags.push({
+        level: 'vigilance',
+        text: `Budget annoncé inférieur de ${this.money(-gap)} à l’estimation.`,
+        anchor: 'cs-projet',
+        cta: 'Voir le projet',
+      });
+    }
+
+    // Un devis envoyé sans réponse n'est pas un dossier en cours : c'est un
+    // dossier à relancer.
+    const stale = this.quotes().filter(
+      (quote) => quote.status === 'envoye' && this.daysSince(quote.sent_at) > 14,
+    );
+    if (stale.length) {
+      flags.push({
+        level: 'vigilance',
+        text: `Devis envoyé il y a plus de 14 jours sans réponse du client.`,
+        anchor: 'cs-devis',
+        cta: 'Relancer',
+      });
+    }
+
+    // Un chantier en cours qui ne produit plus de constat n'est plus suivi.
+    if (dossier.status === 'en_chantier' && this.daysSince(this.lastReportDate()) > 30) {
+      flags.push({
+        level: 'vigilance',
+        text: 'Aucun compte rendu depuis plus de 30 jours sur un chantier en cours.',
+        anchor: 'cs-comptes-rendus',
+        cta: 'Publier un constat',
+      });
+    }
+
+    return flags;
+  });
+
+  /** Ce jalon est-il en retard ? (marque posée sur l'étape elle-même) */
+  protected isLate(milestone: ConstructionMilestone): boolean {
+    return this.lateMilestones().some((late) => late.id === milestone.id);
+  }
+
+  /** Date du constat le plus récent, `null` si le chantier n'en a aucun. */
+  protected lastReportDate(): string | null {
+    const dates = this.reports()
+      .map((report) => report.reported_at)
+      .filter((date): date is string => !!date)
+      .sort();
+    return dates.length ? dates[dates.length - 1] : null;
+  }
+
+  /**
+   * Nombre de jours écoulés depuis une date. `Infinity` si la date est absente :
+   * « jamais de compte rendu » doit se comporter comme « très ancien », sinon
+   * le dossier le moins suivi serait justement celui qui ne remonte rien.
+   */
+  private daysSince(iso: string | null | undefined): number {
+    if (!iso) {
+      return Number.POSITIVE_INFINITY;
+    }
+    return Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  }
+
 
   constructor() {
     if (Number.isNaN(this.requestId)) {

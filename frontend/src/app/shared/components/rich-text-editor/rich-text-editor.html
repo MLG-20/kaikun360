@@ -1,0 +1,145 @@
+<div class="rte" [class.is-disabled]="disabled()">
+  <!-- Barre d'outils : chaque bouton remplace une balise à taper à la main. -->
+  <div class="rte-toolbar" role="toolbar" aria-label="Mise en forme">
+    <div class="rte-group">
+      @for (tool of blockTools; track tool.label) {
+        <button
+          type="button"
+          class="rte-tool"
+          [class.is-on]="isActive(tool)"
+          [attr.aria-pressed]="isActive(tool)"
+          [attr.aria-label]="tool.label"
+          [title]="tool.label"
+          [disabled]="disabled() || sourceOpen()"
+          (mousedown)="$event.preventDefault()"
+          (click)="apply(tool)">
+          {{ tool.icon }}
+        </button>
+      }
+    </div>
+
+    <div class="rte-group">
+      @for (tool of inlineTools; track tool.label) {
+        <button
+          type="button"
+          class="rte-tool rte-tool--{{ tool.command }}"
+          [class.is-on]="isActive(tool)"
+          [attr.aria-pressed]="isActive(tool)"
+          [attr.aria-label]="tool.label"
+          [title]="tool.label"
+          [disabled]="disabled() || sourceOpen()"
+          (mousedown)="$event.preventDefault()"
+          (click)="apply(tool)">
+          {{ tool.icon }}
+        </button>
+      }
+    </div>
+
+    <div class="rte-group">
+      @for (tool of listTools; track tool.label) {
+        <button
+          type="button"
+          class="rte-tool"
+          [class.is-on]="isActive(tool)"
+          [attr.aria-pressed]="isActive(tool)"
+          [attr.aria-label]="tool.label"
+          [title]="tool.label"
+          [disabled]="disabled() || sourceOpen()"
+          (mousedown)="$event.preventDefault()"
+          (click)="apply(tool)">
+          {{ tool.icon }}
+        </button>
+      }
+    </div>
+
+    <div class="rte-group">
+      <button
+        type="button"
+        class="rte-tool"
+        aria-label="Insérer un lien"
+        title="Insérer un lien"
+        [disabled]="disabled() || sourceOpen()"
+        (mousedown)="$event.preventDefault()"
+        (click)="openLink()">
+        🔗
+      </button>
+      <button
+        type="button"
+        class="rte-tool"
+        aria-label="Effacer la mise en forme"
+        title="Effacer la mise en forme"
+        [disabled]="disabled() || sourceOpen()"
+        (mousedown)="$event.preventDefault()"
+        (click)="clearFormat()">
+        ⌫
+      </button>
+    </div>
+
+    <!-- Échappatoire pour qui connaît le HTML : vérifier, ou rattraper. -->
+    <button
+      type="button"
+      class="rte-source-toggle"
+      [class.is-on]="sourceOpen()"
+      [attr.aria-pressed]="sourceOpen()"
+      [disabled]="disabled()"
+      (click)="toggleSource()">
+      {{ sourceOpen() ? 'Revenir à l’édition' : 'Code HTML' }}
+    </button>
+  </div>
+
+  <!-- Barre d'adresse du lien : ouverte à la demande, sélection mémorisée. -->
+  @if (linkOpen()) {
+    <div class="rte-linkbar">
+      <label class="rte-linkbar-label" for="rte-link-url">Adresse du lien</label>
+      <input
+        #linkInput
+        id="rte-link-url"
+        class="k-input rte-linkbar-input"
+        type="url"
+        name="rteLinkUrl"
+        placeholder="https://exemple.sn ou /nuitees"
+        [(ngModel)]="linkUrl"
+        [ngModelOptions]="{ standalone: true }"
+        (keydown.enter)="$event.preventDefault(); applyLink()"
+        (keydown.escape)="cancelLink()" />
+      <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="applyLink()">Appliquer</button>
+      <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="cancelLink()">Annuler</button>
+    </div>
+  }
+
+  @if (sourceOpen()) {
+    <textarea
+      class="rte-source"
+      spellcheck="false"
+      [rows]="rows()"
+      [attr.aria-label]="ariaLabel() + ' — code HTML'"
+      [value]="source()"
+      [disabled]="disabled()"
+      (input)="onSourceInput($any($event.target).value)"></textarea>
+    <p class="rte-hint">
+      Édition du balisage. Les balises non reconnues sont retirées au retour à
+      l’édition visuelle ; le texte, lui, est toujours conservé.
+    </p>
+  } @else {
+    <div class="rte-surface-wrap">
+      <div
+        #surface
+        class="rte-surface"
+        role="textbox"
+        aria-multiline="true"
+        [attr.aria-label]="ariaLabel()"
+        [attr.contenteditable]="!disabled()"
+        [style.min-height.em]="rows() * 1.6"
+        (input)="onInput()"
+        (focus)="onFocus()"
+        (blur)="onBlur()"
+        (paste)="onPaste($event)"
+        (keyup)="refreshActive()"
+        (mouseup)="refreshActive()"></div>
+
+      @if (empty()) {
+        <span class="rte-placeholder" aria-hidden="true">{{ placeholder() }}</span>
+      }
+    </div>
+  }
+</div>

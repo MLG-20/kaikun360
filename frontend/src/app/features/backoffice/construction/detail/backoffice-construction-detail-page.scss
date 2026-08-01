@@ -77,15 +77,6 @@
   margin: 0 0 6px;
 }
 
-// --- Demandeur ---
-.cs-client {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  flex-wrap: wrap;
-}
-
 .cs-label {
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -93,20 +84,18 @@
   color: var(--k-muted);
 }
 
-.cs-client-name {
-  margin: 3px 0 0;
-  font-family: var(--k-font-display);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--k-ink);
+// --- Demandeur (F8.3 : une ligne dans l'en-tête du projet, plus une carte) ---
+.cs-client-inline {
+  margin: 0;
+  color: var(--k-muted);
+  font-size: 0.88rem;
+
+  strong {
+    color: var(--k-ink);
+  }
 }
 
-.cs-client-contact {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
+// Liens de la fiche : contact du demandeur, vidéo d'un compte rendu.
 .cs-link {
   color: var(--k-brand);
   font-size: 0.87rem;
@@ -141,19 +130,8 @@
   }
 }
 
-.cs-gap {
-  margin: 16px 0 0;
-  padding: 10px 14px;
-  border-radius: var(--k-radius);
-  background: rgba(56, 167, 116, 0.1);
-  color: var(--k-ink);
-  font-size: 0.85rem;
-
-  &.is-alert {
-    background: rgba(199, 59, 77, 0.09);
-    color: var(--k-danger);
-  }
-}
+// (`.cs-gap` retiré en F8.3 : l'écart budget/estimation est passé dans la bande
+// de chiffres clés, où il se lit à côté du montant qu'il commente.)
 
 .cs-desc {
   margin-top: 16px;
@@ -499,11 +477,8 @@
 }
 
 // --- Comptes rendus ---
-.cs-count {
-  font-size: 0.8rem;
-  color: var(--k-muted);
-  margin: 0 0 10px;
-}
+// (`.cs-count` retiré en F8.3 : le nombre de comptes rendus est passé dans le
+// résumé du volet, visible sans le déplier.)
 
 .cs-report {
   border: 1px solid var(--k-line);

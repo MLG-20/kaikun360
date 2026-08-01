@@ -1,0 +1,185 @@
+// =============================================================================
+// Briques communes des fiches hiérarchisées du back-office (F8.3).
+//
+// Deux blocs, ajoutés aux `styleUrls` des fiches concernées (chantier, mandat,
+// compte, team-building, diaspora) — Angular encapsule la feuille séparément
+// pour chacune : le style est partagé, la portée reste locale.
+//
+//   1. **la bande de chiffres clés** (`.bo-keys`) : les montants qui se lisent
+//      les uns par rapport aux autres — vendu, engagé, reste dû ;
+//   2. **les volets repliables** (`.bo-fold`) : l'archive, derrière son résumé.
+//
+// (Le bandeau de signaux, lui, est un vrai composant : il porte du comportement
+// — voir `fiche-signals/`.)
+//
+// **Pourquoi replier.** Ces fiches n'avaient pas trop peu d'information, elles
+// en avaient trop, toute au même niveau. Le repli rétablit une hiérarchie sans
+// rien retirer : le résumé du volet porte ce qu'on venait chercher (combien,
+// pour quel montant, depuis quand), et l'on ne déplie que pour agir.
+//
+// `<details>` natif plutôt qu'un composant : ouverture au clavier, recherche
+// dans la page qui déplie toute seule sur les navigateurs récents, et aucun
+// JavaScript à écrire ni à maintenir.
+//
+// Préfixe `bo-` (back-office), neutre : aucun écran n'en est propriétaire.
+// =============================================================================
+
+// =============================================================================
+// Bande de chiffres clés
+//
+// Ces montants ne se lisent jamais seuls : c'est leur *rapport* qui décide. Un
+// pack vendu 12 M et engagé à 13 M perd de l'argent — information que deux
+// cartes distantes ne donnaient pas, chacune ayant raison de son côté.
+// =============================================================================
+.bo-keys {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--k-line);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.bo-key {
+  background: #fff;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bo-key__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--k-muted);
+}
+
+.bo-key__value {
+  font-family: var(--k-font-display);
+  font-size: 1.05rem;
+  color: var(--k-ink);
+  line-height: 1.2;
+
+  &.is-muted {
+    color: var(--k-muted);
+  }
+}
+
+.bo-key__hint {
+  font-size: 0.75rem;
+  color: var(--k-muted);
+
+  &.is-alert {
+    color: var(--k-danger);
+    font-weight: 600;
+  }
+}
+
+// =============================================================================
+// Volets repliables
+// =============================================================================
+.bo-fold {
+  padding: 0;
+
+  // ⚠️ INDISPENSABLE, pas cosmétique. Le volet contient un titre en
+  // `position: absolute` (`.bo-sr-only`). Sans ancêtre positionné, son bloc
+  // conteneur serait la PAGE : `overflow: hidden` sur `.bo-app` ne le rogne pas
+  // (`.bo-app` est en `position: static`, il n'est donc pas dans sa chaîne de
+  // conteneurs), et un titre situé à 2 000 px dans le contenu défilant étire le
+  // document d'autant. Résultat : la page entière se met à défiler et emporte
+  // le rail et la barre horizontale — exactement le défaut corrigé en F8.1.
+  position: relative;
+}
+
+.bo-fold[open] > .bo-fold__summary {
+  border-bottom: 1px solid var(--k-line);
+}
+
+.bo-fold__summary {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 22px;
+  cursor: pointer;
+  list-style: none;
+
+  // Le triangle par défaut des navigateurs ne se style pas ; on le remplace.
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: '▸';
+    color: var(--k-muted);
+    font-size: 0.8rem;
+    transition: transform 0.15s ease;
+  }
+
+  &:hover {
+    background: var(--k-cream);
+  }
+}
+
+.bo-fold[open] > .bo-fold__summary::before {
+  transform: rotate(90deg);
+}
+
+.bo-fold__title {
+  font-family: var(--k-font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--k-ink);
+}
+
+/// Le résumé : ce que le volet dit sans qu'on l'ouvre. Sans lui, replier
+/// reviendrait à cacher.
+.bo-fold__digest {
+  color: var(--k-muted);
+  font-size: 0.85rem;
+
+  .is-alert {
+    color: var(--k-danger);
+    font-weight: 600;
+  }
+}
+
+.bo-fold__body {
+  padding: 18px 22px 20px;
+}
+
+/// Titre conservé pour les lecteurs d'écran : le `<summary>` porte le libellé
+/// visible, mais la section garde son niveau de titre dans le plan du document.
+///
+/// ⚠️ **À n'utiliser que dans un ancêtre `position: relative`** (`.bo-fold` en
+/// fournit un). Ailleurs, cet élément absolu prend la page pour bloc conteneur,
+/// échappe au `overflow: hidden` de la coquille et fait défiler tout le
+/// back-office — rail et barre horizontale compris.
+.bo-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/// Marque d'anomalie posée sur la ligne elle-même (« en retard », « échu »).
+/// Le bandeau de tête dit combien ; cette marque dit lesquelles.
+.bo-late {
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: var(--k-radius-pill);
+  background: rgba(199, 59, 77, 0.1);
+  color: var(--k-danger);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

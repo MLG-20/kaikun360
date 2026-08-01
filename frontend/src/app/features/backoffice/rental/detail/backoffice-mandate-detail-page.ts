@@ -12,6 +12,7 @@ import {
   MandateReport,
 } from '../../../../core/api/admin.service';
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
+import { FicheFlag, FicheSignalsComponent } from '../../shared/fiche-signals/fiche-signals';
 
 /** Formulaire actuellement déplié dans la fiche (un seul à la fois). */
 type OpenForm = 'rent' | 'incident' | 'expense' | 'payout' | null;
@@ -44,9 +45,10 @@ type OpenForm = 'rent' | 'incident' | 'expense' | 'payout' | null;
  */
 @Component({
   selector: 'app-backoffice-mandate-detail-page',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, FicheSignalsComponent],
   templateUrl: './backoffice-mandate-detail-page.html',
-  styleUrl: './backoffice-mandate-detail-page.scss',
+  // Feuille des volets repliables COMMUNE aux fiches hiérarchisées en F8.3.
+  styleUrls: ['./backoffice-mandate-detail-page.scss', '../../shared/fiche-blocks.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BackofficeMandateDetailPageComponent {
@@ -105,6 +107,146 @@ export class BackofficeMandateDetailPageComponent {
   protected readonly openIncidents = computed(() =>
     (this.mandate()?.incidents ?? []).filter((incident) => incident.status !== 'resolu'),
   );
+
+  // --- Ce qui appelle une décision (F8.3) --------------------------------------
+
+  /**
+   * Échéances passées et toujours impayées.
+   *
+   * Un loyer « en attente » dont la date est à venir est normal ; le même
+   * après l'échéance est un impayé. La liste ne faisait pas la différence :
+   * les deux portaient le même badge, à quinze lignes du haut de page.
+   */
+  protected readonly lateRents = computed(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return (this.mandate()?.rents ?? []).filter(
+      (rent) => rent.status !== 'paye' && !!rent.due_date && rent.due_date.slice(0, 10) < today,
+    );
+  });
+
+  /** Cette échéance est-elle échue et impayée ? (marque posée sur la ligne) */
+  protected isLateRent(rent: MandateRent): boolean {
+    return this.lateRents().some((late) => late.id === rent.id);
+  }
+
+  /** Reversements préparés mais jamais exécutés : de l'argent dû, en attente. */
+  protected readonly pendingPayouts = computed(() =>
+    (this.mandate()?.payouts ?? []).filter((payout) => payout.status !== 'effectue'),
+  );
+
+  /** Incidents ouverts en priorité critique ou élevée. */
+  protected readonly urgentIncidents = computed(() =>
+    this.openIncidents().filter((incident) => incident.priority === 'p1' || incident.priority === 'p2'),
+  );
+
+  /** Total encore dû au propriétaire sur le mois affiché. */
+  protected readonly leftToPayout = computed(() => {
+    const report = this.report();
+    if (!report) {
+      return 0;
+    }
+    return Math.max(0, report.net_owner_xof - report.payouts.total_xof);
+  });
+
+  /**
+   * **Le bandeau qui manquait.** Sept cartes empilées, dont deux tableaux de
+   * douze lignes : un incident critique ouvert et un reversement en attente se
+   * lisaient au même niveau que les clauses du contrat, six écrans plus bas.
+   *
+   * Rien d'inventé ici : chaque signal se relit dans la section vers laquelle
+   * il renvoie.
+   */
+  protected readonly flags = computed<FicheFlag[]>(() => {
+    const mandate = this.mandate();
+    if (!mandate) {
+      return [];
+    }
+    const flags: FicheFlag[] = [];
+
+    const late = this.lateRents();
+    if (late.length) {
+      const total = late.reduce((sum, rent) => sum + (rent.amount_xof || 0), 0);
+      flags.push({
+        level: 'alerte',
+        text: `${late.length} loyer${late.length > 1 ? 's' : ''} échu${late.length > 1 ? 's' : ''} et impayé${late.length > 1 ? 's' : ''} — ${this.money(total)}.`,
+        anchor: 'mn-loyers',
+        cta: 'Encaisser',
+      });
+    }
+
+    const urgent = this.urgentIncidents();
+    if (urgent.length) {
+      flags.push({
+        level: 'alerte',
+        text: `${urgent.length} incident${urgent.length > 1 ? 's' : ''} prioritaire${urgent.length > 1 ? 's' : ''} ouvert${urgent.length > 1 ? 's' : ''} (${urgent[0].title}).`,
+        anchor: 'mn-incidents',
+        cta: 'Traiter',
+      });
+    }
+
+    const pending = this.pendingPayouts();
+    if (pending.length) {
+      const total = pending.reduce((sum, payout) => sum + (payout.amount_xof || 0), 0);
+      flags.push({
+        level: 'alerte',
+        text: `${pending.length} reversement${pending.length > 1 ? 's' : ''} préparé${pending.length > 1 ? 's' : ''} mais non exécuté${pending.length > 1 ? 's' : ''} — ${this.money(total)} dus au propriétaire.`,
+        anchor: 'mn-reversements',
+        cta: 'Exécuter',
+      });
+    }
+
+    const others = this.openIncidents().length - urgent.length;
+    if (others > 0) {
+      flags.push({
+        level: 'vigilance',
+        text: `${others} autre${others > 1 ? 's' : ''} incident${others > 1 ? 's' : ''} ouvert${others > 1 ? 's' : ''}.`,
+        anchor: 'mn-incidents',
+        cta: 'Voir',
+      });
+    }
+
+    // Un mois déficitaire n'est pas anormal (gros travaux) — mais il se décide,
+    // il ne se découvre pas au moment de reverser.
+    const report = this.report();
+    if (report && report.net_owner_xof < 0) {
+      flags.push({
+        level: 'vigilance',
+        text: `Net propriétaire négatif sur ${report.period.label} (${this.money(report.net_owner_xof)}) : les dépenses dépassent les loyers encaissés.`,
+        anchor: 'mn-rapport',
+        cta: 'Voir le rapport',
+      });
+    }
+
+    // Un mandat qui expire sans renouvellement fait perdre le bien à la gestion.
+    const daysLeft = this.daysUntil(mandate.end_date);
+    if (daysLeft !== null && daysLeft <= 60) {
+      flags.push({
+        level: daysLeft < 0 ? 'alerte' : 'vigilance',
+        text:
+          daysLeft < 0
+            ? `Mandat arrivé à terme le ${this.shortDate(mandate.end_date)}.`
+            : `Mandat arrivant à terme dans ${daysLeft} jour(s), le ${this.shortDate(mandate.end_date)}.`,
+        anchor: 'mn-contrat',
+        cta: 'Voir le contrat',
+      });
+    }
+
+    return flags;
+  });
+
+  /** Jours restants avant une date ; `null` si le mandat est sans terme. */
+  private daysUntil(iso: string | null): number | null {
+    if (!iso) {
+      return null;
+    }
+    return Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
+  }
+
+  /** Total des dépenses listées, affiché dans le résumé du volet. */
+  protected readonly expensesTotal = computed(() =>
+    (this.mandate()?.expenses ?? []).reduce((sum, expense) => sum + (expense.amount_xof || 0), 0),
+  );
+
 
   constructor() {
     if (Number.isNaN(this.mandateId)) {

@@ -18,25 +18,20 @@
     </div>
   </header>
 
-  <!-- ===================== LE DOSSIER ===================== -->
-  <section class="tb-card">
-    <h2 class="tb-card__title">Le dossier</h2>
-    <dl class="tb-grid">
-      <div><dt>Client</dt><dd>{{ p.client?.name || '—' }}</dd></div>
-      <div><dt>Contact</dt><dd>{{ p.client?.email || '—' }}<br /><span class="tb-muted">{{ p.client?.phone || '' }}</span></dd></div>
-      <div><dt>Type de projet</dt><dd>{{ p.project_type_label || '—' }}</dd></div>
-      <div><dt>Pays de résidence</dt><dd>{{ p.residence_country || '—' }}</dd></div>
-      <div><dt>Budget</dt><dd>{{ xof(p.budget_xof) }}</dd></div>
-      <div><dt>Agent dédié</dt><dd>{{ p.agent?.name || 'Non affecté' }}</dd></div>
-    </dl>
-    @if (p.description) {
-      <p class="tb-desc">{{ p.description }}</p>
-    }
-  </section>
+  <!--
+    ============ CE QUI APPELLE UNE DÉCISION (F8.3) ============
+    « Agent dédié : Non affecté » se lisait comme une ligne parmi six, au milieu
+    de l'identité du client. C'est pourtant la promesse même du service : un
+    dossier sans référent, ou sans nouvelle depuis deux mois, est une promesse
+    rompue — et l'écran ne le disait pas.
+  -->
+  <app-fiche-signals [flags]="flags()" subject="dossier" />
 
-  <!-- ===================== PILOTAGE ===================== -->
+  <!-- ===================== PILOTAGE =====================
+       Remonté devant l'identité du client (F8.3) : c'est le seul bloc de la
+       fiche où l'on agit — affecter l'agent, faire avancer le dossier. -->
   @if (canWrite()) {
-    <section class="tb-card">
+    <section class="tb-card" id="dp-pilotage">
       <h2 class="tb-card__title">Pilotage du dossier</h2>
 
       <div class="tb-control">
@@ -87,9 +82,49 @@
     </section>
   }
 
-  <!-- ===================== RAPPORTS DE SUIVI ===================== -->
+  <!-- ===================== LE DOSSIER ===================== -->
   <section class="tb-card">
-    <h2 class="tb-card__title">Rapports de suivi</h2>
+    <h2 class="tb-card__title">Le dossier</h2>
+    <dl class="tb-grid">
+      <div><dt>Client</dt><dd>{{ p.client?.name || '—' }}</dd></div>
+      <div><dt>Contact</dt><dd>{{ p.client?.email || '—' }}<br /><span class="tb-muted">{{ p.client?.phone || '' }}</span></dd></div>
+      <div><dt>Type de projet</dt><dd>{{ p.project_type_label || '—' }}</dd></div>
+      <div><dt>Pays de résidence</dt><dd>{{ p.residence_country || '—' }}</dd></div>
+      <div><dt>Budget</dt><dd>{{ xof(p.budget_xof) }}</dd></div>
+      <!-- L'absence d'agent est un manque, pas une valeur : elle se marque. -->
+      <div>
+        <dt>Agent dédié</dt>
+        <dd>
+          @if (p.agent?.name) {
+            {{ p.agent!.name }}
+          } @else {
+            <span class="bo-late">non affecté</span>
+          }
+        </dd>
+      </div>
+    </dl>
+    @if (p.description) {
+      <p class="tb-desc">{{ p.description }}</p>
+    }
+  </section>
+
+  <!-- ===================== RAPPORTS DE SUIVI =====================
+       Déplié d'office tant qu'il n'y a rien à montrer au client : c'est
+       justement le cas où l'agent doit agir. -->
+  <details class="tb-card bo-fold" id="dp-rapports" [open]="!reports().length">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Rapports de suivi</span>
+      <span class="bo-fold__digest">
+        @if (reports().length) {
+          {{ reports().length }} rapport(s) · dernier le {{ shortDate(lastReportDate()) }}
+        } @else {
+          <span class="is-alert">aucun rapport</span>
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
+    <h2 class="tb-card__title bo-sr-only">Rapports de suivi</h2>
     <p class="tb-card__hint">Vérification terrain, avancement chantier, reporting à distance pour le client.</p>
 
     @if (reports().length) {
@@ -151,5 +186,6 @@
         }
       </div>
     }
-  </section>
+    </div>
+  </details>
 }

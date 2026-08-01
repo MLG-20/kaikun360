@@ -129,6 +129,40 @@ la remettre en favori.
 - **`app-catalog`** : `universe` (requis) — clé d'univers du registre.
 - **`app-search-engine`** : aucune entrée (navigue lui-même vers `/recherche`).
 
+## Saisie de contenu éditorial (F8.3)
+
+| Composant | Sélecteur | Rôle |
+| --- | --- | --- |
+| `RichTextEditorComponent` | `app-rich-text-editor` | **Éditeur de texte enrichi** du back-office : titres, gras/italique, listes, liens, citation — **par des boutons, aucune balise à taper**. Utilisé pour le corps des pages de contenu (`Paramètres → Contenu → Pages`). |
+
+**À quoi ça sert, en clair :** le corps d'une page publique (mentions légales,
+CGU, à propos) est du HTML. Avant, le back-office n'offrait qu'une grande zone
+de texte : pour obtenir un titre, l'agent devait écrire lui-même `<h2>…</h2>`.
+En pratique, soit il appelait un développeur pour changer une virgule, soit il
+tapait du texte brut qui arrivait en un seul pavé sur le site. Désormais il
+écrit, il sélectionne, il clique — comme dans un traitement de texte.
+
+**Côté technique :**
+- **Aucune dépendance** : `contenteditable` + `document.execCommand`. Déprécié
+  mais universel, et une bibliothèque d'édition apporterait son propre format de
+  document plus ~150 Ko au premier chargement du site, pour six boutons.
+- Implémente **`ControlValueAccessor`** : `[(ngModel)]="…"` fonctionne tel quel.
+  Entrées : `placeholder`, `ariaLabel`, `rows`.
+- **Le format stocké n'a pas changé** : c'est le même HTML qu'avant, donc les
+  pages déjà en base s'ouvrent sans conversion et le rendu public est intact.
+- [`rich-text.sanitizer.ts`](components/rich-text-editor/rich-text.sanitizer.ts) —
+  **liste blanche stricte** (`p, br, strong, em, u, h2, h3, h4, ul, ol, li, a,
+  blockquote`), appliquée à l'ouverture, **au collé** et à la sortie du champ.
+  Ce qui n'y figure pas est **déballé** : on garde le texte, on jette la balise —
+  la rédaction n'est jamais perdue. Un `<h1>` devient un `<h2>` (le titre de la
+  page en est déjà un), `<b>`/`<i>` deviennent `<strong>`/`<em>`, un lien en
+  `javascript:` perd son adresse mais garde son libellé, un lien sortant reçoit
+  `target="_blank" rel="noopener noreferrer"`, et le texte laissé nu est enveloppé
+  dans un `<p>`. La fonction est **idempotente** (couverte par 15 tests).
+- ⚠️ **La réponse d'une FAQ n'utilise pas cet éditeur** : la page publique la rend
+  en `{{ answer }}` (texte brut), pas en HTML — les balises s'y afficheraient en
+  clair. Elle garde son `<textarea>`.
+
 ## Directives (F1)
 
 | Directive | Attribut | Rôle |

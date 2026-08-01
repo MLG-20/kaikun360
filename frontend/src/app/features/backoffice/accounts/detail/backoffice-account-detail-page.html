@@ -36,34 +36,21 @@
     <p class="ad-state ad-state--error" role="alert">{{ actionError() }}</p>
   }
 
-  <!-- Informations -->
-  <section class="ad-grid">
-    <div class="ad-card">
-      <h2 class="ad-card__title">Identité &amp; contact</h2>
-      <dl class="ad-dl">
-        <dt>Nom</dt><dd>{{ u.name }}</dd>
-        <dt>E-mail</dt><dd>{{ u.email || '—' }}</dd>
-        <dt>Téléphone</dt><dd>{{ u.phone || '—' }}</dd>
-        <dt>Adresse</dt><dd>{{ u.address || '—' }}</dd>
-        <dt>Localisation</dt><dd>{{ placeLabel(u) }}</dd>
-      </dl>
-    </div>
+  <!--
+    ============ CE QUI APPELLE UNE DÉCISION (F8.3) ============
+    On n'ouvre pas la fiche d'un compte pour relire son adresse, mais pour
+    trancher : activer, suspendre, réclamer une pièce. Ces signaux étaient dans
+    la page — dispersés dans deux listes de définition.
+  -->
+  <app-fiche-signals [flags]="flags()" subject="compte" />
 
-    <div class="ad-card">
-      <h2 class="ad-card__title">Profil &amp; vérification</h2>
-      <dl class="ad-dl">
-        <dt>Type de profil</dt><dd>{{ u.profile?.type_label || u.profile?.type || '—' }}</dd>
-        <dt>Statut du compte</dt><dd>{{ u.status_label || u.status || '—' }}</dd>
-        <dt>Vérification profil</dt><dd>{{ u.profile?.verification_status || '—' }}</dd>
-        <dt>E-mail vérifié</dt><dd>{{ u.email_verified_at ? longDate(u.email_verified_at) : 'Non' }}</dd>
-        <dt>Téléphone vérifié</dt><dd>{{ u.phone_verified_at ? longDate(u.phone_verified_at) : 'Non' }}</dd>
-        <dt>Inscription</dt><dd>{{ longDate(u.created_at) }}</dd>
-      </dl>
-    </div>
-  </section>
-
-  <!-- Pilotage -->
-  <section class="ad-card ad-manage">
+  <!--
+    ============ PILOTAGE ============
+    Remonté en tête (F8.3) : c'est le seul bloc de la fiche où l'on agit. Il
+    venait après deux cartes d'identité, soit un écran de défilement avant le
+    premier bouton.
+  -->
+  <section class="ad-card ad-manage" id="ad-pilotage">
     <h2 class="ad-card__title">Pilotage du compte</h2>
 
     @if (!canManage()) {
@@ -137,9 +124,50 @@
     }
   </section>
 
-  <!-- Pièces déposées -->
-  <section class="ad-card">
-    <h2 class="ad-card__title">Pièces déposées ({{ documents().length }})</h2>
+  <!-- Informations : descendues sous le pilotage (F8.3), elles se consultent
+       une fois la décision engagée, pas avant. -->
+  <section class="ad-grid" id="ad-profil">
+    <div class="ad-card">
+      <h2 class="ad-card__title">Identité &amp; contact</h2>
+      <dl class="ad-dl">
+        <dt>Nom</dt><dd>{{ u.name }}</dd>
+        <dt>E-mail</dt><dd>{{ u.email || '—' }}</dd>
+        <dt>Téléphone</dt><dd>{{ u.phone || '—' }}</dd>
+        <dt>Adresse</dt><dd>{{ u.address || '—' }}</dd>
+        <dt>Localisation</dt><dd>{{ placeLabel(u) }}</dd>
+      </dl>
+    </div>
+
+    <div class="ad-card">
+      <h2 class="ad-card__title">Profil &amp; vérification</h2>
+      <dl class="ad-dl">
+        <dt>Type de profil</dt><dd>{{ u.profile?.type_label || u.profile?.type || '—' }}</dd>
+        <dt>Statut du compte</dt><dd>{{ u.status_label || u.status || '—' }}</dd>
+        <!-- Le code brut de l'enum était affiché tel quel (« non_verifie ») :
+             lisible par un développeur, pas par un agent. -->
+        <dt>Vérification profil</dt><dd>{{ verificationLabel(u.profile?.verification_status ?? null) }}</dd>
+        <dt>E-mail vérifié</dt><dd>{{ u.email_verified_at ? longDate(u.email_verified_at) : 'Non' }}</dd>
+        <dt>Téléphone vérifié</dt><dd>{{ u.phone_verified_at ? longDate(u.phone_verified_at) : 'Non' }}</dd>
+        <dt>Inscription</dt><dd>{{ longDate(u.created_at) }}</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Pièces déposées : dépliées d'office s'il y a quelque chose à examiner. -->
+  <details class="ad-card bo-fold" id="ad-pieces" [open]="documents().length > 0">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Pièces déposées</span>
+      <span class="bo-fold__digest">
+        @if (documents().length) {
+          {{ documents().length }} pièce(s) · profil : {{ verificationLabel(u.profile?.verification_status ?? null) }}
+        } @else {
+          aucune pièce déposée
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
+    <h2 class="ad-card__title bo-sr-only">Pièces déposées</h2>
     @if (documents().length === 0) {
       <p class="ad-note">Aucune pièce justificative déposée par ce compte.</p>
     } @else {
@@ -166,11 +194,25 @@
         </table>
       </div>
     }
-  </section>
+    </div>
+  </details>
 
-  <!-- Historique (journal d'audit — exigence CDC « historique ») -->
-  <section class="ad-card">
-    <h2 class="ad-card__title">Historique du compte</h2>
+  <!-- Historique (journal d'audit — exigence CDC « historique »).
+       Replié : c'est une archive, consultée en cas de litige. -->
+  <details class="ad-card bo-fold" id="ad-historique">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Historique du compte</span>
+      <span class="bo-fold__digest">
+        @if (activity().length) {
+          {{ activity().length }} action(s) · dernière le {{ dateTime(activity()[0].created_at) }}
+        } @else {
+          aucune action enregistrée
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
+    <h2 class="ad-card__title bo-sr-only">Historique du compte</h2>
     @if (activity().length === 0) {
       <p class="ad-note">Aucune action enregistrée pour ce compte.</p>
     } @else {
@@ -189,5 +231,6 @@
         }
       </ul>
     }
-  </section>
+    </div>
+  </details>
 }

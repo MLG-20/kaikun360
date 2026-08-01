@@ -1,0 +1,18 @@
+@if (flags().length) {
+  <section class="fs" [class.is-alert]="hasAlert()" aria-label="Points d’attention">
+    <h2 class="fs__title">
+      {{ hasAlert() ? 'Ce ' + subject() + ' appelle une décision' : 'À surveiller' }}
+    </h2>
+    <ul class="fs__list">
+      @for (flag of flags(); track flag.text) {
+        <li class="fs__item" [class]="'is-' + flag.level">
+          <span class="fs__dot" aria-hidden="true"></span>
+          <span class="fs__text">{{ flag.text }}</span>
+          <button type="button" class="fs__cta" (click)="goTo(flag.anchor)">
+            {{ flag.cta }} →
+          </button>
+        </li>
+      }
+    </ul>
+  </section>
+}

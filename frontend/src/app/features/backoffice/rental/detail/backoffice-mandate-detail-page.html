@@ -31,25 +31,21 @@
     <p class="mn-state mn-state--ok" role="status">{{ actionMessage() }}</p>
   }
 
-  <!-- ============ LE CONTRAT ============ -->
-  <section class="mn-card">
-    <h2 class="mn-card-title">Le contrat</h2>
-    <dl class="mn-facts">
-      <div><dt>Commission</dt><dd>{{ m.commission_rate }} %</dd></div>
-      <div><dt>Début</dt><dd>{{ shortDate(m.start_date) }}</dd></div>
-      <div><dt>Fin</dt><dd>{{ m.end_date ? shortDate(m.end_date) : 'Sans terme' }}</dd></div>
-      <div><dt>Incidents ouverts</dt><dd>{{ m.summary.incidents_ouverts }}</dd></div>
-    </dl>
-    @if (m.terms) {
-      <div class="mn-terms">
-        <h3 class="mn-subtitle">Clauses</h3>
-        <p>{{ m.terms }}</p>
-      </div>
-    }
-  </section>
+  <!--
+    ============ CE QUI APPELLE UNE DÉCISION (F8.3) ============
+    Six sections de même poids, dont quatre tableaux : un impayé échu et un
+    reversement en attente se lisaient au même niveau que les clauses du
+    contrat. Ce bandeau n'ajoute aucune donnée — il remonte celles qui décident.
+  -->
+  <app-fiche-signals [flags]="flags()" subject="mandat" />
 
-  <!-- ============ RAPPORT MENSUEL ============ -->
-  <section class="mn-card">
+  <!--
+    ============ RAPPORT MENSUEL ============
+    Remonté en tête (F8.3) : c'est le seul bloc qui répond à « ce mandat
+    rapporte-t-il quelque chose ce mois-ci ? ». Il était en troisième position,
+    derrière des données de contrat qui ne changent jamais.
+  -->
+  <section class="mn-card" id="mn-rapport">
     <div class="mn-card-head">
       <h2 class="mn-card-title">Rapport mensuel</h2>
       <div class="mn-month">
@@ -90,16 +86,72 @@
         <div class="mn-kpi">
           <span class="mn-kpi__label">Déjà reversé</span>
           <span class="mn-kpi__value">{{ money(r.payouts.total_xof) }}</span>
-          <span class="mn-kpi__hint">{{ r.incidents.opened }} incident(s) ouvert(s), {{ r.incidents.resolved }} résolu(s)</span>
+          <!--
+            Ce qui reste dû est la conclusion du rapport : c'est le geste que
+            l'agent doit poser. L'encart affichait à la place un compteur
+            d'incidents, sans rapport avec le reversement.
+          -->
+          <span class="mn-kpi__hint" [class.is-alert]="leftToPayout() > 0">
+            @if (leftToPayout() > 0) {
+              reste {{ money(leftToPayout()) }} à reverser
+            } @else {
+              rien à reverser sur la période
+            }
+          </span>
         </div>
       </div>
     }
   </section>
 
+  <!--
+    ============ LE CONTRAT ============
+    Descendu et replié (F8.3) : commission, dates et clauses ne changent pas
+    d'un mois sur l'autre. On les consulte, on n'y décide rien — le résumé du
+    volet suffit à la relecture courante.
+  -->
+  <details class="mn-card bo-fold" id="mn-contrat">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Le contrat</span>
+      <span class="bo-fold__digest">
+        commission {{ m.commission_rate }} %
+        · depuis le {{ shortDate(m.start_date) }}
+        · {{ m.end_date ? 'terme le ' + shortDate(m.end_date) : 'sans terme' }}
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
+      <h2 class="mn-card-title bo-sr-only">Le contrat</h2>
+      <dl class="mn-facts">
+        <div><dt>Commission</dt><dd>{{ m.commission_rate }} %</dd></div>
+        <div><dt>Début</dt><dd>{{ shortDate(m.start_date) }}</dd></div>
+        <div><dt>Fin</dt><dd>{{ m.end_date ? shortDate(m.end_date) : 'Sans terme' }}</dd></div>
+        <div><dt>Incidents ouverts</dt><dd>{{ m.summary.incidents_ouverts }}</dd></div>
+      </dl>
+      @if (m.terms) {
+        <div class="mn-terms">
+          <h3 class="mn-subtitle">Clauses</h3>
+          <p>{{ m.terms }}</p>
+        </div>
+      }
+    </div>
+  </details>
+
   <!-- ============ LOYERS ============ -->
-  <section class="mn-card">
+  <!-- Déplié d'office s'il y a un impayé échu : il y a un geste en attente. -->
+  <details class="mn-card bo-fold" id="mn-loyers" [open]="lateRents().length > 0">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Loyers</span>
+      <span class="bo-fold__digest">
+        {{ (m.rents ?? []).length }} échéance(s)
+        @if (lateRents().length) {
+          · <span class="is-alert">{{ lateRents().length }} impayé(s) échu(s)</span>
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
     <div class="mn-card-head">
-      <h2 class="mn-card-title">Loyers</h2>
+      <h2 class="mn-card-title bo-sr-only">Loyers</h2>
       <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleForm('rent')">
         {{ openForm() === 'rent' ? 'Annuler' : 'Ajouter une échéance' }}
       </button>
@@ -146,7 +198,14 @@
               <td><span class="mn-muted">{{ shortDate(rent.due_date) }}</span></td>
               <td>{{ rent.tenant_name || '—' }}</td>
               <td><span class="mn-strong">{{ money(rent.amount_xof) }}</span></td>
-              <td><span class="mn-badge" [class]="rentStatusClass(rent.status)">{{ rent.status_label || rent.status }}</span></td>
+              <td>
+                <span class="mn-badge" [class]="rentStatusClass(rent.status)">{{ rent.status_label || rent.status }}</span>
+                <!-- « En attente » avant l'échéance et « en attente » après ne
+                     sont pas la même chose : la seconde est un impayé. -->
+                @if (isLateRent(rent)) {
+                  <span class="bo-late">échu</span>
+                }
+              </td>
               <td class="mn-actions-cell">
                 @if (rent.status !== 'paye') {
                   <button type="button" class="k-btn k-btn--sm k-btn--primary" [disabled]="saving()" (click)="markRentPaid(rent)">
@@ -163,12 +222,30 @@
         </tbody>
       </table>
     </div>
-  </section>
+    </div>
+  </details>
 
   <!-- ============ INCIDENTS ============ -->
-  <section class="mn-card">
+  <!-- Déplié d'office tant qu'un incident est ouvert. -->
+  <details class="mn-card bo-fold" id="mn-incidents" [open]="openIncidents().length > 0">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Incidents</span>
+      <span class="bo-fold__digest">
+        @if (openIncidents().length) {
+          <span class="is-alert">{{ openIncidents().length }} ouvert(s)</span>
+          @if (urgentIncidents().length) {
+            · {{ urgentIncidents().length }} prioritaire(s)
+          }
+        } @else {
+          aucun incident ouvert
+        }
+        · {{ (m.incidents ?? []).length }} au total
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
     <div class="mn-card-head">
-      <h2 class="mn-card-title">Incidents</h2>
+      <h2 class="mn-card-title bo-sr-only">Incidents</h2>
       <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleForm('incident')">
         {{ openForm() === 'incident' ? 'Annuler' : 'Signaler un incident' }}
       </button>
@@ -231,12 +308,23 @@
         </tbody>
       </table>
     </div>
-  </section>
+    </div>
+  </details>
 
   <!-- ============ DÉPENSES ============ -->
-  <section class="mn-card">
+  <!-- Historique comptable : rien n'y attend de décision, le total suffit. -->
+  <details class="mn-card bo-fold" id="mn-depenses">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Dépenses</span>
+      <span class="bo-fold__digest">
+        {{ (m.expenses ?? []).length }} ligne(s)
+        @if (expensesTotal()) { · {{ money(expensesTotal()) }} }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
     <div class="mn-card-head">
-      <h2 class="mn-card-title">Dépenses</h2>
+      <h2 class="mn-card-title bo-sr-only">Dépenses</h2>
       <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleForm('expense')">
         {{ openForm() === 'expense' ? 'Annuler' : 'Enregistrer une dépense' }}
       </button>
@@ -301,12 +389,25 @@
         </tbody>
       </table>
     </div>
-  </section>
+    </div>
+  </details>
 
   <!-- ============ REVERSEMENTS ============ -->
-  <section class="mn-card">
+  <!-- Déplié d'office s'il reste de l'argent dû au propriétaire. -->
+  <details class="mn-card bo-fold" id="mn-reversements" [open]="pendingPayouts().length > 0">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Reversements au propriétaire</span>
+      <span class="bo-fold__digest">
+        {{ (m.payouts ?? []).length }} reversement(s)
+        @if (pendingPayouts().length) {
+          · <span class="is-alert">{{ pendingPayouts().length }} en attente d’exécution</span>
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
     <div class="mn-card-head">
-      <h2 class="mn-card-title">Reversements au propriétaire</h2>
+      <h2 class="mn-card-title bo-sr-only">Reversements au propriétaire</h2>
       <button type="button" class="k-btn k-btn--sm k-btn--primary" (click)="toggleForm('payout')">
         {{ openForm() === 'payout' ? 'Annuler' : 'Préparer un reversement' }}
       </button>
@@ -360,7 +461,8 @@
         </tbody>
       </table>
     </div>
-  </section>
+    </div>
+  </details>
 
   <p class="mn-note">
     Les listes ci-dessus affichent les <strong>12 dernières lignes</strong> de chaque

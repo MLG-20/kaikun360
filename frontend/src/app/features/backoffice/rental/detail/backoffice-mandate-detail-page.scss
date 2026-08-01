@@ -171,6 +171,11 @@
   &__hint {
     font-size: 0.74rem;
     color: var(--k-muted);
+
+    &.is-alert {
+      color: var(--k-danger);
+      font-weight: 700;
+    }
   }
 }
 

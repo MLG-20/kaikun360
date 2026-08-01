@@ -18,7 +18,61 @@
     </span>
   </header>
 
-  <section class="tb-card">
+  <!--
+    ============ CE QUI APPELLE UNE DÉCISION (F8.3) ============
+    Le devis jamais envoyé et la brique du pack sans prestataire étaient
+    lisibles — à condition de croiser soi-même deux tableaux distants.
+  -->
+  <app-fiche-signals [flags]="flags()" subject="dossier" />
+
+  <!--
+    ============ CHIFFRES CLÉS ============
+    Ce que l'entreprise paie et ce que le pack coûte étaient dans deux sections
+    éloignées : la marge réelle ne se lisait nulle part.
+  -->
+  <section class="bo-keys" aria-label="Chiffres clés">
+    <div class="bo-key">
+      <span class="bo-key__label">Budget indicatif</span>
+      <strong class="bo-key__value">{{ xof(req.budget_xof) }}</strong>
+      <span class="bo-key__hint">annoncé par l’entreprise</span>
+    </div>
+    <div class="bo-key">
+      <span class="bo-key__label">Pack vendu</span>
+      @if (acceptedQuote(); as quote) {
+        <strong class="bo-key__value">{{ xof(quote.total_xof) }}</strong>
+        <span class="bo-key__hint">{{ quote.reference }}</span>
+      } @else {
+        <strong class="bo-key__value is-muted">—</strong>
+        <span class="bo-key__hint">aucun devis accepté</span>
+      }
+    </div>
+    <div class="bo-key">
+      <span class="bo-key__label">Engagé prestataires</span>
+      <strong class="bo-key__value">{{ committed() ? xof(committed()) : '—' }}</strong>
+      <span class="bo-key__hint">{{ missionsOfActive().length }} mission(s)</span>
+    </div>
+    <div class="bo-key">
+      <span class="bo-key__label">Marge</span>
+      <!-- `!== null` et non `@if (margin(); as m)` : une marge nulle est une
+           marge, pas une absence de calcul. -->
+      @if (margin() !== null) {
+        <strong class="bo-key__value">{{ xof(margin()) }}</strong>
+        <span class="bo-key__hint" [class.is-alert]="margin()! < 0">
+          {{ margin()! < 0 ? 'le pack coûte plus qu’il n’a été vendu' : 'vendu − engagé' }}
+        </span>
+      } @else {
+        <strong class="bo-key__value is-muted">—</strong>
+        <span class="bo-key__hint">calculable une fois le devis accepté</span>
+      }
+    </div>
+    <div class="bo-key">
+      <span class="bo-key__label">Participants</span>
+      <strong class="bo-key__value">{{ req.participants }}</strong>
+      <span class="bo-key__hint">{{ req.city || 'ville non précisée' }}</span>
+    </div>
+  </section>
+
+  <section class="tb-card" id="tb-demande">
     <h2 class="tb-card__title">La demande</h2>
     <dl class="tb-grid">
       <div><dt>Entreprise</dt><dd>{{ req.company?.name || '—' }}</dd></div>
@@ -41,9 +95,28 @@
     }
   </section>
 
-  <!-- ===================== DEVIS (PACK) ===================== -->
-  <section class="tb-card">
-    <h2 class="tb-card__title">Devis du pack</h2>
+  <!-- ===================== DEVIS (PACK) =====================
+       Déplié d'office tant qu'un devis attend d'être envoyé, ou qu'aucun
+       devis n'existe : dans les deux cas, un geste est en attente. -->
+  <details class="tb-card bo-fold" id="tb-devis" [open]="hasDraftQuote() || !req.quotes.length">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Devis du pack</span>
+      <span class="bo-fold__digest">
+        @if (req.quotes.length) {
+          {{ req.quotes.length }} devis
+          @if (acceptedQuote(); as accepted) {
+            · accepté {{ xof(accepted.total_xof) }}
+          } @else if (hasDraftQuote()) {
+            · <span class="is-alert">brouillon à envoyer</span>
+          }
+        } @else {
+          aucun devis composé
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
+    <h2 class="tb-card__title bo-sr-only">Devis du pack</h2>
 
     @if (req.quotes.length) {
       @for (quote of req.quotes; track quote.id) {
@@ -138,11 +211,28 @@
         }
       </div>
     }
-  </section>
+    </div>
+  </details>
 
-  <!-- ===================== AFFECTATION PRESTATAIRES ===================== -->
-  <section class="tb-card">
-    <h2 class="tb-card__title">Affectation des prestataires</h2>
+  <!-- ===================== AFFECTATION PRESTATAIRES =====================
+       Déplié d'office s'il reste une brique du pack vendu sans prestataire. -->
+  <details class="tb-card bo-fold" id="tb-prestataires" [open]="unstaffedCategories().length > 0">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Affectation des prestataires</span>
+      <span class="bo-fold__digest">
+        @if (missionsOfActive().length) {
+          {{ missionsOfActive().length }} mission(s) · {{ xof(committed()) }} engagés
+        } @else {
+          aucun prestataire affecté
+        }
+        @if (unstaffedCategories().length) {
+          · <span class="is-alert">{{ unstaffedCategories().length }} brique(s) à pourvoir</span>
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
+    <h2 class="tb-card__title bo-sr-only">Affectation des prestataires</h2>
     <p class="tb-card__hint">
       Affectez un prestataire validé à chaque brique du pack. Chaque affectation
       crée une mission suivie de son côté (acceptation, exécution, commission).
@@ -216,5 +306,6 @@
         }
       </div>
     }
-  </section>
+    </div>
+  </details>
 }

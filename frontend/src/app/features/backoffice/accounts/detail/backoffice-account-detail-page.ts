@@ -11,6 +11,7 @@ import {
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { User } from '../../../../models/user.model';
+import { FicheFlag, FicheSignalsComponent } from '../../shared/fiche-signals/fiche-signals';
 
 /** Option générique d'un menu déroulant (valeur + libellé). */
 interface SelectOption {
@@ -30,12 +31,19 @@ interface SelectOption {
  *
  * Les garde-fous de hiérarchie sont serveur (pas d'auto-modification, super_admin
  * protégé, escalade réservée) → l'écran reflète les refus (403 / 422).
+ *
+ * **F8.3 — l'ordre de lecture suit l'ordre de décision.** La fiche ouvrait sur
+ * deux cartes d'identité, et les boutons venaient en troisième position ; les
+ * pièces et l'historique occupaient chacun une section entière pour des données
+ * qu'on ne consulte qu'à la demande. Désormais : signaux, pilotage, identité,
+ * puis pièces et historique repliés derrière leur résumé.
  */
 @Component({
   selector: 'app-backoffice-account-detail-page',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, FicheSignalsComponent],
   templateUrl: './backoffice-account-detail-page.html',
-  styleUrl: './backoffice-account-detail-page.scss',
+  // Feuille des volets repliables COMMUNE aux fiches hiérarchisées en F8.3.
+  styleUrls: ['./backoffice-account-detail-page.scss', '../../shared/fiche-blocks.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BackofficeAccountDetailPageComponent {
@@ -73,6 +81,116 @@ export class BackofficeAccountDetailPageComponent {
     if (target.roles.includes('super_admin') && !this.isSuperAdmin()) return false;
     return true;
   });
+
+  // --- Ce qui appelle une décision (F8.3) --------------------------------------
+
+  /**
+   * **Le bandeau qui manquait.** La fiche ouvrait sur deux cartes d'identité —
+   * nom, e-mail, adresse — avant d'arriver aux boutons. Or on n'ouvre pas la
+   * fiche d'un compte pour relire son adresse : on l'ouvre pour trancher.
+   * Activer ? Suspendre ? Réclamer une pièce ? Ces signaux étaient dans la
+   * page, dispersés entre deux listes de définition.
+   */
+  protected readonly flags = computed<FicheFlag[]>(() => {
+    const target = this.user();
+    if (!target) {
+      return [];
+    }
+    const flags: FicheFlag[] = [];
+    const verification = target.profile?.verification_status ?? null;
+    const documents = this.documents();
+
+    // Un compte qui attend depuis son inscription n'attend personne d'autre
+    // que l'agent qui lit cette fiche.
+    if (target.status === 'en_attente_verification') {
+      const days = this.daysSince(target.created_at);
+      flags.push({
+        level: 'alerte',
+        text: `Compte jamais activé, inscrit il y a ${days} jour(s).`,
+        anchor: 'ad-pilotage',
+        cta: 'Activer',
+      });
+    }
+
+    if (target.status === 'suspendu') {
+      flags.push({
+        level: 'alerte',
+        text: 'Compte suspendu : à réactiver ou à désactiver définitivement.',
+        anchor: 'ad-pilotage',
+        cta: 'Trancher',
+      });
+    }
+
+    // Des pièces déposées et un profil qui reste non vérifié : le dossier
+    // attend une lecture humaine. C'est le seul signal que le dépôt produit —
+    // rien, côté serveur, ne fait avancer le statut d'une pièce tout seul.
+    if (documents.length && verification !== 'verifie' && verification !== 'rejete') {
+      flags.push({
+        level: 'alerte',
+        text: `${documents.length} pièce(s) déposée(s), profil toujours « ${this.verificationLabel(verification)} ».`,
+        anchor: 'ad-pieces',
+        cta: 'Examiner',
+      });
+    }
+
+    // L'inverse : rien à examiner parce que rien n'a été demandé.
+    if (!documents.length && verification !== 'verifie') {
+      flags.push({
+        level: 'vigilance',
+        text: 'Aucune pièce justificative déposée par ce compte.',
+        anchor: 'ad-pilotage',
+        cta: 'Demander une pièce',
+      });
+    }
+
+    if (verification === 'rejete') {
+      flags.push({
+        level: 'vigilance',
+        text: 'Vérification du profil rejetée : le compte ne peut pas publier.',
+        anchor: 'ad-profil',
+        cta: 'Voir le profil',
+      });
+    }
+
+    if (!target.email_verified_at || !target.phone_verified_at) {
+      const missing = [
+        !target.email_verified_at ? 'e-mail' : null,
+        !target.phone_verified_at ? 'téléphone' : null,
+      ].filter(Boolean);
+      flags.push({
+        level: 'vigilance',
+        text: `Coordonnées non confirmées : ${missing.join(' et ')}.`,
+        anchor: 'ad-profil',
+        cta: 'Voir le profil',
+      });
+    }
+
+    return flags;
+  });
+
+  /** Libellé lisible d'un état de vérification KYC (miroir de l'enum serveur). */
+  protected verificationLabel(status: string | null): string {
+    switch (status) {
+      case 'verifie':
+        return 'Vérifié';
+      case 'en_cours':
+        return 'En cours de vérification';
+      case 'rejete':
+        return 'Rejeté';
+      case 'non_verifie':
+        return 'Non vérifié';
+      default:
+        return 'inconnu';
+    }
+  }
+
+  /** Nombre de jours écoulés depuis une date (0 si absente ou future). */
+  private daysSince(iso: string | null | undefined): number {
+    if (!iso) {
+      return 0;
+    }
+    return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
+  }
 
   protected readonly assignableRoles: readonly SelectOption[] = [
     { value: 'client', label: 'Client' },

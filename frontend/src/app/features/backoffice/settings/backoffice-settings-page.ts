@@ -14,6 +14,7 @@ import {
   ReferenceCatalog,
 } from '../../../core/api/admin.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor/rich-text-editor';
 
 /** Onglet actif de l'écran Paramètres. */
 type SettingsTab = 'settings' | 'notifications' | 'content' | 'reference';
@@ -67,7 +68,7 @@ interface PricingField {
  */
 @Component({
   selector: 'app-backoffice-settings-page',
-  imports: [FormsModule],
+  imports: [FormsModule, RichTextEditorComponent],
   templateUrl: './backoffice-settings-page.html',
   styleUrl: './backoffice-settings-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
