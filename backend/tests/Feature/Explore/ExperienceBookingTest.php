@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\User;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Explore\Services\ExperienceBookingService;
+use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -47,6 +48,48 @@ class ExperienceBookingTest extends TestCase
             ->assertJsonPath('data.booking.guests', 4);
 
         $this->assertSame(6, app(ExperienceBookingService::class)->seatsLeft($experience->fresh()));
+    }
+
+    /**
+     * F8.4 — la commission plateforme est FIGÉE à la réservation.
+     *
+     * Le tourisme ne l'enregistrait pas : la plateforme vendait des circuits
+     * sans aucune trace de son revenu dans l'export comptable.
+     */
+    public function test_la_commission_plateforme_est_calculee_et_figee(): void
+    {
+        $experience = TourismExperience::factory()->published()->create([
+            'capacity' => 10, 'price_xof' => 50_000, 'duration_days' => 3,
+        ]);
+
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson("/api/v1/experiences/{$experience->id}/bookings", [
+            'guests' => 4,
+            'start_date' => now()->addWeek()->toDateString(),
+        ])->assertCreated();
+
+        // 12 % (taux de repli) de 200 000 = 24 000.
+        $this->assertDatabaseHas('bookings', ['amount_xof' => 200_000, 'commission_xof' => 24_000]);
+    }
+
+    public function test_le_taux_de_commission_suit_le_reglage_du_back_office(): void
+    {
+        // Rien n'est codé en dur : la direction fixe le taux depuis les Paramètres.
+        Settings::set('commission.default_rate', 8.0);
+
+        $experience = TourismExperience::factory()->published()->create([
+            'capacity' => 10, 'price_xof' => 50_000, 'duration_days' => 3,
+        ]);
+
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson("/api/v1/experiences/{$experience->id}/bookings", [
+            'guests' => 2,
+            'start_date' => now()->addWeek()->toDateString(),
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('bookings', ['commission_xof' => 8_000]); // 8 % de 100 000
     }
 
     public function test_la_reservation_refuse_le_depassement_de_capacite(): void

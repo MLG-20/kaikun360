@@ -121,8 +121,14 @@ celui-ci : `GET /admin/vehicles` (flotte + conformité + prestataire) et
 | PATCH | `/api/v1/vehicles/bookings/{booking}/cancel` | annulation (titulaire) — caution restituée/perdue selon le délai |
 | POST | `/api/v1/mobility-services/{id}/bookings` | réservation de places (capacité + commission) |
 
-- `CommissionCalculator` (`DEFAULT_RATE = 12 %`) : `commissionFor(montant, taux?)`
-  figé sur chaque réservation de mobilité (colonne `bookings.commission_xof`).
+- `CommissionCalculator` : `commissionFor(montant, taux?)`, figé sur chaque
+  réservation de mobilité (colonne `bookings.commission_xof`). ⚠️ **Déplacé en
+  F8.4** de `Modules/Mobility/Services/` vers
+  [`app/Support/Billing/`](../../Support/Billing/CommissionCalculator.php) : sept
+  modules s'en servent désormais, un module métier n'a pas à importer une règle
+  transverse depuis un module voisin. Le taux vient du back-office
+  (`commission.default_rate`) ; `DEFAULT_RATE = 12 %` n'est qu'un **repli**
+  appliqué tant que la direction n'a rien saisi.
 - **Caution** (`bookings.caution_status`, enum `App\Enums\CautionStatus`) :
   `retenue` à la réservation ; à l'annulation, `restituee` si conforme
   (≥ `CANCEL_DELAY_DAYS = 2` jours avant le départ) sinon `perdue`.

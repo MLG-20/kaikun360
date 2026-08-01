@@ -5,7 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Models\Region;
 use App\Models\User;
 use App\Modules\Core\Enums\UserRole;
-use App\Modules\Mobility\Services\CommissionCalculator;
+use App\Support\Billing\CommissionCalculator;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;

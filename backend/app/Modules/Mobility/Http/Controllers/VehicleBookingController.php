@@ -9,7 +9,7 @@ use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Modules\Mobility\Http\Requests\StoreVehicleBookingRequest;
 use App\Modules\Mobility\Models\Vehicle;
-use App\Modules\Mobility\Services\CommissionCalculator;
+use App\Support\Billing\CommissionCalculator;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

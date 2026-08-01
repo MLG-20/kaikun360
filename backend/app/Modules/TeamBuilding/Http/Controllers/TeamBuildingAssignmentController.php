@@ -3,7 +3,7 @@
 namespace App\Modules\TeamBuilding\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Mobility\Services\CommissionCalculator;
+use App\Support\Billing\CommissionCalculator;
 use App\Modules\Pro\Enums\MissionStatus;
 use App\Modules\Pro\Http\Resources\ProviderMissionResource;
 use App\Modules\Pro\Models\Provider;

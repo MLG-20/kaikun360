@@ -5,6 +5,7 @@ namespace Tests\Feature\Stay;
 use App\Enums\BookingStatus;
 use App\Models\User;
 use App\Modules\Stay\Models\Stay;
+use App\Support\Settings;
 use Database\Seeders\CommunesSeeder;
 use Database\Seeders\SenegalGeographySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -139,6 +140,63 @@ class StayBookingTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data.booked')
             ->assertJsonPath('data.booked.0.start_date', now()->addDays(5)->toDateString());
+    }
+
+    /**
+     * F8.4 — la commission plateforme est FIGÉE à la réservation.
+     *
+     * Elle ne l'était pas : la colonne restait à 0 sur les nuitées, donc
+     * l'export comptable et le tableau de bord sous-estimaient le revenu réel.
+     */
+    public function test_la_commission_plateforme_est_calculee_et_figee(): void
+    {
+        $stay = $this->nuitee();
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson("/api/v1/stays/{$stay->id}/bookings", [
+            'start_date' => now()->addDays(5)->toDateString(),
+            'end_date' => now()->addDays(8)->toDateString(), // 3 nuits × 20 000
+            'guests' => 2,
+        ])->assertCreated();
+
+        // 12 % (taux de repli) de 60 000 = 7 200.
+        $this->assertDatabaseHas('bookings', ['amount_xof' => 60_000, 'commission_xof' => 7_200]);
+    }
+
+    public function test_le_taux_de_commission_suit_le_reglage_du_back_office(): void
+    {
+        // Rien n'est codé en dur : la direction fixe le taux depuis les Paramètres.
+        Settings::set('commission.default_rate', 20.0);
+
+        $stay = $this->nuitee();
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson("/api/v1/stays/{$stay->id}/bookings", [
+            'start_date' => now()->addDays(5)->toDateString(),
+            'end_date' => now()->addDays(8)->toDateString(),
+            'guests' => 2,
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('bookings', ['commission_xof' => 12_000]); // 20 % de 60 000
+    }
+
+    /**
+     * La caution est un dépôt rendu au client, pas un revenu : elle ne doit
+     * jamais entrer dans l'assiette de commission.
+     */
+    public function test_la_caution_n_entre_pas_dans_l_assiette_de_commission(): void
+    {
+        $stay = $this->nuitee(['caution_xof' => 500_000]);
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson("/api/v1/stays/{$stay->id}/bookings", [
+            'start_date' => now()->addDays(5)->toDateString(),
+            'end_date' => now()->addDays(6)->toDateString(), // 1 nuit = 20 000
+            'guests' => 2,
+        ])->assertCreated();
+
+        // 12 % de 20 000 seulement, la caution de 500 000 est ignorée.
+        $this->assertDatabaseHas('bookings', ['commission_xof' => 2_400]);
     }
 
     public function test_la_reservation_exige_une_authentification(): void

@@ -11,6 +11,7 @@ use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Explore\Services\ExperienceBookingService;
 use App\Modules\Explore\Services\ExperienceCancellationService;
 use App\Support\ApiResponse;
+use App\Support\Billing\CommissionCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -25,8 +26,10 @@ use Illuminate\Validation\ValidationException;
  */
 class ExperienceBookingController extends Controller
 {
-    public function __construct(private readonly ExperienceBookingService $capacity)
-    {
+    public function __construct(
+        private readonly ExperienceBookingService $capacity,
+        private readonly CommissionCalculator $commissions,
+    ) {
     }
 
     /**
@@ -64,13 +67,19 @@ class ExperienceBookingController extends Controller
         $start = Carbon::parse($data['start_date']);
         $end = $start->copy()->addDays(max(0, $experience->duration_days - 1));
 
+        $montant = $guests * $experience->price_xof;
+
         $booking = $experience->bookings()->create([
             'reference' => 'BK-'.now()->format('ymd').'-'.Str::upper(Str::random(6)),
             'user_id' => $request->user()->id,
             'start_date' => $start->toDateString(),
             'end_date' => $end->toDateString(),
             'guests' => $guests,
-            'amount_xof' => $guests * $experience->price_xof,
+            'amount_xof' => $montant,
+            // F8.4 — comme les nuitées, le tourisme n'enregistrait aucune
+            // commission : la plateforme vendait des circuits sans trace de son
+            // revenu. Taux paramétrable au back-office, figé à la réservation.
+            'commission_xof' => $this->commissions->commissionFor($montant),
             'status' => BookingStatus::EN_ATTENTE->value, // en attente de paiement (B14)
         ]);
 

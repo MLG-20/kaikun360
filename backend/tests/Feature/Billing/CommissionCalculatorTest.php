@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Feature\Mobility;
+namespace Tests\Feature\Billing;
 
-use App\Modules\Mobility\Services\CommissionCalculator;
+use App\Support\Billing\CommissionCalculator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

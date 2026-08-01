@@ -9,6 +9,7 @@ use App\Http\Resources\BookingResource;
 use App\Modules\Stay\Http\Requests\StoreStayBookingRequest;
 use App\Modules\Stay\Models\Stay;
 use App\Support\ApiResponse;
+use App\Support\Billing\CommissionCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -19,6 +20,10 @@ use Illuminate\Validation\ValidationException;
  */
 class StayBookingController extends Controller
 {
+    public function __construct(private readonly CommissionCalculator $commissions)
+    {
+    }
+
     /**
      * Calendrier d'occupation. GET /api/v1/stays/{id}/availability
      *
@@ -89,13 +94,23 @@ class StayBookingController extends Controller
             ]);
         }
 
+        // La caution n'entre PAS dans l'assiette de commission : c'est un dépôt
+        // rendu au client, pas un revenu.
+        $montant = $nights * $stay->price_per_night_xof;
+
         $booking = $stay->bookings()->create([
             'reference' => $this->genererReference(),
             'user_id' => $request->user()->id,
             'start_date' => $start->toDateString(),
             'end_date' => $end->toDateString(),
             'guests' => $data['guests'],
-            'amount_xof' => $nights * $stay->price_per_night_xof,
+            'amount_xof' => $montant,
+            // F8.4 — la commission plateforme n'était PAS calculée sur les
+            // nuitées : la colonne restait à 0, donc l'export comptable et le
+            // tableau de bord sous-estimaient le revenu réel de Kaikun. Même
+            // taux paramétrable que les autres univers (`commission.default_rate`),
+            // figé ici et jamais recalculé ensuite.
+            'commission_xof' => $this->commissions->commissionFor($montant),
             'caution_xof' => $stay->caution_xof,
             // F7.3.f — la caution était RECOPIÉE sans jamais être suivie : son
             // statut restait `null` pour une nuitée, là où la location de véhicule

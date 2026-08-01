@@ -106,3 +106,22 @@ propriétaire d'activer/paramétrer ou de retirer le mode nuitées de **son** bi
 > ✅ Tests : `tests/Feature/Stay/PropertyStayManagementTest` (12 cas) couvre
 > l'upsert (création/màj/réactivation), la validation, l'isolation entre
 > propriétaires, le retrait avec/sans réservation et l'exposition sur la fiche.
+
+## Commission plateforme (F8.4)
+
+Une réservation de nuitée fige la **commission Kaikun** dans
+`bookings.commission_xof`, via
+[`CommissionCalculator`](../../Support/Billing/CommissionCalculator.php) — le
+même calcul et le **même taux paramétrable** (`commission.default_rate`,
+Paramètres → Réglages) que la mobilité, le tourisme et les missions prestataires.
+
+⚠️ **Ce n'était pas le cas avant F8.4** : la colonne restait à `0` sur toutes les
+nuitées. L'export comptable et le tableau de bord sous-estimaient donc le revenu
+réel de la plateforme sur cet univers.
+
+⚠️ **La caution n'entre pas dans l'assiette** : c'est un dépôt rendu au client,
+pas un revenu. Seul `nuits × prix` est commissionné.
+
+⚠️ La commission est **figée à la réservation**, jamais recalculée : changer le
+taux au back-office ne réécrit pas l'historique comptable des réservations déjà
+prises.

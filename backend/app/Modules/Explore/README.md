@@ -112,3 +112,15 @@ prestataire, via `AdminExperienceResource`) et `GET /admin/tourism/destinations`
   vivent dans le module **Pro** (`ProviderCategory::GUIDE` / `RESTAURATION`), et
   **aucun lien guide ↔ circuit n'existe** — écart au cahier des charges signalé
   à l'écran, à combler par un modèle d'affectation si le besoin se confirme.
+
+## Commission plateforme (F8.4)
+
+Une réservation d'expérience fige la **commission Kaikun** dans
+`bookings.commission_xof`, via
+[`CommissionCalculator`](../../Support/Billing/CommissionCalculator.php) — même
+taux paramétrable au back-office (`commission.default_rate`) que les autres
+univers.
+
+⚠️ **Ce n'était pas le cas avant F8.4** : la plateforme vendait des circuits sans
+aucune trace de son revenu. Assiette = `participants × prix` ; commission **figée
+à la réservation**, jamais recalculée ensuite.

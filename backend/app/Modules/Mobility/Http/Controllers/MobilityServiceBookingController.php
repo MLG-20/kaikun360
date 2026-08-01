@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\BookingResource;
 use App\Modules\Mobility\Http\Requests\StoreMobilityServiceBookingRequest;
 use App\Modules\Mobility\Models\MobilityService;
-use App\Modules\Mobility\Services\CommissionCalculator;
+use App\Support\Billing\CommissionCalculator;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;

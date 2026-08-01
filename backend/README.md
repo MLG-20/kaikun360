@@ -108,7 +108,7 @@ app/
 ├── Enums/            # Enums transverses (statuts booking/paiement/requête…)
 ├── Models/           # Modèles transverses (Booking, Review, Media, Conversation/Message, Favorite, géo…)
 ├── Http/             # Controllers & Resources transverses
-├── Support/          # ApiResponse, Settings, CatalogCache, Payments/…
+├── Support/          # ApiResponse, Settings, CatalogCache, Billing/, Payments/…
 └── Modules/
     ├── Core/         # Utilisateurs, auth, rôles, profils, KYC
     ├── Immo/         # Biens immobiliers (achat/vente/location mensuelle)
@@ -188,7 +188,7 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   ce sont des catégories du module Pro + des drapeaux d'inclusion, sans lien
   guide ↔ circuit (écart assumé, documenté).
 - **Mobility** — véhicules (avec contrôle de conformité assurance/pirogue),
-  services de mobilité, commission & caution, et **supervision back-office**
+  services de mobilité, caution, et **supervision back-office**
   (F7.2.j — CDC §6) servie par le module Admin : `GET /admin/vehicles` renvoie
   désormais `AdminVehicleResource` (sur-ensemble du format public : assurance,
   identité du chauffeur, gilets, drapeaux de conformité, prestataire ; filtre
@@ -347,6 +347,38 @@ consommateur ayant consommé), notifications (e-mail/SMS asynchrones, canal
 Money).
 
 ---
+
+### Commission plateforme — un seul taux, fixé par la direction (F8.4)
+
+La commission de Kaikun n'est **jamais codée en dur**. Elle vient du back-office
+(*Paramètres → Réglages → Commissions*) et s'applique sans redéploiement :
+
+| Réglage | Repli livré | Portée |
+|---|---|---|
+| `commission.default_rate` | 12 % | Réservations **nuitées, tourisme, mobilité** (véhicule + service) et **toute mission prestataire** (chantier, team building, Pro) |
+| `teambuilding.margin_rate` | 15 % | Marge des devis de pack team building |
+| `build.margin_rate` | 15 % | Marge des devis de chantier |
+
+Les valeurs de la colonne « repli » sont des **ordres de grandeur livrés**, pas
+des décisions : elles s'appliquent tant que la direction n'a rien saisi.
+
+**La gestion locative fait exception, volontairement** : son taux est saisi
+**mandat par mandat** à la création du contrat (`management_mandates.commission_rate`,
+obligatoire, 0–100 %) — une commission de gestion se négocie bien par bien, pas
+globalement. C'est ce taux qui alimente le rapport mensuel du mandat.
+
+Le calcul est centralisé dans
+[`app/Support/Billing/CommissionCalculator.php`](app/Support/Billing/CommissionCalculator.php).
+⚠️ **Il vivait dans `Modules/Mobility/Services/`** (son premier appelant, B7.4) :
+déplacé en F8.4, sept modules en dépendant désormais.
+
+⚠️ **La commission est FIGÉE à la réservation**, jamais recalculée : changer le
+taux ne réécrit pas l'historique comptable des réservations déjà prises.
+
+⚠️ **Nuitées et tourisme ne la calculaient pas avant F8.4.** `commission_xof`
+restait à `0` sur ces deux univers — l'export comptable et le tableau de bord
+sous-estimaient donc le revenu réel. La caution n'entre pas dans l'assiette :
+c'est un dépôt rendu au client, pas un revenu.
 
 ## Structure du projet
 
