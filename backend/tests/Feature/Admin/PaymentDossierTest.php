@@ -165,20 +165,27 @@ class PaymentDossierTest extends TestCase
     {
         // Le remboursement part chez le PSP : on le simule, comme le fait déjà
         // `AdminPaymentTest`. Sans cela l'appel réel échoue et renvoie 502.
-        Http::fake(['engine-sandbox.pay.tech/*' => Http::response([], 200)]);
+        // F8.5 — le client PayTech refuse désormais de partir sans ses clés :
+        // sans elles, l'erreur renvoyée au client serait « panne du PSP » alors
+        // que c'est notre configuration qui est vide.
+        config()->set('services.paytech.api_key', 'test-key');
+        config()->set('services.paytech.api_secret', 'test-secret');
+        Http::fake(['paytech.sn/*' => Http::response(['success' => 1], 200)]);
 
         $payment = $this->payment($this->stayBooking());
 
         Sanctum::actingAs($this->financialAdmin());
 
-        $this->postJson("/api/v1/admin/payments/{$payment->id}/refund", ['amount_xof' => 15_000])
+        // F8.5 — le montant est omis : PayTech ne rembourse que la TOTALITÉ,
+        // un montant partiel est désormais refusé en 422 (cf. AdminPaymentTest).
+        $this->postJson("/api/v1/admin/payments/{$payment->id}/refund")
             ->assertOk();
 
         $this->getJson("/api/v1/admin/payments/{$payment->id}")
             ->assertOk()
-            ->assertJsonPath('data.payment.refunded_amount_xof', 15_000)
+            ->assertJsonPath('data.payment.refunded_amount_xof', 40_000)
             ->assertJsonPath('data.activity.0.description', 'Remboursement de paiement')
-            ->assertJsonPath('data.activity.0.properties.amount_xof', 15_000);
+            ->assertJsonPath('data.activity.0.properties.amount_xof', 40_000);
     }
 
     // --- Avis --------------------------------------------------------------------

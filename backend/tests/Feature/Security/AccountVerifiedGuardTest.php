@@ -62,10 +62,11 @@ class AccountVerifiedGuardTest extends TestCase
 
     public function test_un_compte_verifie_franchit_le_garde_et_paie(): void
     {
-        config()->set('services.paytech.base_url', 'https://engine-sandbox.pay.tech');
+        config()->set('services.paytech.base_url', 'https://paytech.sn/api');
+        config()->set('services.paytech.api_secret', 'test-secret');
         config()->set('services.paytech.api_key', 'test-key');
         Http::fake([
-            'engine-sandbox.pay.tech/*' => Http::response(['id' => 'ptx', 'redirect_url' => 'https://pay.tech/c'], 200),
+            'paytech.sn/*' => Http::response(['success' => 1, 'token' => 'ptx', 'redirect_url' => 'https://paytech.sn/payment/checkout/ptx'], 200),
         ]);
 
         // Compte vérifié (email_verified_at renseigné par la factory).

@@ -10,23 +10,86 @@ par `PaymentProviderInterface`.
   `status`.
 - **`PaymentIntent`** — DTO renvoyé par `initiate` (`providerReference`,
   `redirectUrl`).
-- **`PaytechProvider`** — implémentation HTTP (moteur `engine-sandbox.pay.tech`
-  en test, `engine.pay.tech` en prod ; en-tête Bearer avec la clé API boutique).
-  Parsing défensif des réponses.
+- **`PaytechProvider`** — implémentation HTTP, **réécrite en F8.5 sur l'API
+  réelle** (voir l'encadré ci-dessous). Base unique `https://paytech.sn/api`,
+  authentification par les en-têtes `API_KEY` + `API_SECRET`.
 - **`App\Models\Payment`** — transaction (booking_id, provider, amount_xof,
   commission_xof, status `PaymentStatus`, mode, provider_reference,
   signature_verified, meta). Une réservation peut avoir plusieurs paiements
   (acompte, solde, remboursement).
-- **`PaymentStatus::fromPaytech()`** — mappe AUTHORIZED/COMPLETED/DECLINED/
-  CANCELLED/REFUNDED/PENDING → statut interne (null si inconnu → webhook rejeté).
+- **`PaymentStatus::fromPaytech()`** — mappe les **`type_event`** PayTech
+  (`sale_complete`, `sale_canceled`, `refund_complete`, `transfer_success`,
+  `transfer_failed`) → statut interne. `null` si inconnu → l'IPN est **rejeté**,
+  jamais interprété.
 - **Binding** — `PaymentProviderInterface` → `PaytechProvider` (singleton) dans
   `AppServiceProvider::register()`.
 
+## ⚠️ F8.5 — l'intégration précédente ne pouvait pas fonctionner
+
+Écrite sur une API **supposée**, jamais confrontée au vrai PayTech. Rien ne
+correspondait, et le premier appel réel aurait échoué :
+
+| | Ancien code | PayTech réel |
+|---|---|---|
+| Base | `engine-sandbox.pay.tech` | `paytech.sn/api` (test **et** prod) |
+| Initier | `POST /api/v1/payments` | `POST /payment/request-payment` |
+| Auth | `Bearer <clé>` | en-têtes `API_KEY` + `API_SECRET` |
+| Corps | `amount`, `reference`, `callback_url` | `item_name`, `item_price`, `ref_command`, `command_name`, `ipn_url`, `success_url`, `cancel_url`, `env` |
+| Réponse | `id` | `token` |
+| Statuts | `COMPLETED`, `DECLINED`… | `type_event` : `sale_complete`, `sale_canceled`… |
+| Signature | HMAC du corps brut, en-tête `Signature` | champ `hmac_compute` **dans le corps** |
+| Rembourser | `POST /api/v1/payments/{ref}/refund` | `POST /payment/refund-payment` |
+
+⚠️ **La suite de tests était verte** : elle validait la cohérence du code avec
+lui-même, pas avec le PSP. Un test qui simule le partenaire d'après le code
+qu'il teste ne prouve rien — c'est le piège à retenir de cette tranche.
+
+## Vocabulaire PayTech (à ne pas confondre avec le nôtre)
+
+| PayTech | Chez nous |
+|---|---|
+| `ref_command` | `payments.reference` (NOTRE référence) |
+| `token` | `payments.provider_reference` (référence PSP) |
+| `item_price` | montant **demandé** |
+| `final_item_price` | montant **réellement débité** (promotion, ou tirage aléatoire en test) |
+
 ## Configuration (jamais en dur)
 
-`config/services.php` → `paytech` : `base_url`, `api_key`, `signing_key`,
-`webhook_url`, alimentés par l'environnement
-(`PAYTECH_BASE_URL`, `PAYTECH_API_KEY`, `PAYTECH_SIGNING_KEY`, `PAYTECH_WEBHOOK_URL`).
+`config/services.php` → `paytech` : `base_url`, `api_key`, `api_secret`, `env`,
+`ipn_url`, `success_url`, `cancel_url`.
+
+⚠️ **Il n'y a pas de « signing key » chez PayTech** : l'`API_SECRET` authentifie
+les appels **et** signe les notifications entrantes. `PAYTECH_SIGNING_KEY` n'a
+jamais existé côté PSP.
+
+⚠️ **Sandbox et production partagent la même base** : c'est `PAYTECH_ENV`
+(`test` / `prod`) qui décide.
+
+⚠️ **En mode `test`, PayTech débite un montant ALÉATOIRE entre 100 et 150 FCFA**,
+quel que soit le prix demandé. Toute réconciliation porte donc sur `item_price`,
+jamais sur ce qui a été débité — sinon aucune réservation ne serait confirmée en
+sandbox. Le montant débité est conservé dans `payments.meta.debited_amount_xof`
+pour la trace comptable.
+
+### Tester en local
+
+PayTech exige une URL d'IPN **publique et en HTTPS** : `localhost` est
+injoignable depuis ses serveurs. Ouvrir un tunnel, puis reporter l'URL **aux deux
+endroits** — `PAYTECH_IPN_URL` dans le `.env` *et* le champ IPN du tableau de
+bord PayTech :
+
+```bash
+ngrok http 8000
+# → https://xxxx.ngrok-free.app/api/v1/payments/webhook
+```
+
+### Remboursement : total uniquement
+
+⚠️ La route `refund-payment` ne prend qu'une **référence de commande**, sans
+montant : **PayTech ne rembourse que la totalité**. Le back-office refuse donc
+explicitement un remboursement partiel (422) au lieu d'afficher « remboursé »
+pour une opération que le PSP n'exécutera jamais. Un remboursement partiel se
+règle hors plateforme (Wave/OM) et se trace comme un paiement manuel.
 
 ## B14.2 — Initiation
 

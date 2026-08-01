@@ -23,8 +23,9 @@ class AdminPaymentTest extends TestCase
     {
         parent::setUp();
         $this->seed(RolesAndPermissionsSeeder::class);
-        config()->set('services.paytech.base_url', 'https://engine-sandbox.pay.tech');
+        config()->set('services.paytech.base_url', 'https://paytech.sn/api');
         config()->set('services.paytech.api_key', 'test-key');
+        config()->set('services.paytech.api_secret', 'test-secret');
     }
 
     private function withRole(string $role): User
@@ -71,17 +72,17 @@ class AdminPaymentTest extends TestCase
 
     public function test_l_admin_rembourse_un_paiement_encaisse(): void
     {
-        Http::fake(['engine-sandbox.pay.tech/*' => Http::response([], 200)]);
+        Http::fake(['paytech.sn/*' => Http::response(['success' => 1], 200)]);
         $payment = $this->payment();
 
         Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
 
-        $this->postJson("/api/v1/admin/payments/{$payment->id}/refund", ['amount_xof' => 40_000])
+        $this->postJson("/api/v1/admin/payments/{$payment->id}/refund")
             ->assertOk()
             ->assertJsonPath('data.payment.status', 'rembourse');
 
         $this->assertSame(PaymentStatus::REMBOURSE, $payment->fresh()->status);
-        $this->assertSame(40_000, $payment->fresh()->meta['refunded_amount_xof']);
+        $this->assertSame($payment->amount_xof, $payment->fresh()->meta['refunded_amount_xof']);
     }
 
     public function test_on_ne_rembourse_pas_un_paiement_non_encaisse(): void
@@ -92,6 +93,24 @@ class AdminPaymentTest extends TestCase
 
         $this->postJson("/api/v1/admin/payments/{$payment->id}/refund")
             ->assertStatus(422);
+    }
+
+    /**
+     * F8.5 — PayTech ne rembourse que la TOTALITÉ : sa route ne prend pas de
+     * montant. Proposer un remboursement partiel afficherait « remboursé » pour
+     * une opération que le PSP n'exécutera jamais.
+     */
+    public function test_le_remboursement_partiel_est_refuse(): void
+    {
+        $payment = $this->payment();
+
+        Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
+
+        $this->postJson("/api/v1/admin/payments/{$payment->id}/refund", ['amount_xof' => 40_000])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['amount_xof']);
+
+        $this->assertSame(PaymentStatus::COMPLETE, $payment->fresh()->status);
     }
 
     public function test_le_montant_rembourse_ne_depasse_pas_le_paye(): void
@@ -106,7 +125,7 @@ class AdminPaymentTest extends TestCase
 
     public function test_un_echec_psp_renvoie_502(): void
     {
-        Http::fake(['engine-sandbox.pay.tech/*' => Http::response([], 500)]);
+        Http::fake(['paytech.sn/*' => Http::response([], 500)]);
         $payment = $this->payment();
 
         Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));

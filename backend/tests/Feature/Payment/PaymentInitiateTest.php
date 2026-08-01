@@ -22,16 +22,18 @@ class PaymentInitiateTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        config()->set('services.paytech.base_url', 'https://engine-sandbox.pay.tech');
+        config()->set('services.paytech.base_url', 'https://paytech.sn/api');
         config()->set('services.paytech.api_key', 'test-key');
+        config()->set('services.paytech.api_secret', 'test-secret');
     }
 
     private function fakePaytechOk(): void
     {
-        Http::fake([
-            'engine-sandbox.pay.tech/*' => Http::response([
-                'id' => 'ptx_ok',
-                'redirect_url' => 'https://pay.tech/checkout/ptx_ok',
+Http::fake([
+            'paytech.sn/*' => Http::response([
+                'success' => 1,
+                'token' => 'ptx_ok',
+                'redirect_url' => 'https://paytech.sn/payment/checkout/ptx_ok',
             ], 200),
         ]);
     }
@@ -69,7 +71,7 @@ class PaymentInitiateTest extends TestCase
 
         $this->postJson('/api/v1/payments/initiate', ['booking_id' => $booking->id])
             ->assertCreated()
-            ->assertJsonPath('data.redirect_url', 'https://pay.tech/checkout/ptx_ok')
+            ->assertJsonPath('data.redirect_url', 'https://paytech.sn/payment/checkout/ptx_ok')
             ->assertJsonPath('data.payment.status', 'en_attente')
             ->assertJsonPath('data.payment.amount_xof', 100_000);
 
@@ -124,7 +126,7 @@ class PaymentInitiateTest extends TestCase
 
     public function test_une_panne_du_psp_renvoie_502(): void
     {
-        Http::fake(['engine-sandbox.pay.tech/*' => Http::response([], 500)]);
+        Http::fake(['paytech.sn/*' => Http::response([], 500)]);
         $user = User::factory()->create();
         $booking = $this->bookingFor($user);
 

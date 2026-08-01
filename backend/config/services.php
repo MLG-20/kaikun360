@@ -55,12 +55,23 @@ return [
     ],
 
     // PSP PayTech (B14). Aucune valeur en dur : tout vient de l'environnement.
-    // base_url : engine-sandbox.pay.tech (test) puis engine.pay.tech (prod).
+    // Aligné sur l'API réelle en F8.5 (docs.intech.sn).
+    // ⚠️ Sandbox et production partagent la MÊME base : c'est `env` qui décide.
+    // ⚠️ Il n'y a pas de « signing key » chez PayTech : l'API_SECRET authentifie
+    //    les appels ET signe les notifications entrantes.
     'paytech' => [
-        'base_url' => env('PAYTECH_BASE_URL', 'https://engine-sandbox.pay.tech'),
+        'base_url' => env('PAYTECH_BASE_URL', 'https://paytech.sn/api'),
         'api_key' => env('PAYTECH_API_KEY'),
-        'signing_key' => env('PAYTECH_SIGNING_KEY'),
-        'webhook_url' => env('PAYTECH_WEBHOOK_URL'),
+        'api_secret' => env('PAYTECH_API_SECRET'),
+        // 'test' = sandbox (PayTech ne débite alors qu'un montant aléatoire
+        // entre 100 et 150 FCFA) ; 'prod' = encaissement réel.
+        'env' => env('PAYTECH_ENV', 'test'),
+        // URL publique de NOTRE route POST /api/v1/payments/webhook. PayTech
+        // exige du HTTPS : en local, passer par un tunnel (ngrok).
+        'ipn_url' => env('PAYTECH_IPN_URL'),
+        // Pages du site vitrine où le client retombe après le paiement.
+        'success_url' => env('PAYTECH_SUCCESS_URL'),
+        'cancel_url' => env('PAYTECH_CANCEL_URL'),
     ],
 
     // Connexion Google (B19) : Client ID OAuth (Google Cloud Console). Sert à

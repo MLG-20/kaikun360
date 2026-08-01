@@ -500,7 +500,7 @@ Clés principales (voir `.env.example` pour la liste exhaustive) :
 | `CACHE_STORE=redis` | Cache des catalogues |
 | `QUEUE_CONNECTION=redis` | Notifications asynchrones |
 | `SMS_PROVIDER` | Canal SMS (`log` par défaut, `twilio` en prod) |
-| `PAYTECH_BASE_URL` / `PAYTECH_API_KEY` / `PAYTECH_SIGNING_KEY` | Paiement PayTech |
+| `PAYTECH_BASE_URL` / `PAYTECH_API_KEY` / `PAYTECH_API_SECRET` / `PAYTECH_ENV` / `PAYTECH_IPN_URL` | Paiement PayTech — `env` = `test` \| `prod`, l'IPN doit être **publique et HTTPS** (tunnel ngrok en local). ⚠️ Pas de « signing key » : l'`API_SECRET` signe aussi les notifications. |
 | `CORS_ALLOWED_ORIGINS` | Origines autorisées (front Angular) |
 
 > **Aucun secret n'est versionné** : `.env` est ignoré par git ; seuls les

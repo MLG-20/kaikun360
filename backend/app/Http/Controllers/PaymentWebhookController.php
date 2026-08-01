@@ -12,12 +12,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Réception des notifications PayTech (B14.3).
+ * Réception des notifications de paiement PayTech — l'IPN (B14.3, réécrit F8.5).
  *
- * SÉCURITÉ : la signature HMAC-SHA256 du corps brut est vérifiée AVANT toute
- * lecture métier ; une notification non authentifiée est rejetée (401) sans
- * aucun effet. La confirmation d'une réservation n'a lieu que sur un statut
- * COMPLETE vérifié ET un montant réconcilié — jamais sur une simple différence.
+ * ⚠️ **Réécriture complète.** L'ancienne version lisait un JSON `{id, reference,
+ * amount, status}` et une signature dans un en-tête `Signature`. PayTech ne
+ * poste rien de tout cela : c'est un FORMULAIRE, la preuve d'authenticité est
+ * dans le corps (`hmac_compute`), et le statut s'appelle `type_event`. Aucune
+ * notification réelle n'aurait été acceptée.
+ *
+ * **C'est le seul chemin par lequel une réservation devient payée.** D'où
+ * l'ordre, non négociable :
+ *
+ *   1. authenticité — signature vérifiée AVANT toute lecture métier ;
+ *   2. identification de la transaction locale ;
+ *   3. idempotence — PayTech réémet ses notifications, un encaissement déjà
+ *      enregistré ne doit pas être rejoué ;
+ *   4. traduction de l'événement — un événement inconnu est rejeté, jamais deviné ;
+ *   5. réconciliation du montant ;
+ *   6. application, et confirmation de la réservation si encaissé.
  */
 class PaymentWebhookController extends Controller
 {
@@ -28,87 +40,124 @@ class PaymentWebhookController extends Controller
     }
 
     /**
-     * POST /api/v1/payments/webhook  (public, signé)
+     * POST /api/v1/payments/webhook  (public, authentifié par signature)
      */
     public function handle(Request $request): JsonResponse
     {
-        $raw = $request->getContent();
+        // PayTech poste en `application/x-www-form-urlencoded` ; on accepte
+        // aussi un corps JSON, certains environnements de test l'envoyant ainsi.
+        $payload = $request->all();
 
-        // 1) Authenticité : refuser d'emblée toute notification non signée.
-        if (! $this->verifier->verify($raw, $request->header('Signature'))) {
-            Log::warning('Webhook PayTech rejeté : signature invalide.');
+        // 1) AUTHENTICITÉ. Rien n'est lu tant que ce n'est pas prouvé.
+        if (! $this->verifier->verify($payload)) {
+            Log::warning('IPN PayTech rejeté : signature invalide.', [
+                'ref_command' => $payload['ref_command'] ?? null,
+            ]);
 
             return ApiResponse::error('Signature invalide.', 401);
         }
 
-        $payload = json_decode($raw, true);
-        if (! is_array($payload)) {
-            return ApiResponse::error('Charge utile invalide.', 400);
-        }
-
-        // 2) Retrouver la transaction locale.
-        $providerRef = $payload['id'] ?? $payload['data']['id'] ?? null;
-        $reference = $payload['reference'] ?? $payload['data']['reference'] ?? null;
+        // 2) Retrouver la transaction. `ref_command` est NOTRE référence,
+        //    `token` est celle de PayTech : on tente les deux, dans cet ordre.
+        $reference = $payload['ref_command'] ?? null;
+        $token = $payload['token'] ?? null;
 
         $payment = Payment::query()
-            ->when($providerRef, fn ($q) => $q->orWhere('provider_reference', $providerRef))
-            ->when($reference, fn ($q) => $q->orWhere('reference', $reference))
+            ->when($reference, fn ($q) => $q->where('reference', $reference))
+            ->when(! $reference && $token, fn ($q) => $q->where('provider_reference', $token))
             ->first();
 
         if ($payment === null) {
+            Log::warning('IPN PayTech : paiement introuvable.', ['ref_command' => $reference, 'token' => $token]);
+
             return ApiResponse::error('Paiement introuvable.', 404);
         }
 
-        // Toute notification parvenue jusqu'ici est authentifiée.
+        // Toute notification parvenue ici est authentifiée : c'est cette preuve
+        // que le back-office affiche comme « encaissement prouvé » (F8.2).
         $payment->signature_verified = true;
 
-        // 3) Idempotence : un paiement déjà encaissé n'est pas retraité.
+        // Le jeton PayTech peut nous parvenir pour la première fois ici (IPN
+        // plus rapide que la réponse d'initiation).
+        if ($token && empty($payment->provider_reference)) {
+            $payment->provider_reference = (string) $token;
+        }
+
+        // 3) IDEMPOTENCE. PayTech réémet ; un encaissement déjà acquis ne se
+        //    rejoue pas — sinon on renotifie le client et on double les écritures.
         if ($payment->status === PaymentStatus::COMPLETE) {
             $payment->save();
 
-            return ApiResponse::success(['status' => $payment->status->value]);
+            return ApiResponse::success(['status' => $payment->status->value, 'idempotent' => true]);
         }
 
-        // 4) Mapper le statut PayTech ; un état inconnu est rejeté.
-        $rawStatus = (string) ($payload['status'] ?? $payload['data']['status'] ?? '');
-        $internal = PaymentStatus::fromPaytech($rawStatus);
+        // 4) Traduire l'événement. Inconnu → rejet explicite, jamais d'inférence.
+        $typeEvent = (string) ($payload['type_event'] ?? '');
+        $internal = PaymentStatus::fromPaytech($typeEvent);
+
         if ($internal === null) {
             $payment->save();
+            Log::warning("IPN PayTech : événement non reconnu « {$typeEvent} » sur {$payment->reference}.");
 
-            return ApiResponse::error("Statut PayTech non reconnu : {$rawStatus}.", 422);
+            return ApiResponse::error("Événement PayTech non reconnu : {$typeEvent}.", 422);
         }
 
-        // 5) Réconciliation de montant : jamais de confirmation automatique si le
-        //    montant débité diffère du montant attendu.
-        $reportedAmount = $payload['amount'] ?? $payload['data']['amount'] ?? null;
+        // 5) RÉCONCILIATION DU MONTANT.
+        //    On compare à `item_price` — le montant que NOUS avons demandé et que
+        //    PayTech nous renvoie — et surtout pas à `final_item_price` : en
+        //    environnement `test`, PayTech débite un montant aléatoire entre 100
+        //    et 150 FCFA, et en production une promotion peut l'abaisser
+        //    légitimement. Les deux sont conservés pour la trace comptable.
+        $requested = $payload['item_price'] ?? null;
+        $debited = $payload['final_item_price'] ?? null;
+
         if ($internal === PaymentStatus::COMPLETE
-            && $reportedAmount !== null
-            && (int) $reportedAmount !== $payment->amount_xof) {
+            && $requested !== null
+            && (int) $requested !== $payment->amount_xof) {
             $payment->meta = array_merge($payment->meta ?? [], [
                 'amount_mismatch' => true,
-                'reported_amount_xof' => (int) $reportedAmount,
+                'reported_amount_xof' => (int) $requested,
+                'debited_amount_xof' => $debited !== null ? (int) $debited : null,
             ]);
             $payment->save();
 
-            Log::warning("Webhook PayTech : écart de montant sur {$payment->reference} (attendu {$payment->amount_xof}, reçu {$reportedAmount}).");
+            Log::warning("IPN PayTech : écart de montant sur {$payment->reference} (attendu {$payment->amount_xof}, annoncé {$requested}).");
 
-            return ApiResponse::success(['status' => $payment->status->value, 'reconciliation' => 'amount_mismatch'], status: 202);
+            // 202 : reçu et authentifié, mais NON appliqué — la réservation
+            // reste impayée et un humain doit trancher depuis le back-office.
+            return ApiResponse::success(
+                ['status' => $payment->status->value, 'reconciliation' => 'amount_mismatch'],
+                status: 202,
+            );
         }
 
-        // 6) Appliquer le statut ; confirmer la réservation si encaissé.
-        if (isset($payload['mode']) || isset($payload['data']['mode'])) {
-            $payment->mode = $payload['mode'] ?? $payload['data']['mode'];
+        // 6) Appliquer. On garde la trace de ce qui a réellement été débité et
+        //    du moyen employé (Wave, Orange Money, carte…).
+        $trace = array_filter([
+            'debited_amount_xof' => $debited !== null ? (int) $debited : null,
+            'payment_method' => $payload['payment_method'] ?? null,
+            'client_phone' => $payload['client_phone'] ?? null,
+            'env' => $payload['env'] ?? null,
+        ], static fn ($v) => $v !== null);
+
+        if ($trace !== []) {
+            $payment->meta = array_merge($payment->meta ?? [], $trace);
+        }
+
+        if (! empty($payload['payment_method'])) {
+            $payment->mode = (string) $payload['payment_method'];
         }
 
         if ($internal === PaymentStatus::COMPLETE) {
-            // Source automatique (PSP) : pas de causer. Confirmation + notifs +
-            // événement n8n délégués au service partagé (B20).
+            // Source automatique (PSP) : pas de causer. Confirmation de la
+            // réservation + notifications + événement n8n délégués au service
+            // partagé (B20).
             $this->confirmation->markCompleted($payment);
         } else {
             $payment->status = $internal->value;
             $payment->save();
         }
 
-        return ApiResponse::success(['status' => $payment->status->value]);
+        return ApiResponse::success(['status' => $payment->fresh()->status->value]);
     }
 }

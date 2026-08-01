@@ -78,13 +78,23 @@ class AppServiceProvider extends ServiceProvider
             return new PaytechProvider(
                 baseUrl: $config['base_url'],
                 apiKey: $config['api_key'] ?? null,
-                webhookUrl: $config['webhook_url'] ?? null,
+                apiSecret: $config['api_secret'] ?? null,
+                env: $config['env'] ?? 'test',
+                ipnUrl: $config['ipn_url'] ?? null,
+                successUrl: $config['success_url'] ?? null,
+                cancelUrl: $config['cancel_url'] ?? null,
             );
         });
 
         // Vérificateur de signature des webhooks PayTech (B14.3).
+        // Vérification des notifications PayTech : les DEUX clés sont
+        // nécessaires — l'API_KEY entre dans le message signé, l'API_SECRET est
+        // la clé de signature.
         $this->app->singleton(PaytechWebhookVerifier::class, function () {
-            return new PaytechWebhookVerifier(config('services.paytech.signing_key'));
+            return new PaytechWebhookVerifier(
+                config('services.paytech.api_key'),
+                config('services.paytech.api_secret'),
+            );
         });
 
         // Fournisseur SMS (B16.1/B18.2) : Twilio, Orange, sinon journalisation.

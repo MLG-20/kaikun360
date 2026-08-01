@@ -3,33 +3,104 @@
 namespace App\Support\Payments;
 
 /**
- * Vérification de l'authenticité des webhooks PayTech (B14.3).
+ * Vérification de l'authenticité des notifications PayTech (IPN) — B14.3,
+ * réécrite en F8.5.
  *
- * Règle de sécurité NON NÉGOCIABLE : aucune notification n'est traitée sans que
- * sa signature soit validée. PayTech signe le corps JSON brut en HMAC-SHA256
- * avec la « Signing Key » de la boutique ; on recalcule la signature et on la
- * compare en temps constant (`hash_equals`) pour éviter les attaques temporelles.
+ * ⚠️ **La version précédente ne pouvait rien valider.** Elle recalculait un
+ * HMAC-SHA256 du corps brut avec une « signing key », comparé à un en-tête
+ * `Signature`. PayTech ne procède pas ainsi : il n'envoie aucun en-tête de
+ * signature, et il n'existe pas de signing key — c'est l'`API_SECRET` qui signe.
+ * Toute notification réelle aurait été rejetée en 401.
+ *
+ * **Le contrat réel**, tel que documenté (docs.intech.sn) : PayTech poste un
+ * formulaire contenant, entre autres champs, trois preuves d'authenticité.
+ *
+ *  1. `hmac_compute` (recommandé) — HMAC-SHA256 du message
+ *     `{final_item_price}|{ref_command}|{api_key}`, avec l'`api_secret` pour clé ;
+ *  2. `api_key_sha256` / `api_secret_sha256` — simples empreintes SHA-256 des
+ *     deux clés, à comparer aux nôtres.
+ *
+ * On accepte les deux, **mais dans cet ordre** : le HMAC lie la preuve au
+ * CONTENU de la notification (montant + référence), alors que les empreintes ne
+ * prouvent que la connaissance des clés — un rejeu d'une ancienne notification
+ * les satisferait. Le repli n'existe que parce que le HMAC peut manquer sur
+ * certains événements ; il n'est jamais préférable.
+ *
+ * Toutes les comparaisons passent par `hash_equals` (temps constant) : comparer
+ * deux signatures avec `===` laisse fuir, par le temps de réponse, le nombre de
+ * caractères devinés.
  */
 class PaytechWebhookVerifier
 {
-    public function __construct(private readonly ?string $signingKey)
-    {
+    public function __construct(
+        private readonly ?string $apiKey,
+        private readonly ?string $apiSecret,
+    ) {
     }
 
     /**
-     * Vrai si `$signature` correspond au HMAC-SHA256 du corps brut.
+     * La notification est-elle authentique ?
      *
-     * Renvoie faux si la clé de signature n'est pas configurée ou si l'en-tête
-     * de signature est absent — on refuse par défaut, jamais l'inverse.
+     * @param  array<string, mixed>  $payload  Corps de la requête IPN.
      */
-    public function verify(string $rawPayload, ?string $signature): bool
+    public function verify(array $payload): bool
     {
-        if (empty($this->signingKey) || empty($signature)) {
+        // Sans clés configurées, on refuse : jamais l'inverse. Une plateforme
+        // mal configurée doit cesser d'encaisser, pas tout accepter.
+        if (empty($this->apiKey) || empty($this->apiSecret)) {
             return false;
         }
 
-        $expected = hash_hmac('sha256', $rawPayload, $this->signingKey);
+        if ($this->verifyHmac($payload)) {
+            return true;
+        }
 
-        return hash_equals($expected, $signature);
+        return $this->verifyDigests($payload);
+    }
+
+    /**
+     * Méthode 1 — HMAC-SHA256 lié au contenu (recommandée par PayTech).
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function verifyHmac(array $payload): bool
+    {
+        $received = $payload['hmac_compute'] ?? null;
+        if (! is_string($received) || $received === '') {
+            return false;
+        }
+
+        // ⚠️ L'ordre et le séparateur du message sont imposés par PayTech :
+        // final_item_price | ref_command | api_key.
+        $message = implode('|', [
+            (string) ($payload['final_item_price'] ?? ''),
+            (string) ($payload['ref_command'] ?? ''),
+            (string) $this->apiKey,
+        ]);
+
+        $expected = hash_hmac('sha256', $message, (string) $this->apiSecret);
+
+        return hash_equals($expected, $received);
+    }
+
+    /**
+     * Méthode 2 — empreintes SHA-256 des deux clés.
+     *
+     * Repli uniquement : ces empreintes sont identiques d'une notification à
+     * l'autre, donc rejouables. Les DEUX doivent correspondre.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function verifyDigests(array $payload): bool
+    {
+        $keyDigest = $payload['api_key_sha256'] ?? null;
+        $secretDigest = $payload['api_secret_sha256'] ?? null;
+
+        if (! is_string($keyDigest) || ! is_string($secretDigest)) {
+            return false;
+        }
+
+        return hash_equals(hash('sha256', (string) $this->apiKey), $keyDigest)
+            && hash_equals(hash('sha256', (string) $this->apiSecret), $secretDigest);
     }
 }

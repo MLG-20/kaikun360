@@ -223,6 +223,19 @@ class AdminPaymentController extends Controller
             ]);
         }
 
+        // ⚠️ F8.5 — PayTech ne rembourse que la TOTALITÉ : sa route
+        // `refund-payment` ne prend qu'une référence de commande, pas de montant.
+        // L'écran proposait donc un remboursement partiel que le PSP n'aurait
+        // jamais exécuté — l'agent aurait vu « remboursé » pour une opération
+        // qui n'a pas eu lieu. On refuse explicitement plutôt que de mentir ;
+        // un remboursement partiel se règle hors PSP (virement Wave/OM) puis se
+        // trace ici comme un paiement manuel.
+        if ($payment->provider !== 'manuel' && $amount !== $payment->amount_xof) {
+            throw ValidationException::withMessages([
+                'amount_xof' => ['PayTech ne rembourse que la totalité du paiement. Pour un remboursement partiel, procédez hors plateforme et enregistrez-le manuellement.'],
+            ]);
+        }
+
         if (! $this->provider->refund($payment, $amount)) {
             return ApiResponse::error('Le remboursement a échoué côté PSP.', 502);
         }

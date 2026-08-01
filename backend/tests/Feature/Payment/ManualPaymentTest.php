@@ -31,8 +31,9 @@ class ManualPaymentTest extends TestCase
     {
         parent::setUp();
         $this->seed(RolesAndPermissionsSeeder::class);
-        config()->set('services.paytech.base_url', 'https://engine-sandbox.pay.tech');
+        config()->set('services.paytech.base_url', 'https://paytech.sn/api');
         config()->set('services.paytech.api_key', 'test-key');
+        config()->set('services.paytech.api_secret', 'test-secret');
     }
 
     private function withRole(string $role): User

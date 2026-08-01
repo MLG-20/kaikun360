@@ -5,9 +5,9 @@ namespace App\Enums;
 /**
  * Statuts d'un paiement (table `payments`, cf. phase B14 — PayTech).
  *
- * Ces statuts internes sont alignés sur les états renvoyés par le PSP PayTech
- * (AUTHORIZED, COMPLETED, DECLINED, CANCELLED), complétés des états techniques
- * propres à Kaikun (initié, en attente, remboursé).
+ * Ces statuts internes sont alignés sur les ÉVÉNEMENTS PayTech (`type_event` :
+ * `sale_complete`, `sale_canceled`, `refund_complete`…), complétés des états
+ * techniques propres à Kaikun (initié, en attente).
  *
  * Règle de sécurité (B14) : une réservation n'est confirmée que sur un webhook
  * PayTech VÉRIFIÉ passant au statut COMPLETE — jamais sur une simple capture client.
@@ -16,11 +16,11 @@ enum PaymentStatus: string
 {
     case INITIE = 'initie';          // intention de paiement créée côté Kaikun
     case EN_ATTENTE = 'en_attente';  // en attente de confirmation du PSP
-    case AUTORISE = 'autorise';      // PayTech AUTHORIZED (fonds autorisés)
-    case COMPLETE = 'complete';      // PayTech COMPLETED (encaissé) → confirme la résa
-    case REFUSE = 'refuse';          // PayTech DECLINED
-    case ANNULE = 'annule';          // PayTech CANCELLED
-    case REMBOURSE = 'rembourse';    // remboursement effectué (caution / annulation éligible)
+    case AUTORISE = 'autorise';      // fonds autorisés sans capture (aucun équivalent PayTech)
+    case COMPLETE = 'complete';      // PayTech `sale_complete` (encaissé) → confirme la résa
+    case REFUSE = 'refuse';          // PayTech `transfer_failed`
+    case ANNULE = 'annule';          // PayTech `sale_canceled`
+    case REMBOURSE = 'rembourse';    // PayTech `refund_complete`
 
     /**
      * Libellé lisible (français).
@@ -47,21 +47,30 @@ enum PaymentStatus: string
     }
 
     /**
-     * Traduit un statut brut PayTech vers le statut interne, ou null si l'état
-     * est inconnu (le webhook doit alors être rejeté plutôt qu'interprété).
+     * Traduit un `type_event` PayTech vers le statut interne, ou `null` si
+     * l'événement est inconnu — auquel cas le webhook doit être REJETÉ plutôt
+     * qu'interprété : deviner le sens d'un événement de paiement, c'est risquer
+     * de confirmer une réservation jamais réglée.
      *
-     * États PayTech : AUTHORIZED, COMPLETED, DECLINED, CANCELLED (+ REFUNDED,
-     * PENDING selon les moyens de paiement).
+     * ⚠️ **Réécrit en F8.5.** Cette table contenait `AUTHORIZED`, `COMPLETED`,
+     * `DECLINED`… qui ne sont pas des valeurs PayTech : aucune notification
+     * réelle n'aurait été reconnue. Les événements documentés sont
+     * `sale_complete`, `sale_canceled`, `transfer_success`, `transfer_failed`
+     * et `refund_complete`.
+     *
+     * Il n'existe pas d'équivalent PayTech à `AUTORISE` (autorisation sans
+     * capture) : le PSP ne notifie qu'une vente aboutie ou annulée.
      */
-    public static function fromPaytech(string $paytechStatus): ?self
+    public static function fromPaytech(string $typeEvent): ?self
     {
-        return match (strtoupper($paytechStatus)) {
-            'AUTHORIZED' => self::AUTORISE,
-            'COMPLETED' => self::COMPLETE,
-            'DECLINED' => self::REFUSE,
-            'CANCELLED', 'CANCELED' => self::ANNULE,
-            'REFUNDED' => self::REMBOURSE,
-            'PENDING' => self::EN_ATTENTE,
+        return match (strtolower(trim($typeEvent))) {
+            'sale_complete', 'sale_completed' => self::COMPLETE,
+            'sale_canceled', 'sale_cancelled' => self::ANNULE,
+            'refund_complete', 'refund_completed' => self::REMBOURSE,
+            // Les transferts sortants (paiement d'un prestataire) empruntent le
+            // même canal de notification que les ventes.
+            'transfer_success' => self::COMPLETE,
+            'transfer_failed' => self::REFUSE,
             default => null,
         };
     }
