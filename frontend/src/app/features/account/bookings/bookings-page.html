@@ -3,8 +3,9 @@
   <p class="account-eyebrow">Mon espace</p>
   <h1 class="account-title">Mes réservations</h1>
   <p class="account-lead">
-    Retrouvez vos nuitées, locations de véhicules, expériences et trajets — avec
-    leur statut, et la possibilité d'annuler quand c'est encore permis.
+    Retrouvez vos nuitées, locations de véhicules, expériences, trajets et
+    prestations sur-mesure — avec leur statut, et la possibilité d'annuler quand
+    c'est encore permis.
   </p>
 </section>
 
@@ -19,11 +20,35 @@
   <div class="bk-empty">
     <h2 class="bk-empty-title">Aucune réservation pour l'instant</h2>
     <p class="bk-empty-text">
-      Vous n'avez pas encore de réservation. Parcourez nos univers pour réserver
-      une nuitée, un véhicule, une expérience ou un trajet : elles apparaîtront
-      ici, avec leur suivi.
+      Vous n'avez pas encore de réservation. Réservez une nuitée, un véhicule,
+      une expérience ou un trajet : elles apparaîtront ici, avec leur suivi.
     </p>
-    <a class="k-btn k-btn--primary" routerLink="/nuitees">Explorer les nuitées</a>
+
+    <!--
+      ⚠️ Le texte annonçait quatre univers et le seul bouton n'en ouvrait qu'un
+      (« Explorer les nuitées ») : on nommait au client trois chemins qu'on ne
+      lui donnait pas. Les quatre sont désormais atteignables, et le bouton
+      principal mène au catalogue commun — d'où l'on cherche dans tous.
+    -->
+    <a class="k-btn k-btn--primary" routerLink="/recherche">Parcourir le catalogue</a>
+
+    <ul class="bk-empty-links">
+      <li><a routerLink="/nuitees">Nuitées</a></li>
+      <li><a routerLink="/transport">Véhicules</a></li>
+      <li><a routerLink="/tourisme">Expériences</a></li>
+      <li><a routerLink="/mobilite">Trajets</a></li>
+    </ul>
+
+    <!--
+      Le sur-mesure ne se réserve pas au catalogue : il passe par une demande,
+      puis un devis (F8.11). Ne pas le mentionner ici laisserait croire que la
+      plateforme ne sait faire que du catalogue.
+    -->
+    <p class="bk-empty-note">
+      Un projet sur-mesure (construction, gestion locative, diaspora, team
+      building) ? Il commence par une
+      <a routerLink="/mon-espace/demandes">demande</a>, puis un devis.
+    </p>
   </div>
 } @else {
   <!-- ============================ Liste des réservations =================== -->
