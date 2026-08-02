@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { Booking } from '../../models/booking.model';
 import { Quote } from '../../models/quote.model';
 import { ApiEnvelope } from './api-response.model';
 
@@ -37,13 +38,20 @@ export class QuoteService {
    * PATCH /quotes/{id} — accepte ou refuse un devis (auth requise).
    * Le backend refuse (422) toute réponse à un devis qui n'est pas au statut
    * `envoye` : la page ne propose donc les boutons que dans ce cas.
+   *
+   * ⚠️ **La réponse porte désormais une réservation** (F8.11). Accepter un devis
+   * ne faisait jusqu'ici que changer une colonne : rien ne devenait exigible, et
+   * `POST /payments/initiate` réclamant un `booking_id`, le client ne pouvait
+   * pas régler ce qu'il venait d'accepter. `booking` est **null en cas de
+   * refus** — un refus ne crée rien.
    */
   respond(
     id: string | number,
     status: QuoteDecision,
-  ): Observable<ApiEnvelope<{ quote: Quote }>> {
-    return this.http.patch<ApiEnvelope<{ quote: Quote }>>(`${this.api}/quotes/${id}`, {
-      status,
-    });
+  ): Observable<ApiEnvelope<{ quote: Quote; booking: Booking | null }>> {
+    return this.http.patch<ApiEnvelope<{ quote: Quote; booking: Booking | null }>>(
+      `${this.api}/quotes/${id}`,
+      { status },
+    );
   }
 }

@@ -67,18 +67,75 @@
             </dl>
           }
 
+          <!--
+            Interlocuteur du dossier (F8.11). Placé AVANT la zone de décision :
+            on décide plus sereinement quand on sait à qui l'on a affaire. Un
+            devis sur-mesure n'est pas un article de catalogue — le client
+            n'achète pas une prestation, il fait confiance à quelqu'un.
+          -->
+          @if (agent(); as a) {
+            <div class="quote-agent">
+              <p class="quote-agent-role">Votre interlocuteur</p>
+              <p class="quote-agent-name">{{ a.name }}</p>
+              <p class="quote-agent-contact k-muted">
+                @if (a.phone) {
+                  <a [href]="'tel:' + a.phone">{{ a.phone }}</a>
+                }
+                @if (a.phone && a.email) { <span aria-hidden="true"> · </span> }
+                @if (a.email) {
+                  <a [href]="'mailto:' + a.email">{{ a.email }}</a>
+                }
+              </p>
+              <p class="k-muted quote-agent-note">
+                Une ligne du devis vous semble discutable ? Appelez avant d'accepter —
+                un devis se discute, c'est normal.
+              </p>
+            </div>
+          }
+
           <!-- Zone de décision. -->
           @if (isSettled()) {
             <!-- Le client a déjà tranché : rappel de sa décision. -->
             @if (q.status === 'accepte') {
               <p class="k-form-info" role="status">
-                <strong>Devis accepté ✔</strong> — un conseiller poursuit votre dossier
-                (réservation et paiement).
+                <strong>Devis accepté ✔</strong> — c'est noté, et
+                {{ agent()?.name ?? 'votre conseiller' }} en est informé.
               </p>
+
+              <!--
+                Le règlement est PROPOSÉ, jamais imposé (F8.11) : aucune
+                redirection automatique vers PayTech. Sur du sur-mesure, pousser
+                un client vers un formulaire de paiement dans la seconde qui suit
+                son accord, c'est le meilleur moyen de le faire reculer.
+              -->
+              @if (paymentPath(); as path) {
+                <div class="quote-settle">
+                  <p class="quote-settle-lead">
+                    La prestation est enregistrée pour <strong>{{ amountLabel() }}</strong>.
+                    Vous pouvez la régler dès maintenant, ou en reparler d'abord.
+                  </p>
+                  <div class="quote-actions">
+                    <a class="k-btn k-btn--primary" [routerLink]="path">Régler ma prestation</a>
+                    @if (agent()?.phone; as phone) {
+                      <a class="k-btn k-btn--ghost" [href]="'tel:' + phone">
+                        Appeler {{ agent()?.name }}
+                      </a>
+                    }
+                  </div>
+                  <p class="k-muted quote-settle-note">
+                    Rien n'est prélevé tant que vous n'avez pas validé le paiement.
+                  </p>
+                </div>
+              }
             } @else {
               <p class="quote-refused" role="status">
-                <strong>Devis refusé.</strong> Vous pouvez contacter votre conseiller pour
-                ajuster votre demande.
+                <strong>Devis refusé.</strong>
+                @if (agent(); as a) {
+                  {{ a.name }} en est informé et pourra vous rappeler pour ajuster
+                  votre demande.
+                } @else {
+                  Vous pouvez contacter votre conseiller pour ajuster votre demande.
+                }
               </p>
             }
           } @else if (canRespond()) {

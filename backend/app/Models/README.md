@@ -69,6 +69,7 @@ recu → verification → visite → devis → negociation → cloture
 |---|---|
 | `reference` (unique) | identifiant lisible (`QTE-…`) |
 | `request_id` | demande rattachée (`ServiceRequest`, cascade) |
+| `agent_id` | **F8.11** — l'agent qui a composé le devis (nullable, `nullOnDelete`) |
 | `amount_xof` | montant proposé |
 | `details` (json) | lignes/conditions structurées (facultatif) |
 | `valid_until` | date de validité (facultatif) |
@@ -85,6 +86,34 @@ recu → verification → visite → devis → negociation → cloture
 - Le demandeur ne peut répondre qu'à un devis **`envoye`** (ni brouillon, ni déjà
   tranché) : sinon rejet **422** sur le champ `status`.
 - `QuotePolicy` enregistrée dans `AppServiceProvider`.
+
+### F8.11 — accepter un devis crée une réservation payable
+
+⚠️ **Le trou comblé.** Jusqu'à F8.11, `respond()` ne faisait que changer la
+colonne `quotes.status`. Aucune réservation n'était créée, donc aucun montant
+n'était exigible — et `POST /payments/initiate` réclamant un `booking_id`, le
+client ne pouvait tout simplement pas régler ce qu'il venait d'accepter. Le
+circuit du sur-mesure s'arrêtait sur un accord sans suite.
+
+- **`App\Services\QuoteConversionService`** crée la réservation. Il est
+  **idempotent** (verrou de ligne + `morphOne` existant) : un double clic ou un
+  rejeu ne produisent jamais deux montants à payer pour une prestation.
+- ⚠️ **Le devis accepté est LUI-MÊME la cible polymorphe** de la réservation
+  (`bookable_type = Quote`). Aucune migration de `bookings` : la table est
+  polymorphe depuis B3.3. Le sens est juste — le sur-mesure n'a aucune fiche au
+  catalogue à désigner, ce qui est vendu c'est le devis.
+- **Aucune notification depuis le service** : il tourne dans une transaction, un
+  e-mail parti avant un `rollback` annoncerait une réservation inexistante.
+  C'est le contrôleur qui notifie, après coup.
+- **Commission figée à la conversion** (`CommissionCalculator`), même régime que
+  tous les univers depuis F8.4.
+- **`QuoteAnsweredNotification`** part au SEUL agent auteur (`agent_id`), jamais
+  à toute l'équipe : sinon personne ne se sent responsable du dossier.
+  Événement back-office `quote_answered` (coupable dans *Paramètres*).
+- `BookingResource` connaît le type **`quote`** → libellé « Prestation
+  sur-mesure », `item_label` tiré de l'univers de la demande d'origine
+  (« Prestation — Gestion locative »). **Non annulable** par le client : sur du
+  sur-mesure on en parle à son interlocuteur, on ne clique pas.
 
 ## Finalisation des réservations (phase B11.3)
 

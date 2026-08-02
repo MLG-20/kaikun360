@@ -36,6 +36,7 @@ enum NotificationEvent: string
     case NEW_REQUEST_TO_HANDLE = 'new_request_to_handle';
     case RESOURCE_TO_VALIDATE = 'resource_to_validate';
     case TEAM_BUILDING_REQUEST = 'team_building_request';
+    case QUOTE_ANSWERED = 'quote_answered';
 
     /**
      * Libellé lisible, affiché dans la liste des interrupteurs.
@@ -54,6 +55,7 @@ enum NotificationEvent: string
             self::NEW_REQUEST_TO_HANDLE => 'Nouvelle demande à traiter',
             self::RESOURCE_TO_VALIDATE => 'Nouvelle offre à valider',
             self::TEAM_BUILDING_REQUEST => 'Nouvelle demande team building',
+            self::QUOTE_ANSWERED => 'Réponse du client à un devis',
         };
     }
 
@@ -74,6 +76,7 @@ enum NotificationEvent: string
             self::NEW_REQUEST_TO_HANDLE => 'À l’équipe, à l’arrivée d’une demande de service.',
             self::RESOURCE_TO_VALIDATE => 'À l’équipe, quand un bien ou un véhicule est déposé et attend une décision.',
             self::TEAM_BUILDING_REQUEST => 'À l’équipe, à l’arrivée d’une demande d’entreprise.',
+            self::QUOTE_ANSWERED => 'À l’agent qui a chiffré le devis — lui seul, pas toute l’équipe — quand son client l’accepte ou le refuse.',
         };
     }
 
@@ -85,7 +88,8 @@ enum NotificationEvent: string
         return match ($this) {
             self::NEW_REQUEST_TO_HANDLE,
             self::RESOURCE_TO_VALIDATE,
-            self::TEAM_BUILDING_REQUEST => 'Équipe Kaikun',
+            self::TEAM_BUILDING_REQUEST,
+            self::QUOTE_ANSWERED => 'Équipe Kaikun',
             default => 'Clients & partenaires',
         };
     }

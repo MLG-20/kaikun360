@@ -125,3 +125,64 @@
   background: color-mix(in srgb, var(--k-danger) 8%, transparent);
   color: var(--k-ink);
 }
+
+// --- Interlocuteur du dossier (F8.11) ---------------------------------------
+//
+// Encadré volontairement chaleureux et placé AVANT la zone de décision : sur du
+// sur-mesure, le client n'achète pas un article de catalogue, il accorde sa
+// confiance à quelqu'un. Un chiffrage qui arrive sans aucun nom refroidit.
+.quote-agent {
+  margin-top: 1.75rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--k-radius-sm);
+  border-left: 3px solid var(--k-green);
+  background: color-mix(in srgb, var(--k-green) 6%, transparent);
+}
+
+.quote-agent-role {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--k-muted);
+}
+
+.quote-agent-name {
+  margin: 0.15rem 0 0.2rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.quote-agent-contact {
+  margin: 0;
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+  }
+}
+
+.quote-agent-note {
+  margin: 0.55rem 0 0;
+  font-size: 0.88rem;
+}
+
+// --- Règlement proposé après acceptation (F8.11) ----------------------------
+//
+// Le chemin de paiement n'existait pas : accepter un devis ne créait aucune
+// réservation, donc aucun montant exigible. Il est ici PROPOSÉ, pas imposé —
+// aucune redirection automatique vers le prestataire de paiement.
+.quote-settle {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--k-line);
+}
+
+.quote-settle-lead {
+  margin: 0 0 0.9rem;
+}
+
+.quote-settle-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+}

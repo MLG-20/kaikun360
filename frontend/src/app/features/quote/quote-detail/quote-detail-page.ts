@@ -103,6 +103,30 @@ export class QuoteDetailPageComponent {
   });
 
   /**
+   * L'interlocuteur du dossier (F8.11).
+   *
+   * Un devis sur-mesure engage une relation entre deux personnes, pas une
+   * transaction de catalogue : le client doit voir un NOM, pas une plateforme
+   * anonyme. Absent des devis antérieurs à F8.11 — le gabarit le tolère.
+   */
+  readonly agent = computed(() => this.quote()?.agent ?? null);
+
+  /**
+   * Chemin de règlement de la prestation, une fois le devis accepté (F8.11).
+   *
+   * ⚠️ Il n'existait pas : accepter un devis ne créait aucune réservation, donc
+   * aucun montant exigible, et l'écran se contentait d'annoncer qu'« un
+   * conseiller poursuit votre dossier ». Le client repartait sans rien pouvoir
+   * régler. `booking_id` est servi par l'API dès que le devis est accepté, y
+   * compris au rechargement de la page — sans quoi un client revenu plus tard
+   * perdrait le chemin vers son paiement.
+   */
+  readonly paymentPath = computed(() => {
+    const bookingId = this.quote()?.booking_id;
+    return bookingId ? `/mon-espace/reservations/${bookingId}/paiement` : null;
+  });
+
+  /**
    * Détail chiffré du devis présenté en lignes lisibles. Le backend renvoie un
    * objet libre (`details`) ; on l'aplatit en paires clé → valeur, en ignorant
    * les valeurs vides. Un tableau (rare) n'est pas déplié ici.

@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import {
@@ -27,7 +28,8 @@ import { FicheFlag, FicheSignalsComponent } from '../../shared/fiche-signals/fic
  */
 @Component({
   selector: 'app-backoffice-request-detail-page',
-  imports: [FicheSignalsComponent],
+  // FormsModule : le chiffrage d'un devis (F8.11) se saisit dans cette fiche.
+  imports: [FicheSignalsComponent, FormsModule],
   templateUrl: './backoffice-request-detail-page.html',
   // Briques communes des fiches hiérarchisées en F8.3 (volets repliables).
   styleUrls: ['./backoffice-request-detail-page.scss', '../../shared/fiche-blocks.scss'],
@@ -176,16 +178,133 @@ export class BackofficeRequestDetailPageComponent {
     });
   }
 
-  private messageFor(error: HttpErrorResponse): string {
+  /**
+   * @param refus Message de repli quand le serveur refuse sans détail. Il diffère
+   *              selon le geste : refuser une transition et refuser un chiffrage
+   *              n'appellent pas la même explication.
+   */
+  private messageFor(
+    error: HttpErrorResponse,
+    refus = 'Cette étape a été refusée.',
+    interdit = "Vous n'avez pas le droit de faire avancer cette demande.",
+  ): string {
     if (error.status === 422) {
       const body = error.error as ValidationErrorBody | undefined;
       const first = body?.errors ? Object.values(body.errors)[0]?.[0] : undefined;
-      return first ?? 'Cette étape a été refusée.';
+      return first ?? refus;
     }
     if (error.status === 403) {
-      return "Vous n'avez pas le droit de faire avancer cette demande.";
+      return interdit;
     }
     return 'L\'action a échoué. Réessayez.';
+  }
+
+  // --- Chiffrage d'un devis (F8.11) --------------------------------------------
+  //
+  // ⚠️ `POST /requests/{id}/quotes` existait depuis B11.3 sans aucun écran pour
+  // l'appeler. L'agent pouvait faire avancer une demande jusqu'au stade « devis »
+  // sans jamais pouvoir en produire un — et le client, lui, savait déjà accepter
+  // ou refuser. Il pouvait accepter ce que personne ne pouvait émettre.
+
+  /** Le formulaire de chiffrage est-il déployé ? */
+  protected readonly composing = signal(false);
+  /** Envoi en cours (verrouille le bouton). */
+  protected readonly sendingQuote = signal(false);
+  protected readonly quoteError = signal<string | null>(null);
+
+  protected quoteAmount = '';
+  protected quoteValidUntil = '';
+
+  /**
+   * Postes du chiffrage, saisis ligne à ligne.
+   *
+   * Le backend accepte un objet libre (`details`), affiché tel quel au client.
+   * On ne fait donc PAS taper du JSON à l'agent : une ligne vide est toujours
+   * offerte en fin de liste, les lignes incomplètes sont ignorées à l'envoi.
+   */
+  protected quoteLines: { label: string; value: string }[] = [{ label: '', value: '' }];
+
+  /** Ouvre ou referme le formulaire, en repartant d'une saisie propre. */
+  protected toggleCompose(): void {
+    const next = !this.composing();
+    this.composing.set(next);
+    if (next) {
+      this.quoteAmount = '';
+      this.quoteValidUntil = '';
+      this.quoteLines = [{ label: '', value: '' }];
+      this.quoteError.set(null);
+    }
+  }
+
+  /** Garantit qu'une ligne vierge reste disponible en bas de la liste. */
+  protected onLineInput(): void {
+    const last = this.quoteLines[this.quoteLines.length - 1];
+    if (last && (last.label.trim() || last.value.trim())) {
+      this.quoteLines = [...this.quoteLines, { label: '', value: '' }];
+    }
+  }
+
+  protected removeLine(index: number): void {
+    this.quoteLines = this.quoteLines.filter((_, i) => i !== index);
+    if (!this.quoteLines.length) {
+      this.quoteLines = [{ label: '', value: '' }];
+    }
+  }
+
+  /**
+   * Envoie le devis au client.
+   *
+   * Le montant est la seule donnée obligatoire — c'est la seule que le serveur
+   * exige, et un chiffrage sans détail reste un chiffrage valable.
+   */
+  protected sendQuote(): void {
+    if (this.sendingQuote()) return;
+
+    const montant = Number(this.quoteAmount);
+    if (!Number.isFinite(montant) || montant <= 0) {
+      this.quoteError.set('Indiquez un montant en FCFA.');
+      return;
+    }
+
+    // Seules les lignes complètes partent : une ligne à moitié saisie n'a pas
+    // de sens dans un devis lu par le client.
+    const details: Record<string, string> = {};
+    for (const line of this.quoteLines) {
+      const label = line.label.trim();
+      const value = line.value.trim();
+      if (label && value) {
+        details[label] = value;
+      }
+    }
+
+    this.sendingQuote.set(true);
+    this.quoteError.set(null);
+
+    this.admin
+      .composeQuote(this.requestId, {
+        amount_xof: montant,
+        valid_until: this.quoteValidUntil || null,
+        details: Object.keys(details).length ? details : undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.sendingQuote.set(false);
+          this.composing.set(false);
+          // Rechargement complet : le devis s'ajoute à la liste ET l'historique
+          // gagne une entrée.
+          this.load();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.sendingQuote.set(false);
+          this.quoteError.set(
+            this.messageFor(
+              error,
+              "Ce devis a été refusé par le serveur.",
+              "Vous n'avez pas le droit de chiffrer cette demande.",
+            ),
+          );
+        },
+      });
   }
 
   protected back(): void {

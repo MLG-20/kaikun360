@@ -7,7 +7,15 @@
  * `cancellable` indique si le client peut encore annuler lui-même (vrai pour les
  * véhicules et expériences non encore annulés uniquement).
  */
-export type BookingType = 'stay' | 'vehicle' | 'experience' | 'mobility' | 'autre';
+export type BookingType =
+  | 'stay'
+  | 'vehicle'
+  | 'experience'
+  | 'mobility'
+  // F8.11 — prestation sur-mesure née de l'acceptation d'un devis. Elle n'a
+  // aucune fiche au catalogue : la cible réservée est le DEVIS lui-même.
+  | 'quote'
+  | 'autre';
 
 export interface Booking {
   id: number;

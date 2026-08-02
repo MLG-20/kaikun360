@@ -256,6 +256,22 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   l'équipe recevait l'e-mail d'un dossier introuvable. Le pilotage reste sur
   `PATCH /requests/{id}/status` (même permission) : la machine à états n'est pas
   dupliquée, l'API expose `allowed_transitions` pour l'écran.
+  **Le devis va jusqu'au paiement (F8.11)** — `App\Services\QuoteConversionService`.
+  ⚠️ **`PATCH /quotes/{id}` ne faisait que changer une colonne** : accepter un
+  devis ne créait aucune réservation, donc aucun montant exigible, et
+  `POST /payments/initiate` réclamant un `booking_id`, le client ne pouvait pas
+  régler ce qu'il venait d'accepter. L'acceptation crée désormais un `Booking`
+  dont la **cible polymorphe est le devis lui-même** (`bookable_type = Quote` —
+  aucune migration, `bookings` est polymorphe depuis B3.3 ; le sur-mesure n'a
+  aucune fiche au catalogue à désigner). Conversion **idempotente** (verrou de
+  ligne + `morphOne`), commission figée au passage comme partout depuis F8.4, et
+  **aucune notification depuis le service** — il tourne en transaction, un e-mail
+  parti avant un `rollback` annoncerait une réservation inexistante. Nouvelle
+  colonne **`quotes.agent_id`** : l'auteur du chiffrage devient l'interlocuteur
+  nommé du client, et `QuoteAnsweredNotification` ne part qu'à **lui seul**
+  (événement back-office `quote_answered`). ⚠️ `POST /requests/{id}/quotes`
+  existait depuis B11.3 **sans aucun appelant** : tous les devis venaient du
+  seeder.
   **Gestion documentaire transverse** (`AdminDocumentController`) — les **six**
   familles de la ligne CDC §6 « Documents » depuis F7.4.c : pièces d'identité
   (KYC), documents de biens, certifications prestataires, preuves de reversement,

@@ -79,6 +79,10 @@ class BookingResource extends JsonResource
             'Vehicle' => 'vehicle',
             'TourismExperience' => 'experience',
             'MobilityService' => 'mobility',
+            // F8.11 — le sur-mesure (chantier, mandat, diaspora, team building)
+            // n'a aucune fiche au catalogue à désigner : la cible réservée est
+            // le DEVIS lui-même, avec son montant et ses lignes.
+            'Quote' => 'quote',
             default => 'autre',
         };
     }
@@ -91,6 +95,7 @@ class BookingResource extends JsonResource
             'vehicle' => 'Véhicule',
             'experience' => 'Expérience',
             'mobility' => 'Trajet',
+            'quote' => 'Prestation sur-mesure',
             default => 'Réservation',
         };
     }
@@ -115,6 +120,12 @@ class BookingResource extends JsonResource
             'vehicle' => trim(($bookable->brand ?? '').' '.($bookable->model ?? '')) ?: 'Véhicule',
             'experience' => $bookable->title ?? 'Expérience',
             'mobility' => trim(($bookable->departure ?? '').' → '.($bookable->destination ?? ''), ' →') ?: 'Trajet',
+            // Le libellé vient de l'UNIVERS de la demande d'origine (« Chantier
+            // de construction », « Gestion locative »…) : « devis QTE-XXXX » ne
+            // dirait rien au client dans sa liste de réservations.
+            'quote' => $bookable->request?->service_type?->label()
+                ? 'Prestation — '.$bookable->request->service_type->label()
+                : 'Prestation sur-mesure',
             default => null,
         };
     }

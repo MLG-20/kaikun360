@@ -294,3 +294,90 @@
     }
   }
 }
+
+// --- Chiffrage d'un devis (F8.11) -------------------------------------------
+//
+// Le bloc est replié derrière un bouton : chiffrer est un geste délibéré, qui
+// part IMMÉDIATEMENT au client. Un formulaire déployé en permanence dans un
+// volet de consultation invite au remplissage distrait.
+.rq-compose {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--k-line);
+}
+
+.rq-quote-form {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.rq-quote-intro {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+// Montant + validité côte à côte : ce sont les deux seules données que le
+// serveur connaît vraiment, le reste est du détail libre.
+.rq-quote-head {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+.rq-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  span {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+}
+
+.rq-quote-lines-title {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--k-ink);
+}
+
+// Une ligne de chiffrage : poste, valeur, et le retrait de la ligne.
+.rq-quote-line {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.rq-quote-line-remove {
+  border: 1px solid var(--k-line);
+  background: transparent;
+  border-radius: var(--k-radius-sm);
+  width: 2rem;
+  height: 2rem;
+  line-height: 1;
+  font-size: 1.1rem;
+  color: var(--k-muted);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--k-danger);
+    color: var(--k-danger);
+  }
+}
+
+@media (max-width: 640px) {
+  .rq-quote-line {
+    grid-template-columns: 1fr auto;
+
+    // Sur mobile, la valeur passe sous le poste plutôt que de les écraser
+    // tous les deux à une largeur illisible.
+    input:nth-child(2) {
+      grid-column: 1 / -1;
+    }
+  }
+}

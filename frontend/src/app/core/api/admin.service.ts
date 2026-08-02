@@ -2247,6 +2247,35 @@ export class AdminService {
       .pipe(map((response) => response.data.request));
   }
 
+  /**
+   * Chiffre une demande. `POST /requests/{id}/quotes` (garde `traiter:demandes`)
+   *
+   * ⚠️ **Cette route existait depuis B11.3 et aucun écran ne l'appelait** — la
+   * file de traitement (F8.9) savait lister et faire avancer les demandes, mais
+   * pas les chiffrer. Le client, lui, savait déjà répondre à un devis : il
+   * pouvait accepter ce que personne ne pouvait émettre. Tous les devis en base
+   * venaient du seeder.
+   *
+   * Le devis part **directement au statut « envoyé »** : le serveur ne connaît
+   * pas de brouillon sur cette route, composer c'est envoyer. Le client en est
+   * notifié dans la foulée (`QuoteReceivedNotification`).
+   *
+   * @param details Postes libres du chiffrage (`{ poste: valeur }`), affichés
+   *                tels quels au client — d'où le passage par une saisie
+   *                ligne à ligne plutôt qu'un JSON tapé à la main.
+   */
+  composeQuote(
+    requestId: number,
+    payload: { amount_xof: number; valid_until?: string | null; details?: Record<string, string> },
+  ): Observable<RequestQuote> {
+    return this.http
+      .post<ApiEnvelope<{ quote: RequestQuote }>>(
+        `${this.api}/requests/${requestId}/quotes`,
+        payload,
+      )
+      .pipe(map((response) => response.data.quote));
+  }
+
   // --- Dossier de construction (F7.3.b) --------------------------------------
   //
   // Routes du module Build (hors préfixe /admin) : la lecture passe par la

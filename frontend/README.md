@@ -721,6 +721,36 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     « la réservation ferme relève des phases ultérieures ». Ces phases n'étaient
     jamais venues ; les commentaires disent maintenant ce que le code fait.
 
+  **F8.11 Le devis sur-mesure va enfin jusqu'au paiement.**
+  Le pendant de F8.10 pour ce qui ne se réserve pas au catalogue (construction,
+  gestion locative, diaspora, team building). Trois maillons manquaient, chacun
+  invisible depuis les deux autres :
+  - **L'agent ne pouvait pas chiffrer.** `POST /requests/{id}/quotes` existait
+    depuis B11.3 **sans aucun appelant** : la file de traitement (F8.9) savait
+    lister les demandes et les faire avancer jusqu'au stade « devis », mais rien
+    n'en produisait. Le client, lui, savait déjà répondre — il pouvait accepter
+    ce que personne ne pouvait émettre, et tous les devis venaient du seeder.
+    Le formulaire vit maintenant dans le volet « Devis proposés » de
+    [`features/backoffice/requests/detail/`](src/app/features/backoffice/requests/detail/),
+    replié derrière un bouton : chiffrer part **immédiatement au client**, ce
+    n'est pas un champ qu'on remplit en passant. Les postes se saisissent
+    **ligne à ligne, jamais en JSON** — le client les lit tels quels, c'est ce
+    qui rend un montant discutable plutôt qu'à prendre ou à laisser.
+  - **Accepter ne menait nulle part.** L'écran annonçait « un conseiller
+    poursuit votre dossier (réservation et paiement) » : personne ne le
+    faisait, et aucune réservation n'existait pour être réglée. `/devis/:id`
+    propose désormais **« Régler ma prestation »** vers la page de paiement de
+    F8.6, y compris au rechargement (`booking_id` est servi par l'API).
+  - **Le devis n'avait pas de visage.** ⚠️ **C'est une décision produit, pas un
+    ornement** : sur du sur-mesure, le client n'achète pas un article de
+    catalogue, il accorde sa confiance à quelqu'un. L'agent qui a chiffré est
+    affiché **en tête, avant la zone de décision** (nom, téléphone cliquable,
+    « une ligne vous semble discutable ? appelez avant d'accepter »), et il
+    reparaît après l'accord à côté du bouton de règlement. Le paiement est
+    **proposé, jamais imposé** — aucune redirection automatique vers PayTech :
+    pousser un client vers un formulaire de carte dans la seconde qui suit son
+    accord est le meilleur moyen de le faire reculer.
+
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

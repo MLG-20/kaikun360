@@ -155,6 +155,90 @@
       } @else {
         <p class="tb-muted tb-empty-inline">Aucun devis n'a encore été proposé pour cette demande.</p>
       }
+
+      <!--
+        Chiffrage (F8.11). La route existait depuis B11.3 sans aucun écran :
+        l'agent pouvait amener une demande au stade « devis » sans jamais
+        pouvoir en produire un. Replié par défaut — chiffrer est un geste
+        délibéré, pas un champ qu'on remplit en passant.
+      -->
+      <div class="rq-compose">
+        <button type="button" class="k-btn k-btn--ghost" (click)="toggleCompose()">
+          {{ composing() ? 'Annuler' : '+ Chiffrer cette demande' }}
+        </button>
+
+        @if (composing()) {
+          <form class="rq-quote-form" (submit)="$event.preventDefault(); sendQuote()">
+            <p class="tb-muted rq-quote-intro">
+              Le devis part <strong>immédiatement au client</strong>, qui pourra l'accepter
+              ou le refuser. Vous en serez averti dès sa réponse.
+            </p>
+
+            <div class="rq-quote-head">
+              <label class="rq-field">
+                <span>Montant total (FCFA)</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="1000"
+                  class="k-input"
+                  [(ngModel)]="quoteAmount"
+                  name="amount"
+                  required
+                />
+              </label>
+
+              <label class="rq-field">
+                <span>Valable jusqu'au (facultatif)</span>
+                <input type="date" class="k-input" [(ngModel)]="quoteValidUntil" name="validUntil" />
+              </label>
+            </div>
+
+            <!--
+              Postes du chiffrage : saisis ligne à ligne, jamais en JSON. Le
+              client les lit tels quels sur son devis — c'est ce qui rend un
+              montant discutable plutôt qu'à prendre ou à laisser.
+            -->
+            <p class="rq-quote-lines-title">Détail du chiffrage (facultatif)</p>
+            @for (line of quoteLines; track $index) {
+              <div class="rq-quote-line">
+                <input
+                  type="text"
+                  class="k-input"
+                  placeholder="Poste (ex. Gros œuvre)"
+                  [(ngModel)]="line.label"
+                  [ngModelOptions]="{ standalone: true }"
+                  (input)="onLineInput()"
+                />
+                <input
+                  type="text"
+                  class="k-input"
+                  placeholder="Valeur (ex. 12 000 000 F)"
+                  [(ngModel)]="line.value"
+                  [ngModelOptions]="{ standalone: true }"
+                  (input)="onLineInput()"
+                />
+                <button
+                  type="button"
+                  class="rq-quote-line-remove"
+                  (click)="removeLine($index)"
+                  aria-label="Retirer cette ligne"
+                >
+                  ×
+                </button>
+              </div>
+            }
+
+            @if (quoteError(); as err) {
+              <p class="tb-inline-error" role="alert">{{ err }}</p>
+            }
+
+            <button type="submit" class="k-btn k-btn--primary" [disabled]="sendingQuote()">
+              {{ sendingQuote() ? 'Envoi…' : 'Envoyer le devis au client' }}
+            </button>
+          </form>
+        }
+      </div>
     </div>
   </details>
 
