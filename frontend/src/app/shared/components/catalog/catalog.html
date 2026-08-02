@@ -6,6 +6,12 @@
       <label class="catalog-filter">
         <span class="catalog-filter-label">{{ field.label }}</span>
 
+        <!--
+          ⚠️ `(change)` ne se déclenche qu'à la PERTE DE FOCUS : taper un mot
+          puis fixer l'écran ne filtrait rien, et le catalogue semblait sourd
+          (F8.11). `(keyup.enter)` rend la touche Entrée équivalente, ce que tout
+          le monde essaie en premier dans un champ de recherche.
+        -->
         @switch (field.kind) {
           @case ('select') {
             <select
@@ -35,6 +41,7 @@
               [placeholder]="field.placeholder ?? ''"
               [value]="currentValue(field.key)"
               (change)="onFilterChange(field.key, $any($event.target).value)"
+              (keyup.enter)="onFilterChange(field.key, $any($event.target).value)"
             />
           }
           @case ('date') {
@@ -52,6 +59,7 @@
               [placeholder]="field.placeholder ?? ''"
               [value]="currentValue(field.key)"
               (change)="onFilterChange(field.key, $any($event.target).value)"
+              (keyup.enter)="onFilterChange(field.key, $any($event.target).value)"
             />
           }
         }

@@ -21,7 +21,7 @@ fonctionnalités. Tous sont « présentiels » : pilotés par leurs `input()` /
 | Composant | Sélecteur | Rôle |
 | --- | --- | --- |
 | `CatalogComponent` | `app-catalog` | **Catalogue filtrable, triable et paginé**, réutilisé sur toutes les pages d'univers. Générique : l'univers vient d'un `input()` ; filtres/tri/page vivent dans l'URL (recherches partageables). |
-| `SearchEngineComponent` | `app-search-engine` | **Moteur de recherche global** : onglets d'univers + ville/mots-clés + budget. Navigue vers `/recherche` avec des paramètres alignés sur les filtres du backend. |
+| `SearchEngineComponent` | `app-search-engine` | **Moteur de recherche global** : onglets d'univers + ville/mots-clés + budget. Navigue vers `/recherche` avec des paramètres alignés sur les filtres du backend. **Entrée `live`** (F8.11) : posée sur la page de résultats, elle fait qu'un onglet d'univers **applique le changement aussitôt** au lieu d'attendre « Rechercher ». Les trois champs sont des `linkedSignal` **branchés sur l'URL**. |
 
 ## Conversion (F2.5)
 
@@ -105,9 +105,20 @@ la remettre en favori.
 - La couche de données est [`core/api/catalog.service.ts`](../core/api/catalog.service.ts)
   (5 index publics `/properties`, `/stays`, `/vehicles`, `/experiences`,
   `/mobility-services`), enveloppe paginée typée [`Paginated<T>`](../core/api/pagination.model.ts).
-- `app-search-engine` mappe pour l'instant la « ville » sur la recherche
-  plein-texte `q` ; le filtrage géographique par identifiant (et les dates de
-  disponibilité) arriveront avec les pages d'univers (F2.3).
+- `app-search-engine` mappe la « ville » sur la recherche plein-texte `q` ; le
+  filtrage géographique par identifiant (et les dates de disponibilité)
+  arriveront avec les pages d'univers (F2.3). ⚠️ **Exception mobilité** : un
+  départ programmé n'a **aucun champ libre ni aucun filtre de prix** côté
+  serveur — la ville est donc envoyée en `departure`, et le budget est **omis**
+  plutôt que transmis à un filtre inexistant, qui aurait laissé croire à un
+  tri qui n'a pas lieu.
+- ⚠️ **Deux défauts corrigés en F8.11**, tous deux vécus comme « les filtres ne
+  marchent pas » : (1) les onglets d'univers ne reflétaient pas l'URL et ne
+  changeaient rien au clic, si bien que l'onglet *Nuitées* pouvait s'allumer
+  au-dessus d'un catalogue titrant *Immobilier* ; (2) les champs texte du
+  catalogue n'appliquaient leur filtre qu'à la **perte de focus** (`(change)`) —
+  taper un mot puis fixer l'écran ne filtrait rien. La touche **Entrée** vaut
+  désormais validation.
 
 ### Entrées principales
 

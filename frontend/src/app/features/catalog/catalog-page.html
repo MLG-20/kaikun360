@@ -1,6 +1,9 @@
 <!-- Page de résultats /recherche (F2.1). -->
 <div class="k-wrap catalog-page">
-  <app-search-engine />
+  <!-- `live` : sur une page de RÉSULTATS, cliquer un onglet d'univers doit
+       changer les résultats tout de suite (F8.11). Sur l'accueil, il n'y a rien
+       à changer : l'onglet se contente de préparer la recherche. -->
+  <app-search-engine [live]="true" />
 
   <header class="catalog-page-head">
     <p class="k-eyebrow">Catalogue</p>
