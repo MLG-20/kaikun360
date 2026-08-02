@@ -85,6 +85,13 @@ export class ProfilePageComponent {
   protected readonly verifyingPhone = signal(false);
   protected readonly verifyEmailError = signal<string | null>(null);
   protected readonly verifyPhoneError = signal<string | null>(null);
+  /**
+   * Média réellement employé pour le code du téléphone, dicté par le backend.
+   * Tant que le SMS n'est pas branché, le code arrive sur l'ADRESSE E-MAIL du
+   * compte : la phrase du panneau doit suivre, faute de quoi on enverrait
+   * l'utilisateur guetter un SMS qui n'arrivera jamais.
+   */
+  protected readonly phoneCodeDelivery = signal<'sms' | 'mail'>('sms');
 
   // — Documents —
   protected readonly documents = signal<UserDocument[]>([]);
@@ -293,6 +300,7 @@ export class ProfilePageComponent {
             this.pendingPhone.set(true);
             this.phoneCode.set('');
             this.verifyPhoneError.set(null);
+            this.phoneCodeDelivery.set(result.phoneCodeDelivery);
           }
         },
         error: (error: HttpErrorResponse) => {
@@ -346,8 +354,15 @@ export class ProfilePageComponent {
   /** Renvoie un nouveau code sur le canal concerné. */
   protected resendCode(channel: VerificationChannel): void {
     const errSig = channel === 'email' ? this.verifyEmailError : this.verifyPhoneError;
+    // Pour le téléphone, on rappelle où chercher : le code peut partir par
+    // e-mail (repli tant que le SMS n'est pas branché).
+    const sent =
+      channel === 'phone' && this.phoneCodeDelivery() === 'mail'
+        ? 'Un nouveau code a été envoyé à votre adresse e-mail.'
+        : 'Un nouveau code a été envoyé.';
+
     this.auth.sendVerificationCode(channel).subscribe({
-      next: () => errSig.set('Un nouveau code a été envoyé.'),
+      next: () => errSig.set(sent),
       error: () => errSig.set("L'envoi du code a échoué."),
     });
   }

@@ -188,7 +188,10 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   coordonnées** (`PATCH /users/me`, erreurs 422 par champ). **E-mail / téléphone
   (F3.2b)** : un changement renvoie `verification.{email,phone}_required` → un
   **panneau de saisie de code** apparaît (réutilise `AuthService.verify` /
-  `sendVerificationCode`). **Localisation en cascade** via
+  `sendVerificationCode`). Le panneau du téléphone suit
+  `verification.phone_delivery` : le code partant par **e-mail** tant que le SMS
+  n'est pas branché, la phrase change en conséquence — annoncer un SMS ferait
+  attendre l'utilisateur devant un téléphone muet. **Localisation en cascade** via
   [`GeoService`](../../core/api/geo.service.ts) (Région → Département → Commune,
   préremplie sans déclencher les resets grâce à `emitEvent:false`). **Sécurité**
   : mot de passe via `AccountService.updatePassword` (`PATCH /users/me/password`).

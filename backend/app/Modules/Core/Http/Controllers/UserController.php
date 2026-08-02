@@ -9,6 +9,7 @@ use App\Modules\Core\Enums\UserStatus;
 use App\Modules\Core\Http\Requests\UpdatePasswordRequest;
 use App\Modules\Core\Http\Requests\UpdateProfileRequest;
 use App\Modules\Core\Http\Resources\UserResource;
+use App\Modules\Core\Notifications\VerificationCodeNotification;
 use App\Modules\Core\Services\AccountAnonymizer;
 use App\Modules\Core\Services\VerificationService;
 use App\Support\ApiResponse;
@@ -108,6 +109,11 @@ class UserController extends Controller
             'verification' => [
                 'email_required' => $emailChanged,
                 'phone_required' => $phoneChanged && (bool) $user->phone,
+                // Où le code du téléphone a réellement été envoyé ('sms' ou
+                // 'mail'). Tant qu'aucun fournisseur SMS n'est branché, il part
+                // par e-mail : le front doit le dire, sinon l'utilisateur
+                // attend un SMS qui n'arrivera pas.
+                'phone_delivery' => VerificationCodeNotification::deliveryFor(VerificationService::CHANNEL_PHONE),
             ],
         ]);
     }

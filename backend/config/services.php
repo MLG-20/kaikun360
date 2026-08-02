@@ -38,6 +38,23 @@ return [
     // SMS (B16/B18). Fournisseur `log` par défaut (dev), `twilio` ou `orange` (prod).
     'sms' => [
         'provider' => env('SMS_PROVIDER', 'log'),
+        // Repli des CODES DE VÉRIFICATION vers l'e-mail.
+        //
+        // Un code destiné au téléphone part normalement par SMS. Mais tant
+        // qu'aucun fournisseur réel n'est branché, le provider `log` se
+        // contente d'écrire le SMS dans les logs : l'utilisateur, lui, ne
+        // reçoit RIEN et reste bloqué devant la saisie du code. On préfère
+        // alors le lui envoyer sur son adresse e-mail — canal toujours
+        // disponible, puisque le compte en possède une.
+        //
+        // Par défaut, le repli s'active donc exactement quand le SMS est
+        // factice (`SMS_PROVIDER=log`) et se désactive tout seul le jour où
+        // Twilio / Orange est configuré. `SMS_VERIFICATION_VIA_MAIL` permet de
+        // forcer l'un ou l'autre comportement.
+        'verification_via_mail' => (bool) env(
+            'SMS_VERIFICATION_VIA_MAIL',
+            env('SMS_PROVIDER', 'log') === 'log',
+        ),
         'twilio' => [
             'sid' => env('TWILIO_SID'),
             'token' => env('TWILIO_TOKEN'),

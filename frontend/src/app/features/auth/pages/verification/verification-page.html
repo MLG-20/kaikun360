@@ -38,7 +38,10 @@
           [attr.aria-checked]="channel() === 'phone'"
           [class.is-selected]="channel() === 'phone'"
           (click)="chooseChannel('phone')">
-          📱 SMS
+          <!-- Volontairement « Téléphone » et non « SMS » : ce bouton dit ce
+               que le code CONFIRME, pas par quoi il transite. Le média réel
+               (SMS ou e-mail de repli) est annoncé après l'envoi. -->
+          📱 Téléphone
           <span class="channel-hint">{{ user()?.phone }}</span>
         </button>
       }

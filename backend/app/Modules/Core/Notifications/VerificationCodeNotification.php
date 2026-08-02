@@ -27,7 +27,29 @@ class VerificationCodeNotification extends Notification implements ShouldQueue
     ) {}
 
     /**
-     * Canaux de livraison. Mail uniquement pour l'instant.
+     * Par quel média un code destiné à `$channel` part-il RÉELLEMENT ?
+     *
+     * Un code « téléphone » voyage par SMS… sauf quand le repli e-mail est
+     * actif (voir `config/services.php`, clé `sms.verification_via_mail`), ce
+     * qui est le cas tant qu'aucun fournisseur SMS réel n'est branché.
+     *
+     * L'API expose cette information au frontend : l'écran de saisie doit
+     * annoncer le bon endroit où chercher le code, sous peine d'envoyer
+     * l'utilisateur consulter des SMS qui n'arriveront jamais.
+     *
+     * @return 'sms'|'mail'
+     */
+    public static function deliveryFor(string $channel): string
+    {
+        if ($channel !== 'phone') {
+            return 'mail';
+        }
+
+        return config('services.sms.verification_via_mail') ? 'mail' : 'sms';
+    }
+
+    /**
+     * Canaux de livraison.
      *
      * @return array<int, string>
      */
@@ -37,8 +59,9 @@ class VerificationCodeNotification extends Notification implements ShouldQueue
         // notifications du back-office (F7.2.l). Couper ce canal condamnerait
         // l'accès (2FA admin) et l'inscription — aucun réglage ne doit pouvoir
         // le faire. Voir App\Support\Notifications\NotificationEvent.
-        // Code destiné au téléphone → SMS ; sinon e-mail.
-        return $this->channel === 'phone' ? ['sms'] : ['mail'];
+        // Code destiné au téléphone → SMS ; sinon e-mail. Le repli éventuel
+        // vers l'e-mail est décidé par deliveryFor().
+        return [self::deliveryFor($this->channel)];
     }
 
     /**
@@ -79,6 +102,17 @@ class VerificationCodeNotification extends Notification implements ShouldQueue
                 'Bienvenue. Pour activer votre compte Kaikun 360, saisissez le code ci-dessous dans la page de vérification.',
             ],
         };
+
+        // Cas du repli : le code visait le TÉLÉPHONE et nous arrive par e-mail.
+        // Le message par défaut parlerait de confirmer l'adresse e-mail, ce qui
+        // n'a aucun sens ici et sèmerait le doute. On dit donc les choses : ce
+        // code confirme un numéro, et il transite par e-mail faute de SMS.
+        if ($this->channel === 'phone' && $this->purpose === 'account_verification') {
+            $heading = 'Confirmons votre numéro de téléphone';
+            $intro = 'Vous avez ajouté ou modifié votre numéro de téléphone sur Kaikun 360. '
+                .'Saisissez le code ci-dessous dans la page de vérification pour le confirmer. '
+                .'Ce code vous parvient par e-mail, et non par SMS.';
+        }
 
         $mail = BrandedMail::make()
             ->subject('Votre code de vérification')

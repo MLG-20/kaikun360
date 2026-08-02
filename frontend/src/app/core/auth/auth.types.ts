@@ -50,6 +50,16 @@ export type LoginOutcome =
 /** Canal de vérification d'un compte (e-mail ou téléphone). */
 export type VerificationChannel = 'email' | 'phone';
 
+/**
+ * Média par lequel un code de vérification est RÉELLEMENT parti.
+ *
+ * À distinguer du canal ci-dessus, qui dit ce que le code confirme : vérifier
+ * un TÉLÉPHONE ('phone') n'implique pas que le code arrive par SMS. Tant
+ * qu'aucun fournisseur SMS n'est branché, le backend le route vers l'adresse
+ * e-mail du compte et l'annonce ici (`services.sms.verification_via_mail`).
+ */
+export type CodeDelivery = 'sms' | 'mail';
+
 /** Corps envoyé à POST /auth/password/reset (miroir du contrôleur). */
 export interface ResetPasswordPayload {
   login: string;

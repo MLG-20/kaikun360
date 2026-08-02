@@ -34,6 +34,12 @@ export interface ProfileUpdateResult {
   user: User;
   emailVerificationRequired: boolean;
   phoneVerificationRequired: boolean;
+  /**
+   * Média réellement employé pour le code du TÉLÉPHONE. Tant qu'aucun
+   * fournisseur SMS n'est branché côté backend, le code part par e-mail : la
+   * page doit l'annoncer, sinon l'utilisateur guette un SMS qui n'arrivera pas.
+   */
+  phoneCodeDelivery: 'sms' | 'mail';
 }
 
 /** Corps de `PATCH /users/me/password` — miroir de `UpdatePasswordRequest`. */
@@ -72,15 +78,23 @@ export class AccountService {
    */
   updateProfile(payload: UpdateProfilePayload): Observable<ProfileUpdateResult> {
     return this.http
-      .patch<ApiEnvelope<{ user: User; verification: { email_required: boolean; phone_required: boolean } }>>(
-        `${this.api}/users/me`,
-        payload,
-      )
+      .patch<
+        ApiEnvelope<{
+          user: User;
+          verification: {
+            email_required: boolean;
+            phone_required: boolean;
+            phone_delivery: 'sms' | 'mail';
+          };
+        }>
+      >(`${this.api}/users/me`, payload)
       .pipe(
         map((res) => ({
           user: res.data.user,
           emailVerificationRequired: res.data.verification.email_required,
           phoneVerificationRequired: res.data.verification.phone_required,
+          // Repli défensif : un backend plus ancien n'enverrait pas le champ.
+          phoneCodeDelivery: res.data.verification.phone_delivery ?? 'sms',
         })),
       );
   }

@@ -8,6 +8,7 @@ import { User } from '../../models/user.model';
 import { ApiEnvelope } from '../api/api-response.model';
 import {
   AuthResult,
+  CodeDelivery,
   GooglePayload,
   LoginOutcome,
   LoginPayload,
@@ -115,10 +116,13 @@ export class AuthService {
    * (Re)envoie un code de vérification sur le canal choisi (F1.3).
    * Nécessite une session active (le compte est déjà identifié).
    */
-  sendVerificationCode(channel: VerificationChannel): Observable<void> {
+  sendVerificationCode(channel: VerificationChannel): Observable<CodeDelivery> {
     return this.http
-      .post<ApiEnvelope<{ message: string }>>(`${this.api}/auth/verify/send`, { channel })
-      .pipe(map(() => void 0));
+      .post<ApiEnvelope<{ message: string; delivery: CodeDelivery }>>(`${this.api}/auth/verify/send`, { channel })
+      // Le canal DEMANDÉ n'est pas toujours le média EMPLOYÉ : tant qu'aucun
+      // fournisseur SMS n'est branché, un code « téléphone » part par e-mail.
+      // On propage le média réel pour que l'écran dise où chercher le code.
+      .pipe(map((response) => response.data.delivery ?? (channel === 'phone' ? 'sms' : 'mail')));
   }
 
   /**

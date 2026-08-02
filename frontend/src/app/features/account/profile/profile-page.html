@@ -167,7 +167,14 @@
       <!-- Panneau de re-vérification téléphone -->
       @if (pendingPhone()) {
         <div class="pf-verify-panel">
-          <p>Un code a été envoyé à votre nouveau numéro. Saisissez-le pour le confirmer.</p>
+          @if (phoneCodeDelivery() === 'mail') {
+            <p>
+              Un code a été envoyé à votre adresse e-mail (et non par SMS).
+              Saisissez-le pour confirmer votre nouveau numéro.
+            </p>
+          } @else {
+            <p>Un code a été envoyé à votre nouveau numéro. Saisissez-le pour le confirmer.</p>
+          }
           @if (verifyPhoneError(); as e) { <p class="pf-verify-msg">{{ e }}</p> }
           <div class="pf-verify-row">
             <input type="text" class="k-input" inputmode="numeric" autocomplete="one-time-code"

@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
 import { AuthService } from '../../../../core/auth/auth.service';
-import { VerificationChannel } from '../../../../core/auth/auth.types';
+import { CodeDelivery, VerificationChannel } from '../../../../core/auth/auth.types';
 
 /**
  * Page de vérification de compte (F1.3). Protégée par `authGuard` : l'utilisateur
@@ -36,6 +36,12 @@ export class VerificationPageComponent {
   protected readonly channel = signal<VerificationChannel>('email');
   /** Un code a-t-il été envoyé (bascule l'affichage vers la saisie) ? */
   protected readonly codeSent = signal(false);
+  /**
+   * Média par lequel le dernier code est réellement parti (renseigné par le
+   * backend à l'envoi). Sert à libeller correctement le bouton « SMS », qui
+   * mentirait tant que le SMS n'est pas branché.
+   */
+  protected readonly delivery = signal<CodeDelivery | null>(null);
   protected readonly sending = signal(false);
   protected readonly verifying = signal(false);
   protected readonly info = signal<string | null>(null);
@@ -48,6 +54,7 @@ export class VerificationPageComponent {
   protected chooseChannel(channel: VerificationChannel): void {
     this.channel.set(channel);
     this.codeSent.set(false);
+    this.delivery.set(null);
     this.info.set(null);
     this.formError.set(null);
   }
@@ -62,12 +69,19 @@ export class VerificationPageComponent {
     this.info.set(null);
 
     this.auth.sendVerificationCode(this.channel()).subscribe({
-      next: () => {
+      // `delivery` est le média RÉELLEMENT employé, pas le canal demandé : un
+      // code destiné au téléphone part par e-mail tant que le SMS n'est pas
+      // branché. Annoncer « par SMS » à tort ferait attendre l'utilisateur
+      // devant un téléphone muet.
+      next: (delivery) => {
         this.sending.set(false);
         this.codeSent.set(true);
+        this.delivery.set(delivery);
         this.info.set(
-          this.channel() === 'email'
-            ? 'Un code vous a été envoyé par e-mail.'
+          delivery === 'mail'
+            ? this.channel() === 'phone'
+              ? 'Un code vous a été envoyé par e-mail (et non par SMS).'
+              : 'Un code vous a été envoyé par e-mail.'
             : 'Un code vous a été envoyé par SMS.',
         );
       },

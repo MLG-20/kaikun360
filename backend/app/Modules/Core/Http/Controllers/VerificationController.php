@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Core\Enums\ProfileType;
 use App\Modules\Core\Enums\UserStatus;
 use App\Modules\Core\Http\Resources\UserResource;
+use App\Modules\Core\Notifications\VerificationCodeNotification;
 use App\Modules\Core\Notifications\WelcomeNotification;
 use App\Modules\Core\Services\VerificationService;
 use App\Support\ApiResponse;
@@ -45,7 +46,17 @@ class VerificationController extends Controller
 
         $this->verification->issue($user, VerificationService::PURPOSE_ACCOUNT, $data['channel']);
 
-        return ApiResponse::success(['message' => 'Code de vérification envoyé.']);
+        // Le canal demandé n'est pas toujours le média employé : un code
+        // « téléphone » part par e-mail tant que le SMS n'est pas branché. On
+        // renvoie le média réel pour que le front l'annonce sans se tromper.
+        $delivery = VerificationCodeNotification::deliveryFor($data['channel']);
+
+        return ApiResponse::success([
+            'message' => $delivery === 'mail'
+                ? 'Code de vérification envoyé par e-mail.'
+                : 'Code de vérification envoyé par SMS.',
+            'delivery' => $delivery,
+        ]);
     }
 
     /**

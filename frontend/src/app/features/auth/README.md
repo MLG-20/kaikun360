@@ -95,7 +95,11 @@ le service unique qui parle au backend et retient qui est connecté (via des
 - `login` / `register` / `loginWithGoogle` — ouvrent une session (stockent le jeton
   en mémoire + l'utilisateur) ;
 - `sendVerificationCode(canal)` / `verify(canal, code)` — envoient puis vérifient le
-  code ; `verify` met à jour l'utilisateur en session (compte devenu actif) ;
+  code ; `verify` met à jour l'utilisateur en session (compte devenu actif).
+  `sendVerificationCode` renvoie le **média réellement employé** (`'sms'` ou
+  `'mail'`) : choisir le canal `phone` ne garantit pas un SMS, le backend route
+  le code vers l'e-mail du compte tant qu'aucun fournisseur SMS n'est branché.
+  Les écrans doivent afficher **ce** média, jamais le canal demandé ;
 - `forgotPassword(identifiant)` / `resetPassword(...)` — récupération d'accès ;
 - `logout` / `clearSession` — ferment la session.
 

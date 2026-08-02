@@ -21,6 +21,30 @@ Le fournisseur actif est choisi par la variable d'environnement `SMS_PROVIDER` :
 Le binding se fait dans `AppServiceProvider` ; le canal `sms` est enregistré via
 `Notification::resolved(...)->extend('sms', …)`.
 
+## Repli e-mail des codes de vérification
+
+En `log`, le SMS n'est qu'une ligne de journal : l'utilisateur qui change de
+numéro ne reçoit **rien** et reste bloqué devant la saisie du code. Les **codes
+de vérification** basculent donc sur l'adresse e-mail du compte tant qu'aucun
+fournisseur réel n'est branché.
+
+| `services.sms.verification_via_mail` | Effet sur un code destiné au téléphone |
+| --- | --- |
+| `true` *(défaut si `SMS_PROVIDER=log`)* | envoyé par **e-mail**, avec un message qui dit qu'il confirme un numéro |
+| `false` *(défaut sinon)* | envoyé par **SMS** |
+
+Le repli se lève donc **tout seul** le jour où Twilio / Orange est configuré ;
+`SMS_VERIFICATION_VIA_MAIL` permet de forcer l'un ou l'autre comportement.
+
+`VerificationCodeNotification::deliveryFor($canal)` renvoie le média réellement
+employé (`'sms'` ou `'mail'`). **L'API l'expose au frontend** — champ
+`verification.phone_delivery` de `PATCH /users/me`, champ `delivery` de
+`POST /auth/verify/send` — afin que l'écran annonce où chercher le code au lieu
+de faire guetter un SMS qui n'arrivera pas.
+
+Le repli ne concerne **que** ces codes : les autres notifications SMS suivent la
+règle habituelle.
+
 ## Activer Orange / Sonatel (B18.2)
 
 1. Sur **developer.orange.com**, créer une application, puis **souscrire la

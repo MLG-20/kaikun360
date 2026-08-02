@@ -90,7 +90,10 @@ class UserAccountTest extends TestCase
 
         $this->patchJson('/api/v1/users/me', ['phone' => '+221770000000'])
             ->assertOk()
-            ->assertJsonPath('data.verification.phone_required', true);
+            ->assertJsonPath('data.verification.phone_required', true)
+            // Le média réel accompagne la réponse : l'écran doit annoncer où
+            // chercher le code, qui part par e-mail tant que le SMS est factice.
+            ->assertJsonPath('data.verification.phone_delivery', 'mail');
 
         $this->assertDatabaseHas('users', ['id' => $user->id, 'phone' => '+221770000000', 'phone_verified_at' => null]);
         $this->assertDatabaseHas('verification_codes', ['user_id' => $user->id, 'channel' => 'phone']);

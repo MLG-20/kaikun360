@@ -183,11 +183,18 @@ Codes à **6 chiffres**, **usage unique**, **valables 15 min**, stockés **hach�
 (table `verification_codes`, modèle `VerificationCode`). Toute la logique est dans
 `App\Modules\Core\Services\VerificationService` (génération, envoi, vérification).
 
-Envoi via la **Notification** `VerificationCodeNotification` (canal `mail`).
-En dev (`MAIL_MAILER=log`/`array`), le code n'est pas réellement envoyé.
+Envoi via la **Notification** `VerificationCodeNotification`. Le canal du code
+(`email` / `phone`) dit ce qu'il **confirme** ; le média employé, lui, dépend de
+la configuration SMS : un code « téléphone » part par **e-mail** tant qu'aucun
+fournisseur SMS réel n'est branché (`SMS_PROVIDER=log`), faute de quoi
+l'utilisateur ne recevrait rien. Voir
+[`app/Support/Notifications/README.md`](../../Support/Notifications/README.md#repli-e-mail-des-codes-de-vérification).
 
-> 👉 **À FAIRE (phase B16)** : ajouter un canal **SMS** réel (Twilio…) pour les
-> codes envoyés par téléphone. Aujourd'hui tout passe par mail/log (aucun coût).
+Les réponses portent ce média réel, pour que le frontend annonce le bon endroit
+où chercher le code : `verification.phone_delivery` (`PATCH /users/me`) et
+`delivery` (`POST /auth/verify/send`), tous deux valant `'sms'` ou `'mail'`.
+
+En dev (`MAIL_MAILER=log`/`array`), le code n'est pas réellement envoyé.
 
 ### Endpoints
 
