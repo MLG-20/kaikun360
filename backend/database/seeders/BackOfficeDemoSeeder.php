@@ -35,6 +35,13 @@ class BackOfficeDemoSeeder extends Seeder
         // en conditions réelles, sans coder d'adresse personnelle dans le dépôt.
         $superEmail = env('BACKOFFICE_DEMO_SUPER_EMAIL', 'super@kaikun.test');
 
+        // ⚠️ Même précaution pour l'AGENT, et pas seulement pour le super_admin.
+        // Toute alerte interne (« Nouvelle demande à traiter », biens à valider…)
+        // part vers TOUS les comptes portant `consulter:dashboard-admin` : un
+        // agent de démo laissé sur un domaine inexistant fait rebondir chaque
+        // alerte, et les rapports d'échec retombent dans la boîte d'expédition.
+        $agentEmail = env('BACKOFFICE_DEMO_AGENT_EMAIL', 'agent@kaikun.test');
+
         $superAdmin = User::firstOrCreate(
             ['email' => $superEmail],
             [
@@ -47,7 +54,7 @@ class BackOfficeDemoSeeder extends Seeder
         $superAdmin->syncRoles([UserRole::SUPER_ADMIN->value]);
 
         $agent = User::firstOrCreate(
-            ['email' => 'agent@kaikun.test'],
+            ['email' => $agentEmail],
             [
                 'name' => 'Agent Kaikun (démo)',
                 'password' => 'password',
@@ -61,6 +68,6 @@ class BackOfficeDemoSeeder extends Seeder
 
         $this->command?->info('Comptes back-office de démo prêts :');
         $this->command?->info("  {$superEmail} / password  (super_admin — 2FA e-mail à la connexion)");
-        $this->command?->info('  agent@kaikun.test / password  (agent — sans 2FA)');
+        $this->command?->info("  {$agentEmail} / password  (agent — sans 2FA)");
     }
 }

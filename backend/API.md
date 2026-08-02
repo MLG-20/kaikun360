@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 218 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 233 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -76,6 +76,8 @@ TypeScript miroir côté frontend Angular (phase F0).
 | PATCH | `/users/me` | auth | `UserController@update` |
 | PATCH | `/users/me/password` | auth | `UserController@updatePassword` |
 | GET | `/users/me/documents` | auth | `DocumentController@index` |
+| POST | `/users/me/avatar` | auth | `AvatarController@store` |
+| DELETE | `/users/me/avatar` | auth | `AvatarController@destroy` |
 | POST | `/users/me/documents` | auth | `DocumentController@store` |
 | GET | `/users/me/documents/{document}/download` | URL signée | `DocumentController@download` |
 
@@ -205,6 +207,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/providers/mine` | auth | `ProviderRegistrationController@mine` |
 | PUT | `/providers/mine` | auth | `ProviderProfileController@update` |
 | POST | `/providers/certifications` | auth | `ProviderProfileController@storeCertification` |
+| GET | `/providers/certifications/{certification}/download` | URL signée | `ProviderProfileController@downloadCertification` |
 | DELETE | `/providers/certifications/{certification}` | auth | `ProviderProfileController@destroyCertification` |
 | GET | `/providers/availability` | auth | `ProviderAvailabilityController@show` |
 | PUT | `/providers/availability/weekly` | auth | `ProviderAvailabilityController@updateWeekly` |
@@ -379,6 +382,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | DELETE | `/admin/departments/{department}` | auth + `can:gerer:parametres` | `AdminGeoController@destroyDepartment` |
 | GET | `/admin/geography` | auth + `can:gerer:parametres` | `AdminGeoController@tree` |
 | GET | `/admin/experiences` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@experiences` |
+| GET | `/admin/experiences/{experience}` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@experience` |
 | GET | `/admin/faqs` | auth + `can:gerer:parametres` | `FaqController@index` |
 | POST | `/admin/faqs` | auth + `can:gerer:parametres` | `FaqController@store` |
 | DELETE | `/admin/faqs/{faq}` | auth + `can:gerer:parametres` | `FaqController@destroy` |
@@ -387,11 +391,13 @@ TypeScript miroir côté frontend Angular (phase F0).
 | PATCH | `/admin/contact-messages/{contactMessage}` | auth + `can:traiter:demandes` | `ContactController@update` |
 | GET | `/admin/mandates` | auth + `can:consulter:dashboard-admin` | `AdminDossierController@mandates` |
 | GET | `/admin/mobility-services` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@mobilityServices` |
+| GET | `/admin/mobility-services/{service}` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@mobilityService` |
 | GET | `/admin/pages` | auth + `can:gerer:parametres` | `PageController@index` |
 | POST | `/admin/pages` | auth + `can:gerer:parametres` | `PageController@store` |
 | DELETE | `/admin/pages/{page}` | auth + `can:gerer:parametres` | `PageController@destroy` |
 | PATCH | `/admin/pages/{page}` | auth + `can:gerer:parametres` | `PageController@update` |
 | GET | `/admin/payments` | auth + `can:gerer:paiements` | `AdminPaymentController@index` |
+| GET | `/admin/payments/{payment}` | auth + `can:gerer:paiements` | `AdminPaymentController@show` |
 | POST | `/admin/payments/{payment}/confirm` | auth + `can:gerer:paiements` | `AdminPaymentController@confirm` |
 | POST | `/admin/payments/{payment}/refund` | auth + `can:gerer:paiements` | `AdminPaymentController@refund` |
 | GET | `/admin/properties` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@properties` |
@@ -399,10 +405,17 @@ TypeScript miroir côté frontend Angular (phase F0).
 | PATCH | `/admin/properties/{property}/archive` | auth + `can:valider:bien` | `AdminPropertyController@archive` |
 | PATCH | `/admin/properties/{property}/restore` | auth + `can:valider:bien` | `AdminPropertyController@restore` |
 | GET | `/admin/providers` | auth + `can:valider:prestataire` | `AdminProviderController@index` |
+| GET | `/admin/providers/{provider}` | auth + `can:valider:prestataire` | `AdminProviderController@show` |
 | GET | `/admin/queue` | auth + `can:consulter:dashboard-admin` | `ValidationQueueController@index` |
+| GET | `/admin/queue/{type}/{id}` | auth + `can:consulter:dashboard-admin` | `ValidationQueueController@show` |
+| PATCH | `/admin/media/{media}/status` | auth + `can:consulter:dashboard-admin` | `MediaModerationController@update` |
 | GET | `/admin/reference` | auth + `can:consulter:dashboard-admin` | `ReferenceController@index` |
 | GET | `/admin/reports/export` | auth + `can:gerer:paiements` | `ReportExportController@export` |
+| GET | `/admin/requests` | auth + `can:traiter:demandes` | `AdminRequestController@index` |
+| GET | `/admin/requests/filters` | auth + `can:traiter:demandes` | `AdminRequestController@filters` |
+| GET | `/admin/requests/{serviceRequest}` | auth + `can:traiter:demandes` | `AdminRequestController@show` |
 | GET | `/admin/reviews` | auth + `can:moderer:avis` | `AdminReviewController@index` |
+| GET | `/admin/reviews/{review}` | auth + `can:moderer:avis` | `AdminReviewController@show` |
 | GET | `/admin/settings` | auth + `can:gerer:parametres` | `AdminSettingsController@index` |
 | PATCH | `/admin/settings` | auth + `can:gerer:parametres` | `AdminSettingsController@update` |
 | PATCH | `/admin/stay-bookings/{booking}/check-in` | auth + `can:gerer:nuitees` | `StayOperationsController@checkIn` |
@@ -410,6 +423,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | PATCH | `/admin/stay-bookings/{booking}/housekeeping` | auth + `can:gerer:nuitees` | `StayOperationsController@housekeeping` |
 | PATCH | `/admin/stay-bookings/{booking}/caution` | auth + `can:gerer:nuitees` | `StayOperationsController@caution` |
 | GET | `/admin/stays/calendar` | auth + `can:gerer:nuitees` | `StayOperationsController@calendar` |
+| GET | `/admin/stay-bookings/{booking}` | auth + `can:gerer:nuitees` | `StayOperationsController@show` |
 | GET | `/admin/tourism/destinations` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@tourismDestinations` |
 | GET | `/admin/team` | auth + `can:gerer:utilisateurs` | `AdminTeamController@index` |
 | POST | `/admin/team` | auth + `can:gerer:utilisateurs` | `AdminTeamController@store` |
@@ -422,6 +436,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/admin/users/{user}/request-document` | auth + `can:gerer:utilisateurs` | `AdminUserController@requestDocument` |
 | PATCH | `/admin/validate/{type}/{id}` | auth + `can:consulter:dashboard-admin` | `ValidationQueueController@decide` |
 | GET | `/admin/vehicles` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@vehicles` |
+| GET | `/admin/vehicles/{vehicle}` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@vehicle` |
 
 ### Santé
 

@@ -1,0 +1,293 @@
+// Écran Demandes du back-office — la file de traitement (F8.9).
+// Reprend la grille de l'écran Construction : deux listes de triage qui se
+// lisent pareil doivent se ressembler, l'équipe passe de l'une à l'autre.
+:host {
+  display: block;
+  max-width: 1160px;
+}
+
+.ds-head {
+  margin-bottom: 18px;
+}
+
+.ds-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.ds-sub {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 68ch;
+}
+
+// --- Onglets ---
+.ds-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .ds-search {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  select {
+    max-width: 220px;
+  }
+}
+
+// --- États ---
+.ds-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.ds-count {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  margin: 0 0 8px;
+}
+
+// --- Table ---
+.ds-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+// Cinq colonnes au lieu de dix (F8.1) : la table tient dans la largeur utile.
+.ds-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 700px;
+
+  th:nth-child(1) { width: 26%; }
+  th:nth-child(2) { width: 20%; }
+  th:nth-child(3) { width: 21%; }
+  th:nth-child(4) { width: 17%; }
+  th:nth-child(5) { width: 16%; }
+
+  th,
+  td {
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: top; // cellules empilées : tout s'aligne sur la 1re ligne
+  }
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+// La référence surmonte l'objectif du dossier : en mono et en discret, elle se
+// lit comme un matricule sans voler la vedette au libellé.
+.ds-ref {
+  display: block;
+  font-family: var(--k-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--k-muted);
+  margin-bottom: 3px;
+}
+
+.ds-strong {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.9rem;
+}
+
+.ds-place {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--k-muted);
+
+  &--warn {
+    color: var(--k-warning);
+  }
+}
+
+.ds-amount {
+  display: block;
+  font-weight: 700;
+  color: var(--k-ink);
+  font-size: 0.9rem;
+}
+
+// --- Puces d'avancement ---
+.ds-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ds-chip {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: var(--k-cream);
+  color: var(--k-navy-2);
+  border: 1px solid var(--k-line);
+
+  &--warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+    border-color: transparent;
+  }
+}
+
+.ds-empty {
+  text-align: center;
+  color: var(--k-muted);
+  padding: 26px;
+}
+
+// Contact du demandeur : cliquable depuis la file (tel:/mailto:), pour appeler
+// sans ouvrir la fiche ni recopier un numéro.
+.ds-link {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--k-brand-600);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Extrait du message : deux lignes au plus, le récit complet est sur la fiche.
+.ds-excerpt {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--k-ink);
+  line-height: 1.35;
+}
+
+// Priorité : seules « haute » et « urgente » s'affichent — signaler le normal
+// noierait l'exception, qui est la seule information utile ici.
+.ds-chip {
+  margin-top: 4px;
+
+  &.is-urgent {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+    border-color: transparent;
+  }
+
+  &.is-high {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+    border-color: transparent;
+  }
+}
+
+// --- Badge de statut ---
+.ds-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+  }
+
+  &.is-active {
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+  }
+
+  &.is-warn {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+  }
+
+  &.is-off {
+    background: rgba(199, 59, 77, 0.12);
+    color: var(--k-danger);
+  }
+
+  &.is-pending {
+    background: var(--k-cream);
+    color: var(--k-navy-2);
+    border: 1px solid var(--k-line);
+  }
+}
+
+// --- Pagination ---
+.ds-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+
+  &__info {
+    font-size: 0.85rem;
+    color: var(--k-muted);
+  }
+}
+
+// F7.3.b — Ligne de dossier cliquable → fiche détaillée.
+.ds-row {
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--k-brand-050);
+    outline: none;
+  }
+
+  // L'invite « Voir → » ne s'allume qu'au survol : présente pour signaler que
+  // la ligne est cliquable, discrète pour ne pas bruiter la colonne statut.
+  &:hover .ds-open,
+  &:focus-visible .ds-open {
+    color: var(--k-brand);
+  }
+}
+
+// Colonne statut : badge puis invite d'ouverture, empilés.
+.ds-status-cell {
+  white-space: nowrap;
+}
+
+.ds-open {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--k-muted);
+}

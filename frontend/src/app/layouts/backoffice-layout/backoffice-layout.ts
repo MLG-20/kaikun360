@@ -24,7 +24,8 @@ type BoIcon =
   | 'users'
   | 'shield'
   | 'clock'
-  | 'sliders';
+  | 'sliders'
+  | 'inbox';
 
 /** Une rubrique de navigation du poste de commandement. */
 interface BoNavItem {
@@ -110,6 +111,14 @@ export class BackofficeLayoutComponent {
     // fois ; l'enterrer en bas de liste au nom de l'ordre du cahier coûterait
     // plus qu'il ne rapporterait.
     { label: 'Validation', path: 'validation', icon: 'check', ready: true },
+
+    // Hors §6 également, mais promis par le §7 (« traitement demandes »
+    // confié à l'agent Kaikun) : la file des demandes clients déposées depuis
+    // le site. Elle n'avait aucun écran jusqu'en F8.9 — l'alerte interne
+    // invitait à ouvrir une file qui n'existait pas. Placée juste après
+    // Validation : ce sont les deux écrans où l'équipe prend en charge ce qui
+    // arrive de l'extérieur.
+    { label: 'Demandes', path: 'demandes', icon: 'inbox', ready: true },
 
     // CDC §6 — modules 2 « Utilisateurs » et 12 « Documents » (deux onglets).
     { label: 'Comptes', path: 'comptes', icon: 'id', ready: true },

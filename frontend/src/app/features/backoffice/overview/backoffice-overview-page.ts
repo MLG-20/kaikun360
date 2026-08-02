@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AdminService, DashboardSnapshot } from '../../../core/api/admin.service';
 
@@ -11,7 +11,7 @@ import { AdminService, DashboardSnapshot } from '../../../core/api/admin.service
  */
 @Component({
   selector: 'app-backoffice-overview-page',
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './backoffice-overview-page.html',
   styleUrl: './backoffice-overview-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -37,7 +37,13 @@
     <section class="ov-block">
       <div class="ov-block__head"><h2 class="ov-block__title">Aujourd’hui</h2></div>
       <div class="ov-grid ov-grid--2">
-        <article class="ov-card"><span class="ov-card__value">{{ s.today.requests }}</span><span class="ov-card__label">Demandes reçues</span></article>
+        <!-- F8.9 — Le compteur mène enfin quelque part : jusqu'ici c'était la
+             SEULE trace des demandes dans tout le back-office, et elle ne
+             s'ouvrait pas. -->
+        <a class="ov-card ov-card--link" routerLink="/back-office/demandes">
+          <span class="ov-card__value">{{ s.today.requests }}</span>
+          <span class="ov-card__label">Demandes reçues</span>
+        </a>
         <article class="ov-card"><span class="ov-card__value">{{ s.today.bookings }}</span><span class="ov-card__label">Réservations</span></article>
       </div>
     </section>

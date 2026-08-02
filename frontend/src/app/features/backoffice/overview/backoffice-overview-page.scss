@@ -130,6 +130,22 @@
     color: var(--k-warning);
   }
 
+  // F8.9 — Carte cliquable (les demandes mènent à leur file). Rien ne la
+  // distingue au repos : c'est le même indicateur, il ne doit pas se lire
+  // comme un bouton. Le survol suffit à dire qu'elle s'ouvre.
+  &--link {
+    text-decoration: none;
+    transition:
+      border-color 0.12s ease,
+      transform 0.12s ease;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--k-brand);
+      transform: translateY(-1px);
+    }
+  }
+
   &--money {
     background: linear-gradient(180deg, #fff, var(--k-brand-050));
 

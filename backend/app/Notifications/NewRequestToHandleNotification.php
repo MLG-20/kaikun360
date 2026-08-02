@@ -54,7 +54,10 @@ class NewRequestToHandleNotification extends Notification implements ShouldQueue
                 'Priorité' => $this->request->priority?->label(),
                 'Reçue le' => BrandedMail::date($this->request->created_at),
             ])
-            ->action('Ouvrir la file de traitement', '/back-office')
+            // ⚠️ Ce bouton pointait vers `/back-office` tout court : la file de
+            // traitement n'existait pas (F8.9). L'agent atterrissait sur un
+            // tableau de bord où la demande était comptée, jamais listée.
+            ->action('Ouvrir la file de traitement', '/back-office/demandes')
             ->forRecipient($notifiable)
             ->reason('Vous recevez cet e-mail en tant que membre de l\'équipe Kaikun 360.')
             ->toMailMessage();

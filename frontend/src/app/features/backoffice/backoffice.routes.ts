@@ -44,6 +44,32 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Back-office — Kaikun 360',
       },
       {
+        // F8.9 — Demandes : la file de traitement des demandes clients. Elle
+        // n'existait pas : l'alerte interne « Nouvelle demande à traiter »
+        // renvoyait vers un back-office où le dossier était compté, jamais
+        // listé.
+        path: 'demandes',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('demandes') },
+        loadComponent: () =>
+          import('./requests/backoffice-requests-page').then(
+            (m) => m.BackofficeRequestsPageComponent,
+          ),
+        title: 'Demandes — Back-office Kaikun 360',
+      },
+      {
+        // F8.9 — Fiche d'une demande : demandeur joignable, message, devis,
+        // historique, et le passage à l'étape suivante.
+        path: 'demandes/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('demandes') },
+        loadComponent: () =>
+          import('./requests/detail/backoffice-request-detail-page').then(
+            (m) => m.BackofficeRequestDetailPageComponent,
+          ),
+        title: 'Demande — Back-office Kaikun 360',
+      },
+      {
         // F7.2.a — Validation : file d'approbation des ressources (biens,
         // véhicules, expériences, prestataires) + décision valider/refuser.
         path: 'validation',

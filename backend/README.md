@@ -239,6 +239,17 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   (`GET /admin/mandates`), avec compteurs d'avancement (jalons/rapports côté
   construction ; loyers/incidents/dépenses/reversements côté mandat) — exploitées
   par l'écran back-office **Dossiers** (F7.2.e).
+  **File de traitement des demandes (F8.9)** (`AdminRequestController`,
+  `traiter:demandes`) : `GET /admin/requests` (toutes les demandes clients,
+  urgences d'abord puis les plus anciennes, filtres service/statut/priorité +
+  recherche par référence, ville ou identité du demandeur),
+  `GET /admin/requests/{id}` (fiche : demandeur joignable, devis, historique) et
+  `GET /admin/requests/filters` (référentiels lus dans les enums). ⚠️ **Comble un
+  trou** : l'alerte interne « Nouvelle demande à traiter » existait depuis B11.2
+  et le statut se pilotait déjà, mais **aucune route ne listait les demandes** —
+  l'équipe recevait l'e-mail d'un dossier introuvable. Le pilotage reste sur
+  `PATCH /requests/{id}/status` (même permission) : la machine à états n'est pas
+  dupliquée, l'API expose `allowed_transitions` pour l'écran.
   **Gestion documentaire transverse** (`AdminDocumentController`) — les **six**
   familles de la ligne CDC §6 « Documents » depuis F7.4.c : pièces d'identité
   (KYC), documents de biens, certifications prestataires, preuves de reversement,
@@ -556,7 +567,8 @@ Clés principales (voir `.env.example` pour la liste exhaustive) :
 | `REDIS_*` | Cache, sessions, files d'attente |
 | `CACHE_STORE=redis` | Cache des catalogues |
 | `QUEUE_CONNECTION=redis` | Notifications asynchrones |
-| `SMS_PROVIDER` | Canal SMS (`log` par défaut, `twilio` en prod) |
+| `SMS_PROVIDER` | Canal SMS (`log` par défaut, `twilio` ou `orange` en prod) |
+| `SMS_VERIFICATION_VIA_MAIL` | Envoyer par **e-mail** les codes destinés au téléphone. Actif d'office tant que `SMS_PROVIDER=log` (le SMS n'irait nulle part et l'utilisateur resterait bloqué), levé seul dès qu'un fournisseur réel est configuré. À ne renseigner que pour forcer un comportement. |
 | `FRONTEND_URL` | **URL publique du site Angular** — sert à construire les liens des e-mails. À ne pas confondre avec `APP_URL`, qui désigne l'API. |
 | `BRAND_SUPPORT_EMAIL` / `BRAND_SUPPORT_PHONE` / `BRAND_ADDRESS` | Coordonnées affichées en pied des e-mails (délivrabilité + confiance) |
 | `PAYTECH_BASE_URL` / `PAYTECH_API_KEY` / `PAYTECH_API_SECRET` / `PAYTECH_ENV` / `PAYTECH_IPN_URL` | Paiement PayTech — `env` = `test` \| `prod`, l'IPN doit être **publique et HTTPS** (tunnel ngrok en local). ⚠️ Pas de « signing key » : l'`API_SECRET` signe aussi les notifications. |

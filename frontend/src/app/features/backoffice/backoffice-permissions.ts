@@ -31,6 +31,12 @@ export const BO_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
   // il ne doit donc JAMAIS être fermé, sous peine de boucle de redirection.
   '': [],
 
+  // File de traitement des demandes clients (F8.9) : l'écran EST un geste —
+  // on y fait avancer un dossier. Il porte donc la permission que le serveur
+  // vérifiera, la même qui garde déjà `PATCH /requests/{id}/status` et la file
+  // team building depuis F7.4.b.
+  demandes: ['traiter:demandes'],
+
   // File d'approbation : la décision exige une permission fine par type. Sans
   // aucune des quatre, l'écran ne serait qu'une liste de boutons en 403.
   validation: ['valider:bien', 'valider:vehicule', 'valider:experience', 'valider:prestataire'],

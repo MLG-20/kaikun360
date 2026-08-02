@@ -9,6 +9,7 @@ use App\Modules\Admin\Http\Controllers\AdminGeoController;
 use App\Modules\Admin\Http\Controllers\AdminPaymentController;
 use App\Modules\Admin\Http\Controllers\AdminPropertyController;
 use App\Modules\Admin\Http\Controllers\AdminProviderController;
+use App\Modules\Admin\Http\Controllers\AdminRequestController;
 use App\Modules\Admin\Http\Controllers\AdminReviewController;
 use App\Modules\Admin\Http\Controllers\AdminSettingsController;
 use App\Modules\Admin\Http\Controllers\AdminTeamController;
@@ -260,5 +261,15 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         Route::get('/contact-messages', [ContactController::class, 'index']);
         Route::patch('/contact-messages/{contactMessage}', [ContactController::class, 'update'])
             ->whereNumber('contactMessage');
+
+        // F8.9 — File de traitement des demandes clients. ⚠️ `filters` est
+        // déclarée AVANT `{serviceRequest}`, sinon le segment littéral serait
+        // capturé par le paramètre (contrainte numérique mise pour la même
+        // raison). Le changement de statut et les devis restent dans
+        // routes/transversal.php, sous cette même permission.
+        Route::get('/requests/filters', [AdminRequestController::class, 'filters']);
+        Route::get('/requests', [AdminRequestController::class, 'index']);
+        Route::get('/requests/{serviceRequest}', [AdminRequestController::class, 'show'])
+            ->whereNumber('serviceRequest');
     });
 });

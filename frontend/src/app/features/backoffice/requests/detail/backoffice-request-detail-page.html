@@ -1,0 +1,191 @@
+<button type="button" class="k-btn k-btn--ghost tb-back" (click)="back()">← Retour à la file</button>
+
+@if (loading()) {
+  <p class="tb-state" role="status">Chargement de la demande…</p>
+} @else if (error() || !dossier()) {
+  <p class="tb-state tb-state--error" role="alert">Impossible de charger cette demande.</p>
+} @else {
+  @let d = dossier()!;
+
+  <header class="tb-dhead">
+    <div>
+      <h1 class="tb-dtitle">{{ d.reference }}</h1>
+      <p class="tb-dsub">
+        {{ d.service_type_label || 'Service non précisé' }} · reçue le {{ shortDate(d.created_at) }}
+      </p>
+    </div>
+    <div class="tb-dbadges">
+      @if (d.priority && d.priority !== 'normale') {
+        <span class="tb-badge" [class]="priorityClass(d.priority)">{{ d.priority_label }}</span>
+      }
+      <span class="tb-badge" [class]="statusClass(d.status)">{{ d.status_label || d.status }}</span>
+    </div>
+  </header>
+
+  <!--
+    Ce qui appelle une décision. Dans une file de traitement, le signal, c'est
+    le TEMPS : une demande reçue et jamais prise en charge n'a l'air de rien
+    dans un tableau, alors que c'est exactement le dossier qui abîme la
+    relation client.
+  -->
+  <app-fiche-signals [flags]="flags()" subject="demande" />
+
+  <!-- ===================== PILOTAGE =====================
+       En tête, comme sur les autres fiches : c'est le seul bloc où l'on agit. -->
+  <section class="tb-card" id="rq-pilotage">
+    <h2 class="tb-card__title">Faire avancer la demande</h2>
+    <p class="tb-card__hint">
+      Les étapes proposées sont celles que le serveur acceptera. La clôture reste
+      possible à tout moment ; aucun retour en arrière n'est permis.
+    </p>
+
+    @if (d.allowed_transitions.length) {
+      <div class="tb-btn-group">
+        @for (t of d.allowed_transitions; track t.value) {
+          <button
+            type="button"
+            class="tb-choice"
+            [class.tb-choice--danger]="t.value === 'cloture'"
+            [disabled]="busy()"
+            (click)="advance(t.value)">
+            {{ t.label }}
+          </button>
+        }
+      </div>
+    } @else {
+      <p class="tb-muted tb-empty-inline">
+        Cette demande est clôturée : plus aucune étape n'est possible.
+      </p>
+    }
+
+    @if (actionError()) {
+      <p class="tb-inline-error" role="alert">{{ actionError() }}</p>
+    }
+  </section>
+
+  <!-- ===================== LE DEMANDEUR =====================
+       Avant la demande elle-même : traiter commence par joindre quelqu'un. -->
+  <section class="tb-card" id="rq-demandeur">
+    <h2 class="tb-card__title">Le demandeur</h2>
+    @if (d.requester) {
+      <dl class="tb-grid">
+        <div><dt>Nom</dt><dd>{{ d.requester.name }}</dd></div>
+        <div>
+          <dt>Téléphone</dt>
+          <dd>
+            @if (d.requester.phone) {
+              <a class="tb-link" [href]="'tel:' + d.requester.phone">{{ d.requester.phone }}</a>
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>E-mail</dt>
+          <dd>
+            @if (d.requester.email) {
+              <a class="tb-link" [href]="'mailto:' + d.requester.email">{{ d.requester.email }}</a>
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+        <div><dt>Ville du compte</dt><dd>{{ d.requester.city || '—' }}</dd></div>
+      </dl>
+    } @else {
+      <p class="tb-muted tb-empty-inline">
+        Le compte à l'origine de cette demande n'existe plus.
+      </p>
+    }
+  </section>
+
+  <!-- ===================== LA DEMANDE ===================== -->
+  <section class="tb-card">
+    <h2 class="tb-card__title">La demande</h2>
+    <dl class="tb-grid">
+      <div><dt>Service</dt><dd>{{ d.service_type_label || '—' }}</dd></div>
+      <div><dt>Ville visée</dt><dd>{{ d.city || '—' }}</dd></div>
+      <div><dt>Budget annoncé</dt><dd>{{ xof(d.budget_xof) }}</dd></div>
+      <div><dt>Priorité</dt><dd>{{ d.priority_label || '—' }}</dd></div>
+    </dl>
+    @if (d.message) {
+      <!-- Le message brut, tel que le client l'a écrit : c'est la seule chose
+           qu'il a formulée lui-même, elle ne se résume pas. -->
+      <p class="tb-desc tb-message">{{ d.message }}</p>
+    }
+  </section>
+
+  <!-- ===================== DEVIS ===================== -->
+  <details class="tb-card bo-fold" id="rq-devis" [open]="!quotes().length">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Devis proposés</span>
+      <span class="bo-fold__digest">
+        @if (quotes().length) {
+          {{ quotes().length }} devis
+        } @else {
+          <span class="is-alert">aucun devis</span>
+        }
+      </span>
+    </summary>
+
+    <div class="bo-fold__body">
+      @if (quotes().length) {
+        <div class="tb-table-wrap">
+          <table class="tb-table tb-table--slim">
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Montant</th>
+                <th>Valable jusqu'au</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (q of quotes(); track q.id) {
+                <tr>
+                  <td>{{ q.reference }}</td>
+                  <td>{{ xof(q.amount_xof) }}</td>
+                  <td>{{ shortDate(q.valid_until) }}</td>
+                  <td><span class="tb-badge is-pending">{{ q.status_label || q.status }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="tb-muted tb-empty-inline">Aucun devis n'a encore été proposé pour cette demande.</p>
+      }
+    </div>
+  </details>
+
+  <!-- ===================== HISTORIQUE =====================
+       Replié : c'est une archive, on l'ouvre pour comprendre après coup qui a
+       fait avancer le dossier — pas pour décider. -->
+  <details class="tb-card bo-fold" id="rq-historique">
+    <summary class="bo-fold__summary">
+      <span class="bo-fold__title">Historique</span>
+      <span class="bo-fold__digest">{{ activity().length }} entrée(s)</span>
+    </summary>
+
+    <div class="bo-fold__body">
+      @if (activity().length) {
+        <ul class="tb-timeline">
+          @for (a of activity(); track a.id) {
+            <li class="tb-timeline__item">
+              <span class="tb-muted">{{ dateTime(a.created_at) }}</span>
+              <span class="tb-strong">{{ a.description }}</span>
+              @if (transitionOf(a); as saut) {
+                <span class="tb-chip">{{ saut }}</span>
+              }
+              <span class="tb-muted">par {{ a.causer_name || 'le système' }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="tb-muted tb-empty-inline">
+          Rien encore : cette demande n'a fait l'objet d'aucune décision.
+        </p>
+      }
+    </div>
+  </details>
+}

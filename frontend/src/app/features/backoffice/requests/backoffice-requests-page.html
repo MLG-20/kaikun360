@@ -1,0 +1,140 @@
+<header class="ds-head">
+  <div>
+    <h1 class="ds-title">Demandes</h1>
+    <p class="ds-sub">
+      La file de traitement : toutes les demandes déposées depuis le site, tous
+      services confondus. Les <strong>urgences passent devant</strong>, puis les
+      plus anciennes — c'est le dossier qui attend le plus longtemps qui coûte
+      le plus cher. <strong>Cliquez une ligne</strong> pour ouvrir la demande et
+      la faire avancer.
+    </p>
+  </div>
+</header>
+
+<section class="ds-filters">
+  <input
+    class="k-input ds-search"
+    type="search"
+    name="search"
+    [(ngModel)]="search"
+    (keyup.enter)="applyFilters()"
+    placeholder="Référence, ville, nom ou téléphone du demandeur…" />
+  <select
+    class="k-input"
+    name="service_type"
+    [(ngModel)]="serviceType"
+    (change)="applyFilters()"
+    aria-label="Filtrer par service">
+    <option value="">Tous les services</option>
+    @for (opt of serviceOptions(); track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+  <select
+    class="k-input"
+    name="status"
+    [(ngModel)]="status"
+    (change)="applyFilters()"
+    aria-label="Filtrer par statut">
+    <option value="">Tous les statuts</option>
+    @for (opt of statusOptions(); track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+  <select
+    class="k-input"
+    name="priority"
+    [(ngModel)]="priority"
+    (change)="applyFilters()"
+    aria-label="Filtrer par priorité">
+    <option value="">Toutes priorités</option>
+    @for (opt of priorityOptions(); track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+  <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
+</section>
+
+@if (loading()) {
+  <p class="ds-state" role="status">Chargement de la file de traitement…</p>
+} @else if (error()) {
+  <p class="ds-state ds-state--error" role="alert">
+    Impossible de charger les demandes. Réessayez.
+  </p>
+} @else {
+  <p class="ds-count">{{ total() }} demande(s)</p>
+  <div class="ds-table-wrap">
+    <table class="ds-table">
+      <thead>
+        <tr>
+          <th>Demande</th>
+          <th>Demandeur</th>
+          <th>Objet</th>
+          <th>Attente</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.id) {
+          <tr class="ds-row" tabindex="0" (click)="open(r)" (keyup.enter)="open(r)">
+            <td>
+              <span class="ds-ref">{{ r.reference }}</span>
+              <span class="ds-strong">{{ r.service_type_label || 'Service non précisé' }}</span>
+              <span class="ds-place">{{ r.city || 'Ville non précisée' }}</span>
+            </td>
+            <td>
+              <span class="ds-strong">{{ r.requester?.name || 'Compte supprimé' }}</span>
+              <!-- Contact cliquable : l'agent appelle depuis la file, sans
+                   ouvrir la fiche pour recopier un numéro. -->
+              @if (r.requester?.phone) {
+                <a class="ds-link" [href]="'tel:' + r.requester!.phone" (click)="$event.stopPropagation()">
+                  {{ r.requester!.phone }}
+                </a>
+              }
+              @if (r.requester?.email) {
+                <a class="ds-link" [href]="'mailto:' + r.requester!.email" (click)="$event.stopPropagation()">
+                  {{ r.requester!.email }}
+                </a>
+              }
+            </td>
+            <td>
+              <span class="ds-excerpt">{{ extrait(r.message) }}</span>
+              <span class="ds-place">
+                Budget : {{ xof(r.budget_xof) }}
+                @if (r.quotes_count) {
+                  · {{ r.quotes_count }} devis
+                }
+              </span>
+            </td>
+            <td>
+              <span class="ds-strong">{{ age(r.created_at) }}</span>
+              @if (r.priority && r.priority !== 'normale') {
+                <span class="ds-chip" [class]="priorityClass(r.priority)">{{ r.priority_label }}</span>
+              }
+            </td>
+            <td class="ds-status-cell">
+              <span class="ds-badge" [class]="statusClass(r.status)">{{ r.status_label || r.status }}</span>
+              <span class="ds-open" aria-hidden="true">Voir →</span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="ds-empty">Aucune demande ne correspond à ces filtres.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (lastPage() > 1) {
+    <nav class="ds-pager" aria-label="Pagination">
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === 1" (click)="goTo(page() - 1)">
+        ← Précédent
+      </button>
+      <span class="ds-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === lastPage()" (click)="goTo(page() + 1)">
+        Suivant →
+      </button>
+    </nav>
+  }
+}

@@ -506,6 +506,32 @@ groupes ». Ces éléments ne vivent pas au même endroit dans le modèle :
 (`GET /team-building-requests`) et diaspora (`GET /diaspora-projects`) exposent
 déjà leur file back-office dans leurs modules.
 
+**File de traitement des demandes (F8.9)** — `traiter:demandes` :
+
+- `GET /admin/requests` — toutes les demandes clients génériques (table
+  `requests`), **urgences d'abord puis les plus anciennes**. Filtres `status`,
+  `service_type`, `priority`, `search` (référence, ville, ou nom / e-mail /
+  téléphone du demandeur), `per_page`. Chaque ligne porte le **demandeur**
+  (identité + contact) via `AdminServiceRequestResource` — la ressource
+  publique, elle, ne l'expose pas.
+- `GET /admin/requests/{id}` — la fiche : dossier, demandeur, **devis** déjà
+  proposés et **historique** (journal d'audit). Le pendant staff de
+  `GET /requests/{id}`, qui reste réservé au demandeur (403 sinon).
+- `GET /admin/requests/filters` — statuts / services / priorités, lus dans les
+  **enums PHP** : recopier ces libellés côté frontend les ferait diverger.
+
+> ⚠️ **Ces routes comblent un trou, elles n'ajoutent pas un confort.** Depuis
+> B11.2, déposer une demande déclenchait l'alerte interne « Nouvelle demande à
+> traiter » et le statut se pilotait déjà (`PATCH /requests/{id}/status`) — mais
+> **aucune route ne permettait de LISTER les demandes**. L'équipe recevait donc
+> l'e-mail d'un dossier qu'elle n'avait aucun moyen de retrouver, alors que le
+> CDC §7 confie explicitement le « traitement demandes » à l'agent Kaikun.
+>
+> Le pilotage **n'est pas dupliqué ici** : la machine à états vit dans
+> `RequestStatus` et s'actionne par la route transversale historique, gardée par
+> la même permission. L'API renvoie `allowed_transitions` pour que l'écran ne
+> propose que des étapes qui seront acceptées.
+
 **Gestion documentaire transverse** — sensible (KYC, contrats) → niveau
 administrateur `gerer:utilisateurs`. `GET /admin/documents` : vue d'ensemble
 (compteurs `kyc` / `property` / `certification` / `payout_proof`) ou liste

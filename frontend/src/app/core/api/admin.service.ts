@@ -1115,6 +1115,86 @@ export interface AccountDetail {
   activity: AccountActivity[];
 }
 
+// --- File de traitement des demandes (F8.9) ---------------------------------
+
+/** Une étape atteignable depuis le statut courant (machine à états serveur). */
+export interface RequestTransition {
+  value: string;
+  label: string;
+}
+
+/**
+ * Une demande client dans la file de traitement du back-office
+ * (miroir de `AdminServiceRequestResource`).
+ *
+ * ⚠️ Distincte de la demande vue par le client (`ServiceRequest` de
+ * `RequestsService`) : celle-ci porte le **demandeur** (identité + contact),
+ * que la ressource publique n'expose pas.
+ */
+export interface RequestQueueEntry {
+  id: number;
+  reference: string;
+  service_type: string | null;
+  service_type_label: string | null;
+  message: string | null;
+  budget_xof: number | null;
+  city: string | null;
+  status: string | null;
+  status_label: string | null;
+  priority: string | null;
+  priority_label: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  /**
+   * Les seules étapes que le serveur acceptera. L'écran n'invente aucun
+   * bouton : proposer une transition refusée en 422 serait un faux espoir.
+   */
+  allowed_transitions: RequestTransition[];
+  requester?: {
+    id: number;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    city: string | null;
+  } | null;
+  quotes_count?: number;
+}
+
+/** Un devis rattaché à une demande (miroir de `QuoteResource`). */
+export interface RequestQuote {
+  id: number;
+  reference: string;
+  request_id: number;
+  amount_xof: number | null;
+  details: unknown[] | Record<string, unknown>;
+  valid_until: string | null;
+  status: string | null;
+  status_label: string | null;
+}
+
+/** Fiche d'une demande (GET /admin/requests/{id}) : dossier + devis + historique. */
+export interface RequestQueueDetail {
+  request: RequestQueueEntry;
+  quotes: RequestQuote[];
+  activity: AccountActivity[];
+}
+
+/** Référentiels de filtrage, servis par les enums PHP. */
+export interface RequestQueueFilters {
+  statuses: RequestTransition[];
+  service_types: RequestTransition[];
+  priorities: RequestTransition[];
+}
+
+/** Filtres de la file de traitement. */
+export interface RequestQueueQuery {
+  status?: string;
+  service_type?: string;
+  priority?: string;
+  search?: string;
+  page?: number;
+}
+
 // --- Avis & qualité (F7.2.g) ------------------------------------------------
 
 /**
@@ -2119,6 +2199,52 @@ export class AdminService {
     if (query.status) params = params.set('status', query.status);
     if (query.page) params = params.set('page', String(query.page));
     return this.http.get<Paginated<MandateDossier>>(`${this.api}/admin/mandates`, { params });
+  }
+
+  // --- File de traitement des demandes (F8.9) --------------------------------
+  //
+  // ⚠️ La LECTURE est sous `/admin` (garde `traiter:demandes`), mais le
+  // PILOTAGE reste sur la route transversale historique
+  // `PATCH /requests/{id}/status`, gardée par la même permission : la machine à
+  // états n'existe qu'à un seul endroit et n'a pas à être dupliquée.
+
+  /** File de traitement (urgences d'abord). GET /admin/requests */
+  requestQueue(query: RequestQueueQuery = {}): Observable<Paginated<RequestQueueEntry>> {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.service_type) params = params.set('service_type', query.service_type);
+    if (query.priority) params = params.set('priority', query.priority);
+    if (query.search) params = params.set('search', query.search);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<RequestQueueEntry>>(`${this.api}/admin/requests`, { params });
+  }
+
+  /** Fiche d'une demande (demandeur, devis, historique). GET /admin/requests/{id} */
+  requestDossier(id: number): Observable<RequestQueueDetail> {
+    return this.http
+      .get<ApiEnvelope<RequestQueueDetail>>(`${this.api}/admin/requests/${id}`)
+      .pipe(map((response) => response.data));
+  }
+
+  /** Statuts / services / priorités, tels que les définit le backend. */
+  requestQueueFilters(): Observable<RequestQueueFilters> {
+    return this.http
+      .get<ApiEnvelope<RequestQueueFilters>>(`${this.api}/admin/requests/filters`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Fait avancer une demande. PATCH /requests/{id}/status
+   *
+   * Le serveur refuse (422) toute transition qui n'est pas dans
+   * `allowed_transitions` — l'écran ne propose donc que celles-là.
+   */
+  advanceRequest(id: number, status: string): Observable<RequestQueueEntry> {
+    return this.http
+      .patch<ApiEnvelope<{ request: RequestQueueEntry }>>(`${this.api}/requests/${id}/status`, {
+        status,
+      })
+      .pipe(map((response) => response.data.request));
   }
 
   // --- Dossier de construction (F7.3.b) --------------------------------------

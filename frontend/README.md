@@ -653,6 +653,38 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     apparaître les balises en clair sur le site. (Les retours à la ligne saisis
     sont désormais conservés, via `white-space: pre-line`.)
 
+  **F8.9 La file de traitement des demandes, qui n'existait pas.**
+  ([`features/backoffice/requests/`](src/app/features/backoffice/requests/),
+  rubrique **Demandes**, permission `traiter:demandes`.)
+  Depuis B11.2, toute demande déposée depuis le site (« Demander une
+  réservation », formulaires métier) déclenchait une alerte interne — *Nouvelle
+  demande à traiter*, avec un bouton **« Ouvrir la file de traitement »**. Cette
+  file n'existait nulle part : le bouton menait à la Vue d'ensemble, où le
+  dossier était **compté** et jamais listé. L'équipe recevait donc l'e-mail d'une
+  demande qu'elle n'avait aucun moyen de retrouver, alors que le CDC §7 confie
+  explicitement le « traitement demandes » à l'agent Kaikun. Écart repéré à la
+  vérification physique, pas à l'audit F7 — qui balayait les 14 modules du
+  CDC §6, où les demandes génériques ne forment pas un module.
+  - **La liste** : urgences d'abord puis les plus anciennes (tri **serveur** —
+    dans une file, le dossier qui attend depuis le plus longtemps coûte plus
+    cher que le dernier arrivé), le **demandeur joignable dès la ligne**
+    (`tel:` / `mailto:` cliquables, sans ouvrir la fiche), l'ancienneté en clair
+    (« il y a 6 jours ») plutôt qu'une date à comparer mentalement, et
+    l'extrait du message. Filtres service / statut / priorité + recherche
+    (référence, ville, nom, e-mail, téléphone).
+  - **La fiche** (`demandes/:id`) : bandeau de signaux (reçue depuis N jours et
+    jamais prise en charge, stade devis sans aucun devis, compte du demandeur
+    supprimé), le demandeur, le message **cité tel quel**, les devis, et
+    l'historique des décisions (journal d'audit).
+  - **Les boutons d'étape viennent du serveur** (`allowed_transitions`) et
+    l'action passe par la route historique `PATCH /requests/{id}/status` :
+    rejouer la machine à états côté client la ferait diverger au premier statut
+    ajouté, et proposer une étape refusée en 422 serait un faux espoir.
+  - Le compteur « Demandes reçues » de la Vue d'ensemble **mène enfin à la
+    file**, et le bouton de l'e-mail interne pointe vers `/back-office/demandes`.
+  - **Les référentiels de filtrage sont servis par l'API** (les enums PHP), pas
+    recopiés dans le composant : c'est ce qui les garde d'accord.
+
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au
@@ -662,7 +694,11 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   > (`php artisan queue:work`, pour l'envoi des codes 2FA) + `npm start` (Angular
   > `:4200`, proxy `/api`→`:8000` via `proxy.conf.json`). Comptes de démo :
   > `php artisan db:seed --class=Database\Seeders\BackOfficeDemoSeeder` (super_admin
-  > + agent ; e-mail du super_admin réglé par `BACKOFFICE_DEMO_SUPER_EMAIL`).
+  > + agent ; e-mails réglés par `BACKOFFICE_DEMO_SUPER_EMAIL` et
+  > `BACKOFFICE_DEMO_AGENT_EMAIL`). ⚠️ **Les pointer vers de vraies boîtes** :
+  > les alertes internes partent vers *tous* les comptes de l'équipe, et un
+  > compte de démo resté sur un domaine inexistant fait rebondir chacune d'elles
+  > dans la boîte d'expédition.
 
 ---
 
