@@ -22,6 +22,11 @@ use Illuminate\Support\Facades\Route;
 // --- Catalogue & recherche publics -------------------------------------------
 Route::get('vehicles', [VehicleCatalogController::class, 'index']);
 Route::get('mobility-services', [MobilityServiceController::class, 'index']);
+// F8.10 — fiche d'un départ (avec son remplissage). Déclarée APRÈS la liste et
+// contrainte au numérique : sans cela, `mobility-services/{id}` capterait tout
+// segment littéral qu'on ajouterait plus tard à cette route.
+Route::get('mobility-services/{id}', [MobilityServiceController::class, 'show'])
+    ->whereNumber('id');
 
 // --- Espace prestataire (auth + policy) --------------------------------------
 Route::middleware('auth:sanctum')->group(function () {

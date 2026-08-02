@@ -81,17 +81,11 @@
               <p class="k-muted uni-detail-caution">Caution : {{ caution }}</p>
             }
 
-            <h2 class="uni-detail-card-title">Demander une réservation</h2>
+            <h2 class="uni-detail-card-title">Louer ce véhicule</h2>
 
-            @if (createdReference(); as ref) {
-              <div class="k-form-info" role="status">
-                <strong>Demande envoyée.</strong>
-                Votre référence de suivi : <b>{{ ref }}</b>. Un conseiller confirme
-                la disponibilité et les modalités.
-              </div>
-            } @else if (!isAuthenticated()) {
+            @if (!isAuthenticated()) {
               <p class="k-muted uni-detail-authnote">
-                Connectez-vous pour demander une réservation et suivre votre dossier.
+                Connectez-vous pour louer ce véhicule et suivre votre location.
               </p>
               <a
                 class="k-btn k-btn--primary k-btn--block"
@@ -109,31 +103,49 @@
                 <div class="uni-detail-row">
                   <label class="k-field">
                     <span class="k-label">Début</span>
-                    <input type="date" class="k-input" formControlName="start_date" />
+                    <input type="date" class="k-input" formControlName="start_date" [min]="today" />
                   </label>
                   <label class="k-field">
                     <span class="k-label">Fin</span>
-                    <input type="date" class="k-input" formControlName="end_date" />
+                    <input type="date" class="k-input" formControlName="end_date" [min]="today" />
                   </label>
                 </div>
 
                 <label class="k-field">
-                  <span class="k-label">Votre message</span>
-                  <textarea
-                    class="k-input"
-                    rows="4"
-                    formControlName="message"
-                    [class.k-input--error]="form.controls.message.touched && form.controls.message.invalid"
-                  ></textarea>
+                  <span class="k-label">Passagers</span>
+                  <input type="number" class="k-input" formControlName="guests" min="1" />
                 </label>
+
+                <!-- Le montant se compose sous les yeux du client, caution à part. -->
+                @if (canQuote()) {
+                  <dl class="uni-quote">
+                    <div>
+                      <dt>{{ days() }} jour(s) × {{ priceLabel() }}</dt>
+                      <dd>{{ totalLabel() }}</dd>
+                    </div>
+                    @if (cautionLabel(); as caution) {
+                      <div class="uni-quote__caution">
+                        <dt>Caution (restituée au retour)</dt>
+                        <dd>{{ caution }}</dd>
+                      </div>
+                    }
+                  </dl>
+                } @else if (bookingHint(); as hint) {
+                  <p class="k-muted uni-hint">{{ hint }}</p>
+                }
 
                 <button
                   type="submit"
                   class="k-btn k-btn--primary k-btn--block"
-                  [disabled]="submitting()"
+                  [disabled]="submitting() || !canQuote()"
                 >
-                  {{ submitting() ? 'Envoi…' : 'Envoyer la demande' }}
+                  {{ submitting() ? 'Réservation…' : 'Louer et payer' }}
                 </button>
+
+                <p class="k-muted uni-paynote">
+                  Votre location est enregistrée puis réglée en ligne. Elle n'est
+                  confirmée qu'une fois le paiement reçu.
+                </p>
               </form>
             }
           </div>

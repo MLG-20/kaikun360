@@ -18,6 +18,17 @@ export interface MobilityService {
 }
 
 /**
+ * Fiche publique d'un départ (`GET /mobility-services/{id}`, F8.10) : le trajet
+ * et son **remplissage**. Les places restantes viennent du serveur — les
+ * calculer côté client demanderait de connaître toutes les réservations.
+ */
+export interface MobilityServiceDetail {
+  mobility_service: MobilityService;
+  seats_taken: number;
+  seats_left: number;
+}
+
+/**
  * Trajet vu depuis le **back-office** — miroir d'`AdminMobilityServiceResource`
  * (F7.2.j).
  *

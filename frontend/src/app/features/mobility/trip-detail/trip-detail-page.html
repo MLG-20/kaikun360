@@ -1,0 +1,144 @@
+<!-- Fiche d'un départ programmé (F8.10). -->
+@switch (state()) {
+  @case ('loading') {
+    <div class="k-wrap uni-detail-status" role="status">Chargement du trajet…</div>
+  }
+
+  @case ('notfound') {
+    <div class="k-wrap uni-detail-status">
+      <h1>Trajet introuvable</h1>
+      <p class="k-muted">Ce départ n'existe pas ou n'est plus proposé.</p>
+      <a class="k-btn k-btn--primary" routerLink="/mobilite">Retour aux départs</a>
+    </div>
+  }
+
+  @case ('failed') {
+    <div class="k-wrap uni-detail-status" role="alert">
+      <h1>Chargement impossible</h1>
+      <p class="k-muted">Une erreur est survenue. Vérifiez votre connexion puis réessayez.</p>
+      <a class="k-btn k-btn--primary" routerLink="/mobilite">Retour aux départs</a>
+    </div>
+  }
+
+  @case ('ready') {
+    @if (trip(); as t) {
+      <app-detail-layout [title]="displayName()" [galleryAlt]="displayName()">
+        <ng-container crumbs>
+          <a routerLink="/mobilite">Mobilité</a>
+          <span aria-hidden="true">/</span>
+          <span>{{ t.type_label ?? 'Départ' }}</span>
+        </ng-container>
+
+        <ng-container meta>
+          @if (departureLabel(); as depart) {
+            <span class="uni-detail-loc">{{ depart }}</span>
+          }
+          @if (seatsLeft() !== null) {
+            <span class="uni-detail-verified">{{ seatsLeft() }} place(s) restante(s)</span>
+          }
+        </ng-container>
+
+        @if (t.description) {
+          <section class="uni-detail-block">
+            <h2>Description</h2>
+            <p>{{ t.description }}</p>
+          </section>
+        }
+
+        <section class="uni-detail-block">
+          <h2>Le départ</h2>
+          <dl class="uni-detail-specs">
+            <div><dt>Départ de</dt><dd>{{ t.departure }}</dd></div>
+            <div><dt>Arrivée à</dt><dd>{{ t.destination }}</dd></div>
+            <div><dt>Date et heure</dt><dd>{{ departureLabel() ?? 'À confirmer' }}</dd></div>
+            <div><dt>Type</dt><dd>{{ t.type_label ?? '—' }}</dd></div>
+            <div><dt>Capacité totale</dt><dd>{{ t.capacity }} place(s)</dd></div>
+            <div><dt>Prix par place</dt><dd>{{ priceLabel() }}</dd></div>
+          </dl>
+        </section>
+
+        <!-- Colonne latérale : prix + réservation des places. -->
+        <ng-container aside>
+          <div class="uni-detail-card k-card">
+            @if (priceLabel(); as price) {
+              <p class="uni-detail-price"><b>{{ price }}</b> <span class="unit">/ place</span></p>
+            }
+
+            <h2 class="uni-detail-card-title">Réserver ma place</h2>
+
+            @if (departed()) {
+              <!-- On ne vend pas une place dans un car déjà parti. -->
+              <p class="k-muted uni-detail-authnote">
+                Ce départ a déjà eu lieu. Consultez les prochains départs.
+              </p>
+              <a class="k-btn k-btn--primary k-btn--block" routerLink="/mobilite">
+                Voir les départs
+              </a>
+            } @else if (soldOut()) {
+              <p class="k-muted uni-detail-authnote">
+                Ce départ est complet. Écrivez-nous pour être prévenu d'un
+                prochain départ sur cette liaison.
+              </p>
+            } @else if (!isAuthenticated()) {
+              <p class="k-muted uni-detail-authnote">
+                Connectez-vous pour réserver votre place et suivre votre trajet.
+              </p>
+              <a
+                class="k-btn k-btn--primary k-btn--block"
+                routerLink="/auth/connexion"
+                [queryParams]="loginQueryParams()"
+              >
+                Se connecter
+              </a>
+            } @else {
+              <form class="uni-detail-form" [formGroup]="form" (ngSubmit)="submit()">
+                @if (formError(); as err) {
+                  <p class="k-form-error" role="alert">{{ err }}</p>
+                }
+
+                <!--
+                  Un seul champ : le trajet est DÉJÀ daté. Proposer une date
+                  laisserait croire qu'on peut en changer — on réserve des
+                  places sur un départ existant, rien d'autre.
+                -->
+                <label class="k-field">
+                  <span class="k-label">Nombre de places</span>
+                  <input type="number" class="k-input" formControlName="guests" min="1" />
+                </label>
+
+                @if (canQuote()) {
+                  <dl class="uni-quote">
+                    <div>
+                      <dt>{{ form.controls.guests.value }} × {{ priceLabel() }}</dt>
+                      <dd>{{ totalLabel() }}</dd>
+                    </div>
+                  </dl>
+                } @else if (bookingHint(); as hint) {
+                  <p class="k-muted uni-hint">{{ hint }}</p>
+                }
+
+                <button
+                  type="submit"
+                  class="k-btn k-btn--primary k-btn--block"
+                  [disabled]="submitting() || !canQuote()"
+                >
+                  {{ submitting() ? 'Réservation…' : 'Réserver et payer' }}
+                </button>
+
+                <p class="k-muted uni-paynote">
+                  Vos places sont enregistrées puis réglées en ligne. Elles ne
+                  sont confirmées qu'une fois le paiement reçu.
+                </p>
+              </form>
+            }
+          </div>
+
+          <div class="uni-detail-whatsapp">
+            <p class="k-muted">Une question sur ce départ ?</p>
+            <app-whatsapp-button [subject]="displayName()" />
+          </div>
+        </ng-container>
+      </app-detail-layout>
+    }
+  }
+}

@@ -189,7 +189,13 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   ce sont des catégories du module Pro + des drapeaux d'inclusion, sans lien
   guide ↔ circuit (écart assumé, documenté).
 - **Mobility** — véhicules (avec contrôle de conformité assurance/pirogue),
-  services de mobilité, caution, et **supervision back-office**
+  services de mobilité, caution. **F8.10** : `GET /mobility-services/{id}`
+  (fiche publique d'un départ **avec son remplissage**) — l'endpoint n'existait
+  pas, le module s'arrêtant à la recherche, ce qui interdisait toute page de
+  trajet et donc toute réservation en ligne. ⚠️ **Anti double-location** ajouté
+  à `POST /vehicles/{id}/bookings`, qui ne vérifiait aucun chevauchement : deux
+  clients pouvaient repartir avec le même véhicule le même jour. Et
+  **supervision back-office**
   (F7.2.j — CDC §6) servie par le module Admin : `GET /admin/vehicles` renvoie
   désormais `AdminVehicleResource` (sur-ensemble du format public : assurance,
   identité du chauffeur, gilets, drapeaux de conformité, prestataire ; filtre

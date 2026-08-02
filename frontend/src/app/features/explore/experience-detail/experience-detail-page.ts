@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { CatalogService } from '../../../core/api/catalog.service';
-import { RequestService } from '../../../core/api/request.service';
+import { BookingService } from '../../../core/api/booking.service';
 import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
@@ -25,10 +25,13 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
  * Charge en parallèle l'expérience, sa disponibilité
  * (`GET /experiences/{id}/availability` → places restantes) et ses avis publiés.
  * Présente le programme (durée, destination, inclusions), un indicateur de
- * places restantes, la note moyenne, puis un formulaire de demande de
- * réservation (`POST /requests`, service_type = explore). La réservation ferme
- * (places décomptées + paiement) relève des phases ultérieures ; ici
- * l'utilisateur exprime son besoin, qu'un conseiller confirme.
+ * places restantes, la note moyenne, puis le formulaire de
+ * **réservation ferme** (`POST /experiences/{id}/bookings`, F8.10).
+ *
+ * ⚠️ Cette page ne déposait qu'une *demande*, avec une date « souhaitée »
+ * facultative. Les places sont désormais réellement décomptées, et le client
+ * est emmené payer. ⚠️ Un circuit n'a **pas de date de fin** : sa durée lui
+ * appartient, le client ne choisit que son jour de départ.
  */
 @Component({
   selector: 'app-experience-detail-page',
@@ -47,7 +50,8 @@ export class ExperienceDetailPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly catalog = inject(CatalogService);
   private readonly reviewsApi = inject(ReviewService);
-  private readonly requests = inject(RequestService);
+  private readonly bookings = inject(BookingService);
+  private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
 
@@ -83,7 +87,6 @@ export class ExperienceDetailPageComponent {
           switchMap((env) => {
             this.experience.set(env.data);
             this.state.set('ready');
-            this.prefillMessage(env.data);
             return forkJoin({
               availability: this.catalog.experienceAvailability(id).pipe(
                 map((a) => a.data),
@@ -146,69 +149,102 @@ export class ExperienceDetailPageComponent {
   /** Vrai s'il ne reste plus aucune place (réservation complète). */
   readonly soldOut = computed(() => this.availability()?.seats_left === 0);
 
-  // --- Formulaire de demande de réservation ---------------------------------
+  // --- Réservation (F8.10) ---------------------------------------------------
+  //
+  // ⚠️ Ce bloc déposait une DEMANDE, avec la date « souhaitée » en champ
+  // facultatif et le nombre de participants recopié dans un message. Le client
+  // repartait avec une référence de suivi et rien à payer.
+  //
+  // ⚠️ Un circuit n'a pas de date de FIN : sa durée lui appartient. Le client
+  // ne choisit que son jour de départ — c'est ce que le serveur attend
+  // (`start_date` seul), et proposer une date de retour serait mensonger.
+
   readonly form = this.fb.nonNullable.group({
-    message: ['', [Validators.required, Validators.maxLength(2000)]],
-    seats: [1, [Validators.min(1)]],
-    preferred_date: [''],
+    start_date: ['', [Validators.required]],
+    seats: [1, [Validators.required, Validators.min(1)]],
+  });
+
+  private readonly formValue = toSignal(this.form.valueChanges, {
+    initialValue: this.form.getRawValue(),
   });
 
   readonly submitting = signal(false);
-  readonly createdReference = signal<string | null>(null);
   readonly formError = signal<string | null>(null);
 
-  private prefillMessage(experience: Experience): void {
-    this.form.controls.message.setValue(
-      `Bonjour, je souhaite réserver l'expérience « ${experience.title} » à ${experience.destination}. Merci de me confirmer les disponibilités.`,
-    );
-  }
+  /** Aujourd'hui (`YYYY-MM-DD`) : on ne part pas dans le passé. */
+  readonly today = new Date().toISOString().slice(0, 10);
 
-  /** Dépose la demande de réservation (POST /requests, service_type = explore). */
+  readonly total = computed(
+    () => Number(this.formValue().seats ?? 0) * (this.experience()?.price_xof ?? 0),
+  );
+  readonly totalLabel = computed(() => formatFcfa(this.total()));
+
+  /**
+   * Le nombre de places restantes est déjà connu de l'écran (`availability`) :
+   * autant le dire avant le clic plutôt que de laisser le serveur refuser.
+   */
+  readonly bookingHint = computed<string | null>(() => {
+    const places = Number(this.formValue().seats ?? 0);
+    const restantes = this.availability()?.seats_left;
+    if (places < 1) {
+      return 'Indiquez au moins un participant.';
+    }
+    if (restantes !== undefined && restantes !== null && places > restantes) {
+      return `Il ne reste que ${restantes} place(s) disponible(s).`;
+    }
+    return null;
+  });
+
+  readonly canQuote = computed(
+    () => !!this.formValue().start_date && !this.bookingHint() && !this.soldOut(),
+  );
+
+  /**
+   * Réserve des places sur le circuit (F8.10) puis emmène payer.
+   */
   submit(): void {
-    if (this.submitting() || this.form.invalid) {
+    const experience = this.experience();
+    if (this.submitting() || !experience) {
+      return;
+    }
+    if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-    const experience = this.experience();
-    if (!experience) {
-      return;
-    }
 
-    // Nombre de participants et date souhaitée fusionnés dans le message :
-    // l'API générique de demande ne porte pas de champ dédié.
     const raw = this.form.getRawValue();
-    const extras: string[] = [];
-    if (raw.seats) {
-      extras.push(`Participants : ${raw.seats}.`);
-    }
-    if (raw.preferred_date) {
-      extras.push(`Date souhaitée : ${raw.preferred_date}.`);
-    }
-    const message = extras.length ? `${raw.message}\n\n${extras.join(' ')}` : raw.message;
-
     this.submitting.set(true);
     this.formError.set(null);
 
-    this.requests
-      .create({
-        service_type: 'explore',
-        message,
-        city: experience.destination,
+    this.bookings
+      .createExperienceBooking(experience.id, {
+        start_date: raw.start_date,
+        guests: Number(raw.seats),
       })
       .subscribe({
-        next: (env) => {
+        next: (booking) => {
           this.submitting.set(false);
-          this.createdReference.set(env.data.request.reference);
+          void this.router.navigate(['/mon-espace/reservations', booking.id, 'paiement']);
         },
         error: (err: { status?: number; error?: ValidationErrorBody }) => {
           this.submitting.set(false);
-          const firstError = err?.error?.errors
-            ? Object.values(err.error.errors)[0]?.[0]
-            : null;
-          this.formError.set(
-            firstError ?? "Votre demande n'a pas pu être envoyée. Réessayez.",
-          );
+          this.formError.set(this.messageFor(err));
         },
       });
+  }
+
+  /**
+   * Le serveur annonce lui-même combien de places restent (« Il ne reste que 3
+   * place(s) disponible(s). ») : son message vaut mieux que le nôtre.
+   */
+  private messageFor(err: { status?: number; error?: ValidationErrorBody }): string {
+    if (err?.status === 422) {
+      const premier = err.error?.errors ? Object.values(err.error.errors)[0]?.[0] : null;
+      return premier ?? 'Cette réservation ne peut pas être enregistrée.';
+    }
+    if (err?.status === 403) {
+      return 'Confirmez votre e-mail ou votre téléphone depuis votre profil pour pouvoir réserver.';
+    }
+    return "La réservation n'a pas pu être enregistrée. Réessayez.";
   }
 }

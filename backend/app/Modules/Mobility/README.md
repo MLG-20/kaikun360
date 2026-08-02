@@ -76,6 +76,7 @@ Publiés par des prestataires, validés par un agent, réservables via `Booking`
 | PATCH | `/api/v1/vehicles/{vehicle}/approve` | agent (`can:valider:vehicule`) — bloqué si conformité incomplète |
 | PATCH | `/api/v1/vehicles/{vehicle}/reject` | agent — `rejete` (motif facultatif) |
 | GET | `/api/v1/mobility-services` | public — recherche par type/ville/date |
+| GET | `/api/v1/mobility-services/{id}` | public — **fiche d'un départ + son remplissage** (F8.10) |
 
 ### Events & file de validation
 
@@ -120,6 +121,28 @@ celui-ci : `GET /admin/vehicles` (flotte + conformité + prestataire) et
 | POST | `/api/v1/vehicles/{id}/bookings` | location (montant = jours × prix, **commission** figée, **caution retenue**) |
 | PATCH | `/api/v1/vehicles/bookings/{booking}/cancel` | annulation (titulaire) — caution restituée/perdue selon le délai |
 | POST | `/api/v1/mobility-services/{id}/bookings` | réservation de places (capacité + commission) |
+
+> ⚠️ **F8.10 — les deux endpoints de réservation n'avaient aucun appelant.**
+> Livrés en B7.3/B7.4, ils sont restés muets : le site ne proposait qu'un
+> formulaire de *demande* (`POST /requests`) sur la fiche véhicule, et les
+> trajets n'avaient **même pas de fiche** — `GET /mobility-services/{id}`
+> n'existait pas, la carte du catalogue ne menait nulle part, et le code
+> assumait que « la réservation d'un trajet se fait via un conseiller ».
+> Les deux univers sont désormais réservables depuis le site.
+>
+> **Anti double-location ajouté au passage** : `POST /vehicles/{id}/bookings`
+> ne vérifiait **aucun chevauchement** — deux clients pouvaient repartir avec le
+> même véhicule le même jour. Même règle que les nuitées, à une nuance près :
+> les bornes sont **incluses des deux côtés** (rendre et relouer le même jour,
+> c'est la même journée de mise à disposition, alors qu'un départ de nuitée
+> libère la nuit). Les statuts d'annulation sont **dérivés de l'enum**, jamais
+> recopiés : une location annulée rend sa période au marché.
+>
+> Le **remplissage** (`seats_taken` / `seats_left`) accompagne la fiche d'un
+> départ : afficher la capacité totale d'un trajet où il ne reste qu'une place
+> ferait découvrir le refus après le clic. ⚠️ Ce n'est qu'un **affichage** — le
+> contrôleur de réservation reste seul juge au moment d'écrire, deux clients
+> pouvant viser la dernière place au même instant.
 
 - `CommissionCalculator` : `commissionFor(montant, taux?)`, figé sur chaque
   réservation de mobilité (colonne `bookings.commission_xof`). ⚠️ **Déplacé en

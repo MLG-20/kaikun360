@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { CatalogService } from '../../../core/api/catalog.service';
-import { RequestService } from '../../../core/api/request.service';
+import { BookingService } from '../../../core/api/booking.service';
 import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
@@ -25,9 +25,14 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
  * Charge le véhicule via `CatalogService.vehicle(id)` (un véhicule non publié
  * renvoie 404 → « introuvable ») et ses avis publiés (résilients à l'échec).
  * Présente caractéristiques (type, capacité, chauffeur, caution), la note
- * moyenne, puis un formulaire de demande de réservation (`POST /requests`,
- * service_type = mobility). La réservation ferme (caution + commission) relève
- * des phases ultérieures ; ici l'utilisateur exprime son besoin de dates.
+ * moyenne, puis le formulaire de **location ferme**
+ * (`POST /vehicles/{id}/bookings`, F8.10).
+ *
+ * ⚠️ Cette page ne déposait qu'une *demande*, dates recopiées dans le corps
+ * d'un message qu'un conseiller relisait à la main. Elle crée désormais une
+ * vraie location. Le contrôle **anti double-location** a été ajouté au serveur
+ * dans la même tranche : il manquait, et deux clients pouvaient repartir avec
+ * le même véhicule le même jour.
  */
 @Component({
   selector: 'app-vehicle-detail-page',
@@ -46,7 +51,8 @@ export class VehicleDetailPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly catalog = inject(CatalogService);
   private readonly reviewsApi = inject(ReviewService);
-  private readonly requests = inject(RequestService);
+  private readonly bookings = inject(BookingService);
+  private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
 
@@ -78,7 +84,6 @@ export class VehicleDetailPageComponent {
           switchMap((env) => {
             this.vehicle.set(env.data);
             this.state.set('ready');
-            this.prefillMessage(env.data);
             return forkJoin({
               reviews: this.reviewsApi.forEntity('vehicle', id).pipe(
                 map((r) => r.data),
@@ -117,63 +122,109 @@ export class VehicleDetailPageComponent {
 
   // --- Formulaire de demande de réservation ---------------------------------
   readonly form = this.fb.nonNullable.group({
-    message: ['', [Validators.required, Validators.maxLength(2000)]],
-    start_date: [''],
-    end_date: [''],
+    start_date: ['', [Validators.required]],
+    end_date: ['', [Validators.required]],
+    guests: [1, [Validators.min(1)]],
+  });
+
+  /** Valeurs suivies en signal, pour chiffrer la location en direct. */
+  private readonly formValue = toSignal(this.form.valueChanges, {
+    initialValue: this.form.getRawValue(),
   });
 
   readonly submitting = signal(false);
-  readonly createdReference = signal<string | null>(null);
   readonly formError = signal<string | null>(null);
 
-  private prefillMessage(vehicle: Vehicle): void {
-    const name = [vehicle.brand, vehicle.model].filter(Boolean).join(' ') || vehicle.type_label || 'ce véhicule';
-    this.form.controls.message.setValue(
-      `Bonjour, je souhaite réserver « ${name} »${vehicle.has_driver ? ' avec chauffeur' : ''}. Merci de me confirmer la disponibilité.`,
-    );
-  }
+  /** Aujourd'hui (`YYYY-MM-DD`) : borne `min` des deux champs de date. */
+  readonly today = new Date().toISOString().slice(0, 10);
 
-  /** Dépose la demande de réservation (POST /requests, service_type = mobility). */
+  /**
+   * Nombre de journées facturées. ⚠️ Une location d'UN seul jour est permise et
+   * facturée une journée (`max(1, …)` côté serveur) : rendre le véhicule le
+   * jour même n'annule pas la mise à disposition.
+   */
+  readonly days = computed(() => {
+    const { start_date, end_date } = this.formValue();
+    if (!start_date || !end_date) {
+      return 0;
+    }
+    const ecart = new Date(end_date).getTime() - new Date(start_date).getTime();
+    return ecart < 0 ? 0 : Math.max(1, Math.round(ecart / 86_400_000));
+  });
+
+  readonly total = computed(() => this.days() * (this.vehicle()?.price_per_day_xof ?? 0));
+  readonly totalLabel = computed(() => formatFcfa(this.total()));
+
+  /** Règle dite AVANT le clic plutôt que renvoyée en 422 après. */
+  readonly bookingHint = computed<string | null>(() => {
+    const vehicle = this.vehicle();
+    const { start_date, end_date } = this.formValue();
+    if (!vehicle || !start_date || !end_date) {
+      return null;
+    }
+    if (new Date(end_date) < new Date(start_date)) {
+      return 'La date de fin ne peut pas précéder le début.';
+    }
+    const passagers = Number(this.formValue().guests ?? 0);
+    if (passagers > vehicle.capacity) {
+      return `Ce véhicule transporte ${vehicle.capacity} personne(s) au maximum.`;
+    }
+    return null;
+  });
+
+  readonly canQuote = computed(() => this.days() > 0 && !this.bookingHint());
+
+  /**
+   * Loue le véhicule (F8.10).
+   *
+   * ⚠️ Ce bouton déposait une simple DEMANDE : les dates étaient recopiées dans
+   * le corps d'un message qu'un conseiller relisait à la main. Il crée
+   * désormais une vraie location, et emmène le client la régler.
+   */
   submit(): void {
-    if (this.submitting() || this.form.invalid) {
+    const vehicle = this.vehicle();
+    if (this.submitting() || !vehicle) {
+      return;
+    }
+    if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-    const vehicle = this.vehicle();
-    if (!vehicle) {
-      return;
-    }
 
-    // Dates souhaitées fusionnées dans le message (l'API générique ne porte pas
-    // de champ dédié ; le conseiller les lit dans le corps de la demande).
     const raw = this.form.getRawValue();
-    const dates =
-      raw.start_date || raw.end_date
-        ? `\n\nPériode souhaitée : du ${raw.start_date || '?'} au ${raw.end_date || '?'}.`
-        : '';
-
     this.submitting.set(true);
     this.formError.set(null);
 
-    this.requests
-      .create({
-        service_type: 'mobility',
-        message: `${raw.message}${dates}`,
+    this.bookings
+      .createVehicleBooking(vehicle.id, {
+        start_date: raw.start_date,
+        end_date: raw.end_date,
+        guests: Number(raw.guests) || 1,
       })
       .subscribe({
-        next: (env) => {
+        next: (booking) => {
           this.submitting.set(false);
-          this.createdReference.set(env.data.request.reference);
+          void this.router.navigate(['/mon-espace/reservations', booking.id, 'paiement']);
         },
         error: (err: { status?: number; error?: ValidationErrorBody }) => {
           this.submitting.set(false);
-          const firstError = err?.error?.errors
-            ? Object.values(err.error.errors)[0]?.[0]
-            : null;
-          this.formError.set(
-            firstError ?? "Votre demande n'a pas pu être envoyée. Réessayez.",
-          );
+          this.formError.set(this.messageFor(err));
         },
       });
+  }
+
+  /**
+   * Les 422 du serveur sont déjà écrits pour un client (« Ce véhicule est déjà
+   * loué sur cette période. ») : on les affiche tels quels.
+   */
+  private messageFor(err: { status?: number; error?: ValidationErrorBody }): string {
+    if (err?.status === 422) {
+      const premier = err.error?.errors ? Object.values(err.error.errors)[0]?.[0] : null;
+      return premier ?? 'Ces dates ne peuvent pas être réservées.';
+    }
+    if (err?.status === 403) {
+      return 'Confirmez votre e-mail ou votre téléphone depuis votre profil pour pouvoir réserver.';
+    }
+    return "La location n'a pas pu être enregistrée. Réessayez.";
   }
 }

@@ -1,0 +1,34 @@
+// Fiche d'un départ programmé (F8.10).
+//
+// Presque tout vient de la feuille partagée `_universe.scss` (coquille, carte
+// latérale, devis) : un trajet se lit comme un véhicule ou un circuit, et
+// recopier ces règles ici les ferait diverger à la première retouche de charte.
+// Ne restent que les quelques traits propres au départ.
+
+:host {
+  display: block;
+}
+
+// Liste « départ / arrivée / date / capacité » : deux colonnes qui retombent en
+// une seule sur mobile, où un libellé et sa valeur côte à côte deviennent
+// illisibles.
+.uni-detail-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem 1.5rem;
+  margin: 0;
+
+  dt {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-muted);
+    margin-bottom: 0.15rem;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+}

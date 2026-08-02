@@ -685,6 +685,42 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   - **Les référentiels de filtrage sont servis par l'API** (les enums PHP), pas
     recopiés dans le composant : c'est ce qui les garde d'accord.
 
+  **F8.10 Le client peut enfin réserver — les quatre univers.**
+  Le geste « réserver » ne produisait **aucune réservation** : les quatre fiches
+  publiques (nuitée, véhicule, circuit, trajet) envoyaient toutes un
+  `POST /requests`, c'est-à-dire un **prospect**. Le visiteur croyait avoir
+  réservé, puis « Mes réservations » lui répondait *« Aucune réservation :
+  parcourez nos univers pour réserver »* — en le renvoyant vers le bouton qui
+  venait de lui créer une demande. Les quatre endpoints de réservation
+  existaient depuis B3.3/B6/B7 et **n'avaient jamais eu d'appelant** ; toutes
+  les réservations de la base venaient du seeder.
+  - **Chaque univers a sa forme**, ce n'est pas un écran copié quatre fois :
+    une nuitée se réserve sur une **période** (départ exclu, c'est ce qui fait
+    les nuits) ; un véhicule sur des **journées** (bornes incluses, un seul jour
+    est permis) ; un circuit sur une **date de départ** seule — il n'a pas de
+    date de fin, sa durée lui appartient ; un trajet, déjà daté, ne se réserve
+    qu'en **nombre de places**.
+  - **Le devis se compose sous les yeux du client** pendant qu'il choisit, et la
+    **caution est annoncée à part, en retrait** : c'est un dépôt rendu, pas un
+    prix, et l'additionner mentalement au séjour ferait fuir.
+  - **Les règles sont dites avant le clic** (séjour minimum, capacité, places
+    restantes) plutôt que renvoyées en 422 après. Le serveur reste seul juge —
+    deux clients peuvent viser la dernière place au même instant — et ses
+    messages, déjà écrits pour un client (« Il ne reste que 3 place(s)
+    disponible(s). »), sont affichés tels quels.
+  - **Le succès n'affiche pas un message : il emmène payer**
+    (`/mon-espace/reservations/:id/paiement`). Une réservation en attente de
+    règlement laissée sans indication ne se solderait jamais.
+  - **La fiche d'un trajet a dû être créée de toutes pièces**
+    ([`features/mobility/trip-detail/`](src/app/features/mobility/trip-detail/),
+    route `/mobilite/:id`) : l'univers Mobilité s'arrêtait au catalogue, ses
+    cartes ne menaient nulle part, et le code assumait que « la réservation d'un
+    trajet se fait via un conseiller ». Il a fallu **créer aussi l'endpoint
+    serveur** `GET /mobility-services/{id}`, qui n'existait pas.
+  - Les commentaires de tête des trois autres fiches annonçaient encore que
+    « la réservation ferme relève des phases ultérieures ». Ces phases n'étaient
+    jamais venues ; les commentaires disent maintenant ce que le code fait.
+
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

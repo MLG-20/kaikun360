@@ -156,6 +156,17 @@ export const routes: Routes = [
         title: 'Mobilité, navettes & transferts — Kaikun 360',
       },
       {
+        // F8.10 — fiche d'un départ programmé. Elle n'existait pas : l'univers
+        // Mobilité s'arrêtait au catalogue, et réserver une place passait
+        // forcément par un conseiller sur WhatsApp.
+        path: 'mobilite/:id',
+        loadComponent: () =>
+          import('./features/mobility/trip-detail/trip-detail-page').then(
+            (m) => m.TripDetailPageComponent,
+          ),
+        title: 'Départ — Kaikun 360',
+      },
+      {
         // Univers Construction (F2.5) : page de conversion + simulateur de budget.
         path: 'construction',
         loadComponent: () =>

@@ -152,3 +152,53 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
+
+// --- Devis de réservation (F8.10) -----------------------------------------
+// Le montant se compose pendant que le client choisit ses dates. Découvrir le
+// prix seulement à l'étape du paiement est le meilleur moyen de le perdre là.
+.stay-quote {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--k-line);
+  font-size: 0.9rem;
+
+  div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  dt {
+    color: var(--k-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--k-ink);
+  }
+
+  // La caution n'est pas un prix : elle est annoncée en retrait pour qu'on ne
+  // l'additionne pas mentalement au séjour.
+  &__caution {
+    margin-top: 0.35rem;
+
+    dd {
+      font-weight: 600;
+      color: var(--k-muted);
+    }
+  }
+}
+
+// Règle du logement (séjour minimum, capacité) dite AVANT le clic.
+.stay-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+}
+
+.stay-paynote {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}

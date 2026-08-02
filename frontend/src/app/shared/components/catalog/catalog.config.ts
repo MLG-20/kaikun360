@@ -274,10 +274,11 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         priceUnit: '/ trajet',
         badge: null,
         image: null,
-        // Pas d'endpoint de détail côté backend pour un service de mobilité
-        // (index + réservation seulement) → carte non cliquable, réservation
-        // gérée depuis la vitrine `/mobilite`.
-        link: null,
+        // F8.10 — la carte mène enfin à la fiche du départ. Elle était morte
+        // faute d'endpoint de détail côté serveur (`GET /mobility-services/{id}`
+        // n'existait pas) : le trajet était le seul univers dont on ne pouvait
+        // ni ouvrir un élément, ni réserver une place.
+        link: ['/mobilite', m.id],
         favoritable: { type: 'mobility', id: m.id },
       };
     },

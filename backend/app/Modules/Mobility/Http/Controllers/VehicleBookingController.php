@@ -48,6 +48,27 @@ class VehicleBookingController extends Controller
         // Au moins une journée de location facturée.
         $days = max(1, $start->diffInDays($end));
 
+        // ⚠️ **Anti double-location (F8.10).** Ce contrôle MANQUAIT : deux
+        // clients pouvaient louer le même véhicule aux mêmes dates. Le défaut
+        // est resté invisible tant qu'aucun écran ne créait de réservation ; il
+        // cesse de l'être le jour où le catalogue en produit vraiment.
+        //
+        // Un véhicule est un bien UNIQUE, comme un logement : même règle que
+        // les nuitées. Une différence toutefois — ici les bornes sont INCLUSES
+        // des deux côtés (rendre le 12 et relouer le 12, c'est la même journée
+        // de mise à disposition, alors qu'un départ de nuitée libère la nuit).
+        $chevauchement = $vehicle->bookings()
+            ->whereNotIn('status', $this->statutsAnnules())
+            ->where('start_date', '<=', $end)
+            ->where('end_date', '>=', $start)
+            ->exists();
+
+        if ($chevauchement) {
+            throw ValidationException::withMessages([
+                'start_date' => ['Ce véhicule est déjà loué sur cette période.'],
+            ]);
+        }
+
         $amount = $days * $vehicle->price_per_day_xof;
         $caution = (int) $vehicle->caution_xof;
 
@@ -118,5 +139,23 @@ class VehicleBookingController extends Controller
                 'amount_xof' => $refundAmount,
             ],
         ]);
+    }
+
+    /**
+     * Valeurs de statut correspondant à une annulation.
+     *
+     * Une réservation annulée ne bloque évidemment plus le véhicule : elle est
+     * donc exclue du contrôle de chevauchement. La liste est DÉRIVÉE de l'enum
+     * (`estAnnulee()`) et jamais recopiée — ajouter demain un statut d'annulation
+     * remettrait sinon des créneaux fantômes en circulation.
+     *
+     * @return array<int, string>
+     */
+    private function statutsAnnules(): array
+    {
+        return array_map(
+            fn (BookingStatus $statut) => $statut->value,
+            array_filter(BookingStatus::cases(), fn (BookingStatus $statut) => $statut->estAnnulee()),
+        );
     }
 }

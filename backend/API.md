@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 233 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 234 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -147,6 +147,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
 | GET | `/mobility-services` | public | `MobilityServiceController@index` |
+| GET | `/mobility-services/{id}` | public | `MobilityServiceController@show` |
 | POST | `/mobility-services/{id}/bookings` | auth + vérifié | `MobilityServiceBookingController@store` |
 
 ### Build — construction

@@ -53,7 +53,14 @@ Permet de proposer un **bien** (module Immo) en location **à la nuitée**.
 | Méthode | URL | Accès |
 |---|---|---|
 | GET | `/api/v1/stays/{id}/availability` | public — créneaux déjà occupés |
-| POST | `/api/v1/stays/{id}/bookings` | `auth:sanctum` — réserver |
+| POST | `/api/v1/stays/{id}/bookings` | `auth:sanctum` + vérifié — réserver |
+
+> ⚠️ **F8.10 — cet endpoint est resté sans appelant depuis B3.3.** La fiche
+> publique d'une nuitée ne proposait qu'un formulaire de *demande*
+> (`POST /requests`) : le visiteur croyait avoir réservé et « Mes réservations »
+> lui répondait qu'il n'avait rien réservé. Le commentaire du composant Angular
+> l'assumait — « la réservation ferme relève des phases ultérieures ». Ces
+> phases n'étaient jamais venues. La fiche crée désormais un vrai séjour.
 
 ### Réservations (`bookings`, polymorphe)
 

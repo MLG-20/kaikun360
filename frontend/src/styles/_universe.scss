@@ -270,6 +270,57 @@
   font-size: 0.9rem;
 }
 
+// --- Devis de réservation (F8.10) -----------------------------------------
+// Partagé par les fiches véhicule, circuit et trajet — les nuitées ont le leur,
+// hérité de leur feuille propre. Le montant se compose pendant que le client
+// choisit : découvrir le prix seulement à l'étape du paiement est le meilleur
+// moyen de le perdre là.
+.uni-quote {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--k-line);
+  font-size: 0.9rem;
+
+  div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  dt {
+    color: var(--k-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 700;
+    color: var(--k-ink);
+  }
+
+  // La caution n'est pas un prix : en retrait, pour qu'on ne l'additionne pas.
+  &__caution {
+    margin-top: 0.35rem;
+
+    dd {
+      font-weight: 600;
+      color: var(--k-muted);
+    }
+  }
+}
+
+// Règle du bien (capacité, places restantes) dite AVANT le clic.
+.uni-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+}
+
+.uni-paynote {
+  margin: 0.6rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
 .uni-chips {
   list-style: none;
   display: flex;

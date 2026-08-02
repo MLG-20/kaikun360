@@ -41,6 +41,97 @@ class MobilityBookingTest extends TestCase
             ->assertJsonPath('data.booking.caution_status', 'retenue');
     }
 
+    /**
+     * F8.10 — anti double-location. Le contrôle MANQUAIT : deux clients
+     * pouvaient louer le même véhicule aux mêmes dates. Invisible tant qu'aucun
+     * écran ne créait de réservation ; le catalogue en produit désormais.
+     */
+    /**
+     * F8.10 — fiche publique d'un départ. L'endpoint n'existait pas : le module
+     * n'exposait que la recherche, un trajet ne pouvait donc pas avoir de page
+     * et sa réservation passait forcément par un conseiller.
+     */
+    public function test_la_fiche_d_un_depart_donne_son_remplissage(): void
+    {
+        $service = MobilityService::factory()->published()->create([
+            'capacity' => 30,
+            'price_xof' => 5_000,
+        ]);
+
+        Sanctum::actingAs(User::factory()->create());
+        $this->postJson("/api/v1/mobility-services/{$service->id}/bookings", ['guests' => 4])
+            ->assertCreated();
+
+        // Public : on consulte un départ sans être connecté.
+        app('auth')->forgetGuards();
+
+        $this->getJson("/api/v1/mobility-services/{$service->id}")
+            ->assertOk()
+            ->assertJsonPath('data.mobility_service.id', $service->id)
+            ->assertJsonPath('data.seats_taken', 4)
+            ->assertJsonPath('data.seats_left', 26);
+    }
+
+    /** Un départ non publié n'a pas de fiche publique. */
+    public function test_un_depart_non_publie_est_introuvable(): void
+    {
+        // Le statut par défaut de la factory est « en attente de validation ».
+        $service = MobilityService::factory()->create();
+
+        $this->getJson("/api/v1/mobility-services/{$service->id}")->assertNotFound();
+    }
+
+    public function test_un_vehicule_deja_loue_sur_la_periode_est_refuse(): void
+    {
+        $vehicle = Vehicle::factory()->published()->create(['price_per_day_xof' => 50_000]);
+
+        Sanctum::actingAs(User::factory()->create());
+        $this->postJson("/api/v1/vehicles/{$vehicle->id}/bookings", [
+            'start_date' => now()->addDays(5)->toDateString(),
+            'end_date' => now()->addDays(8)->toDateString(),
+        ])->assertCreated();
+
+        // Un autre client, une période qui empiète : refus.
+        Sanctum::actingAs(User::factory()->create());
+        $this->postJson("/api/v1/vehicles/{$vehicle->id}/bookings", [
+            'start_date' => now()->addDays(7)->toDateString(),
+            'end_date' => now()->addDays(10)->toDateString(),
+        ])
+            ->assertStatus(422)
+            ->assertJsonPath('errors.start_date.0', 'Ce véhicule est déjà loué sur cette période.');
+
+        // Une période disjointe reste possible : on n'a pas bloqué le véhicule.
+        $this->postJson("/api/v1/vehicles/{$vehicle->id}/bookings", [
+            'start_date' => now()->addDays(20)->toDateString(),
+            'end_date' => now()->addDays(22)->toDateString(),
+        ])->assertCreated();
+    }
+
+    /**
+     * Une location ANNULÉE ne doit plus bloquer le véhicule : sinon une
+     * annulation retirerait le véhicule du marché pour rien.
+     */
+    public function test_une_location_annulee_libere_la_periode(): void
+    {
+        $vehicle = Vehicle::factory()->published()->create(['price_per_day_xof' => 50_000]);
+
+        $client = User::factory()->create();
+        Sanctum::actingAs($client);
+        $reponse = $this->postJson("/api/v1/vehicles/{$vehicle->id}/bookings", [
+            'start_date' => now()->addDays(5)->toDateString(),
+            'end_date' => now()->addDays(8)->toDateString(),
+        ])->assertCreated();
+
+        $this->patchJson("/api/v1/vehicles/bookings/{$reponse->json('data.booking.id')}/cancel")
+            ->assertOk();
+
+        Sanctum::actingAs(User::factory()->create());
+        $this->postJson("/api/v1/vehicles/{$vehicle->id}/bookings", [
+            'start_date' => now()->addDays(5)->toDateString(),
+            'end_date' => now()->addDays(8)->toDateString(),
+        ])->assertCreated();
+    }
+
     public function test_annulation_conforme_restitue_la_caution_et_ouvre_le_remboursement(): void
     {
         $client = User::factory()->create();

@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { CatalogService } from '../../../core/api/catalog.service';
-import { RequestService } from '../../../core/api/request.service';
+import { BookingService } from '../../../core/api/booking.service';
 import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
@@ -32,10 +32,13 @@ interface CalendarCell {
  *
  * Charge en parallèle la nuitée, sa disponibilité (`GET /stays/{id}/availability`)
  * et ses avis publiés. Présente équipements, règles, tarifs, un **calendrier de
- * disponibilité** (jours réservés grisés) et un formulaire de demande de
- * réservation (`POST /requests`, service_type = stay). La réservation ferme
- * (paiement + caution) relève des phases ultérieures ; ici l'utilisateur
- * exprime son besoin de dates, qu'un conseiller confirme.
+ * disponibilité** (jours réservés grisés) et le formulaire de
+ * **réservation ferme** (`POST /stays/{id}/bookings`, F8.10).
+ *
+ * ⚠️ Cette page ne proposait qu'une *demande* (`POST /requests`) : le visiteur
+ * croyait avoir réservé, et « Mes réservations » lui répondait qu'il n'avait
+ * rien réservé. Le bouton crée désormais un vrai séjour — commission figée,
+ * caution retenue, en attente de paiement — et emmène le client le régler.
  */
 @Component({
   selector: 'app-stay-detail-page',
@@ -54,7 +57,8 @@ export class StayDetailPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly catalog = inject(CatalogService);
   private readonly reviewsApi = inject(ReviewService);
-  private readonly requests = inject(RequestService);
+  private readonly bookings = inject(BookingService);
+  private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
 
@@ -90,7 +94,6 @@ export class StayDetailPageComponent {
           switchMap((env) => {
             this.stay.set(env.data);
             this.state.set('ready');
-            this.prefillMessage(env.data);
             // Disponibilité + avis en parallèle, chacun résilient.
             return forkJoin({
               availability: this.catalog.stayAvailability(id).pipe(
@@ -235,63 +238,131 @@ export class StayDetailPageComponent {
     return `${y}-${m}-${d}`;
   }
 
-  // --- Formulaire de demande de réservation ---------------------------------
+  // --- Réservation (F8.10) ---------------------------------------------------
+  //
+  // ⚠️ Ce bloc était un formulaire de DEMANDE (`POST /requests`) : le visiteur
+  // cliquait « Demander une réservation », un prospect était créé, et il ne
+  // trouvait rien dans « Mes réservations » — l'écran lui répondant même
+  // « Aucune réservation : parcourez nos univers pour réserver », alors qu'il
+  // venait de le faire. Le bouton produit désormais une VRAIE réservation.
+
   readonly form = this.fb.nonNullable.group({
-    message: ['', [Validators.required, Validators.maxLength(2000)]],
-    arrival: [''],
-    departure: [''],
+    arrival: ['', [Validators.required]],
+    departure: ['', [Validators.required]],
+    guests: [1, [Validators.required, Validators.min(1)]],
+  });
+
+  /** Valeurs du formulaire suivies en signal, pour recalculer le devis en direct. */
+  private readonly formValue = toSignal(this.form.valueChanges, {
+    initialValue: this.form.getRawValue(),
   });
 
   readonly submitting = signal(false);
-  readonly createdReference = signal<string | null>(null);
   readonly formError = signal<string | null>(null);
 
-  private prefillMessage(stay: Stay): void {
-    const title = stay.property?.title ?? 'cette nuitée';
-    this.form.controls.message.setValue(
-      `Bonjour, je souhaite réserver « ${title} ». Merci de me confirmer la disponibilité.`,
-    );
-  }
+  /** Aujourd'hui au format `YYYY-MM-DD` : borne `min` des deux champs de date. */
+  readonly today = this.toIso(new Date());
 
+  /**
+   * Nombre de nuits. La date de départ est **exclue** — on ne dort pas la nuit
+   * du départ. C'est exactement le calcul du serveur ; l'afficher évite au
+   * client de découvrir le montant seulement à l'étape du paiement.
+   */
+  readonly nights = computed(() => {
+    const { arrival, departure } = this.formValue();
+    if (!arrival || !departure) {
+      return 0;
+    }
+    const ecart = new Date(departure).getTime() - new Date(arrival).getTime();
+    return ecart > 0 ? Math.round(ecart / 86_400_000) : 0;
+  });
+
+  /** Montant du séjour (hors caution, qui est un dépôt rendu, pas un revenu). */
+  readonly total = computed(() => this.nights() * (this.stay()?.price_per_night_xof ?? 0));
+  readonly totalLabel = computed(() => formatFcfa(this.total()));
+
+  /**
+   * Ce que le client doit savoir AVANT de cliquer : les règles que le serveur
+   * appliquera. Les rejouer ici n'est pas une duplication de la validation —
+   * le serveur reste seul juge, et refuse en 422 — c'est le refus qu'on évite.
+   */
+  readonly bookingHint = computed<string | null>(() => {
+    const stay = this.stay();
+    const nights = this.nights();
+    if (!stay || nights === 0) {
+      return null;
+    }
+    if (stay.min_nights && nights < stay.min_nights) {
+      return `Séjour minimum : ${stay.min_nights} nuit(s).`;
+    }
+    if (stay.max_nights && nights > stay.max_nights) {
+      return `Séjour maximum : ${stay.max_nights} nuit(s).`;
+    }
+    const guests = Number(this.formValue().guests ?? 0);
+    if (guests > stay.capacity) {
+      return `Ce logement accueille ${stay.capacity} personne(s) au maximum.`;
+    }
+    return null;
+  });
+
+  /** Le récapitulatif chiffré ne s'affiche que s'il a un sens. */
+  readonly canQuote = computed(() => this.nights() > 0 && !this.bookingHint());
+
+  /**
+   * Réserve. Le succès ne renvoie pas un message : il **emmène le client
+   * payer** — c'est la suite naturelle, et une réservation en attente de
+   * paiement laissée sans indication ne se serait jamais soldée.
+   */
   submit(): void {
-    if (this.submitting() || this.form.invalid) {
-      this.form.markAllAsTouched();
+    const stay = this.stay();
+    if (this.submitting() || !stay) {
       return;
     }
-    const stay = this.stay();
-    if (!stay) {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
       return;
     }
 
     const raw = this.form.getRawValue();
-    const dates =
-      raw.arrival || raw.departure
-        ? `\n\nSéjour souhaité : du ${raw.arrival || '?'} au ${raw.departure || '?'}.`
-        : '';
-
     this.submitting.set(true);
     this.formError.set(null);
 
-    this.requests
-      .create({
-        service_type: 'stay',
-        message: `${raw.message}${dates}`,
-        city: stay.property?.location?.commune ?? null,
+    this.bookings
+      .createStayBooking(stay.id, {
+        start_date: raw.arrival,
+        end_date: raw.departure,
+        guests: Number(raw.guests),
       })
       .subscribe({
-        next: (env) => {
+        next: (booking) => {
           this.submitting.set(false);
-          this.createdReference.set(env.data.request.reference);
+          void this.router.navigate(['/mon-espace/reservations', booking.id, 'paiement']);
         },
-        error: (err: { status?: number; error?: ValidationErrorBody }) => {
+        error: (err: { status?: number; error?: ValidationErrorBody & { message?: string } }) => {
           this.submitting.set(false);
-          const firstError = err?.error?.errors
-            ? Object.values(err.error.errors)[0]?.[0]
-            : null;
-          this.formError.set(
-            firstError ?? "Votre demande n'a pas pu être envoyée. Réessayez.",
-          );
+          this.formError.set(this.messageFor(err));
         },
       });
+  }
+
+  /**
+   * Les 422 du serveur sont déjà rédigés pour un client (« Ce créneau est déjà
+   * réservé. », « Le séjour minimum est de 2 nuit(s). ») : on les affiche tels
+   * quels plutôt que d'en écrire une version appauvrie.
+   */
+  private messageFor(err: {
+    status?: number;
+    error?: ValidationErrorBody & { message?: string };
+  }): string {
+    if (err?.status === 422) {
+      const premier = err.error?.errors ? Object.values(err.error.errors)[0]?.[0] : null;
+      return premier ?? 'Ces dates ne peuvent pas être réservées.';
+    }
+    // Le compte existe mais n'est pas vérifié (middleware `verified.account`) :
+    // on le dit franchement, avec la marche à suivre.
+    if (err?.status === 403) {
+      return 'Confirmez votre e-mail ou votre téléphone depuis votre profil pour pouvoir réserver.';
+    }
+    return "La réservation n'a pas pu être enregistrée. Réessayez.";
   }
 }

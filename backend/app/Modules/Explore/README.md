@@ -64,6 +64,14 @@ circuit) via le modèle transversal `Booking`.
 | GET | `/api/v1/experiences/{id}/availability` | public — capacité & places restantes |
 | POST | `/api/v1/experiences/{id}/bookings` | auth — réservation de groupe |
 
+> ⚠️ **F8.10 — endpoint sans appelant depuis B6.** La fiche d'un circuit ne
+> déposait qu'une *demande*, avec une date « souhaitée » **facultative** et le
+> nombre de participants recopié dans un message qu'un conseiller relisait à la
+> main. Les places sont désormais réellement décomptées et le client est emmené
+> payer. ⚠️ Un circuit n'a **pas de date de fin** — sa durée lui appartient : le
+> client ne choisit que son jour de départ, et l'écran ne propose donc aucune
+> date de retour, qui serait mensongère.
+
 - `ExperienceBookingService` : `seatsTaken` / `seatsLeft` / `canAccommodate`
   (places restantes = capacité − participants des réservations **non annulées** ;
   le `guests` d'un panier groupe occupe plusieurs places).

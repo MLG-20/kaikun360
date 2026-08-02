@@ -90,17 +90,11 @@
               }
             }
 
-            <h2 class="uni-detail-card-title">Demander une réservation</h2>
+            <h2 class="uni-detail-card-title">Réserver</h2>
 
-            @if (createdReference(); as ref) {
-              <div class="k-form-info" role="status">
-                <strong>Demande envoyée.</strong>
-                Votre référence de suivi : <b>{{ ref }}</b>. Un conseiller confirme
-                la disponibilité et les modalités.
-              </div>
-            } @else if (!isAuthenticated()) {
+            @if (!isAuthenticated()) {
               <p class="k-muted uni-detail-authnote">
-                Connectez-vous pour demander une réservation et suivre votre dossier.
+                Connectez-vous pour réserver ce circuit et suivre votre dossier.
               </p>
               <a
                 class="k-btn k-btn--primary k-btn--block"
@@ -109,6 +103,12 @@
               >
                 Se connecter
               </a>
+            } @else if (soldOut()) {
+              <!-- Complet : on ne présente pas un formulaire condamné à échouer. -->
+              <p class="k-muted uni-detail-authnote">
+                Ce circuit est complet. Écrivez-nous pour être prévenu d'un
+                prochain départ.
+              </p>
             } @else {
               <form class="uni-detail-form" [formGroup]="form" (ngSubmit)="submit()">
                 @if (formError(); as err) {
@@ -121,28 +121,35 @@
                     <input type="number" min="1" class="k-input" formControlName="seats" />
                   </label>
                   <label class="k-field">
-                    <span class="k-label">Date souhaitée <span class="k-optional">(optionnel)</span></span>
-                    <input type="date" class="k-input" formControlName="preferred_date" />
+                    <!-- Un circuit n'a pas de date de fin : sa durée lui appartient. -->
+                    <span class="k-label">Date de départ</span>
+                    <input type="date" class="k-input" formControlName="start_date" [min]="today" />
                   </label>
                 </div>
 
-                <label class="k-field">
-                  <span class="k-label">Votre message</span>
-                  <textarea
-                    class="k-input"
-                    rows="4"
-                    formControlName="message"
-                    [class.k-input--error]="form.controls.message.touched && form.controls.message.invalid"
-                  ></textarea>
-                </label>
+                @if (canQuote()) {
+                  <dl class="uni-quote">
+                    <div>
+                      <dt>{{ form.controls.seats.value }} × {{ priceLabel() }}</dt>
+                      <dd>{{ totalLabel() }}</dd>
+                    </div>
+                  </dl>
+                } @else if (bookingHint(); as hint) {
+                  <p class="k-muted uni-hint">{{ hint }}</p>
+                }
 
                 <button
                   type="submit"
                   class="k-btn k-btn--primary k-btn--block"
-                  [disabled]="submitting()"
+                  [disabled]="submitting() || !canQuote()"
                 >
-                  {{ submitting() ? 'Envoi…' : 'Envoyer la demande' }}
+                  {{ submitting() ? 'Réservation…' : 'Réserver et payer' }}
                 </button>
+
+                <p class="k-muted uni-paynote">
+                  Vos places sont enregistrées puis réglées en ligne. Elles ne
+                  sont confirmées qu'une fois le paiement reçu.
+                </p>
               </form>
             }
           </div>

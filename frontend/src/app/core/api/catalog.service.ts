@@ -5,7 +5,10 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiEnvelope } from './api-response.model';
 import { Experience, ExperienceAvailability } from '../../models/experience.model';
-import { MobilityService } from '../../models/mobility-service.model';
+import {
+  MobilityService,
+  MobilityServiceDetail,
+} from '../../models/mobility-service.model';
 import { Property } from '../../models/property.model';
 import { Stay, StayAvailability } from '../../models/stay.model';
 import { Vehicle } from '../../models/vehicle.model';
@@ -159,6 +162,23 @@ export class CatalogService {
   ): Observable<ApiEnvelope<ExperienceAvailability>> {
     return this.http.get<ApiEnvelope<ExperienceAvailability>>(
       `${this.api}/experiences/${id}/availability`,
+    );
+  }
+
+  /**
+   * GET /mobility-services/{id} — **fiche d'un départ programmé** avec son
+   * remplissage (F8.10).
+   *
+   * ⚠️ Cet endpoint n'existait pas côté serveur : le module de mobilité
+   * n'exposait que la recherche, donc un trajet ne pouvait pas avoir de page et
+   * sa réservation passait forcément par un conseiller.
+   *
+   * `seats_left` est joint à la fiche : afficher la capacité totale d'un départ
+   * où il ne reste qu'une place ferait découvrir le refus après le clic.
+   */
+  mobilityService(id: number | string): Observable<ApiEnvelope<MobilityServiceDetail>> {
+    return this.http.get<ApiEnvelope<MobilityServiceDetail>>(
+      `${this.api}/mobility-services/${id}`,
     );
   }
 
