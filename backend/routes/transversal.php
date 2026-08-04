@@ -92,8 +92,21 @@ Route::middleware('auth:sanctum')->group(function () {
     // déclarée AVANT la paramétrée `{conversation}` (miroir de F3.6), et la
     // contrainte `whereNumber` lève toute ambiguïté de matching.
     Route::get('messages', [MessageController::class, 'index']);
-    Route::post('messages', [MessageController::class, 'start']);
     Route::get('messages/unread-count', [MessageController::class, 'unreadCount']);
+
+    // Ouvrir un fil AVEC LE SUPPORT (F8.12) : le geste qui manquait depuis
+    // F3.7. Ouvert à tous les profils connectés — c'est LE point d'entrée de la
+    // messagerie côté client, prestataire, propriétaire ou entreprise.
+    Route::post('messages/support', [MessageController::class, 'startWithSupport']);
+
+    // Ouvrir un fil en DÉSIGNANT son destinataire : réservé à l'équipe
+    // (`repondre:messages`). ⚠️ Cette route était ouverte à tous jusqu'en
+    // F8.12 : n'importe quel compte pouvait écrire directement à n'importe quel
+    // autre, ce qui contredit l'architecture retenue (« le fil naît toujours
+    // chez Kaikun, c'est l'agent qui décide d'y faire entrer un tiers »).
+    Route::post('messages', [MessageController::class, 'start'])
+        ->middleware('can:repondre:messages');
+
     Route::get('messages/{conversation}', [MessageController::class, 'show'])
         ->whereNumber('conversation');
     Route::post('messages/{conversation}/messages', [MessageController::class, 'store'])

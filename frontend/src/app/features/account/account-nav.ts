@@ -22,6 +22,10 @@ export type AccountIcon =
   | 'heart' // favoris
   | 'bell' // notifications
   | 'chat' // messages
+  | 'star' // avis & notation (espace prestataire) — F8.12.c : « Avis reçus »
+  //          empruntait la bulle des messages, qui a désormais sa propre
+  //          rubrique dans le même rail ; deux icônes identiques côte à côte
+  //          rendaient le menu illisible.
   | 'user' // profil
   | 'help' // aide (mode d'emploi de l'espace)
   | 'building' // biens immobiliers (espace propriétaire, F4)

@@ -15,6 +15,16 @@ export interface Counterpart {
   id: number;
   /** Nom affiché. */
   name: string;
+  /**
+   * Rôle lisible (F8.12.c) — « Support Kaikun », « Propriétaire »,
+   * « Prestataire ». Depuis qu'un professionnel peut entrer dans le fil, savoir
+   * à QUI l'on parle change la réponse qu'on écrit. ⚠️ Le rôle et le nom sont
+   * exposés, **jamais les coordonnées** : celles écrites dans les messages sont
+   * elles-mêmes masquées entre non-staff, côté serveur.
+   */
+  role?: string | null;
+  /** Ce correspondant fait-il partie de l'équipe Kaikun ? */
+  is_team?: boolean;
 }
 
 /** Aperçu du dernier message d'une conversation (pour la liste des fils). */
@@ -53,6 +63,16 @@ export interface Conversation {
   subject: string | null;
   /** Étiquette du contexte rattaché (« Demande », « Réservation »…), ou null. */
   context_label: string | null;
+  /**
+   * Agent Kaikun RESPONSABLE du fil (F8.12), ou null tant qu'aucun n'a été
+   * assigné. C'est le nom que le client voit en face de lui : un interlocuteur
+   * nommé, comme pour le devis en F8.11.
+   */
+  assigned_agent?: { id: number; name: string } | null;
+  /** Le fil a-t-il été clos par l'équipe ? (écrire à nouveau le rouvre). */
+  is_closed?: boolean;
+  /** Horodatage de clôture, ou null. */
+  closed_at?: string | null;
   /** Les autres participants (le correspondant, du point de vue courant). */
   counterparts: Counterpart[];
   /** Aperçu du dernier message (liste des fils), ou null si aucun. */

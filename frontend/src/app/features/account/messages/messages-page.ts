@@ -3,14 +3,16 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 
 import { MessageService } from '../../../core/api/message.service';
+import { pollWhileVisible } from '../../../core/state/poll-while-visible';
 import { PageMeta } from '../../../core/api/pagination.model';
 import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { Conversation } from '../../../models/message.model';
+import { ContactSupportComponent } from '../../../shared/components/contact-support/contact-support';
 import { AccountIconComponent } from '../account-icon';
 
 @Component({
   selector: 'app-messages-page',
-  imports: [DatePipe, RouterLink, AccountIconComponent],
+  imports: [DatePipe, RouterLink, AccountIconComponent, ContactSupportComponent],
   templateUrl: './messages-page.html',
   styleUrl: './messages-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,9 +26,12 @@ import { AccountIconComponent } from '../account-icon';
  *
  * Liste paginée des conversations (`GET /messages`, 15/page, les plus actives
  * d'abord), avec le total de messages non lus joint aux métadonnées. Chaque
- * ligne mène au fil correspondant, où l'on lit et répond. On ne propose pas ici
- * de « nouveau message » libre : les conversations naissent d'un contexte
- * (contact du support/d'un pro depuis une annonce ou une demande).
+ * ligne mène au fil correspondant, où l'on lit et répond.
+ *
+ * ⚠️ F8.12 : l'écran porte désormais le bloc « Écrire au support »
+ * (`app-contact-support`). Jusque-là, la messagerie n'avait **aucun geste
+ * d'ouverture** — ni ici, ni ailleurs : tous les fils visibles venaient du
+ * seeder, et l'état vide décrivait un bouton qui n'existait pas.
  */
 export class MessagesPageComponent {
   private readonly messages = inject(MessageService);
@@ -50,25 +55,36 @@ export class MessagesPageComponent {
 
   constructor() {
     this.load(1);
+
+    // F8.12.a — la liste se tient à jour seule (30 s), sans état de chargement
+    // ni défilement : on attend une réponse sur cet écran, elle doit arriver
+    // sans rechargement manuel.
+    pollWhileVisible(() => this.load(this.meta()?.current_page ?? 1, true), 30_000);
   }
 
   /** Charge une page de conversations (remplace la liste affichée). */
-  protected load(page: number): void {
-    this.loading.set(true);
-    this.loadError.set(false);
+  protected load(page: number, silencieux = false): void {
+    if (!silencieux) {
+      this.loading.set(true);
+      this.loadError.set(false);
+    }
     this.messages.myConversations(page).subscribe({
       next: (res) => {
         this.items.set(res.data);
         this.meta.set(res.meta);
         this.unreadCount.set(res.unread_count);
         this.loading.set(false);
-        if (typeof window !== 'undefined') {
+        // Le défilement en haut appartient à la navigation voulue par
+        // l'utilisateur : une relève ne doit pas déplacer sa page sous ses yeux.
+        if (!silencieux && typeof window !== 'undefined') {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       },
       error: () => {
-        this.loading.set(false);
-        this.loadError.set(true);
+        if (!silencieux) {
+          this.loading.set(false);
+          this.loadError.set(true);
+        }
       },
     });
   }

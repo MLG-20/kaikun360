@@ -174,6 +174,38 @@ tapait du texte brut qui arrivait en un seul pavé sur le site. Désormais il
   en `{{ answer }}` (texte brut), pas en HTML — les balises s'y afficheraient en
   clair. Elle garde son `<textarea>`.
 
+## Écrire au support (F8.12)
+
+| Composant | Sélecteur | Rôle |
+| --- | --- | --- |
+| `ContactSupportComponent` | `app-contact-support` | **Ouvre un fil de discussion avec le support Kaikun**, avec le dossier concerné joint. Entrées : `contextType`, `contextId`, `subject`, `label`, `hint`. |
+
+**À quoi ça sert, en clair :** la messagerie existait depuis F3.7 — lire un fil,
+répondre, compter les non-lus, notifier — mais **rien ne savait en OUVRIR un**.
+Aucun écran n'appelait `startConversation()` ; tous les fils visibles venaient du
+seeder, et l'état vide de « Mes messages » promettait un bouton (« une
+conversation s'ouvre lorsque vous contactez le support depuis une annonce ou une
+demande ») qui n'existait nulle part. Ce composant est ce bouton.
+
+**Côté technique :**
+- Appelle `POST /messages/support` (`MessageService.startWithSupport`) : **aucun
+  destinataire n'est envoyé**. Le serveur assigne un agent de permanence — le
+  client n'écrit jamais directement au propriétaire ou au prestataire, c'est
+  l'agent qui décidera d'ajouter le tiers au fil. Contourner cette règle ferait
+  sortir l'échange de la plateforme, où plus personne ne voit rien.
+- `contextType` est un **slug** de la liste blanche partagée avec le serveur
+  (`demande`, `devis`, `reservation`, `bien`, `nuitee`, `vehicule`, `circuit`,
+  `trajet`) : les deux listes doivent rester alignées, tout autre slug est refusé
+  en 422. Un dossier personnel qui n'appartient pas à l'auteur est **ignoré**
+  (le message part quand même).
+- Après envoi, **redirection vers le fil** créé ou repris — le client voit son
+  message posté et le nom de l'agent qui lui a été assigné, plutôt qu'un
+  « message envoyé » sans suite. Le préfixe d'espace vient de `SPACE_CONFIG`
+  (injecté en `optional`) : les quatre espaces connectés ont chacun leur
+  `/messages`, un chemin en dur enverrait trois profils sur quatre dans le mur.
+- Monté sur : « Mes messages » (état vide + barre d'actions), la fiche d'une
+  demande, la fiche d'une réservation.
+
 ## Directives (F1)
 
 | Directive | Attribut | Rôle |

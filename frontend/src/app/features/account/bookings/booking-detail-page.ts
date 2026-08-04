@@ -9,6 +9,7 @@ import { BookingService } from '../../../core/api/booking.service';
 import { Booking } from '../../../models/booking.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { ContactSupportComponent } from '../../../shared/components/contact-support/contact-support';
 import { BookingTone, bookingTone } from './booking-display';
 
 /** État de chargement de l'écran. */
@@ -16,7 +17,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'forbidden' | 'failed';
 
 @Component({
   selector: 'app-booking-detail-page',
-  imports: [DatePipe, RouterLink, BackLinkComponent],
+  imports: [DatePipe, RouterLink, BackLinkComponent, ContactSupportComponent],
   templateUrl: './booking-detail-page.html',
   styleUrl: './booking-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,7 +32,9 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'forbidden' | 'failed';
  * voyageurs, montant, caution, statut teinté. Un bouton « ← Mes réservations »
  * ramène toujours à la liste. Une réservation qui n'appartient pas à
  * l'utilisateur renvoie 403 (état « accès refusé »). **L'annulation reste sur la
- * liste** (là où l'action inline est déjà câblée) — cet écran est en lecture seule.
+ * liste** (là où l'action inline est déjà câblée). Depuis F8.12, l'écran porte
+ * en revanche le bloc « Écrire au support sur cette réservation » : c'est ici
+ * qu'un client se pose ses questions, c'est donc ici que le geste doit être.
  */
 export class BookingDetailPageComponent {
   private readonly bookings = inject(BookingService);

@@ -2,6 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Models\User;
+use App\Modules\Core\Enums\UserRole;
+use App\Support\Messaging\ConversationContext;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;
@@ -35,10 +38,31 @@ class ConversationResource extends JsonResource
             'subject' => $this->subject,
             // Étiquette lisible du contexte (« Demande », « Réservation »…), si présent.
             'context_label' => $this->contextLabel(),
+            // Interlocuteur NOMMÉ du support (F8.12). Le client doit savoir qui
+            // lui répond : c'est le même arbitrage produit qu'en F8.11 sur le
+            // devis — « le contact humain fait la confiance ».
+            'assigned_agent' => $this->whenLoaded('assignedAgent', fn () => $this->assignedAgent ? [
+                'id' => $this->assignedAgent->id,
+                'name' => $this->assignedAgent->name,
+            ] : null),
+            // Fil clos = réglé. Le client le voit en lecture et le rouvre en
+            // écrivant à nouveau (cf. MessageController::store).
+            'is_closed' => $this->isClosed(),
+            'closed_at' => $this->closed_at,
             // Les AUTRES participants (le correspondant, du point de vue courant).
             'counterparts' => $this->whenLoaded('participants', fn () => $this->participants
                 ->reject(fn ($p) => $p->id === $user?->id)
-                ->map(fn ($p) => ['id' => $p->id, 'name' => $p->name])
+                ->map(fn ($p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    // F8.12.c — depuis qu'un propriétaire ou un prestataire peut
+                    // entrer dans le fil, savoir À QUI l'on parle devient
+                    // nécessaire : « Ousmane, propriétaire » n'appelle pas la
+                    // même réponse que « Awa, support Kaikun ». On expose le
+                    // rôle et **jamais les coordonnées** (cf. ContactMasker).
+                    'role' => $p->estStaff() ? 'Support Kaikun' : $this->roleLabel($p),
+                    'is_team' => $p->estStaff(),
+                ])
                 ->values()),
             // Aperçu du dernier message pour la liste (corps tronqué).
             'last_message' => $this->whenLoaded('latestMessage', fn () => $this->latestMessage ? [
@@ -56,6 +80,17 @@ class ConversationResource extends JsonResource
     }
 
     /**
+     * Rôle lisible d'un participant non-staff (« Propriétaire », « Prestataire »,
+     * « Client »…), lu dans l'enum plutôt que recopié.
+     */
+    private function roleLabel(User $participant): ?string
+    {
+        $role = $participant->getRoleNames()->first();
+
+        return $role === null ? null : UserRole::tryFrom($role)?->label();
+    }
+
+    /**
      * Étiquette française du contexte polymorphe facultatif, déduite du nom court
      * de la classe (sans coupler cette ressource transversale aux modèles métier).
      */
@@ -65,11 +100,9 @@ class ConversationResource extends JsonResource
             return null;
         }
 
-        return match (class_basename((string) $this->context_type)) {
-            'ServiceRequest' => 'Demande',
-            'Booking' => 'Réservation',
-            'Property' => 'Bien immobilier',
-            default => null,
-        };
+        // Depuis F8.12, la table des contextes admis est unique et partagée avec
+        // la validation du dépôt : la recopier ici ferait diverger ce que le
+        // serveur accepte et ce qu'il sait afficher.
+        return ConversationContext::labelForClass((string) $this->context_type);
     }
 }

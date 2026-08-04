@@ -1,0 +1,51 @@
+<!--
+  Bloc « Écrire au support » (F8.12). Replié, ce n'est qu'un bouton : l'écran
+  qui l'accueille garde sa hiérarchie. Déplié, il devient un vrai espace
+  d'écriture — pas un champ de formulaire coincé en bas de page.
+-->
+<section class="cs-block" [class.is-open]="open()">
+  @if (!open()) {
+    <button type="button" class="k-btn k-btn--ghost cs-trigger" (click)="toggle()">
+      <span class="cs-trigger-icon" aria-hidden="true">✉</span>
+      {{ label() }}
+    </button>
+  } @else {
+    <div class="cs-panel">
+      <div class="cs-head">
+        <h3 class="cs-title">Écrire au support Kaikun</h3>
+        <button type="button" class="cs-close" (click)="toggle()" aria-label="Fermer">✕</button>
+      </div>
+
+      <p class="cs-hint">{{ hint() }}</p>
+
+      <label class="cs-label" for="cs-body">Votre message</label>
+      <textarea
+        id="cs-body"
+        class="cs-textarea"
+        rows="5"
+        maxlength="5000"
+        placeholder="Décrivez votre question en quelques lignes…"
+        [ngModel]="body()"
+        (ngModelChange)="body.set($event)"
+      ></textarea>
+
+      @if (state() === 'failed') {
+        <p class="cs-error" role="alert">
+          Votre message n'a pas pu être envoyé. Vérifiez votre connexion et réessayez.
+        </p>
+      }
+
+      <div class="cs-actions">
+        <button
+          type="button"
+          class="k-btn k-btn--primary"
+          [disabled]="body().trim().length === 0 || state() === 'sending'"
+          (click)="send()"
+        >
+          {{ state() === 'sending' ? 'Envoi…' : 'Envoyer' }}
+        </button>
+        <button type="button" class="k-btn k-btn--ghost" (click)="toggle()">Annuler</button>
+      </div>
+    </div>
+  }
+</section>

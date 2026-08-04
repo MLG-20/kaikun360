@@ -113,6 +113,17 @@
           <p class="bd-paid">✓ Réservation intégralement réglée.</p>
         }
 
+        <!--
+          F8.12 — écrire au support à propos de CETTE réservation (retard,
+          modification, question sur la caution…). Le dossier est joint au fil.
+        -->
+        <app-contact-support
+          contextType="reservation"
+          [contextId]="bk.id"
+          label="Écrire au support sur cette réservation"
+          hint="Un agent Kaikun vous répond dans votre messagerie. La référence de la réservation est jointe automatiquement."
+        />
+
         <!-- L'annulation se fait depuis la liste « Mes réservations ». -->
         @if (bk.cancellable) {
           <p class="bd-hint k-muted">

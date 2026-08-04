@@ -275,7 +275,8 @@ TypeScript miroir côté frontend Angular (phase F0).
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
 | GET | `/messages` | auth | `MessageController@index` |
-| POST | `/messages` | auth | `MessageController@start` |
+| POST | `/messages` | auth + `can:repondre:messages` | `MessageController@start` |
+| POST | `/messages/support` | auth | `MessageController@startWithSupport` |
 | GET | `/messages/unread-count` | auth | `MessageController@unreadCount` |
 | GET | `/messages/{conversation}` | auth | `MessageController@show` |
 | POST | `/messages/{conversation}/messages` | auth | `MessageController@store` |
@@ -287,6 +288,43 @@ TypeScript miroir côté frontend Angular (phase F0).
 > le fil comme lu. Chaque message notifie les autres participants (canal
 > `database`, cf. Notifications). `POST /messages` dédoublonne les fils directs
 > (mêmes deux participants, sans contexte).
+>
+> **F8.12 — support pivot.** Le client n'ouvre PAS un fil vers le compte de son
+> choix : il écrit au support via `POST /messages/support` (aucun `recipient_id`),
+> et le serveur lui assigne un agent du vivier `repondre:messages`
+> (`SupportAssignmentService`, le moins chargé d'abord ; `null` si le vivier est
+> vide — le fil part quand même et attend dans « Non assignés »). Corps :
+> `body`, `subject?`, et le dossier concerné `context_type?` (slug de la liste
+> blanche `ConversationContext` : `demande`, `devis`, `reservation`, `bien`,
+> `nuitee`, `vehicule`, `circuit`, `trajet`) + `context_id?`. Un dossier
+> personnel n'est rattaché que s'il appartient à l'auteur — sinon le contexte est
+> **ignoré** (le message part quand même). Réécrire à propos du même dossier
+> **reprend** le fil ouvert. Tout nouveau message **rouvre** un fil clos.
+> `POST /messages` (destinataire désigné) est depuis réservé à l'équipe.
+>
+> **F8.12.a — relève périodique.** `GET /messages/{conversation}` et
+> `GET /admin/conversations/{conversation}` acceptent **`?after=<message_id>`** :
+> la réponse ne porte alors que les messages d'identifiant supérieur. C'est ce
+> qui permet à un fil ouvert de se tenir à jour (battement de 10 s côté écran)
+> sans retélécharger l'historique. ⚠️ En relève **à vide** (aucun message plus
+> récent), le serveur **ne met pas à jour `last_read_at`** — sinon chaque
+> battement produirait une écriture en base pour ne rien changer.
+>
+> **F8.12.c — un tiers dans le fil.** `GET …/candidates` propose la personne
+> rattachée au dossier (`ConversationContext::holder()` : propriétaire du bien,
+> hôte de la nuitée via son bien, prestataire du véhicule / circuit / trajet,
+> et pour une réservation le détenteur de ce qui est réservé) puis, avec
+> `?search=`, une recherche **restreinte aux rôles propriétaire et
+> prestataire**. `POST …/participants` le fait entrer (il voit **tout
+> l'historique** et reçoit une notification), `DELETE …/participants/{user}` le
+> sort — ni le demandeur ni l'agent responsable ne peuvent l'être (422), et les
+> messages déjà écrits restent. ⚠️ **Masquage** : `ContactMasker` remplace les
+> e-mails et les suites d'au moins **7 chiffres** par « ••• » dans le corps des
+> messages **pour les lecteurs non-staff** ; l'équipe voit le texte entier (elle
+> doit pouvoir arbitrer un litige). Sept chiffres et non six : un prix
+> (« 250 000 ») ne doit pas être haché. Le filtre réduit la friction, **il ne
+> verrouille rien** — la vraie protection contre la désintermédiation est
+> contractuelle.
 
 ### Avis
 
@@ -412,6 +450,13 @@ TypeScript miroir côté frontend Angular (phase F0).
 | PATCH | `/admin/media/{media}/status` | auth + `can:consulter:dashboard-admin` | `MediaModerationController@update` |
 | GET | `/admin/reference` | auth + `can:consulter:dashboard-admin` | `ReferenceController@index` |
 | GET | `/admin/reports/export` | auth + `can:gerer:paiements` | `ReportExportController@export` |
+| GET | `/admin/conversations` | auth + `can:repondre:messages` | `AdminConversationController@index` |
+| GET | `/admin/conversations/{conversation}` | auth + `can:repondre:messages` | `AdminConversationController@show` |
+| PATCH | `/admin/conversations/{conversation}` | auth + `can:repondre:messages` | `AdminConversationController@update` |
+| GET | `/admin/conversations/{conversation}/candidates` | auth + `can:repondre:messages` | `AdminConversationController@candidates` |
+| POST | `/admin/conversations/{conversation}/messages` | auth + `can:repondre:messages` | `AdminConversationController@reply` |
+| POST | `/admin/conversations/{conversation}/participants` | auth + `can:repondre:messages` | `AdminConversationController@addParticipant` |
+| DELETE | `/admin/conversations/{conversation}/participants/{user}` | auth + `can:repondre:messages` | `AdminConversationController@removeParticipant` |
 | GET | `/admin/requests` | auth + `can:traiter:demandes` | `AdminRequestController@index` |
 | GET | `/admin/requests/filters` | auth + `can:traiter:demandes` | `AdminRequestController@filters` |
 | GET | `/admin/requests/{serviceRequest}` | auth + `can:traiter:demandes` | `AdminRequestController@show` |

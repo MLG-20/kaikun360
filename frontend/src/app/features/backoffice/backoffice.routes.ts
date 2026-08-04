@@ -70,6 +70,31 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Demande — Back-office Kaikun 360',
       },
       {
+        // F8.12 — Messages : la boîte de réception du support. Le socle des
+        // conversations existait depuis F3.7, mais aucun écran d'équipe : un
+        // client pouvait écrire… à personne.
+        path: 'messages',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('messages') },
+        loadComponent: () =>
+          import('./messages/backoffice-messages-page').then(
+            (m) => m.BackofficeMessagesPageComponent,
+          ),
+        title: 'Messages — Back-office Kaikun 360',
+      },
+      {
+        // F8.12 — Fiche d'un fil : l'échange, la réponse, la réassignation et
+        // la clôture.
+        path: 'messages/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('messages') },
+        loadComponent: () =>
+          import('./messages/detail/backoffice-message-thread-page').then(
+            (m) => m.BackofficeMessageThreadPageComponent,
+          ),
+        title: 'Conversation — Back-office Kaikun 360',
+      },
+      {
         // F7.2.a — Validation : file d'approbation des ressources (biens,
         // véhicules, expériences, prestataires) + décision valider/refuser.
         path: 'validation',

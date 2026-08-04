@@ -1,0 +1,351 @@
+// Fiche d'un fil de support au back-office (F8.12), préfixe mt-.
+// La grammaire des bulles reprend celle du fil côté client (message-thread) :
+// l'agent et le client doivent voir le MÊME échange, pas deux mises en scène.
+:host {
+  display: block;
+  max-width: 900px;
+}
+
+.mt-back {
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+// --- En-tête : qui, quoi, depuis quand ---
+.mt-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.mt-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.mt-sub {
+  color: var(--k-muted);
+  margin: 0 0 6px;
+}
+
+.mt-contact {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: 0.82rem;
+
+  a {
+    color: var(--k-brand-600);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.mt-role {
+  color: var(--k-muted);
+  text-transform: capitalize;
+}
+
+.mt-flags {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.mt-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: var(--k-cream);
+  color: var(--k-ink);
+  border: 1px solid var(--k-line);
+
+  &.is-due {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+    border-color: transparent;
+  }
+
+  &.is-off {
+    color: var(--k-muted);
+  }
+}
+
+// --- Qui est dans le fil (F8.12.c) ---
+.mt-people {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+
+  &__label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+.mt-person {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--k-cream);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-pill);
+  font-size: 0.8rem;
+  padding: 3px 10px;
+
+  // L'équipe se distingue d'un tiers : on ne parle pas pareil aux deux.
+  &.is-team {
+    background: var(--k-brand-050);
+    border-color: transparent;
+  }
+
+  &__role {
+    color: var(--k-muted);
+    font-size: 0.72rem;
+  }
+
+  &__remove {
+    background: none;
+    border: 0;
+    color: var(--k-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+    padding: 0;
+
+    &:hover {
+      color: var(--k-danger);
+    }
+  }
+}
+
+.mt-add {
+  font-size: 0.82rem;
+  padding: 4px 12px;
+}
+
+// --- Panneau « faire entrer un tiers » ---
+.mt-addbox {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  margin-bottom: 16px;
+  padding: 14px 16px;
+
+  // L'avertissement passe AVANT les candidats : c'est la seule chose que
+  // l'agent doit peser avant de cliquer.
+  &__warn {
+    background: rgba(216, 135, 24, 0.12);
+    border-radius: calc(var(--k-radius) / 1.5);
+    color: var(--k-ink);
+    font-size: 0.84rem;
+    line-height: 1.45;
+    margin: 0 0 12px;
+    padding: 8px 12px;
+  }
+
+  &__none {
+    color: var(--k-muted);
+    font-size: 0.85rem;
+    margin: 0 0 10px;
+  }
+
+  &__search {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0 6px;
+
+    .k-input {
+      flex: 1;
+    }
+  }
+}
+
+.mt-cand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--k-line);
+  padding: 9px 0;
+
+  &:first-of-type {
+    border-top: 0;
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__meta {
+    color: var(--k-muted);
+    font-size: 0.78rem;
+  }
+}
+
+// --- L'échange ---
+.mt-thread {
+  background: var(--k-cream);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.mt-row {
+  display: flex;
+  justify-content: flex-start;
+
+  // Les messages de l'équipe à droite, ceux du client à gauche.
+  &.is-team {
+    justify-content: flex-end;
+
+    .mt-bubble {
+      background: var(--k-brand);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .mt-sender,
+    .mt-time {
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+}
+
+.mt-bubble {
+  max-width: 78%;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  padding: 10px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mt-sender {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--k-muted);
+}
+
+.mt-text {
+  font-size: 0.92rem;
+  line-height: 1.45;
+  white-space: pre-wrap; // les retours à la ligne du client comptent
+  overflow-wrap: anywhere;
+}
+
+.mt-time {
+  font-size: 0.7rem;
+  color: var(--k-muted);
+  align-self: flex-end;
+}
+
+.mt-empty {
+  color: var(--k-muted);
+  text-align: center;
+  margin: 12px 0;
+}
+
+// --- Composeur + pilotage ---
+.mt-composer {
+  margin-top: 16px;
+}
+
+.mt-notice {
+  background: var(--k-brand-050);
+  border: 1px solid var(--k-line);
+  border-radius: calc(var(--k-radius) / 1.5);
+  color: var(--k-ink);
+  font-size: 0.84rem;
+  margin: 0 0 10px;
+  padding: 8px 12px;
+}
+
+.mt-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 6rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--k-line);
+  border-radius: calc(var(--k-radius) / 1.5);
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  line-height: 1.5;
+}
+
+.mt-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.mt-assign {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+
+  &__label {
+    font-size: 0.8rem;
+    color: var(--k-muted);
+  }
+
+  select {
+    max-width: 240px;
+  }
+}
+
+.mt-state {
+  padding: 14px 16px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}

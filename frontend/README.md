@@ -751,6 +751,71 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     pousser un client vers un formulaire de carte dans la seconde qui suit son
     accord est le meilleur moyen de le faire reculer.
 
+  **F8.12 La messagerie interne cesse d'être un décor.**
+  Le socle des conversations date de F3.7 : liste des fils, bulles, composeur,
+  non-lus, notifications. Il **savait tout faire sauf commencer** —
+  `startConversation()` était écrit dans
+  [`core/api/message.service.ts`](src/app/core/api/message.service.ts) et
+  **aucun écran ne l'appelait**. Tous les fils visibles venaient du seeder, et
+  l'état vide de « Mes messages » promettait un bouton (« une conversation
+  s'ouvre lorsque vous contactez le support depuis une annonce ou une demande »)
+  qui n'existait nulle part.
+  - **Le geste, enfin** :
+    [`shared/components/contact-support/`](src/app/shared/components/contact-support/),
+    posé sur « Mes messages » (état vide + barre d'actions), sur la **fiche
+    d'une demande** et sur la **fiche d'une réservation**. Replié c'est un
+    bouton ; déplié, un vrai espace d'écriture. ⚠️ **Aucun destinataire n'est
+    demandé** : le client n'écrit jamais directement au propriétaire ou au
+    prestataire, le serveur lui assigne un agent — l'architecture « support
+    pivot ». Sur une fiche, le **dossier est joint au message** (slug + id),
+    ce qui évite à l'agent de commencer par « de quoi parlez-vous ? ».
+  - **Un interlocuteur nommé** : le fil affiche « Avec Awa Diop, support
+    Kaikun » et non un « support » anonyme — même arbitrage produit qu'en F8.11
+    sur le devis. Un fil clôturé par l'équipe reste ouvert à l'écriture, et le
+    bandeau dit que **écrire le rouvre**.
+  - **Côté équipe**, une rubrique **Messages** au rail
+    ([`features/backoffice/messages/`](src/app/features/backoffice/messages/)) :
+    sans elle, le client écrivait à personne. La file s'ouvre sur **mes fils
+    ouverts** (une boîte partagée où tout le monde regarde tout est une boîte
+    que personne ne traite), signale **« en attente de réponse »** plutôt que
+    « non lu » — un fil dont le dernier message vient du client n'est pas lu, il
+    est **dû** —, rend le client joignable dès la ligne (`tel:`/`mailto:`, comme
+    la file des demandes) et garde « Non assignées » à un clic. Sur la fiche, le
+    composeur annonce les deux effets de bord du serveur : répondre à un fil
+    sans responsable **le prend en charge**, répondre à un fil clos **le rouvre**.
+  - **F8.12.a — les écrans se tiennent à jour seuls** (défaut relevé à la
+    vérification : il fallait recharger pour voir la réponse d'en face).
+    [`core/state/poll-while-visible.ts`](src/app/core/state/poll-while-visible.ts)
+    fait battre les deux fils toutes les **10 s** et les deux listes toutes les
+    **30 s**, en ne redemandant que les messages postérieurs au dernier affiché
+    (`?after=`). ⚠️ **Pas de WebSocket, arbitrage assumé** : un démon permanent
+    (Reverb/Pusher) à surveiller et exposer coûterait plus cher que le service
+    rendu sur un canal où l'on écrit une phrase toutes les deux minutes ; les
+    écrans rechargent, peu importe qui les réveille, donc rien à réécrire le jour
+    où un vrai canal poussé arrive. La relève est **silencieuse** (pas d'état de
+    chargement, pas d'écran d'erreur, pas de défilement forcé — une coupure
+    passagère ne doit pas remplacer une conversation lisible), **ne tourne pas en
+    SSR** ni **onglet caché**, et **bat immédiatement au retour sur l'onglet**.
+  - **F8.12.b — l'écran Permissions dit ce qu'il ne montre pas** : `repondre:messages`
+    est portée par le rôle (comme l'accès au back-office) et n'apparaît donc plus
+    dans la matrice. Sans la phrase ajoutée en tête d'écran, un administrateur
+    chercherait en vain la case « messages » et croirait ses agents privés de la
+    messagerie.
+  - **F8.12.c — le tiers entre dans le fil.** Sur la fiche back-office, un
+    panneau « + Ajouter au fil » propose **la personne du dossier** en un clic,
+    puis une recherche limitée aux propriétaires et prestataires ; les
+    participants sont affichés en pastilles, chacun retirable. ⚠️ L'écran
+    **avertit avant le clic** que le tiers verra tout l'historique — c'est la
+    seule chose que l'agent doit peser. Côté client, le fil nomme désormais
+    chaque participant **par son rôle** (« Ousmane Ba, Propriétaire ») et
+    explique en une phrase pourquoi un numéro tapé dans un message ressort en
+    « ••• » : sans cette phrase, on croirait à un bug et on recommencerait.
+  - ⚠️ **Ce qui reste hors périmètre** : le tiers n'a pas d'écran dédié — il lit
+    et répond depuis la messagerie de SON espace (propriétaire ou prestataire),
+    qui monte déjà le même composant de fil. Aucun tableau de bord « mes
+    conversations de professionnel » n'est prévu tant que le volume ne le
+    justifie pas.
+
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

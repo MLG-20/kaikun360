@@ -1,0 +1,172 @@
+<header class="ms-head">
+  <div>
+    <h1 class="ms-title">Messages</h1>
+    <p class="ms-sub">
+      Les conversations ouvertes par les clients, propriétaires, prestataires et
+      entreprises. Ils écrivent <strong>au support</strong>, jamais directement à
+      un tiers : c'est vous qui décidez de la suite. Les fils
+      <strong>en attente de réponse</strong> sont signalés —
+      <strong>cliquez une ligne</strong> pour ouvrir l'échange et répondre.
+    </p>
+  </div>
+</header>
+
+<!--
+  Portées : « mes fils » d'abord (une boîte partagée où tout le monde regarde
+  tout est une boîte que personne ne traite), puis ce qui n'a pas de
+  responsable, puis l'ensemble de l'équipe.
+-->
+<section class="ms-filters">
+  <div class="ms-scopes" role="tablist" aria-label="Portée de la file">
+    <button
+      type="button"
+      role="tab"
+      class="ms-scope"
+      [class.is-on]="scope() === 'mine'"
+      [attr.aria-selected]="scope() === 'mine'"
+      (click)="setScope('mine')">
+      Mes conversations
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="ms-scope"
+      [class.is-on]="scope() === 'unassigned'"
+      [attr.aria-selected]="scope() === 'unassigned'"
+      (click)="setScope('unassigned')">
+      Non assignées
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="ms-scope"
+      [class.is-on]="scope() === 'all'"
+      [attr.aria-selected]="scope() === 'all'"
+      (click)="setScope('all')">
+      Toute l'équipe
+    </button>
+  </div>
+
+  <input
+    class="k-input ms-search"
+    type="search"
+    name="search"
+    [(ngModel)]="search"
+    (keyup.enter)="applyFilters()"
+    placeholder="Nom, e-mail ou téléphone de l'interlocuteur, sujet…" />
+
+  <button
+    type="button"
+    class="k-btn"
+    [class.k-btn--primary]="closed()"
+    [class.k-btn--ghost]="!closed()"
+    (click)="toggleClosed()">
+    {{ closed() ? 'Voir les conversations en cours' : 'Voir les clôturées' }}
+  </button>
+</section>
+
+@if (loading()) {
+  <p class="ms-state" role="status">Chargement des conversations…</p>
+} @else if (error()) {
+  <p class="ms-state ms-state--error" role="alert">
+    Impossible de charger les conversations. Réessayez.
+  </p>
+} @else {
+  <p class="ms-count">{{ total() }} conversation(s)</p>
+
+  <div class="ms-table-wrap">
+    <table class="ms-table">
+      <thead>
+        <tr>
+          <th>Interlocuteur</th>
+          <th>Dossier</th>
+          <th>Dernier message</th>
+          <th>Attente</th>
+          <th>Suivi par</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of rows(); track t.id) {
+          <tr
+            class="ms-row"
+            [class.is-awaiting]="t.awaiting_reply"
+            tabindex="0"
+            (click)="open(t)"
+            (keyup.enter)="open(t)">
+            <td>
+              <span class="ms-strong">{{ t.requester?.name || 'Compte supprimé' }}</span>
+              <!-- Contact cliquable : certaines questions se règlent au téléphone. -->
+              @if (t.requester?.phone) {
+                <a class="ms-link" [href]="'tel:' + t.requester!.phone" (click)="$event.stopPropagation()">
+                  {{ t.requester!.phone }}
+                </a>
+              }
+              @if (t.requester?.email) {
+                <a class="ms-link" [href]="'mailto:' + t.requester!.email" (click)="$event.stopPropagation()">
+                  {{ t.requester!.email }}
+                </a>
+              }
+            </td>
+            <td>
+              @if (t.context_label) {
+                <span class="ms-chip">{{ t.context_label }}</span>
+              }
+              <span class="ms-place">{{ t.subject || 'Question générale' }}</span>
+            </td>
+            <td>
+              <span class="ms-excerpt">
+                @if (t.last_message?.from_team) {
+                  <span class="ms-from">Équipe :</span>
+                }
+                {{ extrait(t.last_message?.body) }}
+              </span>
+            </td>
+            <td>
+              <span class="ms-strong">{{ age(t.last_message_at) }}</span>
+              @if (t.awaiting_reply) {
+                <span class="ms-chip is-due">En attente de réponse</span>
+              } @else if (t.is_closed) {
+                <span class="ms-chip is-off">Clôturée</span>
+              }
+            </td>
+            <td class="ms-owner-cell">
+              @if (t.assigned_agent) {
+                <span class="ms-strong">{{ t.is_mine ? 'Vous' : t.assigned_agent.name }}</span>
+              } @else {
+                <span class="ms-chip is-due">Personne</span>
+              }
+              <span class="ms-open" aria-hidden="true">Ouvrir →</span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="ms-empty">
+              @if (scope() === 'mine' && !closed()) {
+                Aucune conversation ne vous est assignée pour l'instant. Regardez
+                « Non assignées » : un fil peut attendre qu'on le prenne.
+              } @else {
+                Aucune conversation ne correspond à cette vue.
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (lastPage() > 1) {
+    <nav class="ms-pager" aria-label="Pagination">
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === 1" (click)="goTo(page() - 1)">
+        ← Précédent
+      </button>
+      <span class="ms-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+      <button
+        type="button"
+        class="k-btn k-btn--ghost"
+        [disabled]="page() === lastPage()"
+        (click)="goTo(page() + 1)">
+        Suivant →
+      </button>
+    </nav>
+  }
+}

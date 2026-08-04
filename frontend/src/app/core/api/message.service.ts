@@ -17,6 +17,21 @@ export interface PaginatedConversations extends Paginated<Conversation> {
 }
 
 /**
+ * Les dossiers qu'un fil peut citer (F8.12) — miroir exact de la liste blanche
+ * `App\Support\Messaging\ConversationContext` côté serveur. Tout autre slug
+ * est refusé en 422 : les deux listes doivent rester alignées.
+ */
+export type SupportContextType =
+  | 'demande'
+  | 'devis'
+  | 'reservation'
+  | 'bien'
+  | 'nuitee'
+  | 'vehicule'
+  | 'circuit'
+  | 'trajet';
+
+/**
  * Accès à la messagerie du client connecté (F3.7).
  *
  * Socle générique côté backend (conversations à participants + messages) :
@@ -41,9 +56,19 @@ export class MessageService {
     });
   }
 
-  /** GET /messages/{id} — détail d'un fil (messages + marquage lu côté serveur). */
-  conversation(id: number): Observable<ApiEnvelope<Conversation>> {
-    return this.http.get<ApiEnvelope<Conversation>>(`${this.api}/messages/${id}`);
+  /**
+   * GET /messages/{id} — détail d'un fil (messages + marquage lu côté serveur).
+   *
+   * `afterId` sert à la **relève périodique** (F8.12.a) : le fil déjà affiché ne
+   * redemande que les messages postérieurs à celui qu'il a en dernier. Sans lui,
+   * un fil ouvert dix minutes retéléchargerait tout l'historique à chaque
+   * battement. En relève, le serveur ne remet pas non plus le compteur de lecture
+   * à jour s'il n'y a rien de neuf.
+   */
+  conversation(id: number, afterId?: number): Observable<ApiEnvelope<Conversation>> {
+    return this.http.get<ApiEnvelope<Conversation>>(`${this.api}/messages/${id}`, {
+      params: afterId ? { after: String(afterId) } : {},
+    });
   }
 
   /** POST /messages/{id}/messages — envoie un message dans un fil existant. */
@@ -54,7 +79,43 @@ export class MessageService {
     );
   }
 
-  /** POST /messages — ouvre une nouvelle conversation avec un destinataire. */
+  /**
+   * POST /messages/support — ouvre (ou reprend) un fil avec le SUPPORT (F8.12).
+   *
+   * ⚠️ C'est le point d'entrée de la messagerie pour tous les profils
+   * connectés : **on ne désigne pas son interlocuteur**, le serveur assigne un
+   * agent de permanence. Le dossier concerné (`contextType`/`contextId`) est
+   * facultatif mais fortement conseillé — c'est ce qui évite à l'agent de
+   * demander « de quoi parlez-vous ? » avant de pouvoir aider.
+   *
+   * Réécrire à propos du même dossier reprend le fil existant : le serveur ne
+   * crée pas de doublon, l'appelant obtient l'identifiant du fil à ouvrir.
+   */
+  startWithSupport(input: {
+    body: string;
+    subject?: string;
+    contextType?: SupportContextType;
+    contextId?: number;
+  }): Observable<ApiEnvelope<{ conversation: Conversation }>> {
+    return this.http.post<ApiEnvelope<{ conversation: Conversation }>>(
+      `${this.api}/messages/support`,
+      {
+        body: input.body,
+        ...(input.subject ? { subject: input.subject } : {}),
+        ...(input.contextType && input.contextId
+          ? { context_type: input.contextType, context_id: input.contextId }
+          : {}),
+      },
+    );
+  }
+
+  /**
+   * POST /messages — ouvre une conversation avec un destinataire DÉSIGNÉ.
+   *
+   * ⚠️ Réservé à l'équipe depuis F8.12 (`can:repondre:messages`) : côté client,
+   * c'est `startWithSupport` qu'il faut appeler. Un appel depuis un écran
+   * client se solderait par un 403.
+   */
   startConversation(
     recipientId: number,
     body: string,

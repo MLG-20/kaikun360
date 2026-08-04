@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ContactController;
 use App\Modules\Admin\Http\Controllers\AdminCatalogController;
+use App\Modules\Admin\Http\Controllers\AdminConversationController;
 use App\Modules\Admin\Http\Controllers\AdminDashboardController;
 use App\Modules\Admin\Http\Controllers\AdminDocumentController;
 use App\Modules\Admin\Http\Controllers\AdminDossierController;
@@ -271,5 +272,32 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         Route::get('/requests', [AdminRequestController::class, 'index']);
         Route::get('/requests/{serviceRequest}', [AdminRequestController::class, 'show'])
             ->whereNumber('serviceRequest');
+    });
+
+    // --- Messagerie du support (F8.12) ---------------------------------------
+    // Boîte de réception de l'équipe. Permission dédiée `repondre:messages`,
+    // qui sert AUSSI de vivier d'assignation (SupportAssignmentService) : la
+    // déléguer, c'est mettre quelqu'un de permanence.
+    Route::middleware('can:repondre:messages')->group(function () {
+        Route::get('/conversations', [AdminConversationController::class, 'index']);
+        Route::get('/conversations/{conversation}', [AdminConversationController::class, 'show'])
+            ->whereNumber('conversation');
+        Route::post('/conversations/{conversation}/messages', [AdminConversationController::class, 'reply'])
+            ->whereNumber('conversation');
+        Route::patch('/conversations/{conversation}', [AdminConversationController::class, 'update'])
+            ->whereNumber('conversation');
+
+        // F8.12.c — faire entrer (ou sortir) un tiers : propriétaire du bien,
+        // hôte de la nuitée, prestataire du circuit. ⚠️ `candidates` est
+        // déclarée AVANT la route paramétrée de suppression pour lever toute
+        // ambiguïté de matching, et le geste reste un jugement de l'agent : il
+        // n'existe aucune règle d'ajout automatique.
+        Route::get('/conversations/{conversation}/candidates', [AdminConversationController::class, 'candidates'])
+            ->whereNumber('conversation');
+        Route::post('/conversations/{conversation}/participants', [AdminConversationController::class, 'addParticipant'])
+            ->whereNumber('conversation');
+        Route::delete('/conversations/{conversation}/participants/{user}', [AdminConversationController::class, 'removeParticipant'])
+            ->whereNumber('conversation')
+            ->whereNumber('user');
     });
 });

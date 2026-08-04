@@ -49,6 +49,18 @@ l'application (approche standalone, sans NgModule) :
   (gestion centralisée : 401 → login, 422 → erreurs de formulaire, 500 → page
   d'erreur).
 - **guards/** — `authGuard`, `roleGuard` (protection des routes).
+- **state/** — état et cycles de vie transverses :
+  - `favorite-store.ts` — les favoris du client, partagés entre écrans.
+  - `poll-while-visible.ts` (F8.12.a) — **relève périodique** d'un écran ouvert :
+    rappelle une fonction à intervalle **tant que l'onglet est visible**, avec un
+    battement immédiat au retour sur l'onglet, et **rien du tout en SSR** (un
+    intervalle empêcherait la réponse serveur de se terminer). Le nettoyage est
+    branché sur le `DestroyRef` local — à appeler depuis un contexte d'injection,
+    il n'y a rien à défaire à la main. ⚠️ Ce n'est **pas** du temps réel : c'est
+    le choix assumé de ne pas exiger un démon WebSocket permanent pour un canal
+    où l'on écrit une phrase toutes les deux minutes. Utilisé par les deux fils
+    de discussion (10 s) et les deux listes de la messagerie (30 s) ; l'appelant
+    doit ne redemander que le nouveau (`?after=`).
 
 Fourni via `app.config.ts` (`provideHttpClient(withInterceptors(...))`, etc.).
 Ne contient **aucun composant d'interface** (voir [`../shared`](../shared)).

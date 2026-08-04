@@ -129,3 +129,21 @@ Documents (F4.5) — l'espace propriétaire est complet.
     la **supprime** (`DELETE`, après confirmation ; retrait local immédiat). Le
     statut de validation d'une pièce (`En attente de vérification`…) est posé par
     un agent Kaikun — lecture seule ici.
+
+## Messages (F8.12.c)
+
+La rubrique **Messages** monte les écrans transverses de la messagerie
+([`../account/messages/`](../account/messages)) sous le shell propriétaire :
+liste des fils, puis le fil lui-même.
+
+⚠️ **Pourquoi elle est arrivée ici en F8.12.c, et pas avant.** Le support peut
+désormais faire entrer un propriétaire dans une conversation client (« ce logement
+accepte-t-il les animaux ? »). Le tiers recevait la notification… et n'avait
+**aucun écran pour lire le message** : la messagerie n'était montée que dans
+l'espace client et l'espace entreprise. Les composants étant transverses et
+autonomes (ils lisent `SPACE_CONFIG`), il a suffi de déclarer les deux routes —
+les liens restent alors dans l'espace courant, personne n'est éjecté vers
+`/mon-espace`.
+
+⚠️ Le propriétaire **n'ouvre pas** de conversation de son côté : il répond dans un
+fil où le support l'a fait entrer. Le fil naît toujours chez Kaikun.

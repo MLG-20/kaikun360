@@ -37,6 +37,11 @@ export const BO_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
   // team building depuis F7.4.b.
   demandes: ['traiter:demandes'],
 
+  // Messagerie du support (F8.12) : l'écran EST un geste — on y répond au
+  // client. Permission dédiée, qui sert AUSSI de vivier d'assignation côté
+  // serveur : ne la voient que ceux qui sont réellement de permanence.
+  messages: ['repondre:messages'],
+
   // File d'approbation : la décision exige une permission fine par type. Sans
   // aucune des quatre, l'écran ne serait qu'une liste de boutons en 403.
   validation: ['valider:bien', 'valider:vehicule', 'valider:experience', 'valider:prestataire'],

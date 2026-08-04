@@ -44,6 +44,12 @@ class RolesAndPermissionsSeeder extends Seeder
             // Traitement des demandes génériques (couche transversale B11) :
             // changement de statut (machine à états) par les agents.
             'traiter:demandes',
+            // Messagerie du support (F8.12) : répondre aux fils ouverts par les
+            // clients. ⚠️ Cette permission désigne AUSSI le vivier des agents à
+            // qui un nouveau fil est assigné (SupportAssignmentService) — et
+            // depuis F8.12.b elle est portée par le RÔLE agent_kaikun (voir la
+            // matrice ci-dessous) : tout agent est de permanence d'office.
+            'repondre:messages',
             // Administration
             'consulter:dashboard-admin',
             'gerer:utilisateurs',
@@ -73,8 +79,18 @@ class RolesAndPermissionsSeeder extends Seeder
             // et AdminTeamController::syncPermissions). Le rôle ne porte donc plus
             // les permissions opérationnelles — elles ne sont plus « héritées en
             // bloc », ce qui donnerait le même pouvoir à tous les agents.
+            // (Une seule exception depuis F8.12.b : `repondre:messages`.)
             UserRole::AGENT_KAIKUN->value => [
                 'consulter:dashboard-admin',
+                // ⚠️ EXCEPTION au grant pur (F8.12.b, arbitrage produit) :
+                // répondre aux messages des clients est le **métier de base**
+                // d'un agent, pas un levier sensible qu'on délègue au
+                // compte-gouttes. Tout agent est donc de permanence d'office —
+                // sans quoi un nouvel agent serait invisible du routage tant que
+                // personne n'aurait pensé à cocher une case, et les fils
+                // s'entasseraient dans « Non assignés ». Le super administrateur
+                // garde la main : il réassigne n'importe quel fil à la main.
+                'repondre:messages',
             ],
 
             // L'admin a l'ensemble du back-office.

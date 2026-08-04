@@ -1195,7 +1195,96 @@ export interface RequestQueueQuery {
   page?: number;
 }
 
+
+// --- Messagerie du support (F8.12) ------------------------------------------
+
+/** Un participant d'un fil, vu du back-office. */
+export interface SupportParticipant {
+  id: number;
+  name: string;
+  role?: string | null;
+  is_team?: boolean;
+}
+
+/** L'interlocuteur côté public : joignable, c'est le point de l'écran. */
+export interface SupportRequester extends SupportParticipant {
+  email: string | null;
+  phone: string | null;
+}
+
+/** Un message du fil (miroir de `MessageResource`). */
+export interface SupportMessage {
+  id: number;
+  body: string;
+  sender: { id: number; name: string | null };
+  is_mine: boolean;
+  created_at: string | null;
+}
+
+/**
+ * Un fil de support (miroir de `AdminConversationResource`).
+ *
+ * ⚠️ `awaiting_reply` est LE chiffre qui gouverne le travail : un fil dont le
+ * dernier message vient du client n'est pas « lu », il est **dû**.
+ */
+export interface SupportThread {
+  id: number;
+  subject: string | null;
+  context_label: string | null;
+  context_type: string | null;
+  context_id: number | null;
+  is_closed: boolean;
+  closed_at: string | null;
+  last_message_at: string | null;
+  created_at: string | null;
+  assigned_agent: { id: number; name: string } | null;
+  is_mine: boolean;
+  requester: SupportRequester | null;
+  others: SupportParticipant[];
+  last_message: { body: string; from_team: boolean; created_at: string | null } | null;
+  awaiting_reply: boolean;
+  messages?: SupportMessage[];
+}
+
+/**
+ * Une personne que l'agent peut faire entrer dans un fil (F8.12.c).
+ *
+ * `from_context` dit POURQUOI elle est proposée (« Bien immobilier »,
+ * « Nuitée »…) : c'est la personne rattachée au dossier cité. Les résultats de
+ * recherche, eux, n'ont pas d'origine.
+ */
+export interface SupportCandidate {
+  id: number;
+  name: string;
+  email: string | null;
+  role: string | null;
+  from_context: string | null;
+}
+
+/** Candidats à l'ajout : la personne du dossier, puis la recherche. */
+export interface SupportCandidates {
+  dossier: SupportCandidate | null;
+  results: SupportCandidate[];
+}
+
+/** Fiche d'un fil : l'échange + le vivier pour le sélecteur de réassignation. */
+export interface SupportThreadDetail {
+  conversation: SupportThread;
+  agents: { id: number; name: string }[];
+}
+
+/** Filtres de la boîte de réception. */
+export interface SupportInboxQuery {
+  /** `mine` (défaut) · `unassigned` · `all`. */
+  scope?: 'mine' | 'unassigned' | 'all';
+  /** `true` = l'archive des fils clos. */
+  closed?: boolean;
+  search?: string;
+  page?: number;
+}
+
 // --- Avis & qualité (F7.2.g) ------------------------------------------------
+
 
 /**
  * Un avis dans la file de modération (miroir de la forme normalisée de
@@ -2199,6 +2288,117 @@ export class AdminService {
     if (query.status) params = params.set('status', query.status);
     if (query.page) params = params.set('page', String(query.page));
     return this.http.get<Paginated<MandateDossier>>(`${this.api}/admin/mandates`, { params });
+  }
+
+
+  // --- Messagerie du support (F8.12) -----------------------------------------
+  //
+  // ⚠️ Sans ces quatre appels, la messagerie n'existe pas côté équipe : depuis
+  // F3.7, un client pouvait lire et répondre dans un fil, mais personne au
+  // back-office n'avait de vue sur ces fils. Permission dédiée
+  // `repondre:messages`, qui sert AUSSI de vivier d'assignation côté serveur.
+
+  /** Boîte de réception (par défaut : mes fils ouverts). GET /admin/conversations */
+  supportInbox(query: SupportInboxQuery = {}): Observable<Paginated<SupportThread>> {
+    let params = new HttpParams();
+    if (query.scope) params = params.set('scope', query.scope);
+    if (query.closed) params = params.set('closed', '1');
+    if (query.search) params = params.set('search', query.search);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<SupportThread>>(`${this.api}/admin/conversations`, { params });
+  }
+
+  /**
+   * Fiche d'un fil (échange complet + vivier). GET /admin/conversations/{id}
+   *
+   * `afterId` : **relève périodique** (F8.12.a) — ne redemande que les messages
+   * postérieurs à celui déjà affiché, et n'écrit pas le marquage de lecture pour
+   * une relève à vide.
+   */
+  supportThread(id: number, afterId?: number): Observable<SupportThreadDetail> {
+    return this.http
+      .get<ApiEnvelope<SupportThreadDetail>>(`${this.api}/admin/conversations/${id}`, {
+        params: afterId ? new HttpParams().set('after', String(afterId)) : undefined,
+      })
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Répondre au client. POST /admin/conversations/{id}/messages
+   *
+   * ⚠️ Deux effets voulus côté serveur : répondre **prend** le dossier s'il
+   * n'avait pas de responsable, et **rouvre** le fil s'il était clos.
+   */
+  replyToSupportThread(id: number, body: string): Observable<SupportThread> {
+    return this.http
+      .post<ApiEnvelope<{ conversation: SupportThread }>>(
+        `${this.api}/admin/conversations/${id}/messages`,
+        { body },
+      )
+      .pipe(map((response) => response.data.conversation));
+  }
+
+  /**
+   * Piloter un fil : réassigner et/ou clore. PATCH /admin/conversations/{id}
+   *
+   * `assigned_agent_id: null` remet le fil dans « Non assignés ».
+   */
+  updateSupportThread(
+    id: number,
+    changes: { assigned_agent_id?: number | null; closed?: boolean },
+  ): Observable<SupportThread> {
+    return this.http
+      .patch<ApiEnvelope<{ conversation: SupportThread }>>(
+        `${this.api}/admin/conversations/${id}`,
+        changes,
+      )
+      .pipe(map((response) => response.data.conversation));
+  }
+
+  /**
+   * Qui peut entrer dans ce fil. GET /admin/conversations/{id}/candidates
+   *
+   * Sans `search`, on ne reçoit que la personne du dossier (le cas courant, en
+   * un clic). Avec, une recherche **restreinte aux comptes propriétaire et
+   * prestataire** — ajouter un client tiers dans la conversation d'un autre
+   * client n'aurait aucun sens.
+   */
+  supportCandidates(id: number, search?: string): Observable<SupportCandidates> {
+    return this.http
+      .get<ApiEnvelope<SupportCandidates>>(`${this.api}/admin/conversations/${id}/candidates`, {
+        params: search ? new HttpParams().set('search', search) : undefined,
+      })
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Fait entrer un tiers dans le fil. POST /admin/conversations/{id}/participants
+   *
+   * ⚠️ Le tiers voit **tout l'historique** de la conversation, et il est
+   * notifié. C'est un geste vers l'extérieur : l'écran l'annonce avant.
+   */
+  addSupportParticipant(id: number, userId: number): Observable<SupportThread> {
+    return this.http
+      .post<ApiEnvelope<{ conversation: SupportThread }>>(
+        `${this.api}/admin/conversations/${id}/participants`,
+        { user_id: userId },
+      )
+      .pipe(map((response) => response.data.conversation));
+  }
+
+  /**
+   * Sort un tiers du fil. DELETE /admin/conversations/{id}/participants/{userId}
+   *
+   * Ses messages déjà écrits restent : on le sort de la suite de l'échange, on
+   * ne réécrit pas l'histoire. Le demandeur et l'agent responsable, eux, ne
+   * peuvent pas être retirés (422).
+   */
+  removeSupportParticipant(id: number, userId: number): Observable<SupportThread> {
+    return this.http
+      .delete<ApiEnvelope<{ conversation: SupportThread }>>(
+        `${this.api}/admin/conversations/${id}/participants/${userId}`,
+      )
+      .pipe(map((response) => response.data.conversation));
   }
 
   // --- File de traitement des demandes (F8.9) --------------------------------

@@ -161,3 +161,21 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
 > `updateProfile()` / `addCertification()` / `removeCertification()`
 > (« Mes services ») et enfin `reviews()` (F5.5) ont été ajoutés au fil des
 > sous-phases.
+
+## Messages (F8.12.c)
+
+La rubrique **Messages** monte les écrans transverses de la messagerie
+([`../account/messages/`](../account/messages)) sous le shell prestataire :
+liste des fils, puis le fil lui-même.
+
+⚠️ **Pourquoi elle est arrivée ici en F8.12.c, et pas avant.** Le support peut
+désormais faire entrer un prestataire dans une conversation client (« ce logement
+accepte-t-il les animaux ? »). Le tiers recevait la notification… et n'avait
+**aucun écran pour lire le message** : la messagerie n'était montée que dans
+l'espace client et l'espace entreprise. Les composants étant transverses et
+autonomes (ils lisent `SPACE_CONFIG`), il a suffi de déclarer les deux routes —
+les liens restent alors dans l'espace courant, personne n'est éjecté vers
+`/mon-espace`.
+
+⚠️ Le prestataire **n'ouvre pas** de conversation de son côté : il répond dans un
+fil où le support l'a fait entrer. Le fil naît toujours chez Kaikun.

@@ -86,6 +86,18 @@
             </li>
           }
         </ol>
+
+        <!--
+          F8.12 — poser une question SUR CE DOSSIER. Le contexte part avec le
+          message : l'agent ouvre le fil en sachant de quelle demande il s'agit,
+          sans un aller-retour pour le lui demander.
+        -->
+        <app-contact-support
+          contextType="demande"
+          [contextId]="req.id"
+          label="Poser une question sur cette demande"
+          hint="Un agent Kaikun vous répond dans votre messagerie. La référence de la demande est jointe automatiquement."
+        />
       </article>
     }
   }

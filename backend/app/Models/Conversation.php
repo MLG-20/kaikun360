@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -30,9 +31,11 @@ class Conversation extends Model
      */
     protected $fillable = [
         'subject',
+        'assigned_agent_id',
         'context_type',
         'context_id',
         'last_message_at',
+        'closed_at',
     ];
 
     /**
@@ -42,7 +45,26 @@ class Conversation extends Model
     {
         return [
             'last_message_at' => 'datetime',
+            'closed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Agent RESPONSABLE du fil (F8.12) — celui dont le client voit le nom et
+     * qui doit la réponse. Il figure aussi parmi les `participants` : la
+     * relation ci-dessous dit qui en répond, le pivot dit qui peut lire.
+     */
+    public function assignedAgent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_agent_id');
+    }
+
+    /**
+     * Un fil clos est réglé : il quitte la file de traitement sans disparaître.
+     */
+    public function isClosed(): bool
+    {
+        return $this->closed_at !== null;
     }
 
     /**
@@ -70,6 +92,20 @@ class Conversation extends Model
     public function latestMessage(): HasOne
     {
         return $this->hasOne(Message::class)->latestOfMany();
+    }
+
+    /**
+     * PREMIER message du fil — donc celui qui l'a ouvert (F8.12.c).
+     *
+     * ⚠️ C'est la seule définition fiable du « demandeur ». Le back-office le
+     * déduisait du premier participant non-staff : dès qu'un propriétaire ou un
+     * prestataire entre dans le fil, cette règle désigne parfois le TIERS à la
+     * place du client — la fiche affichait alors le mauvais nom et les
+     * mauvaises coordonnées. L'auteur du premier message, lui, ne change jamais.
+     */
+    public function firstMessage(): HasOne
+    {
+        return $this->hasOne(Message::class)->oldestOfMany();
     }
 
     /**

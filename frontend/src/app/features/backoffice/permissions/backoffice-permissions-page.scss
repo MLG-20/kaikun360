@@ -22,6 +22,14 @@
   margin: 0;
 }
 
+// Ce que la matrice ne montre pas : les droits portés par le rôle (F8.12.b).
+// Sur sa propre ligne et en plus discret — c'est une précision, pas la consigne.
+.pm-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.84rem;
+}
+
 .pm-muted {
   color: var(--k-muted);
   font-size: 0.9rem;

@@ -160,3 +160,53 @@
     width: 100%;
   }
 }
+
+// Bandeau « conversation clôturée » (F8.12). Informe sans bloquer : le
+// composeur reste actif, écrire rouvre le fil côté serveur.
+.mt-closed {
+  background: var(--k-sand);
+  border: 1px solid var(--k-line);
+  border-radius: calc(var(--k-radius) / 1.5);
+  color: var(--k-muted);
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.85rem;
+}
+
+// Participants du fil (F8.12.c) : nommer chacun par son rôle, sans coordonnées.
+.mt-people {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+
+  &__label {
+    color: var(--k-muted);
+  }
+}
+
+.mt-person {
+  background: var(--k-sand);
+  border-radius: var(--k-radius-pill);
+  padding: 2px 10px;
+
+  &__role {
+    color: var(--k-muted);
+    font-size: 0.75rem;
+    margin-left: 4px;
+  }
+}
+
+// Pourquoi un numéro ressort en « ••• ». Discret : c'est une explication, pas
+// un avertissement — le client n'a rien fait de mal.
+.mt-privacy {
+  background: var(--k-sand);
+  border-radius: calc(var(--k-radius) / 1.5);
+  color: var(--k-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.85rem;
+}

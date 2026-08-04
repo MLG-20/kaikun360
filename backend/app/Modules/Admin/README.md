@@ -532,6 +532,61 @@ déjà leur file back-office dans leurs modules.
 > la même permission. L'API renvoie `allowed_transitions` pour que l'écran ne
 > propose que des étapes qui seront acceptées.
 
+**Boîte de réception du support (F8.12)** — `repondre:messages` :
+
+- `GET /admin/conversations` — la file. Portées : `scope=mine` (**défaut**),
+  `unassigned`, `all` ; `closed=1` ouvre l'archive ; `search` porte sur le sujet
+  et sur l'identité / e-mail / téléphone de l'interlocuteur. Chaque ligne porte
+  `requester` (contact joignable), `assigned_agent`, `context_label`, et surtout
+  **`awaiting_reply`** — un fil dont le dernier message vient du client n'est pas
+  « non lu », il est **dû**.
+- `GET /admin/conversations/{id}` — l'échange complet + le **vivier** d'agents
+  pour la réassignation. ⚠️ L'accès n'est **pas** scopé aux fils dont on est
+  participant (contrairement à l'espace client) : un agent doit pouvoir reprendre
+  le dossier d'un collègue absent. Ouvrir un fil ne le marque comme lu que si
+  l'on y participe déjà — lire par-dessus l'épaule d'un collègue ne doit pas
+  éteindre SA pastille.
+- `POST /admin/conversations/{id}/messages` — répondre. **Deux effets de bord
+  voulus** : répondre à un fil sans responsable **le prend en charge** (sinon
+  « Non assignés » ne se viderait jamais et deux agents répondraient au même
+  client), et répondre à un fil clos **le rouvre**.
+- `PATCH /admin/conversations/{id}` — réassigner (`assigned_agent_id`, `null`
+  pour remettre dans la file) et/ou clore (`closed`). Le destinataire doit
+  appartenir au vivier : assigner un fil à quelqu'un qui n'a pas le droit d'y
+  répondre le rendrait muet (422). Réassigner **ne retire personne du fil** —
+  sortir l'agent précédent effacerait l'historique de son côté.
+
+> ⚠️ **Sans cet écran, la messagerie n'existait pas.** Le socle des conversations
+> date de F3.7 : un client pouvait lire un fil et y répondre, mais **aucun geste
+> ne permettait d'en ouvrir un** et personne côté équipe n'avait de vue sur ces
+> fils. Un agent aurait dû ouvrir son espace client personnel pour découvrir, au
+> hasard d'une notification, qu'on lui écrivait — alors que le CDC liste
+> « Messages — conversation avec le support Kaikun ou le prestataire affecté »
+> comme module contractuel, **pour tous les profils**.
+>
+> ⚠️ **`repondre:messages` a deux particularités.** D'abord, les comptes qui la
+> portent forment le **vivier d'assignation**. Ensuite, depuis **F8.12.b**, elle
+> est **portée par le rôle `agent_kaikun`** — exception assumée au grant pur de
+> F7.1.b : ce principe sert à cloisonner des LEVIERS (argent, comptes,
+> validation), pas à rationner le fait de répondre à quelqu'un qui écrit. Un
+> droit à cocher rendait tout nouvel agent invisible du routage jusqu'à ce que
+> quelqu'un y pense. Elle sort donc de `delegable()` / `catalog()` (voir
+> `AdminPermission::carriedByRole()`) : afficher une case décochée en face d'un
+> droit effectif serait un mensonge d'écran.
+>
+> **L'ordre d'assignation (F8.12.b)** : (1) les agents **en poste** — session de
+> pointeuse ouverte, `Attendance::open()` : un agent parti à 18 h ne doit pas
+> recevoir le fil de 22 h ; (2) parmi eux, **le moins chargé** en fils ouverts —
+> c'est le sens concret de « libre », zéro conversation passe avant une. ⚠️ Deux
+> replis, dans cet ordre : personne en poste (nuit, week-end) → **tout le
+> vivier**, un message ne dépend jamais d'un pointage oublié ; vivier vide → le
+> fil est créé **non assigné** et attend dans « Non assignés ». Le super
+> administrateur peut de toute façon réassigner n'importe quel fil.
+>
+> ⚠️ **L'ajout d'un TIERS au fil** (propriétaire, prestataire) n'est pas livré :
+> c'est un jugement au cas par cas, avec ses propres garde-fous (masquage des
+> coordonnées). Tranche suivante.
+
 **Gestion documentaire transverse** — sensible (KYC, contrats) → niveau
 administrateur `gerer:utilisateurs`. `GET /admin/documents` : vue d'ensemble
 (compteurs `kyc` / `property` / `certification` / `payout_proof`) ou liste

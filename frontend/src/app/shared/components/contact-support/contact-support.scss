@@ -1,0 +1,99 @@
+// Bloc « Écrire au support » (F8.12), préfixe cs-. Réutilisé tel quel sur
+// plusieurs écrans (messages, demande, réservation) : aucune règle ne suppose
+// un parent particulier, tout est contenu dans .cs-block.
+
+.cs-block {
+  margin: 1.25rem 0;
+}
+
+// — Replié : un simple bouton —
+.cs-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cs-trigger-icon {
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+// — Déplié : un vrai espace d'écriture —
+.cs-panel {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 1.25rem 1.25rem 1.1rem;
+}
+
+.cs-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cs-title {
+  font-family: var(--k-font-display);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.cs-close {
+  background: none;
+  border: 0;
+  color: var(--k-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.25rem;
+
+  &:hover {
+    color: var(--k-ink);
+  }
+}
+
+.cs-hint {
+  color: var(--k-muted);
+  font-size: 0.9rem;
+  margin: 0.35rem 0 1rem;
+}
+
+.cs-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+}
+
+.cs-textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 7.5rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--k-line);
+  border-radius: calc(var(--k-radius) / 1.5);
+  background: var(--k-white);
+  color: inherit;
+  font: inherit;
+  line-height: 1.5;
+
+  &:focus-visible {
+    outline: 2px solid var(--k-brand);
+    outline-offset: 1px;
+  }
+}
+
+.cs-error {
+  color: var(--k-danger);
+  font-size: 0.9rem;
+  margin: 0.6rem 0 0;
+}
+
+.cs-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.9rem;
+}

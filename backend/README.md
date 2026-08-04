@@ -272,6 +272,49 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   (événement back-office `quote_answered`). ⚠️ `POST /requests/{id}/quotes`
   existait depuis B11.3 **sans aucun appelant** : tous les devis venaient du
   seeder.
+  **Boîte de réception du support (F8.12)** (`AdminConversationController`,
+  `repondre:messages`) : `GET /admin/conversations` (portées `mine` par défaut /
+  `unassigned` / `all`, archive `closed=1`, recherche sur le sujet et
+  l'interlocuteur), `GET /admin/conversations/{id}` (échange complet + vivier
+  d'agents), `POST /admin/conversations/{id}/messages` (répondre) et
+  `PATCH /admin/conversations/{id}` (réassigner / clore). ⚠️ **Sans cet écran, la
+  messagerie n'existait pas** : le socle F3.7 savait lire et répondre, mais
+  **aucun geste n'ouvrait un fil** et personne côté équipe ne les voyait. Côté
+  client, `POST /messages/support` (`MessageController@startWithSupport`)
+  n'accepte **aucun destinataire** — `SupportAssignmentService` désigne l'agent
+  du vivier le moins chargé ; `POST /messages` (destinataire désigné) devient
+  réservé à l'équipe, laisser un client écrire directement à un propriétaire
+  contredisait l'architecture « support pivot ». ⚠️ **`repondre:messages` sert
+  aussi de vivier** : la déléguer, c'est mettre quelqu'un de permanence ; vivier
+  vide → fil **non assigné** (jamais perdu). Deux colonnes neuves sur
+  `conversations` (`assigned_agent_id`, `closed_at`), et
+  `App\Support\Messaging\ConversationContext` (liste blanche de 8 slugs) branche
+  enfin `context_type`/`context_id`, restés vides depuis F3.7 — un dossier
+  personnel n'est rattaché que s'il appartient à l'auteur, sinon il est ignoré.
+  **Relève périodique (F8.12.a)** : `GET /messages/{id}` et
+  `GET /admin/conversations/{id}` acceptent **`?after=<message_id>`** et ne
+  renvoient alors que les messages plus récents — un fil ouvert se tient à jour
+  sans retélécharger l'historique. ⚠️ **Relève à vide = aucune écriture** :
+  `last_read_at` n'est touché que s'il y a réellement du nouveau, sinon chaque
+  battement produirait un `UPDATE` pour rien.
+  **Qui reçoit un nouveau fil (F8.12.b)** — `SupportAssignmentService` : (1) le
+  vivier = porteurs de `repondre:messages`, **désormais portée par le rôle**
+  `agent_kaikun` (tout agent est de permanence d'office ; elle sort de
+  `AdminPermission::delegable()` via `carriedByRole()`) ; (2) **en poste
+  d'abord** — une session de pointeuse ouverte (`Attendance::open()`) ; (3) parmi
+  eux, **le moins chargé** (fils ouverts assignés). ⚠️ **Deux replis** : personne
+  en poste → tout le vivier (un message ne dépend jamais d'un pointage oublié) ;
+  vivier vide → fil **non assigné**. Le super administrateur réassigne à la main
+  (`PATCH /admin/conversations/{id}`).
+  **Un tiers dans le fil (F8.12.c)** : `GET …/candidates` (personne du dossier
+  via `ConversationContext::holder()`, puis recherche limitée aux rôles
+  propriétaire/prestataire), `POST …/participants` (il voit **tout
+  l'historique** et est notifié), `DELETE …/participants/{user}` (ni le
+  demandeur ni l'agent responsable — 422 ; les messages écrits restent).
+  ⚠️ **`ContactMasker`** masque e-mails et suites d'au moins **7 chiffres** dans
+  `MessageResource` **pour les lecteurs non-staff seulement** : l'équipe doit
+  voir le texte entier pour arbitrer un litige, et 7 chiffres (pas 6) pour ne
+  pas hacher un prix. Le filtre réduit la friction, **il ne verrouille rien**.
   **Gestion documentaire transverse** (`AdminDocumentController`) — les **six**
   familles de la ligne CDC §6 « Documents » depuis F7.4.c : pièces d'identité
   (KYC), documents de biens, certifications prestataires, preuves de reversement,

@@ -4,7 +4,10 @@ namespace Tests\Feature\Transversal;
 
 use App\Models\Conversation;
 use App\Models\User;
+use App\Modules\Admin\Enums\AdminPermission;
+use App\Modules\Core\Enums\UserRole;
 use App\Notifications\NewMessageNotification;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
@@ -21,6 +24,27 @@ use Tests\TestCase;
 class MessagingTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Depuis F8.12, ouvrir un fil EN DÉSIGNANT son destinataire relève de la
+        // permission `repondre:messages` : les rôles doivent donc exister.
+        $this->seed(RolesAndPermissionsSeeder::class);
+    }
+
+    /**
+     * Un agent du support : c'est lui, depuis F8.12, qui a le droit d'ouvrir un
+     * fil vers un compte donné (le client, lui, passe par /messages/support).
+     */
+    private function agentDuSupport(): User
+    {
+        $agent = User::factory()->create();
+        $agent->assignRole(UserRole::AGENT_KAIKUN->value);
+        $agent->givePermissionTo(AdminPermission::REPONDRE_MESSAGES->value);
+
+        return $agent;
+    }
 
     /**
      * Crée une conversation directe entre deux utilisateurs, avec un message
@@ -142,39 +166,39 @@ class MessagingTest extends TestCase
         ])->assertStatus(404);
     }
 
-    public function test_ouvrir_une_conversation_cree_le_fil_et_notifie_le_destinataire(): void
+    public function test_l_equipe_ouvre_une_conversation_et_notifie_le_destinataire(): void
     {
         Notification::fake();
 
         $client = User::factory()->create();
-        $agent = User::factory()->create();
+        $agent = $this->agentDuSupport();
 
-        Sanctum::actingAs($client);
+        Sanctum::actingAs($agent);
 
         $this->postJson('/api/v1/messages', [
-            'recipient_id' => $agent->id,
-            'subject' => 'Question sur ma réservation',
-            'body' => 'Bonjour, une question rapide.',
+            'recipient_id' => $client->id,
+            'subject' => 'Question sur votre réservation',
+            'body' => 'Bonjour, une précision à vous demander.',
         ])
             ->assertStatus(201)
-            ->assertJsonPath('data.conversation.subject', 'Question sur ma réservation')
-            ->assertJsonPath('data.conversation.counterparts.0.id', $agent->id);
+            ->assertJsonPath('data.conversation.subject', 'Question sur votre réservation')
+            ->assertJsonPath('data.conversation.counterparts.0.id', $client->id);
 
         $this->assertDatabaseCount('conversations', 1);
-        $this->assertDatabaseHas('messages', ['body' => 'Bonjour, une question rapide.']);
-        Notification::assertSentTo($agent, NewMessageNotification::class);
+        $this->assertDatabaseHas('messages', ['body' => 'Bonjour, une précision à vous demander.']);
+        Notification::assertSentTo($client, NewMessageNotification::class);
     }
 
     public function test_ouvrir_un_second_fil_direct_reutilise_le_meme(): void
     {
         $client = User::factory()->create();
-        $agent = User::factory()->create();
+        $agent = $this->agentDuSupport();
 
-        Sanctum::actingAs($client);
+        Sanctum::actingAs($agent);
 
-        $this->postJson('/api/v1/messages', ['recipient_id' => $agent->id, 'body' => 'Premier'])
+        $this->postJson('/api/v1/messages', ['recipient_id' => $client->id, 'body' => 'Premier'])
             ->assertStatus(201);
-        $this->postJson('/api/v1/messages', ['recipient_id' => $agent->id, 'body' => 'Second'])
+        $this->postJson('/api/v1/messages', ['recipient_id' => $client->id, 'body' => 'Second'])
             ->assertStatus(201);
 
         // Pas de doublon : un seul fil direct, deux messages.
@@ -184,14 +208,30 @@ class MessagingTest extends TestCase
 
     public function test_on_ne_peut_pas_se_parler_a_soi_meme(): void
     {
+        $agent = $this->agentDuSupport();
+
+        Sanctum::actingAs($agent);
+
+        $this->postJson('/api/v1/messages', [
+            'recipient_id' => $agent->id,
+            'body' => 'Coucou moi-même',
+        ])->assertStatus(422);
+    }
+
+    public function test_un_client_ne_peut_pas_designer_son_destinataire(): void
+    {
         $client = User::factory()->create();
+        $proprietaire = User::factory()->create();
 
         Sanctum::actingAs($client);
 
+        // ⚠️ F8.12 : cette route était ouverte à tous. Elle ne l'est plus —
+        // le client passe par /messages/support, et c'est l'agent qui décide
+        // d'ajouter un tiers au fil. Voir SupportMessagingTest.
         $this->postJson('/api/v1/messages', [
-            'recipient_id' => $client->id,
-            'body' => 'Coucou moi-même',
-        ])->assertStatus(422);
+            'recipient_id' => $proprietaire->id,
+            'body' => 'Contactons-nous directement',
+        ])->assertStatus(403);
     }
 
     public function test_le_compteur_de_non_lus(): void

@@ -41,6 +41,9 @@ import { AccountIcon } from './account-nav';
         @case ('chat') {
           <path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         }
+        @case ('star') {
+          <path d="M12 3.6l2.6 5.3 5.8.85-4.2 4.1 1 5.75L12 16.9l-5.2 2.7 1-5.75-4.2-4.1 5.8-.85z" />
+        }
         @case ('user') {
           <circle cx="12" cy="8" r="4" />
           <path d="M4 21c0-4 3.5-6 8-6s8 2 8 6" />

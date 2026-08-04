@@ -6,10 +6,35 @@
       @if (conv.context_label) {
         <span class="mt-tag">{{ conv.context_label }}</span>
       }
-      @if (conv.counterparts.length) {
+      <!--
+        F8.12 — un interlocuteur NOMMÉ. Le serveur assigne un agent au fil ; on
+        affiche son nom plutôt qu'un « support » anonyme, même arbitrage produit
+        qu'en F8.11 sur le devis : le contact humain fait la confiance.
+      -->
+      @if (conv.assigned_agent) {
+        Avec <strong>{{ conv.assigned_agent.name }}</strong>, support Kaikun
+      } @else if (conv.counterparts.length) {
         Avec {{ conv.counterparts[0].name }}
+      } @else {
+        Votre message attend qu'un agent le prenne en charge.
       }
     </p>
+
+    <!--
+      F8.12.c — quand l'agent fait entrer un propriétaire ou un prestataire, le
+      fil devient un échange à trois. Le dire évite au client de croire qu'il
+      parle encore en privé avec le support, et nomme chacun par son rôle.
+    -->
+    @if (conv.counterparts.length > 1) {
+      <p class="mt-people">
+        <span class="mt-people__label">Dans la conversation :</span>
+        @for (p of conv.counterparts; track p.id) {
+          <span class="mt-person">
+            {{ p.name }}@if (p.role) { <span class="mt-person__role">{{ p.role }}</span> }
+          </span>
+        }
+      </p>
+    }
   } @else {
     <h1 class="account-title mt-title">Conversation</h1>
   }
@@ -42,6 +67,29 @@
   </div>
 
   <!-- ============================== Composeur ============================= -->
+  <!--
+    Un fil clos reste ouvert à l'écriture : écrire à nouveau le ROUVRE côté
+    serveur. Le dire évite au client de croire qu'il parle dans le vide.
+  -->
+  @if (conversation()?.is_closed) {
+    <p class="mt-closed" role="status">
+      Cette conversation a été clôturée par l'équipe. Écrivez à nouveau pour la rouvrir.
+    </p>
+  }
+
+  <!--
+    Dire pourquoi un numéro tapé dans un message ressort en « ••• » : sans cette
+    phrase, le client croirait à un bug et recommencerait.
+  -->
+  @if ((conversation()?.counterparts?.length ?? 0) > 1) {
+    <p class="mt-privacy">
+      Pour votre protection, les numéros de téléphone et adresses e-mail écrits
+      dans les messages sont masqués. Réservez et réglez via Kaikun : c'est ce
+      qui vous ouvre le paiement sécurisé, la caution et le recours en cas de
+      litige.
+    </p>
+  }
+
   <form class="mt-composer" (ngSubmit)="send()">
     @if (sendError()) {
       <p class="k-form-error" role="alert">

@@ -36,6 +36,13 @@ export const OWNER_NAV: readonly SpaceNavItem[] = [
     ready: true, // F4.4 ✅ (mandats + loyers/reversements/incidents + rapport mensuel)
   },
   {
+    label: 'Messages',
+    description: 'Échangez avec le support Kaikun sur vos biens et vos locataires.',
+    path: 'messages',
+    icon: 'chat',
+    ready: true, // F8.12.c ✅ — le support peut vous faire entrer dans un fil
+  },
+  {
     label: 'Documents',
     description: 'Les pièces justificatives de chacun de vos biens.',
     path: 'documents',

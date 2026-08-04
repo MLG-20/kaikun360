@@ -25,7 +25,8 @@ type BoIcon =
   | 'shield'
   | 'clock'
   | 'sliders'
-  | 'inbox';
+  | 'inbox'
+  | 'chat';
 
 /** Une rubrique de navigation du poste de commandement. */
 interface BoNavItem {
@@ -119,6 +120,12 @@ export class BackofficeLayoutComponent {
     // Validation : ce sont les deux écrans où l'équipe prend en charge ce qui
     // arrive de l'extérieur.
     { label: 'Demandes', path: 'demandes', icon: 'inbox', ready: true },
+
+    // CDC §5 — module « Messages » (« conversation avec support Kaikun ou
+    // prestataire affecté », pour TOUS les profils). Contractuel, et pourtant
+    // sans écran d'équipe jusqu'en F8.12 : le client écrivait dans le vide.
+    // Placée avec Demandes — même métier, ce qui arrive de l'extérieur.
+    { label: 'Messages', path: 'messages', icon: 'chat', ready: true },
 
     // CDC §6 — modules 2 « Utilisateurs » et 12 « Documents » (deux onglets).
     { label: 'Comptes', path: 'comptes', icon: 'id', ready: true },

@@ -119,6 +119,26 @@ export const PROVIDER_ROUTES: Routes = [
         title: 'Revenus & commissions — Kaikun 360',
       },
       {
+        // ⚠️ **F8.12.c — sans ces deux routes, la messagerie ment.** Depuis que
+        // l'agent peut faire entrer un propriétaire ou un prestataire dans un
+        // fil, le tiers reçoit une notification… et n'avait AUCUN écran pour
+        // lire le message : les écrans de messagerie n'étaient montés que dans
+        // l'espace client et l'espace entreprise. Les composants sont
+        // transverses et autonomes (ils lisent `SPACE_CONFIG`) : les monter ici
+        // suffit, et les liens restent dans l'espace courant.
+        path: 'messages',
+        loadComponent: () =>
+          import('../account/messages/messages-page').then((m) => m.MessagesPageComponent),
+        title: 'Mes messages — Kaikun 360',
+      },
+      {
+        // Fil de discussion (GET /messages/{id}).
+        path: 'messages/:id',
+        loadComponent: () =>
+          import('../account/messages/message-thread').then((m) => m.MessageThreadComponent),
+        title: 'Conversation — Kaikun 360',
+      },
+      {
         // Profil — écran transverse monté DANS l'espace prestataire (réutilise le
         // composant de l'espace client : il porte sur l'utilisateur connecté).
         path: 'profil',

@@ -3,13 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StartConversationRequest;
+use App\Http\Requests\StartSupportConversationRequest;
 use App\Http\Requests\StoreMessageRequest;
 use App\Http\Resources\ConversationResource;
 use App\Http\Resources\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use App\Notifications\NewMessageNotification;
+use App\Services\SupportAssignmentService;
 use App\Support\ApiResponse;
+use App\Support\Messaging\ConversationContext;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -42,7 +47,10 @@ class MessageController extends Controller
 
         $conversations = $user->conversations()
             // Correspondant(s) + aperçu du dernier message pour la liste.
-            ->with(['participants', 'latestMessage'])
+            // `assignedAgent` : le client voit le nom de qui lui répond (F8.12).
+            // `participants.roles` : la ressource affiche le RÔLE de chaque
+            // participant depuis F8.12.c — sans ce chargement, un N+1 par fil.
+            ->with(['participants.roles', 'assignedAgent', 'latestMessage'])
             ->orderByDesc('last_message_at')
             ->paginate(15);
 
@@ -61,15 +69,31 @@ class MessageController extends Controller
     {
         $user = $request->user();
 
+        // `?after=<id>` — RELÈVE PÉRIODIQUE (F8.12.a) : l'écran qui a déjà le fil
+        // ne redemande que ce qui a été écrit depuis son dernier message. Sans
+        // ce paramètre, un fil ouvert dix minutes retéléchargerait tout
+        // l'historique toutes les dix secondes.
+        $after = $request->integer('after') ?: null;
+
         // Accès scopé : `findOrFail` sur la relation → 404 si non participant.
         $conversation = $user->conversations()
-            ->with(['participants', 'messages.sender'])
+            ->with([
+                'participants.roles',
+                'assignedAgent',
+                'messages' => fn ($query) => $query
+                    ->when($after, fn ($q) => $q->where('id', '>', $after))
+                    ->with('sender'),
+            ])
             ->findOrFail($conversation->id);
 
-        // Marque comme lu : tout est vu jusqu'à maintenant.
-        $user->conversations()->updateExistingPivot($conversation->id, [
-            'last_read_at' => now(),
-        ]);
+        // Marque comme lu : tout est vu jusqu'à maintenant. ⚠️ En relève, on
+        // n'écrit que s'il y a réellement du nouveau — sinon chaque battement
+        // produirait une écriture en base pour ne rien changer.
+        if ($after === null || $conversation->messages->isNotEmpty()) {
+            $user->conversations()->updateExistingPivot($conversation->id, [
+                'last_read_at' => now(),
+            ]);
+        }
 
         return ConversationResource::make($conversation);
     }
@@ -95,7 +119,13 @@ class MessageController extends Controller
                 'body' => $request->validated('body'),
             ]);
 
-            $conversation->update(['last_message_at' => $message->created_at]);
+            // Un nouveau message ROUVRE un fil clos (F8.12) : le client qui
+            // relance un dossier réglé doit réapparaître dans la file de
+            // l'agent, sinon sa relance n'est vue par personne.
+            $conversation->update([
+                'last_message_at' => $message->created_at,
+                'closed_at' => null,
+            ]);
             $user->conversations()->updateExistingPivot($conversation->id, [
                 'last_read_at' => $message->created_at,
             ]);
@@ -148,7 +178,93 @@ class MessageController extends Controller
 
         return ApiResponse::created([
             'conversation' => ConversationResource::make(
-                $conversation->load(['participants', 'latestMessage'])
+                $conversation->load(['participants.roles', 'latestMessage'])
+            ),
+        ]);
+    }
+
+    /**
+     * Ouvre (ou reprend) un fil AVEC LE SUPPORT KAIKUN, et poste le premier
+     * message. POST /api/v1/messages/support — F8.12.
+     *
+     * C'est LE geste qui manquait depuis F3.7 : le socle savait tout faire sauf
+     * commencer. `startConversation()` existait côté frontend et n'était appelé
+     * par aucun écran ; l'état vide de « Mes messages » promettait un bouton qui
+     * n'existait nulle part.
+     *
+     * Trois différences avec `start()` :
+     *   1. **Aucun destinataire fourni** : le serveur choisit l'agent de
+     *      permanence. Le client n'écrit jamais directement au propriétaire ou au
+     *      prestataire — c'est l'agent qui décidera, au cas par cas, d'ajouter le
+     *      tiers au fil.
+     *   2. **Le dossier concerné est rattaché** (`context_type`/`context_id`),
+     *      pour que l'agent sache de quoi on lui parle sans un aller-retour.
+     *   3. **Reprise plutôt que doublon** : réécrire à propos du MÊME dossier
+     *      continue le fil ouvert au lieu d'en empiler un second — pour le
+     *      client comme pour l'agent, c'est la même conversation.
+     *
+     * ⚠️ Si aucun agent ne porte `repondre:messages`, le fil est créé quand même,
+     * sans responsable : il tombera dans « Non assignés » au back-office. Perdre
+     * le message serait pire que de le faire attendre visiblement.
+     */
+    public function startWithSupport(
+        StartSupportConversationRequest $request,
+        SupportAssignmentService $assignment,
+    ): JsonResponse {
+        $user = $request->user();
+
+        // Résolution du dossier AVANT la transaction : un contexte invalide ou
+        // qui ne regarde pas cet utilisateur est simplement ignoré (le message
+        // part quand même — refuser laisserait le client sans recours).
+        $context = ConversationContext::resolve(
+            $request->validated('context_type'),
+            $request->integer('context_id') ?: null,
+            $user,
+        );
+
+        $agent = $assignment->pick();
+
+        [$conversation, $message] = DB::transaction(function () use ($request, $user, $context, $agent) {
+            $conversation = $this->findSupportConversation($user, $context);
+
+            if ($conversation === null) {
+                $conversation = Conversation::create([
+                    'subject' => $request->validated('subject')
+                        ?: $this->defaultSubject($context),
+                    'assigned_agent_id' => $agent?->id,
+                    'context_type' => $context?->getMorphClass(),
+                    'context_id' => $context?->getKey(),
+                ]);
+            } elseif ($conversation->isClosed()) {
+                // Rouvrir : le client relance un dossier qu'on croyait réglé.
+                $conversation->forceFill(['closed_at' => null])->save();
+            }
+
+            // Le client et l'agent responsable participent au fil. `syncWithoutDetaching`
+            // n'enlève personne : sur un fil repris, un tiers déjà ajouté par
+            // l'agent y reste.
+            $conversation->participants()->syncWithoutDetaching(
+                array_filter([$user->id, $conversation->assigned_agent_id]),
+            );
+
+            $message = $conversation->messages()->create([
+                'sender_id' => $user->id,
+                'body' => $request->validated('body'),
+            ]);
+
+            $conversation->update(['last_message_at' => $message->created_at]);
+            $user->conversations()->updateExistingPivot($conversation->id, [
+                'last_read_at' => $message->created_at,
+            ]);
+
+            return [$conversation, $message];
+        });
+
+        $this->notifyOthers($conversation, $user->id, $message);
+
+        return ApiResponse::created([
+            'conversation' => ConversationResource::make(
+                $conversation->load(['participants.roles', 'assignedAgent', 'latestMessage'])
             ),
         ]);
     }
@@ -177,6 +293,44 @@ class MessageController extends Controller
             ->with('participants')
             ->get()
             ->sum(fn (Conversation $conversation) => $conversation->unreadCountFor($user));
+    }
+
+    /**
+     * Retrouve le fil de support de cet utilisateur pour CE dossier (ou le fil
+     * de support général si aucun dossier n'est cité), afin de le reprendre au
+     * lieu d'en ouvrir un second. F8.12.
+     *
+     * Un fil de support se reconnaît à son `assigned_agent_id` renseigné — ou,
+     * cas limite, à un fil né sans agent de permanence disponible, qu'il faut
+     * bien pouvoir reprendre lui aussi. On ne remonte que les fils dont
+     * l'utilisateur est déjà participant.
+     */
+    private function findSupportConversation(User $user, ?Model $context): ?Conversation
+    {
+        return $user->conversations()
+            ->when(
+                $context !== null,
+                fn ($query) => $query
+                    ->where('context_type', $context->getMorphClass())
+                    ->where('context_id', $context->getKey()),
+                // Fil « général » : sans dossier attaché, il n'y en a qu'un.
+                fn ($query) => $query->whereNull('context_type'),
+            )
+            ->orderByDesc('last_message_at')
+            ->first();
+    }
+
+    /**
+     * Sujet par défaut d'un fil de support : le nom du dossier concerné, pour
+     * que la liste des fils reste lisible même sans sujet saisi.
+     */
+    private function defaultSubject(?Model $context): string
+    {
+        $label = ConversationContext::labelForClass($context ? $context::class : null);
+
+        return $label !== null
+            ? $label.' — '.($context->getAttribute('reference') ?? '#'.$context->getKey())
+            : 'Question au support Kaikun';
     }
 
     /**

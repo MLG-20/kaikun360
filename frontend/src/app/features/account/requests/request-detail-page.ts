@@ -9,6 +9,7 @@ import { RequestService } from '../../../core/api/request.service';
 import { ServiceRequest } from '../../../models/service-request.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { ContactSupportComponent } from '../../../shared/components/contact-support/contact-support';
 import { REQUEST_STEPS, RequestStep, stepState } from './request-timeline';
 
 /** État de chargement de l'écran. */
@@ -16,7 +17,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'forbidden' | 'failed';
 
 @Component({
   selector: 'app-request-detail-page',
-  imports: [DatePipe, BackLinkComponent],
+  imports: [DatePipe, BackLinkComponent, ContactSupportComponent],
   templateUrl: './request-detail-page.html',
   styleUrl: './request-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,6 +32,9 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'forbidden' | 'failed';
  * faits (localité, budget, date) — puis la **chronologie de statut** (machine à
  * états backend). Un bouton « ← Mes demandes » ramène toujours à la liste. Une
  * demande qui n'appartient pas à l'utilisateur renvoie 403 (état « accès refusé »).
+ *
+ * Depuis F8.12, la fiche porte le bloc « Poser une question sur cette demande » :
+ * le fil de support s'ouvre avec le dossier déjà rattaché.
  */
 export class RequestDetailPageComponent {
   private readonly requests = inject(RequestService);

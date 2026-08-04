@@ -1,0 +1,208 @@
+<app-back-link class="mt-back" fallback="/back-office/messages" label="← Messages" />
+
+@if (state() === 'loading') {
+  <p class="mt-state" role="status">Chargement de la conversation…</p>
+} @else if (state() === 'failed') {
+  <p class="mt-state mt-state--error" role="alert">
+    Cette conversation est introuvable, ou vous n'avez pas le droit de la lire.
+  </p>
+} @else if (thread(); as t) {
+  <!-- ============== 1. Qui écrit, à propos de quoi, depuis quand ============= -->
+  <header class="mt-head">
+    <div>
+      <h1 class="mt-title">{{ t.requester?.name || 'Compte supprimé' }}</h1>
+      <p class="mt-sub">
+        @if (t.context_label) {
+          <span class="mt-chip">{{ t.context_label }}</span>
+        }
+        {{ t.subject || 'Question générale' }}
+      </p>
+      <p class="mt-contact">
+        @if (t.requester?.phone) {
+          <a [href]="'tel:' + t.requester!.phone">{{ t.requester!.phone }}</a>
+        }
+        @if (t.requester?.email) {
+          <a [href]="'mailto:' + t.requester!.email">{{ t.requester!.email }}</a>
+        }
+        @if (t.requester?.role) {
+          <span class="mt-role">{{ t.requester!.role }}</span>
+        }
+      </p>
+    </div>
+
+    <!--
+      F8.12.c — qui est dans le fil. Un échange à trois ne se lit pas comme un
+      échange à deux : l'agent doit voir d'un coup d'œil si le propriétaire y
+      est déjà, et pouvoir l'en sortir.
+    -->
+    <div class="mt-people">
+      <span class="mt-people__label">Dans la conversation</span>
+      <ul class="mt-people__list">
+        @for (p of t.others; track p.id) {
+          <li class="mt-person" [class.is-team]="p.is_team">
+            {{ p.name }}
+            @if (p.role) {
+              <span class="mt-person__role">{{ p.is_team ? 'support' : p.role }}</span>
+            }
+            @if (!p.is_team) {
+              <button
+                type="button"
+                class="mt-person__remove"
+                title="Retirer de la conversation"
+                (click)="removeParticipant(p.id)">
+                ✕
+              </button>
+            }
+          </li>
+        }
+      </ul>
+      <button type="button" class="k-btn k-btn--ghost mt-add" (click)="toggleAdd()">
+        {{ adding() ? 'Fermer' : '+ Ajouter au fil' }}
+      </button>
+    </div>
+
+    <div class="mt-flags">
+      @if (t.awaiting_reply) {
+        <span class="mt-chip is-due">En attente de votre réponse</span>
+      }
+      @if (t.is_closed) {
+        <span class="mt-chip is-off">Conversation clôturée</span>
+      }
+      @if (!t.assigned_agent) {
+        <span class="mt-chip is-due">Personne n'en est responsable</span>
+      }
+    </div>
+  </header>
+
+  <!-- ============== 1 bis. Faire entrer un tiers (F8.12.c) ================== -->
+  @if (adding()) {
+    <section class="mt-addbox">
+      <p class="mt-addbox__warn">
+        ⚠️ La personne ajoutée verra <strong>tout l'historique</strong> de cette
+        conversation et sera prévenue par notification. Une question de
+        disponibilité se transmet volontiers&nbsp;; une négociation de prix, gardez-la.
+      </p>
+
+      @if (candidateFromContext(); as c) {
+        <div class="mt-cand">
+          <span class="mt-cand__main">
+            <strong>{{ c.name }}</strong>
+            <span class="mt-cand__meta">
+              {{ c.role }}@if (c.from_context) { · rattaché à ce dossier ({{ c.from_context }}) }
+            </span>
+          </span>
+          <button type="button" class="k-btn k-btn--primary" (click)="addParticipant(c)">
+            Ajouter
+          </button>
+        </div>
+      } @else {
+        <p class="mt-addbox__none">
+          Aucun professionnel n'est rattaché au dossier de cette conversation.
+          Cherchez la personne par son nom.
+        </p>
+      }
+
+      <div class="mt-addbox__search">
+        <input
+          class="k-input"
+          type="search"
+          name="candidate-search"
+          [(ngModel)]="candidateSearch"
+          (keyup.enter)="loadCandidates()"
+          placeholder="Nom ou e-mail d'un propriétaire ou prestataire…" />
+        <button type="button" class="k-btn k-btn--ghost" (click)="loadCandidates()">Chercher</button>
+      </div>
+
+      @for (c of candidateResults(); track c.id) {
+        <div class="mt-cand">
+          <span class="mt-cand__main">
+            <strong>{{ c.name }}</strong>
+            <span class="mt-cand__meta">{{ c.role }} · {{ c.email }}</span>
+          </span>
+          <button type="button" class="k-btn k-btn--ghost" (click)="addParticipant(c)">
+            Ajouter
+          </button>
+        </div>
+      }
+    </section>
+  }
+
+  <!-- ========================== 2. L'échange complet ========================= -->
+  <section class="mt-thread" aria-label="Fil de la conversation">
+    @for (m of t.messages || []; track m.id) {
+      <!--
+        `is_mine` est calculé côté serveur pour le lecteur courant : un message
+        de l'équipe s'aligne à droite, comme dans le fil vu par le client.
+      -->
+      <div class="mt-row" [class.is-team]="m.is_mine">
+        <div class="mt-bubble">
+          @if (m.sender.name) {
+            <span class="mt-sender">{{ m.sender.name }}</span>
+          }
+          <span class="mt-text">{{ m.body }}</span>
+          @if (m.created_at) {
+            <span class="mt-time">{{ m.created_at | date: 'short' : '' : 'fr' }}</span>
+          }
+        </div>
+      </div>
+    } @empty {
+      <p class="mt-empty">Aucun message dans cette conversation.</p>
+    }
+  </section>
+
+  <!-- ============================ 3. Répondre =============================== -->
+  <section class="mt-composer">
+    @if (sendError()) {
+      <p class="mt-state mt-state--error" role="alert">
+        L'action n'a pas abouti. Vérifiez votre connexion et réessayez.
+      </p>
+    }
+
+    @if (!t.assigned_agent) {
+      <p class="mt-notice">
+        Ce fil n'a pas de responsable : <strong>y répondre vous l'attribue</strong>.
+      </p>
+    } @else if (t.is_closed) {
+      <p class="mt-notice">
+        Ce fil est clôturé : <strong>y répondre le rouvre</strong>.
+      </p>
+    }
+
+    <textarea
+      class="mt-input"
+      rows="4"
+      maxlength="5000"
+      placeholder="Écrivez votre réponse au client…"
+      [ngModel]="draft()"
+      (ngModelChange)="draft.set($event)"
+      [disabled]="sending()"></textarea>
+
+    <div class="mt-actions">
+      <button
+        type="button"
+        class="k-btn k-btn--primary"
+        [disabled]="draft().trim().length === 0 || sending()"
+        (click)="send()">
+        {{ sending() ? 'Envoi…' : 'Répondre' }}
+      </button>
+
+      <!-- Pilotage, au second rang : le geste principal reste de répondre. -->
+      <label class="mt-assign">
+        <span class="mt-assign__label">Suivi par</span>
+        <select
+          class="k-input"
+          [value]="t.assigned_agent?.id ?? ''"
+          (change)="reassign($any($event.target).value)">
+          <option value="">Personne (remettre dans la file)</option>
+          @for (a of agents(); track a.id) {
+            <option [value]="a.id">{{ a.name }}</option>
+          }
+        </select>
+      </label>
+
+      <button type="button" class="k-btn k-btn--ghost" (click)="toggleClosed()">
+        {{ t.is_closed ? 'Rouvrir' : 'Clôturer' }}
+      </button>
+    </div>
+  </section>
+}

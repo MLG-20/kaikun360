@@ -1,0 +1,237 @@
+// Écran Messages du back-office — la boîte de réception du support (F8.12).
+// Même grille que la file des demandes (F8.9) : deux écrans de triage qui se
+// lisent pareil doivent se ressembler, l'équipe passe de l'un à l'autre.
+// Préfixe ms- (styles encapsulés par le composant).
+:host {
+  display: block;
+  max-width: 1160px;
+}
+
+.ms-head {
+  margin-bottom: 18px;
+}
+
+.ms-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.ms-sub {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 68ch;
+}
+
+// --- Filtres : portée + recherche + archive ---
+.ms-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ms-scopes {
+  display: inline-flex;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-pill);
+  overflow: hidden;
+  background: #fff;
+}
+
+.ms-scope {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  padding: 8px 14px;
+
+  &.is-on {
+    background: var(--k-brand);
+    color: #fff;
+  }
+
+  &:not(.is-on):hover {
+    background: var(--k-cream);
+  }
+}
+
+.ms-search {
+  flex: 1;
+  min-width: 240px;
+}
+
+// --- États ---
+.ms-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.ms-count {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  margin: 0 0 8px;
+}
+
+// --- Table (5 colonnes, comme les autres listes depuis F8.1) ---
+.ms-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.ms-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 700px;
+
+  th:nth-child(1) { width: 22%; }
+  th:nth-child(2) { width: 20%; }
+  th:nth-child(3) { width: 27%; }
+  th:nth-child(4) { width: 16%; }
+  th:nth-child(5) { width: 15%; }
+
+  th,
+  td {
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: top;
+  }
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.ms-row {
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--k-cream);
+  }
+
+  // Un fil qui attend une réponse porte un liseré : c'est la seule ligne sur
+  // laquelle l'équipe doit agir aujourd'hui.
+  &.is-awaiting td:first-child {
+    box-shadow: inset 3px 0 0 var(--k-brand);
+  }
+}
+
+.ms-strong {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.9rem;
+}
+
+.ms-place {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--k-muted);
+}
+
+.ms-link {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--k-brand-600);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.ms-excerpt {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--k-ink);
+  line-height: 1.35;
+}
+
+.ms-from {
+  font-weight: 600;
+  color: var(--k-muted);
+}
+
+.ms-chip {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 9px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: var(--k-cream);
+  color: var(--k-ink);
+  border: 1px solid var(--k-line);
+
+  // « En attente de réponse » / « Personne » : ce sont des appels à l'action.
+  &.is-due {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+    border-color: transparent;
+  }
+
+  &.is-off {
+    color: var(--k-muted);
+  }
+}
+
+.ms-owner-cell {
+  position: relative;
+}
+
+.ms-open {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  color: var(--k-brand-600);
+  font-weight: 600;
+}
+
+.ms-empty {
+  text-align: center;
+  color: var(--k-muted);
+  padding: 26px;
+}
+
+.ms-pager {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+
+  &__info {
+    font-size: 0.82rem;
+    color: var(--k-muted);
+  }
+}

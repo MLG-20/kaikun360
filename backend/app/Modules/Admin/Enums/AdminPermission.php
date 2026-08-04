@@ -16,6 +16,12 @@ namespace App\Modules\Admin\Enums;
  * **gouvernance** (délégables uniquement par un super_admin — garde-fou
  * d'escalade). `consulter:dashboard-admin` est l'accès de base porté par le
  * rôle : il n'est donc PAS délégable (il n'apparaît pas dans les cases).
+ *
+ * ⚠️ **F8.12.b — une seconde permission a rejoint le rôle** :
+ * `repondre:messages`. Ce n'est pas un relâchement du principe, c'est sa limite :
+ * le grant pur sert à cloisonner des LEVIERS (l'argent, les comptes, la
+ * validation) ; répondre à un client qui écrit est le métier de base d'un agent.
+ * Les deux forment `carriedByRole()`, exclu de la matrice de délégation.
  */
 enum AdminPermission: string
 {
@@ -34,6 +40,15 @@ enum AdminPermission: string
     case GERER_NUITEES = 'gerer:nuitees';
     case TRAITER_DEMANDES = 'traiter:demandes';
     case MODERER_AVIS = 'moderer:avis';
+    // Support de la messagerie interne (F8.12). Deux particularités :
+    //   1. elle définit aussi le VIVIER des agents à qui le serveur assigne un
+    //      nouveau fil (cf. SupportAssignmentService) ;
+    //   2. depuis F8.12.b elle est **portée par le rôle** `agent_kaikun`, comme
+    //      l'accès au tableau de bord — répondre aux clients est le métier de
+    //      base d'un agent, pas un levier sensible. Elle n'apparaît donc PAS
+    //      dans la matrice de délégation (`delegable()`) : y montrer une case
+    //      décochée alors que le droit est effectif serait un mensonge d'écran.
+    case REPONDRE_MESSAGES = 'repondre:messages';
 
     // Gouvernance de la plateforme (sensible → délégable par super_admin seul).
     case GERER_UTILISATEURS = 'gerer:utilisateurs';
@@ -56,6 +71,7 @@ enum AdminPermission: string
             self::GERER_NUITEES => 'Exploiter les nuitées',
             self::TRAITER_DEMANDES => 'Traiter les demandes',
             self::MODERER_AVIS => 'Modérer les avis',
+            self::REPONDRE_MESSAGES => 'Répondre aux messages du support',
             self::GERER_UTILISATEURS => 'Gérer les utilisateurs & l’équipe',
             self::GERER_PAIEMENTS => 'Gérer les paiements',
             self::GERER_PARAMETRES => 'Gérer les paramètres & le contenu',
@@ -77,7 +93,8 @@ enum AdminPermission: string
             self::GERER_CHANTIERS,
             self::GERER_NUITEES,
             self::TRAITER_DEMANDES,
-            self::MODERER_AVIS => 'Exploitation',
+            self::MODERER_AVIS,
+            self::REPONDRE_MESSAGES => 'Exploitation',
             self::GERER_UTILISATEURS,
             self::GERER_PAIEMENTS,
             self::GERER_PARAMETRES => 'Gouvernance',
@@ -95,7 +112,8 @@ enum AdminPermission: string
     }
 
     /**
-     * Les 12 permissions DÉLÉGABLES (tout sauf l'accès de base).
+     * Les permissions DÉLÉGABLES : tout sauf celles que le **rôle** back-office
+     * porte déjà (cf. `carriedByRole()`).
      *
      * @return array<int, string>
      */
@@ -103,8 +121,24 @@ enum AdminPermission: string
     {
         return array_values(array_map(
             fn (self $p) => $p->value,
-            array_filter(self::cases(), fn (self $p) => $p !== self::CONSULTER_DASHBOARD),
+            array_filter(self::cases(), fn (self $p) => ! in_array($p, self::carriedByRole(), true)),
         ));
+    }
+
+    /**
+     * Permissions **portées par le rôle** `agent_kaikun` : acquises en devenant
+     * membre de l'équipe, donc ni à cocher ni à décocher dans la matrice.
+     *
+     * L'accès au tableau de bord depuis F7.1.b ; la réponse aux messages du
+     * support depuis F8.12.b — répondre aux clients est le métier de base d'un
+     * agent, et un droit qu'il faudrait penser à accorder laisserait les fils
+     * s'entasser dans « Non assignés » à chaque arrivée dans l'équipe.
+     *
+     * @return array<int, self>
+     */
+    public static function carriedByRole(): array
+    {
+        return [self::CONSULTER_DASHBOARD, self::REPONDRE_MESSAGES];
     }
 
     /**
@@ -145,6 +179,9 @@ enum AdminPermission: string
             'label' => $p->label(),
             'group' => $p->group(),
             'requires_super_admin' => $p->isGovernance(),
-        ], array_values(array_filter(self::cases(), fn (self $p) => $p !== self::CONSULTER_DASHBOARD)));
+        ], array_values(array_filter(
+            self::cases(),
+            fn (self $p) => ! in_array($p, self::carriedByRole(), true),
+        )));
     }
 }

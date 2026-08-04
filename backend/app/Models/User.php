@@ -101,6 +101,16 @@ class User extends Authenticatable
     }
 
     /**
+     * Fils de support dont ce compte est RESPONSABLE (F8.12) — sous-ensemble de
+     * `conversations` : participer à un fil n'est pas en répondre. Sert à
+     * mesurer la charge d'un agent au moment d'assigner un nouveau fil.
+     */
+    public function assignedConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'assigned_agent_id');
+    }
+
+    /**
      * Localisation structurée du compte (F3.2b), en cascade Région → Département
      * → Commune. Toutes optionnelles (référentiel géo partagé avec les biens).
      */

@@ -125,6 +125,18 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   fil le **marque comme lu** (la pastille disparaît). Chaque nouveau message reçu
   génère aussi une **notification** (cloche F3.6). C'est la **dernière** rubrique
   *de données* de l'espace client.
+
+  ⚠️ **F8.12 — le geste d'OUVRIR un fil.** Jusque-là, la messagerie savait tout
+  faire sauf commencer : aucun écran n'ouvrait de conversation, tous les fils
+  visibles venaient du seeder, et l'état vide décrivait un bouton qui n'existait
+  nulle part. L'écran porte désormais
+  [`app-contact-support`](../../shared/components/contact-support/contact-support.ts)
+  (état vide + barre d'actions), tout comme la **fiche d'une demande** et la
+  **fiche d'une réservation** — qui joignent en plus le dossier concerné au fil.
+  Le client **ne choisit pas son interlocuteur** : le serveur lui assigne un
+  agent, dont le fil affiche le **nom** (« Avec Awa Diop, support Kaikun »). Un
+  fil clôturé par l'équipe reste ouvert à l'écriture — écrire le **rouvre**, et
+  le bandeau le dit.
 - **La rubrique Aide** — [`help/`](help) : le **mode d'emploi** de l'espace,
   toujours disponible depuis le **pied du menu** latéral. Un **accordéon** explique, rubrique par
   rubrique, à quoi sert chaque partie et comment s'en servir, avec un lien direct

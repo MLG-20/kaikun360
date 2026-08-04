@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { MessageService } from '../../../core/api/message.service';
+import { pollWhileVisible } from '../../../core/state/poll-while-visible';
 import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { Conversation, ConversationMessage } from '../../../models/message.model';
 
@@ -33,6 +34,12 @@ import { Conversation, ConversationMessage } from '../../../models/message.model
  * du correspondant à gauche) et propose un composeur pour répondre
  * (`POST /messages/{id}/messages`). Le message envoyé est ajouté au fil sans
  * rechargement. Un fil dont on n'est pas participant renvoie 404 → écran d'erreur.
+ *
+ * ⚠️ **F8.12.a — le fil se tient à jour tout seul.** Il ne se chargeait qu'à
+ * l'ouverture : la réponse de l'agent n'apparaissait qu'après un rechargement
+ * manuel, ce qui n'est pas une conversation. Une **relève** (`pollWhileVisible`)
+ * redemande toutes les 10 s **uniquement les messages postérieurs** au dernier
+ * affiché (`?after=`), et ne tourne pas quand l'onglet est caché.
  */
 export class MessageThreadComponent implements AfterViewChecked {
   private readonly messages = inject(MessageService);
@@ -77,6 +84,11 @@ export class MessageThreadComponent implements AfterViewChecked {
 
   constructor() {
     this.load();
+
+    // Relève : le fil ouvert va chercher ce qui est arrivé depuis. Le premier
+    // chargement reste séparé — lui seul doit afficher un état de chargement et
+    // faire défiler en bas.
+    pollWhileVisible(() => this.refresh());
   }
 
   ngAfterViewChecked(): void {
@@ -103,6 +115,39 @@ export class MessageThreadComponent implements AfterViewChecked {
       error: () => {
         this.loading.set(false);
         this.loadError.set(true);
+      },
+    });
+  }
+
+  /**
+   * Relève : ne demande QUE les messages postérieurs au dernier affiché et les
+   * ajoute à la suite. Silencieuse par construction — aucun état de chargement,
+   * aucune erreur affichée : une coupure réseau passagère ne doit pas remplacer
+   * une conversation lisible par un message d'erreur, le battement suivant
+   * rattrapera. On ne défile en bas que s'il y a réellement du nouveau, sinon on
+   * arracherait le lecteur à l'endroit qu'il est en train de lire.
+   */
+  private refresh(): void {
+    if (this.loading() || this.sending()) {
+      return;
+    }
+
+    const dernier = this.thread().at(-1)?.id;
+
+    this.messages.conversation(this.id, dernier).subscribe({
+      next: (res) => {
+        const nouveaux = res.data.messages ?? [];
+
+        // L'en-tête peut avoir changé (agent assigné, fil clôturé par l'équipe).
+        this.conversation.set(res.data);
+
+        if (nouveaux.length > 0) {
+          this.thread.update((liste) => [...liste, ...nouveaux]);
+          this.pendingScroll = true;
+        }
+      },
+      error: () => {
+        /* relève silencieuse : le battement suivant réessaiera */
       },
     });
   }

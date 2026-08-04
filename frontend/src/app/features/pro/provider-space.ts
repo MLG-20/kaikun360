@@ -54,8 +54,15 @@ export const PROVIDER_NAV: readonly SpaceNavItem[] = [
     label: 'Avis reçus',
     description: 'Consultez les avis et la notation laissés par vos clients.',
     path: 'avis',
-    icon: 'chat',
+    icon: 'star',
     ready: true, // F5.5 ✅
+  },
+  {
+    label: 'Messages',
+    description: 'Échangez avec le support Kaikun sur vos offres et vos missions.',
+    path: 'messages',
+    icon: 'chat',
+    ready: true, // F8.12.c ✅ — le support peut vous faire entrer dans un fil
   },
   {
     label: 'Revenus & commissions',
