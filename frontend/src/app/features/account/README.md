@@ -230,11 +230,19 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   - **`request-timeline.ts`** — **source unique** des étapes (`REQUEST_STEPS`,
     miroir de `RequestStatus`) et du calcul d'état d'étape (`stepState`),
     partagée par les deux écrans (plus de duplication).
-- **`bookings/`** (F3.4) — deux écrans via le
-  [`BookingService`](../../core/api/booking.service.ts) :
+- **`bookings/`** (F3.4) — trois écrans via le
+  [`BookingService`](../../core/api/booking.service.ts). ⚠️ **Ils ne sont plus
+  propres à l'espace client** (F8.14) : ils dérivent tous leurs liens de
+  `SPACE_CONFIG` (`bookingsBase`), comme le font les écrans Messages,
+  Notifications et Profil depuis F4, et sont **montés tels quels dans l'espace
+  entreprise**. Écrire `/mon-espace` en dur les rendait inutilisables ailleurs —
+  or `/mon-espace` est gardé par le rôle `client`, un compte entreprise y aurait
+  été refoulé au moment de payer. Le seul élément qui ne se transpose pas est
+  **l'état vide**, piloté par `SpaceConfig.bookingsEmpty` (`catalogue` pour un
+  client, `devis` pour une entreprise — un séminaire ne s'achète pas sur étagère) :
   - **`BookingsPageComponent`** (route enfant `reservations`) : liste paginée
     (`myBookings`). Chaque carte est un **lien** (`.bk-card-link`) vers le
-    détail (`['/mon-espace/reservations', bk.id]`) ; la **notice de
+    détail (`[bookingsBase, bk.id]`) ; la **notice de
     remboursement** et le **bloc d'annulation** restent hors du lien pour rester
     cliquables. **Annulation** propre à l'univers via `cancel(type, id)`.
   - **`BookingDetailPageComponent`** (route enfant `reservations/:id`) : charge
@@ -242,6 +250,21 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
     `paramMap`, avec états `loading/ready/notfound/forbidden/failed` (403 = pas
     la mienne). **Lecture seule** (l'annulation vit sur la liste), bouton retour
     **historique** (`app-back-link`) — présent aussi en tête de la **liste**.
+  - **`BookingPaymentPageComponent`** (route enfant `reservations/:id/paiement`,
+    F8.6) : écran **dédié** au règlement — payer engage de l'argent, un bouton
+    posé sur une carte de liste ferait partir un client d'un clic malheureux.
+    ⚠️ **Un seul chemin proposé depuis F8.14.a** : paiement en ligne, montant
+    intégral. Le **transfert Wave/OM** et l'**acompte** sont **masqués, pas
+    supprimés** — deux booléens documentés dans le composant
+    (`manualTransferEnabled`, `partialPaymentEnabled`). Le serveur continue de
+    les accepter (`mode: 'manuel'`, montants partiels) et les tests les couvrent :
+    les rétablir est une bascule, pas un développement. Raisons de la décision :
+    un transfert manuel n'est confirmé qu'après le passage d'un agent (le client
+    croit avoir payé alors que sa réservation attend), et l'acompte est réservé à
+    de futures **dérogations** accordées au cas par cas à des clients fidèles —
+    l'ouvrir à tous reviendrait à l'accorder à tout le monde. ⚠️ Le règlement
+    Wave/OM reste possible : il se **constate au back-office** quand un client
+    transfère de lui-même.
   - **`booking-display.ts`** — **source unique** de la tonalité de statut
     (`bookingTone`), partagée par les deux écrans (plus de duplication).
 - **`notifications/`** — `NotificationsPageComponent` (F3.6, route enfant

@@ -83,6 +83,10 @@ class BookingResource extends JsonResource
             // n'a aucune fiche au catalogue à désigner : la cible réservée est
             // le DEVIS lui-même, avec son montant et ses lignes.
             'Quote' => 'quote',
+            // F8.14 — le team building a ses PROPRES devis : c'est le devis
+            // accepté (lignes + total + marge) qui est réservé, pas une fiche.
+            'TeamBuildingQuote' => 'team_building',
+            'ConstructionQuote' => 'construction',
             default => 'autre',
         };
     }
@@ -96,6 +100,8 @@ class BookingResource extends JsonResource
             'experience' => 'Expérience',
             'mobility' => 'Trajet',
             'quote' => 'Prestation sur-mesure',
+            'team_building' => 'Team building',
+            'construction' => 'Chantier',
             default => 'Réservation',
         };
     }
@@ -126,6 +132,22 @@ class BookingResource extends JsonResource
             'quote' => $bookable->request?->service_type?->label()
                 ? 'Prestation — '.$bookable->request->service_type->label()
                 : 'Prestation sur-mesure',
+            // La ville et l'effectif disent l'événement mieux que sa référence :
+            // « Séminaire — Saly, 24 participants ».
+            // L'objectif et la ville disent le chantier : « Chantier — Villa
+            // R+1, Mbour » plutôt qu'une référence de devis.
+            'construction' => 'Chantier'
+                .($bookable->constructionRequest?->objective
+                    ? ' — '.$bookable->constructionRequest->objective
+                    : '')
+                .($bookable->constructionRequest?->city
+                    ? ', '.$bookable->constructionRequest->city
+                    : ''),
+            'team_building' => 'Séminaire'
+                .($bookable->request?->city ? ' — '.$bookable->request->city : '')
+                .($bookable->request?->participants
+                    ? ', '.$bookable->request->participants.' participants'
+                    : ''),
             default => null,
         };
     }

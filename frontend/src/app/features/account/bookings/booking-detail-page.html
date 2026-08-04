@@ -1,6 +1,6 @@
 <section class="account-head bd-head">
   <!-- Retour à la page précédente (liste, notifications…) : toujours présent. -->
-  <app-back-link class="account-back" fallback="/mon-espace/reservations" />
+  <app-back-link class="account-back" [fallback]="bookingsBase" />
   <p class="account-eyebrow">Ma réservation</p>
   @if (booking(); as bk) {
     <h1 class="account-title bd-title">{{ bk.reference }}</h1>
@@ -105,7 +105,7 @@
                 <span class="bd-pay__paid">{{ amount(bk.paid_xof) }} déjà réglé</span>
               }
             </div>
-            <a class="k-btn k-btn--primary" [routerLink]="['/mon-espace/reservations', bk.id, 'paiement']">
+            <a class="k-btn k-btn--primary" [routerLink]="[bookingsBase, bk.id, 'paiement']">
               Régler ma réservation
             </a>
           </div>
@@ -128,7 +128,7 @@
         @if (bk.cancellable) {
           <p class="bd-hint k-muted">
             Pour annuler cette réservation, utilisez le bouton « Annuler » sur
-            <a routerLink="/mon-espace/reservations">Mes réservations</a>.
+            <a [routerLink]="bookingsBase">Mes réservations</a>.
           </p>
         }
       </article>

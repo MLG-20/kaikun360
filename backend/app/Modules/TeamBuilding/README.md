@@ -68,7 +68,7 @@ animation) agrégeant plusieurs modules.
 | GET | `/api/v1/team-building-requests/{id}/quotes` | policy `view` |
 | POST | `/api/v1/team-building-requests/{id}/quotes` | admin (policy `manage`) — compose un devis |
 | PATCH | `/api/v1/team-building-quotes/{quote}/send` | admin — envoie (event `QuoteSent`) |
-| PATCH | `/api/v1/team-building-quotes/{quote}/accept` | entreprise (policy `accept`) — accepte (event `QuoteAccepted`) |
+| PATCH | `/api/v1/team-building-quotes/{quote}/accept` | entreprise (policy `accept`) — accepte, **convertit en réservation payable** (F8.14) et renvoie `{quote, booking}` |
 | GET | `/api/v1/team-building-requests/{id}/assignments` | admin (policy `manage`) — prestataires affectés |
 | POST | `/api/v1/team-building-requests/{id}/assignments` | admin (policy `manage`) — **affecte un prestataire** (F7.2.h) |
 
@@ -101,3 +101,34 @@ prestataire. Le `client_id` de la mission = l'entreprise de la demande. La fiche
 
 `view` = entreprise propriétaire ou admin ; `manage` (composer/envoyer) = admin ;
 `accept` = entreprise propriétaire. Un devis n'est acceptable que s'il est `envoye`.
+
+## ⚠️ L'acceptation crée une réservation payable (F8.14)
+
+Jusqu'à cette tranche, `accept()` ne faisait que **changer deux colonnes
+`status`**, puis émettait `QuoteAccepted` dont l'unique écouteur
+(`StartOperationalFollowUp`) écrivait une ligne d'audit en annonçant que
+« l'orchestration s'appuiera sur la couche Bookings/Quotes (B11) » — ce qui n'a
+jamais été fait. Conséquence : **une entreprise pouvait demander un séminaire,
+recevoir un devis, l'accepter… et n'avoir rien à payer**, `POST /payments/initiate`
+exigeant un `booking_id`. Le circuit s'arrêtait sur un statut.
+
+`QuoteConversionService::convertTeamBuilding()` crée désormais la réservation :
+
+- le **devis est lui-même la cible polymorphe** (`bookable_type = TeamBuildingQuote`),
+  comme le devis générique en F8.11 — un séminaire sur mesure n'a aucune fiche au
+  catalogue à désigner. `bookings` étant polymorphe depuis B3.3, **aucune migration** ;
+- **titulaire** = l'entreprise (`request.company_id`) ; la réservation porte aussi
+  les **dates** et les **participants** de la demande, ce qui la rend lisible sans
+  rouvrir le devis ;
+- ⚠️ **la commission est `margin_xof`**, la marge déjà chiffrée dans le devis, et
+  **non** le taux commun de `CommissionCalculator` : un devis team building est
+  composé des coûts prestataires plus la marge de la plateforme, et c'est le TOTAL
+  qui est signé par le client. Y ajouter la commission commune facturerait deux
+  fois la même rémunération ;
+- **idempotent** (verrou de ligne + `morphOne`) : un double clic ne crée pas deux
+  montants à payer pour un seul séminaire ;
+- `TeamBuildingQuoteAcceptedNotification` part à l'entreprise **après** la
+  transaction (un e-mail parti avant un `rollback` annoncerait une réservation
+  inexistante), avec un lien résolu par `SpaceLink` vers
+  `/espace-entreprise/reservations/{id}/paiement` — **jamais `/mon-espace`**, qui
+  est gardé par le rôle `client`.

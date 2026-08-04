@@ -30,6 +30,20 @@ class TeamBuildingQuoteResource extends JsonResource
             'status_label' => $this->status?->label(),
             'sent_at' => $this->sent_at?->toIso8601String(),
             'accepted_at' => $this->accepted_at?->toIso8601String(),
+            // F8.14 — la réservation née de l'acceptation. Sans elle, l'écran ne
+            // saurait proposer « Régler » qu'au retour immédiat de l'acceptation :
+            // au rechargement suivant, le montant exigible redeviendrait
+            // invisible. `null` tant que le devis n'est pas accepté.
+            'booking' => $this->whenLoaded(
+                'booking',
+                fn () => $this->booking ? [
+                    'id' => $this->booking->id,
+                    'reference' => $this->booking->reference,
+                    'status' => $this->booking->status?->value,
+                    'is_paid' => $this->booking->estPayee(),
+                    'remaining_xof' => $this->booking->resteAPayer(),
+                ] : null,
+            ),
         ];
     }
 }

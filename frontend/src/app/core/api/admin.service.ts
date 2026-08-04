@@ -846,6 +846,18 @@ export interface ConstructionQuote {
   accepted_at: string | null;
   created_at: string | null;
   author?: { id: number | null; name: string | null };
+  /**
+   * Réservation née de l'acceptation (F8.14) — absente ou `null` tant que le
+   * devis n'est pas accepté. C'est elle qui porte le montant exigible : sans
+   * elle, accepter un chantier ne menait à aucun règlement possible.
+   */
+  booking?: {
+    id: number;
+    reference: string;
+    status: string | null;
+    is_paid: boolean;
+    remaining_xof: number;
+  } | null;
 }
 
 /** Ligne saisie à la composition (le serveur calcule le montant et l'ordre). */

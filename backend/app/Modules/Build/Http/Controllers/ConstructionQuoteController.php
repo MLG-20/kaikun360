@@ -3,6 +3,7 @@
 namespace App\Modules\Build\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\BookingResource;
 use App\Modules\Build\Enums\ConstructionQuoteStatus;
 use App\Modules\Build\Enums\ConstructionRequestStatus;
 use App\Modules\Build\Events\ConstructionQuoteSent;
@@ -10,7 +11,9 @@ use App\Modules\Build\Http\Requests\ComposeConstructionQuoteRequest;
 use App\Modules\Build\Http\Resources\ConstructionQuoteResource;
 use App\Modules\Build\Models\ConstructionQuote;
 use App\Modules\Build\Models\ConstructionRequest;
+use App\Modules\Build\Notifications\ConstructionQuoteAcceptedNotification;
 use App\Modules\Build\Services\ConstructionQuoteComposer;
+use App\Services\QuoteConversionService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -129,7 +132,7 @@ class ConstructionQuoteController extends Controller
     /**
      * Le client accepte le devis. PATCH /api/v1/construction-quotes/{quote}/accept
      */
-    public function accept(ConstructionQuote $quote): JsonResponse
+    public function accept(ConstructionQuote $quote, QuoteConversionService $conversion): JsonResponse
     {
         Gate::authorize('respond', $quote->constructionRequest);
 
@@ -143,7 +146,22 @@ class ConstructionQuoteController extends Controller
             'status' => ConstructionRequestStatus::ACCEPTEE->value,
         ]);
 
-        return ApiResponse::success(['quote' => ConstructionQuoteResource::make($quote->fresh())]);
+        // F8.14 — L'ACCEPTATION DEVIENT EXIGIBLE. Comme en team building (et
+        // comme les devis génériques avant F8.11), accepter ne faisait que
+        // changer deux colonnes `status` : le client validait un chantier à
+        // plusieurs millions et rien ne devenait payable. Conversion idempotente.
+        $booking = $conversion->convertConstruction($quote);
+
+        // Après la conversion : elle tourne en transaction, et un e-mail parti
+        // avant un rollback annoncerait une réservation inexistante.
+        $quote->constructionRequest->client?->notify(
+            new ConstructionQuoteAcceptedNotification($quote, $booking)
+        );
+
+        return ApiResponse::success([
+            'quote' => ConstructionQuoteResource::make($quote->fresh()->load('booking')),
+            'booking' => BookingResource::make($booking),
+        ]);
     }
 
     /**

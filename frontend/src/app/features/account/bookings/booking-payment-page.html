@@ -1,5 +1,5 @@
 <section class="account-head">
-  <app-back-link class="account-back" fallback="/mon-espace/reservations" />
+  <app-back-link class="account-back" [fallback]="bookingsBase" />
   <p class="account-eyebrow">Règlement</p>
   <h1 class="account-title">Régler ma réservation</h1>
 </section>
@@ -64,7 +64,7 @@
           } @else {
             Cette réservation est annulée : elle ne peut plus être réglée.
           }
-          <a routerLink="/mon-espace/reservations">Retour à mes réservations</a>
+          <a [routerLink]="bookingsBase">Retour à mes réservations</a>
         </p>
       } @else if (instructions(); as ins) {
         <!--
@@ -100,54 +100,66 @@
             <strong>constaté par notre équipe</strong>. Vous serez notifié.
           </p>
 
-          <a class="k-btn k-btn--ghost" routerLink="/mon-espace/reservations">
+          <a class="k-btn k-btn--ghost" [routerLink]="bookingsBase">
             Retour à mes réservations
           </a>
         </article>
       } @else {
         <!-- Choix du moyen et du montant. -->
         <article class="pay-card">
-          <h2 class="pay-section-title">Comment souhaitez-vous régler ?</h2>
+          <!--
+            F8.14.a — UN SEUL CHEMIN DE RÈGLEMENT. Le transfert Wave/OM et
+            l'acompte sont masqués (décision produit, cf. les deux interrupteurs
+            documentés dans le composant). Quand une seule possibilité existe,
+            on ne présente pas un choix : une liste de boutons radio à une
+            option fait hésiter sans rien offrir. Les sections entières
+            disparaissent donc, plutôt que leur seconde carte.
+          -->
+          @if (manualTransferEnabled) {
+            <h2 class="pay-section-title">Comment souhaitez-vous régler ?</h2>
 
-          <div class="pay-modes" role="radiogroup" aria-label="Moyen de règlement">
-            <label class="pay-mode" [class.is-active]="mode === 'paytech'">
-              <input type="radio" name="mode" value="paytech" [(ngModel)]="mode" />
-              <span class="pay-mode__body">
-                <strong>Paiement en ligne</strong>
-                <em>Carte bancaire, Orange Money ou Wave — immédiat et sécurisé.</em>
-              </span>
-            </label>
+            <div class="pay-modes" role="radiogroup" aria-label="Moyen de règlement">
+              <label class="pay-mode" [class.is-active]="mode === 'paytech'">
+                <input type="radio" name="mode" value="paytech" [(ngModel)]="mode" />
+                <span class="pay-mode__body">
+                  <strong>Paiement en ligne</strong>
+                  <em>Carte bancaire, Orange Money ou Wave — immédiat et sécurisé.</em>
+                </span>
+              </label>
 
-            <label class="pay-mode" [class.is-active]="mode === 'manuel'">
-              <input type="radio" name="mode" value="manuel" [(ngModel)]="mode" />
-              <span class="pay-mode__body">
-                <strong>Transfert Wave / Orange Money</strong>
-                <em>Vous transférez au numéro Kaikun ; un conseiller valide.</em>
-              </span>
-            </label>
-          </div>
+              <label class="pay-mode" [class.is-active]="mode === 'manuel'">
+                <input type="radio" name="mode" value="manuel" [(ngModel)]="mode" />
+                <span class="pay-mode__body">
+                  <strong>Transfert Wave / Orange Money</strong>
+                  <em>Vous transférez au numéro Kaikun ; un conseiller valide.</em>
+                </span>
+              </label>
+            </div>
+          }
 
-          <h2 class="pay-section-title">Quel montant ?</h2>
+          @if (partialPaymentEnabled) {
+            <h2 class="pay-section-title">Quel montant ?</h2>
 
-          <div class="pay-modes" role="radiogroup" aria-label="Montant du règlement">
-            <label class="pay-mode" [class.is-active]="!partial">
-              <input type="radio" name="part" [value]="false" [(ngModel)]="partial" />
-              <span class="pay-mode__body">
-                <strong>Tout régler — {{ money(bk.remaining_xof) }}</strong>
-                <em>Solde la réservation.</em>
-              </span>
-            </label>
+            <div class="pay-modes" role="radiogroup" aria-label="Montant du règlement">
+              <label class="pay-mode" [class.is-active]="!partial">
+                <input type="radio" name="part" [value]="false" [(ngModel)]="partial" />
+                <span class="pay-mode__body">
+                  <strong>Tout régler — {{ money(bk.remaining_xof) }}</strong>
+                  <em>Solde la réservation.</em>
+                </span>
+              </label>
 
-            <label class="pay-mode" [class.is-active]="partial">
-              <input type="radio" name="part" [value]="true" [(ngModel)]="partial" />
-              <span class="pay-mode__body">
-                <strong>Verser un acompte</strong>
-                <em>Le reste sera à régler plus tard.</em>
-              </span>
-            </label>
-          </div>
+              <label class="pay-mode" [class.is-active]="partial">
+                <input type="radio" name="part" [value]="true" [(ngModel)]="partial" />
+                <span class="pay-mode__body">
+                  <strong>Verser un acompte</strong>
+                  <em>Le reste sera à régler plus tard.</em>
+                </span>
+              </label>
+            </div>
+          }
 
-          @if (partial) {
+          @if (partialPaymentEnabled && partial) {
             <label class="pay-field">
               <span>Montant de l’acompte (FCFA)</span>
               <input
@@ -162,6 +174,11 @@
                 Maximum {{ money(bk.remaining_xof) }} — le reste dû.
               </span>
             </label>
+          }
+
+          <!-- Sans aucune section de choix, la carte a besoin de son titre. -->
+          @if (!manualTransferEnabled && !partialPaymentEnabled) {
+            <h2 class="pay-section-title">Paiement en ligne</h2>
           }
 
           @if (error()) {

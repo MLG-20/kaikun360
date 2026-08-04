@@ -144,9 +144,52 @@
               </button>
             </div>
           } @else if (quote.status === 'accepte') {
-            <p class="td-quote-accepted" role="status">
-              ✓ Devis accepté — Kaikun coordonne l'organisation de votre événement.
-            </p>
+            <!--
+              F8.14 — L'ACCEPTATION DEVIENT EXIGIBLE. Ce bloc ne disait que
+              « Kaikun coordonne votre événement » : l'accord de l'entreprise ne
+              produisait aucune réservation, donc rien à payer, et le parcours
+              s'arrêtait sur cette phrase rassurante. Elle voit désormais ce
+              qu'elle doit, et par où le régler.
+            -->
+            @if (quote.booking; as bk) {
+              @if (bk.is_paid) {
+                <p class="td-quote-accepted" role="status">
+                  ✓ Devis accepté et réglé — Kaikun coordonne l'organisation de
+                  votre événement.
+                </p>
+              } @else {
+                <div class="td-quote-due">
+                  <p class="td-quote-accepted" role="status">
+                    ✓ Devis accepté. Il reste
+                    <b>{{ fcfa(bk.remaining_xof) }}</b> à régler : c'est le
+                    paiement qui confirme la réservation et engage les
+                    prestataires.
+                  </p>
+                  <div class="td-quote-actions">
+                    <!--
+                      Proposé, jamais imposé (même arbitrage qu'en F8.11) :
+                      aucune redirection automatique vers le paiement.
+                    -->
+                    <a
+                      class="k-btn k-btn--primary"
+                      [routerLink]="['/espace-entreprise/reservations', bk.id, 'paiement']"
+                    >
+                      Régler {{ fcfa(bk.remaining_xof) }}
+                    </a>
+                    <a
+                      class="k-btn k-btn--ghost"
+                      [routerLink]="['/espace-entreprise/reservations', bk.id]"
+                    >
+                      Voir la réservation
+                    </a>
+                  </div>
+                </div>
+              }
+            } @else {
+              <p class="td-quote-accepted" role="status">
+                ✓ Devis accepté — Kaikun coordonne l'organisation de votre événement.
+              </p>
+            }
           }
         </article>
       }

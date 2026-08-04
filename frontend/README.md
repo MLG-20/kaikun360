@@ -873,6 +873,60 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     toujours — la rebrancher est le seul travail à refaire le jour où un agent
     devra écrire le premier.
 
+  **F8.14 L'entreprise n'avait nulle part où payer (et le chantier non plus).**
+  Question de vérification : « pour PayTech, tout est couvert pour le client et
+  pour l'entreprise ? » Non — et le blocage était triple. Le premier est côté
+  serveur (trois familles de devis, une seule reliée au paiement : voir le README
+  du backend). Les deux autres sont ici.
+  - **L'écran de règlement n'existait que dans l'espace client.**
+    `/mon-espace/reservations/:id/paiement` est gardé par `roleGuard` avec
+    `roles: ['client']` ; un compte entreprise ne porte que le rôle `entreprise`.
+    Même si une réservation avait existé, le lien l'aurait menée à un mur. Les
+    **trois** écrans de réservation (liste, détail, règlement) n'écrivent plus
+    `/mon-espace` en dur : ils lisent `SPACE_CONFIG`, comme les messages, les
+    notifications et le profil depuis F4. Ils sont montés tels quels dans
+    `/espace-entreprise`, avec une rubrique **Réservations** au rail.
+  - ⚠️ **Un état vide n'est pas transposable d'un espace à l'autre.** « Aucune
+    réservation → parcourez le catalogue » n'a aucun sens pour une entreprise :
+    son séminaire ne s'achète pas sur étagère, il se demande puis se chiffre.
+    D'où le champ `bookingsEmpty` de `SpaceConfig` (`catalogue` | `devis`) : le
+    composant reste unique, l'issue proposée suit l'espace.
+  - **Le geste principal est sur la demande, pas dans une liste.** Sur la fiche
+    d'une demande d'entreprise, le devis accepté affichait « ✓ Devis accepté —
+    Kaikun coordonne l'organisation de votre événement » et rien d'autre : une
+    phrase rassurante au bout d'un parcours qui s'arrêtait là. Il montre
+    maintenant ce qui reste dû et deux boutons (« Régler », « Voir la
+    réservation »). Même correction sur le bloc client des devis de chantier
+    (`shared/components/construction-quotes/`, F3.9), dont le texte promettait
+    que « notre équipe lance le chantier ».
+  - ⚠️ **Le montant exigible devait survivre à un rechargement** : les deux
+    ressources de devis exposent désormais leur `booking`. Sans cela, le bouton
+    « Régler » n'aurait existé qu'au retour immédiat du clic d'acceptation.
+  - **Proposé, jamais imposé** — même arbitrage qu'en F8.11 : aucune redirection
+    automatique vers le paiement après l'acceptation. On ne pousse pas quelqu'un
+    vers un formulaire de carte dans la seconde qui suit son accord.
+  - ⚠️ **Rattrapage de l'existant (`php artisan devis:rattraper-reservations`).**
+    Défaut trouvé à la vérification navigateur : la conversion se déclenche **au
+    moment de l'acceptation**, donc tous les devis acceptés AVANT le déploiement
+    restaient orphelins — statut « accepté », aucun montant exigible, et à
+    l'écran un client qui a dit oui sans jamais voir de bouton. Corriger le futur
+    en laissant le passé cassé n'était pas une correction : le passé, ici, ce
+    sont de vraies ventes. La commande balaie les trois familles, se rejoue sans
+    risque (conversion idempotente) et **n'envoie aucune notification** —
+    réclamer aujourd'hui le règlement d'un accord vieux de plusieurs semaines
+    serait déroutant ; la reprise de contact est un geste commercial.
+  - **F8.14.a — un seul chemin de règlement.** L'écran offrait trois choix
+    (en ligne / transfert Wave-OM, puis intégral / acompte). Décision produit :
+    **paiement en ligne, montant intégral**, et rien d'autre. Le transfert manuel
+    n'est confirmé qu'après le passage d'un agent — le client croit avoir payé
+    alors que sa réservation attend — et l'acompte est réservé à de futures
+    **dérogations** accordées au cas par cas à des clients fidèles ; l'ouvrir à
+    tous reviendrait à l'accorder à tout le monde. ⚠️ **Masqués, pas supprimés** :
+    deux booléens documentés dans le composant, le serveur et ses tests continuant
+    de couvrir les deux modes. Et quand une seule possibilité subsiste, ce sont
+    les **sections entières** qui disparaissent — un groupe de boutons radio à
+    une seule option fait hésiter sans rien offrir.
+
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

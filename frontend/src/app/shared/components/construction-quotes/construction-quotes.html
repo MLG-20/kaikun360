@@ -208,11 +208,43 @@
                           </div>
                         }
                       } @else if (quote.status === 'accepte') {
-                        <p class="cq-answered">
-                          Devis accepté@if (quote.accepted_at) {
-                            le {{ quote.accepted_at | date: 'dd/MM/yyyy' }}
-                          }. Notre équipe lance le chantier.
-                        </p>
+                        <!--
+                          F8.14 — « Notre équipe lance le chantier » était faux :
+                          accepter ne créait aucune réservation, donc rien à
+                          payer, et aucun chantier ne partait. Le client voit
+                          maintenant ce qu'il doit et par où le régler.
+                        -->
+                        @if (quote.booking; as bk) {
+                          @if (bk.is_paid) {
+                            <p class="cq-answered">
+                              Devis accepté@if (quote.accepted_at) {
+                                le {{ quote.accepted_at | date: 'dd/MM/yyyy' }}
+                              } et réglé. Notre équipe lance le chantier.
+                            </p>
+                          } @else {
+                            <p class="cq-answered">
+                              Devis accepté@if (quote.accepted_at) {
+                                le {{ quote.accepted_at | date: 'dd/MM/yyyy' }}
+                              }. Il reste <b>{{ fcfa(bk.remaining_xof) }}</b> à
+                              régler : c'est le versement qui déclenche le
+                              démarrage des travaux.
+                            </p>
+                            <div class="cq-actions">
+                              <a
+                                class="k-btn k-btn--primary"
+                                [routerLink]="[bookingsBase, bk.id, 'paiement']"
+                              >
+                                Régler {{ fcfa(bk.remaining_xof) }}
+                              </a>
+                            </div>
+                          }
+                        } @else {
+                          <p class="cq-answered">
+                            Devis accepté@if (quote.accepted_at) {
+                              le {{ quote.accepted_at | date: 'dd/MM/yyyy' }}
+                            }. Notre équipe lance le chantier.
+                          </p>
+                        }
                       } @else if (quote.status === 'refuse') {
                         <p class="cq-answered">
                           Devis refusé. Votre projet reste ouvert, un chiffrage révisé

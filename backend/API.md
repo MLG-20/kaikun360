@@ -390,6 +390,19 @@ TypeScript miroir côté frontend Angular (phase F0).
 > une URL de redirection PSP) ou `manuel` (Phase 1 du cahier des charges : aucun
 > appel PSP, renvoie les instructions de règlement Wave/Orange Money ; la
 > confirmation se fait ensuite via `POST /admin/payments/{payment}/confirm`).
+>
+> ⚠️ **`POST /payments/initiate` exige un `booking_id`** — c'est la seule chose
+> qu'un paiement sache régler. Les **trois** familles de devis produisent donc
+> une réservation à l'acceptation, et leurs endpoints renvoient un objet
+> `booking` en plus du `quote` (F8.11 puis F8.14) :
+> `PATCH /quotes/{quote}` (générique), `PATCH /construction-quotes/{quote}/accept`
+> (chantier) et `PATCH /team-building-quotes/{quote}/accept` (séminaire).
+> Le devis accepté est **lui-même** la cible polymorphe (`bookable_type`) : le
+> sur-mesure n'a aucune fiche au catalogue à désigner, et `bookings` est
+> polymorphe depuis B3.3 — aucune migration. ⚠️ Pour le **chantier** et le
+> **team building**, la commission de la réservation est la **marge déjà
+> chiffrée dans le devis** (`margin_xof`), et non le taux commun de
+> `CommissionCalculator` : le total signé par le client la contient déjà.
 
 ### Notifications
 

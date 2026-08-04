@@ -68,6 +68,16 @@ export interface SpaceConfig {
   notificationsPath: string;
   /** URL **absolue** ciblée par « Mon profil » dans le menu utilisateur. */
   profilePath: string;
+  /**
+   * Ce qu'on propose à quelqu'un qui n'a **aucune réservation** (F8.14).
+   *
+   * Les écrans de réservation sont partagés par les espaces, mais l'issue d'un
+   * état vide ne l'est pas : un client va au catalogue (il réserve une nuitée,
+   * un véhicule…), une entreprise n'y trouverait rien — son séminaire ne
+   * s'achète pas sur étagère, il commence par une demande puis un devis.
+   * Défaut : `catalogue`.
+   */
+  bookingsEmpty?: 'catalogue' | 'devis';
 }
 
 /** Jeton fournissant la `SpaceConfig` de l'espace courant au shell générique. */

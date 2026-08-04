@@ -7,6 +7,7 @@ import { ManualInstructions, PaymentMode, PaymentService } from '../../../core/a
 import { Booking } from '../../../models/booking.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 
 /** État de chargement de l'écran. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'forbidden' | 'failed';
@@ -50,13 +51,57 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'forbidden' | 'failed';
 })
 export class BookingPaymentPageComponent {
   private readonly bookings = inject(BookingService);
+  /** Espace dans lequel cet écran est monté (F8.14) : aucun lien n'est écrit en
+   * dur sur `/mon-espace`, sinon monter l'écran ailleurs éjecterait
+   * l'utilisateur de son espace — quand la garde de rôle ne l'y refoulerait pas. */
+  protected readonly space = inject(SPACE_CONFIG);
+  /** Préfixe des liens vers les réservations de CET espace. */
+  protected readonly bookingsBase = this.space.basePath + '/reservations';
   private readonly payments = inject(PaymentService);
   private readonly route = inject(ActivatedRoute);
 
   protected readonly state = signal<LoadState>('loading');
   protected readonly booking = signal<Booking | null>(null);
 
-  /** Moyen de règlement choisi. */
+  // --- Ce qui est OFFERT au client (F8.14.a) --------------------------------
+  //
+  // Décision produit : **un seul chemin de règlement**, le paiement en ligne du
+  // montant intégral. Les deux autres possibilités existent de bout en bout —
+  // serveur, tests, back-office — mais ne sont pas proposées à l'écran.
+  //
+  // ⚠️ **Masquées, pas supprimées**, et c'est délibéré : le backend continue
+  // d'accepter `mode: 'manuel'` et les versements partiels
+  // (`PaymentController::initiate`, `natureDuReglement`). Rétablir l'une ou
+  // l'autre est un booléen à basculer ici, pas un développement à refaire —
+  // supprimer le code aurait transformé une décision commerciale réversible en
+  // dette technique.
+
+  /**
+   * Transfert Wave / Orange Money proposé au client ?
+   *
+   * `false` : offrir deux chemins de paiement demande de savoir lequel
+   * recommander, et le transfert manuel n'est confirmé qu'après le passage d'un
+   * agent — il donne au client l'impression d'avoir payé alors que sa
+   * réservation reste en attente. ⚠️ Le règlement Wave/OM **reste possible** :
+   * il se constate au back-office (`POST /admin/payments/{payment}/confirm`)
+   * quand un client transfère de lui-même.
+   */
+  protected readonly manualTransferEnabled = false;
+
+  /**
+   * Versement d'un acompte proposé au client ?
+   *
+   * `false` **pour l'instant** : l'acompte est réservé à de futures dérogations
+   * accordées au cas par cas aux clients fidèles, décision commerciale qui n'est
+   * pas encore outillée (rien ne dit aujourd'hui QUI y a droit). Laisser le
+   * choix ouvert à tous reviendrait à accorder la dérogation à tout le monde.
+   */
+  protected readonly partialPaymentEnabled = false;
+
+  /**
+   * Moyen de règlement choisi. Reste `paytech` tant que
+   * `manualTransferEnabled` est faux — c'est le seul proposé.
+   */
   protected mode: PaymentMode = 'paytech';
 
   /** Règle-t-on tout le reste dû, ou un acompte ? */
@@ -75,7 +120,8 @@ export class BookingPaymentPageComponent {
   /** Montant réellement envoyé au serveur. */
   protected readonly amountToPay = computed(() => {
     const remaining = this.booking()?.remaining_xof ?? 0;
-    if (!this.partial) {
+    // Acompte non proposé → on solde, quel que soit l'état des champs.
+    if (!this.partial || !this.partialPaymentEnabled) {
       return remaining;
     }
     return Math.min(Math.max(0, Math.round(this.partialAmount)), remaining);

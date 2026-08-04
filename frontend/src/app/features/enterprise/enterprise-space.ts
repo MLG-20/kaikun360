@@ -35,6 +35,18 @@ export const ENTERPRISE_NAV: readonly SpaceNavItem[] = [
     ready: true, // F6 ✅ (historique + détail + acceptation de devis)
   },
   {
+    // F8.14 — l'entreprise règle ici les séminaires dont elle a accepté le devis.
+    // ⚠️ La rubrique n'existait pas : accepter un devis ne créait aucune
+    // réservation, et l'écran de paiement n'existait que dans l'espace CLIENT,
+    // fermé à un compte entreprise par la garde de rôle. Une entreprise pouvait
+    // donc dire oui à un devis et n'avoir nulle part où payer.
+    label: 'Réservations',
+    description: 'Vos événements confirmés et le règlement de vos devis acceptés.',
+    path: 'reservations',
+    icon: 'calendar',
+    ready: true, // F8.14 ✅
+  },
+  {
     label: 'Messages',
     description: 'Échangez avec le support Kaikun pour organiser votre événement.',
     path: 'messages',
@@ -56,4 +68,7 @@ export const ENTERPRISE_SPACE: SpaceConfig = {
   // ⚠️ Chaque espace est AUTONOME : ces liens restent dans l'espace entreprise.
   notificationsPath: '/espace-entreprise/notifications',
   profilePath: '/espace-entreprise/profil',
+  // Une entreprise sans réservation n'a rien à faire au catalogue : son
+  // séminaire commence par une demande, puis un devis (F8.14).
+  bookingsEmpty: 'devis',
 };

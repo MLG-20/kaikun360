@@ -2,10 +2,12 @@
 
 namespace App\Modules\Build\Models;
 
+use App\Models\Booking;
 use App\Models\User;
 use App\Modules\Build\Enums\ConstructionQuoteStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Devis de chantier ventilé par lot (F7.3.e2).
@@ -49,6 +51,18 @@ class ConstructionQuote extends Model
             'sent_at' => 'datetime',
             'accepted_at' => 'datetime',
         ];
+    }
+
+    /**
+     * La réservation payable née de l'acceptation de ce devis (F8.14).
+     *
+     * Même modélisation que le devis sur-mesure générique (F8.11) et que le
+     * devis team building : le devis est LUI-MÊME la cible polymorphe — un
+     * chantier n'a aucune fiche au catalogue à désigner.
+     */
+    public function booking(): MorphOne
+    {
+        return $this->morphOne(Booking::class, 'bookable');
     }
 
     public function constructionRequest(): BelongsTo

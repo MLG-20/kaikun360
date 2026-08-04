@@ -37,6 +37,19 @@ class ConstructionQuoteResource extends JsonResource
             'sent_at' => $this->sent_at?->toIso8601String(),
             'accepted_at' => $this->accepted_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
+            // F8.14 — la réservation née de l'acceptation, `null` tant que le
+            // devis n'est pas accepté. Sans elle, le montant exigible
+            // redeviendrait invisible au rechargement suivant.
+            'booking' => $this->whenLoaded(
+                'booking',
+                fn () => $this->booking ? [
+                    'id' => $this->booking->id,
+                    'reference' => $this->booking->reference,
+                    'status' => $this->booking->status?->value,
+                    'is_paid' => $this->booking->estPayee(),
+                    'remaining_xof' => $this->booking->resteAPayer(),
+                ] : null,
+            ),
             'author' => $this->whenLoaded('author', fn () => [
                 'id' => $this->author?->id,
                 'name' => $this->author?->name,

@@ -272,7 +272,32 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   (événement back-office `quote_answered`). ⚠️ `POST /requests/{id}/quotes`
   existait depuis B11.3 **sans aucun appelant** : tous les devis venaient du
   seeder.
-  **Boîte de réception du support (F8.12)** (`AdminConversationController`,
+  **Les DEUX autres familles de devis vont aussi jusqu'au paiement (F8.14)** —
+  `QuoteConversionService::convertTeamBuilding()` et `::convertConstruction()`.
+  ⚠️ **Le même trou existait en trois exemplaires** : F8.11 n'avait comblé que les
+  devis *génériques* (`quotes`), or le produit en a **trois familles**, chacune
+  avec sa table et son contrôleur. `TeamBuildingQuoteController::accept()` et
+  `ConstructionQuoteController::accept()` ne faisaient eux aussi que changer deux
+  colonnes `status` — le premier déclenchait même un écouteur qui écrivait « le
+  suivi opérationnel s'appuiera sur la couche Bookings/Quotes », promesse jamais
+  tenue. Une **entreprise** pouvait accepter un séminaire et un **client** un
+  chantier à plusieurs millions sans que rien ne devienne exigible. Les deux
+  acceptations créent désormais un `Booking` dont la cible polymorphe est le devis
+  lui-même, renvoient `{quote, booking}`, et notifient le destinataire **après** la
+  transaction (`TeamBuildingQuoteAcceptedNotification`,
+  `ConstructionQuoteAcceptedNotification`, événement `team_building_quote_accepted`).
+  ⚠️ **La commission n'est PAS celle de `CommissionCalculator`** ici, mais la
+  **marge déjà chiffrée dans le devis** (`margin_xof`) : ces deux devis sont
+  composés coûts + marge, et c'est le total qui est signé — appliquer le taux
+  commun par-dessus facturerait deux fois la même rémunération. Les deux
+  ressources exposent `booking` (chargé avec les devis), sans quoi le montant
+  exigible redeviendrait invisible au premier rechargement.
+  ⚠️ **`SpaceLink` retombe désormais sur le RÔLE** quand le profil manque : son
+  repli `/mon-espace` semblait inoffensif (« l'espace client existe toujours »)
+  mais cette adresse est **gardée par le rôle `client`** côté Angular — une
+  entreprise l'aurait reçue comme un refus d'accès, dans l'e-mail même qui devait
+  l'emmener payer.
+    **Boîte de réception du support (F8.12)** (`AdminConversationController`,
   `repondre:messages`) : `GET /admin/conversations` (portées `mine` par défaut /
   `unassigned` / `all`, archive `closed=1`, recherche sur le sujet et
   l'interlocuteur), `GET /admin/conversations/{id}` (échange complet + vivier

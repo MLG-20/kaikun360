@@ -19,8 +19,34 @@ branche est protégée par `roleGuard` (rôle `entreprise`) dans
 | **Nouvelle demande** | `/espace-entreprise/demandes/nouvelle` | `POST /team-building-requests` |
 | **Mes demandes** (historique) | `/espace-entreprise/demandes` | `GET /team-building-requests/mine` |
 | **Détail + devis** | `/espace-entreprise/demandes/:id` | `GET /team-building-requests/{id}`, `PATCH /team-building-quotes/{id}/accept` |
+| **Réservations** | `/espace-entreprise/reservations[/:id[/paiement]]` | `GET /bookings/my`, `GET /bookings/{id}`, `POST /payments/initiate` (écrans génériques, F8.14) |
 | **Messages** | `/espace-entreprise/messages[/:id]` | `GET/POST /messages…` (écrans génériques) |
 | **Notifications / Profil** | `/espace-entreprise/{notifications,profil}` | écrans transverses réutilisés |
+
+### ⚠️ Réservations & règlement (F8.14) — le bout qui manquait
+
+Une entreprise pouvait accepter un devis… et **n'avoir nulle part où payer**.
+Trois verrous, dont deux ici :
+
+1. l'acceptation ne créait **aucune réservation** (corrigé côté serveur, voir le
+   module `TeamBuilding` du backend) ;
+2. l'écran de règlement n'existait que sous **`/mon-espace`**, gardé par
+   `roleGuard` avec `roles: ['client']` : un compte entreprise, qui ne porte que
+   le rôle `entreprise`, y aurait été **refoulé** — au moment précis où il voulait
+   payer ;
+3. la fiche d'une demande s'arrêtait sur « ✓ Devis accepté — Kaikun coordonne
+   l'organisation de votre événement », une phrase rassurante au bout d'un
+   parcours sans suite.
+
+Les trois écrans de réservation (`features/account/bookings/`) ne lisent plus
+`/mon-espace` en dur : ils dérivent leurs liens de `SPACE_CONFIG`, exactement
+comme les écrans Messages, Notifications et Profil depuis F4. Ils sont donc
+montés **tels quels** ici. ⚠️ Seule chose qui ne se transpose pas : **l'état
+vide**. « Aucune réservation → parcourez le catalogue » n'a aucun sens pour une
+entreprise ; d'où `bookingsEmpty: 'devis'` dans `ENTERPRISE_SPACE`, qui propose
+de déposer une demande. Sur la fiche d'une demande, le devis accepté affiche le
+reste dû et mène au règlement — **proposé, jamais imposé** (aucune redirection
+automatique, même arbitrage qu'en F8.11).
 
 ### `overview/` — Tableau de bord
 Page d'atterrissage : salutation, **appel à l'action principal** (« Demander un

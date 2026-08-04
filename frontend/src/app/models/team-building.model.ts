@@ -45,6 +45,19 @@ export interface TeamBuildingQuote {
   status_label: string | null;
   sent_at: string | null;
   accepted_at: string | null;
+  /**
+   * Réservation née de l'acceptation (F8.14) — `null` ou absente tant que le
+   * devis n'est pas accepté. C'est elle qui porte le montant exigible : sans
+   * elle, l'écran ne saurait proposer « Régler » qu'au retour immédiat du clic,
+   * et le montant redeviendrait invisible au rechargement suivant.
+   */
+  booking?: {
+    id: number;
+    reference: string;
+    status: string | null;
+    is_paid: boolean;
+    remaining_xof: number;
+  } | null;
 }
 
 /**

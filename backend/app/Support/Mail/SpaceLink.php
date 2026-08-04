@@ -3,9 +3,11 @@
 namespace App\Support\Mail;
 
 use App\Modules\Core\Enums\ProfileType;
+use App\Modules\Core\Enums\UserRole;
 
 /**
- * Résout le bon lien d'espace privé selon le PROFIL du destinataire.
+ * Résout le bon lien d'espace privé selon le PROFIL du destinataire (et, à
+ * défaut, selon son RÔLE).
  *
  * POURQUOI ? Le frontend Angular n'a pas un espace connecté, mais QUATRE, à des
  * adresses différentes : `/mon-espace` (client et diaspora),
@@ -26,9 +28,9 @@ class SpaceLink
     /**
      * Préfixe de l'espace connecté du destinataire.
      *
-     * Le repli sur `/mon-espace` couvre les cas limites (profil non chargé,
-     * compte sans profil) : mieux vaut le tableau de bord client, qui existe
-     * toujours, qu'un lien cassé.
+     * Deux sources, dans cet ordre : le **profil** (il porte le sens métier),
+     * puis le **rôle** si le profil manque. Le dernier repli reste
+     * `/mon-espace`, la seule adresse qui existe pour tout le monde.
      */
     public static function base(object $notifiable): string
     {
@@ -38,6 +40,33 @@ class SpaceLink
             ProfileType::PROPRIETAIRE => '/espace-proprietaire',
             ProfileType::PRESTATAIRE => '/espace-prestataire',
             ProfileType::ENTREPRISE => '/espace-entreprise',
+            // Profil absent (compte importé, jeu d'essai, création hors du
+            // parcours d'inscription) : le RÔLE dit la même chose et il est,
+            // lui, indispensable — c'est sur lui que les espaces sont
+            // cloisonnés côté Angular. Sans ce second recours (F8.14), le repli
+            // envoyait vers `/mon-espace`, une adresse gardée par le rôle
+            // `client` : le destinataire y aurait été refoulé.
+            default => self::fromRole($notifiable),
+        };
+    }
+
+    /**
+     * Repli sur le rôle de sécurité quand le profil manque.
+     *
+     * L'ordre est celui de la spécificité : un compte multi-rôles (rare, mais
+     * possible côté back-office) sera dirigé vers l'espace le plus spécifique
+     * qu'il possède, et `/mon-espace` reste le dernier mot — il existe toujours.
+     */
+    private static function fromRole(object $notifiable): string
+    {
+        if (! method_exists($notifiable, 'hasRole')) {
+            return '/mon-espace';
+        }
+
+        return match (true) {
+            $notifiable->hasRole(UserRole::ENTREPRISE->value) => '/espace-entreprise',
+            $notifiable->hasRole(UserRole::PRESTATAIRE->value) => '/espace-prestataire',
+            $notifiable->hasRole(UserRole::PROPRIETAIRE->value) => '/espace-proprietaire',
             default => '/mon-espace',
         };
     }
@@ -77,12 +106,14 @@ class SpaceLink
      */
     public static function requests(object $notifiable): string
     {
-        $type = $notifiable->profile?->type ?? null;
+        // Dérivé de `base()` pour hériter du repli par rôle (F8.14) : un compte
+        // entreprise sans profil doit atterrir sur SES demandes, pas sur celles
+        // d'un espace client auquel son rôle interdit l'accès.
+        $base = self::base($notifiable);
 
-        return match ($type) {
-            ProfileType::ENTREPRISE => '/espace-entreprise/demandes',
-            ProfileType::PROPRIETAIRE, ProfileType::PRESTATAIRE => self::base($notifiable),
-            default => '/mon-espace/demandes',
+        return match ($base) {
+            '/espace-proprietaire', '/espace-prestataire' => $base,
+            default => $base.'/demandes',
         };
     }
 }

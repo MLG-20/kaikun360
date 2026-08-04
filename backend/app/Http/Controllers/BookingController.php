@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\BookingResource;
 use App\Models\Booking;
+use App\Models\Quote;
+use App\Modules\Build\Models\ConstructionQuote;
 use App\Modules\Stay\Models\Stay;
+use App\Modules\TeamBuilding\Models\TeamBuildingQuote;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,6 +30,11 @@ class BookingController extends Controller
             // bien immobilier, dont le titre sert de libellé.
             ->with(['bookable' => fn (MorphTo $morphTo) => $morphTo->morphWith([
                 Stay::class => ['property'],
+                // F8.14 — un devis team building tire son libellé de sa demande
+                // (ville, participants) : sans ce chargement, une requête par ligne.
+                TeamBuildingQuote::class => ['request'],
+                ConstructionQuote::class => ['constructionRequest'],
+                Quote::class => ['request'],
             ])])
             // F8.6 — l'état de règlement exposé par la ressource lit les
             // paiements : sans ce chargement, 15 réservations = 15 requêtes.
@@ -52,6 +60,9 @@ class BookingController extends Controller
         // Charge le bookable (et le bien d'une nuitée) pour le libellé lisible.
         $booking->load(['bookable' => fn (MorphTo $morphTo) => $morphTo->morphWith([
             Stay::class => ['property'],
+            TeamBuildingQuote::class => ['request'],
+            ConstructionQuote::class => ['constructionRequest'],
+            Quote::class => ['request'],
         ]), 'payments']);
 
         return ApiResponse::success(['booking' => BookingResource::make($booking)]);

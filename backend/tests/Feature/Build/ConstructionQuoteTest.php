@@ -2,12 +2,16 @@
 
 namespace Tests\Feature\Build;
 
+use App\Enums\BookingStatus;
+use App\Models\Booking;
 use App\Models\User;
 use App\Modules\Admin\Enums\AdminPermission;
 use App\Modules\Build\Enums\ConstructionLot;
 use App\Modules\Build\Enums\ConstructionQuoteStatus;
 use App\Modules\Build\Enums\ConstructionRequestStatus;
+use App\Modules\Build\Models\ConstructionQuote;
 use App\Modules\Build\Models\ConstructionRequest;
+use App\Modules\Build\Notifications\ConstructionQuoteAcceptedNotification;
 use App\Modules\Build\Notifications\ConstructionQuoteSentNotification;
 use App\Modules\Build\Services\ConstructionQuoteComposer;
 use App\Modules\Core\Enums\UserRole;
@@ -333,5 +337,113 @@ class ConstructionQuoteTest extends TestCase
 
         // Ni la composition ni l'envoi ne ramènent le dossier en arrière.
         $this->assertSame(ConstructionRequestStatus::EN_CHANTIER, $request->fresh()->status);
+    }
+
+    // --- F8.14 : l'acceptation d'un devis de chantier devient exigible --------
+    //
+    // MÊME TROU, TROISIÈME FAMILLE DE DEVIS. Après les devis génériques (F8.11)
+    // et ceux du team building, `ConstructionQuoteController::accept()` ne
+    // faisait lui aussi que changer deux colonnes `status` : le client validait
+    // un chantier à plusieurs millions et rien ne devenait payable.
+
+    public function test_accepter_un_devis_de_chantier_cree_une_reservation_payable(): void
+    {
+        $client = User::factory()->create();
+        $request = ConstructionRequest::factory()->create([
+            'client_id' => $client->id,
+            'status' => ConstructionRequestStatus::SOUMISE->value,
+        ]);
+
+        Sanctum::actingAs($this->agent());
+        $quoteId = $this->postJson("/api/v1/construction-requests/{$request->id}/quotes", [
+            'lines' => $this->lines(),
+        ])->json('data.quote.id');
+        $this->patchJson("/api/v1/construction-quotes/{$quoteId}/send")->assertOk();
+
+        Sanctum::actingAs($client);
+        $response = $this->patchJson("/api/v1/construction-quotes/{$quoteId}/accept")->assertOk();
+
+        $quote = ConstructionQuote::findOrFail($quoteId);
+        $booking = Booking::query()
+            ->where('bookable_type', ConstructionQuote::class)
+            ->where('bookable_id', $quote->id)
+            ->firstOrFail();
+
+        $this->assertSame($client->id, $booking->user_id);
+        $this->assertSame((int) $quote->total_xof, $booking->amount_xof);
+        $this->assertSame(BookingStatus::EN_ATTENTE, $booking->status);
+        // ⚠️ La commission est la MARGE du devis, pas un pourcentage ajouté
+        // par-dessus : le total signé par le client la contient déjà.
+        $this->assertSame((int) $quote->margin_xof, $booking->commission_xof);
+
+        $response->assertJsonPath('data.booking.id', $booking->id)
+            ->assertJsonPath('data.booking.type', 'construction')
+            ->assertJsonPath('data.booking.payable', true);
+    }
+
+    /**
+     * Le montant exigible doit rester visible APRÈS un rechargement : sans la
+     * réservation jointe au devis, l'écran ne saurait proposer « Régler » qu'au
+     * retour immédiat du clic.
+     */
+    public function test_le_devis_accepte_porte_sa_reservation_dans_la_liste_du_client(): void
+    {
+        $client = User::factory()->create();
+        $request = ConstructionRequest::factory()->create(['client_id' => $client->id]);
+
+        Sanctum::actingAs($this->agent());
+        $quoteId = $this->postJson("/api/v1/construction-requests/{$request->id}/quotes", [
+            'lines' => $this->lines(),
+        ])->json('data.quote.id');
+        $this->patchJson("/api/v1/construction-quotes/{$quoteId}/send")->assertOk();
+
+        Sanctum::actingAs($client);
+        $this->patchJson("/api/v1/construction-quotes/{$quoteId}/accept")->assertOk();
+
+        $devis = $this->getJson('/api/v1/construction-requests/mine')
+            ->assertOk()
+            ->json('data.0.quotes.0');
+
+        $this->assertNotNull($devis['booking'] ?? null, 'Le devis accepté doit porter sa réservation.');
+        $this->assertFalse($devis['booking']['is_paid']);
+        $this->assertSame($devis['total_xof'], $devis['booking']['remaining_xof']);
+    }
+
+    /** Un refus ne crée évidemment rien d'exigible. */
+    public function test_refuser_un_devis_de_chantier_ne_cree_aucune_reservation(): void
+    {
+        $client = User::factory()->create();
+        $request = ConstructionRequest::factory()->create(['client_id' => $client->id]);
+
+        Sanctum::actingAs($this->agent());
+        $quoteId = $this->postJson("/api/v1/construction-requests/{$request->id}/quotes", [
+            'lines' => $this->lines(),
+        ])->json('data.quote.id');
+        $this->patchJson("/api/v1/construction-quotes/{$quoteId}/send")->assertOk();
+
+        Sanctum::actingAs($client);
+        $this->patchJson("/api/v1/construction-quotes/{$quoteId}/refuse")->assertOk();
+
+        $this->assertSame(0, Booking::query()->where('bookable_type', ConstructionQuote::class)->count());
+    }
+
+    /** Le client est prévenu que son chantier attend un règlement. */
+    public function test_le_client_est_prevenu_que_son_chantier_attend_un_reglement(): void
+    {
+        Notification::fake();
+
+        $client = User::factory()->create();
+        $request = ConstructionRequest::factory()->create(['client_id' => $client->id]);
+
+        Sanctum::actingAs($this->agent());
+        $quoteId = $this->postJson("/api/v1/construction-requests/{$request->id}/quotes", [
+            'lines' => $this->lines(),
+        ])->json('data.quote.id');
+        $this->patchJson("/api/v1/construction-quotes/{$quoteId}/send")->assertOk();
+
+        Sanctum::actingAs($client);
+        $this->patchJson("/api/v1/construction-quotes/{$quoteId}/accept")->assertOk();
+
+        Notification::assertSentTo($client, ConstructionQuoteAcceptedNotification::class);
     }
 }

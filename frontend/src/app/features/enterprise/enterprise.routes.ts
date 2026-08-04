@@ -64,6 +64,35 @@ export const ENTERPRISE_ROUTES: Routes = [
         title: 'Ma demande — Kaikun 360',
       },
       {
+        // F8.14 — Réservations : écrans transverses réutilisés (ils lisent
+        // `SPACE_CONFIG`, aucun lien n'y est écrit en dur sur `/mon-espace`).
+        // ⚠️ Sans ces trois routes, l'e-mail « votre devis est accepté »
+        // renverrait l'entreprise vers l'espace client, gardé par le rôle
+        // `client` : un mur, au moment précis où elle veut payer.
+        path: 'reservations',
+        loadComponent: () =>
+          import('../account/bookings/bookings-page').then((m) => m.BookingsPageComponent),
+        title: 'Mes réservations — Kaikun 360',
+      },
+      {
+        path: 'reservations/:id',
+        loadComponent: () =>
+          import('../account/bookings/booking-detail-page').then(
+            (m) => m.BookingDetailPageComponent,
+          ),
+        title: 'Ma réservation — Kaikun 360',
+      },
+      {
+        // Écran DÉDIÉ au règlement : payer engage de l'argent, on montre ce
+        // qui est dû avant de sortir vers le prestataire de paiement.
+        path: 'reservations/:id/paiement',
+        loadComponent: () =>
+          import('../account/bookings/booking-payment-page').then(
+            (m) => m.BookingPaymentPageComponent,
+          ),
+        title: 'Régler ma réservation — Kaikun 360',
+      },
+      {
         // Messages — écran transverse (GET /messages), réutilisé, autonome via SPACE_CONFIG.
         path: 'messages',
         loadComponent: () =>

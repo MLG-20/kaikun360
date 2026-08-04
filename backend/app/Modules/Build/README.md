@@ -254,7 +254,34 @@ en cours **ne fait pas régresser** son statut, et un **refus** laisse le dossie
 Un devis déjà envoyé ne se renvoie pas (422) — un second envoi écraserait en silence
 la réponse du client. Seul un devis **envoyé** est acceptable ou refusable (422).
 
-Tests : `tests/Feature/Build/ConstructionQuoteTest.php` (12 cas).
+### ⚠️ L'acceptation crée une réservation payable (F8.14)
+
+`accept()` ne faisait que **changer deux colonnes `status`**. Le client validait
+un chantier à plusieurs millions et **rien ne devenait exigible** : ni montant,
+ni écran de règlement, ni relance — `POST /payments/initiate` réclamant un
+`booking_id`. C'est le même trou que F8.11 avait comblé sur les devis génériques,
+et que F8.14 a trouvé simultanément sur le team building : **trois familles de
+devis, trois fois la même coupure** entre l'accord et l'encaissement.
+
+`QuoteConversionService::convertConstruction()` crée la réservation :
+
+- le **devis est lui-même la cible polymorphe** (`bookable_type = ConstructionQuote`) —
+  un chantier n'a aucune fiche au catalogue à désigner ; `bookings` est polymorphe
+  depuis B3.3, **aucune migration** ;
+- **titulaire** = le client du dossier ; ni dates ni participants (un chantier n'en
+  a pas), colonnes que `bookings` autorise à nul ;
+- ⚠️ **commission = `margin_xof`**, la marge déjà ventilée dans le devis, et non le
+  taux commun de `CommissionCalculator` : le total signé la contient déjà ;
+- **idempotent** (verrou de ligne + `morphOne`) ;
+- `ConstructionQuoteAcceptedNotification` part au client **après** la transaction,
+  avec un lien résolu par `SpaceLink` vers `<son espace>/reservations/{id}/paiement`
+  (un chantier peut être suivi par un client comme par un compte diaspora).
+
+`ConstructionQuoteResource` expose désormais `booking` (chargé par
+`GET /construction-requests/mine`) : sans lui, le montant exigible redeviendrait
+invisible au premier rechargement de l'écran.
+
+Tests : `tests/Feature/Build/ConstructionQuoteTest.php` (18 cas).
 
 ## Prestataires BTP (F7.3.e3)
 
@@ -288,12 +315,13 @@ Tests : `tests/Feature/Build/ConstructionAssignmentTest.php` (9 cas, dont la
 cohabitation de plusieurs corps d'état, le refus d'un prestataire non validé et la
 non-régression des missions ordinaires).
 
-> ⚠️ **Écart d'interface signalé (F7.3.e2)** : `accept` / `refuse` sont livrés et
-> testés, mais **le client n'a aucun écran** pour répondre — l'espace client n'a pas
-> de suivi de ses demandes de construction (`features/build/` côté Angular n'est que
-> la page publique + simulateur). Un devis peut donc être envoyé sans que son
-> destinataire puisse le trancher autrement que par téléphone. À livrer comme les
-> écrans diaspora de F3.8.
+> ✅ **Écart d'interface RÉSORBÉ.** Signalé en F7.3.e2 (« `accept` / `refuse` sont
+> livrés et testés, mais le client n'a aucun écran pour répondre »), il a été comblé
+> en **F3.9** par le bloc `shared/components/construction-quotes/`, monté dans
+> `/mon-espace/diaspora`. **F8.14** y a ajouté le maillon suivant : le devis accepté
+> y affiche le montant restant dû et le bouton qui mène au règlement — l'écran
+> promettait jusque-là que « notre équipe lance le chantier », ce qui était faux
+> puisque rien n'était payable.
 >
 > ⚠️ **Piège de test** : les jalons sont semés par le **contrôleur** `store`, pas
 > par la factory — une demande créée directement par le modèle n'en a aucun.

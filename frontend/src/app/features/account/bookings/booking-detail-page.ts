@@ -11,6 +11,7 @@ import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
 import { ContactSupportComponent } from '../../../shared/components/contact-support/contact-support';
 import { BookingTone, bookingTone } from './booking-display';
+import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 
 /** État de chargement de l'écran. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'forbidden' | 'failed';
@@ -38,6 +39,12 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'forbidden' | 'failed';
  */
 export class BookingDetailPageComponent {
   private readonly bookings = inject(BookingService);
+  /** Espace dans lequel cet écran est monté (F8.14) : aucun lien n'est écrit en
+   * dur sur `/mon-espace`, sinon monter l'écran ailleurs éjecterait
+   * l'utilisateur de son espace — quand la garde de rôle ne l'y refoulerait pas. */
+  protected readonly space = inject(SPACE_CONFIG);
+  /** Préfixe des liens vers les réservations de CET espace. */
+  protected readonly bookingsBase = this.space.basePath + '/reservations';
   private readonly route = inject(ActivatedRoute);
 
   // — État de l'écran —

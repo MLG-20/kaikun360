@@ -1,4 +1,5 @@
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 
 import {
@@ -8,6 +9,7 @@ import {
   QUOTE_UNIT_LABELS,
 } from '../../../core/api/construction.service';
 import { formatFcfa } from '../catalog/catalog.config';
+import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 
 /** État de chargement du bloc. */
 type LoadState = 'loading' | 'ready' | 'error';
@@ -39,13 +41,22 @@ type LoadState = 'loading' | 'ready' | 'error';
  */
 @Component({
   selector: 'app-construction-quotes',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './construction-quotes.html',
   styleUrl: './construction-quotes.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConstructionQuotesComponent {
   private readonly construction = inject(ConstructionService);
+
+  /**
+   * Espace dans lequel ce bloc est monté (F8.14). Le règlement d'un devis
+   * accepté vit dans l'espace COURANT : écrire `/mon-espace` en dur casserait
+   * le jour où ce bloc serait monté ailleurs — et les espaces sont cloisonnés
+   * par rôle, l'utilisateur y serait refoulé.
+   */
+  private readonly space = inject(SPACE_CONFIG);
+  protected readonly bookingsBase = this.space.basePath + '/reservations';
 
   protected readonly state = signal<LoadState>('loading');
   protected readonly requests = signal<ClientConstructionRequest[]>([]);

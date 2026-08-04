@@ -212,3 +212,21 @@
   color: var(--k-green, #38a774);
   font-weight: 600;
 }
+
+// Devis accepté mais NON réglé (F8.14) : l'accord est acquis (vert), le
+// règlement reste dû — les deux informations tiennent dans le même bloc pour
+// qu'on ne lise pas « accepté » comme « terminé ».
+.td-quote-due {
+  margin-top: 1rem;
+
+  .td-quote-accepted {
+    margin-top: 0;
+  }
+
+  .td-quote-actions {
+    margin-top: 0.85rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+}

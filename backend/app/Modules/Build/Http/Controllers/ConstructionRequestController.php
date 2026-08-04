@@ -76,7 +76,11 @@ class ConstructionRequestController extends Controller
             // dossier. Les BROUILLONS sont exclus ici comme ils le sont dans
             // `ConstructionQuoteController::index` — un chiffrage en cours de
             // composition n'est pas un document du client.
-            ->with(['quotes' => fn ($q) => $q->where('status', '!=', ConstructionQuoteStatus::BROUILLON->value)])
+            ->with(['quotes' => fn ($q) => $q
+                ->where('status', '!=', ConstructionQuoteStatus::BROUILLON->value)
+                // F8.14 — la réservation du devis accepté voyage avec lui : c'est
+                // elle qui porte le montant exigible et le lien de règlement.
+                ->with('booking')])
             ->latest()
             ->paginate(15);
 

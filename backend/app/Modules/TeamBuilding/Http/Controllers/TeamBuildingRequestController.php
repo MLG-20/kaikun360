@@ -57,7 +57,10 @@ class TeamBuildingRequestController extends Controller
         Gate::authorize('view', $teamBuildingRequest);
 
         // Devis + prestataires affectés (avec leur nom commercial) + entreprise.
-        $teamBuildingRequest->load(['quotes', 'company', 'providerMissions.provider']);
+        // F8.14 — `quotes.booking` : l'écran doit pouvoir proposer « Régler » sur un
+        // devis accepté à n'importe quel rechargement, pas seulement au retour du
+        // clic. Chargé ici (et pas relu ligne à ligne) pour éviter les N+1.
+        $teamBuildingRequest->load(['quotes.booking', 'company', 'providerMissions.provider']);
 
         return ApiResponse::success(['request' => TeamBuildingRequestResource::make($teamBuildingRequest)]);
     }
