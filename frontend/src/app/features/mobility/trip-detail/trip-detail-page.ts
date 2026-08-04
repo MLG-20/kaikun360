@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -9,6 +16,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { BookingService } from '../../../core/api/booking.service';
 import { CatalogService } from '../../../core/api/catalog.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { BookingIntentStore } from '../../../core/state/booking-intent-store';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { MobilityService } from '../../../models/mobility-service.model';
 import { DetailLayoutComponent } from '../../../shared/components/detail-layout/detail-layout';
@@ -50,6 +58,8 @@ export class TripDetailPageComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  /** Panier : garde la saisie du visiteur le temps qu'il se connecte (F8.13). */
+  private readonly intents = inject(BookingIntentStore);
 
   private readonly id = toSignal(this.route.paramMap.pipe(map((p) => p.get('id'))));
 
@@ -138,6 +148,22 @@ export class TripDetailPageComponent {
   readonly submitting = signal(false);
   readonly formError = signal<string | null>(null);
 
+  constructor() {
+    // F8.13 — reprise du panier après la connexion (une seule fois : il se consomme).
+    let repris = false;
+    effect(() => {
+      const id = this.id();
+      if (repris || !id) {
+        return;
+      }
+      repris = true;
+      const saisie = this.intents.take('mobility', id);
+      if (saisie) {
+        this.form.patchValue({ guests: Number(saisie['guests'] ?? 1) });
+      }
+    });
+  }
+
   readonly total = computed(
     () => Number(this.formValue().guests ?? 0) * (this.trip()?.price_xof ?? 0),
   );
@@ -168,6 +194,15 @@ export class TripDetailPageComponent {
     }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      return;
+    }
+
+    // Visiteur non connecté (F8.13) : le nombre de places est conservé.
+    if (!this.isAuthenticated()) {
+      this.intents.remember('mobility', String(trip.id), {
+        guests: Number(this.form.getRawValue().guests),
+      });
+      void this.router.navigate(['/auth/connexion'], { queryParams: this.loginQueryParams() });
       return;
     }
 

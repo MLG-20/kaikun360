@@ -29,6 +29,15 @@ export interface SpaceNavItem {
   icon: AccountIcon;
   /** L'écran est-il construit ? (sinon affiché « Bientôt », non cliquable). */
   ready: boolean;
+  /**
+   * Compteur de non-lus affiché en pastille au bout de la rubrique (F8.13).
+   *
+   * `undefined` pour l'immense majorité des rubriques : une pastille n'a de sens
+   * que là où quelque chose ARRIVE sans qu'on l'ait demandé. Les valeurs
+   * possibles sont les compteurs tenus par `UnreadStore`, jamais un nombre en
+   * dur — la config décrit l'espace, elle ne compte rien.
+   */
+  badge?: 'messages' | 'notifications';
 }
 
 /** Description complète d'un espace connecté, injectée dans le shell. */

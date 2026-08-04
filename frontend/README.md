@@ -816,6 +816,63 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     conversations de professionnel » n'est prévu tant que le volume ne le
     justifie pas.
 
+  **F8.13 L'état transverse : deux pastilles qui n'existaient pas, et un
+  formulaire qu'on cachait.**
+  Le cahier des charges demandait un état partagé pour quatre choses. Deux
+  étaient déjà en place et il aurait été absurde de les refaire : **l'utilisateur
+  connecté** (`AuthService`, plus `favorite-store.ts` pour les cœurs) et **les
+  filtres de recherche**, branchés sur l'URL au correctif `34fbe37` — l'URL *est*
+  leur état partagé, et c'est le bon endroit : un filtre qu'on ne peut pas
+  envoyer par lien n'est pas partagé. Les deux autres manquaient vraiment.
+  - **Les compteurs de non-lus**
+    ([`core/state/unread-store.ts`](src/app/core/state/unread-store.ts)) étaient
+    dans deux états opposés, tous deux mauvais. Celui des **notifications** était
+    compté dans l'en-tête lui-même et ne bougeait qu'à la navigation : une
+    notification arrivée pendant qu'on lit une page ne se signalait qu'au clic
+    suivant, et l'écran « Notifications » — celui qui vide la liste — ne pouvait
+    pas éteindre la pastille qu'il venait de vider. Celui des **messages**
+    n'existait **nulle part** : `MessageService.unreadCount()` était écrit depuis
+    F3.7 sans un seul appelant, et la rubrique « Messages » du rail des quatre
+    espaces restait muette. ⚠️ **C'est le motif exact qui avait fait rater la
+    messagerie à l'inventaire des orphelins** (une méthode de service que personne
+    n'appelle est invisible d'une comparaison route↔URL) : la seconde passe
+    promise a été faite **au niveau des méthodes**, et n'a trouvé que deux cas —
+    celui-ci et `AdminService.teamBuildingAssignments()`. Une source unique
+    réveillée par la session, la navigation et une relève d'une minute alimente
+    maintenant la cloche **et** les rails, **back-office compris** : l'agent voit
+    arriver un message client sans ouvrir sa boîte. Les écrans qui font *baisser*
+    un compteur le poussent (`setNotifications` / `setMessages`) plutôt que
+    d'attendre le réveil suivant, les endpoints renvoyant déjà le nouveau total ;
+    ouvrir un fil, dont l'endpoint ne le renvoie pas, redemande le total. ⚠️ Une
+    coupure réseau **ne remet jamais un compteur à zéro** : ce serait faire
+    disparaître un non-lu réel.
+  - **Le panier de réservation en cours**
+    ([`core/state/booking-intent-store.ts`](src/app/core/state/booking-intent-store.ts)).
+    Les quatre fiches réservables **masquaient leur formulaire** au visiteur non
+    connecté et affichaient à la place un bouton « Se connecter » : il fallait
+    créer un compte pour découvrir un prix — le mur arrivait avant l'envie. Le
+    formulaire est désormais ouvert à tous ; c'est le bouton « Réserver » qui
+    conduit à la connexion (« Se connecter pour réserver »), et la saisie attend
+    le retour. ⚠️ **`sessionStorage`, pas un signal** : la connexion Google (F8.7)
+    fait **sortir de l'application** et tout l'état en mémoire disparaît ; et à la
+    différence de `localStorage`, la session meurt avec l'onglet — la saisie d'un
+    visiteur ne traîne pas derrière lui sur une machine partagée. Le panier se
+    rend **à la seule fiche concernée** (la nuitée 12 n'est pas le véhicule 12),
+    **une seule fois** (il se consomme : revenir des semaines plus tard ne doit
+    pas ressusciter des dates oubliées) et **périme au bout d'une heure**. Le
+    store ne connaît pas la forme des univers — période pour une nuitée, journées
+    pour un véhicule, date de départ seule pour un circuit, places seules pour un
+    trajet : il transporte, la fiche interprète.
+  - ⚠️ **Ce que la reprise ne fait PAS** : elle ne réserve pas toute seule au
+    retour de connexion. Le formulaire est rempli, le client relit et clique —
+    arbitrage explicite : on ne l'engage pas dans un paiement pendant qu'il
+    regardait ailleurs.
+  - **Ménage** : `MessageService.startConversation()` est **retirée** (aucun
+    appelant ; depuis F8.12 la route est réservée à l'équipe, qui répond aux fils
+    et y fait entrer un tiers mais n'en ouvre pas). La route serveur existe
+    toujours — la rebrancher est le seul travail à refaire le jour où un agent
+    devra écrire le premier.
+
   > ⚠️ **Rendu SSR** : `/back-office` est déclaré `RenderMode.Client` dans
   > [`app.routes.server.ts`](src/app/app.routes.server.ts), comme les autres
   > espaces privés. Sans cela, le guard tournerait côté serveur (sans accès au

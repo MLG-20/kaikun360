@@ -15,9 +15,16 @@ Deux écrans :
 - **La fiche d'une nuitée** (`/nuitees/:id`) — le logement en détail :
   équipements, règlement intérieur, modalités (capacité, nuits min/max, heures
   d'arrivée/départ, caution), un **calendrier de disponibilité** qui grise les
-  jours déjà réservés, les **avis clients**, et un **formulaire de demande de
-  réservation** (avec dates d'arrivée/départ). Comme pour l'immobilier, envoyer
-  une demande nécessite d'être connecté et renvoie une référence de suivi.
+  jours déjà réservés, les **avis clients**, et le **formulaire de réservation
+  ferme** (arrivée, départ, voyageurs) : depuis F8.10 il crée une vraie
+  réservation — commission figée, caution retenue — et emmène le client la
+  régler. Le devis (nuits × prix, caution annoncée à part) se compose sous ses
+  yeux, avant le clic. ⚠️ **Le formulaire est ouvert aux visiteurs non
+  connectés** depuis F8.13 : il était masqué, et l'on demandait donc un compte
+  pour découvrir un prix. C'est le bouton (« Se connecter pour réserver ») qui
+  conduit à la connexion, et les dates saisies sont **conservées** — le visiteur
+  les retrouve en revenant sur la fiche (voir
+  [`core/state/booking-intent-store.ts`](../../core/state/booking-intent-store.ts)).
 
 ---
 

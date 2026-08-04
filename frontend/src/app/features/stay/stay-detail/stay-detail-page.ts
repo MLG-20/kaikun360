@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -10,6 +10,7 @@ import { CatalogService } from '../../../core/api/catalog.service';
 import { BookingService } from '../../../core/api/booking.service';
 import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { BookingIntentStore } from '../../../core/state/booking-intent-store';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Stay, BookedRange } from '../../../models/stay.model';
 import { ReviewsComponent } from '../../../shared/components/reviews/reviews';
@@ -61,6 +62,8 @@ export class StayDetailPageComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  /** Panier : garde la saisie du visiteur le temps qu'il se connecte (F8.13). */
+  private readonly intents = inject(BookingIntentStore);
 
   private readonly id = toSignal(this.route.paramMap.pipe(map((p) => p.get('id'))));
 
@@ -260,6 +263,29 @@ export class StayDetailPageComponent {
   readonly submitting = signal(false);
   readonly formError = signal<string | null>(null);
 
+  constructor() {
+    // F8.13 — reprise du panier : si le visiteur a saisi ses dates puis est allé
+    // se connecter, il retrouve son formulaire tel qu'il l'avait laissé. Une
+    // seule reprise par instance (`repris`) : le panier se consomme, revenir
+    // plus tard sur la fiche ne doit pas ressusciter une saisie oubliée.
+    let repris = false;
+    effect(() => {
+      const id = this.id();
+      if (repris || !id) {
+        return;
+      }
+      repris = true;
+      const saisie = this.intents.take('stay', id);
+      if (saisie) {
+        this.form.patchValue({
+          arrival: String(saisie['arrival'] ?? ''),
+          departure: String(saisie['departure'] ?? ''),
+          guests: Number(saisie['guests'] ?? 1),
+        });
+      }
+    });
+  }
+
   /** Aujourd'hui au format `YYYY-MM-DD` : borne `min` des deux champs de date. */
   readonly today = this.toIso(new Date());
 
@@ -324,6 +350,23 @@ export class StayDetailPageComponent {
     }
 
     const raw = this.form.getRawValue();
+
+    // Visiteur non connecté (F8.13) : on met sa saisie de côté et on l'emmène se
+    // connecter — il revient sur cette fiche avec ses dates déjà en place. La
+    // fiche ne lui cache plus son formulaire : on ne demande un compte qu'au
+    // moment où il engage vraiment quelque chose.
+    if (!this.isAuthenticated()) {
+      this.intents.remember('stay', String(stay.id), {
+        arrival: raw.arrival,
+        departure: raw.departure,
+        guests: Number(raw.guests),
+      });
+      void this.router.navigate(['/auth/connexion'], {
+        queryParams: this.loginQueryParams(),
+      });
+      return;
+    }
+
     this.submitting.set(true);
     this.formError.set(null);
 

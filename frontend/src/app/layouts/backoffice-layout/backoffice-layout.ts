@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter } from 'rxjs/operators';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { UnreadStore } from '../../core/state/unread-store';
 import { permissionsFor } from '../../features/backoffice/backoffice-permissions';
 
 /** Clé d'icône du rail (rendue en SVG inline dans le template). */
@@ -36,6 +37,12 @@ interface BoNavItem {
   icon: BoIcon;
   /** L'écran est-il construit ? (sinon « Bientôt », non cliquable). */
   ready: boolean;
+  /**
+   * Pastille de non-lus au bout de la rubrique (F8.13). Une seule rubrique en
+   * porte une : l'agent est le destinataire des messages clients, et jusqu'ici
+   * rien ne le lui disait — il fallait ouvrir la boîte pour l'apprendre.
+   */
+  badge?: 'messages';
 }
 
 /**
@@ -60,6 +67,7 @@ interface BoNavItem {
 })
 export class BackofficeLayoutComponent {
   private readonly auth = inject(AuthService);
+  private readonly unread = inject(UnreadStore);
   private readonly router = inject(Router);
 
   /** Utilisateur connecté (nom, initiale, rôle affichés). */
@@ -125,7 +133,7 @@ export class BackofficeLayoutComponent {
     // prestataire affecté », pour TOUS les profils). Contractuel, et pourtant
     // sans écran d'équipe jusqu'en F8.12 : le client écrivait dans le vide.
     // Placée avec Demandes — même métier, ce qui arrive de l'extérieur.
-    { label: 'Messages', path: 'messages', icon: 'chat', ready: true },
+    { label: 'Messages', path: 'messages', icon: 'chat', ready: true, badge: 'messages' },
 
     // CDC §6 — modules 2 « Utilisateurs » et 12 « Documents » (deux onglets).
     { label: 'Comptes', path: 'comptes', icon: 'id', ready: true },
@@ -178,6 +186,15 @@ export class BackofficeLayoutComponent {
       return required.length === 0 || this.auth.hasAnyPermission([...required]);
     }),
   );
+
+  /**
+   * Nombre de non-lus à afficher au bout d'une rubrique, `0` sinon (F8.13).
+   * Même source que les espaces utilisateurs (`UnreadStore`) : l'agent voit
+   * arriver un message client sans avoir à ouvrir la boîte de réception.
+   */
+  protected badgeFor(item: BoNavItem): number {
+    return item.badge === 'messages' ? this.unread.messages() : 0;
+  }
 
   /** Tiroir ouvert ? (petit écran uniquement ; rail permanent en desktop). */
   protected readonly sidebarOpen = signal(false);

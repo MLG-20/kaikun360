@@ -40,6 +40,7 @@ export const ENTERPRISE_NAV: readonly SpaceNavItem[] = [
     path: 'messages',
     icon: 'chat',
     ready: true, // F6 ✅ (messagerie générique, cahier §5 « Tous »)
+    badge: 'messages', // F8.13 — pastille de non-lus
   },
 ];
 

@@ -159,19 +159,13 @@
 
             <h2 class="uni-detail-card-title">Réserver</h2>
 
-            @if (!isAuthenticated()) {
-              <p class="k-muted uni-detail-authnote">
-                Connectez-vous pour réserver ce logement et suivre votre séjour.
-              </p>
-              <a
-                class="k-btn k-btn--primary k-btn--block"
-                routerLink="/auth/connexion"
-                [queryParams]="loginQueryParams()"
-              >
-                Se connecter
-              </a>
-            } @else {
-              <form class="uni-detail-form" [formGroup]="form" (ngSubmit)="submit()">
+            <!--
+              F8.13 — le formulaire est ouvert à TOUS. Il était masqué au
+              visiteur non connecté, qui devait donc créer un compte pour
+              découvrir un prix. La connexion n'est demandée qu'au clic sur
+              « Réserver », et la saisie est conservée pendant l'aller-retour.
+            -->
+            <form class="uni-detail-form" [formGroup]="form" (ngSubmit)="submit()">
                 @if (formError(); as err) {
                   <p class="k-form-error" role="alert">{{ err }}</p>
                 }
@@ -221,15 +215,27 @@
                   class="k-btn k-btn--primary k-btn--block"
                   [disabled]="submitting() || !canQuote()"
                 >
-                  {{ submitting() ? 'Réservation…' : 'Réserver et payer' }}
+                  @if (submitting()) {
+                    Réservation…
+                  } @else if (isAuthenticated()) {
+                    Réserver et payer
+                  } @else {
+                    Se connecter pour réserver
+                  }
                 </button>
 
-                <p class="k-muted stay-paynote">
-                  Votre réservation est enregistrée puis réglée en ligne. Elle
-                  n'est confirmée qu'une fois le paiement reçu.
-                </p>
+                @if (isAuthenticated()) {
+                  <p class="k-muted stay-paynote">
+                    Votre réservation est enregistrée puis réglée en ligne. Elle
+                    n'est confirmée qu'une fois le paiement reçu.
+                  </p>
+                } @else {
+                  <p class="k-muted stay-paynote">
+                    Vos dates sont conservées : vous les retrouverez ici après
+                    la connexion.
+                  </p>
+                }
               </form>
-            }
           </div>
 
           <!-- Contact direct par WhatsApp, prérempli avec la nuitée (F2.6). -->

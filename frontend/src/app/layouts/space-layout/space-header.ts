@@ -13,8 +13,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
-import { NotificationService } from '../../core/api/notification.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { UnreadStore } from '../../core/state/unread-store';
 import { SPACE_CONFIG } from './space.config';
 
 /**
@@ -46,7 +46,7 @@ export class SpaceHeaderComponent {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly notifications = inject(NotificationService);
+  private readonly unread = inject(UnreadStore);
 
   /** Configuration de l'espace courant (titre, cibles des liens transverses). */
   protected readonly space = inject(SPACE_CONFIG);
@@ -81,42 +81,26 @@ export class SpaceHeaderComponent {
   protected readonly userMenuOpen = signal(false);
 
   /**
-   * Nombre de notifications non lues (pastille sur la cloche, F3.6). Rafraîchi
-   * à chaque navigation dans l'espace : une visite de l'écran « Notifications »
-   * (où l'on marque des notifications comme lues) met ainsi la pastille à jour
-   * au retour, sans état partagé complexe.
+   * Nombre de notifications non lues (pastille sur la cloche, F3.6).
+   *
+   * ⚠️ Ce compteur était **compté ici**, en local, et ne se rafraîchissait qu'à
+   * la navigation : rien n'arrivait tant qu'on ne cliquait pas, et l'écran
+   * « Notifications » ne pouvait pas éteindre la pastille qu'il venait de vider.
+   * Il vient désormais de l'état partagé, qui se réveille aussi tout seul —
+   * voir `UnreadStore` (F8.13).
    */
-  protected readonly unreadCount = signal(0);
+  protected readonly unreadCount = this.unread.notifications;
 
   constructor() {
+    // Toute navigation referme le menu utilisateur. (Le rafraîchissement des
+    // compteurs, lui, n'est plus l'affaire de l'en-tête : `UnreadStore` écoute
+    // la navigation pour tout le monde.)
     this.router.events
       .pipe(
         filter((e) => e instanceof NavigationEnd),
         takeUntilDestroyed(),
       )
-      .subscribe(() => {
-        // Toute navigation referme le menu utilisateur…
-        this.userMenuOpen.set(false);
-        // …et rafraîchit la pastille de non-lues.
-        this.refreshUnread();
-      });
-
-    this.refreshUnread();
-  }
-
-  /**
-   * Recharge le compteur de non-lues (seulement si une session est active :
-   * inutile — et voué au 401 — côté serveur où le jeton en mémoire est absent).
-   */
-  private refreshUnread(): void {
-    if (!this.user()) {
-      return;
-    }
-    this.notifications.unreadCount().subscribe({
-      next: (res) => this.unreadCount.set(res.data.unread_count),
-      // Silencieux : la pastille est un confort, pas un contenu critique.
-      error: () => {},
-    });
+      .subscribe(() => this.userMenuOpen.set(false));
   }
 
   /** Ouvre/ferme le menu utilisateur. */

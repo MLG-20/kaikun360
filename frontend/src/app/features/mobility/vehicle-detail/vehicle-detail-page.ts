@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -10,6 +17,7 @@ import { CatalogService } from '../../../core/api/catalog.service';
 import { BookingService } from '../../../core/api/booking.service';
 import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { BookingIntentStore } from '../../../core/state/booking-intent-store';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Vehicle } from '../../../models/vehicle.model';
 import { ReviewsComponent } from '../../../shared/components/reviews/reviews';
@@ -55,6 +63,8 @@ export class VehicleDetailPageComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  /** Panier : garde la saisie du visiteur le temps qu'il se connecte (F8.13). */
+  private readonly intents = inject(BookingIntentStore);
 
   private readonly id = toSignal(this.route.paramMap.pipe(map((p) => p.get('id'))));
 
@@ -135,6 +145,27 @@ export class VehicleDetailPageComponent {
   readonly submitting = signal(false);
   readonly formError = signal<string | null>(null);
 
+  constructor() {
+    // F8.13 — reprise du panier : le visiteur retrouve ses dates après s'être
+    // connecté. Une seule reprise par instance : le panier se consomme.
+    let repris = false;
+    effect(() => {
+      const id = this.id();
+      if (repris || !id) {
+        return;
+      }
+      repris = true;
+      const saisie = this.intents.take('vehicle', id);
+      if (saisie) {
+        this.form.patchValue({
+          start_date: String(saisie['start_date'] ?? ''),
+          end_date: String(saisie['end_date'] ?? ''),
+          guests: Number(saisie['guests'] ?? 1),
+        });
+      }
+    });
+  }
+
   /** Aujourd'hui (`YYYY-MM-DD`) : borne `min` des deux champs de date. */
   readonly today = new Date().toISOString().slice(0, 10);
 
@@ -192,6 +223,19 @@ export class VehicleDetailPageComponent {
     }
 
     const raw = this.form.getRawValue();
+
+    // Visiteur non connecté (F8.13) : sa saisie est mise de côté, il revient ici
+    // avec ses dates après la connexion.
+    if (!this.isAuthenticated()) {
+      this.intents.remember('vehicle', String(vehicle.id), {
+        start_date: raw.start_date,
+        end_date: raw.end_date,
+        guests: Number(raw.guests) || 1,
+      });
+      void this.router.navigate(['/auth/connexion'], { queryParams: this.loginQueryParams() });
+      return;
+    }
+
     this.submitting.set(true);
     this.formError.set(null);
 

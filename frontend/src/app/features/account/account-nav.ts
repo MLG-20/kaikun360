@@ -46,6 +46,13 @@ export interface AccountNavItem {
   icon: AccountIcon;
   /** L'écran est-il construit ? (sinon affiché « Bientôt », non cliquable). */
   ready: boolean;
+  /**
+   * Compteur de non-lus affiché en pastille au bout de la rubrique (F8.13).
+   * Même champ — même sens — que sur `SpaceNavItem` : cette liste sert de `nav`
+   * à la `SpaceConfig` de l'espace client, les deux types doivent rester
+   * compatibles.
+   */
+  badge?: 'messages' | 'notifications';
 }
 
 /**
@@ -102,6 +109,7 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     path: 'messages',
     icon: 'chat',
     ready: true, // F3.7 ✅
+    badge: 'messages', // F8.13 — pastille de non-lus
   },
   // NB : « Profil » et « Se déconnecter » ne sont PAS dans le menu de gauche :
   // ils sont accessibles depuis le menu utilisateur de l'en-tête (haut droite),

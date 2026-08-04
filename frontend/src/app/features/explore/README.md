@@ -16,12 +16,14 @@ Deux écrans :
 - **La fiche d'une expérience** (`/tourisme/:id`) — le programme, la
   destination, la durée, la liste de **ce qui est inclus** (guide, transport,
   restauration…), le **nombre de places restantes**, la note moyenne et les
-  avis, puis un **formulaire « Demander une réservation »** (nombre de
-  participants + date souhaitée). Pour envoyer une demande il faut être
-  connecté ; sinon un bouton invite à se connecter (et ramène ensuite sur la
-  fiche).
-
-Quand la demande est envoyée, le visiteur reçoit une **référence de suivi**.
+  avis, puis le **formulaire de réservation** (participants + **date de départ
+  seule** : un circuit n'a pas de date de fin, sa durée lui appartient). Depuis
+  F8.10 il crée une vraie réservation et emmène le client la régler ; un circuit
+  complet n'affiche aucun formulaire, plutôt qu'un formulaire condamné à échouer.
+  ⚠️ **Ouvert aux visiteurs non connectés** depuis F8.13 : le bouton (« Se
+  connecter pour réserver ») conduit à la connexion et la saisie est
+  **conservée** jusqu'au retour (voir
+  [`core/state/booking-intent-store.ts`](../../core/state/booking-intent-store.ts)).
 
 ---
 

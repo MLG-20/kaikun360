@@ -30,10 +30,22 @@
             [routerLink]="linkFor(item.path)"
             [routerLinkActive]="'is-active'"
             [routerLinkActiveOptions]="{ exact: item.path === '' }"
+            [attr.aria-label]="
+              badgeFor(item) > 0 ? item.label + ', ' + badgeFor(item) + ' non lu(s)' : null
+            "
             (click)="closeSidebar()"
           >
             <span class="account-nav-ic"><app-account-icon [name]="item.icon" /></span>
             <span class="account-nav-label">{{ item.label }}</span>
+            <!-- Pastille de non-lus (F8.13) : seules les rubriques où quelque
+                 chose ARRIVE en portent une, et seulement s'il y a à voir. Le
+                 compte lisible est porté par l'aria-label du lien (même parti
+                 pris que la cloche de l'en-tête), la pastille reste décorative. -->
+            @if (badgeFor(item) > 0) {
+              <span class="account-nav-badge" aria-hidden="true">
+                {{ badgeFor(item) > 9 ? '9+' : badgeFor(item) }}
+              </span>
+            }
           </a>
         } @else {
           <span class="account-nav-link is-soon" aria-disabled="true">

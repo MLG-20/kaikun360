@@ -169,6 +169,27 @@
   flex: 1 1 auto;
 }
 
+// Pastille de non-lus au bout d'une rubrique (F8.13). En bout de ligne et non
+// sur l'icône : le rail est étroit, une pastille collée à l'icône se lirait
+// comme une partie du pictogramme. Même couleur de marque que celle de la
+// cloche, pour qu'on les reconnaisse comme une seule et même alerte.
+.account-nav-badge {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--k-radius-pill);
+  background: var(--k-brand);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 // Étiquette « Bientôt » adaptée au fond sombre (le style global est clair).
 .account-side .account-soon-tag {
   flex: 0 0 auto;

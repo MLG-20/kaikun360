@@ -38,8 +38,9 @@ export type SupportContextType =
  *   - `myConversations` liste mes fils (paginé, plus actifs d'abord) + compteur ;
  *   - `conversation` ouvre un fil (le marque lu au passage, côté serveur) ;
  *   - `sendMessage` poste un message dans un fil existant ;
- *   - `startConversation` ouvre un nouveau fil avec un destinataire ;
- *   - `unreadCount` ne renvoie que le compteur (pastille de menu).
+ *   - `startWithSupport` ouvre (ou reprend) le fil de support, seul geste
+ *     d'ouverture côté client depuis F8.12 ;
+ *   - `unreadCount` ne renvoie que le compteur, alimentant `UnreadStore` (F8.13).
  *
  * Auth requise (Bearer posé par l'intercepteur). L'isolation est garantie côté
  * serveur : on n'accède jamais qu'aux fils dont on est participant (404 sinon).
@@ -109,24 +110,13 @@ export class MessageService {
     );
   }
 
-  /**
-   * POST /messages — ouvre une conversation avec un destinataire DÉSIGNÉ.
-   *
-   * ⚠️ Réservé à l'équipe depuis F8.12 (`can:repondre:messages`) : côté client,
-   * c'est `startWithSupport` qu'il faut appeler. Un appel depuis un écran
-   * client se solderait par un 403.
-   */
-  startConversation(
-    recipientId: number,
-    body: string,
-    subject?: string,
-  ): Observable<ApiEnvelope<{ conversation: Conversation }>> {
-    return this.http.post<ApiEnvelope<{ conversation: Conversation }>>(`${this.api}/messages`, {
-      recipient_id: recipientId,
-      body,
-      ...(subject ? { subject } : {}),
-    });
-  }
+  // ⚠️ `startConversation` (POST /messages, ouverture d'un fil avec un
+  // destinataire désigné) a été RETIRÉE en F8.13 : plus aucun écran ne
+  // l'appelait. Depuis F8.12 la route est réservée à l'équipe, et l'équipe
+  // n'ouvre pas de fil — elle répond aux fils de support et y fait entrer un
+  // tiers (`addSupportParticipant`). Côté client, c'est `startWithSupport`.
+  // La route existe toujours côté serveur : la rebrancher ici serait le seul
+  // travail à refaire si l'on veut un jour qu'un agent écrive le premier.
 
   /** GET /messages/unread-count — total de messages non lus (pastille de menu). */
   unreadCount(): Observable<ApiEnvelope<{ unread_count: number }>> {

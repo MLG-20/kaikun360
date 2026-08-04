@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 
 import { MessageService } from '../../../core/api/message.service';
 import { pollWhileVisible } from '../../../core/state/poll-while-visible';
+import { UnreadStore } from '../../../core/state/unread-store';
 import { PageMeta } from '../../../core/api/pagination.model';
 import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { Conversation } from '../../../models/message.model';
@@ -35,6 +36,8 @@ import { AccountIconComponent } from '../account-icon';
  */
 export class MessagesPageComponent {
   private readonly messages = inject(MessageService);
+  /** Compteur partagé avec la pastille du rail (F8.13). */
+  private readonly unread = inject(UnreadStore);
 
   /** Préfixe des liens vers un fil (`<espace>/messages`), propre à l'espace courant. */
   protected readonly messagesBase = `${inject(SPACE_CONFIG).basePath}/messages`;
@@ -44,7 +47,12 @@ export class MessagesPageComponent {
   protected readonly loadError = signal(false);
   protected readonly items = signal<Conversation[]>([]);
   protected readonly meta = signal<PageMeta | null>(null);
-  protected readonly unreadCount = signal(0);
+  /**
+   * Total de non-lus, tous fils confondus. Tenu par l'état partagé (F8.13) : la
+   * pastille du rail et ce compteur ne peuvent pas diverger, et la relève
+   * ci-dessous éteint la pastille dès qu'un fil a été lu ailleurs.
+   */
+  protected readonly unreadCount = this.unread.messages;
 
   /** Y a-t-il d'autres pages avant / après la page courante ? */
   protected readonly hasPrev = computed(() => (this.meta()?.current_page ?? 1) > 1);
@@ -72,7 +80,7 @@ export class MessagesPageComponent {
       next: (res) => {
         this.items.set(res.data);
         this.meta.set(res.meta);
-        this.unreadCount.set(res.unread_count);
+        this.unread.setMessages(res.unread_count);
         this.loading.set(false);
         // Le défilement en haut appartient à la navigation voulue par
         // l'utilisateur : une relève ne doit pas déplacer sa page sous ses yeux.

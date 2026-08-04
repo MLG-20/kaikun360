@@ -14,6 +14,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { MessageService } from '../../../core/api/message.service';
 import { pollWhileVisible } from '../../../core/state/poll-while-visible';
+import { UnreadStore } from '../../../core/state/unread-store';
 import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { Conversation, ConversationMessage } from '../../../models/message.model';
 
@@ -43,6 +44,8 @@ import { Conversation, ConversationMessage } from '../../../models/message.model
  */
 export class MessageThreadComponent implements AfterViewChecked {
   private readonly messages = inject(MessageService);
+  /** Compteur partagé : lire un fil éteint la pastille du rail (F8.13). */
+  private readonly unread = inject(UnreadStore);
   private readonly route = inject(ActivatedRoute);
 
   /** Lien de retour vers la liste des messages de l'espace courant (`<espace>/messages`). */
@@ -111,6 +114,10 @@ export class MessageThreadComponent implements AfterViewChecked {
         this.thread.set(res.data.messages ?? []);
         this.loading.set(false);
         this.pendingScroll = true;
+        // Ouvrir un fil le marque comme lu CÔTÉ SERVEUR, mais l'endpoint ne
+        // renvoie pas le nouveau total : sans ce rappel, la pastille du rail
+        // resterait allumée sur des messages qu'on est en train de lire (F8.13).
+        this.unread.refresh();
       },
       error: () => {
         this.loading.set(false);
@@ -144,6 +151,9 @@ export class MessageThreadComponent implements AfterViewChecked {
         if (nouveaux.length > 0) {
           this.thread.update((liste) => [...liste, ...nouveaux]);
           this.pendingScroll = true;
+          // Ces messages arrivent lus (le fil est ouvert sous les yeux) : on
+          // reprend le total pour que la pastille ne s'allume pas pour rien.
+          this.unread.refresh();
         }
       },
       error: () => {

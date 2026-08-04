@@ -112,7 +112,11 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   marquer comme lu »** (`PATCH …/read-all`) apparaît dès qu'il reste des non-lues.
   Les notifications non lues sont mises en avant (liseré de marque, point). La
   **cloche de l'en-tête** (`space-header`) porte une **pastille** du nombre de
-  non-lues, rafraîchie à chaque navigation dans l'espace.
+  non-lues. ⚠️ Depuis **F8.13**, elle ne dépend plus d'une navigation pour bouger :
+  elle se met à jour toute seule (relève d'une minute tant que l'onglet est
+  visible) et s'éteint dès qu'on marque une notification comme lue, ici ou
+  ailleurs — la rubrique **Messages** du rail a reçu la même pastille, qui, elle,
+  n'existait tout simplement pas.
 
 - **La rubrique Messages (F3.7)** — [`messages/`](messages) : la **messagerie** du
   client. Un premier écran liste ses **conversations** (`GET /messages`, paginé),
@@ -245,10 +249,14 @@ toutes en place (plus aucune section « Bientôt »), complétées d'une rubriqu
   [`NotificationService`](../../core/api/notification.service.ts)
   (`myNotifications` renvoie la pagination **enrichie** de `unread_count`). Au
   clic sur une carte, `markAsRead` puis navigation vers `action_url` ;
-  `markAllAsRead` remet toutes les non-lues à lu. La **cloche de l'en-tête**
-  (`space-header`) appelle `unreadCount` et affiche la pastille, rechargée à
-  chaque `NavigationEnd` (donc mise à jour au retour de l'écran) — et seulement
-  quand une session est active (pas d'appel voué au 401 côté serveur SSR).
+  `markAllAsRead` remet toutes les non-lues à lu. ⚠️ **Le compteur n'est plus tenu
+  par l'écran ni par l'en-tête** : depuis F8.13 il vit dans
+  [`core/state/unread-store.ts`](../../core/state/unread-store.ts), source unique
+  de la cloche **et** de la pastille « Messages » du rail. Il se réveille à la
+  session, à chaque navigation et par une relève d'une minute ; cet écran, qui
+  fait *baisser* le compteur, le **pousse** (`setNotifications`) pour que la
+  pastille s'éteigne dans le même geste que le clic. Auparavant, il était compté
+  dans l'en-tête et ne bougeait qu'à la navigation.
 - **`messages/`** (F3.7) — deux écrans via le
   [`MessageService`](../../core/api/message.service.ts) (socle backend générique :
   conversations à participants + messages) :

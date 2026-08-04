@@ -4,8 +4,9 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter } from 'rxjs/operators';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { UnreadStore } from '../../core/state/unread-store';
 import { AccountIconComponent } from '../../features/account/account-icon';
-import { SPACE_CONFIG } from './space.config';
+import { SPACE_CONFIG, SpaceNavItem } from './space.config';
 import { SpaceHeaderComponent } from './space-header';
 
 /**
@@ -44,6 +45,7 @@ import { SpaceHeaderComponent } from './space-header';
 export class SpaceLayoutComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly unread = inject(UnreadStore);
 
   /** Configuration de l'espace courant (marque, nav, liens). */
   protected readonly space = inject(SPACE_CONFIG);
@@ -62,6 +64,23 @@ export class SpaceLayoutComponent {
         takeUntilDestroyed(),
       )
       .subscribe(() => this.sidebarOpen.set(false));
+  }
+
+  /**
+   * Nombre de non-lus à afficher au bout d'une rubrique, `0` si elle n'en porte
+   * pas (F8.13). Le rail ne compte rien lui-même : il lit `UnreadStore`, la même
+   * source que la cloche de l'en-tête — les deux pastilles ne peuvent donc pas
+   * se contredire.
+   */
+  protected badgeFor(item: SpaceNavItem): number {
+    switch (item.badge) {
+      case 'messages':
+        return this.unread.messages();
+      case 'notifications':
+        return this.unread.notifications();
+      default:
+        return 0;
+    }
   }
 
   /** Construit le `routerLink` d'une rubrique à partir de son chemin relatif. */

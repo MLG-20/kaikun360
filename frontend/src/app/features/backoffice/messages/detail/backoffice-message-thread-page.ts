@@ -9,6 +9,7 @@ import {
   SupportThread,
 } from '../../../../core/api/admin.service';
 import { pollWhileVisible } from '../../../../core/state/poll-while-visible';
+import { UnreadStore } from '../../../../core/state/unread-store';
 import { BackLinkComponent } from '../../../../shared/components/back-link/back-link';
 
 /** État de chargement de l'écran. */
@@ -53,6 +54,8 @@ type LoadState = 'loading' | 'ready' | 'failed';
 export class BackofficeMessageThreadPageComponent {
   private readonly admin = inject(AdminService);
   private readonly route = inject(ActivatedRoute);
+  /** Compteur partagé : lire un fil éteint la pastille du rail (F8.13). */
+  private readonly unread = inject(UnreadStore);
 
   protected readonly state = signal<LoadState>('loading');
   protected readonly thread = signal<SupportThread | null>(null);
@@ -90,6 +93,9 @@ export class BackofficeMessageThreadPageComponent {
         this.thread.set(detail.conversation);
         this.agents.set(detail.agents);
         this.state.set('ready');
+        // Ouvrir le fil l'a marqué comme lu côté serveur ; l'endpoint ne renvoie
+        // pas le nouveau total, on le redemande pour éteindre la pastille (F8.13).
+        this.unread.refresh();
       },
       error: () => this.state.set('failed'),
     });

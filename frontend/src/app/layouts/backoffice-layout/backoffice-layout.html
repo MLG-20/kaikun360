@@ -18,7 +18,10 @@
             class="bo-nav__link"
             [routerLink]="linkFor(item.path)"
             routerLinkActive="is-active"
-            [routerLinkActiveOptions]="{ exact: item.path === '' }">
+            [routerLinkActiveOptions]="{ exact: item.path === '' }"
+            [attr.aria-label]="
+              badgeFor(item) > 0 ? item.label + ', ' + badgeFor(item) + ' non lu(s)' : null
+            ">
             <span class="bo-nav__icon">
               @switch (item.icon) {
                 @case ('grid') {
@@ -83,6 +86,13 @@
               }
             </span>
             <span class="bo-nav__label">{{ item.label }}</span>
+            <!-- Pastille de non-lus (F8.13), portée par la seule rubrique
+                 « Messages » : le compte lisible est dans l'aria-label du lien. -->
+            @if (badgeFor(item) > 0) {
+              <span class="bo-nav__badge" aria-hidden="true">
+                {{ badgeFor(item) > 9 ? '9+' : badgeFor(item) }}
+              </span>
+            }
           </a>
         } @else {
           <span class="bo-nav__link bo-nav__link--soon" aria-disabled="true">

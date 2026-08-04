@@ -61,6 +61,27 @@ l'application (approche standalone, sans NgModule) :
     où l'on écrit une phrase toutes les deux minutes. Utilisé par les deux fils
     de discussion (10 s) et les deux listes de la messagerie (30 s) ; l'appelant
     doit ne redemander que le nouveau (`?after=`).
+  - `unread-store.ts` (F8.13) — **les compteurs de non-lus**, notifications et
+    messages, en une seule source pour la cloche de l'en-tête, le rail des quatre
+    espaces et celui du back-office. Se réveille sur trois signaux : ouverture /
+    fermeture de session (la déconnexion **remet à zéro**), chaque navigation, et
+    une relève d'une minute tant que l'onglet est visible. Les écrans qui font
+    *baisser* un compteur le poussent (`setNotifications` / `setMessages`) au lieu
+    d'attendre le réveil suivant — les endpoints de lecture renvoient déjà le
+    nouveau total. ⚠️ Avant, le compteur de notifications vivait **dans
+    l'en-tête** et ne bougeait qu'à la navigation, et celui des messages
+    **n'existait nulle part** (`MessageService.unreadCount()` n'avait aucun
+    appelant depuis F3.7). Tout appel est gardé par `isAuthenticated()` et par
+    `isBrowser` : rien ne part d'une page publique ni du SSR.
+  - `booking-intent-store.ts` (F8.13) — **le panier de réservation en cours** : ce
+    qu'un visiteur a saisi sur une fiche (dates, places) avant qu'on lui demande
+    de se connecter. Les quatre fiches réservables masquaient leur formulaire aux
+    visiteurs : il fallait un compte pour découvrir un prix. La saisie est
+    conservée en `sessionStorage` — elle doit survivre au **rechargement complet**
+    de la connexion Google, et mourir avec l'onglet — puis rendue **à la seule
+    fiche concernée**, **une seule fois** (elle se consomme), et **périmée au bout
+    d'une heure**. Le store ne connaît pas la forme des univers : il transporte,
+    la fiche interprète.
 
 Fourni via `app.config.ts` (`provideHttpClient(withInterceptors(...))`, etc.).
 Ne contient **aucun composant d'interface** (voir [`../shared`](../shared)).

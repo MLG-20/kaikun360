@@ -142,6 +142,26 @@
     flex: 1;
   }
 
+  // Pastille de non-lus en bout de rubrique (F8.13), calquée sur celle du rail
+  // des espaces utilisateurs : même forme, même couleur de marque — c'est la
+  // même alerte, elle ne doit pas se lire différemment selon le côté du produit.
+  &__badge {
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--k-radius-pill);
+    background: var(--k-brand);
+    color: #fff;
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
   &__soon {
     font-family: var(--k-font-mono);
     font-size: 0.58rem;

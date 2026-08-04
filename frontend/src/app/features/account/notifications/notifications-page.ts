@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 
 import { NotificationService } from '../../../core/api/notification.service';
 import { PageMeta } from '../../../core/api/pagination.model';
+import { UnreadStore } from '../../../core/state/unread-store';
 import { AppNotification, NotificationCategory } from '../../../models/notification.model';
 import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { AccountIcon } from '../account-nav';
@@ -37,6 +38,8 @@ const CLIENT_BASE = '/mon-espace';
 export class NotificationsPageComponent {
   private readonly notifications = inject(NotificationService);
   private readonly router = inject(Router);
+  /** Compteur partagé avec la cloche de l'en-tête et le rail (F8.13). */
+  private readonly unread = inject(UnreadStore);
   /** Espace dans lequel cet écran est monté (client, propriétaire…). */
   private readonly space = inject(SPACE_CONFIG);
   /** Sur-titre de l'écran : le nom de l'espace courant, pas « Mon espace » en dur. */
@@ -47,7 +50,12 @@ export class NotificationsPageComponent {
   protected readonly loadError = signal(false);
   protected readonly items = signal<AppNotification[]>([]);
   protected readonly meta = signal<PageMeta | null>(null);
-  protected readonly unreadCount = signal(0);
+  /**
+   * Non-lues restantes. Lu sur l'état partagé, et non tenu ici : cet écran est
+   * précisément celui qui fait BAISSER le compteur, et sa pastille doit s'éteindre
+   * dans le même geste que celle de la cloche (F8.13).
+   */
+  protected readonly unreadCount = this.unread.notifications;
   /** Notification en cours de marquage (désactive sa carte le temps de l'appel). */
   protected readonly busyId = signal<string | null>(null);
 
@@ -70,7 +78,7 @@ export class NotificationsPageComponent {
       next: (res) => {
         this.items.set(res.data);
         this.meta.set(res.meta);
-        this.unreadCount.set(res.unread_count);
+        this.unread.setNotifications(res.unread_count);
         this.loading.set(false);
         if (typeof window !== 'undefined') {
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -147,7 +155,7 @@ export class NotificationsPageComponent {
     this.notifications.markAsRead(item.id).subscribe({
       next: (res) => {
         this.applyRead(item.id);
-        this.unreadCount.set(res.data.unread_count);
+        this.unread.setNotifications(res.data.unread_count);
         this.busyId.set(null);
         go();
       },
@@ -164,7 +172,7 @@ export class NotificationsPageComponent {
     this.notifications.markAllAsRead().subscribe({
       next: () => {
         this.items.update((list) => list.map((n) => ({ ...n, read: true })));
-        this.unreadCount.set(0);
+        this.unread.setNotifications(0);
       },
     });
   }

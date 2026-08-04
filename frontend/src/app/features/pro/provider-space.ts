@@ -63,6 +63,7 @@ export const PROVIDER_NAV: readonly SpaceNavItem[] = [
     path: 'messages',
     icon: 'chat',
     ready: true, // F8.12.c ✅ — le support peut vous faire entrer dans un fil
+    badge: 'messages', // F8.13 — pastille de non-lus
   },
   {
     label: 'Revenus & commissions',

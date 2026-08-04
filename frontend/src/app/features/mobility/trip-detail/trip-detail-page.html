@@ -79,18 +79,14 @@
                 Ce départ est complet. Écrivez-nous pour être prévenu d'un
                 prochain départ sur cette liaison.
               </p>
-            } @else if (!isAuthenticated()) {
-              <p class="k-muted uni-detail-authnote">
-                Connectez-vous pour réserver votre place et suivre votre trajet.
-              </p>
-              <a
-                class="k-btn k-btn--primary k-btn--block"
-                routerLink="/auth/connexion"
-                [queryParams]="loginQueryParams()"
-              >
-                Se connecter
-              </a>
             } @else {
+            <!--
+              F8.13 — le formulaire est ouvert à TOUS. Il était masqué au
+              visiteur non connecté, qui devait donc créer un compte pour
+              découvrir un prix. La connexion n'est demandée qu'au clic, et la
+              saisie est conservée pendant l'aller-retour.
+            -->
+
               <form class="uni-detail-form" [formGroup]="form" (ngSubmit)="submit()">
                 @if (formError(); as err) {
                   <p class="k-form-error" role="alert">{{ err }}</p>
@@ -122,13 +118,26 @@
                   class="k-btn k-btn--primary k-btn--block"
                   [disabled]="submitting() || !canQuote()"
                 >
-                  {{ submitting() ? 'Réservation…' : 'Réserver et payer' }}
+                  @if (submitting()) {
+                    Réservation…
+                  } @else if (isAuthenticated()) {
+                    Réserver et payer
+                  } @else {
+                    Se connecter pour réserver
+                  }
                 </button>
 
-                <p class="k-muted uni-paynote">
-                  Vos places sont enregistrées puis réglées en ligne. Elles ne
-                  sont confirmées qu'une fois le paiement reçu.
-                </p>
+                @if (isAuthenticated()) {
+                  <p class="k-muted uni-paynote">
+                    Vos places sont enregistrées puis réglées en ligne. Elles ne
+                    sont confirmées qu'une fois le paiement reçu.
+                  </p>
+                } @else {
+                  <p class="k-muted uni-paynote">
+                    Votre choix est conservé : vous le retrouverez ici après la
+                    connexion.
+                  </p>
+                }
               </form>
             }
           </div>
