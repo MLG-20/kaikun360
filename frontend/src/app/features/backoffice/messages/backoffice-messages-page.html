@@ -1,15 +1,192 @@
 <header class="ms-head">
   <div>
     <h1 class="ms-title">Messages</h1>
-    <p class="ms-sub">
-      Les conversations ouvertes par les clients, propriétaires, prestataires et
-      entreprises. Ils écrivent <strong>au support</strong>, jamais directement à
-      un tiers : c'est vous qui décidez de la suite. Les fils
-      <strong>en attente de réponse</strong> sont signalés —
-      <strong>cliquez une ligne</strong> pour ouvrir l'échange et répondre.
-    </p>
+    @if (tab() === 'threads') {
+      <p class="ms-sub">
+        Les conversations ouvertes par les clients, propriétaires, prestataires et
+        entreprises. Ils écrivent <strong>au support</strong>, jamais directement à
+        un tiers : c'est vous qui décidez de la suite. Les fils
+        <strong>en attente de réponse</strong> sont signalés —
+        <strong>cliquez une ligne</strong> pour ouvrir l'échange et répondre.
+      </p>
+    } @else {
+      <p class="ms-sub">
+        Le courrier déposé sur la <strong>page Contact</strong> du site. Ces
+        personnes n'ont le plus souvent <strong>pas de compte</strong> : il n'y a
+        pas de fil de discussion ici. On les <strong>rappelle ou on leur
+        écrit</strong>, puis on marque le message traité — c'est ce qui évite que
+        deux agents contactent le même prospect.
+      </p>
+    }
   </div>
 </header>
+
+<!--
+  F8.15.c — Deux natures de courrier entrant, deux onglets. Un message de contact
+  n'est pas une conversation : pas de compte, pas de fil, pas de réponse dans
+  l'application. Les fondre dans la même liste ferait chercher un bouton
+  « Répondre » qui ne peut pas exister.
+-->
+<nav class="ms-tabs" role="tablist" aria-label="Nature du courrier">
+  <button
+    type="button"
+    role="tab"
+    class="ms-tab"
+    [class.is-on]="tab() === 'threads'"
+    [attr.aria-selected]="tab() === 'threads'"
+    (click)="setTab('threads')">
+    Conversations
+  </button>
+  <button
+    type="button"
+    role="tab"
+    class="ms-tab"
+    [class.is-on]="tab() === 'contact'"
+    [attr.aria-selected]="tab() === 'contact'"
+    (click)="setTab('contact')">
+    Messages de contact
+    @if (contactPending() > 0) {
+      <span class="ms-tab__badge">{{ contactPending() }}</span>
+    }
+  </button>
+</nav>
+
+@if (tab() === 'contact') {
+  <section class="ms-filters">
+    <div class="ms-scopes" role="tablist" aria-label="Statut des messages">
+      <button
+        type="button"
+        role="tab"
+        class="ms-scope"
+        [class.is-on]="contactStatus() === 'nouveau'"
+        [attr.aria-selected]="contactStatus() === 'nouveau'"
+        (click)="setContactStatus('nouveau')">
+        À traiter
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="ms-scope"
+        [class.is-on]="contactStatus() === 'traite'"
+        [attr.aria-selected]="contactStatus() === 'traite'"
+        (click)="setContactStatus('traite')">
+        Traités
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="ms-scope"
+        [class.is-on]="contactStatus() === null"
+        [attr.aria-selected]="contactStatus() === null"
+        (click)="setContactStatus(null)">
+        Tous
+      </button>
+    </div>
+  </section>
+
+  @if (contactLoading()) {
+    <p class="ms-state" role="status">Chargement du courrier…</p>
+  } @else if (contactError()) {
+    <p class="ms-state ms-state--error" role="alert">
+      Impossible de charger les messages de contact. Réessayez.
+    </p>
+  } @else {
+    <p class="ms-count">{{ contactPending() }} message(s) à traiter</p>
+
+    <div class="ms-table-wrap">
+      <table class="ms-table">
+        <thead>
+          <tr>
+            <th>Expéditeur</th>
+            <th>Sujet</th>
+            <th>Message</th>
+            <th>Reçu</th>
+            <th>Suivi</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of contactRows(); track m.id) {
+            <tr class="ms-row" [class.is-awaiting]="m.status === 'nouveau'">
+              <td>
+                <span class="ms-strong">{{ m.name }}</span>
+                <!-- Le seul moyen de répondre : on le rend cliquable. -->
+                <a class="ms-link" [href]="'mailto:' + m.email">{{ m.email }}</a>
+              </td>
+              <td>
+                <span class="ms-place">{{ m.subject || 'Sans sujet' }}</span>
+              </td>
+              <td>
+                <!--
+                  Le message ENTIER, pas un extrait : contrairement à un fil, il
+                  n'y a pas de fiche à ouvrir — cette ligne est tout ce qu'on a.
+                -->
+                <span class="ms-message">{{ m.message }}</span>
+              </td>
+              <td>
+                <span class="ms-strong">{{ age(m.created_at) }}</span>
+                @if (m.status === 'nouveau') {
+                  <span class="ms-chip is-due">À traiter</span>
+                }
+              </td>
+              <td class="ms-owner-cell">
+                @if (m.status === 'traite') {
+                  <span class="ms-strong">{{ m.handled_by || 'Traité' }}</span>
+                  <span class="ms-place">{{ age(m.handled_at) }}</span>
+                }
+                <button
+                  type="button"
+                  class="k-btn"
+                  [class.k-btn--primary]="m.status === 'nouveau'"
+                  [class.k-btn--ghost]="m.status === 'traite'"
+                  [disabled]="contactBusyId() === m.id"
+                  (click)="toggleContactHandled(m)">
+                  @if (contactBusyId() === m.id) {
+                    …
+                  } @else if (m.status === 'nouveau') {
+                    Marquer traité
+                  } @else {
+                    Rouvrir
+                  }
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="ms-empty">
+                @if (contactStatus() === 'nouveau') {
+                  Aucun message en attente. Tout le courrier de la page Contact a
+                  été traité.
+                } @else {
+                  Aucun message dans cette vue.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (contactLastPage() > 1) {
+      <nav class="ms-pager" aria-label="Pagination">
+        <button
+          type="button"
+          class="k-btn k-btn--ghost"
+          [disabled]="contactPage() === 1"
+          (click)="goToContact(contactPage() - 1)">
+          ← Précédent
+        </button>
+        <span class="ms-pager__info">Page {{ contactPage() }} / {{ contactLastPage() }}</span>
+        <button
+          type="button"
+          class="k-btn k-btn--ghost"
+          [disabled]="contactPage() === contactLastPage()"
+          (click)="goToContact(contactPage() + 1)">
+          Suivant →
+        </button>
+      </nav>
+    }
+  }
+} @else {
 
 <!--
   Portées : « mes fils » d'abord (une boîte partagée où tout le monde regarde
@@ -169,4 +346,5 @@
       </button>
     </nav>
   }
+}
 }

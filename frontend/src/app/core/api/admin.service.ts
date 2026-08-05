@@ -1285,6 +1285,32 @@ export interface SupportThreadDetail {
   agents: { id: number; name: string }[];
 }
 
+// --- Messages de contact (F2.8.1, écran livré en F8.15.c) --------------------
+
+/**
+ * Un message déposé depuis la page publique **Contact** — miroir de
+ * `ContactMessageResource`.
+ *
+ * ⚠️ **Ce n'est PAS une conversation.** L'auteur est le plus souvent un prospect
+ * **sans compte** : il n'y a pas de fil, pas de réponse dans l'application. On le
+ * rappelle ou on lui écrit, puis on marque le message traité. D'où un onglet
+ * distinct sur le même écran, et non une quatrième portée de la file.
+ */
+export interface AdminContactMessage {
+  id: number;
+  name: string;
+  email: string;
+  subject: string | null;
+  message: string;
+  /** `nouveau` · `traite`. */
+  status: string;
+  status_label: string;
+  /** Nom de l'agent qui a traité le message (absent tant qu'il ne l'est pas). */
+  handled_by?: string | null;
+  handled_at: string | null;
+  created_at: string | null;
+}
+
 /** Filtres de la boîte de réception. */
 export interface SupportInboxQuery {
   /** `mine` (défaut) · `unassigned` · `all`. */
@@ -2318,6 +2344,46 @@ export class AdminService {
     if (query.search) params = params.set('search', query.search);
     if (query.page) params = params.set('page', String(query.page));
     return this.http.get<Paginated<SupportThread>>(`${this.api}/admin/conversations`, { params });
+  }
+
+  // --- Messages de contact (F8.15.c) ---------------------------------------
+  // ⚠️ `GET`/`PATCH /admin/contact-messages` étaient écrits depuis F2.8.1 et
+  // n'avaient AUCUN appelant : la page publique Contact — l'un des canaux de
+  // conversion prioritaires du cahier des charges — écrivait en base et
+  // personne ne lisait jamais. Un prospect pouvait attendre indéfiniment.
+
+  /**
+   * Messages de contact. GET /admin/contact-messages
+   *
+   * `status` filtre (`nouveau` / `traite`) ; le total des **non traités** voyage
+   * dans `meta.pending`, indépendamment du filtre — sinon regarder les traités
+   * ferait disparaître la charge restante.
+   */
+  contactMessages(query: { status?: string; page?: number } = {}) {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<AdminContactMessage> & { meta: { pending?: number } }>(
+      `${this.api}/admin/contact-messages`,
+      { params },
+    );
+  }
+
+  /**
+   * Marque un message traité (ou le rouvre).
+   * PATCH /admin/contact-messages/{id}
+   *
+   * Le serveur enregistre l'agent et l'horodatage au passage à « traité », et
+   * les efface au retour à « nouveau » : c'est ce qui évite que deux agents
+   * rappellent le même prospect.
+   */
+  setContactMessageStatus(id: number, status: 'nouveau' | 'traite') {
+    return this.http
+      .patch<ApiEnvelope<{ contact_message: AdminContactMessage }>>(
+        `${this.api}/admin/contact-messages/${id}`,
+        { status },
+      )
+      .pipe(map((res) => res.data.contact_message));
   }
 
   /**

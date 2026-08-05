@@ -142,4 +142,62 @@ class ContactMessageTest extends TestCase
         ]);
         $this->assertNotNull($message->fresh()->handled_at);
     }
+
+    // =========================================================================
+    // F8.15.c — ce dont l'écran back-office a besoin
+    //
+    // ⚠️ Ces routes existaient depuis F2.8.1 et n'avaient AUCUN appelant : la
+    // page Contact — canal de conversion prioritaire du cahier des charges —
+    // écrivait en base et personne ne lisait jamais. Les deux manques ci-dessous
+    // sont apparus en construisant l'écran.
+    // =========================================================================
+
+    public function test_la_liste_dit_quel_agent_a_traite_le_message(): void
+    {
+        $message = ContactMessage::create([
+            'name' => 'Awa', 'email' => 'awa@example.com',
+            'message' => 'Bonjour', 'status' => ContactMessageStatus::NOUVEAU->value,
+        ]);
+
+        $agent = $this->agent();
+        Sanctum::actingAs($agent);
+
+        // Avant traitement : personne n'est responsable, rien à afficher.
+        $this->getJson('/api/v1/admin/contact-messages')
+            ->assertOk()
+            ->assertJsonPath('data.0.handled_by', null);
+
+        $this->patchJson("/api/v1/admin/contact-messages/{$message->id}", [
+            'status' => ContactMessageStatus::TRAITE->value,
+        ])->assertOk();
+
+        // Après : le NOM de l'agent, pas son identifiant — sans ce chargement,
+        // la clé était absente de la réponse (`whenLoaded`) et deux agents
+        // pouvaient rappeler le même prospect.
+        $this->getJson('/api/v1/admin/contact-messages')
+            ->assertOk()
+            ->assertJsonPath('data.0.handled_by', $agent->name);
+    }
+
+    public function test_le_compteur_des_messages_a_traiter_ignore_le_filtre(): void
+    {
+        ContactMessage::create([
+            'name' => 'Awa', 'email' => 'awa@example.com',
+            'message' => 'En attente', 'status' => ContactMessageStatus::NOUVEAU->value,
+        ]);
+        ContactMessage::create([
+            'name' => 'Bou', 'email' => 'bou@example.com',
+            'message' => 'Déjà vu', 'status' => ContactMessageStatus::TRAITE->value,
+        ]);
+
+        Sanctum::actingAs($this->agent());
+
+        // Sur la vue « traités », la liste ne montre que le message traité — mais
+        // le compteur doit continuer de dire ce qui ATTEND, sinon l'écran ment
+        // sur la charge restante dès qu'on change de filtre.
+        $this->getJson('/api/v1/admin/contact-messages?status=traite')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('meta.pending', 1);
+    }
 }

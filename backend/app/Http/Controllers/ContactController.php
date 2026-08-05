@@ -101,6 +101,10 @@ class ContactController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $messages = ContactMessage::query()
+            // F8.15.c — sans ce chargement, `handled_by` restait absent de la
+            // réponse (`whenLoaded`) : l'écran ne pouvait pas dire QUI avait
+            // traité un message, donc deux agents rappelaient le même prospect.
+            ->with('handledBy:id,name')
             ->when(
                 $request->filled('status'),
                 fn ($query) => $query->where('status', $request->string('status')),
@@ -108,7 +112,14 @@ class ContactController extends Controller
             ->latest()
             ->paginate(20);
 
-        return ContactMessageResource::collection($messages);
+        // F8.15.c — le compteur des messages NON TRAITÉS voyage avec la page :
+        // filtrer sur « traités » ne doit pas faire disparaître le nombre de
+        // ceux qui attendent, sinon l'écran ment sur la charge restante.
+        return ContactMessageResource::collection($messages)->additional([
+            'meta' => [
+                'pending' => ContactMessage::where('status', ContactMessageStatus::NOUVEAU->value)->count(),
+            ],
+        ]);
     }
 
     /**

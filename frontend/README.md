@@ -787,6 +787,20 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     la file des demandes) et garde « Non assignées » à un clic. Sur la fiche, le
     composeur annonce les deux effets de bord du serveur : répondre à un fil
     sans responsable **le prend en charge**, répondre à un fil clos **le rouvre**.
+  - **F8.15.c — le courrier de la page Contact y a rejoint les conversations.**
+    `GET`/`PATCH /admin/contact-messages` existaient depuis F2.8.1 et n'avaient
+    **aucun appelant** : la page Contact — l'un des canaux de conversion
+    prioritaires du cahier des charges — écrivait en base et **personne ne lisait
+    jamais**. Un prospect pouvait attendre indéfiniment. C'est un **onglet** du
+    même écran, et non une quatrième portée de la file : un message de contact
+    n'est pas une conversation (auteur le plus souvent **sans compte**, pas de
+    fil, pas de réponse dans l'application), les fondre ferait chercher un bouton
+    « Répondre » qui ne peut pas exister. La vue s'ouvre sur **« à traiter »**, le
+    message est affiché **en entier** (aucune fiche à ouvrir derrière), l'e-mail
+    est cliquable, et « Marquer traité » enregistre **qui** a traité — sans quoi
+    deux agents rappellent le même prospect. Le compteur de l'onglet est servi
+    **hors filtre** (`meta.pending`) : regarder les messages traités ne doit pas
+    faire disparaître la charge restante.
   - **F8.12.a — les écrans se tiennent à jour seuls** (défaut relevé à la
     vérification : il fallait recharger pour voir la réponse d'en face).
     [`core/state/poll-while-visible.ts`](src/app/core/state/poll-while-visible.ts)

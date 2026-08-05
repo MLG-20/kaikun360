@@ -2,11 +2,27 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
-import { AdminService, SupportInboxQuery, SupportThread } from '../../../core/api/admin.service';
+import {
+  AdminContactMessage,
+  AdminService,
+  SupportInboxQuery,
+  SupportThread,
+} from '../../../core/api/admin.service';
 import { pollWhileVisible } from '../../../core/state/poll-while-visible';
 
 /** Portée de la file, telle que la comprend le serveur. */
 type Scope = 'mine' | 'unassigned' | 'all';
+
+/**
+ * Les deux natures de courrier entrant (F8.15.c).
+ *
+ * ⚠️ **Un onglet, pas une quatrième portée.** Une conversation a un compte, un
+ * fil et une réponse dans l'application ; un message de contact vient d'un
+ * prospect **sans compte**, se traite au téléphone ou par e-mail, et se referme.
+ * Les mélanger dans la même liste ferait chercher un bouton « Répondre » qui ne
+ * peut pas exister.
+ */
+type Tab = 'threads' | 'contact';
 
 /**
  * Écran **Messages** du back-office — la boîte de réception du support (F8.12).
@@ -54,8 +70,26 @@ export class BackofficeMessagesPageComponent {
   protected readonly closed = signal(false);
   protected search = '';
 
+  // --- Messages de contact (F8.15.c) ----------------------------------------
+  /** Onglet courant : les fils du support, ou le courrier des prospects. */
+  protected readonly tab = signal<Tab>('threads');
+  protected readonly contactRows = signal<AdminContactMessage[]>([]);
+  /** Nombre de messages de contact NON TRAITÉS, quel que soit le filtre. */
+  protected readonly contactPending = signal(0);
+  protected readonly contactPage = signal(1);
+  protected readonly contactLastPage = signal(1);
+  protected readonly contactLoading = signal(false);
+  protected readonly contactError = signal(false);
+  /** Filtre : `null` = tout, sinon `nouveau` / `traite`. */
+  protected readonly contactStatus = signal<string | null>('nouveau');
+  /** Message dont le changement de statut est en vol (bouton neutralisé). */
+  protected readonly contactBusyId = signal<number | null>(null);
+
   constructor() {
     this.load();
+    // Le compteur de l'onglet doit être juste dès l'arrivée, même si l'agent
+    // reste sur les fils : sinon rien ne l'appelle vers le courrier en attente.
+    this.loadContact();
 
     // F8.12.a — la file se tient à jour seule (30 s) : c'est l'écran sur lequel
     // un agent ATTEND, un nouveau fil qui n'apparaît qu'au rechargement manuel
@@ -137,5 +171,86 @@ export class BackofficeMessagesPageComponent {
   protected extrait(texte: string | null | undefined): string {
     if (!texte) return '—';
     return texte.length > 90 ? `${texte.slice(0, 90)}…` : texte;
+  }
+
+  // --- Messages de contact (F8.15.c) ------------------------------------------
+
+  /** Bascule d'onglet ; ne recharge que ce qui est réellement affiché. */
+  protected setTab(tab: Tab): void {
+    if (this.tab() === tab) return;
+    this.tab.set(tab);
+    if (tab === 'contact') {
+      this.loadContact();
+    }
+  }
+
+  /**
+   * Filtre du courrier. Le défaut est **« à traiter »** : une boîte qui s'ouvre
+   * sur tout l'historique est une boîte où l'on ne voit pas ce qui reste à faire.
+   */
+  protected setContactStatus(status: string | null): void {
+    if (this.contactStatus() === status) return;
+    this.contactStatus.set(status);
+    this.contactPage.set(1);
+    this.loadContact();
+  }
+
+  protected goToContact(page: number): void {
+    if (page < 1 || page > this.contactLastPage() || page === this.contactPage()) return;
+    this.contactPage.set(page);
+    this.loadContact();
+  }
+
+  protected loadContact(): void {
+    this.contactLoading.set(true);
+    this.contactError.set(false);
+
+    this.admin
+      .contactMessages({
+        status: this.contactStatus() ?? undefined,
+        page: this.contactPage(),
+      })
+      .subscribe({
+        next: (paginated) => {
+          this.contactRows.set(paginated.data);
+          this.contactLastPage.set(paginated.meta.last_page);
+          // `pending` est servi hors filtre : il dit la charge réelle même quand
+          // l'agent regarde les messages déjà traités.
+          this.contactPending.set(paginated.meta.pending ?? 0);
+          this.contactLoading.set(false);
+        },
+        error: () => {
+          this.contactError.set(true);
+          this.contactLoading.set(false);
+        },
+      });
+  }
+
+  /**
+   * Marque traité / rouvre. Le serveur enregistre l'agent et l'horodatage — d'où
+   * le remplacement de la ligne par sa version fraîche plutôt qu'une bascule
+   * locale, qui afficherait « traité par personne ».
+   */
+  protected toggleContactHandled(message: AdminContactMessage): void {
+    const cible = message.status === 'traite' ? 'nouveau' : 'traite';
+    this.contactBusyId.set(message.id);
+
+    this.admin.setContactMessageStatus(message.id, cible).subscribe({
+      next: (fresh) => {
+        this.contactBusyId.set(null);
+        this.contactPending.update((n) => (cible === 'traite' ? Math.max(0, n - 1) : n + 1));
+        // Sous filtre, la ligne quitte la vue : la garder afficherait un message
+        // « traité » dans une liste intitulée « à traiter ».
+        if (this.contactStatus() !== null && this.contactStatus() !== cible) {
+          this.contactRows.update((rows) => rows.filter((r) => r.id !== message.id));
+        } else {
+          this.contactRows.update((rows) => rows.map((r) => (r.id === fresh.id ? fresh : r)));
+        }
+      },
+      error: () => {
+        this.contactBusyId.set(null);
+        this.contactError.set(true);
+      },
+    });
   }
 }

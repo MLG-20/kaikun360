@@ -235,3 +235,64 @@
     color: var(--k-muted);
   }
 }
+
+// --- Onglets « Conversations » / « Messages de contact » (F8.15.c) ------------
+//
+// Un cran AU-DESSUS des portées (`.ms-scopes`) dans la hiérarchie : les portées
+// filtrent une même liste, les onglets changent de nature de courrier. D'où le
+// soulignement plutôt que la pilule — deux pilules superposées se liraient comme
+// deux filtres de même niveau.
+.ms-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--k-line);
+}
+
+.ms-tab {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &.is-on {
+    color: var(--k-brand);
+    border-bottom-color: var(--k-brand);
+  }
+
+  &:not(.is-on):hover {
+    color: var(--k-ink);
+  }
+
+  // Le nombre de messages en attente : c'est lui qui appelle vers l'onglet.
+  &__badge {
+    min-width: 20px;
+    padding: 1px 6px;
+    border-radius: var(--k-radius-pill);
+    background: var(--k-brand);
+    color: #fff;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    text-align: center;
+  }
+}
+
+// Le message de contact est affiché EN ENTIER (aucune fiche à ouvrir derrière) :
+// on borne sa largeur pour que la colonne ne dévore pas la table, et on respecte
+// les retours à la ligne du visiteur.
+.ms-message {
+  display: block;
+  max-width: 46ch;
+  white-space: pre-line;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--k-ink);
+}
