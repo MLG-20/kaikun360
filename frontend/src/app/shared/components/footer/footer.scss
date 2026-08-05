@@ -105,15 +105,39 @@
   color: #fff;
 }
 
+// Bandeau légal (F8.15.e) : une rangée séparée, au-dessus du copyright, qui
+// enveloppe librement pour rester lisible sur mobile sans défilement latéral.
+.legal {
+  margin-top: 38px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    padding: 0;
+  }
+
+  a {
+    font-size: 13.5px;
+    color: #aebbd4;
+    transition: color 0.15s;
+
+    &:hover {
+      color: #fff;
+    }
+  }
+}
+
 .bottom {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 38px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 18px;
   font-size: 13.5px;
   color: #aebbd4;
 }

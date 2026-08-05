@@ -11,7 +11,7 @@ API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 - **243 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **61 tables**, référentiel géographique du Sénégal inclus
-- **839 tests** automatisés (2776 assertions), tous verts ✅
+- **845 tests** automatisés (2820 assertions), tous verts ✅
 
 ---
 
@@ -51,7 +51,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 839 tests automatiques** — des petits programmes
+notifications) et **vérifié par 845 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -633,7 +633,16 @@ php artisan db:seed --class=CommunesSeeder   # (optionnel) communes officielles 
 php artisan db:seed --class=DemoSeeder       # (optionnel, dev) annonces + demandes + réservations + gestion locative + profil & missions prestataire de démonstration
                                              # → remplit les 5 catalogues publics et les espaces connectés ; idempotent
 php artisan db:seed --class=ContentSeeder    # (optionnel, dev) contenu éditorial de démo
-                                             # → FAQ publiée + pages À propos/légales (slugs) ; idempotent
+                                             # → FAQ publiée ; appelle PublicPagesSeeder ; idempotent
+php artisan db:seed --class=PublicPagesSeeder # ⚠️ PAS optionnel, PAS de la démo : les pages
+                                             # légales du CDC §4.2 (CGU, CGV, confidentialité,
+                                             # cookies, conditions de mandat, annulation/
+                                             # remboursement) + mentions légales et À propos.
+                                             # → À REJOUER APRÈS CHAQUE DÉPLOIEMENT qui ajoute
+                                             #   une page : la garde est par SLUG, les pages
+                                             #   déjà en base ne sont jamais réécrites (le texte
+                                             #   validé par le juriste et saisi au back-office
+                                             #   doit survivre à une relance).
 
 # 4. Stockage privé (documents/médias)
 php artisan storage:link

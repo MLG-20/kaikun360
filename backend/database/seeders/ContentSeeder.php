@@ -3,17 +3,24 @@
 namespace Database\Seeders;
 
 use App\Models\Faq;
-use App\Models\Page;
 use Illuminate\Database\Seeder;
 
 /**
- * Contenu éditorial de DÉMONSTRATION (hors production) : FAQ publiée et pages
- * institutionnelles / légales servies publiquement par slug.
+ * Contenu éditorial de DÉMONSTRATION : la FAQ publiée, plus les pages
+ * institutionnelles et légales appelées via {@see PublicPagesSeeder}.
  *
  * Alimente les pages du frontend (F2.8 : /faqs, /pages/{slug}, À propos) pour
  * qu'elles s'affichent remplies en développement local. Séparé du DemoSeeder
  * (catalogues) et du DatabaseSeeder (référentiel) pour rester modulaire et ne
  * jamais polluer les tests.
+ *
+ * ⚠️ **Les pages ne vivent plus ici** (F8.15.e). Elles ont migré dans
+ * {@see PublicPagesSeeder} parce qu'elles ne sont PAS de la démonstration : le
+ * CDC §4.2 les impose en production. Surtout, la garde d'idempotence ci-dessous
+ * est « tout ou rien » — une seule page en base et le seeder s'arrête —, si
+ * bien qu'une page ajoutée à la liste n'aurait jamais atteint une base déjà
+ * remplie. `PublicPagesSeeder` garde slug par slug, ce qui rend l'ajout d'une
+ * page sûr et rejouable. La garde ci-dessous ne porte donc plus que sur la FAQ.
  *
  * Le corps des pages (`body`) est un fragment HTML : le frontend le rend via
  * `[innerHTML]` (Angular assainit automatiquement le balisage). En production,
@@ -22,38 +29,26 @@ use Illuminate\Database\Seeder;
  * À lancer explicitement :
  *   php artisan db:seed --class=ContentSeeder
  *
- * Idempotent : si des pages existent déjà, on ne réinsère rien (relance sûre).
+ * Idempotent : relance sûre (FAQ déjà présente → rien ; pages → par slug).
  */
 class ContentSeeder extends Seeder
 {
     public function run(): void
     {
-        // Garde d'idempotence : contenu déjà présent → on s'arrête.
-        if (Page::query()->exists() || Faq::query()->exists()) {
-            $this->command?->info('ContentSeeder : contenu éditorial déjà présent, rien à faire.');
+        // Les pages légales/institutionnelles d'abord : elles sont attendues en
+        // production et se posent une par une, indépendamment de la FAQ.
+        $this->call(PublicPagesSeeder::class);
+
+        // Garde d'idempotence de la DÉMO : FAQ déjà présente → on s'arrête.
+        if (Faq::query()->exists()) {
+            $this->command?->info('ContentSeeder : FAQ de démonstration déjà présente, rien à faire.');
 
             return;
         }
 
-        $this->seedPages();
         $this->seedFaqs();
 
-        $this->command?->info('ContentSeeder : pages et FAQ de démonstration créées.');
-    }
-
-    /**
-     * Pages institutionnelles et légales, adressées par slug.
-     */
-    private function seedPages(): void
-    {
-        foreach ($this->pages() as $slug => $page) {
-            Page::query()->create([
-                'slug' => $slug,
-                'title' => $page['title'],
-                'body' => $page['body'],
-                'is_published' => true,
-            ]);
-        }
+        $this->command?->info('ContentSeeder : FAQ de démonstration créée.');
     }
 
     /**
@@ -70,136 +65,6 @@ class ContentSeeder extends Seeder
                 'is_published' => true,
             ]);
         }
-    }
-
-    /**
-     * @return array<string, array{title: string, body: string}>
-     */
-    private function pages(): array
-    {
-        return [
-            'a-propos' => [
-                'title' => 'À propos de Kaikun 360',
-                'body' => <<<'HTML'
-<p>Kaikun 360 est la plateforme sénégalaise qui réunit en un seul endroit
-l'immobilier, les séjours, le tourisme, le transport, la construction et les
-services aux entreprises. Notre mission : rendre chaque transaction <strong>simple,
-vérifiée et fiable</strong>, que vous soyez au Sénégal ou dans la diaspora.</p>
-
-<h2>Notre raison d'être</h2>
-<p>Trop de projets — un terrain acheté à distance, une villa louée pour les
-vacances, un chantier confié depuis l'étranger — se heurtent au même obstacle :
-le manque de confiance. Kaikun 360 est né pour lever cet obstacle avec un
-protocole clair et des acteurs identifiés.</p>
-
-<h2>Le protocole de confiance</h2>
-<ul>
-  <li><strong>Vérification documentée</strong> des biens et des prestataires
-  avant publication.</li>
-  <li><strong>Tout est filmé et daté</strong> : visites, états des lieux et
-  étapes de chantier sont tracés.</li>
-  <li><strong>Un numéro de suivi unique</strong> par dossier, pour savoir en
-  permanence où en est votre projet.</li>
-</ul>
-
-<h2>Pensé pour la diaspora</h2>
-<p>Piloter un projet à distance ne devrait pas rimer avec inquiétude. Nos outils
-de suivi, nos comptes rendus réguliers et notre accompagnement humain permettent
-de décider en confiance, où que vous soyez.</p>
-
-<h2>Nos huit univers</h2>
-<p>Immobilier, Nuitées &amp; séjours, Tourisme, Transport, Construction, Gestion
-locative, Diaspora et Team building : une même exigence de sérieux sur chacun.</p>
-
-<p>Une question ? Notre équipe est disponible sur la page
-<a href="/contact">Contact</a>.</p>
-HTML,
-            ],
-            'mentions-legales' => [
-                'title' => 'Mentions légales',
-                'body' => <<<'HTML'
-<h2>Éditeur du site</h2>
-<p>Le présent site est édité par Kaikun 360, plateforme de mise en relation de
-services immobiliers, touristiques et de construction au Sénégal.</p>
-<p>Contact : <a href="mailto:support@kaikun360.sn">support@kaikun360.sn</a></p>
-
-<h2>Hébergement</h2>
-<p>Le site est hébergé sur une infrastructure sécurisée. Les coordonnées de
-l'hébergeur sont disponibles sur simple demande auprès du support.</p>
-
-<h2>Propriété intellectuelle</h2>
-<p>L'ensemble des contenus (textes, visuels, logos, marque « Kaikun 360 ») est
-protégé. Toute reproduction sans autorisation préalable est interdite.</p>
-
-<h2>Responsabilité</h2>
-<p>Kaikun 360 agit comme intermédiaire de confiance entre utilisateurs et
-prestataires. Les informations publiées par les annonceurs restent sous leur
-responsabilité ; Kaikun 360 met en œuvre un processus de vérification mais ne
-saurait être tenu responsable d'un usage contraire aux présentes conditions.</p>
-HTML,
-            ],
-            'cgu' => [
-                'title' => "Conditions générales d'utilisation",
-                'body' => <<<'HTML'
-<p>Les présentes conditions générales d'utilisation (CGU) encadrent l'accès et
-l'usage de la plateforme Kaikun 360. En créant un compte, vous les acceptez.</p>
-
-<h2>1. Objet</h2>
-<p>Kaikun 360 met en relation des utilisateurs recherchant un bien ou un service
-avec des propriétaires et prestataires vérifiés.</p>
-
-<h2>2. Compte utilisateur</h2>
-<p>Vous êtes responsable de l'exactitude des informations de votre compte et de
-la confidentialité de vos identifiants. Certaines actions (dépôt de bien,
-paiement) requièrent un compte vérifié.</p>
-
-<h2>3. Engagements des prestataires</h2>
-<p>Les prestataires s'engagent à fournir des informations exactes, à respecter
-le protocole de vérification et à honorer les réservations confirmées.</p>
-
-<h2>4. Réservations et paiements</h2>
-<p>Une réservation n'est confirmée qu'après validation du paiement. Les modalités
-d'annulation sont précisées au moment de la réservation.</p>
-
-<h2>5. Comportements interdits</h2>
-<p>Sont notamment interdits : la publication d'annonces frauduleuses, l'usurpation
-d'identité et toute tentative de contournement du protocole de confiance.</p>
-
-<h2>6. Modification des CGU</h2>
-<p>Kaikun 360 peut faire évoluer les présentes conditions ; les utilisateurs sont
-informés des changements significatifs.</p>
-HTML,
-            ],
-            'politique-confidentialite' => [
-                'title' => 'Politique de confidentialité',
-                'body' => <<<'HTML'
-<p>Kaikun 360 attache une grande importance à la protection de vos données
-personnelles. Cette politique explique quelles données nous collectons et comment
-nous les utilisons.</p>
-
-<h2>Données collectées</h2>
-<ul>
-  <li>Données de compte : nom, e-mail, téléphone, ville.</li>
-  <li>Données de projet : demandes, réservations, échanges avec les prestataires.</li>
-  <li>Données techniques : informations de connexion nécessaires au bon
-  fonctionnement du service.</li>
-</ul>
-
-<h2>Utilisation des données</h2>
-<p>Vos données servent à fournir le service, sécuriser les transactions, vous
-tenir informé de l'avancement de vos projets et améliorer la plateforme. Elles ne
-sont jamais vendues à des tiers.</p>
-
-<h2>Conservation</h2>
-<p>Les données sont conservées le temps nécessaire à la fourniture du service et
-au respect de nos obligations légales.</p>
-
-<h2>Vos droits</h2>
-<p>Vous pouvez accéder à vos données, les corriger ou en demander la suppression
-en écrivant à <a href="mailto:support@kaikun360.sn">support@kaikun360.sn</a>.</p>
-HTML,
-            ],
-        ];
     }
 
     /**

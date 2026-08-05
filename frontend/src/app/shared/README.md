@@ -10,7 +10,7 @@ fonctionnalités. Tous sont « présentiels » : pilotés par leurs `input()` /
 | Composant | Sélecteur | Rôle |
 | --- | --- | --- |
 | `HeaderComponent` | `app-header` | En-tête global **réellement fixe** (sticky porté par l'hôte) : logo, **méga-menus déroulants par univers** (cartes icône + titre + description, ouverture survol/clavier, fermeture Échap/navigation/clic-dehors), lien Kaikun Pro, CTA connexion, **menu mobile en accordéons**. Aligné sur le prototype client ; chaque lien mène à une page réelle (F2.3 → F2.7). |
-| `FooterComponent` | `app-footer` | Pied de page : marque, colonnes de liens, mention légale. |
+| `FooterComponent` | `app-footer` | Pied de page : marque, réseaux sociaux, trois colonnes de liens et **bandeau légal** (F8.15.e — les textes de cadre du CDC §4.2, séparés des liens d'aide : on ne cherche pas les CGV comme on cherche la FAQ). ⚠️ Chaque lien `/pages/:slug` suppose la page en base, posée par `PublicPagesSeeder`. |
 | `OrbitHeroComponent` | `app-orbit-hero` | « Signature orbitale » du hero : anneaux tournants + univers en orbite, carte centrale interactive (repris de la maquette client, charte Kaikun). |
 | `ListingCardComponent` | `app-listing-card` | Carte de bien / service du catalogue (image ou dégradé de repli, badge, titre, localisation, prix, CTA). |
 | `VerificationBadgeComponent` | `app-verification-badge` | Pastille de vérification (« Vérifié », « Vérifié notaire »…), tons `default` / `gold`. |

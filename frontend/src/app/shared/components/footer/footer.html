@@ -58,6 +58,15 @@
     }
   </div>
 
+  <!-- Bandeau légal (F8.15.e) : les textes de cadre exigés par le CDC §4.2. -->
+  <nav class="k-wrap legal" aria-label="Informations légales">
+    <ul>
+      @for (link of legalLinks; track link.link) {
+        <li><a [routerLink]="link.link">{{ link.label }}</a></li>
+      }
+    </ul>
+  </nav>
+
   <div class="k-wrap bottom">
     <span>© {{ year }} Kaikun 360. Tous droits réservés.</span>
     <span class="k-muted">Fait au Sénégal 🇸🇳</span>

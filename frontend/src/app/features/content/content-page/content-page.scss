@@ -33,7 +33,18 @@
 }
 
 // Mise en forme du HTML éditorial (titres, paragraphes, listes, liens).
-.content-prose {
+//
+// ⚠️ `::ng-deep` est INDISPENSABLE ici, ce n'est pas une facilité (F8.15.e).
+// Le corps de la page arrive par `[innerHTML]` : ses éléments sont créés hors
+// du template, donc SANS l'attribut d'encapsulation que Angular ajoute aux
+// balises écrites à la main. Sans `::ng-deep`, `.content-prose h2` compile en
+// `.content-prose[_ngcontent-x] h2[_ngcontent-x]` et ne rencontre jamais rien —
+// les règles ci-dessous étaient donc lettre morte depuis F2.8. Et comme le
+// reset global (`_base.scss`) met `margin: 0` sur TOUT et retire couleur et
+// soulignement des liens, les pages légales s'affichaient en un pavé compact
+// aux liens invisibles. Le `:host` qui précède empêche la fuite : ces règles ne
+// s'appliquent qu'à l'intérieur de ce composant.
+:host ::ng-deep .content-prose {
   color: var(--k-ink);
   line-height: 1.7;
 
@@ -65,5 +76,16 @@
 
   strong {
     color: var(--k-ink);
+  }
+
+  // Mention de fin des pages légales encore en relecture juridique (F8.15.e) :
+  // détachée du texte, discrète, mais lisible — c'est une réserve, pas une
+  // note de bas de page décorative.
+  .page-note {
+    margin-top: 2.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--k-line);
+    font-size: 0.875rem;
+    color: var(--k-muted);
   }
 }

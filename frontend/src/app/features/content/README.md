@@ -62,14 +62,28 @@ Deux façons de nous joindre :
 On oriente enfin vers les parcours métier existants (déposer un bien, devenir
 prestataire, FAQ). Aucun bouton mort.
 
-## Données de démonstration
+## Le contenu vient de la base
 
-Les endpoints existent (B13.4) mais la base est vide par défaut. Le contenu de
-démo (FAQ + pages) est seedé côté backend :
+Les endpoints existent (B13.4) mais la base est vide par défaut. Deux seeders,
+qui ne jouent pas le même rôle :
 
 ```bash
-php artisan db:seed --class=ContentSeeder   # idempotent
+php artisan db:seed --class=PublicPagesSeeder  # les PAGES — attendues en production
+php artisan db:seed --class=ContentSeeder      # la FAQ de démo (appelle le précédent)
 ```
+
+⚠️ **Les pages légales ne sont pas de la démonstration.** Le CDC §4.2 en impose
+six (CGU, CGV, confidentialité, cookies, conditions de mandat, politique de
+remboursement) et le §13 les classe en priorité **Haute** : elles doivent exister
+en production. D'où un seeder à part, dont la garde d'idempotence est **par
+slug** — une page ajoutée à la liste se pose sur une base déjà remplie, une page
+déjà présente n'est **jamais** réécrite (le texte relu par le juriste et saisi au
+back-office survit à une relance). `ContentSeeder`, lui, garde le tout-ou-rien
+qui convient à de la démo.
+
+⚠️ **Un lien du pied de page suppose donc un seeder rejoué.** Ajouter une entrée
+dans `footer.ts` sans ajouter le slug dans `PublicPagesSeeder` produit un 404 sur
+une page obligatoire.
 
 ## Styles
 
@@ -77,5 +91,8 @@ php artisan db:seed --class=ContentSeeder   # idempotent
 - Section d'orientation Contact : `.conv-section-title`
   ([`_conversion.scss`](../../../styles/_conversion.scss)).
 - Spécifiques : accordéons FAQ (`faq-page.scss`), prose éditoriale
-  (`content-page.scss`, classe `.content-prose`), cartes Contact
+  (`content-page.scss`, classe `.content-prose` — ⚠️ sous `:host ::ng-deep`,
+  seule façon d'atteindre du HTML injecté par `[innerHTML]` ; sans cela les
+  règles ne s'appliquent à rien et le reset global affiche la page en un pavé
+  compact aux liens invisibles), cartes Contact
   (`contact-page.scss`).

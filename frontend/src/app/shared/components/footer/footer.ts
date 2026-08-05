@@ -79,18 +79,39 @@ export class FooterComponent {
         { label: 'À propos', link: '/pages/a-propos' },
         { label: 'Diaspora', link: '/diaspora' },
         { label: 'Team building', link: '/team-building' },
-        { label: 'Nous contacter', link: '/contact' },
       ],
     },
     {
       title: 'Aide',
       links: [
         { label: 'FAQ', link: '/faqs' },
-        { label: 'Confidentialité', link: '/pages/politique-confidentialite' },
-        { label: "Conditions d'utilisation", link: '/pages/cgu' },
-        { label: 'Mentions légales', link: '/pages/mentions-legales' },
+        { label: 'Nous contacter', link: '/contact' },
+        { label: 'Annulation & remboursement', link: '/pages/politique-annulation-remboursement' },
+        { label: 'Conditions de mandat', link: '/pages/conditions-de-mandat' },
       ],
     },
+  ];
+
+  /**
+   * Bandeau légal du bas de page (F8.15.e).
+   *
+   * Le CDC §4.2 impose six pages légales. Les entasser dans la colonne « Aide »
+   * l'aurait portée à huit entrées, sans hiérarchie : on ne cherche pas les CGV
+   * comme on cherche la FAQ. D'où la répartition par INTENTION — la politique
+   * d'annulation et les conditions de mandat répondent à une question qu'on se
+   * pose (« qu'est-ce qui s'applique à moi ? ») et restent dans « Aide », les
+   * textes de cadre vont dans ce bandeau, à l'endroit où l'usage les attend.
+   *
+   * ⚠️ Chacun de ces liens suppose une page en base : elles sont posées par
+   * `PublicPagesSeeder` côté backend, à rejouer après déploiement. Un slug
+   * modifié ici sans l'être là-bas produit un 404 sur une page obligatoire.
+   */
+  protected readonly legalLinks: FooterLink[] = [
+    { label: 'Mentions légales', link: '/pages/mentions-legales' },
+    { label: "Conditions d'utilisation", link: '/pages/cgu' },
+    { label: 'Conditions de vente', link: '/pages/cgv' },
+    { label: 'Confidentialité', link: '/pages/politique-confidentialite' },
+    { label: 'Cookies', link: '/pages/politique-cookies' },
   ];
 
   constructor() {
