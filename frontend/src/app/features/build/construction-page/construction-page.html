@@ -332,17 +332,20 @@
       </div>
     </div>
 
-    <!-- Demande de devis (pré-remplie par le simulateur) -->
+    <!--
+      Dépôt du dossier de chantier (F8.15.b). Ce n'était qu'un `app-lead-form`
+      générique : la demande partait dans `requests` et n'atteignait jamais
+      l'écran back-office « Construction ». Les champs structurés lui viennent
+      directement du simulateur — le visiteur ne ressaisit rien.
+    -->
     <div class="build-lead">
-      <app-lead-form
-        serviceType="build"
-        redirectPath="/construction"
-        heading="Recevoir un devis de construction"
-        intro="Votre estimation est reprise ci-dessous. Complétez-la et un conducteur de travaux vous recontacte."
-        ctaLabel="Demander mon devis"
-        [defaultMessage]="leadMessage()"
-        [showCity]="true"
-        [showBudget]="true" />
+      <app-construction-request-form
+        [objective]="objective()"
+        [finishLevel]="finish()"
+        [surfaceM2]="surface()"
+        [city]="region().name"
+        [budget]="budget()"
+        [defaultDescription]="leadMessage()" />
     </div>
   </div>
 </section>

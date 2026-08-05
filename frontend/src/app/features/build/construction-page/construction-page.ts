@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Observable, catchError, debounceTime, distinctUntilChanged, map, of, startWith, switchMap } from 'rxjs';
 
-import { LeadFormComponent } from '../../../shared/components/lead-form/lead-form';
+import { ConstructionRequestFormComponent } from '../construction-request-form/construction-request-form';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import {
   ConstructionObjective,
@@ -46,12 +46,18 @@ type SimState =
  * du projet (objectif, surface, niveaux, finition, zone, foncier) et interroge
  * l'endpoint PUBLIC `POST /construction-requests/simulate` : tout le chiffrage
  * (travaux, frais annexes, foncier, délai, jalons, rentabilité) vient du backend,
- * seule source de vérité, dont le barème est géré au back-office. Le résultat
- * alimente aussi un formulaire de demande de devis (`service_type = build`).
+ * seule source de vérité, dont le barème est géré au back-office.
+ *
+ * ⚠️ **F8.15.b — le formulaire ne dépose plus une demande générique.** Il envoie
+ * un vrai dossier de chantier (`POST /construction-requests`), en réutilisant les
+ * paramètres déjà réglés au simulateur. Avant, la demande partait dans `requests`
+ * avec le simulateur résumé en TEXTE : elle n'atteignait jamais l'écran
+ * back-office « Construction », aucun jalon n'était semé et aucun devis ventilé
+ * par lot n'était composable — tout l'aval du module était inatteignable.
  */
 @Component({
   selector: 'app-construction-page',
-  imports: [LeadFormComponent],
+  imports: [ConstructionRequestFormComponent],
   templateUrl: './construction-page.html',
   styleUrl: './construction-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

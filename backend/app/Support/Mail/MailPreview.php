@@ -16,6 +16,9 @@ use App\Modules\Core\Notifications\WelcomeNotification;
 use App\Modules\Core\Services\VerificationService;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Modules\Build\Enums\ConstructionObjective;
+use App\Modules\Build\Enums\FinishLevel;
+use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\TeamBuilding\Models\TeamBuildingQuote;
 use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
 use App\Notifications\BookingConfirmedNotification;
@@ -66,6 +69,7 @@ class MailPreview
             'interne-bien-a-valider' => 'Interne — Bien à valider',
             'interne-vehicule-a-valider' => 'Interne — Véhicule à valider',
             'interne-team-building' => 'Interne — Demande team building',
+            'interne-chantier' => 'Interne — Nouvelle demande de chantier',
         ];
     }
 
@@ -214,6 +218,18 @@ class MailPreview
                 'start_date' => '2026-11-06',
                 'end_date' => '2026-11-08',
                 'budget_xof' => 6000000,
+            ])),
+
+            // F8.15.b — l'alerte de chantier n'existait pas : le dépôt était
+            // muet, faute d'écran public qui alimente `construction_requests`.
+            'interne-chantier' => new \App\Modules\Build\Notifications\NewConstructionRequestNotification(new ConstructionRequest([
+                'reference' => 'CST-2026-0117',
+                'objective' => ConstructionObjective::CONSTRUCTION_NEUVE,
+                'surface_m2' => 120,
+                'finish_level' => FinishLevel::STANDARD,
+                'city' => 'Thiès',
+                'budget_xof' => 30000000,
+                'estimated_cost_xof' => 33000000,
             ])),
 
             default => abort(404, 'Aperçu inconnu.'),

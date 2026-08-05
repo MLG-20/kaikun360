@@ -577,7 +577,7 @@ plateforme. Kaikun 360 vendant de la *confiance* sur un marché où la méfiance
 la règle, ces messages sont traités comme un élément de produit à part entière —
 pas comme une notification technique.
 
-**20 e-mails**, tous issus d'un gabarit unique de marque (charte du site :
+**21 e-mails**, tous issus d'un gabarit unique de marque (charte du site :
 bleu `#0348FB`, navy `#03193F`, or `#D3AE52`, crème `#F7F4EB`).
 
 | Point | Mise en œuvre |
@@ -587,8 +587,8 @@ bleu `#0348FB`, navy `#03193F`, or `#D3AE52`, crème `#F7F4EB`).
 | Accueil personnalisé | `WelcomeNotification` — un message distinct par profil (client, diaspora, propriétaire, prestataire, entreprise), envoyé **à l'activation** du compte |
 | Liens toujours valides | `SpaceLink` résout l'espace privé du destinataire (4 espaces distincts côté Angular) |
 | Compatibilité | Tables, styles inline, aucune image distante, bouton « à toute épreuve » Outlook, responsive + mode sombre |
-| Relecture | `http://127.0.0.1:8000/apercu-emails` — les 20 e-mails dans le navigateur, données fictives, **aucun envoi** (local uniquement) |
-| Relecture en conditions réelles | `php artisan mail:apercu <adresse>` — envoie les 20 e-mails (données fictives) dans une vraie boîte de réception |
+| Relecture | `http://127.0.0.1:8000/apercu-emails` — les 21 e-mails dans le navigateur, données fictives, **aucun envoi** (local uniquement) |
+| Relecture en conditions réelles | `php artisan mail:apercu <adresse>` — envoie les 21 e-mails (données fictives) dans une vraie boîte de réception |
 
 Détail complet, règles de rédaction et ajout d'un e-mail :
 [`app/Support/Mail/README.md`](app/Support/Mail/README.md).
@@ -662,7 +662,7 @@ php artisan serve                 # http://127.0.0.1:8000
 |---|---|
 | `reservations:cloturer` | **Planifiée (3 h)** — fait avancer les réservations *datées* : `en_cours` quand le service commence, `terminee` quand il s'achève. N'avance ni les annulées ni les impayées (une réservation jamais payée n'est pas un service consommé). Rejouable sans risque ; `--dry-run` pour simuler. |
 | `devis:rattraper-reservations` | Ponctuelle — crée les réservations manquantes des devis déjà acceptés avant F8.14. Idempotente, `--dry-run`, **sans notification**. |
-| `mail:apercu <adresse>` | Ponctuelle — envoie les 20 e-mails transactionnels dans une vraie boîte. |
+| `mail:apercu <adresse>` | Ponctuelle — envoie les 21 e-mails transactionnels dans une vraie boîte. |
 
 ---
 

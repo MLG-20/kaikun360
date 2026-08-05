@@ -236,6 +236,24 @@ export interface ClientConstructionRequest {
   quotes?: ConstructionQuote[];
 }
 
+/**
+ * Corps de `POST /construction-requests` — miroir de
+ * `StoreConstructionRequestRequest` (F8.15.b).
+ *
+ * ⚠️ `city` est une **chaîne libre côté serveur**, pas un identifiant de région :
+ * on y envoie le nom de la région choisie au simulateur.
+ */
+export interface CreateConstructionRequestPayload {
+  objective: ConstructionObjective;
+  city: string;
+  surface_m2: number;
+  finish_level: FinishLevel;
+  /** Budget du client, `null` s'il ne l'a pas renseigné. */
+  budget_xof?: number | null;
+  /** Le contexte que le client ajoute, plus le récapitulatif du simulateur. */
+  description?: string | null;
+}
+
 /** Libellés des unités de ligne de devis (miroir des unités backend). */
 export const QUOTE_UNIT_LABELS: Record<string, string> = {
   m2: 'm²',
@@ -250,6 +268,27 @@ export const QUOTE_UNIT_LABELS: Record<string, string> = {
 export class ConstructionService {
   private readonly http = inject(HttpClient);
   private readonly api = environment.apiUrl;
+
+  /**
+   * POST /construction-requests — dépose un vrai dossier de chantier (F8.15.b).
+   *
+   * ⚠️ **La page publique n'appelait pas cette route** : elle envoyait un
+   * `POST /requests` générique, dont le corps était un message en TEXTE
+   * récapitulant le simulateur. La demande atterrissait donc dans `requests` et
+   * non dans `construction_requests` — la table que lit l'écran back-office
+   * « Construction ». Conséquences : aucun jalon semé, aucune estimation
+   * enregistrée, aucun devis de chantier composable, et un agent qui devait
+   * relire une phrase pour retrouver « 120 m², R+1, finition standard ».
+   *
+   * Le serveur estime le coût et sème les jalons par défaut ; la réponse porte
+   * la référence `CST-…` du dossier.
+   */
+  create(payload: CreateConstructionRequestPayload) {
+    return this.http.post<ApiEnvelope<{ construction_request: ClientConstructionRequest }>>(
+      `${this.api}/construction-requests`,
+      payload,
+    );
+  }
 
   /** POST /construction-requests/simulate — chiffrage complet (public). */
   simulate(payload: SimulatePayload): Observable<ApiEnvelope<{ simulation: Simulation }>> {

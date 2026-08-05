@@ -10,6 +10,8 @@ use App\Models\Quote;
 use App\Models\Review;
 use App\Models\User;
 use App\Modules\Build\Events\ConstructionQuoteSent;
+use App\Modules\Build\Events\ConstructionRequestCreated;
+use App\Modules\Build\Listeners\NotifyAdminsOfConstructionRequest;
 use App\Modules\Build\Listeners\NotifyClientOfConstructionQuote;
 use App\Modules\Build\Models\ConstructionRequest;
 use App\Modules\Build\Policies\ConstructionRequestPolicy;
@@ -161,6 +163,10 @@ class AppServiceProvider extends ServiceProvider
         // F3.9 — Devis de CHANTIER envoyé au client (à ne pas confondre avec
         // `QuoteSent`, qui est le devis pack du team building).
         Event::listen(ConstructionQuoteSent::class, NotifyClientOfConstructionQuote::class);
+        // F8.15.b — Nouveau CHANTIER déposé depuis la page publique. Il n'y
+        // avait aucune alerte : le dossier arrivait en base sans que personne
+        // ne l'apprenne, faute d'écran public qui alimente cette table.
+        Event::listen(ConstructionRequestCreated::class, NotifyAdminsOfConstructionRequest::class);
         Event::listen(QuoteAccepted::class, StartOperationalFollowUp::class);
         Event::listen(RequestCreated::class, NotifyAvailableAgentsOfRequest::class);
         Event::listen(RequestStatusChanged::class, NotifyUserOfRequestStatusChange::class);

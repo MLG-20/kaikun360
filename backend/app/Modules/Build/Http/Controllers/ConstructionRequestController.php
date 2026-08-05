@@ -8,6 +8,7 @@ use App\Modules\Build\Enums\ConstructionQuoteStatus;
 use App\Modules\Build\Enums\ConstructionRequestStatus;
 use App\Modules\Build\Enums\ConstructionZone;
 use App\Modules\Build\Enums\FinishLevel;
+use App\Modules\Build\Events\ConstructionRequestCreated;
 use App\Modules\Build\Http\Requests\SimulateConstructionRequest;
 use App\Modules\Build\Http\Requests\StoreConstructionRequestRequest;
 use App\Modules\Build\Http\Resources\ConstructionRequestResource;
@@ -56,6 +57,12 @@ class ConstructionRequestController extends Controller
 
         // Jalons par défaut selon l'objectif du projet.
         $milestones->seedDefault($constructionRequest);
+
+        // F8.15.b — Prévient l'équipe. Cette ligne manquait : le dossier était
+        // créé, chiffré et jalonné dans le silence le plus complet. Le défaut
+        // était masqué par la page publique, qui déposait jusqu'ici une demande
+        // GÉNÉRIQUE (elle, notifiée depuis B11.2) dans une autre table.
+        ConstructionRequestCreated::dispatch($constructionRequest);
 
         return ApiResponse::created([
             'construction_request' => ConstructionRequestResource::make(

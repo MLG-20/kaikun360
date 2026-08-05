@@ -1,0 +1,74 @@
+<!--
+  Dépôt d'un dossier de chantier (F8.15.b). Reprend les classes globales de
+  `app-lead-form` (`.k-card.lead-form`) : la page ne doit pas changer d'aspect
+  parce que la destination de l'envoi a changé.
+-->
+<div class="k-card lead-form">
+  <h2 class="lead-form-title">Recevoir un devis de construction</h2>
+
+  @if (createdReference(); as reference) {
+    <!--
+      Succès : on nomme le dossier ET on dit où le retrouver. Un chantier n'est
+      pas une demande de rappel — il a une vie (jalons, rapports, devis), et le
+      client doit savoir qu'elle commence et où elle se suit.
+    -->
+    <p class="k-form-info">
+      Dossier de chantier ouvert ✔ — référence <b>{{ reference }}</b>. Un
+      conducteur de travaux vérifié étudie votre projet et vous adresse un devis
+      ventilé par lot. Vous le retrouvez dans
+      <a routerLink="/mon-espace/diaspora">« Mes chantiers &amp; devis »</a>.
+    </p>
+  } @else if (!isAuthenticated()) {
+    <p class="lead-form-authnote">
+      Connectez-vous pour ouvrir votre dossier de chantier et en suivre
+      l’avancement.
+    </p>
+    <a
+      class="k-btn k-btn--primary k-btn--block"
+      routerLink="/auth/connexion"
+      [queryParams]="{ redirect: '/construction' }"
+      >Se connecter</a
+    >
+    <p class="lead-form-alt">
+      Pas encore de compte ?
+      <a routerLink="/auth/inscription">Créer un compte</a>
+    </p>
+  } @else {
+    <p class="lead-form-intro">
+      Votre estimation est reprise ci-dessous. Complétez-la et un conducteur de
+      travaux vous recontacte.
+    </p>
+
+    <form class="lead-form-fields" [formGroup]="form" (ngSubmit)="submit()">
+      @if (formError(); as error) {
+        <p class="k-form-error">{{ error }}</p>
+      }
+
+      <div class="k-field">
+        <label class="k-label" for="cst-description">Votre projet</label>
+        <textarea
+          id="cst-description"
+          class="k-input"
+          rows="7"
+          formControlName="description"
+          [class.k-input--error]="
+            form.controls.description.touched && form.controls.description.invalid
+          "></textarea>
+        @if (form.controls.description.touched && form.controls.description.invalid) {
+          <p class="k-error">Merci de décrire votre projet.</p>
+        }
+        <p class="k-hint">
+          Objectif, surface, finition et localisation sont déjà repris du
+          simulateur ci-dessus — inutile de les ressaisir.
+        </p>
+      </div>
+
+      <button
+        class="k-btn k-btn--primary k-btn--block"
+        type="submit"
+        [disabled]="submitting()">
+        {{ submitting() ? 'Envoi…' : 'Demander mon devis' }}
+      </button>
+    </form>
+  }
+</div>

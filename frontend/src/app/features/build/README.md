@@ -26,8 +26,10 @@ budget couvre le projet » / « il manque X »), les **métriques clés** (trava
 frais annexes, terrain, délai, surface totale), puis des **sections repliables**
 à l'intérieur du panneau : répartition des travaux, **frais annexes officiels**
 (études, permis, viabilisation SENELEC/eau), échéancier par jalons, et projection
-de **rentabilité locative**. Sous le simulateur, un formulaire de demande de devis
-est **pré-rempli avec l'estimation** (connexion requise).
+de **rentabilité locative**. Sous le simulateur, un formulaire **ouvre un vrai
+dossier de chantier** (`CST-…`), pré-rempli avec l'estimation et reprenant les
+paramètres déjà réglés au-dessus (connexion requise). Le client le retrouve dans
+son espace, l'équipe le reçoit dans son écran « Construction ».
 
 Quand le terrain est **à acquérir**, un rappel invite à **vérifier le titre
 foncier** — cœur du protocole anti-arnaque, surtout pour la diaspora.
@@ -60,9 +62,27 @@ après étude du projet.
   rattachées chacune à une zone de coût — regroupement d'IHM ; les coefficients de
   zone restent gérés au backend). *(L'ancien `construction-estimator.ts`, qui
   dupliquait le calcul en local, a été supprimé.)*
-- Le formulaire de devis est le composant partagé
-  [`app-lead-form`](../../shared/components/lead-form) (`service_type = build`,
-  champs ville + budget affichés).
+- **`construction-request-form/`** — `ConstructionRequestFormComponent`, le
+  formulaire sous le simulateur. ⚠️ **Il a remplacé `app-lead-form` en F8.15.b.**
+  La page envoyait jusque-là un `POST /requests` **générique** dont le corps était
+  le simulateur résumé en TEXTE : la demande atterrissait dans `requests` et
+  n'atteignait **jamais** l'écran back-office « Construction », qui lit
+  `construction_requests`. `POST /construction-requests` existait depuis B5.5 et
+  **n'avait aucun appelant** — donc aucun jalon semé, aucune estimation
+  enregistrée, aucun devis ventilé par lot composable : tout l'aval du module
+  (rapports photo/vidéo, acceptation du devis par le client en F3.9, conversion en
+  réservation payable en F8.14) partait d'une porte murée.
+  ⚠️ **Aucune ressaisie** : objectif, ville, surface, finition et budget viennent
+  des signaux du simulateur, que le visiteur a déjà réglés. Le formulaire ne porte
+  qu'un champ — la description, pré-remplie du récapitulatif (qui garde ce
+  qu'aucune colonne ne stocke : niveaux, foncier, estimation affichée, projection
+  locative). Il réutilise les classes `.k-card.lead-form` pour que la page ne
+  change pas d'aspect. Le succès nomme le dossier (`CST-…`) et **dit où le
+  suivre** (`/mon-espace/diaspora`, « Mes chantiers & devis ») : un chantier a une
+  vie, contrairement à une demande de rappel.
+  ⚠️ Côté serveur, le dépôt **ne prévenait personne** — `ConstructionRequestCreated`
+  + `NotifyAdminsOfConstructionRequest` ont été ajoutés en même temps (le manque
+  était masqué par la demande générique, alertée depuis B11.2).
 - Styles : bandeau `.uni-hero` + sections `.conv-*` partagés ; le simulateur a ses
   styles propres dans `construction-page.scss` — formulaire clair `.build-sim-form`
   (+ `.build-choice`, `.build-input`, `.build-select`, `.build-range`) et **panneau
