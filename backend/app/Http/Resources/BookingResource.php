@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\BookingStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,6 +24,14 @@ class BookingResource extends JsonResource
 {
     /** Types de `bookable` dont le client peut déclencher l'annulation lui-même. */
     private const CANCELLABLE_TYPES = ['vehicle', 'experience'];
+
+    /**
+     * Types de `bookable` qui se notent (F8.15.a) — miroir des clés réservables
+     * de `Review::TYPES`. Le trajet (`mobility`) en est absent : le service rendu
+     * est celui du véhicule et de son chauffeur, que `Review::TYPES` ne sait pas
+     * désigner depuis un départ. Le sur-mesure aussi (il n'a pas de fiche).
+     */
+    private const REVIEWABLE_TYPES = ['stay', 'vehicle', 'experience'];
 
     /**
      * @return array<string, mixed>
@@ -65,6 +74,19 @@ class BookingResource extends JsonResource
             // Le titulaire peut-il encore annuler cette réservation lui-même ?
             'cancellable' => in_array($type, self::CANCELLABLE_TYPES, true)
                 && ! ($this->status?->estAnnulee() ?? false),
+            // --- Avis (F8.15.a) ---------------------------------------------
+            // La cible d'un avis n'est PAS la réservation mais la chose réservée
+            // (`Review::TYPES`) : on note un logement, pas son contrat. Le front
+            // a donc besoin du couple, qu'il ne peut pas deviner depuis `id`.
+            // `null` pour le sur-mesure, qui ne se note pas (le devis n'est pas
+            // une fiche du catalogue).
+            'reviewable_type' => in_array($type, self::REVIEWABLE_TYPES, true) ? $type : null,
+            'reviewable_id' => in_array($type, self::REVIEWABLE_TYPES, true) ? $this->bookable_id : null,
+            // Miroir exact de `ReviewPolicy::create` + `Review::hasConsumed` : on
+            // ne note qu'un service **terminé**. ⚠️ Ne dit PAS si un avis existe
+            // déjà — ça, c'est `GET /reviews/mine` (une requête par ligne sinon).
+            'can_review' => in_array($type, self::REVIEWABLE_TYPES, true)
+                && $this->status === BookingStatus::TERMINEE,
         ];
     }
 

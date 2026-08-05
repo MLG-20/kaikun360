@@ -377,3 +377,41 @@ client revient d'un autre domaine, parfois longtemps après. Une garde de rôle 
 renverrait vers la connexion juste après avoir payé. Elles n'affichent aucune
 donnée de réservation et **n'affirment jamais que le paiement est acquis** — une
 redirection de navigateur ne prouve rien, seul l'IPN signé fait foi.
+
+## Donner son avis (F8.15.a)
+
+| Route | Écran |
+|---|---|
+| `<espace>/reservations/:id/avis` | Dépôt d'un avis sur une réservation terminée |
+
+⚠️ **`POST /reviews` existait depuis B12.2 et n'avait aucun appelant.** Le client
+n'avait nulle part où noter, le back-office « Avis et qualité » modérait une file
+que rien n'alimentait, et la note des prestataires ne pouvait jamais monter — le
+cahier des charges demande pourtant des avis sur les fiches (§4.2), la notation
+des prestataires (Kaikun Pro) et leur modération (§6).
+
+⚠️ **Le trou était plus profond qu'un écran manquant : aucune réservation ne
+devenait jamais `terminee`.** La policy serveur exige un service consommé ; or ni
+le check-in/check-out, ni l'encaissement, ni aucun geste ne posaient ce statut —
+`en_cours` et `terminee` étaient des états morts. Livrer le formulaire seul
+n'aurait donné le droit d'écrire à personne. Le cycle est fermé côté serveur (la
+tâche planifiée `reservations:cloturer` et le check-out d'un agent), **ce qui
+suppose un cron en production** : sans lui, le bouton n'apparaît jamais.
+
+**On note la chose réservée, pas la réservation.** La cible est le logement, le
+véhicule ou l'expérience (`reviewable_type`/`reviewable_id`, servis par
+`BookingResource`) : deux séjours dans le même logement visent le même avis, et
+le serveur n'en accepte qu'un. Les trajets et le sur-mesure ne se notent pas —
+il n'y a pas de fiche à noter.
+
+⚠️ **`GET /reviews` ne dit pas si j'ai déjà donné mon avis** : il ne renvoie que
+les avis **publiés**, or tout avis frais est en modération. L'écran s'appuie donc
+sur `GET /reviews/mine` et affiche l'avis existant au lieu du formulaire. La
+liste et la fiche, elles, ne le savent pas : le vérifier par ligne coûterait une
+requête par carte — elles n'affichent le bouton que sur `can_review`, miroir
+exact de la policy, et laissent l'écran d'avis trancher.
+
+**Écran dédié, comme le règlement** : écrire un avis demande de se souvenir du
+séjour, ce qu'un champ coincé entre deux cartes n'invite pas à faire. La
+réservation est rappelée au-dessus du formulaire. Les étoiles sont de **vrais
+boutons** portant leur libellé (`aria-label`), pas un `input[type=range]`.

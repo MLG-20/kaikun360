@@ -64,3 +64,33 @@
   font-size: 0.88rem;
   font-weight: 600;
 }
+
+// --- Invitation à donner son avis (F8.15.a) ----------------------------------
+// Même gabarit que `.bd-pay` (une phrase à gauche, un bouton à droite), mais en
+// fond neutre : c'est une invitation, pas une somme à régler.
+.bd-review {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-cream);
+
+  &__title {
+    display: block;
+    color: var(--k-ink);
+    font-size: 0.95rem;
+  }
+
+  &__hint {
+    display: block;
+    margin-top: 3px;
+    color: var(--k-muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+}

@@ -140,6 +140,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --- Avis (B12.2) --------------------------------------------------------
     // Dépôt réservé à qui a consommé la ressource (policy create côté contrôleur).
+    // ⚠️ `reviews/mine` AVANT toute route à paramètre sur le même segment.
+    Route::get('reviews/mine', [ReviewController::class, 'mine']);
     Route::post('reviews', [ReviewController::class, 'store']);
 
     // --- Modération des avis (B12.3) -----------------------------------------

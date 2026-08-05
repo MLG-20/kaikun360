@@ -93,6 +93,18 @@ export const ENTERPRISE_ROUTES: Routes = [
         title: 'Régler ma réservation — Kaikun 360',
       },
       {
+        // F8.15.a — Donner son avis. Montée ici aussi parce que la carte de
+        // réservation porte le bouton dans TOUS les espaces : sans la route,
+        // il mènerait au 404. Une entreprise réserve des séminaires (qui ne se
+        // notent pas), mais rien ne l'empêche de louer un véhicule.
+        path: 'reservations/:id/avis',
+        loadComponent: () =>
+          import('../account/bookings/booking-review-page').then(
+            (m) => m.BookingReviewPageComponent,
+          ),
+        title: 'Donner mon avis — Kaikun 360',
+      },
+      {
         // Messages — écran transverse (GET /messages), réutilisé, autonome via SPACE_CONFIG.
         path: 'messages',
         loadComponent: () =>

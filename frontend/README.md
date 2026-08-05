@@ -37,7 +37,11 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
 - ✅ **L'espace client (F3)** : l'espace personnel de la personne connectée, sous
   `/mon-espace` (menu latéral sombre, en-tête épuré). Ses écrans sont en
   place — tableau de bord, **profil** (photo, identité, coordonnées, sécurité, pièces),
-  **mes demandes** (liste + détail cliquable), **réservations** (liste + détail cliquable), **favoris** (tous univers, avec le cœur du
+  **mes demandes** (liste + détail cliquable), **réservations** (liste + détail
+  cliquable, **règlement** et, une fois le service terminé, **dépôt d'un avis** —
+  F8.15.a : `POST /reviews` n'avait jusque-là aucun écran, et aucune réservation
+  ne devenait jamais « terminée », si bien que personne n'avait jamais pu noter
+  quoi que ce soit), **favoris** (tous univers, avec le cœur du
   catalogue pour les ajouter), **notifications** et **messagerie** (conversations
   + fil de discussion avec réponse). **« Projets diaspora »** (F3.8 —
   `GET/POST /diaspora-projects…`) : le client **lance et suit ses dossiers

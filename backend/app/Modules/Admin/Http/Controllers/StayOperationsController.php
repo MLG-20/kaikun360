@@ -2,6 +2,7 @@
 
 namespace App\Modules\Admin\Http\Controllers;
 
+use App\Enums\BookingStatus;
 use App\Enums\CautionStatus;
 use App\Enums\HousekeepingStatus;
 use App\Http\Controllers\Controller;
@@ -205,6 +206,15 @@ class StayOperationsController extends Controller
     /**
      * Enregistre le départ et déclenche le ménage.
      * PATCH /api/v1/admin/stay-bookings/{booking}/check-out
+     *
+     * **F8.15.a — le départ clôt aussi la réservation.** Jusqu'ici cette méthode
+     * n'horodatait que ses propres colonnes : le séjour était constaté fini côté
+     * exploitation, mais la réservation restait `confirmee` pour l'éternité. Le
+     * départ enregistré par un agent est pourtant la preuve la plus sûre qu'un
+     * séjour a eu lieu — plus sûre que la date de fin, qu'un départ anticipé
+     * dément. C'est donc lui qui pose `terminee`, sans attendre la tâche
+     * planifiée `reservations:cloturer` (qui ne rattrape que les séjours dont
+     * personne n'a enregistré le départ).
      */
     public function checkOut(Booking $booking): JsonResponse
     {
@@ -220,6 +230,9 @@ class StayOperationsController extends Controller
         $booking->update([
             'checked_out_at' => now(),
             'housekeeping_status' => HousekeepingStatus::A_FAIRE->value,
+            // Une réservation annulée qui aurait malgré tout été occupée reste
+            // annulée : on ne réécrit pas une décision d'annulation.
+            ...($booking->status->estAnnulee() ? [] : ['status' => BookingStatus::TERMINEE->value]),
         ]);
 
         return ApiResponse::success(['booking' => $this->summary($booking->fresh())]);

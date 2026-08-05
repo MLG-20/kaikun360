@@ -145,6 +145,22 @@
           }
         }
 
+        <!--
+          F8.15.a — Donner son avis, depuis la liste : c'est là que le client
+          revoit ses séjours passés. Le bouton n'apparaît que sur un service
+          TERMINÉ (`can_review`, miroir de la policy serveur). La liste ne sait
+          pas si l'avis a déjà été donné — le savoir coûterait une requête par
+          ligne ; c'est l'écran d'avis qui le vérifie et montre alors l'avis
+          existant au lieu du formulaire.
+        -->
+        @if (bk.can_review) {
+          <footer class="bk-actions">
+            <a class="k-btn k-btn--ghost" [routerLink]="[bookingsBase, bk.id, 'avis']">
+              Donner mon avis
+            </a>
+          </footer>
+        }
+
         <!-- Zone d'annulation : seulement si le backend l'autorise -->
         @if (bk.cancellable) {
           <footer class="bk-actions">

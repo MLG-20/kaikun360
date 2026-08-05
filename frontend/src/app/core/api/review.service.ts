@@ -24,11 +24,33 @@ export interface ReviewList {
   summary: ReviewSummary;
 }
 
+/** Un de MES avis (`GET /reviews/mine`) : la note + ce qu'elle vise. */
+export interface MyReview extends Review {
+  /** Type de la cible notée, en clé courte (jamais le nom de classe PHP). */
+  reviewable_type: ReviewableType | null;
+  reviewable_id: number | null;
+}
+
+/** Corps de `POST /reviews` — miroir de `StoreReviewRequest`. */
+export interface ReviewSubmission {
+  reviewable_type: ReviewableType;
+  reviewable_id: number;
+  /** Note de 1 à 5. */
+  rating: number;
+  comment?: string | null;
+}
+
 /**
- * Accès en LECTURE aux avis publiés (F2.3).
+ * Avis : lecture publique (F2.3) et **dépôt** (F8.15.a).
  *
  * `GET /reviews` est public et exige le couple (`reviewable_type`,
  * `reviewable_id`). N'expose que les avis publiés (modération côté backend).
+ *
+ * ⚠️ **`GET /reviews` ne suffit pas à savoir si j'ai déjà donné mon avis** : il
+ * ne renvoie que les avis **publiés**, or tout avis frais est en modération. Un
+ * écran qui s'y fierait rouvrirait le formulaire à un client qui vient d'écrire,
+ * pour l'envoyer droit sur le 422 « Vous avez déjà laissé un avis ». D'où
+ * `mine()`, qui voit aussi les avis en attente.
  */
 @Injectable({ providedIn: 'root' })
 export class ReviewService {
@@ -41,5 +63,19 @@ export class ReviewService {
       .set('reviewable_type', type)
       .set('reviewable_id', String(id));
     return this.http.get<ApiEnvelope<ReviewList>>(`${this.api}/reviews`, { params });
+  }
+
+  /** GET /reviews/mine — mes avis, publiés ET en attente de modération. */
+  mine(): Observable<ApiEnvelope<{ reviews: MyReview[] }>> {
+    return this.http.get<ApiEnvelope<{ reviews: MyReview[] }>>(`${this.api}/reviews/mine`);
+  }
+
+  /**
+   * POST /reviews — dépose un avis. Le serveur exige d'avoir consommé la cible
+   * (réservation **terminée**) et n'en accepte qu'un seul par cible ; l'avis naît
+   * « en attente » et n'est visible qu'après modération.
+   */
+  submit(body: ReviewSubmission): Observable<ApiEnvelope<{ review: Review }>> {
+    return this.http.post<ApiEnvelope<{ review: Review }>>(`${this.api}/reviews`, body);
   }
 }

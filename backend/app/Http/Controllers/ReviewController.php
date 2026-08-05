@@ -90,6 +90,48 @@ class ReviewController extends Controller
     }
 
     /**
+     * Mes avis, tous univers confondus. GET /api/v1/reviews/mine
+     *
+     * **F8.15.a — pourquoi cette route.** L'écran « Mes réservations » doit
+     * savoir, pour chaque réservation terminée, si le client a **déjà** donné son
+     * avis : sans quoi il proposerait indéfiniment « Donner mon avis » et le
+     * client se heurterait au 422 « Vous avez déjà laissé un avis ».
+     *
+     * Elle ne peut pas se déduire de `GET /reviews` (qui ne renvoie que les avis
+     * **publiés** : un avis encore en modération — l'état de tout avis frais —
+     * n'y figure pas, et le client se croirait libre de recommencer). Elle évite
+     * aussi de faire porter l'information par `BookingResource`, où « cet
+     * utilisateur a-t-il noté cette cible ? » coûterait une requête par ligne de
+     * liste. Ici, un seul appel couvre tout l'écran.
+     *
+     * Renvoie le couple (`reviewable_type`, `reviewable_id`) en clé courte, celle
+     * que le front manipule déjà, jamais le nom de classe PHP.
+     */
+    public function mine(Request $request): JsonResponse
+    {
+        // Classe Eloquent → clé courte exposée à l'API (inverse de Review::TYPES).
+        $slugs = array_flip(Review::TYPES);
+
+        $reviews = Review::query()
+            ->where('user_id', $request->user()->id)
+            ->latest()
+            ->get()
+            ->map(fn (Review $review) => [
+                'id' => $review->id,
+                'reference' => $review->reference,
+                'reviewable_type' => $slugs[$review->reviewable_type] ?? null,
+                'reviewable_id' => $review->reviewable_id,
+                'rating' => $review->rating,
+                'comment' => $review->comment,
+                'status' => $review->status?->value,
+                'status_label' => $review->status?->label(),
+                'created_at' => $review->created_at?->toIso8601String(),
+            ]);
+
+        return ApiResponse::success(['reviews' => $reviews]);
+    }
+
+    /**
      * Modère un avis en attente (agents/admin). Publie ou rejette, puis
      * répercute la note sur le prestataire concerné le cas échéant.
      * PATCH /api/v1/reviews/{review}/moderate

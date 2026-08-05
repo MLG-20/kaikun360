@@ -69,6 +69,15 @@ export const ACCOUNT_ROUTES: Routes = [
         title: 'Régler ma réservation — Kaikun 360',
       },
       {
+        // F8.15.a — Donner son avis sur une réservation terminée (POST /reviews,
+        // écrit depuis B12.2 et jusqu'ici sans aucun appelant). Écran dédié,
+        // comme le règlement : écrire un avis demande de se souvenir du séjour.
+        path: 'reservations/:id/avis',
+        loadComponent: () =>
+          import('./bookings/booking-review-page').then((m) => m.BookingReviewPageComponent),
+        title: 'Donner mon avis — Kaikun 360',
+      },
+      {
         // F3.8 — Projets diaspora : liste des dossiers pilotés à distance
         // (GET /diaspora-projects/mine).
         path: 'diaspora',

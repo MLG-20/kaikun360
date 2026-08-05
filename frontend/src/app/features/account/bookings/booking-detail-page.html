@@ -114,6 +114,27 @@
         }
 
         <!--
+          F8.15.a — Donner son avis. N'apparaît qu'une fois le service TERMINÉ
+          (`can_review` est le miroir de la policy serveur) : proposer plus tôt
+          mènerait droit au 403. La fiche ne sait pas si l'avis a déjà été donné —
+          ça, c'est l'écran d'avis qui le vérifie (`GET /reviews/mine`) et qui
+          affiche alors l'avis existant plutôt qu'un formulaire.
+        -->
+        @if (bk.can_review) {
+          <div class="bd-review">
+            <div>
+              <strong class="bd-review__title">Comment s’est passé votre {{ bk.type_label | lowercase }} ?</strong>
+              <span class="bd-review__hint">
+                Votre avis aide les prochains clients et fait vivre la note de nos partenaires.
+              </span>
+            </div>
+            <a class="k-btn k-btn--ghost" [routerLink]="[bookingsBase, bk.id, 'avis']">
+              Donner mon avis
+            </a>
+          </div>
+        }
+
+        <!--
           F8.12 — écrire au support à propos de CETTE réservation (retard,
           modification, question sur la caution…). Le dossier est joint au fil.
         -->

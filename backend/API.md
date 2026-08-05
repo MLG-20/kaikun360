@@ -331,8 +331,18 @@ TypeScript miroir côté frontend Angular (phase F0).
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
 | GET | `/reviews` | public | `ReviewController@index` |
+| GET | `/reviews/mine` | auth | `ReviewController@mine` |
 | POST | `/reviews` | auth | `ReviewController@store` |
 | PATCH | `/reviews/{review}/moderate` | auth | `ReviewController@moderate` |
+
+> `/reviews` ne renvoie que les avis **publiés** ; `/reviews/mine` renvoie ceux
+> de l'utilisateur connecté **y compris en attente de modération** (F8.15.a).
+> Sans cette seconde route, l'écran « Donner mon avis » rouvrirait son
+> formulaire à un client qui vient d'écrire, pour l'envoyer sur un 422.
+>
+> ⚠️ Le dépôt exige une réservation **terminée** (`ReviewPolicy`). Ce statut
+> n'est atteint que par la tâche planifiée `reservations:cloturer` ou par le
+> check-out d'un agent : sans cron en production, personne ne peut noter.
 
 ### Médias
 

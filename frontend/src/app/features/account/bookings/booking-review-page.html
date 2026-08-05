@@ -1,0 +1,149 @@
+<section class="account-head">
+  <app-back-link class="account-back" [fallback]="bookingsBase" />
+  <p class="account-eyebrow">Votre avis</p>
+  <h1 class="account-title">Donner mon avis</h1>
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="pf-state" role="status">Chargement de votre réservation…</p>
+  }
+  @case ('notfound') {
+    <p class="pf-state pf-state--error" role="alert">Cette réservation est introuvable.</p>
+  }
+  @case ('forbidden') {
+    <p class="pf-state pf-state--error" role="alert">Cette réservation ne vous appartient pas.</p>
+  }
+  @case ('failed') {
+    <p class="pf-state pf-state--error" role="alert">
+      Impossible de charger cette réservation pour le moment. Merci de réessayer plus tard.
+    </p>
+  }
+
+  @default {
+    @if (booking(); as bk) {
+      <!-- De quoi parle-t-on : on ne note pas de mémoire une référence. -->
+      <article class="rev-card rev-recap">
+        <div>
+          <span class="rev-kind">{{ bk.type_label }}</span>
+          <h2 class="rev-item">{{ bk.item_label || bk.reference }}</h2>
+        </div>
+        <span class="rev-ref">{{ bk.reference }}</span>
+      </article>
+
+      @switch (state()) {
+        @case ('done') {
+          @if (existing(); as rev) {
+            <article class="rev-card rev-card--done">
+              <h2 class="rev-section-title">Merci, votre avis est enregistré</h2>
+
+              <p class="rev-stars" aria-label="Note donnée : {{ rev.rating }} sur 5">
+                @for (star of stars; track star) {
+                  <span class="rev-star" [class.is-on]="star <= rev.rating" aria-hidden="true">★</span>
+                }
+              </p>
+
+              @if (rev.comment) {
+                <blockquote class="rev-quote">{{ rev.comment }}</blockquote>
+              }
+
+              <p class="rev-note">
+                @if (rev.status === 'publie') {
+                  Il est publié sur la fiche : merci d’aider les prochains voyageurs.
+                } @else {
+                  Il est <strong>en cours de vérification</strong> par notre équipe et
+                  paraîtra sur la fiche une fois validé. Vous n’avez rien d’autre à faire.
+                }
+              </p>
+
+              <a class="k-btn k-btn--ghost" [routerLink]="bookingsBase">
+                Retour à mes réservations
+              </a>
+            </article>
+          }
+        }
+
+        @case ('ineligible') {
+          <!--
+            Cas honnête plutôt qu'un formulaire inerte : la policy serveur exige un
+            service TERMINÉ, et le sur-mesure comme les trajets ne se notent pas
+            du tout (aucune fiche à noter).
+          -->
+          <article class="rev-card">
+            <p class="pf-state" role="status">
+              @if (bk.reviewable_type === null) {
+                Cette réservation ne se note pas : l’avis porte sur un logement, un
+                véhicule ou une expérience du catalogue.
+              } @else {
+                Vous pourrez donner votre avis <strong>une fois le service terminé</strong>.
+                Cette réservation est encore « {{ bk.status_label }} ».
+              }
+            </p>
+            <a class="k-btn k-btn--ghost" [routerLink]="bookingsBase">
+              Retour à mes réservations
+            </a>
+          </article>
+        }
+
+        @default {
+          <form class="rev-card" (ngSubmit)="submit()">
+            <h2 class="rev-section-title">Quelle note donnez-vous ?</h2>
+
+            <!--
+              Des boutons, pas un `input[type=range]` : la note est un choix parmi
+              cinq valeurs nommées, et chaque bouton porte son libellé pour les
+              lecteurs d'écran (l'étoile seule ne dit rien).
+            -->
+            <div class="rev-picker" role="radiogroup" aria-label="Note sur 5">
+              @for (star of stars; track star) {
+                <button
+                  type="button"
+                  class="rev-pick"
+                  [class.is-on]="star <= rating"
+                  role="radio"
+                  [attr.aria-checked]="rating === star"
+                  [attr.aria-label]="star + ' étoile' + (star > 1 ? 's' : '')"
+                  (click)="choose(star)">
+                  ★
+                </button>
+              }
+            </div>
+
+            <label class="rev-field">
+              <span>Votre commentaire <em>(facultatif)</em></span>
+              <textarea
+                class="k-input"
+                name="comment"
+                rows="5"
+                maxlength="2000"
+                placeholder="Ce qui vous a plu, ce qui pourrait être amélioré…"
+                [(ngModel)]="comment"></textarea>
+              <span class="rev-hint">
+                Votre avis est vérifié par notre équipe avant publication. Il paraîtra
+                sous votre nom sur la fiche.
+              </span>
+            </label>
+
+            @if (error()) {
+              <p class="pf-state pf-state--error" role="alert">{{ error() }}</p>
+            }
+
+            <div class="rev-actions">
+              <button
+                type="submit"
+                class="k-btn k-btn--primary"
+                [disabled]="sending() || rating < 1">
+                @if (sending()) {
+                  Envoi de votre avis…
+                } @else {
+                  Envoyer mon avis
+                }
+              </button>
+              <a class="k-btn k-btn--ghost" [routerLink]="bookingsBase">Annuler</a>
+            </div>
+          </form>
+        }
+      }
+    }
+  }
+}

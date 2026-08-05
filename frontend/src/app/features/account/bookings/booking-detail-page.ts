@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, LowerCasePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -18,7 +18,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'forbidden' | 'failed';
 
 @Component({
   selector: 'app-booking-detail-page',
-  imports: [DatePipe, RouterLink, BackLinkComponent, ContactSupportComponent],
+  imports: [DatePipe, LowerCasePipe, RouterLink, BackLinkComponent, ContactSupportComponent],
   templateUrl: './booking-detail-page.html',
   styleUrl: './booking-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

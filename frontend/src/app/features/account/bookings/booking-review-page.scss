@@ -1,0 +1,175 @@
+// =============================================================================
+// Donner mon avis sur une réservation terminée (F8.15.a)
+//
+// Même charpente de carte que l'écran de règlement (`booking-payment-page`) —
+// les deux vivent côte à côte sous « Mes réservations » et doivent se ressembler.
+// La différence de ton est voulue : ici rien n'engage d'argent, la page invite
+// à écrire plutôt qu'à décider. Les étoiles sont donc la seule zone appuyée.
+// =============================================================================
+
+:host {
+  display: block;
+}
+
+.rev-card {
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+}
+
+// --- Rappel de la réservation notée ------------------------------------------
+
+.rev-recap {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.rev-kind {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--k-muted);
+}
+
+.rev-item {
+  margin: 4px 0 0;
+  font-family: var(--k-font-display);
+  font-size: 1.15rem;
+  color: var(--k-ink);
+}
+
+.rev-ref {
+  font-family: var(--k-font-mono);
+  font-size: 0.78rem;
+  color: var(--k-muted);
+}
+
+// --- Saisie ------------------------------------------------------------------
+
+.rev-section-title {
+  margin: 0 0 12px;
+  font-family: var(--k-font-display);
+  font-size: 1rem;
+  color: var(--k-ink);
+}
+
+.rev-picker {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+
+// Les étoiles sont de vrais boutons : cible large (44 px, doigt sur mobile),
+// contour visible au clavier, et couleur seulement quand la note est choisie —
+// une rangée d'étoiles déjà dorées laisserait croire que la note est donnée.
+.rev-pick {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  line-height: 1;
+  background: none;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  color: var(--k-line-strong);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+
+  &:hover {
+    border-color: var(--k-gold, var(--k-brand));
+    transform: translateY(-1px);
+  }
+
+  &.is-on {
+    color: var(--k-gold, #d88718);
+    border-color: var(--k-gold, #d88718);
+  }
+}
+
+.rev-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 18px;
+
+  > span:first-child {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--k-ink);
+
+    em {
+      font-style: normal;
+      font-weight: 400;
+      color: var(--k-muted);
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 110px;
+    font-family: inherit;
+  }
+}
+
+.rev-hint {
+  font-size: 0.78rem;
+  color: var(--k-muted);
+  line-height: 1.5;
+}
+
+.rev-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 18px;
+  border-top: 1px solid var(--k-line);
+}
+
+// --- Avis déjà déposé --------------------------------------------------------
+
+.rev-card--done {
+  border-left: 4px solid var(--k-green);
+}
+
+// Ici les étoiles ne sont plus cliquables : simple restitution de la note.
+.rev-stars {
+  margin: 0 0 14px;
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: 2px;
+}
+
+.rev-star {
+  color: var(--k-line-strong);
+
+  &.is-on {
+    color: var(--k-gold, #d88718);
+  }
+}
+
+.rev-quote {
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--k-line);
+  background: var(--k-cream);
+  border-radius: var(--k-radius-sm);
+  color: var(--k-ink);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.rev-note {
+  margin: 0 0 16px;
+  color: var(--k-muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}

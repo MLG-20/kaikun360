@@ -645,6 +645,25 @@ php artisan serve                 # http://127.0.0.1:8000
 > Un **worker de queue** est nécessaire en production pour les notifications
 > asynchrones (`php artisan queue:work`), supervisé (Supervisor/systemd).
 
+> ⚠️ Un **cron** est nécessaire en production, au même titre que le worker :
+>
+> ```
+> * * * * * cd /chemin/du/projet && php artisan schedule:run >> /dev/null 2>&1
+> ```
+>
+> Sans lui, `reservations:cloturer` ne tourne jamais : **aucune réservation
+> n'atteint le statut `terminee`**, et comme la `ReviewPolicy` l'exige, plus
+> personne ne peut déposer d'avis (F8.15.a). Le symptôme est silencieux — le
+> bouton « Donner mon avis » n'apparaît simplement jamais.
+
+### Tâches planifiées et commandes de maintenance
+
+| Commande | Rôle |
+|---|---|
+| `reservations:cloturer` | **Planifiée (3 h)** — fait avancer les réservations *datées* : `en_cours` quand le service commence, `terminee` quand il s'achève. N'avance ni les annulées ni les impayées (une réservation jamais payée n'est pas un service consommé). Rejouable sans risque ; `--dry-run` pour simuler. |
+| `devis:rattraper-reservations` | Ponctuelle — crée les réservations manquantes des devis déjà acceptés avant F8.14. Idempotente, `--dry-run`, **sans notification**. |
+| `mail:apercu <adresse>` | Ponctuelle — envoie les 20 e-mails transactionnels dans une vraie boîte. |
+
 ---
 
 ## Configuration (.env)
