@@ -8,6 +8,7 @@ use App\Modules\Pro\Enums\ProviderCategory;
 use App\Modules\Pro\Enums\ProviderStatus;
 use App\Modules\Pro\Http\Resources\ProviderResource;
 use App\Modules\Pro\Models\Provider;
+use App\Modules\Pro\Models\ProviderMission;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -84,11 +85,17 @@ class AdminProviderController extends Controller
      * un avertissement sans son motif ne se défend pas devant l'intéressé.
      *
      * La fiche rassemble donc l'**identité et le contact** (le compte derrière
-     * l'enseigne), les **certifications** déposées, les **avis reçus** en clair
-     * et le **journal** — où la sanction figure avec sa raison.
+     * l'enseigne), les **certifications** déposées, les **avis reçus** en clair,
+     * les **missions confiées** (F8.15.d) et le **journal** — où la sanction
+     * figure avec sa raison.
      *
      * Lecture seule : avertir ou suspendre reste au module Pro
      * (`PATCH /providers/{id}/warn|suspend`), qui trace chaque décision.
+     * ⚠️ **L'affectation de mission fait exception** (F8.15.d) : elle passe par
+     * `POST /providers/{id}/missions`, appelé depuis cette même fiche. Ce n'est
+     * pas une sanction mais un geste d'exploitation quotidien, et il se décide
+     * précisément là où l'on juge le prestataire — sur sa note, ses avis et sa
+     * charge en cours.
      */
     public function show(Provider $provider): JsonResponse
     {
@@ -138,6 +145,29 @@ class AdminProviderController extends Controller
             ],
             'reviews' => $reviews,
             'activity' => $activity,
+            // F8.15.d — les missions confiées à ce prestataire. Elles manquaient
+            // à la fiche : `POST /providers/{id}/missions` n'ayant jamais eu
+            // d'appelant, aucune mission n'existait hors seeder et personne ne
+            // les avait réclamées. Elles deviennent indispensables dès qu'on
+            // peut en affecter une — sans elles on affecterait à l'aveugle,
+            // sans voir ce que le prestataire a déjà sur les bras.
+            'missions' => $provider->missions()
+                ->with('client:id,name')
+                ->latest()
+                ->limit(30)
+                ->get()
+                ->map(fn (ProviderMission $mission) => [
+                    'id' => $mission->id,
+                    'reference' => $mission->reference,
+                    'title' => $mission->title,
+                    'amount_xof' => $mission->amount_xof,
+                    'commission_xof' => $mission->commission_xof,
+                    'status' => $mission->status?->value,
+                    'status_label' => $mission->status?->label(),
+                    'client_name' => $mission->client?->name,
+                    'scheduled_at' => $mission->scheduled_at,
+                    'created_at' => $mission->created_at,
+                ]),
         ]);
     }
 }

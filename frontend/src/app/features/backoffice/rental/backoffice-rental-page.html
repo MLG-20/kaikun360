@@ -21,7 +21,140 @@
     }
   </select>
   <button type="button" class="k-btn k-btn--primary" (click)="applyFilters()">Filtrer</button>
+
+  <!--
+    F8.15.d — Ouvrir un mandat. Ce geste manquait : l'écran savait tout piloter
+    d'un mandat sauf en créer un, et tous ceux de la base venaient du seeder.
+  -->
+  <button
+    type="button"
+    class="k-btn"
+    [class.k-btn--primary]="!creating()"
+    [class.k-btn--ghost]="creating()"
+    (click)="toggleCreate()">
+    {{ creating() ? 'Fermer' : '+ Ouvrir un mandat' }}
+  </button>
 </section>
+
+@if (creating()) {
+  <section class="mnd-create">
+    <h2 class="mnd-create__title">Ouvrir un mandat de gestion</h2>
+
+    @if (created(); as reference) {
+      <p class="k-form-info" role="status">
+        Mandat <strong>{{ reference }}</strong> ouvert ✔ — il apparaît dans la liste
+        ci-dessous. Ouvrez sa fiche pour y saisir les loyers, incidents, dépenses
+        et reversements.
+      </p>
+    }
+
+    @if (createError(); as message) {
+      <p class="k-form-error" role="alert">{{ message }}</p>
+    }
+
+    <!--
+      Le bien d'abord : c'est lui qui détermine le propriétaire (déduit côté
+      serveur). Une recherche plutôt qu'une liste déroulante — le catalogue peut
+      compter des centaines de biens.
+    -->
+    <div class="mnd-field">
+      <label class="k-label" for="mnd-search">Bien à mettre en gestion</label>
+      @if (picked(); as property) {
+        <div class="mnd-picked">
+          <span>
+            <strong>{{ property.title }}</strong>
+            <em>{{ property.owner.name }}</em>
+          </span>
+          <button type="button" class="k-btn k-btn--ghost" (click)="clearPick()">
+            Changer
+          </button>
+        </div>
+      } @else {
+        <div class="mnd-search">
+          <input
+            id="mnd-search"
+            class="k-input"
+            type="search"
+            name="propertySearch"
+            [(ngModel)]="propertySearch"
+            (keyup.enter)="searchProperty()"
+            placeholder="Titre du bien…" />
+          <button type="button" class="k-btn k-btn--ghost" (click)="searchProperty()">
+            {{ searching() ? 'Recherche…' : 'Chercher' }}
+          </button>
+        </div>
+
+        @if (candidates().length) {
+          <ul class="mnd-candidates">
+            @for (c of candidates(); track c.id) {
+              <li>
+                <button type="button" class="mnd-candidate" (click)="pick(c)">
+                  {{ candidateLabel(c) }}
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </div>
+
+    <div class="mnd-row">
+      <div class="mnd-field">
+        <label class="k-label" for="mnd-rate">Commission (%)</label>
+        <input
+          id="mnd-rate"
+          class="k-input"
+          type="number"
+          min="0"
+          max="100"
+          step="0.5"
+          name="commissionRate"
+          [(ngModel)]="commissionRate" />
+      </div>
+      <div class="mnd-field">
+        <label class="k-label" for="mnd-start">Début</label>
+        <input id="mnd-start" class="k-input" type="date" name="startDate" [(ngModel)]="startDate" />
+      </div>
+      <div class="mnd-field">
+        <label class="k-label" for="mnd-end">
+          Fin <span class="k-optional">(facultatif)</span>
+        </label>
+        <input id="mnd-end" class="k-input" type="date" name="endDate" [(ngModel)]="endDate" />
+      </div>
+    </div>
+
+    <div class="mnd-field">
+      <label class="k-label" for="mnd-terms">
+        Clauses du mandat <span class="k-optional">(facultatif)</span>
+      </label>
+      <textarea
+        id="mnd-terms"
+        class="k-input"
+        rows="4"
+        name="terms"
+        [(ngModel)]="terms"
+        placeholder="Durée, périmètre, honoraires, conditions de résiliation…"></textarea>
+      <!-- Écart CDC assumé : pas de contrat scanné, les clauses sont en texte. -->
+      <p class="mnd-hint">
+        Ces clauses tiennent lieu de contrat de mandat : elles sont visibles du
+        propriétaire dans son espace.
+      </p>
+    </div>
+
+    <div class="mnd-actions">
+      <button
+        type="button"
+        class="k-btn k-btn--primary"
+        [disabled]="!picked() || saving()"
+        (click)="submitMandate()">
+        {{ saving() ? 'Ouverture…' : 'Ouvrir le mandat' }}
+      </button>
+      @if (!picked()) {
+        <span class="mnd-hint">Choisissez d’abord le bien concerné.</span>
+      }
+    </div>
+  </section>
+}
 
 @if (loading()) {
   <p class="ds-state" role="status">Chargement des mandats de gestion…</p>

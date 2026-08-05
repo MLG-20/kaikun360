@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Admin\Enums\AdminPermission;
 use App\Modules\Core\Enums\UserRole;
 use App\Modules\Immo\Models\Property;
+use App\Modules\Manage\Enums\MandateStatus;
 use App\Modules\Manage\Models\Incident;
 use App\Modules\Manage\Models\ManagementMandate;
 use App\Modules\Manage\Models\OwnerPayout;
@@ -61,6 +62,61 @@ class MandateManagementTest extends TestCase
             'property_id' => $property->id,
             'owner_id' => $owner->id,
         ]);
+    }
+
+    /**
+     * F8.15.d — **un seul mandat vivant par bien**.
+     *
+     * Rien ne l'empêchait tant qu'aucun écran ne créait de mandat : tous
+     * venaient du seeder, et le défaut ne pouvait donc pas se produire. En
+     * branchant le geste au back-office, il le devenait — et deux mandats sur le
+     * même bien, ce sont deux commissions prélevées sur le même loyer, deux
+     * reversements au même propriétaire et un rapport mensuel faux, sans rien à
+     * l'écran pour comprendre l'écart.
+     */
+    public function test_un_bien_deja_sous_mandat_est_refuse(): void
+    {
+        $property = Property::factory()->create();
+        Sanctum::actingAs($this->agent());
+
+        $this->postJson('/api/v1/manage/mandates', [
+            'property_id' => $property->id,
+            'commission_rate' => 10,
+            'start_date' => '2026-06-01',
+        ])->assertCreated();
+
+        $this->postJson('/api/v1/manage/mandates', [
+            'property_id' => $property->id,
+            'commission_rate' => 12,
+            'start_date' => '2026-07-01',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('property_id');
+
+        $this->assertSame(1, ManagementMandate::where('property_id', $property->id)->count());
+    }
+
+    /**
+     * Le renouvellement reste possible : un mandat TERMINÉ ne bloque pas. C'est
+     * le cas normal — un propriétaire qui reconduit sa gestion l'année suivante.
+     */
+    public function test_un_mandat_termine_n_empeche_pas_d_en_ouvrir_un_nouveau(): void
+    {
+        $property = Property::factory()->create();
+        ManagementMandate::factory()->create([
+            'property_id' => $property->id,
+            'status' => MandateStatus::TERMINE->value,
+        ]);
+
+        Sanctum::actingAs($this->agent());
+
+        $this->postJson('/api/v1/manage/mandates', [
+            'property_id' => $property->id,
+            'commission_rate' => 10,
+            'start_date' => '2026-06-01',
+        ])->assertCreated();
+
+        $this->assertSame(2, ManagementMandate::where('property_id', $property->id)->count());
     }
 
     public function test_un_non_agent_ne_peut_pas_creer_de_mandat(): void

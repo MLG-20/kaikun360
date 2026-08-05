@@ -396,11 +396,35 @@ export interface PartnerReview {
  * `account` est le compte utilisateur derrière l'enseigne : c'est lui qu'on
  * appelle quand la note se dégrade.
  */
+/**
+ * Une mission confiée à un prestataire (F8.15.d).
+ *
+ * ⚠️ `POST /providers/{id}/missions` était écrit depuis B10.3 et n'avait **aucun
+ * appelant** : aucune mission n'existait hors seeder. Les missions portent
+ * pourtant la **commission figée** de la marketplace Pro (CDC §2.1) — et ce sont
+ * elles qui rendent un prestataire **notable** (`Review::hasCompletedMissionWith`,
+ * la seconde moitié de F8.15.a, jusqu'ici inatteignable).
+ */
+export interface PartnerMission {
+  id: number;
+  reference: string;
+  title: string;
+  amount_xof: number;
+  commission_xof: number;
+  status: string | null;
+  status_label: string | null;
+  client_name: string | null;
+  scheduled_at: string | null;
+  created_at: string | null;
+}
+
 export interface PartnerDossier {
   provider: Provider;
   account: QueueOwner | null;
   reviews: PartnerReview[];
   activity: AccountActivity[];
+  /** Missions confiées (30 dernières), servies depuis F8.15.d. */
+  missions: PartnerMission[];
 }
 
 /**
@@ -2090,6 +2114,37 @@ export class AdminService {
   }
 
   /**
+   * Confie une mission à un prestataire. POST /providers/{id}/missions (F8.15.d)
+   *
+   * ⚠️ Route écrite en B10.3, **jamais appelée** : aucune mission n'était
+   * créable, donc l'espace prestataire (« Mes missions », « Mes revenus ») ne
+   * pouvait afficher que des données de seeder, et la **commission** de la
+   * marketplace Pro ne se déclenchait jamais. C'était aussi le verrou qui
+   * empêchait de **noter un prestataire** (F8.15.a) : la preuve de consommation
+   * exigée par la policy est une **mission terminée**.
+   *
+   * Le serveur refuse un prestataire non validé et **fige la commission** au
+   * moment de l'affectation (le taux peut changer, la mission garde le sien).
+   */
+  assignMission(
+    providerId: number,
+    payload: {
+      title: string;
+      description?: string | null;
+      amount_xof: number;
+      client_id?: number | null;
+      scheduled_at?: string | null;
+    },
+  ): Observable<PartnerMission> {
+    return this.http
+      .post<ApiEnvelope<{ mission: PartnerMission }>>(
+        `${this.api}/providers/${providerId}/missions`,
+        payload,
+      )
+      .pipe(map((res) => res.data.mission));
+  }
+
+  /**
    * Couverture par destination (agrégat, non paginé).
    * GET /admin/tourism/destinations — onglet « Destinations » (F7.2.k).
    */
@@ -2326,6 +2381,34 @@ export class AdminService {
     if (query.status) params = params.set('status', query.status);
     if (query.page) params = params.set('page', String(query.page));
     return this.http.get<Paginated<MandateDossier>>(`${this.api}/admin/mandates`, { params });
+  }
+
+  /**
+   * Ouvre un mandat de gestion sur un bien. POST /manage/mandates (F8.15.d)
+   *
+   * ⚠️ **Cette route était écrite depuis B6 et n'avait aucun appelant.** Le
+   * back-office savait tout piloter d'un mandat — loyers, incidents, dépenses,
+   * reversements, rapport mensuel — **sauf en créer un** : tous les mandats
+   * existants venaient du seeder. Le CTA « Confier mon bien » de la page
+   * Gestion locative produisait une demande générique, qu'aucun geste ne
+   * transformait en contrat. L'univers Kaikun Manage n'avait pas de porte
+   * d'entrée.
+   *
+   * ⚠️ Le **propriétaire n'est pas transmis** : le serveur le déduit du bien
+   * (`property.owner_id`). Deux sources pour la même information, c'est une
+   * incohérence garantie le jour où un bien change de main.
+   */
+  createMandate(payload: {
+    property_id: number;
+    commission_rate: number;
+    start_date: string;
+    end_date?: string | null;
+    status?: string | null;
+    terms?: string | null;
+  }): Observable<MandateDossier> {
+    return this.http
+      .post<ApiEnvelope<{ mandate: MandateDossier }>>(`${this.api}/manage/mandates`, payload)
+      .pipe(map((res) => res.data.mandate));
   }
 
 

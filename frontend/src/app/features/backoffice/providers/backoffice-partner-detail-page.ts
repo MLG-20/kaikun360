@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AdminService, PartnerDossier } from '../../../core/api/admin.service';
@@ -26,7 +27,7 @@ import { BackLinkComponent } from '../../../shared/components/back-link/back-lin
  */
 @Component({
   selector: 'app-backoffice-partner-detail-page',
-  imports: [RouterLink, BackLinkComponent],
+  imports: [FormsModule, RouterLink, BackLinkComponent],
   templateUrl: './backoffice-partner-detail-page.html',
   // Feuille COMMUNE à toutes les fiches du back-office (F8.2) : une fiche en
   // appelle une autre, elles doivent se ressembler.
@@ -64,6 +65,96 @@ export class BackofficePartnerDetailPageComponent {
   protected readonly negativeReviews = computed(() =>
     this.publishedReviews().filter((r) => r.rating <= 2),
   );
+
+  // --- Confier une mission (F8.15.d) ------------------------------------------
+  //
+  // ⚠️ `POST /providers/{id}/missions` était écrit depuis B10.3 et n'avait AUCUN
+  // appelant : aucune mission n'était créable. L'espace prestataire (« Mes
+  // missions », « Mes revenus ») ne pouvait donc afficher que des données de
+  // seeder, et la commission de la marketplace Pro ne se déclenchait jamais.
+  // C'était aussi le verrou qui rendait la NOTATION D'UN PRESTATAIRE
+  // inatteignable : la policy exige une mission TERMINÉE comme preuve de
+  // consommation — raison pour laquelle F8.15.a n'avait pu couvrir que les
+  // réservations.
+  //
+  // ⚠️ Le geste est ici, et non à l'écran « Avis & qualité » où vivent les
+  // sanctions : affecter n'est pas sanctionner. C'est un acte d'exploitation
+  // quotidien, et il se décide là où l'on juge le prestataire — sur sa note,
+  // ses avis et la charge qu'il a déjà.
+
+  /** Le formulaire d'affectation est-il déplié ? */
+  protected readonly assigning = signal(false);
+  protected readonly saving = signal(false);
+  protected readonly assignError = signal<string | null>(null);
+  /** Référence de la mission créée (bandeau de succès). */
+  protected readonly assigned = signal<string | null>(null);
+
+  protected missionTitle = '';
+  protected missionDescription = '';
+  protected missionAmount = 0;
+  protected missionScheduledAt = '';
+
+  /** Missions en cours (ni terminées ni annulées) : la charge du prestataire. */
+  protected readonly openMissions = computed(
+    () =>
+      this.dossier()?.missions.filter(
+        (m) => m.status !== 'terminee' && m.status !== 'annulee',
+      ) ?? [],
+  );
+
+  /** Un prestataire non validé ne peut pas recevoir de mission (règle serveur). */
+  protected readonly canAssign = computed(
+    () => this.dossier()?.provider.status === 'valide',
+  );
+
+  protected toggleAssign(): void {
+    this.assigning.update((open) => !open);
+    this.missionTitle = '';
+    this.missionDescription = '';
+    this.missionAmount = 0;
+    this.missionScheduledAt = '';
+    this.assignError.set(null);
+    this.assigned.set(null);
+  }
+
+  protected submitMission(): void {
+    if (this.saving() || !this.missionTitle.trim() || this.missionAmount <= 0) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.assignError.set(null);
+
+    this.admin
+      .assignMission(this.id, {
+        title: this.missionTitle.trim(),
+        description: this.missionDescription.trim() || null,
+        amount_xof: this.missionAmount,
+        scheduled_at: this.missionScheduledAt || null,
+      })
+      .subscribe({
+        next: (mission) => {
+          this.saving.set(false);
+          this.assigned.set(mission.reference);
+          // On recharge la fiche entière : la mission neuve doit apparaître dans
+          // la liste, et le prestataire vient de changer de charge.
+          this.load();
+        },
+        error: (err: { error?: { errors?: Record<string, string[]>; message?: string } }) => {
+          this.saving.set(false);
+          const first = err?.error?.errors ? Object.values(err.error.errors)[0]?.[0] : null;
+          this.assignError.set(
+            first ?? err?.error?.message ?? "La mission n'a pas pu être confiée. Réessayez.",
+          );
+        },
+      });
+  }
+
+  /** Montant formaté en FCFA. */
+  protected xof(value: number | null): string {
+    if (value === null || value === undefined) return '—';
+    return `${value.toLocaleString('fr-FR')} F`;
+  }
 
   constructor() {
     this.load();

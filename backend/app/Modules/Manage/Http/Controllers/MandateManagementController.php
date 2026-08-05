@@ -49,6 +49,29 @@ class MandateManagementController extends Controller
         $data = $request->validated();
         $property = Property::findOrFail($data['property_id']);
 
+        // F8.15.d — UN SEUL MANDAT VIVANT PAR BIEN. Rien ne l'empêchait tant
+        // qu'aucun écran ne créait de mandat : tous venaient du seeder. Deux
+        // mandats sur le même bien, ce sont deux commissions sur le même loyer,
+        // deux reversements au même propriétaire et un rapport mensuel faux —
+        // et rien à l'écran pour comprendre d'où vient l'écart. Un mandat
+        // TERMINÉ, lui, ne bloque pas : c'est le cas normal du renouvellement.
+        $vivant = ManagementMandate::where('property_id', $property->id)
+            ->whereIn('status', [
+                MandateStatus::EN_ATTENTE->value,
+                MandateStatus::ACTIF->value,
+                MandateStatus::SUSPENDU->value,
+            ])
+            ->first();
+
+        if ($vivant !== null) {
+            throw ValidationException::withMessages([
+                'property_id' => [
+                    "Ce bien est déjà sous mandat ({$vivant->reference}, {$vivant->status->label()}). "
+                    .'Terminez le mandat en cours avant d’en ouvrir un nouveau.',
+                ],
+            ]);
+        }
+
         $mandate = ManagementMandate::create([
             'reference' => 'MND-'.Str::upper(Str::random(8)),
             'property_id' => $property->id,

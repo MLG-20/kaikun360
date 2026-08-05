@@ -165,6 +165,142 @@
       }
     </section>
 
+    <!-- ============ MISSIONS (F8.15.d) ============
+      Affecter une mission ne pouvait se faire nulle part : la route existait
+      depuis B10.3 sans appelant. C'est pourtant elle qui déclenche la
+      commission de la marketplace Pro, qui alimente « Mes missions » et « Mes
+      revenus » côté prestataire, et qui rend le prestataire NOTABLE (la policy
+      d'avis exige une mission terminée).
+
+      Le geste est ici et non à « Avis & qualité » : affecter n'est pas
+      sanctionner. On décide de confier un travail là où l'on voit la note, les
+      avis et la charge déjà engagée.
+    -->
+    <section class="bo-card bo-card--wide">
+      <h2 class="bo-card__title">Missions confiées</h2>
+
+      @if (assigned(); as reference) {
+        <p class="k-form-info" role="status">
+          Mission <strong>{{ reference }}</strong> confiée ✔ — le prestataire la
+          voit dans son espace, et sa commission est figée au taux du jour.
+        </p>
+      }
+
+      @if (d.missions.length) {
+        <p class="bo-muted">
+          {{ openMissions().length }} en cours sur {{ d.missions.length }} affichée(s).
+        </p>
+        <ul class="bo-missions">
+          @for (m of d.missions; track m.id) {
+            <li class="bo-mission">
+              <span class="bo-mission__head">
+                <strong>{{ m.title }}</strong>
+                <span class="bo-badge">{{ m.status_label || m.status }}</span>
+              </span>
+              <span class="bo-muted">
+                {{ m.reference }} · {{ xof(m.amount_xof) }}
+                (commission {{ xof(m.commission_xof) }})
+                @if (m.client_name) {
+                  · pour {{ m.client_name }}
+                }
+                @if (m.scheduled_at) {
+                  · prévue le {{ shortDate(m.scheduled_at) }}
+                }
+              </span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="bo-muted">
+          Aucune mission confiée à ce partenaire. Tant qu'il n'en a pas terminé
+          une, <strong>aucun client ne peut le noter</strong> — la note reste
+          vide, ce n'est pas un mauvais signe.
+        </p>
+      }
+
+      @if (canAssign()) {
+        <button type="button" class="k-btn k-btn--ghost" (click)="toggleAssign()">
+          {{ assigning() ? 'Annuler' : '+ Confier une mission' }}
+        </button>
+      } @else {
+        <p class="bo-muted">
+          Ce partenaire n'est pas validé : il ne peut pas recevoir de mission.
+          Validez-le d'abord depuis « Avis &amp; qualité ».
+        </p>
+      }
+
+      @if (assigning()) {
+        <div class="bo-mission-form">
+          @if (assignError(); as message) {
+            <p class="k-form-error" role="alert">{{ message }}</p>
+          }
+
+          <div class="bo-mission-form__field">
+            <label class="k-label" for="msn-title">Intitulé</label>
+            <input
+              id="msn-title"
+              class="k-input"
+              type="text"
+              name="missionTitle"
+              maxlength="255"
+              [(ngModel)]="missionTitle"
+              placeholder="Ex. Guidage circuit Sine-Saloum, 12 personnes" />
+          </div>
+
+          <div class="bo-mission-form__row">
+            <div class="bo-mission-form__field">
+              <label class="k-label" for="msn-amount">Montant (FCFA)</label>
+              <input
+                id="msn-amount"
+                class="k-input"
+                type="number"
+                min="0"
+                step="1000"
+                name="missionAmount"
+                [(ngModel)]="missionAmount" />
+              <!-- Le taux vit au back-office : on ne l'écrit pas en dur ici. -->
+              <p class="bo-muted">
+                La commission Kaikun est calculée et <strong>figée</strong> à
+                l'affectation.
+              </p>
+            </div>
+            <div class="bo-mission-form__field">
+              <label class="k-label" for="msn-date">
+                Date prévue <span class="k-optional">(facultatif)</span>
+              </label>
+              <input
+                id="msn-date"
+                class="k-input"
+                type="date"
+                name="missionScheduledAt"
+                [(ngModel)]="missionScheduledAt" />
+            </div>
+          </div>
+
+          <div class="bo-mission-form__field">
+            <label class="k-label" for="msn-desc">
+              Détail <span class="k-optional">(facultatif)</span>
+            </label>
+            <textarea
+              id="msn-desc"
+              class="k-input"
+              rows="3"
+              name="missionDescription"
+              [(ngModel)]="missionDescription"
+              placeholder="Lieu, horaires, matériel, consignes de sécurité…"></textarea>
+          </div>
+
+          <button
+            type="button"
+            class="k-btn k-btn--primary"
+            [disabled]="saving() || !missionTitle.trim() || missionAmount <= 0"
+            (click)="submitMission()">
+            {{ saving() ? 'Affectation…' : 'Confier la mission' }}
+          </button>
+        </div>
+      }
+    </section>
+
     <!-- ============ JOURNAL ============ -->
     <section class="bo-card bo-card--wide">
       <h2 class="bo-card__title">Journal</h2>

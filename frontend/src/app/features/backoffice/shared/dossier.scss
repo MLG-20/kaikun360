@@ -704,3 +704,59 @@
     grid-column: auto;
   }
 }
+
+// --- Missions confiées à un prestataire (F8.15.d) ----------------------------
+//
+// Vit dans la feuille COMMUNE des fiches : la fiche prestataire n'a pas de
+// feuille propre (F8.2), et une mission peut demain s'afficher ailleurs.
+.bo-missions {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bo-mission {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    strong {
+      color: var(--k-ink);
+      font-size: 0.92rem;
+    }
+  }
+}
+
+// Formulaire d'affectation : déplié à la demande, pour que la fiche reste
+// d'abord un écran de lecture (on décide en regardant, on affecte ensuite).
+.bo-mission-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--k-line);
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 14px;
+    flex: 1 1 200px;
+  }
+
+  &__row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+}

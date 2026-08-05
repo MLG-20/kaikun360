@@ -253,3 +253,118 @@
   font-weight: 600;
   color: var(--k-muted);
 }
+
+// --- Ouvrir un mandat (F8.15.d) ----------------------------------------------
+//
+// Volet de saisie replié par défaut : l'écran reste une liste de triage, la
+// création est un geste occasionnel. Il s'ouvre AU-DESSUS de la liste pour que
+// le mandat créé apparaisse juste en dessous, sans avoir à chercher.
+.mnd-create {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 20px 22px;
+  margin-bottom: 18px;
+
+  &__title {
+    margin: 0 0 16px;
+    font-family: var(--k-font-display);
+    font-size: 1.05rem;
+    color: var(--k-ink);
+  }
+}
+
+.mnd-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 16px;
+  flex: 1 1 180px;
+}
+
+.mnd-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.mnd-search {
+  display: flex;
+  gap: 8px;
+
+  .k-input {
+    flex: 1;
+  }
+}
+
+// Résultats de recherche : une pile courte et cliquable, pas un tableau — on
+// choisit un bien, on ne le consulte pas.
+.mnd-candidates {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+}
+
+.mnd-candidate {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--k-ink);
+  padding: 10px 14px;
+
+  &:hover {
+    background: var(--k-cream);
+  }
+}
+
+// Bien retenu : il remplace la recherche, pour qu'on voie d'un coup d'œil sur
+// quoi porte le mandat qu'on est en train d'ouvrir.
+.mnd-picked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border: 1px solid var(--k-brand);
+  border-radius: var(--k-radius-sm);
+  background: var(--k-brand-050);
+
+  strong {
+    display: block;
+    color: var(--k-ink);
+    font-size: 0.92rem;
+  }
+
+  em {
+    font-style: normal;
+    color: var(--k-muted);
+    font-size: 0.82rem;
+  }
+}
+
+.mnd-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid var(--k-line);
+}
+
+.mnd-hint {
+  margin: 4px 0 0;
+  color: var(--k-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
