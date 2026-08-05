@@ -5,10 +5,12 @@ namespace Tests\Feature\Transversal;
 use App\Enums\ContactMessageStatus;
 use App\Models\ContactMessage;
 use App\Models\User;
+use App\Notifications\NewContactMessageNotification;
 use App\Modules\Admin\Enums\AdminPermission;
 use App\Modules\Core\Enums\UserRole;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -177,6 +179,49 @@ class ContactMessageTest extends TestCase
         $this->getJson('/api/v1/admin/contact-messages')
             ->assertOk()
             ->assertJsonPath('data.0.handled_by', $agent->name);
+    }
+
+    /**
+     * F8.15.c bis — l'arrivée d'un message alerte l'équipe.
+     *
+     * F8.15.c avait donné un écran à ce courrier, mais rien n'avertissait de son
+     * arrivée : il fallait penser à ouvrir l'onglet. Le seul relais prévu était
+     * le webhook n8n, **non configuré** — donc silencieux.
+     */
+    public function test_le_depot_d_un_message_alerte_l_equipe(): void
+    {
+        NotificationFacade::fake();
+
+        $agent = $this->agent();
+
+        $this->postJson('/api/v1/contact', [
+            'name' => 'Awa Diop',
+            'email' => 'awa@example.com',
+            'subject' => 'Villa à Saly',
+            'message' => 'Est-elle disponible en août ?',
+        ])->assertCreated();
+
+        NotificationFacade::assertSentTo($agent, NewContactMessageNotification::class);
+    }
+
+    /**
+     * ⚠️ Le dépôt est **public** : un visiteur sans compte ne doit évidemment
+     * pas recevoir l'alerte interne, et un utilisateur ordinaire non plus.
+     */
+    public function test_l_alerte_ne_part_qu_a_l_equipe(): void
+    {
+        NotificationFacade::fake();
+
+        $this->agent();
+        $simple = User::factory()->create();
+
+        $this->postJson('/api/v1/contact', [
+            'name' => 'Awa Diop',
+            'email' => 'awa@example.com',
+            'message' => 'Bonjour',
+        ])->assertCreated();
+
+        NotificationFacade::assertNotSentTo($simple, NewContactMessageNotification::class);
     }
 
     public function test_le_compteur_des_messages_a_traiter_ignore_le_filtre(): void

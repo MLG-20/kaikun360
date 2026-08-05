@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { PLATFORM_ID, Injectable, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 import { environment } from '../../../environments/environment';
 
@@ -41,13 +42,34 @@ const GSI_SRC = 'https://accounts.google.com/gsi/client';
  *
  * Tant que `environment.googleClientId` est vide (identifiant non fourni par le
  * client), `isEnabled` vaut faux et rien n'est chargé : le bouton n'apparaît pas.
+ *
+ * ⚠️ **Le bouton lui-même ne se dessine QUE dans le navigateur** (garde dans
+ * `renderButton`) : le site est rendu côté serveur (SSR, F2.9), où `window` et
+ * `document` n'existent pas. Défaut apparu avec F8.7 et resté invisible parce
+ * qu'il ne se voyait que dans les journaux du serveur de rendu.
+ *
+ * ⚠️ En revanche `isEnabled` **ne dépend pas de la plateforme** : il pilote le
+ * balisage, et rendre au serveur un DOM différent de celui qu'attend le client
+ * ferait échouer `provideClientHydration`. Corriger le premier défaut en
+ * masquant le bloc au serveur en aurait donc introduit un second.
  */
 @Injectable({ providedIn: 'root' })
 export class GoogleIdentityService {
   private readonly clientId = environment.googleClientId;
+  /** Vrai côté navigateur seulement — faux pendant le rendu serveur (SSR). */
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private scriptPromise: Promise<void> | null = null;
 
-  /** La connexion Google est-elle disponible (identifiant client configuré) ? */
+  /**
+   * La connexion Google est-elle proposée (identifiant client configuré) ?
+   *
+   * ⚠️ **Volontairement indépendant de la plateforme.** Ce drapeau pilote le
+   * BALISAGE (`@if (googleEnabled)` sur les deux écrans d'authentification) : le
+   * rendre faux au serveur ferait rendre au serveur un DOM différent de celui
+   * qu'attend le client, et `provideClientHydration` échouerait sur cette
+   * divergence. Le serveur rend donc le même emplacement vide ; c'est
+   * `renderButton` — et lui seul — qui ne fait rien hors navigateur.
+   */
   get isEnabled(): boolean {
     return this.clientId.trim().length > 0;
   }
@@ -57,7 +79,14 @@ export class GoogleIdentityService {
    * jeton d'identité quand l'utilisateur s'est connecté côté Google.
    */
   async renderButton(parent: HTMLElement, onToken: (idToken: string) => void): Promise<void> {
-    if (!this.isEnabled) {
+    // ⚠️ LA garde SSR. `renderButton` est appelé depuis `ngAfterViewInit`, hook
+    // qui s'exécute AUSSI pendant le rendu serveur — où ni `window` ni
+    // `document` n'existent. Sans elle, chaque rendu de `/auth/connexion` et
+    // `/auth/inscription` levait un `ReferenceError: window is not defined` en
+    // promesse non rattrapée. La page finissait par s'afficher (l'hydratation
+    // reprend la main), mais le serveur de rendu journalisait une erreur à
+    // chaque visite des deux pages les plus fréquentées du site.
+    if (!this.isBrowser || !this.isEnabled) {
       return;
     }
 

@@ -38,6 +38,7 @@ enum NotificationEvent: string
     case RESOURCE_TO_VALIDATE = 'resource_to_validate';
     case TEAM_BUILDING_REQUEST = 'team_building_request';
     case CONSTRUCTION_REQUEST = 'construction_request';
+    case CONTACT_MESSAGE = 'contact_message';
     case QUOTE_ANSWERED = 'quote_answered';
 
     /**
@@ -59,6 +60,7 @@ enum NotificationEvent: string
             self::RESOURCE_TO_VALIDATE => 'Nouvelle offre à valider',
             self::TEAM_BUILDING_REQUEST => 'Nouvelle demande team building',
             self::CONSTRUCTION_REQUEST => 'Nouvelle demande de chantier',
+            self::CONTACT_MESSAGE => 'Nouveau message depuis la page Contact',
             self::QUOTE_ANSWERED => 'Réponse du client à un devis',
         };
     }
@@ -82,6 +84,7 @@ enum NotificationEvent: string
             self::RESOURCE_TO_VALIDATE => 'À l’équipe, quand un bien ou un véhicule est déposé et attend une décision.',
             self::TEAM_BUILDING_REQUEST => 'À l’équipe, à l’arrivée d’une demande d’entreprise.',
             self::CONSTRUCTION_REQUEST => 'À l’équipe, à l’arrivée d’une demande de construction ou de rénovation, avec son estimation automatique.',
+            self::CONTACT_MESSAGE => 'À l’équipe, à chaque message déposé sur la page Contact. L’e-mail porte le message entier : la plupart se règlent d’une réponse directe. Le dépôt étant ouvert à tous, c’est l’alerte à éteindre en premier si le volume gêne.',
             self::QUOTE_ANSWERED => 'À l’agent qui a chiffré le devis — lui seul, pas toute l’équipe — quand son client l’accepte ou le refuse.',
         };
     }
@@ -96,6 +99,7 @@ enum NotificationEvent: string
             self::RESOURCE_TO_VALIDATE,
             self::TEAM_BUILDING_REQUEST,
             self::CONSTRUCTION_REQUEST,
+            self::CONTACT_MESSAGE,
             self::QUOTE_ANSWERED => 'Équipe Kaikun',
             default => 'Clients & partenaires',
         };

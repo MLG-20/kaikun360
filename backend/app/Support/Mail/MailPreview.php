@@ -16,6 +16,7 @@ use App\Modules\Core\Notifications\WelcomeNotification;
 use App\Modules\Core\Services\VerificationService;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Models\ContactMessage;
 use App\Modules\Build\Enums\ConstructionObjective;
 use App\Modules\Build\Enums\FinishLevel;
 use App\Modules\Build\Models\ConstructionRequest;
@@ -70,6 +71,7 @@ class MailPreview
             'interne-vehicule-a-valider' => 'Interne — Véhicule à valider',
             'interne-team-building' => 'Interne — Demande team building',
             'interne-chantier' => 'Interne — Nouvelle demande de chantier',
+            'interne-contact' => 'Interne — Message depuis la page Contact',
         ];
     }
 
@@ -230,6 +232,15 @@ class MailPreview
                 'city' => 'Thiès',
                 'budget_xof' => 30000000,
                 'estimated_cost_xof' => 33000000,
+            ])),
+
+            // F8.15.c bis — l'arrivée d'un message de contact n'alertait
+            // personne : le webhook n8n était le seul relais, et il dort.
+            'interne-contact' => new \App\Notifications\NewContactMessageNotification(new ContactMessage([
+                'name' => 'Awa Diop',
+                'email' => 'awa.diop@example.com',
+                'subject' => 'Villa à Saly pour août',
+                'message' => "Bonjour,\n\nJe cherche une villa à Saly pour la première quinzaine d'août, 6 personnes. Est-ce encore disponible ? Quel est le tarif à la semaine ?\n\nMerci d'avance.",
             ])),
 
             default => abort(404, 'Aperçu inconnu.'),

@@ -7,12 +7,15 @@ use App\Http\Requests\StoreContactMessageRequest;
 use App\Http\Requests\UpdateContactMessageRequest;
 use App\Http\Resources\ContactMessageResource;
 use App\Models\ContactMessage;
+use App\Models\User;
+use App\Notifications\NewContactMessageNotification;
 use App\Support\ApiResponse;
 use App\Support\Settings;
 use App\Support\Webhooks\WebhookDispatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * Messages de contact (F2.8.1).
@@ -88,6 +91,17 @@ class ContactController extends Controller
             'email' => $message->email,
             'subject' => $message->subject,
         ]);
+
+        // F8.15.c bis — prévient l'équipe. Le webhook n8n ci-dessus était le
+        // SEUL relais prévu, et il n'est pas configuré : le message partait donc
+        // nulle part. Les trois autres files d'attente alertent depuis longtemps
+        // ; la page Contact, canal de conversion prioritaire du cahier des
+        // charges, ne le faisait pas. Même vivier que les autres alertes
+        // internes, et un interrupteur au back-office si le volume gêne.
+        Notification::send(
+            User::permission('consulter:dashboard-admin')->get(),
+            new NewContactMessageNotification($message),
+        );
 
         return ApiResponse::created(['contact_message' => ContactMessageResource::make($message)]);
     }
