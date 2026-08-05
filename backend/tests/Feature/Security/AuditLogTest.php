@@ -24,6 +24,10 @@ class AuditLogTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Clés PayTech du test : la signature de l'IPN se calcule avec elles. */
+    private const API_KEY = 'test_api_key';
+    private const API_SECRET = 'test_api_secret';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -55,7 +59,17 @@ class AuditLogTest extends TestCase
 
     public function test_la_validation_de_paiement_est_auditee(): void
     {
-        config()->set('services.paytech.signing_key', 'whsec');
+        // ⚠️ Ce test posait `services.paytech.signing_key`, réglage DISPARU :
+        // F8.5 a réécrit l'IPN sur le contrat réel de PayTech (formulaire +
+        // `hmac_compute` signé par l'`api_secret`). Il envoyait donc une
+        // notification qu'aucun code ne pouvait reconnaître — 401. C'était la
+        // JUMELLE de la dette soldée en F8.14 dans `EventNotificationsTest` :
+        // les deux tests portaient le même protocole inventé, un seul avait été
+        // corrigé. Trouvée en lançant la suite ENTIÈRE (F8.15) — aucune suite
+        // partielle ne la traversait.
+        config()->set('services.paytech.api_key', self::API_KEY);
+        config()->set('services.paytech.api_secret', self::API_SECRET);
+
         $payment = Payment::create([
             'reference' => 'PAY-'.uniqid(),
             'amount_xof' => 100_000,
@@ -64,7 +78,7 @@ class AuditLogTest extends TestCase
             'status' => PaymentStatus::EN_ATTENTE->value,
         ]);
 
-        $this->webhook(['id' => 'ptx_audit', 'status' => 'COMPLETED', 'amount' => 100_000])->assertOk();
+        $this->webhook($payment)->assertOk();
 
         $this->assertDatabaseHas('activity_log', [
             'description' => 'Validation de paiement',
@@ -98,17 +112,40 @@ class AuditLogTest extends TestCase
         $this->assertDatabaseHas('activity_log', ['description' => 'Suppression de page']);
     }
 
-    private function webhook(array $payload): TestResponse
+    /**
+     * Notification d'encaissement PayTech, telle que le PSP l'envoie RÉELLEMENT
+     * (contrat rétabli en F8.5) : un FORMULAIRE, un `type_event`, et la preuve
+     * d'authenticité dans le corps — `hmac_compute` = HMAC-SHA256 de
+     * `{final_item_price}|{ref_command}|{api_key}`, clé = `api_secret`.
+     *
+     * ⚠️ `final_item_price` diffère volontairement du montant commandé : en
+     * sandbox, PayTech ne débite qu'un montant aléatoire. C'est `ref_command`
+     * qui identifie le règlement, jamais le montant reçu.
+     */
+    private function webhook(Payment $payment): TestResponse
     {
-        $raw = json_encode($payload);
-        $sig = hash_hmac('sha256', $raw, 'whsec');
+        $finalPrice = 127;
 
-        return $this->call(
-            'POST',
-            '/api/v1/payments/webhook',
-            [], [], [],
-            ['HTTP_SIGNATURE' => $sig, 'CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'],
-            $raw,
-        );
+        $payload = [
+            'type_event' => 'sale_complete',
+            'ref_command' => $payment->reference,
+            'token' => $payment->provider_reference,
+            'item_name' => 'Kaikun 360',
+            'item_price' => $payment->amount_xof,
+            'initial_item_price' => $payment->amount_xof,
+            'final_item_price' => $finalPrice,
+            'currency' => 'XOF',
+            'command_name' => 'Kaikun 360',
+            'payment_method' => 'Orange Money',
+            'client_phone' => '771234567',
+            'env' => 'test',
+            'hmac_compute' => hash_hmac(
+                'sha256',
+                implode('|', [$finalPrice, $payment->reference, self::API_KEY]),
+                self::API_SECRET,
+            ),
+        ];
+
+        return $this->post('/api/v1/payments/webhook', $payload, ['Accept' => 'application/json']);
     }
 }
