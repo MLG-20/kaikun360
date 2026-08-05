@@ -12,7 +12,7 @@ fonctionnalités. Tous sont « présentiels » : pilotés par leurs `input()` /
 | `HeaderComponent` | `app-header` | En-tête global **réellement fixe** (sticky porté par l'hôte) : logo, **méga-menus déroulants par univers** (cartes icône + titre + description, ouverture survol/clavier, fermeture Échap/navigation/clic-dehors), lien Kaikun Pro, CTA connexion, **menu mobile en accordéons**. Aligné sur le prototype client ; chaque lien mène à une page réelle (F2.3 → F2.7). |
 | `FooterComponent` | `app-footer` | Pied de page : marque, réseaux sociaux, trois colonnes de liens et **bandeau légal** (F8.15.e — les textes de cadre du CDC §4.2, séparés des liens d'aide : on ne cherche pas les CGV comme on cherche la FAQ). ⚠️ Chaque lien `/pages/:slug` suppose la page en base, posée par `PublicPagesSeeder`. |
 | `OrbitHeroComponent` | `app-orbit-hero` | « Signature orbitale » du hero : anneaux tournants + univers en orbite, carte centrale interactive (repris de la maquette client, charte Kaikun). |
-| `ListingCardComponent` | `app-listing-card` | Carte de bien / service du catalogue (image ou dégradé de repli, badge, titre, localisation, prix, CTA). |
+| `ListingCardComponent` | `app-listing-card` | Carte de bien / service du catalogue (image ou dégradé de repli, badge, titre, localisation, prix, CTA), **cœur de favori** et **case « Comparer »** (F8.15.e, immobilier seul). ⚠️ Cœur et case portent `z-index: 3` : la carte est recouverte d'un **lien étiré**, sans cet empilement un clic dessus ouvrirait la fiche. |
 | `VerificationBadgeComponent` | `app-verification-badge` | Pastille de vérification (« Vérifié », « Vérifié notaire »…), tons `default` / `gold`. |
 | `GalleryComponent` | `app-gallery` | Galerie photo : image principale cliquable (→ plein écran), miniatures, navigation clavier, compteur. Enrichie en F2.6 (voir plus bas). |
 
@@ -20,7 +20,7 @@ fonctionnalités. Tous sont « présentiels » : pilotés par leurs `input()` /
 
 | Composant | Sélecteur | Rôle |
 | --- | --- | --- |
-| `CatalogComponent` | `app-catalog` | **Catalogue filtrable, triable et paginé**, réutilisé sur toutes les pages d'univers. Générique : l'univers vient d'un `input()` ; filtres/tri/page vivent dans l'URL (recherches partageables). |
+| `CatalogComponent` | `app-catalog` | **Catalogue filtrable, triable et paginé**, réutilisé sur toutes les pages d'univers. Générique : l'univers vient d'un `input()` ; filtres/tri/page vivent dans l'URL (recherches partageables). Porte aussi la **barre de comparaison** (F8.15.e), affichée sur le seul univers `immobilier` — le serveur ne sait comparer que des biens. |
 | `SearchEngineComponent` | `app-search-engine` | **Moteur de recherche global** : onglets d'univers + ville/mots-clés + budget. Navigue vers `/recherche` avec des paramètres alignés sur les filtres du backend. **Entrée `live`** (F8.11) : posée sur la page de résultats, elle fait qu'un onglet d'univers **applique le changement aussitôt** au lieu d'attendre « Rechercher ». Les trois champs sont des `linkedSignal` **branchés sur l'URL**. |
 
 ## Conversion (F2.5)

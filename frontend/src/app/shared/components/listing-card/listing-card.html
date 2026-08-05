@@ -68,5 +68,24 @@
         </svg>
       </a>
     }
+
+    <!-- Case « Comparer » (F8.15.e) : au-dessus du lien étiré, sinon un clic
+         dessus emmènerait sur la fiche au lieu de cocher. -->
+    @if (comparable()) {
+      <label
+        class="cmp-toggle"
+        [class.is-on]="compared()"
+        [class.is-off]="compareDisabled()"
+        [attr.title]="compareDisabled() ? 'Comparaison limitée à 4 biens — retirez-en un pour ajouter celui-ci' : null"
+      >
+        <input
+          type="checkbox"
+          [checked]="compared()"
+          [disabled]="compareDisabled()"
+          (click)="onCompareClick($event)"
+        />
+        <span>Comparer</span>
+      </label>
+    }
   </div>
 </article>

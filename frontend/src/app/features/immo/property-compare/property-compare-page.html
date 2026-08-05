@@ -1,0 +1,104 @@
+<section class="k-wrap cmp-page">
+  <app-back-link label="Retour au catalogue" fallback="/immobilier" />
+
+  <header class="cmp-head">
+    <h1>Comparer des biens</h1>
+    <p class="k-muted">
+      Les critères qui <b>diffèrent</b> d'un bien à l'autre sont mis en évidence :
+      ce sont eux qui font le choix.
+    </p>
+  </header>
+
+  @switch (state()) {
+    @case ('loading') {
+      <p class="cmp-status" role="status">Chargement de la comparaison…</p>
+    }
+
+    @case ('failed') {
+      <p class="cmp-status cmp-status--error" role="alert">
+        Impossible de charger la comparaison. Vérifiez votre connexion puis réessayez.
+      </p>
+      <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+    }
+
+    @default {
+      @if (isEmpty()) {
+        <!-- Aucun bien : on ne laisse jamais un écran vide sans issue. -->
+        <div class="cmp-empty">
+          <p>Vous n'avez encore sélectionné aucun bien à comparer.</p>
+          <p class="k-muted">
+            Cochez « Comparer » sur les cartes du catalogue — jusqu'à quatre biens.
+          </p>
+          <a class="k-btn k-btn--primary" routerLink="/immobilier">Parcourir les biens</a>
+        </div>
+      } @else {
+        <!--
+          Biens sélectionnés que le serveur n'a pas renvoyés : dépubliés,
+          retirés de la vente ou supprimés depuis la sélection. Le dire est le
+          seul moyen d'expliquer pourquoi le tableau est plus court que prévu.
+        -->
+        @if (missing() > 0) {
+          <p class="cmp-notice" role="status">
+            {{ missing() }} bien{{ missing() > 1 ? 's ne sont plus disponibles' : " n'est plus disponible" }}
+            et {{ missing() > 1 ? 'ont' : 'a' }} été retiré{{ missing() > 1 ? 's' : '' }} de la comparaison.
+          </p>
+        }
+
+        <div class="cmp-scroll">
+          <table class="cmp-table">
+            <caption class="cmp-caption">
+              Comparaison des biens sélectionnés, critère par critère
+            </caption>
+
+            <thead>
+              <tr>
+                <th scope="col" class="cmp-corner">Critère</th>
+                @for (bien of columns(); track bien.id) {
+                  <th scope="col" class="cmp-col">
+                    <div class="cmp-card">
+                      @if (bien.photo_url) {
+                        <img class="cmp-thumb" [src]="bien.photo_url" [alt]="bien.title" loading="lazy" />
+                      } @else {
+                        <span class="cmp-thumb cmp-thumb--empty" aria-hidden="true"></span>
+                      }
+
+                      <a class="cmp-title" [routerLink]="['/immobilier', bien.id]">{{ bien.title }}</a>
+                      <p class="cmp-price">{{ prix(bien) ?? 'Prix non communiqué' }}</p>
+
+                      <button
+                        type="button"
+                        class="cmp-remove"
+                        (click)="remove(bien.id)"
+                        [attr.aria-label]="'Retirer ' + bien.title + ' de la comparaison'"
+                      >
+                        Retirer
+                      </button>
+                    </div>
+                  </th>
+                }
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (row of rows(); track row.label) {
+                <tr [class.is-diff]="row.differs">
+                  <th scope="row" class="cmp-label">{{ row.label }}</th>
+                  @for (value of row.values; track $index) {
+                    <td>{{ value ?? '—' }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="cmp-actions">
+          <button type="button" class="k-btn k-btn--ghost" (click)="clear()">
+            Vider la comparaison
+          </button>
+          <a class="k-btn k-btn--ghost" routerLink="/immobilier">Ajouter un bien</a>
+        </div>
+      }
+    }
+  }
+</section>

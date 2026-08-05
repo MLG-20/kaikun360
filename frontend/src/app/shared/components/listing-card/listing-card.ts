@@ -53,10 +53,39 @@ export class ListingCardComponent {
   /** Émis au clic sur le cœur (la page hôte fait l'appel service + login si anonyme). */
   readonly favoriteToggle = output<void>();
 
+  /**
+   * Comparaison (F8.15.e) : `true` affiche la case « Comparer » sous la carte.
+   *
+   * ⚠️ Réservé à l'immobilier — c'est le seul univers dont le serveur sait
+   * comparer les fiches. La carte reste présentielle : elle ignore tout du
+   * plafond de 4 et de la sélection, elle affiche ce qu'on lui dit et émet.
+   */
+  readonly comparable = input(false);
+  /** Ce bien est-il déjà dans la sélection à comparer ? */
+  readonly compared = input(false);
+  /**
+   * Sélection pleine ET ce bien non sélectionné : la case est désactivée, avec
+   * l'explication en `title` — un contrôle qui refuse un clic sans rien dire se
+   * lit comme un bug.
+   */
+  readonly compareDisabled = input(false);
+  /** Émis à la bascule de la case « Comparer ». */
+  readonly compareToggle = output<void>();
+
   /** Clic sur le cœur : ne déclenche jamais le lien de la carte. */
   protected onFavoriteClick(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
     this.favoriteToggle.emit();
+  }
+
+  /**
+   * Bascule de la case « Comparer ». Même précaution que le cœur : la carte
+   * entière est cliquable (lien étiré), un clic sur la case ne doit jamais
+   * emmener sur la fiche.
+   */
+  protected onCompareClick(event: Event): void {
+    event.stopPropagation();
+    this.compareToggle.emit();
   }
 }

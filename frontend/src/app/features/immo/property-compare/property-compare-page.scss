@@ -1,0 +1,176 @@
+// Comparateur de biens (F8.15.e) — route `/immobilier/comparer`.
+
+.cmp-page {
+  // padding-block seulement : garder la marge latérale de `.k-wrap` en mobile.
+  padding-block: 2rem 4rem;
+}
+
+.cmp-head {
+  margin: 1.5rem 0 2rem;
+
+  h1 {
+    font-family: var(--k-font-display);
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    color: var(--k-navy);
+    margin-bottom: 0.6rem;
+  }
+}
+
+.cmp-status {
+  padding: 2rem 0;
+  color: var(--k-muted);
+
+  &--error {
+    color: var(--k-danger, #b3261e);
+  }
+}
+
+.cmp-notice {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: rgba(212, 160, 23, 0.12);
+  border: 1px solid var(--k-gold);
+  color: var(--k-ink);
+  font-size: 14.5px;
+}
+
+.cmp-empty {
+  padding: 3rem 0;
+  text-align: center;
+
+  p {
+    margin-bottom: 0.75rem;
+  }
+
+  .k-btn {
+    margin-top: 0.75rem;
+  }
+}
+
+// Le tableau défile dans SON conteneur : quatre colonnes de biens ne tiennent
+// pas dans un écran de téléphone, et la page elle-même ne doit jamais défiler
+// latéralement.
+.cmp-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.cmp-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+}
+
+// Légende du tableau : lue par les lecteurs d'écran, invisible à l'œil (le
+// titre de page la répète). Pas d'utilitaire global dans le design system, on
+// la garde locale plutôt que d'en inventer un pour un seul usage.
+.cmp-caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.cmp-corner {
+  width: 170px;
+  text-align: left;
+}
+
+.cmp-col {
+  min-width: 190px;
+  padding: 0 0.5rem 1rem;
+  vertical-align: top;
+  text-align: left;
+}
+
+.cmp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cmp-thumb {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 12px;
+
+  &--empty {
+    display: block;
+    background: linear-gradient(135deg, var(--k-navy), var(--k-brand));
+    opacity: 0.35;
+  }
+}
+
+.cmp-title {
+  font-family: var(--k-font-display);
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--k-navy);
+  line-height: 1.25;
+
+  &:hover {
+    color: var(--k-brand);
+    text-decoration: underline;
+  }
+}
+
+.cmp-price {
+  font-weight: 700;
+  color: var(--k-brand);
+}
+
+.cmp-remove {
+  align-self: flex-start;
+  font-size: 13px;
+  color: var(--k-muted);
+  text-decoration: underline;
+
+  &:hover {
+    color: var(--k-ink);
+  }
+}
+
+.cmp-table tbody tr {
+  border-top: 1px solid var(--k-line);
+}
+
+.cmp-label {
+  padding: 0.85rem 0.75rem 0.85rem 0;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--k-muted);
+  white-space: nowrap;
+}
+
+.cmp-table td {
+  padding: 0.85rem 0.5rem;
+  font-size: 14.5px;
+  color: var(--k-ink);
+}
+
+// ⚠️ Ce qui fait la valeur d'un comparateur : les lignes où les biens
+// DIFFÈRENT. Sans cette mise en évidence, il faut relire ligne à ligne pour
+// trouver ce qui sépare deux annonces — le tableau redevient une pile.
+.cmp-table tbody tr.is-diff {
+  background: rgba(3, 72, 251, 0.045);
+
+  .cmp-label {
+    color: var(--k-navy);
+  }
+
+  td {
+    font-weight: 600;
+  }
+}
+
+.cmp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 1.75rem;
+}

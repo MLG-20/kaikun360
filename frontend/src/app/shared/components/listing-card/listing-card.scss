@@ -176,3 +176,41 @@
 .cta:hover svg {
   transform: translateX(3px);
 }
+
+// --- Comparaison (F8.15.e) -------------------------------------------------
+// Case « Comparer », affichée seulement sur les cartes de biens immobiliers.
+//
+// ⚠️ `z-index: 3` comme le cœur : la carte porte un LIEN ÉTIRÉ (`.card-stretch`,
+// z-index 1) qui recouvre toute sa surface. Sans cet empilement, cliquer la case
+// ouvrirait la fiche du bien au lieu de le sélectionner.
+.cmp-toggle {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  align-self: flex-start;
+  font-size: 13.5px;
+  color: var(--k-muted);
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    accent-color: var(--k-brand);
+    width: 15px;
+    height: 15px;
+    cursor: inherit;
+  }
+
+  &.is-on {
+    color: var(--k-brand);
+    font-weight: 600;
+  }
+
+  // Sélection pleine : le refus se voit, et le `title` de la balise l'explique.
+  &.is-off {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

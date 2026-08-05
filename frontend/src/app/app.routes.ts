@@ -88,6 +88,17 @@ export const routes: Routes = [
         title: 'Déposer un bien — Kaikun 360',
       },
       {
+        // Comparateur de biens (F8.15.e). ⚠️ DOIT être déclaré AVANT
+        // `immobilier/:id`, sinon « comparer » serait pris pour un identifiant
+        // de bien et la page de fiche répondrait « introuvable ».
+        path: 'immobilier/comparer',
+        loadComponent: () =>
+          import('./features/immo/property-compare/property-compare-page').then(
+            (m) => m.PropertyComparePageComponent,
+          ),
+        title: 'Comparer des biens — Kaikun 360',
+      },
+      {
         path: 'immobilier/:id',
         loadComponent: () =>
           import('./features/immo/property-detail/property-detail-page').then(

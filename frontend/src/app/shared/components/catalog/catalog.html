@@ -115,6 +115,10 @@
           [favorited]="card.favoritable ? favorites.isFavorited(card.favoritable) : false"
           [favoriteBusy]="card.favoritable ? favorites.isBusy(card.favoritable) : false"
           (favoriteToggle)="favorites.toggle(card.favoritable)"
+          [comparable]="comparable()"
+          [compared]="compare.has(card.id)"
+          [compareDisabled]="compare.isFull() && !compare.has(card.id)"
+          (compareToggle)="onCompareToggle(card.id)"
         />
       }
     </div>
@@ -143,5 +147,50 @@
         </nav>
       }
     }
+  }
+
+  <!--
+    Barre de comparaison (F8.15.e). Affichée uniquement sur l'immobilier.
+
+    ⚠️ `[hidden]` et NON `@if` sur le contenu : la sélection vit dans le
+    `localStorage` du navigateur, donc vide au rendu SERVEUR et éventuellement
+    pleine au client. Un `@if` ferait donc rendre au serveur un DOM différent de
+    celui du client et `provideClientHydration` échouerait sur cette divergence —
+    exactement le piège rencontré sur le bouton Google en F8.15. La structure
+    reste identique des deux côtés ; seule la visibilité change.
+  -->
+  @if (comparable()) {
+    <div class="catalog-compare" [hidden]="compare.count() === 0" aria-live="polite">
+      <p class="catalog-compare-count">
+        {{ compare.count() }} bien{{ compare.count() > 1 ? 's' : '' }} à comparer
+        @if (compareRefus()) {
+          <span class="catalog-compare-warn">
+            — maximum 4 : retirez-en un pour en ajouter un autre.
+          </span>
+        }
+      </p>
+
+      <div class="catalog-compare-actions">
+        <button type="button" class="k-btn k-btn--ghost" (click)="clearCompare()">
+          Vider
+        </button>
+        <!--
+          Un bien seul ne se compare à rien : le bouton attend le deuxième.
+          ⚠️ Un `<button>` désactivé et non un lien conditionnel : `@if` autour
+          d'un lien changerait la structure du DOM selon un état issu du
+          navigateur, avec le même risque d'hydratation que ci-dessus. Un
+          attribut `disabled` ne change rien à la structure.
+        -->
+        <button
+          type="button"
+          class="k-btn k-btn--primary"
+          [disabled]="!compare.canCompare()"
+          [attr.title]="compare.canCompare() ? null : 'Sélectionnez au moins deux biens'"
+          (click)="goToCompare()"
+        >
+          Comparer
+        </button>
+      </div>
+    </div>
   }
 </section>

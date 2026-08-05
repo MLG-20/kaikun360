@@ -114,6 +114,24 @@ export class CatalogService {
     return this.http.get<ApiEnvelope<Property>>(`${this.api}/properties/${id}`);
   }
 
+  /**
+   * GET /properties/compare?ids=1,2,3 — comparaison de biens (F8.15.e).
+   *
+   * L'endpoint existe depuis **B2.5** et n'avait aucun appelant. Il renvoie une
+   * collection **non paginée** — d'où `{ data }` et non l'enveloppe paginée.
+   *
+   * ⚠️ Le serveur **filtre en silence** : il ne garde que les biens *publiés*,
+   * ignore les ids inconnus et tronque au-delà de **4**. La réponse peut donc
+   * être plus courte que la demande, sans erreur. L'écran doit comparer ce
+   * qu'il a reçu à ce qu'il a demandé pour dire ce qui a disparu, sinon un bien
+   * dépublié entre-temps s'évapore de la comparaison sans un mot.
+   */
+  compareProperties(ids: readonly number[]): Observable<{ data: Property[] }> {
+    return this.http.get<{ data: Property[] }>(`${this.api}/properties/compare`, {
+      params: { ids: ids.join(',') },
+    });
+  }
+
   /** GET /stays/{id} — détail d'une nuitée publiée (fiche nuitée, F2.3). */
   stay(id: number | string): Observable<ApiEnvelope<Stay>> {
     return this.http.get<ApiEnvelope<Stay>>(`${this.api}/stays/${id}`);

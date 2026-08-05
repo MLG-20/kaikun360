@@ -6,6 +6,7 @@ import { catchError, switchMap, tap } from 'rxjs/operators';
 
 import { Paginated } from '../../../core/api/pagination.model';
 import { CatalogService } from '../../../core/api/catalog.service';
+import { CompareStore } from '../../../core/state/compare-store';
 import { FavoriteStore } from '../../../core/state/favorite-store';
 import { ListingCardComponent } from '../listing-card/listing-card';
 import {
@@ -40,9 +41,18 @@ export class CatalogComponent {
   private readonly router = inject(Router);
   /** État partagé des favoris (cœurs), commun à toutes les surfaces catalogue. */
   protected readonly favorites = inject(FavoriteStore);
+  /** Sélection de biens à comparer (F8.15.e) — immobilier uniquement. */
+  protected readonly compare = inject(CompareStore);
 
   /** Univers à afficher (fourni par la page hôte). */
   readonly universe = input.required<Universe>();
+
+  /**
+   * La comparaison n'est proposée que sur l'immobilier : c'est le seul univers
+   * pour lequel le serveur expose `GET /properties/compare`. Afficher la case
+   * ailleurs promettrait un écran qui n'existe pas.
+   */
+  protected readonly comparable = computed(() => this.universe() === 'immobilier');
 
   readonly sortOptions = SORT_OPTIONS;
 
@@ -162,6 +172,35 @@ export class CatalogComponent {
   /** Navigue vers une page de résultats. */
   goToPage(page: number): void {
     this.patchParams({ page });
+  }
+
+  /**
+   * Coche / décoche un bien à comparer (F8.15.e).
+   *
+   * ⚠️ Le refus au-delà de 4 est **dit**, pas subi : sans ce message, le clic
+   * n'aurait aucun effet visible et la case paraîtrait cassée. Le message se
+   * range de lui-même dès qu'une place se libère.
+   */
+  protected onCompareToggle(id: number): void {
+    if (!this.compare.toggle(id)) {
+      this.compareRefus.set(true);
+      return;
+    }
+    this.compareRefus.set(false);
+  }
+
+  /** Un ajout vient-il d'être refusé faute de place ? */
+  protected readonly compareRefus = signal(false);
+
+  /** Vide la sélection depuis la barre d'action. */
+  protected clearCompare(): void {
+    this.compare.clear();
+    this.compareRefus.set(false);
+  }
+
+  /** Ouvre l'écran de comparaison. La sélection voyage par le store, pas par l'URL. */
+  protected goToCompare(): void {
+    this.router.navigate(['/immobilier', 'comparer']);
   }
 
   /** Met à jour les query params en fusionnant avec ceux déjà présents. */

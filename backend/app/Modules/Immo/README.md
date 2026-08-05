@@ -186,6 +186,14 @@ Tous validés (`exists` pour les FK, `Rule::in` pour type/sort). Exemple :
 
 - **Comparaison** : renvoie les biens **publiés** parmi les `ids` fournis,
   **4 maximum** pour rester lisible.
+- ⚠️ **Ce filtrage est SILENCIEUX** — un identifiant inconnu, supprimé ou
+  dépublié est ignoré, et au-delà de quatre le reste est tronqué : **jamais
+  d'erreur**, une liste simplement plus courte que la demande. Depuis F8.15.e
+  c'est un **contrat** avec l'écran `/immobilier/comparer` (frontend), qui
+  reproduit le plafond pour refuser le cinquième bien *avec un message* et
+  compare la réponse à sa demande pour signaler les biens disparus. Abaisser ce
+  plafond, ou transformer ces cas en 422, casserait cet écran : deux tests de
+  `FavoriteAndCompareTest` le verrouillent.
 
 > **Favoris** : autrefois limités aux biens immobiliers ici, ils sont désormais
 > **polymorphes (tous univers)** et vivent dans la **couche transversale** —
