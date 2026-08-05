@@ -16,6 +16,14 @@ export type ServiceType =
   | 'immo'
   | 'stay'
   | 'manage'
+  /**
+   * ⚠️ **HISTORIQUE — ne plus l'envoyer.** Depuis F8.15.b, le serveur REFUSE une
+   * demande générique de type `build` : un chantier se dépose sur
+   * `POST /construction-requests` (cf. `ConstructionService.create`), qui ouvre
+   * un vrai dossier avec estimation, jalons, rapports et devis par lot. Le type
+   * reste ici parce que `GET /requests/my` peut renvoyer d'anciennes demandes
+   * qui le portent : le retirer ferait mentir la lecture.
+   */
   | 'build'
   | 'explore'
   | 'mobility'

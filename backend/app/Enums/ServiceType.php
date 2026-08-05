@@ -7,12 +7,22 @@ namespace App\Enums;
  *
  * Recouvre les univers Kaikun 360 : une demande transversale peut concerner
  * n'importe lequel d'entre eux.
+ *
+ * ⚠️ **`BUILD` est HISTORIQUE depuis F8.15.b** — voir le cas ci-dessous.
  */
 enum ServiceType: string
 {
     case IMMO = 'immo';
     case STAY = 'stay';
     case MANAGE = 'manage';
+    /**
+     * ⚠️ **Plus aucune demande générique ne peut naître avec ce type**
+     * (`StoreRequestRequest` le refuse depuis F8.15.b) : un chantier se dépose
+     * sur `POST /construction-requests`, qui ouvre un vrai dossier (estimation,
+     * jalons, rapports, devis par lot). Le cas est **conservé** parce que des
+     * demandes antérieures le portent en base : le retirer casserait leur
+     * relecture. Ne pas le rebrancher sur un formulaire.
+     */
     case BUILD = 'build';
     case EXPLORE = 'explore';
     case MOBILITY = 'mobility';

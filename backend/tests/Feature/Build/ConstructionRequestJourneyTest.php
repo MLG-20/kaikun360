@@ -118,4 +118,53 @@ class ConstructionRequestJourneyTest extends TestCase
     {
         $this->postJson('/api/v1/construction-requests', $this->payload())->assertStatus(401);
     }
+
+    /**
+     * Le mauvais aiguillage est devenu impossible : sans ce garde-fou, un futur
+     * écran (ou l'application mobile) pourrait redéposer un chantier en demande
+     * générique, et le dossier retomberait dans la table que le back-office
+     * « Construction » ne lit pas.
+     */
+    public function test_un_chantier_ne_peut_plus_partir_en_demande_generique(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson('/api/v1/requests', [
+            'service_type' => 'build',
+            'message' => 'Je veux construire une villa à Thiès.',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('service_type');
+
+        // Les autres univers, eux, restent des demandes génériques légitimes :
+        // leur conversion EST une prise de contact.
+        $this->postJson('/api/v1/requests', [
+            'service_type' => 'manage',
+            'message' => 'Je souhaite confier mon appartement en gestion.',
+        ])->assertCreated();
+    }
+
+    /**
+     * Les demandes déposées AVANT F8.15.b portent encore `build` : le cas reste
+     * dans l'enum et doit rester relisible, sans quoi on casserait l'historique
+     * en fermant la porte d'entrée.
+     */
+    public function test_les_anciennes_demandes_build_restent_lisibles(): void
+    {
+        $client = User::factory()->create();
+
+        $ancienne = \App\Models\ServiceRequest::create([
+            'reference' => 'REQ-LEGACY01',
+            'user_id' => $client->id,
+            'service_type' => 'build',
+            'message' => 'Demande de chantier déposée avant F8.15.b.',
+            'status' => \App\Enums\RequestStatus::RECU->value,
+        ]);
+
+        Sanctum::actingAs($client);
+
+        $this->getJson('/api/v1/requests/my')
+            ->assertOk()
+            ->assertJsonFragment(['reference' => $ancienne->reference]);
+    }
 }
