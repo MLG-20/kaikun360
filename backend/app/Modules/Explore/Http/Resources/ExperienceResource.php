@@ -34,6 +34,17 @@ class ExperienceResource extends JsonResource
             'status_label' => $this->status?->label(),
             'published_at' => $this->published_at?->toIso8601String(),
             'seats_left' => $this->when(isset($this->seats_left), fn () => (int) $this->seats_left),
+            // F8.18 — LES PHOTOS. Même dette que les véhicules : `HasMedia` sur
+            // le modèle, clé `experience` acceptée par `POST /media/upload`, et
+            // aucun chemin de retour vers les écrans. Un circuit est pourtant ce
+            // qui se vend le plus par l'image.
+            //
+            // ⚠️ `whenLoaded` : pas de N+1 sur le catalogue Tourisme.
+            'photos' => \App\Http\Resources\MediaResource::collection($this->whenLoaded('media')),
+            'photo_url' => $this->when(
+                $this->relationLoaded('media'),
+                fn () => $this->media->first()?->resolveUrl(),
+            ),
         ];
     }
 }

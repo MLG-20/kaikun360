@@ -1,0 +1,66 @@
+<p class="kpm-hint k-muted">
+  {{ hint() ?? 'Des photos nettes et bien éclairées sont ce qui décide un client. La première photo sert de couverture dans le catalogue.' }}
+  Formats JPEG, PNG ou WebP, 5 Mo maximum.
+</p>
+
+@if (photoError(); as err) {
+  <p class="k-error" role="alert">{{ err }}</p>
+}
+
+@if (hasNoPhoto()) {
+  <p class="kpm-warn">
+    Aucune photo pour l'instant — une annonce sans photo est rarement consultée.
+  </p>
+}
+
+<div class="kpm-grid">
+  <!-- Photos déjà en ligne (édition) -->
+  @for (photo of photos(); track photo.id) {
+    <figure class="kpm-photo" [class.is-primary]="photo.is_primary">
+      <img [src]="photo.url" [alt]="photo.original_name ?? ('Photo — ' + subject())" />
+      @if (photo.is_primary) {
+        <figcaption class="kpm-tag">Couverture</figcaption>
+      }
+      <div class="kpm-actions">
+        @if (!photo.is_primary) {
+          <button
+            type="button"
+            class="kpm-btn"
+            [disabled]="photoBusyId() === photo.id"
+            (click)="makePrimary(photo)"
+          >
+            Couverture
+          </button>
+        }
+        <button
+          type="button"
+          class="kpm-btn kpm-btn--danger"
+          [disabled]="photoBusyId() === photo.id"
+          (click)="removePhoto(photo)"
+        >
+          Retirer
+        </button>
+      </div>
+    </figure>
+  }
+
+  <!-- Photos choisies, pas encore envoyées -->
+  @for (item of pendingPhotos(); track item.preview; let i = $index) {
+    <figure class="kpm-photo kpm-photo--pending">
+      <img [src]="item.preview" [alt]="item.file.name" />
+      <figcaption class="kpm-tag kpm-tag--pending">À envoyer</figcaption>
+      <div class="kpm-actions">
+        <button type="button" class="kpm-btn kpm-btn--danger" (click)="removePending(i)">
+          Retirer
+        </button>
+      </div>
+    </figure>
+  }
+
+  <!-- Ajout -->
+  <label class="kpm-add">
+    <input type="file" [accept]="accept" multiple (change)="onPhotosSelected($event)" />
+    <span class="kpm-add-plus">+</span>
+    <span>Ajouter des photos</span>
+  </label>
+</div>

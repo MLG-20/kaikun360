@@ -71,6 +71,47 @@ class Media extends Model
     }
 
     /**
+     * Catalogues publics à régénérer quand un média de ce type change (F8.18).
+     *
+     * ⚠️ **Un véhicule touche DEUX catalogues** : le sien et celui des trajets,
+     * dont les cartes sont illustrées par le véhicule qui les opère. Un bien en
+     * touche deux pour la même raison (les nuitées). Oublier le second laisserait
+     * une moitié du site afficher la vignette de repli après un dépôt de photo.
+     *
+     * @var array<class-string, list<string>>
+     */
+    private const CATALOGS_TO_FLUSH = [
+        \App\Modules\Immo\Models\Property::class => ['properties', 'stays'],
+        \App\Modules\Mobility\Models\Vehicle::class => ['vehicles', 'mobility'],
+        \App\Modules\Explore\Models\TourismExperience::class => ['experiences'],
+    ];
+
+    /**
+     * Un média qui change régénère le catalogue de sa ressource (F8.18).
+     *
+     * POURQUOI : les listes publiques sont mises en cache 5 minutes
+     * (`CatalogCache`), et ce cache n'est vidé que par la sauvegarde de la
+     * ressource elle-même. Or déposer une photo **ne touche pas** le véhicule ni
+     * le bien : sans ce crochet, le partenaire téléverse, retourne au catalogue,
+     * et n'y voit rien changer pendant cinq minutes. Il en conclut que le dépôt a
+     * échoué et recommence — c'est le genre de silence qui fait abandonner.
+     *
+     * Couvre le dépôt, la suppression, le changement de couverture **et** la
+     * modération (un média masqué doit disparaître des cartes tout de suite).
+     */
+    protected static function booted(): void
+    {
+        $flush = function (self $media) {
+            foreach (self::CATALOGS_TO_FLUSH[$media->mediable_type] ?? [] as $catalog) {
+                \App\Support\Cache\CatalogCache::flush($catalog);
+            }
+        };
+
+        static::saved($flush);
+        static::deleted($flush);
+    }
+
+    /**
      * La ressource illustrée par ce média.
      */
     public function mediable(): MorphTo

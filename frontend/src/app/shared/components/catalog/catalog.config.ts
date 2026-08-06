@@ -218,7 +218,10 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         price: formatFcfa(v.price_per_day_xof),
         priceUnit: '/ jour',
         badge: v.has_driver ? 'Avec chauffeur' : null,
-        image: null,
+        // F8.18 — la photo de couverture déposée par le loueur. Cette ligne
+        // valait `null` en dur : même illustré, un véhicule s'affichait en
+        // vignette dégradée, sur l'univers où l'image décide presque seule.
+        image: v.photo_url ?? null,
         link: ['/transport', v.id],
         favoritable: { type: 'vehicle', id: v.id },
       };
@@ -246,7 +249,8 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         price: formatFcfa(e.price_xof),
         priceUnit: '/ pers.',
         badge: null,
-        image: null,
+        // F8.18 — photo de couverture du circuit (même dette qu'au transport).
+        image: e.photo_url ?? null,
         link: ['/tourisme', e.id],
         favoritable: { type: 'experience', id: e.id },
       };
@@ -273,7 +277,10 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         price: formatFcfa(m.price_xof),
         priceUnit: '/ trajet',
         badge: null,
-        image: null,
+        // F8.18 — un trajet est illustré par le VÉHICULE qui l'opère : le
+        // prestataire photographie son minibus une fois, tous ses départs sont
+        // illustrés. `null` reste légitime pour un trajet sans véhicule attaché.
+        image: m.photo_url ?? null,
         // F8.10 — la carte mène enfin à la fiche du départ. Elle était morte
         // faute d'endpoint de détail côté serveur (`GET /mobility-services/{id}`
         // n'existait pas) : le trajet était le seul univers dont on ne pouvait

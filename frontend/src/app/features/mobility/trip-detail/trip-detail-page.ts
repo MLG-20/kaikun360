@@ -71,6 +71,19 @@ export class TripDetailPageComponent {
   readonly isAuthenticated = this.auth.isAuthenticated;
   readonly loginQueryParams = computed(() => ({ redirect: `/mobilite/${this.id() ?? ''}` }));
 
+  /**
+   * URLs de la galerie (F8.18) — les photos déposées par le partenaire. Le
+   * composant de fiche recevait `[galleryAlt]` mais jamais `[images]` : la
+   * galerie était montée et systématiquement vide.
+   */
+  readonly photoUrls = computed(
+    () =>
+      this.trip()
+        ?.photos?.map((photo) => photo.url)
+        .filter((url): url is string => !!url) ?? [],
+  );
+
+
   private readonly loader = toSignal(
     this.route.paramMap.pipe(
       map((p) => p.get('id')),

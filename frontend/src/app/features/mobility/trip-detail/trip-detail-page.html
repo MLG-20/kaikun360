@@ -22,7 +22,11 @@
 
   @case ('ready') {
     @if (trip(); as t) {
-      <app-detail-layout [title]="displayName()" [galleryAlt]="displayName()">
+      <app-detail-layout
+        [title]="displayName()"
+        [galleryAlt]="displayName()"
+        [images]="photoUrls()"
+      >
         <ng-container crumbs>
           <a routerLink="/mobilite">Mobilité</a>
           <span aria-hidden="true">/</span>

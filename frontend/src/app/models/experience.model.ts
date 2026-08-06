@@ -1,3 +1,5 @@
+import { PropertyPhoto } from './property.model';
+
 /**
  * Expérience touristique — miroir de `ExperienceResource` (module Explore).
  * `seats_left` n'est présent que sur l'endpoint de disponibilité.
@@ -28,6 +30,18 @@ export interface Experience {
    * SANS visuel, ou dont des photos ont été masquées par la modération.
    */
   media_count?: number;
+
+  /**
+   * Photos de l'annonce (F8.18), servies dès que la relation est chargée :
+   * catalogue public, fiche publique et espace du prestataire.
+   */
+  photos?: PropertyPhoto[];
+  /**
+   * URL de la photo de couverture, ou `null` si l'annonce n'est pas encore
+   * illustrée — la carte retombe alors sur sa vignette de repli.
+   */
+  photo_url?: string | null;
+
   media_hidden_count?: number;
 }
 

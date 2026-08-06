@@ -46,7 +46,11 @@ class VehicleManagementController extends Controller
      */
     public function mine(Request $request): AnonymousResourceCollection
     {
+        // F8.18 — les photos déjà déposées voyagent avec la liste : c'est
+        // depuis elle que le formulaire d'édition du prestataire se préremplit,
+        // et sans elles il afficherait « aucune photo » sur un véhicule illustré.
         $vehicles = Vehicle::where('provider_id', $request->user()->id)
+            ->with('media')
             ->latest()
             ->paginate(15);
 

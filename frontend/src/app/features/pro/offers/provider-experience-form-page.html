@@ -71,6 +71,16 @@
     </div>
   </fieldset>
 
+  <!-- Photos du circuit (F8.18) : l'univers où l'image vend le plus. -->
+  <fieldset class="xf-inclusions">
+    <legend>Photos du circuit</legend>
+    <app-photo-manager
+      type="experience"
+      subject="circuit"
+      hint="Montrez les paysages, l'hébergement et le transport tels qu'ils sont : un client déçu à l'arrivée est un avis négatif et un remboursement. La première photo sert de couverture dans le catalogue."
+    />
+  </fieldset>
+
   @if (formError()) {
     <p class="xf-msg xf-msg--error" role="alert">{{ formError() }}</p>
   }

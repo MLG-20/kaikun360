@@ -41,7 +41,9 @@ class ExperienceManagementController extends Controller
      */
     public function mine(Request $request): AnonymousResourceCollection
     {
+        // F8.18 — idem véhicules : le formulaire d'édition lit cette liste.
         $experiences = TourismExperience::where('provider_id', $request->user()->id)
+            ->with('media')
             ->latest()
             ->paginate(15);
 

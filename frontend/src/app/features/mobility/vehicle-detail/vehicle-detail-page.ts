@@ -76,6 +76,19 @@ export class VehicleDetailPageComponent {
   readonly loginQueryParams = computed(() => ({ redirect: `/transport/${this.id() ?? ''}` }));
 
   /**
+   * URLs de la galerie (F8.18) — les photos déposées par le partenaire. Le
+   * composant de fiche recevait `[galleryAlt]` mais jamais `[images]` : la
+   * galerie était montée et systématiquement vide.
+   */
+  readonly photoUrls = computed(
+    () =>
+      this.vehicle()
+        ?.photos?.map((photo) => photo.url)
+        .filter((url): url is string => !!url) ?? [],
+  );
+
+
+  /**
    * Charge le véhicule puis ses avis. Les avis sont tolérants à l'échec (repli
    * sur null) ; seule l'absence du véhicule bascule en « introuvable ».
    */

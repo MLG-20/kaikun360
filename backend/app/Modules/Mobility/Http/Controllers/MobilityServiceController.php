@@ -40,7 +40,10 @@ class MobilityServiceController extends Controller
         $cacheParams = $filters + ['page' => $request->integer('page', 1)];
 
         $payload = CatalogCache::remember('mobility', $cacheParams, function () use ($filters) {
-            $query = MobilityService::query()->published();
+            // F8.18 — un trajet est illustré par le VÉHICULE qui l'opère : la
+            // relation imbriquée est donc chargée en amont, sinon chaque carte
+            // déclencherait deux requêtes (le véhicule, puis ses photos).
+            $query = MobilityService::query()->published()->with('vehicle.media');
 
             $query->when($filters['type'] ?? null, fn ($q, $v) => $q->where('type', $v));
             $query->when($filters['departure'] ?? null, fn ($q, $v) => $q->where('departure', $v));
@@ -76,7 +79,7 @@ class MobilityServiceController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        $service = MobilityService::query()->published()->findOrFail($id);
+        $service = MobilityService::query()->published()->with('vehicle.media')->findOrFail($id);
 
         // Places prises = participants des réservations non annulées. Même
         // calcul que le contrôleur de réservation, qui reste seul juge au

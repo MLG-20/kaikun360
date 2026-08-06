@@ -23,7 +23,11 @@
   @case ('ready') {
     @if (vehicle(); as v) {
       <!-- Coquille de fiche générique (F2.6). -->
-      <app-detail-layout [title]="displayName()" [galleryAlt]="displayName()">
+      <app-detail-layout
+        [title]="displayName()"
+        [galleryAlt]="displayName()"
+        [images]="photoUrls()"
+      >
         <ng-container crumbs>
           <a routerLink="/transport">Transport</a>
           <span aria-hidden="true">/</span>

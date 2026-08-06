@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 import {
   EXPERIENCE_INCLUSIONS,
@@ -9,6 +11,7 @@ import {
 } from '../../../core/api/offer.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { PhotoManagerComponent } from '../../../shared/components/photo-manager/photo-manager';
 
 /**
  * Formulaire de dépôt d'une **expérience touristique** (F5.6), monté sous
@@ -21,7 +24,7 @@ import { BackLinkComponent } from '../../../shared/components/back-link/back-lin
  */
 @Component({
   selector: 'app-provider-experience-form-page',
-  imports: [ReactiveFormsModule, BackLinkComponent],
+  imports: [ReactiveFormsModule, BackLinkComponent, PhotoManagerComponent],
   templateUrl: './provider-experience-form-page.html',
   styleUrl: './provider-experience-form-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +39,14 @@ export class ProviderExperienceFormPageComponent {
 
   protected readonly submitting = signal(false);
   protected readonly formError = signal<string | null>(null);
+
+  /**
+   * Bloc photos (F8.18). Un circuit est ce qui se vend le plus par l'image, et
+   * c'était l'univers le plus démuni : ni dépôt, ni photo sur la carte, ni
+   * galerie sur la fiche. ⚠️ Écran de **création seule** (le backend n'expose
+   * pas d'édition de circuit) : les photos partent donc juste après le POST.
+   */
+  private readonly photoManager = viewChild(PhotoManagerComponent);
 
   protected readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(255)]],
@@ -71,7 +82,10 @@ export class ProviderExperienceFormPageComponent {
     this.submitting.set(true);
     this.formError.set(null);
 
-    this.offers.createExperience(payload).subscribe({
+    this.offers
+      .createExperience(payload)
+      .pipe(switchMap((env) => this.photoManager()?.uploadPending(env.data.experience.id) ?? of(null)))
+      .subscribe({
       next: () => {
         this.submitting.set(false);
         this.router.navigate(['/espace-prestataire/offres']);

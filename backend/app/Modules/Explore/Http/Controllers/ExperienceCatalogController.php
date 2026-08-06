@@ -39,7 +39,9 @@ class ExperienceCatalogController extends Controller
         $cacheParams = $filters + ['page' => $request->integer('page', 1)];
 
         $payload = CatalogCache::remember('experiences', $cacheParams, function () use ($filters) {
-            $query = TourismExperience::query()->published();
+            // F8.18 — `media` chargée en amont : la carte du catalogue Tourisme
+            // affiche enfin la photo de couverture du circuit, sans N+1.
+            $query = TourismExperience::query()->published()->with('media');
 
             $query->when($filters['destination'] ?? null, fn ($q, $v) => $q->where('destination', $v));
             $query->when($filters['price_min'] ?? null, fn ($q, $v) => $q->where('price_xof', '>=', $v));
@@ -66,7 +68,8 @@ class ExperienceCatalogController extends Controller
      */
     public function show(string $id): ExperienceResource
     {
-        $experience = TourismExperience::query()->published()->findOrFail($id);
+        // La fiche affiche la galerie entière du circuit.
+        $experience = TourismExperience::query()->published()->with('media')->findOrFail($id);
 
         return ExperienceResource::make($experience);
     }

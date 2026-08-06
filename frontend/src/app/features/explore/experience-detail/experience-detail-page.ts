@@ -77,6 +77,17 @@ export class ExperienceDetailPageComponent {
   readonly loginQueryParams = computed(() => ({ redirect: `/tourisme/${this.id() ?? ''}` }));
 
   /**
+   * URLs de la galerie (F8.18) — les photos du circuit déposées par son
+   * organisateur. La fiche montait sa galerie sans jamais l'alimenter.
+   */
+  readonly photoUrls = computed(
+    () =>
+      this.experience()
+        ?.photos?.map((photo) => photo.url)
+        .filter((url): url is string => !!url) ?? [],
+  );
+
+  /**
    * Charge expérience + disponibilité + avis en une passe. Disponibilité et
    * avis sont tolérants à l'échec (repli sur vide) : seule l'absence de
    * l'expérience elle-même bascule en « introuvable ».

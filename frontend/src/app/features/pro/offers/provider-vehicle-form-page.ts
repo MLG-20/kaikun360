@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 import {
   NewVehiclePayload,
@@ -10,8 +12,10 @@ import {
   vehicleFamily,
 } from '../../../core/api/offer.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { PropertyPhoto } from '../../../models/property.model';
 import { Vehicle } from '../../../models/vehicle.model';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { PhotoManagerComponent } from '../../../shared/components/photo-manager/photo-manager';
 
 /** État d'affichage de l'écran (création prête d'emblée ; édition attend le chargement). */
 type FormState = 'loading' | 'form' | 'not-found' | 'error';
@@ -30,7 +34,7 @@ type FormState = 'loading' | 'form' | 'not-found' | 'error';
  */
 @Component({
   selector: 'app-provider-vehicle-form-page',
-  imports: [ReactiveFormsModule, BackLinkComponent],
+  imports: [ReactiveFormsModule, BackLinkComponent, PhotoManagerComponent],
   templateUrl: './provider-vehicle-form-page.html',
   styleUrl: './provider-vehicle-form-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +50,17 @@ export class ProviderVehicleFormPageComponent {
 
   /** Id du véhicule édité (null en création). */
   protected readonly editId = signal<number | null>(null);
+
+  /**
+   * Bloc photos (F8.18). Ce formulaire n'en avait AUCUN : un loueur déposait son
+   * véhicule et sa carte au catalogue restait un aplat de couleur, sur l'univers
+   * où l'image décide presque seule (on ne loue pas une voiture qu'on n'a pas
+   * vue). Le serveur acceptait pourtant la clé `vehicle` depuis B12.1.
+   */
+  private readonly photoManager = viewChild(PhotoManagerComponent);
+
+  /** Photos du véhicule reçues du serveur (mode édition). */
+  protected readonly existingPhotos = signal<PropertyPhoto[]>([]);
   protected readonly state = signal<FormState>('form');
   protected readonly submitting = signal(false);
   protected readonly formError = signal<string | null>(null);
@@ -111,6 +126,7 @@ export class ProviderVehicleFormPageComponent {
       description: v.description ?? '',
     });
     this.typeValue.set((v.type as VehicleTypeValue) ?? '');
+    this.existingPhotos.set(v.photos ?? []);
   }
 
   /** Dépose ou met à jour le véhicule. */
@@ -145,7 +161,11 @@ export class ProviderVehicleFormPageComponent {
       ? this.offers.updateVehicle(id, payload)
       : this.offers.createVehicle(payload);
 
-    request$.subscribe({
+    // ⚠️ Les photos partent APRÈS l'enregistrement : en création le véhicule
+    // n'a pas encore d'id, et un média ne peut être rattaché à rien.
+    request$
+      .pipe(switchMap((env) => this.photoManager()?.uploadPending(env.data.vehicle.id) ?? of(null)))
+      .subscribe({
       next: () => {
         this.submitting.set(false);
         this.router.navigate(['/espace-prestataire/offres']);

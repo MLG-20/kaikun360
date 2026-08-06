@@ -40,7 +40,10 @@ class VehicleCatalogController extends Controller
         $cacheParams = $filters + ['page' => $request->integer('page', 1)];
 
         $payload = CatalogCache::remember('vehicles', $cacheParams, function () use ($filters) {
-            $query = Vehicle::query()->published();
+            // F8.18 — `media` chargée en amont : la carte affiche la photo de
+            // couverture, et sans ce `with` chaque ligne déclencherait sa propre
+            // requête (N+1 sur la liste la plus consultée du site).
+            $query = Vehicle::query()->published()->with('media');
 
             $query->when($filters['type'] ?? null, fn ($q, $v) => $q->where('type', $v));
             $query->when($filters['capacity_min'] ?? null, fn ($q, $v) => $q->where('capacity', '>=', $v));
@@ -67,7 +70,8 @@ class VehicleCatalogController extends Controller
      */
     public function show(string $id): VehicleResource
     {
-        $vehicle = Vehicle::query()->published()->findOrFail($id);
+        // La fiche affiche la galerie ENTIÈRE (pas seulement la couverture).
+        $vehicle = Vehicle::query()->published()->with('media')->findOrFail($id);
 
         return VehicleResource::make($vehicle);
     }

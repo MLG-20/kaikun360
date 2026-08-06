@@ -125,6 +125,18 @@
         </fieldset>
       }
 
+      <!-- Photos du véhicule (F8.18) : ce qui décide le client avant tout prix. -->
+      <fieldset class="vf-compliance">
+        <legend>Photos du véhicule</legend>
+        <app-photo-manager
+          type="vehicle"
+          subject="véhicule"
+          [resourceId]="editId()"
+          [initial]="existingPhotos()"
+          hint="Montrez le véhicule entier, l'intérieur et le coffre, de jour : personne ne réserve une voiture qu'il n'a pas vue. La première photo sert de couverture dans le catalogue."
+        />
+      </fieldset>
+
       @if (formError()) {
         <p class="vf-msg vf-msg--error" role="alert">{{ formError() }}</p>
       }

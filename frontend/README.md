@@ -241,6 +241,24 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   ressaisir le canal et la référence. ⚠️ L'URL du justificatif est **signée 10
   minutes** et posée en `[href]` — jamais appelée par `HttpClient`, la signature
   valant pour une requête de navigateur et non pour un appel authentifié.
+  **F8.18 Photos des annonces** (`shared/components/photo-manager/`) : le bloc de
+  dépôt de photos n'existait que dans le formulaire de bien du propriétaire —
+  c'était **le seul appelant de `POST /media/upload` de tout le frontend**. Un
+  loueur de véhicule ou un organisateur de circuit ne pouvait illustrer son
+  annonce par aucun moyen, et trois univers du catalogue sur cinq
+  (`transport`, `tourisme`, `mobilite`) codaient `image: null` **en dur** dans
+  `catalog.config.ts`, tandis que les fiches détail montaient une galerie sans
+  jamais lui passer d'images. ⚠️ **Extrait en composant partagé plutôt que
+  recopié** : la même centaine de lignes dans trois formulaires aurait divergé au
+  premier correctif. ⚠️ **Les photos existantes arrivent par une ENTRÉE, jamais
+  poussées par le parent** : le bloc vit dans une branche conditionnelle du
+  gabarit (compte non vérifié, annonce en cours de chargement) et un
+  `viewChild.required` y viserait un composant pas encore monté. ⚠️ **Le dépôt
+  est différé** : en création l'annonce n'a pas d'id, envoyer plus tôt exigerait
+  des médias temporaires à nettoyer si le partenaire abandonne. ⚠️ **La première
+  photo devient la couverture** — c'est elle, et elle seule, qui illustre la
+  carte du catalogue. L'écran back-office, lui, n'a rien demandé : il affichait
+  déjà les galeries depuis F8.1, il n'était que privé de contenu.
   **F7.2.e Dossiers → F7.3.c : deux rubriques distinctes.** L'écran unique à
   onglets (`features/backoffice/dossiers/`) a été **scindé** en
   `features/backoffice/construction/` (route `construction`) et

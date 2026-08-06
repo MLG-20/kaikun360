@@ -23,7 +23,7 @@
   @case ('ready') {
     @if (experience(); as e) {
       <!-- Coquille de fiche générique (F2.6). -->
-      <app-detail-layout [title]="e.title" [galleryAlt]="e.title">
+      <app-detail-layout [title]="e.title" [galleryAlt]="e.title" [images]="photoUrls()">
         <ng-container crumbs>
           <a routerLink="/tourisme">Tourisme</a>
           <span aria-hidden="true">/</span>

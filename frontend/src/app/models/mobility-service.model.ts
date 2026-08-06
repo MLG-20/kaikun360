@@ -1,3 +1,5 @@
+import { PropertyPhoto } from './property.model';
+
 /**
  * Service de mobilité (navette, transfert, liaison, excursion) —
  * miroir de `MobilityServiceResource` (module Mobility).
@@ -15,6 +17,14 @@ export interface MobilityService {
   description: string | null;
   status: string | null;
   status_label: string | null;
+  /**
+   * Photos du trajet (F8.18) — ce sont celles du **véhicule qui l'opère** :
+   * `mobility_services.vehicle_id`. Le prestataire n'illustre pas chaque départ,
+   * il illustre son véhicule une fois. Vide si aucun véhicule n'est rattaché.
+   */
+  photos?: PropertyPhoto[];
+  /** Couverture héritée du véhicule, ou `null` (vignette de repli). */
+  photo_url?: string | null;
 }
 
 /**
