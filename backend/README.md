@@ -710,6 +710,28 @@ php artisan test
 > Après toute nouvelle migration : régénérer le dump
 > (`php artisan schema:dump`) pour garder les tests rapides.
 
+### Tests de parcours — la catégorie à ne pas confondre avec les autres
+
+Quatre fichiers portent le nom `…JourneyTest` et obéissent à une **règle propre** :
+ils n'écrivent **aucun état à la main**. Là où un test de couche pose ce dont il a
+besoin (`'status' => 'terminee'`) et vérifie que la couche suivante sait le traiter,
+un test de parcours exige que chaque état soit **produit par le produit lui-même** —
+seule façon de prouver qu'il est atteignable en vrai.
+
+| Fichier | Ce qu'il parcourt |
+| --- | --- |
+| [`Transversal/MoneyJourneyTest.php`](tests/Feature/Transversal/MoneyJourneyTest.php) | **Le circuit de l'argent** : visiteur → réservation → paiement → IPN PayTech → confirmation → clôture → dette → délai → virement au partenaire |
+| [`Transversal/BookingReviewJourneyTest.php`](tests/Feature/Transversal/BookingReviewJourneyTest.php) | Réservation confirmée → clôture (tâche planifiée ou check-out) → avis → modération |
+| [`Pro/ProviderMissionJourneyTest.php`](tests/Feature/Pro/ProviderMissionJourneyTest.php) | Mission confiée → terminée → avis enfin possible |
+| [`Build/ConstructionRequestJourneyTest.php`](tests/Feature/Build/ConstructionRequestJourneyTest.php) | Demande de chantier → alerte de l'équipe → dossier au back-office → visible côté client |
+
+⚠️ **Pourquoi cette catégorie existe** : tous les défauts corrigés en F8.15/F8.16
+vivaient **entre** deux couches, chacune verte de son côté. Un test de couche ne peut
+structurellement pas les voir. ⚠️ `MoneyJourneyTest` **fait passer le temps**
+(`travel`) plutôt que de figer les délais : la fin du service et les 7 jours de
+sûreté sont des règles d'argent, les neutraliser rendrait le test aveugle à leur
+inversion.
+
 ---
 
 ## Documentation
