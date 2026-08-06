@@ -447,14 +447,51 @@
               <td><span class="mn-badge" [class]="payoutStatusClass(payout.status)">{{ payout.status_label || payout.status }}</span></td>
               <td class="mn-actions-cell">
                 @if (payout.status !== 'effectue') {
-                  <button type="button" class="k-btn k-btn--sm k-btn--primary" [disabled]="saving()" (click)="markPayoutPaid(payout)">
-                    Marquer effectué
+                  <button type="button" class="k-btn k-btn--sm k-btn--primary" [disabled]="saving()" (click)="openPayoutProof(payout)">
+                    {{ payoutBeingPaid() === payout.id ? 'Annuler' : 'Constater le virement' }}
                   </button>
                 } @else {
                   <span class="mn-muted">{{ shortDate(payout.paid_at) }}</span>
+                  <!-- ⚠️ URL SIGNÉE de 10 minutes, en [href] et jamais via
+                       HttpClient : la signature vaut pour une requête de
+                       navigateur, pas pour un appel authentifié. -->
+                  @if (payout.has_proof && payout.proof_url) {
+                    <a class="mn-proof" [href]="payout.proof_url" target="_blank" rel="noopener">
+                      {{ payout.proof_original_name || 'Justificatif' }}
+                    </a>
+                  }
                 }
               </td>
             </tr>
+
+            <!-- Dépôt du justificatif : déplié sous la ligne concernée, pour que
+                 l'agent voie le montant qu'il constate pendant qu'il joint sa
+                 pièce. -->
+            @if (payoutBeingPaid() === payout.id) {
+              <tr>
+                <td colspan="5" class="mn-proof-row">
+                  <label class="k-field">
+                    <span>Justificatif du virement <b>(obligatoire)</b></span>
+                    <input
+                      class="k-input"
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,.pdf"
+                      (change)="onPayoutProofSelected($event)" />
+                    <small class="mn-muted">
+                      Capture Wave/Orange Money ou avis de virement. C'est la seule
+                      preuve, un an plus tard, que ce propriétaire a bien été payé.
+                    </small>
+                  </label>
+                  <button
+                    type="button"
+                    class="k-btn k-btn--sm k-btn--primary"
+                    [disabled]="saving()"
+                    (click)="markPayoutPaid(payout)">
+                    Constater {{ money(payout.amount_xof) }}
+                  </button>
+                </td>
+              </tr>
+            }
           } @empty {
             <tr><td colspan="5" class="mn-empty">Aucun reversement enregistré.</td></tr>
           }

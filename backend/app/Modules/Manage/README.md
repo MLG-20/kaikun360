@@ -72,12 +72,23 @@ Relation `ManagementMandate::rents()` (hasMany).
 > transverse couvre les quatre autres lignes d'affaires (nuitées, véhicules,
 > circuits, trajets) plus les missions prestataires.
 >
-> ⚠️ **Dette connue, NON corrigée ici** : `owner_payouts.proof_path` existe
-> depuis B4.4 et **rien ne l'écrit jamais** — aucun endpoint ne téléverse de
-> justificatif, alors que l'écran Documents du back-office compte les preuves de
-> reversement (il compte donc toujours zéro). Le registre F8.16.a ne refait pas
-> cette promesse : son `POST .../pay` **exige** la pièce. Aligner la gestion
-> locative dessus reste à faire.
+> ✅ **Dette soldée le 2026-08-06.** `owner_payouts.proof_path` existait depuis
+> B4.4 et **rien ne l'écrivait jamais** : le constat posait le statut et la date,
+> sans aucune preuve — pendant que l'écran Documents du back-office prétendait
+> compter les justificatifs de reversement (il comptait donc toujours zéro, et
+> affichait le *chemin de stockage* comme nom de fichier).
+>
+> Le justificatif est désormais **obligatoire**, aligné sur `partner_payouts`
+> (F8.16.a) : c'est le même acte, sortir de l'argent vers un partenaire. Trois
+> colonnes ajoutées — `proof_disk`, `proof_original_name`, `paid_by`.
+>
+> ⚠️ **La route passe de `PATCH` à `POST`** (`/manage/payouts/{payout}/pay`) :
+> la pièce voyage en `multipart/form-data`, que PHP ne décode que sur un POST
+> (`$_FILES` reste vide sur un PATCH).
+>
+> ⚠️ Le chemin de stockage n'est jamais exposé : `OwnerPayoutResource` sert une
+> **URL signée de 10 minutes** (`proof_url`), comme le KYC et les certifications.
+> Un justificatif de virement porte des coordonnées.
 
 ---
 

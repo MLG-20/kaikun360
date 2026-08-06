@@ -28,6 +28,9 @@ class OwnerPayout extends Model
         'status',
         'paid_at',
         'proof_path',
+        'proof_disk',
+        'proof_original_name',
+        'paid_by',
     ];
 
     /**
@@ -50,6 +53,18 @@ class OwnerPayout extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    /** L'agent qui a constaté le virement (2026-08-06). */
+    public function payer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'paid_by');
+    }
+
+    /** Le justificatif a-t-il bien été déposé ? */
+    public function hasProof(): bool
+    {
+        return $this->proof_path !== null;
     }
 
     protected static function newFactory(): OwnerPayoutFactory

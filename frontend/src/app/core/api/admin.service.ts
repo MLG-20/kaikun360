@@ -1012,6 +1012,19 @@ export interface MandatePayout {
   status: string | null;
   status_label: string | null;
   paid_at: string | null;
+  /** Agent ayant constaté le virement (2026-08-06). */
+  paid_by?: string | null;
+  /**
+   * Justificatif du virement (2026-08-06). La colonne existait depuis B4.4 sans
+   * que rien ne l'écrive ; elle est désormais **obligatoire** au constat.
+   *
+   * ⚠️ `proof_url` est une URL **signée 10 minutes**, à poser en `[href]` —
+   * jamais à appeler via HttpClient : la signature vaut pour une requête de
+   * navigateur, pas pour un appel authentifié.
+   */
+  has_proof?: boolean;
+  proof_original_name?: string | null;
+  proof_url?: string | null;
 }
 
 /** Un incident sur le bien géré (miroir de `IncidentResource`). */
@@ -2885,10 +2898,24 @@ export class AdminService {
       .pipe(map((response) => response.data.payout));
   }
 
-  /** Marque un reversement comme effectué. PATCH /manage/payouts/{id}/pay */
-  markPayoutPaid(payoutId: number): Observable<MandatePayout> {
+  /**
+   * Constate le reversement effectué. POST /manage/payouts/{id}/pay
+   *
+   * ⚠️ **multipart, justificatif OBLIGATOIRE** (2026-08-06). Ce geste ne
+   * demandait aucune preuve : `owner_payouts.proof_path` existait depuis B4.4
+   * sans qu'aucun endpoint ne l'écrive, pendant que l'écran Documents du
+   * back-office prétendait compter les justificatifs de reversement. Aligné sur
+   * `payPartnerPayout` — c'est le même acte, sortir de l'argent vers un
+   * partenaire.
+   *
+   * ⚠️ **POST et non PATCH** : PHP ne décode `multipart/form-data` que sur un
+   * POST (`$_FILES` reste vide sur un PATCH).
+   */
+  markPayoutPaid(payoutId: number, proof: File): Observable<MandatePayout> {
+    const form = new FormData();
+    form.append('proof', proof);
     return this.http
-      .patch<ApiEnvelope<{ payout: MandatePayout }>>(`${this.api}/manage/payouts/${payoutId}/pay`, {})
+      .post<ApiEnvelope<{ payout: MandatePayout }>>(`${this.api}/manage/payouts/${payoutId}/pay`, form)
       .pipe(map((response) => response.data.payout));
   }
 

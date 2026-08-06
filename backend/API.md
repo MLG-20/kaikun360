@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 234 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 252 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -243,7 +243,23 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/manage/mandates/{mandate}/payouts` | auth + `can:gerer:gestion-locative` | `MandateManagementController@storePayout` |
 | POST | `/manage/mandates/{mandate}/rents` | auth + `can:gerer:gestion-locative` | `MandateManagementController@storeRent` |
 | GET | `/manage/mandates/{mandate}/report` | auth | `ManageController@report` |
-| PATCH | `/manage/payouts/{payout}/pay` | auth + `can:gerer:gestion-locative` | `MandateManagementController@markPayoutPaid` |
+| POST | `/manage/payouts/{payout}/pay` | auth + `can:gerer:gestion-locative` | `MandateManagementController@markPayoutPaid` |
+| GET | `/manage/payouts/{payout}/proof` | **URL signée** (10 min) | `MandateManagementController@downloadPayoutProof` |
+
+> **Le justificatif de reversement devient obligatoire (2026-08-06).**
+> `owner_payouts.proof_path` existait depuis **B4.4** et **rien ne l'écrivait
+> jamais** : le constat posait le statut et la date, sans aucune preuve — pendant
+> que l'écran **Documents** du back-office (F7.4.c) prétendait compter les
+> justificatifs de reversement, et affichait le *chemin de stockage* comme nom de
+> fichier. Il comptait donc invariablement zéro.
+>
+> ⚠️ **La méthode passe de `PATCH` à `POST`** : la pièce voyage en
+> `multipart/form-data`, que PHP ne décode que sur un POST (`$_FILES` reste vide
+> sur un PATCH). Aligné sur `POST /admin/partner-payouts/{payout}/pay`
+> (F8.16.a) — c'est le même acte, sortir de l'argent vers un partenaire.
+>
+> ⚠️ Le chemin de stockage n'est jamais exposé : `OwnerPayoutResource` sert
+> `proof_url`, **URL signée de 10 minutes**, comme le KYC et les certifications.
 | PATCH | `/manage/rents/{rent}/pay` | auth + `can:gerer:gestion-locative` | `MandateManagementController@markRentPaid` |
 
 ### Requests (transversal)

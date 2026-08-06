@@ -78,8 +78,25 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    /*
+     * Défaut aligné sur `.env` (2026-08-06) : Kaikun 360 est un produit
+     * sénégalais francophone. Le mettre dans le CODE et pas seulement dans
+     * `.env` évite qu'un déploiement neuf — `.env` n'étant pas versionné —
+     * reparte en anglais.
+     */
+    'locale' => env('APP_LOCALE', 'fr'),
 
+    /*
+     * ⚠️ **Le repli doit rester `en`, et ce n'est pas un oubli.** Laravel
+     * embarque ses propres traductions anglaises : une clé absente de `lang/fr`
+     * retombe donc sur une phrase anglaise LISIBLE. Avec `fr` en repli — ce
+     * qu'indiquait `.env` jusqu'au 2026-08-06 — la même clé ressort **brute**.
+     *
+     * C'est précisément ce qui se passait : la locale était bien `fr`, mais
+     * **aucun dossier `lang/fr` n'existait** et le repli pointait sur lui-même.
+     * `POST /api/v1/contact`, endpoint PUBLIC, répondait donc
+     * « validation.required » à de vrais visiteurs.
+     */
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),

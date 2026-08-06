@@ -37,5 +37,17 @@ Route::middleware(['auth:sanctum', 'can:gerer:gestion-locative'])->prefix('manag
     Route::post('/mandates/{mandate}/expenses', [MandateManagementController::class, 'storeExpense'])->whereNumber('mandate');
 
     Route::post('/mandates/{mandate}/payouts', [MandateManagementController::class, 'storePayout'])->whereNumber('mandate');
-    Route::patch('/payouts/{payout}/pay', [MandateManagementController::class, 'markPayoutPaid'])->whereNumber('payout');
+    // ⚠️ POST et non PATCH (2026-08-06) : le constat porte désormais un
+    // JUSTIFICATIF obligatoire, donc un `multipart/form-data` — que PHP ne
+    // décode que sur un POST (`$_FILES` reste vide sur un PATCH).
+    Route::post('/payouts/{payout}/pay', [MandateManagementController::class, 'markPayoutPaid'])->whereNumber('payout');
 });
+
+// Téléchargement du justificatif d'un reversement propriétaire. HORS du groupe
+// authentifié : l'accès est prouvé par la SIGNATURE de l'URL (10 min, produite
+// par OwnerPayoutResource), comme le KYC, les certifications et les versements
+// partenaires. ⚠️ Le nom de route doit rester celui employé par la ressource.
+Route::get('manage/payouts/{payout}/proof', [MandateManagementController::class, 'downloadPayoutProof'])
+    ->name('manage.payouts.proof')
+    ->whereNumber('payout')
+    ->middleware('signed');

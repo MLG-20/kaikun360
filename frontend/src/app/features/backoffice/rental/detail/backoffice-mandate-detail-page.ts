@@ -398,8 +398,39 @@ export class BackofficeMandateDetailPageComponent {
     );
   }
 
+  /**
+   * Reversement en cours de constat : son identifiant, ou `null`.
+   *
+   * ⚠️ Le constat n'est plus un clic unique (2026-08-06) : il exige désormais un
+   * **justificatif**. On déplie donc un choix de fichier au lieu de déclarer le
+   * virement effectué sur parole — la colonne `proof_path` existait depuis B4.4
+   * sans que rien ne l'écrive, et l'écran Documents comptait des preuves qui
+   * n'existaient pas.
+   */
+  protected readonly payoutBeingPaid = signal<number | null>(null);
+  protected payoutProof: File | null = null;
+
+  protected openPayoutProof(payout: MandatePayout): void {
+    this.payoutBeingPaid.set(this.payoutBeingPaid() === payout.id ? null : payout.id);
+    this.payoutProof = null;
+  }
+
+  protected onPayoutProofSelected(event: Event): void {
+    this.payoutProof = (event.target as HTMLInputElement).files?.[0] ?? null;
+  }
+
   protected markPayoutPaid(payout: MandatePayout): void {
-    this.run(this.admin.markPayoutPaid(payout.id), 'Reversement marqué effectué.');
+    if (this.payoutProof === null) {
+      // Dit AVANT l'appel plutôt que de laisser revenir un 422 : le serveur
+      // refuserait de toute façon, autant l'expliquer tout de suite.
+      this.actionError.set('Joignez le justificatif du virement : c’est la seule preuve du paiement.');
+      return;
+    }
+
+    this.run(this.admin.markPayoutPaid(payout.id, this.payoutProof), 'Reversement constaté.', () => {
+      this.payoutBeingPaid.set(null);
+      this.payoutProof = null;
+    });
   }
 
   /**

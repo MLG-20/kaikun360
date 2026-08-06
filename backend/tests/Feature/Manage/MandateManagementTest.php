@@ -13,6 +13,8 @@ use App\Modules\Manage\Models\OwnerPayout;
 use App\Modules\Manage\Models\Rent;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -29,6 +31,9 @@ class MandateManagementTest extends TestCase
     {
         parent::setUp();
         $this->seed(RolesAndPermissionsSeeder::class);
+        // Les justificatifs de reversement partent sur le disque privé
+        // (2026-08-06) : on l'isole pour ne rien écrire dans `storage/`.
+        Storage::fake('local');
     }
 
     /**
@@ -226,15 +231,75 @@ class MandateManagementTest extends TestCase
             ->assertJsonPath('data.payout.status', 'en_attente')
             ->json('data.payout.id');
 
-        $this->patchJson("/api/v1/manage/payouts/{$payoutId}/pay")
+        // ⚠️ Sans justificatif, le constat est refusé (2026-08-06). La colonne
+        // `proof_path` existait depuis B4.4 sans que rien ne l'écrive : le
+        // reversement se déclarait effectué sans la moindre preuve, alors que
+        // l'écran Documents du back-office prétendait les compter.
+        $this->postJson("/api/v1/manage/payouts/{$payoutId}/pay")
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('proof');
+
+        $this->post("/api/v1/manage/payouts/{$payoutId}/pay", [
+            'proof' => UploadedFile::fake()->image('recu-wave.jpg'),
+        ])
             ->assertOk()
-            ->assertJsonPath('data.payout.status', 'effectue');
+            ->assertJsonPath('data.payout.status', 'effectue')
+            ->assertJsonPath('data.payout.has_proof', true);
 
         $this->assertDatabaseHas('owner_payouts', [
             'id' => $payoutId,
             'owner_id' => $mandate->owner_id,
         ]);
-        $this->assertNotNull(OwnerPayout::find($payoutId)->paid_at);
+
+        $payout = OwnerPayout::find($payoutId);
+        $this->assertNotNull($payout->paid_at);
+        // La pièce existe VRAIMENT sur le disque privé, et l'agent est nommé.
+        $this->assertNotNull($payout->proof_path);
+        $this->assertSame('recu-wave.jpg', $payout->proof_original_name);
+        $this->assertNotNull($payout->paid_by);
+        Storage::disk('local')->assertExists($payout->proof_path);
+    }
+
+    public function test_le_justificatif_d_un_reversement_n_est_accessible_que_par_url_signee(): void
+    {
+        $mandate = ManagementMandate::factory()->create();
+        Sanctum::actingAs($this->agent());
+
+        $payoutId = $this->postJson("/api/v1/manage/mandates/{$mandate->id}/payouts", [
+            'period_label' => 'Juillet 2026',
+            'amount_xof' => 90_000,
+        ])->json('data.payout.id');
+
+        $payout = $this->post("/api/v1/manage/payouts/{$payoutId}/pay", [
+            'proof' => UploadedFile::fake()->create('avis-virement.pdf', 30, 'application/pdf'),
+        ])->assertOk()->json('data.payout');
+
+        // Le chemin de stockage n'est jamais servi : une preuve de virement
+        // porte des coordonnées.
+        $this->assertArrayNotHasKey('proof_path', $payout);
+
+        $this->get("/api/v1/manage/payouts/{$payoutId}/proof")->assertStatus(403);
+        $this->get($payout['proof_url'])->assertOk();
+    }
+
+    public function test_un_reversement_deja_constate_ne_se_reconstate_pas(): void
+    {
+        $mandate = ManagementMandate::factory()->create();
+        Sanctum::actingAs($this->agent());
+
+        $payoutId = $this->postJson("/api/v1/manage/mandates/{$mandate->id}/payouts", [
+            'period_label' => 'Août 2026',
+            'amount_xof' => 50_000,
+        ])->json('data.payout.id');
+
+        $this->post("/api/v1/manage/payouts/{$payoutId}/pay", [
+            'proof' => UploadedFile::fake()->image('recu.png'),
+        ])->assertOk();
+
+        // Le reconstater écraserait la première preuve et fausserait la date.
+        $this->post("/api/v1/manage/payouts/{$payoutId}/pay", [
+            'proof' => UploadedFile::fake()->image('autre.png'),
+        ])->assertStatus(422);
     }
 
     public function test_la_gestion_exige_la_permission(): void

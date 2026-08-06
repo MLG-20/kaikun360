@@ -132,7 +132,13 @@ class AdminDocumentController extends Controller
                     'subject_type' => 'owner',
                     'subject_id' => $p->owner_id,
                     'label' => $p->reference,
-                    'original_name' => $p->proof_path,
+                    // ⚠️ Le nom TÉLÉVERSÉ, pas le chemin de stockage
+                    // (2026-08-06). Cette ligne affichait `proof_path` — un
+                    // chemin haché illisible — et de toute façon la liste était
+                    // vide : rien n'écrivait jamais la colonne. Repli sur la
+                    // référence pour les reversements constatés avant que le
+                    // justificatif ne devienne obligatoire.
+                    'original_name' => $p->proof_original_name ?? $p->reference,
                     'status' => $p->status->value,
                     'created_at' => $p->created_at,
                 ],

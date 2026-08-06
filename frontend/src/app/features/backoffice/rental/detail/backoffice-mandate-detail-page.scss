@@ -332,3 +332,24 @@
   color: var(--k-muted);
   margin: 0 0 24px;
 }
+
+// Justificatif de reversement (2026-08-06) : dépôt déplié sous la ligne, et
+// lien de téléchargement une fois le virement constaté.
+.mn-proof-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+  background: rgba(3, 72, 251, 0.035);
+
+  .k-field {
+    flex: 1 1 320px;
+  }
+}
+
+.mn-proof {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--k-brand);
+  text-decoration: underline;
+}

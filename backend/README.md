@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **251 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **252 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **873 tests** automatisés (2937 assertions), tous verts ✅
+- **880 tests** automatisés (2970 assertions), tous verts ✅
 
 ---
 
@@ -51,7 +51,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 873 tests automatiques** — des petits programmes
+notifications) et **vérifié par 880 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 

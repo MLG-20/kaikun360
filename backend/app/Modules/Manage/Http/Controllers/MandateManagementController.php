@@ -26,8 +26,10 @@ use App\Modules\Immo\Models\Property;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Endpoints de gestion locative réservés aux AGENTS (phase B4.6).
@@ -178,18 +180,68 @@ class MandateManagementController extends Controller
     }
 
     /**
-     * Marque un reversement comme effectué. PATCH /api/v1/manage/payouts/{payout}/pay
+     * Constate le reversement effectué. POST /api/v1/manage/payouts/{payout}/pay
+     *
+     * ⚠️ **Le justificatif est désormais OBLIGATOIRE** (2026-08-06). La colonne
+     * `proof_path` existait depuis B4.4 et **rien ne l'écrivait** : ce geste
+     * posait le statut et la date, sans jamais demander de preuve. L'écran
+     * Documents du back-office comptait pourtant les justificatifs de
+     * reversement — il comptait donc toujours zéro.
+     *
+     * Aligné sur `partner_payouts` (F8.16.a), qui exige la pièce : imposer la
+     * preuve d'un côté et la rendre impossible de l'autre n'aurait aucun sens,
+     * alors que c'est le même acte — sortir de l'argent vers un partenaire.
+     *
+     * ⚠️ **La méthode HTTP passe de PATCH à POST** : un téléversement de fichier
+     * voyage en `multipart/form-data`, que PHP ne sait décoder que sur un POST
+     * (`$_FILES` reste vide sur un PATCH). Le geste est de toute façon un
+     * enregistrement d'événement, pas une correction de champ.
      */
     public function markPayoutPaid(Request $request, OwnerPayout $payout): JsonResponse
     {
+        if ($payout->status === OwnerPayoutStatus::EFFECTUE) {
+            throw ValidationException::withMessages([
+                'payout' => ['Ce reversement est déjà constaté.'],
+            ]);
+        }
+
+        $request->validate([
+            'proof' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
+        ], [
+            'proof.required' => "Joignez le justificatif du virement : c'est la seule preuve du paiement.",
+            'proof.mimes' => 'Le justificatif doit être une image (JPG, PNG, WEBP) ou un PDF.',
+            'proof.max' => 'Le justificatif ne doit pas dépasser 5 Mo.',
+        ]);
+
+        // Disque PRIVÉ : une preuve de virement porte des coordonnées.
+        $fichier = $request->file('proof');
+
         $payout->update([
             'status' => OwnerPayoutStatus::EFFECTUE->value,
             'paid_at' => now(),
+            'paid_by' => $request->user()->id,
+            'proof_path' => $fichier->store("payouts/owners/{$payout->id}", 'local'),
+            'proof_disk' => 'local',
+            'proof_original_name' => $fichier->getClientOriginalName(),
         ]);
 
         // Action financière sensible : on l'audite (cf. B15).
-        activity()->causedBy($request->user())->performedOn($payout)->log('Reversement propriétaire effectué');
+        activity()->causedBy($request->user())->performedOn($payout)
+            ->withProperties(['amount_xof' => $payout->amount_xof])
+            ->log('Reversement propriétaire effectué');
 
-        return ApiResponse::success(['payout' => OwnerPayoutResource::make($payout)]);
+        return ApiResponse::success(['payout' => OwnerPayoutResource::make($payout->fresh())]);
+    }
+
+    /**
+     * Téléchargement du justificatif, par URL SIGNÉE uniquement.
+     * GET /api/v1/manage/payouts/{payout}/proof
+     */
+    public function downloadPayoutProof(OwnerPayout $payout): StreamedResponse
+    {
+        abort_if($payout->proof_path === null, 404);
+
+        return Storage::disk($payout->proof_disk ?? 'local')
+            ->download($payout->proof_path, $payout->proof_original_name ?? 'justificatif');
     }
 }
