@@ -161,6 +161,11 @@
   border: 1px solid var(--k-line);
   background: var(--k-cream);
 
+  // Garde-fou : même sans la règle ci-dessus, l'image porte ses dimensions en
+  // attributs — une vignette ne doit jamais pouvoir occuper la page entière.
+  max-width: 72px;
+  max-height: 54px;
+
   &--empty {
     display: flex;
     align-items: center;

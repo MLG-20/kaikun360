@@ -57,7 +57,12 @@
               <!-- F8.18 — la couverture telle qu'elle sort au catalogue : le
                    prestataire voit d'un coup d'œil ses annonces sans visuel. -->
               @if (v.photo_url) {
-                <img class="of-thumb" [src]="v.photo_url" [alt]="vehicleName(v)" />
+                <!-- ⚠️ `width`/`height` en ATTRIBUTS, pas seulement en CSS : ils
+                     donnent sa taille intrinsèque à l'image, ce qui évite le
+                     saut de mise en page pendant le chargement — et surtout
+                     empêche la photo de s'afficher en pleine page si la feuille
+                     de style du composant n'est pas (encore) là. -->
+                <img class="of-thumb" width="72" height="54" [src]="v.photo_url" [alt]="vehicleName(v)" />
               } @else {
                 <span class="of-thumb of-thumb--empty" aria-hidden="true">📷</span>
               }
@@ -121,7 +126,7 @@
           @for (x of experiences(); track x.id) {
             <li class="of-card">
               @if (x.photo_url) {
-                <img class="of-thumb" [src]="x.photo_url" [alt]="x.title" />
+                <img class="of-thumb" width="72" height="54" [src]="x.photo_url" [alt]="x.title" />
               } @else {
                 <span class="of-thumb of-thumb--empty" aria-hidden="true">📷</span>
               }
