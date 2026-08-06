@@ -27,6 +27,11 @@ Route::prefix('experiences')->group(function () {
 Route::middleware('auth:sanctum')->prefix('experiences')->group(function () {
     Route::post('/', [ExperienceManagementController::class, 'store'])->middleware('verified.account');
     Route::get('/mine', [ExperienceManagementController::class, 'mine']);
+    // F8.19 — édition et retrait d'un circuit, deux gestes qui MANQUAIENT : un
+    // circuit déposé était définitif, et ne pouvait donc jamais être illustré
+    // après coup.
+    Route::patch('/{experience}', [ExperienceManagementController::class, 'update'])->whereNumber('experience');
+    Route::delete('/{experience}', [ExperienceManagementController::class, 'destroy'])->whereNumber('experience');
     Route::post('/{id}/bookings', [ExperienceBookingController::class, 'store'])->whereNumber('id')->middleware('verified.account');
     Route::patch('/bookings/{booking}/cancel', [ExperienceBookingController::class, 'cancel'])->whereNumber('booking');
 });

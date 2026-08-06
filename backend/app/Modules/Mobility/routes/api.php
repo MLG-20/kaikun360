@@ -33,6 +33,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('vehicles', [VehicleManagementController::class, 'store'])->middleware('verified.account');
     Route::get('vehicles/mine', [VehicleManagementController::class, 'mine']);
     Route::patch('vehicles/{vehicle}', [VehicleManagementController::class, 'update'])->whereNumber('vehicle');
+    // F8.19 — retrait d'une offre par son prestataire (suppression réelle si le
+    // véhicule n'a jamais servi, retrait conservatoire sinon).
+    Route::delete('vehicles/{vehicle}', [VehicleManagementController::class, 'destroy'])->whereNumber('vehicle');
 
     // Réservations (caution & commission) — B7.4.
     Route::post('vehicles/{id}/bookings', [VehicleBookingController::class, 'store'])->whereNumber('id')->middleware('verified.account');

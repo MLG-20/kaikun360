@@ -15,6 +15,18 @@ enum ExperienceStatus: string
     case SUSPENDU = 'suspendu';
     case REJETE = 'rejete';
 
+    /**
+     * **Retiré par son prestataire** (F8.19) — retrait VOLONTAIRE, à ne jamais
+     * confondre avec `SUSPENDU`, qui est une sanction de l'équipe Kaikun.
+     *
+     * ⚠️ Ce statut existe parce qu'une offre déjà réservée **ne peut pas être
+     * supprimée** : les réservations pointent dessus par une relation
+     * polymorphe, sans clé étrangère pour les retenir. La supprimer laisserait
+     * des clients avec une réservation dont l'objet a disparu de leur
+     * historique. Retirée, l'offre quitte le catalogue et reste lisible.
+     */
+    case RETIRE = 'retire';
+
     public function label(): string
     {
         return match ($this) {

@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **252 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **255 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **891 tests** automatisés (3075 assertions), tous verts ✅
+- **900 tests** automatisés (3124 assertions), tous verts ✅
 
 ---
 
@@ -51,7 +51,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 891 tests automatiques** — des petits programmes
+notifications) et **vérifié par 900 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -527,7 +527,7 @@ backend/
 │   └── emails/          # Gabarit unique des e-mails (HTML + texte brut)
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 177 endpoints
+├── API.md               # Référence des 255 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -704,7 +704,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 891 tests, 3075 assertions — verts
+# 900 tests, 3124 assertions — verts
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -712,7 +712,7 @@ php artisan test
 
 ### Tests de parcours — la catégorie à ne pas confondre avec les autres
 
-Cinq fichiers portent le nom `…JourneyTest` et obéissent à une **règle propre** :
+Six fichiers portent le nom `…JourneyTest` et obéissent à une **règle propre** :
 ils n'écrivent **aucun état à la main**. Là où un test de couche pose ce dont il a
 besoin (`'status' => 'terminee'`) et vérifie que la couche suivante sait le traiter,
 un test de parcours exige que chaque état soit **produit par le produit lui-même** —
@@ -721,6 +721,7 @@ seule façon de prouver qu'il est atteignable en vrai.
 | Fichier | Ce qu'il parcourt |
 | --- | --- |
 | [`Transversal/MoneyJourneyTest.php`](tests/Feature/Transversal/MoneyJourneyTest.php) | **Le circuit de l'argent** : visiteur → réservation → paiement → IPN PayTech → confirmation → clôture → dette → délai → virement au partenaire |
+| [`Transversal/OfferLifecycleJourneyTest.php`](tests/Feature/Transversal/OfferLifecycleJourneyTest.php) | **La vie d'une offre** : déposée → corrigée → illustrée après coup → retirée (ou supprimée si elle n'a jamais servi) |
 | [`Transversal/CatalogPhotoJourneyTest.php`](tests/Feature/Transversal/CatalogPhotoJourneyTest.php) | **La photo d'une annonce** : dépôt par le partenaire → carte du catalogue → fiche → file de validation du back-office |
 | [`Transversal/BookingReviewJourneyTest.php`](tests/Feature/Transversal/BookingReviewJourneyTest.php) | Réservation confirmée → clôture (tâche planifiée ou check-out) → avis → modération |
 | [`Pro/ProviderMissionJourneyTest.php`](tests/Feature/Pro/ProviderMissionJourneyTest.php) | Mission confiée → terminée → avis enfin possible |
@@ -739,7 +740,7 @@ inversion.
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 177 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 255 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |

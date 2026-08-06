@@ -26,6 +26,20 @@ export type VehicleTypeValue =
   | 'chauffeur';
 
 /** Option du sélecteur de type de véhicule (valeur + libellé + famille). */
+/**
+ * Ce que le serveur répond au retrait d'une offre (F8.19).
+ *
+ * ⚠️ Deux issues, et l'écran doit dire laquelle a eu lieu : « supprimé » et
+ * « retiré mais conservé pour l'historique de vos clients » ne veulent pas dire
+ * la même chose pour un prestataire qui vient de cliquer.
+ */
+export interface OfferRemoval {
+  /** Vrai si l'offre a réellement disparu ; faux si elle est seulement retirée. */
+  deleted: boolean;
+  /** Pourquoi elle a été conservée, `null` en cas de suppression réelle. */
+  reason: string | null;
+}
+
 export interface VehicleTypeOption {
   value: VehicleTypeValue;
   label: string;
@@ -188,6 +202,59 @@ export class OfferService {
       `${this.api}/experiences`,
       this.cleanExperience(payload),
     );
+  }
+
+  /**
+   * Retrouve un de mes circuits par son id, tous statuts confondus (F8.19).
+   *
+   * Même contrainte que `findMyVehicle` : le détail public ne renvoie que les
+   * circuits **publiés**, or on édite justement ceux qui attendent leur
+   * validation. Un circuit **retiré** se relit donc aussi par ce chemin.
+   */
+  findMyExperience(id: number): Observable<Experience | null> {
+    const search = (page: number): Observable<Experience | null> =>
+      this.myExperiences(page).pipe(
+        switchMap((res) => {
+          const found = res.data.find((x) => x.id === id);
+          if (found) return of(found);
+          if (res.meta.current_page < res.meta.last_page) return search(page + 1);
+          return of(null);
+        }),
+      );
+    return search(1);
+  }
+
+  /**
+   * PATCH /experiences/{id} — met à jour un circuit (F8.19).
+   *
+   * ⚠️ Cette route **n'existait pas** côté serveur : un circuit déposé était
+   * définitif, et ne pouvait donc jamais être illustré après coup.
+   */
+  updateExperience(
+    id: number,
+    payload: NewExperiencePayload,
+  ): Observable<ApiEnvelope<{ experience: Experience }>> {
+    return this.http.patch<ApiEnvelope<{ experience: Experience }>>(
+      `${this.api}/experiences/${id}`,
+      this.cleanExperience(payload),
+    );
+  }
+
+  /**
+   * DELETE /vehicles/{id} — retire un véhicule du catalogue (F8.19).
+   *
+   * ⚠️ **Le serveur décide s'il supprime ou s'il retire** : une offre déjà
+   * réservée n'est jamais supprimée (les réservations la désignent sans clé
+   * étrangère). La réponse porte `deleted` et, le cas échéant, la `reason` à
+   * afficher au prestataire — l'écran ne rejoue pas la règle.
+   */
+  deleteVehicle(id: number): Observable<ApiEnvelope<OfferRemoval>> {
+    return this.http.delete<ApiEnvelope<OfferRemoval>>(`${this.api}/vehicles/${id}`);
+  }
+
+  /** DELETE /experiences/{id} — retire un circuit du catalogue (F8.19). */
+  deleteExperience(id: number): Observable<ApiEnvelope<OfferRemoval>> {
+    return this.http.delete<ApiEnvelope<OfferRemoval>>(`${this.api}/experiences/${id}`);
   }
 
   // --- Préparation des corps -------------------------------------------------

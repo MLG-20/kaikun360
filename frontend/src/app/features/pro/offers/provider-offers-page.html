@@ -29,6 +29,15 @@
     </div>
   }
   @default {
+    <!-- Résultat du dernier retrait : « supprimé » et « retiré mais conservé »
+         ne veulent pas dire la même chose, et le prestataire doit le lire. -->
+    @if (removalNotice(); as notice) {
+      <p class="of-notice" role="status">{{ notice }}</p>
+    }
+    @if (removalError(); as err) {
+      <p class="k-error" role="alert">{{ err }}</p>
+    }
+
     <!-- ===================== Véhicules ===================== -->
     <section class="of-block">
       <header class="of-block-head">
@@ -45,6 +54,13 @@
         <ul class="of-list">
           @for (v of vehicles(); track v.id) {
             <li class="of-card">
+              <!-- F8.18 — la couverture telle qu'elle sort au catalogue : le
+                   prestataire voit d'un coup d'œil ses annonces sans visuel. -->
+              @if (v.photo_url) {
+                <img class="of-thumb" [src]="v.photo_url" [alt]="vehicleName(v)" />
+              } @else {
+                <span class="of-thumb of-thumb--empty" aria-hidden="true">📷</span>
+              }
               <div class="of-card-main">
                 <p class="of-card-title">{{ vehicleName(v) }}</p>
                 <p class="of-card-meta">
@@ -57,7 +73,30 @@
               </div>
               <div class="of-card-side">
                 <span class="of-badge" [class]="statusClass(v.status)">{{ v.status_label }}</span>
-                <a class="of-card-edit" [routerLink]="['vehicule', v.id, 'modifier']">Modifier</a>
+                @if (!v.photo_url) {
+                  <span class="of-nophoto">Sans photo</span>
+                }
+                @if (pendingRemoval() === 'vehicle-' + v.id) {
+                  <p class="of-confirm">Retirer cette offre du catalogue ?</p>
+                  <div class="of-confirm-actions">
+                    <button
+                      type="button"
+                      class="of-card-danger"
+                      [disabled]="removing() === 'vehicle-' + v.id"
+                      (click)="confirmRemove('vehicle', v.id)"
+                    >
+                      {{ removing() === 'vehicle-' + v.id ? 'Retrait…' : 'Confirmer' }}
+                    </button>
+                    <button type="button" class="of-card-edit" (click)="askRemove(null)">Annuler</button>
+                  </div>
+                } @else {
+                  <div class="of-card-actions">
+                    <a class="of-card-edit" [routerLink]="['vehicule', v.id, 'modifier']">Modifier</a>
+                    <button type="button" class="of-card-danger" (click)="askRemove('vehicle-' + v.id)">
+                      Retirer
+                    </button>
+                  </div>
+                }
               </div>
             </li>
           }
@@ -81,6 +120,11 @@
         <ul class="of-list">
           @for (x of experiences(); track x.id) {
             <li class="of-card">
+              @if (x.photo_url) {
+                <img class="of-thumb" [src]="x.photo_url" [alt]="x.title" />
+              } @else {
+                <span class="of-thumb of-thumb--empty" aria-hidden="true">📷</span>
+              }
               <div class="of-card-main">
                 <p class="of-card-title">{{ x.title }}</p>
                 <p class="of-card-meta">
@@ -94,6 +138,32 @@
               </div>
               <div class="of-card-side">
                 <span class="of-badge" [class]="statusClass(x.status)">{{ x.status_label }}</span>
+                @if (!x.photo_url) {
+                  <span class="of-nophoto">Sans photo</span>
+                }
+                @if (pendingRemoval() === 'experience-' + x.id) {
+                  <p class="of-confirm">Retirer ce circuit du catalogue ?</p>
+                  <div class="of-confirm-actions">
+                    <button
+                      type="button"
+                      class="of-card-danger"
+                      [disabled]="removing() === 'experience-' + x.id"
+                      (click)="confirmRemove('experience', x.id)"
+                    >
+                      {{ removing() === 'experience-' + x.id ? 'Retrait…' : 'Confirmer' }}
+                    </button>
+                    <button type="button" class="of-card-edit" (click)="askRemove(null)">Annuler</button>
+                  </div>
+                } @else {
+                  <div class="of-card-actions">
+                    <!-- F8.19 — ce lien n'existait pas : un circuit déposé était
+                         définitif, donc impossible à illustrer après coup. -->
+                    <a class="of-card-edit" [routerLink]="['experience', x.id, 'modifier']">Modifier</a>
+                    <button type="button" class="of-card-danger" (click)="askRemove('experience-' + x.id)">
+                      Retirer
+                    </button>
+                  </div>
+                }
               </div>
             </li>
           }

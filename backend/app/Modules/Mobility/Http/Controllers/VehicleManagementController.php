@@ -10,6 +10,7 @@ use App\Modules\Mobility\Http\Requests\UpdateVehicleRequest;
 use App\Modules\Mobility\Http\Resources\VehicleResource;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Support\ApiResponse;
+use App\Support\Offers\OfferRetirementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -69,6 +70,30 @@ class VehicleManagementController extends Controller
 
         $vehicle->update($request->validated());
 
-        return ApiResponse::success(['vehicle' => VehicleResource::make($vehicle->fresh())]);
+        return ApiResponse::success([
+            'vehicle' => VehicleResource::make($vehicle->fresh()->load('media')),
+        ]);
+    }
+
+    /**
+     * Retire un véhicule du catalogue. DELETE /api/v1/vehicles/{vehicle}
+     *
+     * ⚠️ **Ce geste n'existait pas** (F8.19) : un véhicule vendu, remplacé ou
+     * déposé par erreur restait au catalogue pour toujours, et le prestataire
+     * n'avait d'autre recours que d'écrire au support.
+     *
+     * Supprime réellement ou retire selon l'histoire de l'offre — la règle vit
+     * dans `OfferRetirementService`, jamais dupliquée ici.
+     */
+    public function destroy(Vehicle $vehicle, OfferRetirementService $retrait): JsonResponse
+    {
+        Gate::authorize('update', $vehicle);
+
+        $resultat = $retrait->retirer($vehicle);
+
+        return ApiResponse::success([
+            'deleted' => $resultat['deleted'],
+            'reason' => $resultat['reason'],
+        ]);
     }
 }

@@ -1,13 +1,30 @@
 <section class="account-head">
   <app-back-link class="account-back" fallback="/espace-prestataire/offres" />
   <p class="account-eyebrow">Espace prestataire</p>
-  <h1 class="account-title">Déposer un circuit</h1>
+  <h1 class="account-title">{{ isEdit() ? 'Modifier le circuit' : 'Déposer un circuit' }}</h1>
   <p class="account-lead">
     Composez une expérience touristique (excursion, circuit, activité). Elle
     sera proposée aux voyageurs une fois validée par Kaikun.
   </p>
 </section>
 
+@switch (state()) {
+  @case ('loading') {
+    <p class="xf-msg" role="status">Chargement du circuit…</p>
+  }
+  @case ('not-found') {
+    <div class="xf-msg xf-msg--error">
+      <p>Ce circuit est introuvable ou ne fait pas partie de vos offres.</p>
+      <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Retour à mes offres</a>
+    </div>
+  }
+  @case ('error') {
+    <div class="xf-msg xf-msg--error">
+      <p>Impossible de charger ce circuit pour le moment.</p>
+      <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Retour à mes offres</a>
+    </div>
+  }
+  @default {
 <form class="xf-form" [formGroup]="form" (ngSubmit)="submit()">
   <div class="xf-field">
     <label for="xf-title">Titre du circuit</label>
@@ -77,6 +94,8 @@
     <app-photo-manager
       type="experience"
       subject="circuit"
+      [resourceId]="editId()"
+      [initial]="existingPhotos()"
       hint="Montrez les paysages, l'hébergement et le transport tels qu'ils sont : un client déçu à l'arrivée est un avis négatif et un remboursement. La première photo sert de couverture dans le catalogue."
     />
   </fieldset>
@@ -87,8 +106,10 @@
 
   <div class="xf-actions">
     <button type="submit" class="k-btn k-btn--primary" [disabled]="submitting()">
-      {{ submitting() ? 'Enregistrement…' : 'Déposer le circuit' }}
+      {{ submitting() ? 'Enregistrement…' : isEdit() ? 'Enregistrer les modifications' : 'Déposer le circuit' }}
     </button>
     <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Annuler</a>
   </div>
 </form>
+  }
+}

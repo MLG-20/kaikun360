@@ -83,6 +83,16 @@ export const PROVIDER_ROUTES: Routes = [
         title: 'Déposer un circuit — Kaikun 360',
       },
       {
+        // F8.19 — Édition d'un circuit (PATCH /experiences/{id}). La route
+        // n'existait ni ici ni côté serveur : un circuit déposé était définitif,
+        // et ne pouvait donc jamais être illustré après coup.
+        path: 'offres/experience/:id/modifier',
+        loadComponent: () =>
+          import('./offers/provider-experience-form-page').then(
+            (m) => m.ProviderExperienceFormPageComponent,
+          ),
+      },
+      {
         // F5.2 — Missions reçues (GET /provider-missions/mine + transitions).
         path: 'missions',
         loadComponent: () =>

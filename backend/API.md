@@ -122,6 +122,8 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/experiences` | auth + vérifié | `ExperienceManagementController@store` |
 | PATCH | `/experiences/bookings/{booking}/cancel` | auth | `ExperienceBookingController@cancel` |
 | GET | `/experiences/mine` | auth | `ExperienceManagementController@mine` |
+| PATCH | `/experiences/{experience}` | auth (policy `update`) | `ExperienceManagementController@update` |
+| DELETE | `/experiences/{experience}` | auth (policy `update`) | `ExperienceManagementController@destroy` |
 | PATCH | `/experiences/{experience}/approve` | auth + `can:valider:experience` | `ExperienceValidationController@approve` |
 | PATCH | `/experiences/{experience}/reject` | auth + `can:valider:experience` | `ExperienceValidationController@reject` |
 | GET | `/experiences/{id}` | public | `ExperienceCatalogController@show` |
@@ -139,6 +141,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/vehicles/{id}` | public | `VehicleCatalogController@show` |
 | POST | `/vehicles/{id}/bookings` | auth + vérifié | `VehicleBookingController@store` |
 | PATCH | `/vehicles/{vehicle}` | auth | `VehicleManagementController@update` |
+| DELETE | `/vehicles/{vehicle}` | auth (policy `update`) | `VehicleManagementController@destroy` |
 | PATCH | `/vehicles/{vehicle}/approve` | auth + `can:valider:vehicule` | `VehicleValidationController@approve` |
 | PATCH | `/vehicles/{vehicle}/reject` | auth + `can:valider:vehicule` | `VehicleValidationController@reject` |
 

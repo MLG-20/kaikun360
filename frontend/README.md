@@ -259,6 +259,21 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   photo devient la couverture** — c'est elle, et elle seule, qui illustre la
   carte du catalogue. L'écran back-office, lui, n'a rien demandé : il affichait
   déjà les galeries depuis F8.1, il n'était que privé de contenu.
+  **F8.19 Corriger et retirer une offre** (`features/pro/offers/`) : l'écran
+  « Mes offres » ne proposait de **modifier** que les véhicules — un circuit
+  déposé était définitif, donc **impossible à illustrer après coup**, ce qui
+  privait F8.18 de tout effet sur les circuits existants. Et **aucune offre ne
+  pouvait être retirée**, des deux côtés. Le formulaire de circuit sert désormais
+  les deux modes (la présence d'un `:id` bascule en édition, comme celui des
+  véhicules), et chaque ligne porte « Modifier » et « Retirer ». ⚠️ **Le serveur
+  décide, l'écran annonce** : il répond `deleted` + `reason`, parce que
+  « supprimé » et « retiré mais conservé pour l'historique de vos clients » ne se
+  disent pas de la même façon à quelqu'un qui vient de cliquer. ⚠️ **Confirmation
+  en deux temps dans la ligne**, jamais `window.confirm` : la boîte native
+  n'existe pas au rendu serveur et ne peut pas expliquer une conséquence qui
+  varie d'une offre à l'autre. ⚠️ La liste affiche la **vignette de couverture**
+  et une mention « Sans photo » : le prestataire repère d'un coup d'œil les
+  annonces qui ne se loueront jamais.
   **F7.2.e Dossiers → F7.3.c : deux rubriques distinctes.** L'écran unique à
   onglets (`features/backoffice/dossiers/`) a été **scindé** en
   `features/backoffice/construction/` (route `construction`) et

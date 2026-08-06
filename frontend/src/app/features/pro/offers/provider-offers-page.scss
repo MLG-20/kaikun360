@@ -146,3 +146,79 @@
     background: color-mix(in srgb, var(--k-muted) 14%, transparent);
   }
 }
+
+
+// --- Vignette, actions et retrait (F8.18 / F8.19) --------------------------
+
+// La couverture telle qu'elle sort au catalogue : le prestataire repère d'un
+// coup d'œil ses annonces sans visuel, celles qui ne se louent jamais.
+.of-thumb {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: var(--k-radius-sm);
+  border: 1px solid var(--k-line);
+  background: var(--k-cream);
+
+  &--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-style: dashed;
+    font-size: 1.2rem;
+    opacity: 0.55;
+  }
+}
+
+.of-nophoto {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--k-gold);
+}
+
+.of-card-actions,
+.of-confirm-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.of-card-danger {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--k-danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+// La question posée AVANT le geste irréversible, dans la ligne concernée.
+.of-confirm {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--k-navy);
+}
+
+// Retrait volontaire : ni un rejet, ni une sanction — d'où une teinte neutre.
+.of-badge.is-withdrawn {
+  background: var(--k-cream);
+  color: var(--k-muted);
+  border: 1px solid var(--k-line);
+}
+
+.of-notice {
+  margin: 0 0 1rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--k-brand);
+  background: var(--k-cream);
+  border-radius: var(--k-radius-sm);
+  font-size: 0.9rem;
+}

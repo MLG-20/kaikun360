@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
-import { OfferService } from '../../../core/api/offer.service';
+import { OfferRemoval, OfferService } from '../../../core/api/offer.service';
 import { Experience } from '../../../models/experience.model';
 import { Vehicle } from '../../../models/vehicle.model';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
@@ -41,6 +41,26 @@ export class ProviderOffersPageComponent {
   /** Formatage FCFA lisible (mutualisé avec le catalogue public). */
   protected readonly fcfa = formatFcfa;
 
+  // --- Retrait d'une offre (F8.19) -------------------------------------------
+
+  /**
+   * Offre dont le retrait attend confirmation, sous la forme `vehicle-12`.
+   *
+   * ⚠️ **Confirmation en deux temps DANS la ligne**, et non `window.confirm` :
+   * la boîte native n'existe pas au rendu serveur, ne se traduit pas, et surtout
+   * ne peut pas expliquer la conséquence — or elle diffère selon l'offre
+   * (suppression réelle, ou retrait avec conservation de l'historique).
+   */
+  protected readonly pendingRemoval = signal<string | null>(null);
+
+  /** Retrait en cours (désactive les boutons de la ligne concernée). */
+  protected readonly removing = signal<string | null>(null);
+
+  /** Ce que le serveur a répondu au dernier retrait, à afficher au prestataire. */
+  protected readonly removalNotice = signal<string | null>(null);
+
+  protected readonly removalError = signal<string | null>(null);
+
   constructor() {
     this.load();
   }
@@ -73,9 +93,62 @@ export class ProviderOffersPageComponent {
         return 'is-rejected';
       case 'suspendu':
         return 'is-suspended';
+      // F8.19 — retrait VOLONTAIRE : ni une sanction, ni un rejet.
+      case 'retire':
+        return 'is-withdrawn';
       default:
         return 'is-pending';
     }
+  }
+
+  /** Demande confirmation avant de retirer (ou annule la demande en cours). */
+  protected askRemove(cle: string | null): void {
+    this.removalError.set(null);
+    this.removalNotice.set(null);
+    this.pendingRemoval.set(cle);
+  }
+
+  /**
+   * Retire l'offre. **Le serveur décide** s'il supprime réellement ou s'il
+   * conserve : l'écran ne rejoue pas la règle, il annonce le résultat.
+   */
+  protected confirmRemove(kind: 'vehicle' | 'experience', id: number): void {
+    const cle = `${kind}-${id}`;
+    if (this.removing()) {
+      return;
+    }
+    this.removing.set(cle);
+    this.removalError.set(null);
+
+    const call$ =
+      kind === 'vehicle' ? this.offers.deleteVehicle(id) : this.offers.deleteExperience(id);
+
+    call$.subscribe({
+      next: (env) => {
+        this.removing.set(null);
+        this.pendingRemoval.set(null);
+        this.announce(kind, env.data);
+        // On relit la liste plutôt que de retirer la ligne à la main : une offre
+        // conservée doit RESTER visible, avec son nouveau statut « Retiré ».
+        this.load();
+      },
+      error: () => {
+        this.removing.set(null);
+        this.pendingRemoval.set(null);
+        this.removalError.set("Le retrait n'a pas abouti. Réessayez dans un instant.");
+      },
+    });
+  }
+
+  /** Traduit la réponse du serveur en une phrase pour le prestataire. */
+  private announce(kind: 'vehicle' | 'experience', resultat: OfferRemoval): void {
+    const quoi = kind === 'vehicle' ? 'Le véhicule' : 'Le circuit';
+
+    this.removalNotice.set(
+      resultat.deleted
+        ? `${quoi} a été supprimé, avec ses photos.`
+        : `${quoi} a été retiré du catalogue. ${resultat.reason ?? ''}`.trim(),
+    );
   }
 
   /** Libellé « marque modèle » d'un véhicule, avec repli sur le type. */
