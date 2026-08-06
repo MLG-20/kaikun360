@@ -10,6 +10,7 @@ use Database\Factories\ProviderMissionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 /**
  * Mission affectée à un prestataire (module Pro).
@@ -34,6 +35,7 @@ class ProviderMission extends Model
         'commission_xof',
         'status',
         'scheduled_at',
+        'completed_at',
     ];
 
     /**
@@ -46,12 +48,25 @@ class ProviderMission extends Model
             'commission_xof' => 'integer',
             'status' => MissionStatus::class,
             'scheduled_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
     }
 
     public function provider(): BelongsTo
     {
         return $this->belongsTo(Provider::class);
+    }
+
+    /**
+     * La dette envers le prestataire née de cette mission (F8.16.a).
+     *
+     * ⚠️ **C'est par ici que team building et construction sont reversés** : le
+     * devis de ces univers est un total « coûts + marge » qui ne dit rien de ce
+     * qui revient à chaque intervenant. Ce qui est dû vit mission par mission.
+     */
+    public function partnerDue(): MorphOne
+    {
+        return $this->morphOne(\App\Models\PartnerDue::class, 'source');
     }
 
     public function client(): BelongsTo

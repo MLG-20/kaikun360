@@ -16,6 +16,7 @@ type BoIcon =
   | 'compass'
   | 'calendar'
   | 'card'
+  | 'payout'
   | 'hammer'
   | 'key'
   | 'id'
@@ -156,6 +157,10 @@ export class BackofficeLayoutComponent {
     { label: 'Diaspora', path: 'diaspora', icon: 'globe', ready: true },
     // CDC §6 — module 11 « Paiements ».
     { label: 'Paiements', path: 'paiements', icon: 'card', ready: true },
+    // F8.16.a — l'autre sens du flux : ce que Kaikun REVERSE aux partenaires.
+    // Rubrique à part et non un onglet de Paiements : ce ne sont ni les mêmes
+    // objets (une dette n'est pas un règlement), ni le même moment du métier.
+    { label: 'Reversements', path: 'reversements', icon: 'payout', ready: true },
     // CDC §6 — module 13 « Avis et qualité ». (Le 12 est dans Comptes.)
     { label: 'Avis & qualité', path: 'qualite', icon: 'star', ready: true },
     // CDC §6 — module 14 « Paramètres ».

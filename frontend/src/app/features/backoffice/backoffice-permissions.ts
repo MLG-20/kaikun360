@@ -75,6 +75,12 @@ export const BO_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
   equipe: ['gerer:utilisateurs'],
   permissions: ['gerer:utilisateurs'],
   paiements: ['gerer:paiements'],
+  // Reversements (F8.16.a) : MÊME permission que Paiements, volontairement.
+  // Reverser, c'est sortir de l'argent — exactement la nature d'acte que garde
+  // déjà `gerer:paiements`. Un droit distinct aurait dispersé la décision
+  // financière sur deux permissions qu'on aurait de toute façon accordées
+  // ensemble, et fabriqué un agent qui peut virer sans pouvoir rembourser.
+  reversements: ['gerer:paiements'],
   parametres: ['gerer:parametres'],
 
   // Pointeuse : périmètre PERSONNEL (on pointe pour soi). Toute l'équipe y a

@@ -219,6 +219,28 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   serveur) et le **reste dû** sur la réservation, montant restant sur le total.
   Sans elles, un versement de 50 000 F sur une réservation de 180 000 F était
   indistinguable d'une erreur de saisie.
+  **F8.16.a Reversements** (`features/backoffice/payouts/`) : l'autre sens du
+  flux — ce que Kaikun **doit** aux partenaires, et non ce qu'elle encaisse.
+  Rubrique à part et non un onglet de Paiements : ce ne sont ni les mêmes objets
+  (une dette n'est pas un règlement) ni le même moment du métier. Deux onglets,
+  parce qu'il y a deux questions distinctes — « **À payer** » répond à *qui
+  dois-je payer et combien*, avec **une ligne par partenaire** (`GET
+  /admin/partner-dues/beneficiaries`, agrégé côté serveur : on ne vire pas à une
+  réservation, on vire à quelqu'un), et « **Versements** » est l'archive de ce
+  qui est parti. ⚠️ **Deux montants séparés sur chaque ligne, jamais
+  additionnés** : le *payable aujourd'hui* et l'*acquis encore sous délai*. Les
+  confondre ferait virer de l'argent avant que le délai d'annulation du client
+  soit écoulé, et un reversement parti trop tôt se réclame au partenaire.
+  ⚠️ **`is_payable` vient du serveur** (miroir du scope `payables()`) : l'écran
+  ne rejoue pas la règle « exigible ET sans lot » — une règle d'argent ne vit
+  qu'à un endroit. ⚠️ **La sélection ne survit jamais au changement de
+  partenaire** : un lot ne concerne qu'un bénéficiaire (le serveur le refuse), et
+  des cases restées cochées d'un autre partenaire produiraient un 422
+  incompréhensible. ⚠️ Le **justificatif est exigé avant l'appel**, pas seulement
+  par le serveur : laisser revenir un 422 sur un formulaire vidé ferait
+  ressaisir le canal et la référence. ⚠️ L'URL du justificatif est **signée 10
+  minutes** et posée en `[href]` — jamais appelée par `HttpClient`, la signature
+  valant pour une requête de navigateur et non pour un appel authentifié.
   **F7.2.e Dossiers → F7.3.c : deux rubriques distinctes.** L'écran unique à
   onglets (`features/backoffice/dossiers/`) a été **scindé** en
   `features/backoffice/construction/` (route `construction`) et

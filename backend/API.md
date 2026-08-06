@@ -462,6 +462,37 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/admin/payments/{payment}` | auth + `can:gerer:paiements` | `AdminPaymentController@show` |
 | POST | `/admin/payments/{payment}/confirm` | auth + `can:gerer:paiements` | `AdminPaymentController@confirm` |
 | POST | `/admin/payments/{payment}/refund` | auth + `can:gerer:paiements` | `AdminPaymentController@refund` |
+| GET | `/admin/partner-dues` | auth + `can:gerer:paiements` | `AdminPartnerPayoutController@dues` |
+| GET | `/admin/partner-dues/beneficiaries` | auth + `can:gerer:paiements` | `AdminPartnerPayoutController@beneficiaries` |
+| GET | `/admin/partner-payouts` | auth + `can:gerer:paiements` | `AdminPartnerPayoutController@index` |
+| POST | `/admin/partner-payouts` | auth + `can:gerer:paiements` | `AdminPartnerPayoutController@store` |
+| GET | `/admin/partner-payouts/{payout}` | auth + `can:gerer:paiements` | `AdminPartnerPayoutController@show` |
+| POST | `/admin/partner-payouts/{payout}/pay` | auth + `can:gerer:paiements` | `AdminPartnerPayoutController@pay` |
+| POST | `/admin/partner-payouts/{payout}/fail` | auth + `can:gerer:paiements` | `AdminPartnerPayoutController@fail` |
+| GET | `/admin/partner-payouts/{payout}/proof` | **URL signée** (10 min) | `AdminPartnerPayoutController@proof` |
+
+> **Reversements aux partenaires (F8.16.a).** Kaikun encaisse et commissionne sur
+> tous les univers depuis F8.4 mais ne reversait qu'en gestion locative
+> (`owner_payouts.mandate_id` est **non nullable**) : jusqu'ici, **si un hôte
+> demandait ce qu'on lui devait, personne ne pouvait répondre**. Deux tables
+> transversales comblent le trou — `partner_dues` (le registre, une ligne par
+> service rendu, source **polymorphe** `Booking` ou `ProviderMission`) et
+> `partner_payouts` (le versement, qui solde plusieurs dettes d'un même
+> bénéficiaire).
+>
+> ⚠️ **Le serveur n'exécute aucun virement.** `POST .../pay` **constate** un
+> paiement fait par ailleurs (Wave, Orange Money, virement) et exige un
+> **justificatif** — la colonne `owner_payouts.proof_path` existe depuis B4.4 sans
+> qu'aucun endpoint ne l'ait jamais écrite, on ne refait pas la promesse.
+>
+> ⚠️ **Garde `gerer:paiements` et non une permission neuve** : reverser, c'est
+> sortir de l'argent, exactement ce que garde déjà cette permission de
+> **gouvernance** (un agent purement opérationnel reçoit 403).
+>
+> ⚠️ La caution **n'entre jamais** dans l'assiette, la commission est **recopiée
+> figée** depuis la source, et un **remboursement éteint** la dette encore vivante
+> (si le virement est déjà parti, la ligne reste « payée » : l'écart est une
+> créance à régler hors application).
 | GET | `/admin/properties` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@properties` |
 | PATCH | `/admin/properties/{property}` | auth + `can:valider:bien` | `AdminPropertyController@update` |
 | PATCH | `/admin/properties/{property}/archive` | auth + `can:valider:bien` | `AdminPropertyController@archive` |

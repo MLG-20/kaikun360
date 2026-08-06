@@ -746,3 +746,80 @@ d'audit est mutualisée dans `AdminCatalogController::activityOf()`.
 eu lieu, le règlement a été encaissé : la fiche renvoie `stay: null` (ou
 « Ressource retirée ») plutôt qu'un 404. Un dossier financier qui s'évanouit avec
 son bien est ingérable en cas de litige.
+
+---
+
+## F8.16.a — Reversements aux partenaires
+
+Le second bout du circuit d'argent. Kaikun **encaisse et commissionne** sur tous
+les univers depuis F8.4, mais ne **reversait** qu'en gestion locative : jusqu'ici,
+**si un hôte demandait ce qu'on lui devait, personne ne pouvait répondre.**
+
+### Deux tables, pas cinq
+
+Vérifié dans les modèles avant d'écrire une ligne : il n'y a que **deux natures
+de bénéficiaire** — propriétaire d'un bien, prestataire — et toutes deux sont des
+**`users`**. `Vehicle.provider_id`, `MobilityService.provider_id` et
+`TourismExperience.provider_id` référencent `users` **directement**, pas
+`providers` (seule `ProviderMission.provider_id` fait l'indirection). D'où :
+
+- **`partner_dues`** — le registre. Une ligne = une dette née d'un service rendu.
+  Bénéficiaire (`users`), **source polymorphe** (`Booking` ou `ProviderMission`,
+  comme `bookings.bookable` depuis B3.3), assiette, commission, net, statut,
+  date d'exigibilité.
+- **`partner_payouts`** — le versement. Un lot qui solde **plusieurs** dettes
+  d'un même bénéficiaire. C'est lui qui rend la cadence libre (hebdomadaire,
+  mensuelle, à la demande) **sans toucher au schéma** : un virement par
+  réservation coûterait des frais à chaque nuit vendue.
+
+⚠️ **Team building et construction ne se reversent PAS depuis le devis.** Leur
+devis est un total « coûts + marge » qui ne dit rien de ce qui revient à chaque
+intervenant — un séminaire peut devoir de l'argent à quatre prestataires. Ce qui
+est dû vit **mission par mission**, telle qu'elle a été chiffrée à l'affectation.
+
+### Les règles qui ne se négocient pas
+
+| Règle | Pourquoi |
+| --- | --- |
+| La **caution n'entre jamais** dans l'assiette (`amount_xof`, jamais `caution_xof`) | Elle est retenue puis restituée ou saisie : elle n'a jamais appartenu au partenaire. L'inclure reviendrait à lui reverser l'argent du client. |
+| La commission est **recopiée figée**, jamais recalculée | Elle est fixée sur la source depuis F8.4. La relire au reversement ferait dépendre une dette passée du barème d'aujourd'hui. |
+| Exigible à **service rendu + 7 jours** (`PartnerDueRegistrar::DELAI_JOURS`) | Aligné sur le plus long délai d'annulation du produit. Payer avant, c'est risquer de reverser puis devoir rembourser : l'argent est sorti et il faut le réclamer. |
+| Le délai court sur la **fin de service**, pas sur l'instant du calcul | Un traitement lancé en retard ne doit pas retarder le partenaire. |
+| Un **remboursement éteint** la dette encore vivante | Sans quoi le client est remboursé **et** le partenaire payé : Kaikun perd deux fois. |
+| Une dette **déjà payée n'est pas annulée** par un remboursement | L'argent est parti. L'écart devient une **créance** de Kaikun sur le partenaire, à régler hors application — la marquer annulée ferait disparaître des comptes un virement bien réel. |
+| Annulée, **jamais supprimée** | Le motif reste lisible, et le calcul ne recrée pas la dette au passage suivant. |
+| **Unique en base** sur (`source_type`, `source_id`) | Deux exécutions concurrentes du calcul créeraient deux dettes pour le même service : le partenaire serait payé deux fois. L'idempotence est garantie par la base, pas seulement par le code. |
+| Un lot ne concerne **qu'un bénéficiaire** | Un virement groupant deux partenaires serait impossible à justifier, et son justificatif impossible à rattacher. |
+| Le **justificatif est obligatoire** au constat | `owner_payouts.proof_path` existe depuis B4.4 et **rien ne l'écrit jamais** ; l'écran Documents compte des preuves qui n'existent pas. On ne refait pas la promesse. |
+
+### Ce que le serveur ne fait PAS
+
+**Aucun virement n'est exécuté.** Le registre calcule et affiche ; l'agent paie
+par Wave, Orange Money ou virement, puis vient le **constater** avec sa pièce.
+Aucun argent ne bouge sans un geste humain.
+
+⚠️ **PayTech reverse à KAIKUN, pas aux partenaires** : le client paie PayTech,
+PayTech crédite le compte marchand. Le reversement est une **dette de Kaikun**,
+pas une fonction du prestataire de paiement — confusion fréquente qui a longtemps
+fait croire le sujet réglé. L'automatisation par leur API de transfert se
+branchera derrière une interface, comme `PaytechProvider`, et **seulement** après
+avoir confirmé auprès d'eux : produit activable ? frais par transfert ? KYC des
+bénéficiaires ?
+
+### Alimentation
+
+`php artisan reversements:calculer` (planifiée à 3 h 30), **idempotente**,
+`--dry-run` disponible. ⚠️ Elle tourne **après** `reservations:cloturer` (3 h) et
+ce n'est pas un détail : une dette naît d'un service rendu, or c'est la clôture
+qui pose `terminee`. Dans l'ordre inverse, chaque service attendrait un jour de
+plus. Les deux **exigent un cron `schedule:run`** en production, et son absence
+est **silencieuse**.
+
+### Garde
+
+`gerer:paiements`, **sans permission neuve** : reverser, c'est sortir de
+l'argent, exactement la nature d'acte que garde déjà cette permission de
+**gouvernance**. Un droit distinct aurait dispersé la décision financière sur
+deux permissions qu'on aurait de toute façon accordées ensemble — et fabriqué un
+agent capable de virer sans pouvoir rembourser.
+

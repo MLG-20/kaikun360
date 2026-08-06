@@ -21,6 +21,7 @@ HTTP et garantissent la cohérence front/back.
 | `Quote` | `QuoteResource` | transversal |
 | `Booking` | `BookingResource` | transversal |
 | `Payment` | `PaymentResource` | Paiement |
+| `PartnerDue`, `PartnerPayout` (+ `PayoutBeneficiary…`) | `PartnerDueResource`, `PartnerPayoutResource` | Admin (reversements, F8.16.a) |
 | `Review` (+ `ReviewAuthor`) | `ReviewResource` | transversal |
 | `Media` | `MediaResource` | transversal |
 | `Provider` (+ `ProviderCertification`) | `ProviderResource` | Pro |

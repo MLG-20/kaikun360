@@ -253,6 +253,20 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Règlement — Back-office Kaikun 360',
       },
       {
+        // F8.16.a — Reversements : ce que Kaikun doit aux partenaires (hôtes,
+        // loueurs, organisateurs, prestataires) et le constat des virements.
+        // Rubrique distincte de Paiements : l'une regarde l'argent qui ENTRE,
+        // l'autre celui qui SORT vers les partenaires.
+        path: 'reversements',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('reversements') },
+        loadComponent: () =>
+          import('./payouts/backoffice-payouts-page').then(
+            (m) => m.BackofficePayoutsPageComponent,
+          ),
+        title: 'Reversements — Back-office Kaikun 360',
+      },
+      {
         // F7.3.c — Construction : l'ancien écran « Dossiers » à onglets est
         // scindé, chaque métier ayant sa rubrique au rail.
         path: 'construction',

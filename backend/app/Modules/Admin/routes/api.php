@@ -7,6 +7,7 @@ use App\Modules\Admin\Http\Controllers\AdminDashboardController;
 use App\Modules\Admin\Http\Controllers\AdminDocumentController;
 use App\Modules\Admin\Http\Controllers\AdminDossierController;
 use App\Modules\Admin\Http\Controllers\AdminGeoController;
+use App\Modules\Admin\Http\Controllers\AdminPartnerPayoutController;
 use App\Modules\Admin\Http\Controllers\AdminPaymentController;
 use App\Modules\Admin\Http\Controllers\AdminPropertyController;
 use App\Modules\Admin\Http\Controllers\AdminProviderController;
@@ -166,6 +167,31 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
             ->middleware('throttle:payment');
     });
 
+    // F8.16.a — REVERSEMENTS AUX PARTENAIRES.
+    //
+    // ⚠️ Gardé par `gerer:paiements` et non par une permission neuve : reverser,
+    // c'est sortir de l'argent — exactement la nature d'acte que garde déjà
+    // cette permission de GOUVERNANCE (un agent purement opérationnel y reçoit
+    // 403). Un droit distinct aurait dispersé la décision financière sur deux
+    // permissions qu'on aurait de toute façon accordées ensemble.
+    Route::middleware('can:gerer:paiements')->group(function () {
+        // Le registre : ce que Kaikun doit, ligne à ligne.
+        Route::get('/partner-dues', [AdminPartnerPayoutController::class, 'dues']);
+        // « À qui doit-on quoi » — l'écran d'entrée, agrégé par partenaire.
+        // ⚠️ Déclaré AVANT toute route à paramètre : « beneficiaries » n'est pas
+        // un identifiant.
+        Route::get('/partner-dues/beneficiaries', [AdminPartnerPayoutController::class, 'beneficiaries']);
+
+        Route::get('/partner-payouts', [AdminPartnerPayoutController::class, 'index']);
+        Route::post('/partner-payouts', [AdminPartnerPayoutController::class, 'store']);
+        Route::get('/partner-payouts/{payout}', [AdminPartnerPayoutController::class, 'show'])
+            ->whereNumber('payout');
+        Route::post('/partner-payouts/{payout}/pay', [AdminPartnerPayoutController::class, 'pay'])
+            ->whereNumber('payout');
+        Route::post('/partner-payouts/{payout}/fail', [AdminPartnerPayoutController::class, 'fail'])
+            ->whereNumber('payout');
+    });
+
     // B13.7.3 — Gestion documentaire transverse (KYC, docs biens, certifs,
     // preuves). Sensible → niveau administrateur.
     Route::get('/documents', [AdminDocumentController::class, 'index'])
@@ -301,3 +327,12 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
             ->whereNumber('user');
     });
 });
+
+// F8.16.a — Téléchargement du justificatif d'un versement partenaire. HORS du
+// groupe `auth:sanctum` : l'accès est prouvé par la SIGNATURE de l'URL (10 min,
+// produite par PartnerPayoutResource), comme pour le KYC et les certifications.
+// ⚠️ Le nom de route doit rester identique à celui employé par la ressource.
+Route::get('admin/partner-payouts/{payout}/proof', [AdminPartnerPayoutController::class, 'proof'])
+    ->name('admin.partner-payouts.proof')
+    ->whereNumber('payout')
+    ->middleware('signed');

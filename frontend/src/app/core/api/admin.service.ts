@@ -6,6 +6,12 @@ import { environment } from '../../../environments/environment';
 import { AdminExperience } from '../../models/experience.model';
 import { AdminMobilityService } from '../../models/mobility-service.model';
 import { Payment } from '../../models/payment.model';
+import {
+  PartnerDue,
+  PartnerPayout,
+  PayoutBeneficiaryLine,
+  PayoutTotals,
+} from '../../models/payout.model';
 import { Property } from '../../models/property.model';
 import { Provider } from '../../models/provider.model';
 import { Review } from '../../models/review.model';
@@ -3278,5 +3284,101 @@ export class AdminService {
   /** Supprime un département VIDE et inutilisé (409 sinon). DELETE /admin/departments/{id} */
   deleteDepartment(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/admin/departments/${id}`);
+  }
+
+  // --- Reversements aux partenaires (F8.16.a) --------------------------------
+  //
+  // ⚠️ Aucun de ces appels n'exécute un virement. Le serveur tient le REGISTRE
+  // de ce que Kaikun doit ; l'agent paie par Wave/OM/virement et vient le
+  // constater ici avec son justificatif.
+
+  /**
+   * « À qui doit-on quoi » — l'écran d'entrée.
+   * GET /admin/partner-dues/beneficiaries
+   */
+  payoutBeneficiaries(): Observable<{
+    beneficiaries: PayoutBeneficiaryLine[];
+    totals: PayoutTotals;
+  }> {
+    return this.http
+      .get<ApiEnvelope<{ beneficiaries: PayoutBeneficiaryLine[]; totals: PayoutTotals }>>(
+        `${this.api}/admin/partner-dues/beneficiaries`,
+      )
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Le registre, ligne à ligne. GET /admin/partner-dues
+   *
+   * ⚠️ Sans `status`, le serveur ne renvoie que les dettes VIVANTES : ouvrir
+   * l'écran sur l'archive des dettes soldées ferait chercher le travail à faire.
+   */
+  partnerDues(query: { status?: string; beneficiary_id?: number; page?: number } = {}): Observable<Paginated<PartnerDue>> {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.beneficiary_id) params = params.set('beneficiary_id', String(query.beneficiary_id));
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<PartnerDue>>(`${this.api}/admin/partner-dues`, { params });
+  }
+
+  /** Historique des versements. GET /admin/partner-payouts */
+  partnerPayouts(query: { status?: string; beneficiary_id?: number; page?: number } = {}): Observable<Paginated<PartnerPayout>> {
+    let params = new HttpParams();
+    if (query.status) params = params.set('status', query.status);
+    if (query.beneficiary_id) params = params.set('beneficiary_id', String(query.beneficiary_id));
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<PartnerPayout>>(`${this.api}/admin/partner-payouts`, { params });
+  }
+
+  /** Fiche d'un versement, dettes soldées comprises. GET /admin/partner-payouts/{id} */
+  partnerPayout(id: number): Observable<PartnerPayout> {
+    return this.http
+      .get<ApiEnvelope<{ payout: PartnerPayout }>>(`${this.api}/admin/partner-payouts/${id}`)
+      .pipe(map((response) => response.data.payout));
+  }
+
+  /**
+   * Prépare un lot à partir de dettes exigibles. POST /admin/partner-payouts
+   *
+   * ⚠️ Un lot ne concerne qu'UN bénéficiaire (le serveur refuse le mélange) :
+   * un virement groupant deux partenaires serait impossible à justifier.
+   */
+  createPartnerPayout(payload: { due_ids: number[]; note?: string }): Observable<PartnerPayout> {
+    return this.http
+      .post<ApiEnvelope<{ payout: PartnerPayout }>>(`${this.api}/admin/partner-payouts`, payload)
+      .pipe(map((response) => response.data.payout));
+  }
+
+  /**
+   * Constate le virement effectué. POST /admin/partner-payouts/{id}/pay
+   *
+   * ⚠️ **multipart, et le justificatif est OBLIGATOIRE** : c'est le seul
+   * document qui prouve, un an plus tard, qu'un partenaire a bien été payé. La
+   * colonne équivalente de la gestion locative existe depuis B4.4 sans que rien
+   * ne l'ait jamais écrite — on ne refait pas la promesse.
+   */
+  payPartnerPayout(
+    id: number,
+    payload: { method: string; external_reference?: string; proof: File },
+  ): Observable<PartnerPayout> {
+    const form = new FormData();
+    form.append('method', payload.method);
+    if (payload.external_reference) form.append('external_reference', payload.external_reference);
+    form.append('proof', payload.proof);
+    return this.http
+      .post<ApiEnvelope<{ payout: PartnerPayout }>>(`${this.api}/admin/partner-payouts/${id}/pay`, form)
+      .pipe(map((response) => response.data.payout));
+  }
+
+  /**
+   * Constate l'échec du virement. POST /admin/partner-payouts/{id}/fail
+   *
+   * Les dettes du lot redeviennent payables : l'argent n'est pas parti, la
+   * créance du partenaire n'a pas disparu.
+   */
+  failPartnerPayout(id: number, note: string): Observable<PartnerPayout> {
+    return this.http
+      .post<ApiEnvelope<{ payout: PartnerPayout }>>(`${this.api}/admin/partner-payouts/${id}/fail`, { note })
+      .pipe(map((response) => response.data.payout));
   }
 }

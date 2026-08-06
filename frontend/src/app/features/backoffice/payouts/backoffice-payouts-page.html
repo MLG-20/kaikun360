@@ -1,0 +1,321 @@
+<header class="pyo-head">
+  <div>
+    <h1 class="pyo-title">Reversements</h1>
+    <p class="pyo-sub">
+      Ce que Kaikun doit à ses partenaires — hôtes, loueurs, organisateurs et
+      prestataires. Préparez un versement, effectuez le virement par vos moyens
+      habituels, puis <strong>constatez-le ici avec son justificatif</strong>.
+    </p>
+  </div>
+</header>
+
+<!-- Onglets : deux questions distinctes, pas deux vues d'une même liste. -->
+<div class="pyo-tabs" role="tablist">
+  <button
+    type="button"
+    class="pyo-tab"
+    role="tab"
+    [class.is-active]="tab() === 'a-payer'"
+    [attr.aria-selected]="tab() === 'a-payer'"
+    (click)="switchTab('a-payer')">
+    À payer
+  </button>
+  <button
+    type="button"
+    class="pyo-tab"
+    role="tab"
+    [class.is-active]="tab() === 'versements'"
+    [attr.aria-selected]="tab() === 'versements'"
+    (click)="switchTab('versements')">
+    Versements
+  </button>
+</div>
+
+@if (flash(); as message) {
+  <p class="pyo-flash" role="status">{{ message }}</p>
+}
+@if (actionError(); as message) {
+  <p class="pyo-error" role="alert">{{ message }}</p>
+}
+
+@if (failed()) {
+  <p class="pyo-error" role="alert">
+    Impossible de charger les reversements. Vérifiez votre connexion puis réessayez.
+  </p>
+}
+
+<!-- ===================== ONGLET « À PAYER » ===================== -->
+@if (tab() === 'a-payer') {
+  @if (totals(); as t) {
+    <!--
+      Deux montants SÉPARÉS, jamais additionnés : les confondre ferait virer de
+      l'argent avant que le délai d'annulation du client soit écoulé.
+    -->
+    <section class="pyo-kpis">
+      <div class="pyo-kpi pyo-kpi--strong">
+        <span class="pyo-kpi__label">Payable aujourd'hui</span>
+        <b class="pyo-kpi__value">{{ fcfa(t.payable_xof) }}</b>
+      </div>
+      <div class="pyo-kpi">
+        <span class="pyo-kpi__label">Acquis, sous délai</span>
+        <b class="pyo-kpi__value">{{ fcfa(t.pending_xof) }}</b>
+        <span class="pyo-kpi__hint">Payable 7 jours après le service rendu</span>
+      </div>
+      <div class="pyo-kpi">
+        <span class="pyo-kpi__label">Partenaires concernés</span>
+        <b class="pyo-kpi__value">{{ t.beneficiaries_count }}</b>
+      </div>
+    </section>
+  }
+
+  @if (loading() && lines().length === 0) {
+    <p class="pyo-status" role="status">Chargement…</p>
+  } @else if (lines().length === 0 && !failed()) {
+    <p class="pyo-status">
+      Aucune dette en cours : tous les services rendus ont été reversés.
+    </p>
+  } @else {
+    <div class="pyo-scroll">
+      <table class="pyo-table">
+        <thead>
+          <tr>
+            <th scope="col">Partenaire</th>
+            <th scope="col">Payable</th>
+            <th scope="col">Sous délai</th>
+            <th scope="col">Services</th>
+            <th scope="col">Plus ancien</th>
+            <th scope="col"><span class="pyo-sr">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of lines(); track line.beneficiary.id) {
+            <tr [class.is-open]="openedBeneficiary() === line.beneficiary.id">
+              <td>
+                <b>{{ line.beneficiary.name ?? 'Partenaire inconnu' }}</b>
+                <span class="pyo-muted">{{ line.beneficiary.phone ?? line.beneficiary.email }}</span>
+              </td>
+              <td class="pyo-amount">{{ fcfa(line.payable_xof) }}</td>
+              <td class="pyo-muted">{{ fcfa(line.pending_xof) }}</td>
+              <td>{{ line.dues_count }}</td>
+              <td class="pyo-muted">{{ date(line.oldest_eligible_at) }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="k-btn k-btn--ghost pyo-btn-sm"
+                  (click)="toggleBeneficiary(line.beneficiary.id)">
+                  {{ openedBeneficiary() === line.beneficiary.id ? 'Fermer' : 'Détail' }}
+                </button>
+              </td>
+            </tr>
+
+            <!-- Détail déplié : les dettes de CE partenaire, à cocher. -->
+            @if (openedBeneficiary() === line.beneficiary.id) {
+              <tr class="pyo-detail-row">
+                <td colspan="6">
+                  @if (duesLoading()) {
+                    <p class="pyo-status" role="status">Chargement du détail…</p>
+                  } @else {
+                    <div class="pyo-detail">
+                      <div class="pyo-detail__head">
+                        <p class="pyo-muted">
+                          Cochez les services à régler. Seuls ceux dont le délai est
+                          écoulé sont sélectionnables.
+                        </p>
+                        <button type="button" class="k-btn k-btn--ghost pyo-btn-sm" (click)="selectAllPayable()">
+                          Tout sélectionner
+                        </button>
+                      </div>
+
+                      <ul class="pyo-dues">
+                        @for (due of dues(); track due.id) {
+                          <li class="pyo-due" [class.is-locked]="!due.is_payable">
+                            <label class="pyo-due__pick">
+                              <input
+                                type="checkbox"
+                                [checked]="isSelected(due.id)"
+                                [disabled]="!due.is_payable"
+                                (change)="toggleDue(due)" />
+                            </label>
+                            <div class="pyo-due__body">
+                              <b>{{ due.source.label ?? due.source.reference ?? 'Service' }}</b>
+                              <span class="pyo-muted">
+                                {{ sourceLabel(due) }} · {{ due.source.reference }} ·
+                                exigible le {{ date(due.eligible_at) }}
+                              </span>
+                            </div>
+                            <div class="pyo-due__money">
+                              <b>{{ fcfa(due.net_xof) }}</b>
+                              <!-- Le brut et la commission expliquent le net : sans
+                                   eux, un partenaire qui conteste n'a aucun calcul
+                                   à refaire avec l'agent au téléphone. -->
+                              <span class="pyo-muted">
+                                {{ fcfa(due.gross_xof) }} − {{ fcfa(due.commission_xof) }} de commission
+                              </span>
+                            </div>
+                            <span class="pyo-badge" [class.is-warn]="!due.is_payable">
+                              {{ due.status_label }}
+                            </span>
+                          </li>
+                        }
+                      </ul>
+
+                      <div class="pyo-detail__foot">
+                        <p>
+                          Sélection : <b>{{ fcfa(selectedTotal()) }}</b>
+                          ({{ selection().size }} service{{ selection().size > 1 ? 's' : '' }})
+                        </p>
+                        <button
+                          type="button"
+                          class="k-btn k-btn--primary"
+                          [disabled]="!canPrepare() || loading()"
+                          (click)="prepare()">
+                          Préparer le versement
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}
+
+<!-- ===================== ONGLET « VERSEMENTS » ===================== -->
+@if (tab() === 'versements') {
+  @if (loading() && payouts().length === 0) {
+    <p class="pyo-status" role="status">Chargement…</p>
+  } @else if (payouts().length === 0 && !failed()) {
+    <p class="pyo-status">Aucun versement pour l'instant.</p>
+  } @else {
+    <div class="pyo-scroll">
+      <table class="pyo-table">
+        <thead>
+          <tr>
+            <th scope="col">Référence</th>
+            <th scope="col">Partenaire</th>
+            <th scope="col">Montant</th>
+            <th scope="col">Statut</th>
+            <th scope="col">Justificatif</th>
+            <th scope="col"><span class="pyo-sr">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (payout of payouts(); track payout.id) {
+            <tr [class.is-open]="openedPayout() === payout.id">
+              <td>
+                <span class="pyo-ref">{{ payout.reference }}</span>
+                <span class="pyo-muted">{{ date(payout.created_at) }}</span>
+              </td>
+              <td>{{ payout.beneficiary.name ?? '—' }}</td>
+              <td class="pyo-amount">{{ fcfa(payout.amount_xof) }}</td>
+              <td>
+                <span class="pyo-badge" [class.is-ok]="payout.status === 'paye'" [class.is-warn]="payout.status === 'echoue'">
+                  {{ payout.status_label }}
+                </span>
+              </td>
+              <td>
+                <!--
+                  ⚠️ URL SIGNÉE de 10 minutes, posée en [href] et jamais appelée
+                  par HttpClient : la signature vaut pour une requête de
+                  navigateur, pas pour un appel authentifié.
+                -->
+                @if (payout.has_proof && payout.proof_url) {
+                  <a [href]="payout.proof_url" target="_blank" rel="noopener">
+                    {{ payout.proof_original_name ?? 'Télécharger' }}
+                  </a>
+                } @else {
+                  <span class="pyo-muted">—</span>
+                }
+              </td>
+              <td>
+                @if (payout.status === 'en_attente') {
+                  <button type="button" class="k-btn k-btn--ghost pyo-btn-sm" (click)="togglePayout(payout.id)">
+                    {{ openedPayout() === payout.id ? 'Fermer' : 'Constater' }}
+                  </button>
+                } @else {
+                  <span class="pyo-muted">{{ payout.paid_by ?? '—' }}</span>
+                }
+              </td>
+            </tr>
+
+            @if (openedPayout() === payout.id) {
+              <tr class="pyo-detail-row">
+                <td colspan="6">
+                  <div class="pyo-forms">
+                    <!-- Constat du virement -->
+                    <form class="pyo-form" (submit)="$event.preventDefault(); confirmPaid(payout)">
+                      <h2 class="pyo-form__title">Le virement a été effectué</h2>
+
+                      <label class="k-field">
+                        <span>Canal</span>
+                        <select class="k-input" [(ngModel)]="method" name="method">
+                          @for (option of methods; track option.value) {
+                            <option [value]="option.value">{{ option.label }}</option>
+                          }
+                        </select>
+                      </label>
+
+                      <label class="k-field">
+                        <span>Référence de l'opération (facultatif)</span>
+                        <input
+                          class="k-input"
+                          type="text"
+                          [(ngModel)]="externalReference"
+                          name="externalReference"
+                          placeholder="Le numéro figurant sur votre reçu" />
+                      </label>
+
+                      <label class="k-field">
+                        <span>Justificatif <b>(obligatoire)</b></span>
+                        <input
+                          class="k-input"
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.webp,.pdf"
+                          (change)="onProofSelected($event)" />
+                        <small class="pyo-muted">
+                          Capture Wave/Orange Money ou avis de virement. C'est la seule
+                          preuve, un an plus tard, que ce partenaire a bien été payé.
+                        </small>
+                      </label>
+
+                      <button type="submit" class="k-btn k-btn--primary" [disabled]="loading()">
+                        Constater le versement
+                      </button>
+                    </form>
+
+                    <!-- Échec du virement -->
+                    <form class="pyo-form pyo-form--danger" (submit)="$event.preventDefault(); declareFailed(payout)">
+                      <h2 class="pyo-form__title">Le virement a été rejeté</h2>
+                      <p class="pyo-muted">
+                        Les services de ce lot redeviennent à payer : l'argent n'est
+                        pas parti, la créance du partenaire n'a pas disparu.
+                      </p>
+
+                      <label class="k-field">
+                        <span>Motif du rejet</span>
+                        <textarea
+                          class="k-input"
+                          rows="2"
+                          [(ngModel)]="failNote"
+                          name="failNote"
+                          placeholder="Numéro erroné, plafond atteint…"></textarea>
+                      </label>
+
+                      <button type="submit" class="k-btn k-btn--ghost" [disabled]="loading()">
+                        Déclarer l'échec
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

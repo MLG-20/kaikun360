@@ -121,7 +121,16 @@ class ProviderMissionController extends Controller
 
         $target = $this->resolveTransition($mission->status, $action);
 
-        $mission->update(['status' => $target->value]);
+        $mission->update([
+            'status' => $target->value,
+            // ⚠️ Date d'achèvement posée ICI, à la transition (F8.16.a). Le
+            // reversement au prestataire devient exigible au service rendu plus
+            // un délai : sans cette colonne il faudrait se rabattre sur
+            // `updated_at`, que la moindre retouche ultérieure de la mission
+            // décalerait — repoussant le paiement sans que personne ne comprenne
+            // pourquoi. Les autres transitions ne l'écrasent pas.
+            ...($target === MissionStatus::TERMINEE ? ['completed_at' => now()] : []),
+        ]);
 
         return ApiResponse::success(['mission' => ProviderMissionResource::make($mission->fresh())]);
     }

@@ -61,7 +61,23 @@ Relation `ManagementMandate::rents()` (hasMany).
   `status` via enum `OwnerPayoutStatus` en_attente/effectue, `paid_at`,
   `proof_path`). Modèle `OwnerPayout` ; relation `ManagementMandate::payouts()`.
 
-> Distinct des **payouts prestataires / PSP** (ledger, phases B11/B14).
+> Distinct des **reversements aux partenaires** des autres univers, qui vivent
+> dans les tables transverses `partner_dues` / `partner_payouts` (F8.16.a).
+>
+> ⚠️ **Pourquoi les deux coexistent, et pourquoi c'est voulu.** `mandate_id` est
+> **non nullable** : cette table ne peut structurellement porter que la gestion
+> locative. Surtout, elle reverse une **PÉRIODE** (loyers encaissés − commission
+> − dépenses d'un mois), pas un service rendu — la comptabilité n'est pas la
+> même. Les y fondre aurait aplati deux réalités distinctes ; le registre
+> transverse couvre les quatre autres lignes d'affaires (nuitées, véhicules,
+> circuits, trajets) plus les missions prestataires.
+>
+> ⚠️ **Dette connue, NON corrigée ici** : `owner_payouts.proof_path` existe
+> depuis B4.4 et **rien ne l'écrit jamais** — aucun endpoint ne téléverse de
+> justificatif, alors que l'écran Documents du back-office compte les preuves de
+> reversement (il compte donc toujours zéro). Le registre F8.16.a ne refait pas
+> cette promesse : son `POST .../pay` **exige** la pièce. Aligner la gestion
+> locative dessus reste à faire.
 
 ---
 

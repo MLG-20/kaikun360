@@ -10,6 +10,7 @@ use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
@@ -101,6 +102,17 @@ class Booking extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * La dette envers le partenaire née de cette réservation (F8.16.a).
+     *
+     * `morphOne` et non `morphMany` : le registre porte un unique en base sur
+     * (`source_type`, `source_id`) — un service rendu ne se doit qu'une fois.
+     */
+    public function partnerDue(): MorphOne
+    {
+        return $this->morphOne(PartnerDue::class, 'source');
     }
 
     /**

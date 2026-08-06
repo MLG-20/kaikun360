@@ -16,3 +16,5 @@ export * from './provider.model';
 export * from './content.model';
 export * from './document.model';
 export * from './notification.model';
+// Reversements aux partenaires (F8.16.a) — registre des dettes et versements.
+export * from './payout.model';

@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Support\ApiResponse;
 use App\Support\Payments\PaymentConfirmationService;
 use App\Support\Payments\PaymentProviderInterface;
+use App\Support\Payouts\PartnerDueRegistrar;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -27,6 +28,7 @@ class AdminPaymentController extends Controller
     public function __construct(
         private readonly PaymentProviderInterface $provider,
         private readonly PaymentConfirmationService $confirmation,
+        private readonly PartnerDueRegistrar $dues,
     ) {
     }
 
@@ -245,8 +247,22 @@ class AdminPaymentController extends Controller
             'meta' => array_merge($payment->meta ?? [], ['refunded_amount_xof' => $amount]),
         ]);
 
+        // ⚠️ F8.16.a — un remboursement ÉTEINT la dette envers le partenaire.
+        // Sans cela, le client est remboursé ET le partenaire payé : Kaikun perd
+        // deux fois. La dette n'est éteinte que si elle est encore vivante ; si
+        // le virement est déjà parti, la ligne reste « payée » et l'écart devient
+        // une créance à régler hors application — la marquer annulée ferait
+        // disparaître des comptes un virement bien réel.
+        $eteinte = false;
+        if ($payment->booking !== null) {
+            $eteinte = $this->dues->cancelForSource(
+                $payment->booking,
+                "Réservation remboursée (paiement {$payment->reference})",
+            );
+        }
+
         activity()->causedBy($request->user())->performedOn($payment)
-            ->withProperties(['amount_xof' => $amount])
+            ->withProperties(['amount_xof' => $amount, 'dette_partenaire_annulee' => $eteinte])
             ->log('Remboursement de paiement');
 
         return ApiResponse::success(['payment' => PaymentResource::make($payment->fresh())]);

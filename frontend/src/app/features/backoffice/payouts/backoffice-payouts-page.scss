@@ -1,0 +1,323 @@
+// Écran Reversements du back-office (F8.16.a) — ce que Kaikun doit aux
+// partenaires, et comment on le solde.
+
+:host {
+  display: block;
+  max-width: 1080px;
+}
+
+.pyo-head {
+  margin-bottom: 18px;
+}
+
+.pyo-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.pyo-sub {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 62ch;
+}
+
+// --- Onglets ---------------------------------------------------------------
+.pyo-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--k-line);
+  margin-bottom: 18px;
+}
+
+.pyo-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    color: var(--k-ink);
+  }
+
+  &.is-active {
+    color: var(--k-brand);
+    border-bottom-color: var(--k-brand);
+  }
+}
+
+// --- Messages --------------------------------------------------------------
+.pyo-flash,
+.pyo-error,
+.pyo-status {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.pyo-flash {
+  background: rgba(56, 167, 116, 0.12);
+  border: 1px solid var(--k-green, #38a774);
+  color: var(--k-ink);
+}
+
+.pyo-error {
+  background: rgba(179, 38, 30, 0.08);
+  border: 1px solid rgba(179, 38, 30, 0.35);
+  color: #8c1d18;
+}
+
+.pyo-status {
+  background: transparent;
+  padding-left: 0;
+  color: var(--k-muted);
+}
+
+// --- Bande de chiffres clés ------------------------------------------------
+// ⚠️ « Payable » et « sous délai » sont deux tuiles DISTINCTES et jamais un
+// total : les additionner ferait virer de l'argent avant que le délai
+// d'annulation du client soit écoulé.
+.pyo-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.pyo-kpi {
+  padding: 14px 16px;
+  border: 1px solid var(--k-line);
+  border-radius: 12px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &--strong {
+    border-color: var(--k-brand);
+    background: rgba(3, 72, 251, 0.04);
+  }
+
+  &__label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--k-muted);
+    font-weight: 700;
+  }
+
+  &__value {
+    font-family: var(--k-font-display);
+    font-size: 1.35rem;
+    color: var(--k-ink);
+  }
+
+  &__hint {
+    font-size: 0.78rem;
+    color: var(--k-muted);
+  }
+}
+
+// --- Tableaux --------------------------------------------------------------
+// Le tableau défile dans SON conteneur : la page ne doit jamais défiler
+// latéralement, règle tenue depuis F8.1.
+.pyo-scroll {
+  overflow-x: auto;
+}
+
+.pyo-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--k-muted);
+    border-bottom: 1px solid var(--k-line);
+  }
+
+  td {
+    padding: 12px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: top;
+  }
+
+  tbody tr.is-open > td {
+    background: rgba(3, 72, 251, 0.035);
+    border-bottom-color: transparent;
+  }
+}
+
+// Cellule empilée : la donnée secondaire sous la principale plutôt qu'en
+// colonne à comparer (règle des listes de triage, F8.1).
+.pyo-table td b {
+  display: block;
+}
+
+.pyo-muted {
+  display: block;
+  color: var(--k-muted);
+  font-size: 0.82rem;
+}
+
+.pyo-amount {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pyo-ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+}
+
+.pyo-btn-sm {
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+
+// Titre de colonne réservé aux lecteurs d'écran (colonne d'actions).
+.pyo-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.pyo-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: rgba(3, 72, 251, 0.1);
+  color: var(--k-brand);
+  white-space: nowrap;
+
+  &.is-ok {
+    background: rgba(56, 167, 116, 0.14);
+    color: #1f6f4c;
+  }
+
+  &.is-warn {
+    background: rgba(212, 160, 23, 0.16);
+    color: #7a5a00;
+  }
+}
+
+// --- Détail déplié ---------------------------------------------------------
+.pyo-detail-row > td {
+  background: rgba(3, 72, 251, 0.035);
+  padding-top: 0;
+}
+
+.pyo-detail__head,
+.pyo-detail__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pyo-detail__foot {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--k-line);
+}
+
+.pyo-dues {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pyo-due {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--k-line);
+  border-radius: 10px;
+  background: #fff;
+
+  // Dette encore sous délai : visiblement hors d'atteinte, avec son statut à
+  // côté — un contrôle qui refuse un clic sans rien dire se lit comme un bug.
+  &.is-locked {
+    opacity: 0.62;
+  }
+}
+
+.pyo-due__pick input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--k-brand);
+}
+
+.pyo-due__money {
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .pyo-due {
+    grid-template-columns: auto 1fr;
+
+    &__money,
+    .pyo-badge {
+      grid-column: 2;
+      text-align: left;
+    }
+  }
+}
+
+// --- Formulaires de constat ------------------------------------------------
+.pyo-forms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  padding: 14px 0;
+}
+
+.pyo-form {
+  padding: 16px;
+  border: 1px solid var(--k-line);
+  border-radius: 12px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &--danger {
+    border-color: rgba(179, 38, 30, 0.28);
+  }
+
+  &__title {
+    font-family: var(--k-font-display);
+    font-size: 1rem;
+    margin: 0;
+    color: var(--k-ink);
+  }
+}
