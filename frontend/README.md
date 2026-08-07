@@ -1080,6 +1080,19 @@ Sont également visés : `/back-office…` (alertes internes),
   [`src/styles/_tokens.scss`](src/styles/_tokens.scss), primitives (boutons,
   champs de formulaire, cartes…) dans [`src/styles/_base.scss`](src/styles/_base.scss).
 - Adresse de l'API du moteur configurée dans `src/environments/`.
+- **Politique de défilement maison**
+  ([`core/scroll/scroll-behavior.ts`](src/app/core/scroll/scroll-behavior.ts), F8.20)
+  à la place de `withInMemoryScrolling`. La politique intégrée d'Angular remonte
+  en haut de page à **chaque** navigation — or **filtrer un catalogue EST une
+  navigation**, les filtres vivant dans les paramètres d'URL. Le visiteur réglait
+  un prix maximum, validait, et se retrouvait devant la bannière du haut, à
+  redéfiler jusqu'aux résultats — à chaque essai, alors qu'on affine une
+  recherche cinq ou six fois de suite. La règle est désormais : position
+  mémorisée (retour navigateur) > ancre demandée > haut de page si le **chemin**
+  change > **on ne touche à rien** si seuls les paramètres changent (filtres, tri,
+  pagination). ⚠️ La règle est isolée dans une fonction pure `deciderDefilement`,
+  couverte par 6 tests : c'est un comportement invisible, qu'une régression ne
+  ferait pas remarquer avant longtemps.
 
 ### Rendu côté serveur — SSR (F2.9)
 

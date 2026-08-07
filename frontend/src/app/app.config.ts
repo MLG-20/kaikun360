@@ -1,11 +1,16 @@
 import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  ApplicationConfig,
+  provideBrowserGlobalErrorListeners,
+  provideEnvironmentInitializer,
+} from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
+import { activerPolitiqueDeDefilement } from './core/scroll/scroll-behavior';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { tokenInterceptor } from './core/interceptors/token.interceptor';
 
@@ -18,13 +23,17 @@ registerLocaleData(localeFr);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    // Défilement : on remonte en haut à chaque changement de page et on gère les
-    // liens à ancre (#section) — utilisés par les tuiles d'univers de l'accueil
-    // qui pointent vers des sections plus bas dans la même page.
+    // Défilement : politique MAISON (F8.20), voir `core/scroll/scroll-behavior`.
+    // ⚠️ `scrollPositionRestoration: 'disabled'` ne veut pas dire « aucun
+    // défilement » : le routeur continue d'émettre ses événements `Scroll` (avec
+    // la position mémorisée et l'ancre), c'est nous qui décidons quoi en faire.
+    // La politique intégrée remontait en haut à CHAQUE navigation, y compris sur
+    // un simple changement de filtre — les filtres vivant dans l'URL.
     provideRouter(
       routes,
-      withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
+      withInMemoryScrolling({ scrollPositionRestoration: 'disabled', anchorScrolling: 'disabled' }),
     ),
+    provideEnvironmentInitializer(activerPolitiqueDeDefilement),
     // Client HTTP + interceptors fonctionnels : on ajoute d'abord le jeton
     // (tokenInterceptor), puis on traite les erreurs de la réponse (errorInterceptor).
     // `withFetch()` : au rendu serveur (SSR, F2.9) le HttpClient s'appuie sur
