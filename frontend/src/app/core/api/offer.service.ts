@@ -4,6 +4,7 @@ import { Observable, of, switchMap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { Experience } from '../../models/experience.model';
+import { MobilityService } from '../../models/mobility-service.model';
 import { Vehicle } from '../../models/vehicle.model';
 import { ApiEnvelope } from './api-response.model';
 import { Paginated } from './pagination.model';
@@ -88,6 +89,64 @@ export interface NewVehiclePayload {
   life_jackets_count?: number | null;
   weather_compliant?: boolean | null;
   provider_compliant?: boolean | null;
+}
+
+/**
+ * Type de départ programmé — miroir EXACT de l'enum `MobilityServiceType`.
+ *
+ * ⚠️ **À ne pas confondre avec `VehicleTypeValue`** : celui-ci décrit le
+ * VÉHICULE (minibus, pirogue…), celui-là la NATURE DU TRAJET (navette régulière,
+ * transfert point à point…). Un même minibus assure une navette le lundi et une
+ * liaison le mardi — c'est précisément pourquoi le départ est un objet à part.
+ */
+export type MobilityServiceTypeValue = 'navette' | 'transfert' | 'liaison' | 'excursion';
+
+/** Types de départ proposés à la programmation (miroir de `MobilityServiceType`). */
+export const MOBILITY_SERVICE_TYPES: readonly {
+  value: MobilityServiceTypeValue;
+  label: string;
+  hint: string;
+}[] = [
+  {
+    value: 'navette',
+    label: 'Navette régulière',
+    hint: 'Trajet répété à horaire fixe, par exemple vers l’aéroport AIBD.',
+  },
+  {
+    value: 'transfert',
+    label: 'Transfert point à point',
+    hint: 'Une course d’un lieu précis à un autre, à une date donnée.',
+  },
+  {
+    value: 'liaison',
+    label: 'Liaison interurbaine',
+    hint: 'Trajet entre deux villes, par exemple Dakar – Saint-Louis.',
+  },
+  {
+    value: 'excursion',
+    label: 'Excursion en transport',
+    hint: 'Sortie à la journée avec transport inclus.',
+  },
+];
+
+/**
+ * Corps de `POST /mobility-services` / `PATCH /mobility-services/{id}` — miroir
+ * de `StoreMobilityServiceRequest` / `UpdateMobilityServiceRequest`.
+ */
+export interface NewMobilityServicePayload {
+  type: MobilityServiceTypeValue;
+  departure: string;
+  destination: string;
+  /** Date-heure du départ, au format `YYYY-MM-DD HH:mm:ss`. Doit être future. */
+  departure_at: string;
+  capacity: number;
+  price_xof: number;
+  description?: string | null;
+  /**
+   * Véhicule opérant le départ. Facultatif, mais **le serveur exige qu'il soit
+   * le vôtre** et que la capacité vendue n'excède pas la sienne.
+   */
+  vehicle_id?: number | null;
 }
 
 /** Une inclusion structurée d'un circuit (clé backend + libellé affiché). */
@@ -257,6 +316,65 @@ export class OfferService {
     return this.http.delete<ApiEnvelope<OfferRemoval>>(`${this.api}/experiences/${id}`);
   }
 
+  // --- Départs programmés (module Mobility, F8.23) ---------------------------
+  //
+  // ⚠️ `mobility_services` était en LECTURE SEULE côté serveur : le catalogue
+  // public `/mobilite` ne pouvait être alimenté que par le seeder. Ces quatre
+  // méthodes appellent les routes qui manquaient.
+
+  /** GET /mobility-services/mine — mes départs, tous statuts (paginé, 15/page). */
+  myDepartures(page = 1): Observable<Paginated<MobilityService>> {
+    return this.http.get<Paginated<MobilityService>>(`${this.api}/mobility-services/mine`, {
+      params: { page: String(page) },
+    });
+  }
+
+  /**
+   * Retrouve un de mes départs par son id, tous statuts confondus.
+   *
+   * Même contrainte que `findMyVehicle` / `findMyExperience` : la fiche publique
+   * ne sert que les départs **publiés**, or on corrige justement ceux qui
+   * attendent leur validation — ou qui ont été retirés.
+   */
+  findMyDeparture(id: number): Observable<MobilityService | null> {
+    const search = (page: number): Observable<MobilityService | null> =>
+      this.myDepartures(page).pipe(
+        switchMap((res) => {
+          const found = res.data.find((d) => d.id === id);
+          if (found) return of(found);
+          if (res.meta.current_page < res.meta.last_page) return search(page + 1);
+          return of(null);
+        }),
+      );
+    return search(1);
+  }
+
+  /** POST /mobility-services — programme un départ (créé « en attente de validation »). */
+  createDeparture(
+    payload: NewMobilityServicePayload,
+  ): Observable<ApiEnvelope<{ mobility_service: MobilityService }>> {
+    return this.http.post<ApiEnvelope<{ mobility_service: MobilityService }>>(
+      `${this.api}/mobility-services`,
+      this.cleanDeparture(payload),
+    );
+  }
+
+  /** PATCH /mobility-services/{id} — corrige un départ (le statut n'est pas modifiable ici). */
+  updateDeparture(
+    id: number,
+    payload: NewMobilityServicePayload,
+  ): Observable<ApiEnvelope<{ mobility_service: MobilityService }>> {
+    return this.http.patch<ApiEnvelope<{ mobility_service: MobilityService }>>(
+      `${this.api}/mobility-services/${id}`,
+      this.cleanDeparture(payload),
+    );
+  }
+
+  /** DELETE /mobility-services/{id} — retire un départ du catalogue. */
+  deleteDeparture(id: number): Observable<ApiEnvelope<OfferRemoval>> {
+    return this.http.delete<ApiEnvelope<OfferRemoval>>(`${this.api}/mobility-services/${id}`);
+  }
+
   // --- Préparation des corps -------------------------------------------------
 
   /**
@@ -286,6 +404,29 @@ export class OfferService {
       if (p.driver_identity && p.driver_identity.trim() !== '')
         body['driver_identity'] = p.driver_identity.trim();
     }
+    return body;
+  }
+
+  /**
+   * Prépare le corps d'un départ : omet la description vide, et envoie
+   * `vehicle_id` **explicitement à `null`** quand le prestataire détache son
+   * véhicule.
+   *
+   * ⚠️ Le détachement est le seul cas où une valeur vide doit VOYAGER : omettre
+   * la clé, sur un `PATCH` en `sometimes`, laisserait le véhicule en place et le
+   * prestataire croirait l'avoir retiré.
+   */
+  private cleanDeparture(p: NewMobilityServicePayload): Record<string, unknown> {
+    const body: Record<string, unknown> = {
+      type: p.type,
+      departure: p.departure.trim(),
+      destination: p.destination.trim(),
+      departure_at: p.departure_at,
+      capacity: p.capacity,
+      price_xof: p.price_xof,
+      vehicle_id: p.vehicle_id ?? null,
+    };
+    if (p.description && p.description.trim() !== '') body['description'] = p.description.trim();
     return body;
   }
 

@@ -171,6 +171,7 @@ qui **réutilise** les événements et services de son module :
 |---|---|---|---|
 | `property`   | Bien (Immo)          | `valider:bien`        | événement `PropertyValidated` |
 | `vehicle`    | Véhicule (Mobility)  | `valider:vehicule`    | `VehicleComplianceChecker` (blocage 422) + `VehicleValidated` |
+| `mobility_service` | **Départ programmé** (Mobility, F8.23) | `valider:vehicule` | conformité du **véhicule opérant** (blocage 422) + refus des départs **passés** |
 | `experience` | Circuit (Explore)    | `valider:experience`  | publication + traçabilité |
 | `provider`   | Prestataire (Pro)    | `valider:prestataire` | `ProviderValidationService` (synchro profil) |
 
@@ -186,6 +187,18 @@ propriétaire ; véhicules/expériences : le prestataire ; prestataires : le
 titulaire du compte. Produit par le helper `Validation\OwnerEntry`, avec
 **eager-loading** de la relation dans `pendingQuery()` (anti N+1). L'écran de
 validation du back-office (F7.2.a) affiche ce déposant pour trancher.
+
+⚠️ **Le tri de la file n'est pas le même pour tous les types** : tous rendent le
+plus ancien déposé (`oldest()`), **sauf `mobility_service`**, qui rend le départ
+le plus **proche** (`orderBy('departure_at')`). Un départ a une date de
+péremption : celui qui part demain doit être tranché aujourd'hui, même s'il a été
+déposé après celui de septembre.
+
+⚠️ **`{type}` accepte les types composés depuis F8.23** : la route les
+contraignait à `[a-z]+`, si bien que `mobility_service` répondait **404** — le
+validateur était enregistré, la file le comptait, et la décision restait
+injoignable. La contrainte est passée à `[a-z_]+` ; tout nouveau type composé
+doit s'y conformer.
 
 **`PATCH /api/v1/admin/validate/{type}/{id}`** — corps
 `{ "decision": "approve"|"reject", "reason"?: string }`.

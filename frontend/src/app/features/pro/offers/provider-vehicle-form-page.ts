@@ -36,7 +36,7 @@ type FormState = 'loading' | 'form' | 'not-found' | 'error';
   selector: 'app-provider-vehicle-form-page',
   imports: [ReactiveFormsModule, BackLinkComponent, PhotoManagerComponent],
   templateUrl: './provider-vehicle-form-page.html',
-  styleUrl: './provider-vehicle-form-page.scss',
+  styleUrl: './offer-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProviderVehicleFormPageComponent {

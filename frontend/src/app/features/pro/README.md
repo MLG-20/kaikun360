@@ -81,15 +81,20 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
   les mêmes cas que le tableau de bord — chargement, échec réseau, et le **404
   « pas encore de profil »** (→ `/pro/inscription`).
 - **`offers/`** — dépôt des **offres réservables** du prestataire (F5.6),
-  routes `offres`, `offres/vehicule/nouveau`, `offres/vehicule/:id/modifier` et
+  routes `offres`, `offres/vehicule/nouveau`, `offres/vehicule/:id/modifier`,
+  `offres/depart/nouveau`, `offres/depart/:id/modifier` (F8.23) et
   `offres/experience/nouvelle`. Comble l'exigence CDC §5.2 / §15 (« un
   prestataire peut proposer véhicule, circuit, pirogue… ») en branchant des
   interfaces sur des endpoints déjà exposés par le backend.
-  - `ProviderOffersPageComponent` (`offres`) — liste **Mes offres** en deux
-    blocs (Véhicules & mobilité / Circuits & expériences), chargée en parallèle
-    via `GET /vehicles/mine` + `GET /experiences/mine` (`forkJoin`). Chaque offre
-    affiche son **statut de validation** (pastille `.of-badge` teintée) ; les
-    véhicules ont un lien **Modifier**. Boutons de dépôt en tête de chaque bloc.
+  - `ProviderOffersPageComponent` (`offres`) — liste **Mes offres** en **trois**
+    blocs (Véhicules & mobilité / **Départs programmés** / Circuits &
+    expériences), chargés en parallèle via `GET /vehicles/mine` +
+    `GET /mobility-services/mine` + `GET /experiences/mine` (`forkJoin`). Chaque
+    offre affiche son **statut de validation** (pastille `.of-badge` teintée),
+    un lien **Modifier** et un **Retirer** à confirmation en deux temps dans la
+    ligne. ⚠️ Un départ porte en plus la mention **« ce départ a déjà eu lieu »**
+    quand son heure est passée : aucun statut ne le dit — un départ périmé reste
+    « Publié » et n'est pourtant plus réservable.
   - `ProviderVehicleFormPageComponent` (`offres/vehicule/nouveau` &
     `.../:id/modifier`) — dépôt/édition d'un véhicule (`POST /vehicles`,
     `PATCH /vehicles/{id}`). Le **type** propose les 8 catégories distinctes de
@@ -100,14 +105,33 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
     le véhicule est rechargé via `OfferService.findMyVehicle` (le détail public
     ne renvoie que les véhicules publiés). Gère les 403 (dossier non validé) et
     422 (validation).
+  - **`ProviderDepartureFormPageComponent`** (`offres/depart/nouveau` &
+    `.../:id/modifier`, F8.23) — programmation/correction d'un **départ**
+    (`POST` / `PATCH /mobility-services`).
+    ⚠️ **Cet écran comble le dernier trou structurel du produit** :
+    `mobility_services` était en **lecture seule** côté serveur, le catalogue
+    public `/mobilite` ne pouvait donc être alimenté que par le seeder.
+    ⚠️ **Aucun bloc photo, délibérément** : un départ hérite des photos de son
+    véhicule (F8.18). L'écran le dit, plutôt que de laisser le prestataire
+    chercher un téléversement qui n'existe pas.
+    ⚠️ Le sélecteur de véhicule ne propose que **mes** véhicules et affiche leur
+    capacité : le serveur refuse celui d'un concurrent et plafonne les places
+    vendues, autant rendre le cas fautif **impossible à saisir** plutôt que de le
+    traduire en message d'erreur.
+    ⚠️ `datetime-local` lu et écrit en heure **locale** (jamais `toISOString()`,
+    qui décalerait un bus de 06:00 à 05:00 GMT).
   - `ProviderExperienceFormPageComponent` (`offres/experience/nouvelle`) — dépôt
     d'un circuit (`POST /experiences`) : titre, destination, durée, capacité,
     prix par participant, programme et **inclusions** cochées (restauration,
     guide, transport, hébergement → `{ cle: booléen }`). Création uniquement (le
     backend n'expose pas d'édition d'expérience ; la modification passe par le
     back-office).
+  - Feuille de style **`offers/offer-form.scss`**, partagée par les formulaires
+    véhicule et départ (préfixe historique `vf-`) — **ne pas en recréer une par
+    formulaire**, même précédent que `backoffice/shared/dossier.scss`.
   - Service dédié **`core/api/offer.service.ts`** (`OfferService`) : constantes
-    `VEHICLE_TYPES` / `EXPERIENCE_INCLUSIONS`, helper `vehicleFamily`, et méthodes
+    `VEHICLE_TYPES` / **`MOBILITY_SERVICE_TYPES`** / `EXPERIENCE_INCLUSIONS`,
+    helper `vehicleFamily`, et méthodes
     `myVehicles` / `createVehicle` / `updateVehicle` / `findMyVehicle` /
     `myExperiences` / `createExperience`. Le nettoyage des corps n'envoie que les
     champs de conformité pertinents pour la famille du véhicule.

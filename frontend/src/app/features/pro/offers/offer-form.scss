@@ -1,4 +1,16 @@
-// Formulaire de dépôt / édition d'un véhicule (F5.6).
+// Feuille de style COMMUNE aux formulaires de dépôt d'offre du prestataire.
+//
+// Écrite en F5.6 pour le véhicule, partagée en F8.23 avec le départ programmé
+// plutôt que recopiée une troisième fois — même précédent que
+// `backoffice/shared/dossier.scss` pour les 7 fiches du back-office : **ne pas
+// recréer une feuille par formulaire.**
+//
+// Le préfixe `vf-` est conservé (« vehicle form » à l'origine) : le renommer
+// obligerait à toucher un écran déjà vérifié au navigateur pour un gain nul.
+// Lire « vf- » comme « formulaire d'offre ».
+//
+// ⚠️ `provider-experience-form-page.scss` (préfixe `xf-`) reste à part et lui
+// est presque identique : à replier ici lors d'une passe de cohérence visuelle.
 
 .vf-state {
   margin: 1.5rem 0;

@@ -86,7 +86,7 @@ class MobilityServiceController extends Controller
         // moment d'écrire : ceci n'est qu'un affichage, deux clients peuvent
         // toujours viser la dernière place en même temps.
         $prises = (int) $service->bookings()
-            ->whereNotIn('status', $this->statutsAnnules())
+            ->whereNotIn('status', BookingStatus::valeursAnnulees())
             ->sum('guests');
 
         return ApiResponse::success([
@@ -94,19 +94,5 @@ class MobilityServiceController extends Controller
             'seats_taken' => $prises,
             'seats_left' => max(0, $service->capacity - $prises),
         ]);
-    }
-
-    /**
-     * Statuts d'annulation, DÉRIVÉS de l'enum : une réservation annulée rend
-     * sa place au départ.
-     *
-     * @return array<int, string>
-     */
-    private function statutsAnnules(): array
-    {
-        return array_map(
-            fn (BookingStatus $statut) => $statut->value,
-            array_filter(BookingStatus::cases(), fn (BookingStatus $statut) => $statut->estAnnulee()),
-        );
     }
 }

@@ -74,6 +74,29 @@ export const PROVIDER_ROUTES: Routes = [
         title: 'Modifier le véhicule — Kaikun 360',
       },
       {
+        // F8.23 — Programmation d'un départ (POST /mobility-services).
+        //
+        // ⚠️ Ces deux routes ferment le trou le plus structurel qui restait :
+        // `mobility_services` était en LECTURE SEULE côté serveur, donc le
+        // catalogue public `/mobilite` ne pouvait être alimenté que par le
+        // seeder — aucune navette AIBD, aucune liaison n'était mettable en vente.
+        path: 'offres/depart/nouveau',
+        loadComponent: () =>
+          import('./offers/provider-departure-form-page').then(
+            (m) => m.ProviderDepartureFormPageComponent,
+          ),
+        title: 'Programmer un départ — Kaikun 360',
+      },
+      {
+        // F8.23 — Correction d'un départ (PATCH /mobility-services/{id}).
+        path: 'offres/depart/:id/modifier',
+        loadComponent: () =>
+          import('./offers/provider-departure-form-page').then(
+            (m) => m.ProviderDepartureFormPageComponent,
+          ),
+        title: 'Modifier le départ — Kaikun 360',
+      },
+      {
         // F5.6 — Dépôt d'une expérience touristique (POST /experiences).
         path: 'offres/experience/nouvelle',
         loadComponent: () =>

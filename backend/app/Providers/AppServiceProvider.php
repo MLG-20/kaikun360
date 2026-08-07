@@ -29,11 +29,15 @@ use App\Modules\Immo\Models\Property;
 use App\Modules\Immo\Policies\PropertyPolicy;
 use App\Modules\Manage\Models\ManagementMandate;
 use App\Modules\Manage\Policies\ManagementMandatePolicy;
+use App\Modules\Mobility\Events\MobilityServiceCreated;
 use App\Modules\Mobility\Events\VehicleCreated;
 use App\Modules\Mobility\Events\VehicleValidated;
+use App\Modules\Mobility\Listeners\NotifyAgentsOfNewMobilityService;
 use App\Modules\Mobility\Listeners\NotifyAgentsOfNewVehicle;
 use App\Modules\Mobility\Listeners\NotifyProviderOfVehicleValidated;
+use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Modules\Mobility\Policies\MobilityServicePolicy;
 use App\Modules\Mobility\Policies\VehiclePolicy;
 use App\Modules\Pro\Models\Provider;
 use App\Modules\Pro\Policies\ProviderPolicy;
@@ -157,6 +161,10 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(PropertyCreated::class, NotifyAgentsOfNewProperty::class);
         Event::listen(PropertyValidated::class, NotifyOwnerOfPropertyValidated::class);
         Event::listen(VehicleCreated::class, NotifyAgentsOfNewVehicle::class);
+        // F8.23 — Départ programmé déposé par un prestataire. Même file de
+        // validation que les véhicules, mais l'alerte porte la DATE du départ :
+        // un trajet validé après son heure ne se vend plus.
+        Event::listen(MobilityServiceCreated::class, NotifyAgentsOfNewMobilityService::class);
         Event::listen(VehicleValidated::class, NotifyProviderOfVehicleValidated::class);
         Event::listen(TeamBuildingRequestCreated::class, NotifyAdminsOfTeamBuildingRequest::class);
         Event::listen(QuoteSent::class, NotifyCompanyOfQuoteSent::class);
@@ -192,6 +200,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ConstructionRequest::class, ConstructionRequestPolicy::class);
         Gate::policy(TourismExperience::class, ExperiencePolicy::class);
         Gate::policy(Vehicle::class, VehiclePolicy::class);
+        Gate::policy(MobilityService::class, MobilityServicePolicy::class);
         Gate::policy(DiasporaProject::class, DiasporaProjectPolicy::class);
         Gate::policy(TeamBuildingRequest::class, TeamBuildingRequestPolicy::class);
         Gate::policy(Provider::class, ProviderPolicy::class);

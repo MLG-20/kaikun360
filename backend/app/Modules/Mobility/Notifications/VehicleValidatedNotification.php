@@ -7,8 +7,8 @@ use App\Support\Mail\BrandedMail;
 use App\Support\Notifications\NotificationEvent;
 use App\Support\Notifications\NotificationSettings;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**

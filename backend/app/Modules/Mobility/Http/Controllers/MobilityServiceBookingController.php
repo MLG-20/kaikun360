@@ -7,8 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\BookingResource;
 use App\Modules\Mobility\Http\Requests\StoreMobilityServiceBookingRequest;
 use App\Modules\Mobility\Models\MobilityService;
-use App\Support\Billing\CommissionCalculator;
 use App\Support\ApiResponse;
+use App\Support\Billing\CommissionCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -20,9 +20,7 @@ use Illuminate\Validation\ValidationException;
  */
 class MobilityServiceBookingController extends Controller
 {
-    public function __construct(private readonly CommissionCalculator $commissions)
-    {
-    }
+    public function __construct(private readonly CommissionCalculator $commissions) {}
 
     /**
      * Réserve des places. POST /api/v1/mobility-services/{id}/bookings
@@ -34,7 +32,7 @@ class MobilityServiceBookingController extends Controller
 
         // Places restantes = capacité − participants des réservations non annulées.
         $taken = (int) $service->bookings()
-            ->whereNotIn('status', $this->cancelledStatuses())
+            ->whereNotIn('status', BookingStatus::valeursAnnulees())
             ->sum('guests');
         $left = max(0, $service->capacity - $taken);
 
@@ -60,16 +58,5 @@ class MobilityServiceBookingController extends Controller
         activity()->causedBy($request->user())->performedOn($booking)->log('Réservation de service de mobilité');
 
         return ApiResponse::created(['booking' => BookingResource::make($booking)]);
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    private function cancelledStatuses(): array
-    {
-        return array_map(
-            fn (BookingStatus $s) => $s->value,
-            array_filter(BookingStatus::cases(), fn (BookingStatus $s) => $s->estAnnulee()),
-        );
     }
 }

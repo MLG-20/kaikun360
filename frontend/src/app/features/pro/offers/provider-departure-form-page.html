@@ -1,0 +1,157 @@
+<section class="account-head">
+  <app-back-link class="account-back" fallback="/espace-prestataire/offres" />
+  <p class="account-eyebrow">Espace prestataire</p>
+  <h1 class="account-title">{{ isEdit() ? 'Modifier le départ' : 'Programmer un départ' }}</h1>
+  <p class="account-lead">
+    Un départ est un trajet <strong>daté</strong> dont vous vendez les places :
+    navette aéroport, liaison entre deux villes, transfert. Il paraîtra au
+    catalogue mobilité une fois validé par Kaikun.
+  </p>
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="vf-state" role="status">Chargement du départ…</p>
+  }
+  @case ('not-found') {
+    <div class="vf-error">
+      <p>Ce départ est introuvable ou ne fait pas partie de vos offres.</p>
+      <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Retour à mes offres</a>
+    </div>
+  }
+  @case ('error') {
+    <div class="vf-error">
+      <p>Impossible de charger ce départ pour le moment.</p>
+      <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Retour à mes offres</a>
+    </div>
+  }
+  @default {
+    <form class="vf-form" [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Nature du trajet — à ne pas confondre avec le type de VÉHICULE. -->
+      <div class="vf-field">
+        <label for="df-type">Nature du trajet</label>
+        <select id="df-type" formControlName="type">
+          <option value="" disabled>Choisissez…</option>
+          @for (t of types; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+        @for (t of types; track t.value) {
+          @if (form.controls.type.value === t.value) {
+            <p class="vf-hint">{{ t.hint }}</p>
+          }
+        }
+        @if (form.controls.type.touched && form.controls.type.invalid) {
+          <p class="vf-hint vf-hint--error">La nature du trajet est obligatoire.</p>
+        }
+      </div>
+
+      <div class="vf-row">
+        <div class="vf-field">
+          <label for="df-departure">Lieu de départ</label>
+          <input id="df-departure" type="text" formControlName="departure" maxlength="255"
+                 placeholder="Dakar" />
+          @if (form.controls.departure.touched && form.controls.departure.invalid) {
+            <p class="vf-hint vf-hint--error">Indiquez le lieu de départ.</p>
+          }
+        </div>
+        <div class="vf-field">
+          <label for="df-destination">Destination</label>
+          <input id="df-destination" type="text" formControlName="destination" maxlength="255"
+                 placeholder="AIBD" />
+          @if (form.controls.destination.touched && form.controls.destination.invalid) {
+            <p class="vf-hint vf-hint--error">Indiquez la destination.</p>
+          }
+        </div>
+      </div>
+
+      <div class="vf-field">
+        <label for="df-when">Date et heure du départ</label>
+        <input id="df-when" type="datetime-local" formControlName="departure_at"
+               [min]="minDeparture" />
+        <p class="vf-hint">
+          Un départ ne se programme que dans le futur : passée l'heure indiquée,
+          il n'est plus réservable.
+        </p>
+        @if (form.controls.departure_at.touched && form.controls.departure_at.invalid) {
+          <p class="vf-hint vf-hint--error">Indiquez la date et l'heure du départ.</p>
+        }
+      </div>
+
+      <div class="vf-row">
+        <div class="vf-field">
+          <label for="df-capacity">Places mises en vente</label>
+          <input id="df-capacity" type="number" min="1" [max]="capacityCap()"
+                 formControlName="capacity" />
+          @if (capacityCap() !== null) {
+            <p class="vf-hint">
+              Le véhicule choisi transporte {{ capacityCap() }} passager(s) :
+              vous ne pouvez pas en vendre davantage.
+            </p>
+          }
+          @if (form.controls.capacity.touched && form.controls.capacity.invalid) {
+            <p class="vf-hint vf-hint--error">Indiquez au moins 1 place.</p>
+          }
+        </div>
+        <div class="vf-field">
+          <label for="df-price">Prix par place (FCFA)</label>
+          <input id="df-price" type="number" min="0" formControlName="price_xof" />
+          @if (form.controls.price_xof.touched && form.controls.price_xof.invalid) {
+            <p class="vf-hint vf-hint--error">Indiquez un prix (0 ou plus).</p>
+          }
+        </div>
+      </div>
+
+      <!--
+        Le véhicule opérant le départ. Restreint à MES véhicules : le serveur
+        refuse celui d'un concurrent, autant ne pas le proposer.
+      -->
+      <fieldset class="vf-compliance">
+        <legend>Véhicule qui assure le départ</legend>
+        <div class="vf-field">
+          <label for="df-vehicle">Véhicule <span class="vf-opt">(facultatif)</span></label>
+          <select id="df-vehicle" formControlName="vehicle_id">
+            <option [ngValue]="null">Aucun véhicule rattaché</option>
+            @for (v of myVehicles(); track v.id) {
+              <option [ngValue]="v.id">
+                {{ v.brand }} {{ v.model }} — {{ v.capacity }} places ({{ v.reference }})
+              </option>
+            }
+          </select>
+        </div>
+
+        @if (myVehicles().length === 0) {
+          <p class="vf-hint">
+            Vous n'avez encore déposé aucun véhicule. Vous pouvez programmer ce
+            départ sans en rattacher un, mais il paraîtra <strong>sans photo</strong>.
+            <a routerLink="/espace-prestataire/offres/vehicule/nouveau">Déposer un véhicule</a>
+          </p>
+        } @else {
+          <p class="vf-hint">
+            <strong>Les photos du départ sont celles de son véhicule</strong> — vous
+            n'avez pas à les redéposer ici. Un départ sans véhicule rattaché
+            paraîtra sans photo, et sa conformité (assurance, gilets) ne pourra
+            pas être contrôlée.
+          </p>
+        }
+      </fieldset>
+
+      <div class="vf-field">
+        <label for="df-desc">Description <span class="vf-opt">(facultatif)</span></label>
+        <textarea id="df-desc" rows="4" formControlName="description"
+                  placeholder="Points de ramassage, bagages autorisés, durée estimée…"></textarea>
+      </div>
+
+      @if (formError()) {
+        <p class="vf-msg vf-msg--error" role="alert">{{ formError() }}</p>
+      }
+
+      <div class="vf-actions">
+        <button type="submit" class="k-btn k-btn--primary" [disabled]="submitting()">
+          {{ submitting() ? 'Enregistrement…' : isEdit() ? 'Enregistrer les modifications' : 'Programmer le départ' }}
+        </button>
+        <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Annuler</a>
+      </div>
+    </form>
+  }
+}

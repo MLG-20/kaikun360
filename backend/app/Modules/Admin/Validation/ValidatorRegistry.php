@@ -23,13 +23,15 @@ class ValidatorRegistry
     private const VALIDATORS = [
         PropertyValidator::class,
         VehicleValidator::class,
+        // F8.23 — les départs programmés entrent dans la file au même titre que
+        // les véhicules : jusque-là, rien ne pouvait en créer, donc rien n'avait
+        // à être validé.
+        MobilityServiceValidator::class,
         ExperienceValidator::class,
         ProviderValidator::class,
     ];
 
-    public function __construct(private readonly Container $container)
-    {
-    }
+    public function __construct(private readonly Container $container) {}
 
     /**
      * Tous les validateurs, indexés par clé de type.

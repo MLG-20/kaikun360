@@ -18,6 +18,12 @@ export interface MobilityService {
   status: string | null;
   status_label: string | null;
   /**
+   * Véhicule qui opère le départ (F8.23), ou `null`. Sert au **préremplissage**
+   * du formulaire de correction : sans lui, corriger un prix détacherait le
+   * départ de son véhicule — donc de ses photos et de sa conformité.
+   */
+  vehicle_id?: number | null;
+  /**
    * Photos du trajet (F8.18) — ce sont celles du **véhicule qui l'opère** :
    * `mobility_services.vehicle_id`. Le prestataire n'illustre pas chaque départ,
    * il illustre son véhicule une fois. Vide si aucun véhicule n'est rattaché.

@@ -48,6 +48,12 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // L'accès back-office est gardé par `consulter:dashboard-admin` ; la
     // permission fine (valider:bien, valider:vehicule…) est vérifiée dans le
     // contrôleur selon le {type} ciblé.
+    //
+    // ⚠️ **`[a-z_]+` et non `[a-z]+`** (corrigé en F8.23) : le premier type
+    // composé enregistré au `ValidatorRegistry` — `mobility_service` — ne
+    // correspondait plus à la route, qui répondait **404 au lieu de 403/422**.
+    // Le validateur était bien en place, la file le comptait, et la décision
+    // était pourtant injoignable : un symptôme muet, à des lieues de sa cause.
     Route::get('/queue', [ValidationQueueController::class, 'index'])
         ->middleware('can:consulter:dashboard-admin');
 
@@ -55,12 +61,12 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // déposant et caractéristiques du type. L'agent doit VOIR ce qu'il publie
     // sur le site vitrine avant de trancher.
     Route::get('/queue/{type}/{id}', [ValidationQueueController::class, 'show'])
-        ->where('type', '[a-z]+')
+        ->where('type', '[a-z_]+')
         ->whereNumber('id')
         ->middleware('can:consulter:dashboard-admin');
 
     Route::patch('/validate/{type}/{id}', [ValidationQueueController::class, 'decide'])
-        ->where('type', '[a-z]+')
+        ->where('type', '[a-z_]+')
         ->whereNumber('id')
         ->middleware('can:consulter:dashboard-admin');
 

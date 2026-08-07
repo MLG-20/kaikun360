@@ -5,6 +5,7 @@ namespace App\Support\Offers;
 use App\Models\Media;
 use App\Modules\Explore\Enums\ExperienceStatus;
 use App\Modules\Explore\Models\TourismExperience;
+use App\Modules\Mobility\Enums\MobilityServiceStatus;
 use App\Modules\Mobility\Enums\VehicleStatus;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
@@ -131,6 +132,8 @@ class OfferRetirementService
         return match (true) {
             $offre instanceof Vehicle => VehicleStatus::RETIRE->value,
             $offre instanceof TourismExperience => ExperienceStatus::RETIRE->value,
+            // F8.23 — un départ programmé se retire comme les deux autres offres.
+            $offre instanceof MobilityService => MobilityServiceStatus::RETIRE->value,
             default => throw new \InvalidArgumentException(
                 'Type d\'offre non géré par le retrait : '.$offre::class,
             ),

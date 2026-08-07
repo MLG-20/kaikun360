@@ -9,8 +9,8 @@ use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Modules\Mobility\Http\Requests\StoreVehicleBookingRequest;
 use App\Modules\Mobility\Models\Vehicle;
-use App\Support\Billing\CommissionCalculator;
 use App\Support\ApiResponse;
+use App\Support\Billing\CommissionCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -31,9 +31,7 @@ class VehicleBookingController extends Controller
      */
     public const CANCEL_DELAY_DAYS = 2;
 
-    public function __construct(private readonly CommissionCalculator $commissions)
-    {
-    }
+    public function __construct(private readonly CommissionCalculator $commissions) {}
 
     /**
      * Réserve un véhicule. POST /api/v1/vehicles/{id}/bookings

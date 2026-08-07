@@ -49,6 +49,10 @@ export class BackofficeValidationPageComponent {
   protected readonly types: readonly TypeMeta[] = [
     { key: 'property', label: 'Biens', singular: 'bien' },
     { key: 'vehicle', label: 'Véhicules', singular: 'véhicule' },
+    // F8.23 — les départs programmés : un onglet à part des véhicules, parce
+    // qu'un départ a une DATE et se juge dans l'ordre de son échéance, pas de
+    // son dépôt.
+    { key: 'mobility_service', label: 'Départs', singular: 'départ' },
     { key: 'experience', label: 'Expériences', singular: 'expérience' },
     { key: 'provider', label: 'Prestataires', singular: 'prestataire' },
   ];

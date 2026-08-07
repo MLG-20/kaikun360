@@ -57,4 +57,24 @@ enum BookingStatus: string
     {
         return array_column(self::cases(), 'value');
     }
+
+    /**
+     * Les valeurs brutes des statuts d'annulation.
+     *
+     * ⚠️ Extrait ici en F8.23 parce que ce calcul était recopié à l'identique
+     * dans `MobilityServiceController`, `MobilityServiceBookingController` et,
+     * désormais, la correction d'un départ : partout où l'on compte des places
+     * prises, une réservation annulée rend sa place. Trois copies d'une même
+     * règle, c'est trois occasions qu'elles divergent le jour où un quatrième
+     * statut d'annulation apparaît.
+     *
+     * @return array<int, string>
+     */
+    public static function valeursAnnulees(): array
+    {
+        return array_map(
+            fn (self $statut) => $statut->value,
+            array_filter(self::cases(), fn (self $statut) => $statut->estAnnulee()),
+        );
+    }
 }

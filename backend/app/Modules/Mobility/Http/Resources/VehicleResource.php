@@ -2,13 +2,15 @@
 
 namespace App\Modules\Mobility\Http\Resources;
 
+use App\Http\Resources\MediaResource;
+use App\Modules\Mobility\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Représentation JSON d'un véhicule (module Mobility).
  *
- * @mixin \App\Modules\Mobility\Models\Vehicle
+ * @mixin Vehicle
  */
 class VehicleResource extends JsonResource
 {
@@ -43,7 +45,7 @@ class VehicleResource extends JsonResource
             // ⚠️ `whenLoaded` et non un accès direct : la clé disparaît quand la
             // relation n'est pas chargée, plutôt que de déclencher une requête
             // par ligne de catalogue (N+1 sur la liste la plus consultée).
-            'photos' => \App\Http\Resources\MediaResource::collection($this->whenLoaded('media')),
+            'photos' => MediaResource::collection($this->whenLoaded('media')),
             // Raccourci consommé par les CARTES : l'image de couverture seule.
             // `media()` trie déjà « principale d'abord », `first()` est donc la
             // couverture, et `null` quand le véhicule n'a pas encore de photo.

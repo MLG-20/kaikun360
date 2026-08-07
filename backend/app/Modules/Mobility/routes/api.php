@@ -2,6 +2,7 @@
 
 use App\Modules\Mobility\Http\Controllers\MobilityServiceBookingController;
 use App\Modules\Mobility\Http\Controllers\MobilityServiceController;
+use App\Modules\Mobility\Http\Controllers\MobilityServiceManagementController;
 use App\Modules\Mobility\Http\Controllers\VehicleBookingController;
 use App\Modules\Mobility\Http\Controllers\VehicleCatalogController;
 use App\Modules\Mobility\Http\Controllers\VehicleManagementController;
@@ -36,6 +37,20 @@ Route::middleware('auth:sanctum')->group(function () {
     // F8.19 — retrait d'une offre par son prestataire (suppression réelle si le
     // véhicule n'a jamais servi, retrait conservatoire sinon).
     Route::delete('vehicles/{vehicle}', [VehicleManagementController::class, 'destroy'])->whereNumber('vehicle');
+
+    // F8.23 — LES DÉPARTS PROGRAMMÉS DEVIENNENT ÉCRIVABLES.
+    //
+    // ⚠️ `mobility_services` était en LECTURE SEULE depuis B7.2 : le catalogue
+    // public `/mobilite` ne pouvait être alimenté que par le seeder. Ces quatre
+    // routes sont la porte d'entrée qui manquait.
+    //
+    // ⚠️ `mine` ne peut PAS être capté par `mobility-services/{id}` : cette
+    // dernière est contrainte au numérique (voir plus haut). L'ordre reste
+    // néanmoins celui des véhicules, pour que les deux cycles se relisent pareil.
+    Route::post('mobility-services', [MobilityServiceManagementController::class, 'store'])->middleware('verified.account');
+    Route::get('mobility-services/mine', [MobilityServiceManagementController::class, 'mine']);
+    Route::patch('mobility-services/{mobility_service}', [MobilityServiceManagementController::class, 'update'])->whereNumber('mobility_service');
+    Route::delete('mobility-services/{mobility_service}', [MobilityServiceManagementController::class, 'destroy'])->whereNumber('mobility_service');
 
     // Réservations (caution & commission) — B7.4.
     Route::post('vehicles/{id}/bookings', [VehicleBookingController::class, 'store'])->whereNumber('id')->middleware('verified.account');

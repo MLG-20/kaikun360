@@ -165,8 +165,21 @@ export interface AttendanceSummary {
 
 // --- File de validation (F7.2.a) ---------------------------------------------
 
-/** Types de ressources soumis à validation (miroir de `ValidatorRegistry`). */
-export type ValidationType = 'property' | 'vehicle' | 'experience' | 'provider';
+/**
+ * Types de ressources soumis à validation (miroir de `ValidatorRegistry`).
+ *
+ * ⚠️ `mobility_service` (F8.23) est le **premier type composé** : la route
+ * `/admin/validate/{type}/{id}` le contraignait à `[a-z]+` et répondait **404**
+ * — le validateur existait, la file le comptait, et la décision était pourtant
+ * injoignable. La contrainte serveur est passée à `[a-z_]+` ; tout type composé
+ * ajouté ici doit s'y conformer.
+ */
+export type ValidationType =
+  | 'property'
+  | 'vehicle'
+  | 'mobility_service'
+  | 'experience'
+  | 'provider';
 
 /**
  * Une entrée normalisée de la file de validation (miroir de

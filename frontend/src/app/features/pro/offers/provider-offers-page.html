@@ -3,9 +3,9 @@
   <p class="account-eyebrow">Espace prestataire</p>
   <h1 class="account-title">Mes offres</h1>
   <p class="account-lead">
-    Publiez les prestations que les clients pourront réserver — véhicules et
-    circuits touristiques. Chaque offre est mise en ligne après validation par
-    Kaikun.
+    Publiez les prestations que les clients pourront réserver — véhicules,
+    départs programmés et circuits touristiques. Chaque offre est mise en ligne
+    après validation par Kaikun.
   </p>
 </section>
 
@@ -101,6 +101,82 @@
                   <div class="of-card-actions">
                     <a class="of-card-edit" [routerLink]="['vehicule', v.id, 'modifier']">Modifier</a>
                     <button type="button" class="of-card-danger" (click)="askRemove('vehicle-' + v.id)">
+                      Retirer
+                    </button>
+                  </div>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- ===================== Départs programmés (F8.23) ===================== -->
+    <section class="of-block">
+      <header class="of-block-head">
+        <h2 class="of-block-title">Départs programmés</h2>
+        <a class="k-btn k-btn--primary" routerLink="depart/nouveau">Programmer un départ</a>
+      </header>
+
+      @if (departures().length === 0) {
+        <p class="of-block-empty">
+          Aucun départ programmé. Mettez en vente les places d'une navette
+          aéroport, d'une liaison entre deux villes ou d'un transfert.
+        </p>
+      } @else {
+        <ul class="of-list">
+          @for (d of departures(); track d.id) {
+            <li class="of-card">
+              <!-- Les photos d'un départ sont celles de son véhicule (F8.18) :
+                   un départ sans véhicule rattaché n'en a donc aucune. -->
+              @if (d.photo_url) {
+                <img class="of-thumb" width="72" height="54" [src]="d.photo_url"
+                     [alt]="departureName(d)" />
+              } @else {
+                <span class="of-thumb of-thumb--empty" aria-hidden="true">🚐</span>
+              }
+              <div class="of-card-main">
+                <p class="of-card-title">{{ departureName(d) }}</p>
+                <p class="of-card-meta">
+                  <span>{{ d.type_label ?? 'Départ' }}</span>
+                  <span>· {{ departureWhen(d) }}</span>
+                  <span>· {{ d.capacity }} place{{ d.capacity > 1 ? 's' : '' }}</span>
+                  @if (fcfa(d.price_xof); as price) {
+                    <span>· {{ price }} / place</span>
+                  }
+                </p>
+                @if (isPast(d)) {
+                  <p class="of-card-hint">
+                    Ce départ a déjà eu lieu : il n'est plus réservable, même s'il
+                    reste publié.
+                  </p>
+                } @else if (visibilityHint(d.status); as hint) {
+                  <p class="of-card-hint">{{ hint }}</p>
+                }
+              </div>
+              <div class="of-card-side">
+                <span class="of-badge" [class]="statusClass(d.status)">{{ d.status_label }}</span>
+                @if (!d.photo_url) {
+                  <span class="of-nophoto">Sans photo</span>
+                }
+                @if (pendingRemoval() === 'departure-' + d.id) {
+                  <p class="of-confirm">Retirer ce départ du catalogue ?</p>
+                  <div class="of-confirm-actions">
+                    <button
+                      type="button"
+                      class="of-card-danger"
+                      [disabled]="removing() === 'departure-' + d.id"
+                      (click)="confirmRemove('departure', d.id)"
+                    >
+                      {{ removing() === 'departure-' + d.id ? 'Retrait…' : 'Confirmer' }}
+                    </button>
+                    <button type="button" class="of-card-edit" (click)="askRemove(null)">Annuler</button>
+                  </div>
+                } @else {
+                  <div class="of-card-actions">
+                    <a class="of-card-edit" [routerLink]="['depart', d.id, 'modifier']">Modifier</a>
+                    <button type="button" class="of-card-danger" (click)="askRemove('departure-' + d.id)">
                       Retirer
                     </button>
                   </div>

@@ -136,10 +136,11 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   mission — une **synthèse de notation** (note moyenne, total, histogramme de
   répartition par étoiles) surmonte la **liste des avis** (auteur, source,
   commentaire, date). **« Mes offres »** (F5.6 — `GET/POST/PATCH /vehicles…`,
-  `GET/POST /experiences`) : le prestataire **dépose et suit ses prestations
-  réservables** — véhicules (les 8 catégories distinctes : voiture particulière,
-  touristique, navette aéroportuaire, bus, minibus, 4x4, pirogue, chauffeur) et
-  **circuits touristiques** — chacune avec son **statut de validation** ; les
+  `GET/POST /experiences` ; F8.23 — `GET/POST/PATCH/DELETE /mobility-services`) :
+  le prestataire **dépose et suit ses prestations réservables** — véhicules (les
+  8 catégories distinctes : voiture particulière, touristique, navette
+  aéroportuaire, bus, minibus, 4x4, pirogue, chauffeur), **départs programmés**
+  et **circuits touristiques** — chacune avec son **statut de validation** ; les
   champs de sécurité s'adaptent au type (assurance/chauffeur pour un motorisé,
   gilets/conformité météo pour une pirogue). C'est le geste central attendu par
   le cahier des charges (§5.2 / §15), désormais couvert. 👉 Détail :
@@ -304,6 +305,26 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   varie d'une offre à l'autre. ⚠️ La liste affiche la **vignette de couverture**
   et une mention « Sans photo » : le prestataire repère d'un coup d'œil les
   annonces qui ne se loueront jamais.
+  **F8.23 Programmer un départ** (`features/pro/offers/provider-departure-form-page`,
+  routes `offres/depart/nouveau` et `offres/depart/:id/modifier`) : troisième
+  bloc de « Mes offres », et le dernier geste **structurellement** manquant du
+  produit. ⚠️ **`mobility_services` était en lecture seule côté serveur depuis
+  B7.2** : le catalogue public `/mobilite` ne pouvait être alimenté que par le
+  seeder — aucune navette AIBD, aucune liaison interurbaine n'était mettable en
+  vente. ⚠️ **Écran distinct de celui du véhicule, pas des champs en plus** : un
+  même minibus assure une navette le lundi et une liaison le mardi ; ce qui se
+  vend est le **trajet daté**. ⚠️ **Aucun bloc photo, délibérément** — un départ
+  hérite des photos de son véhicule (F8.18), et l'écran le **dit** plutôt que de
+  laisser le prestataire chercher un téléversement qui n'existe pas. ⚠️ Le
+  sélecteur de véhicule ne propose que **mes** véhicules, avec leur capacité
+  affichée : le serveur refuse celui d'un concurrent et plafonne les places
+  vendues — autant rendre le cas fautif **impossible à saisir** plutôt que de le
+  traduire en message d'erreur. ⚠️ La liste signale « ce départ a déjà eu lieu »
+  quand l'heure est passée : **aucun statut ne le dit**, un départ périmé reste
+  « Publié » et n'est pourtant plus réservable. ⚠️ `datetime-local` lu et écrit
+  en heure **locale**, jamais via `toISOString()` (qui afficherait un bus de
+  06:00 à 05:00 GMT). La feuille de style du formulaire véhicule est devenue
+  `offers/offer-form.scss`, **partagée** — ne pas en recréer une par formulaire.
   **F7.2.e Dossiers → F7.3.c : deux rubriques distinctes.** L'écran unique à
   onglets (`features/backoffice/dossiers/`) a été **scindé** en
   `features/backoffice/construction/` (route `construction`) et

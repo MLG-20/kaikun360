@@ -7,14 +7,15 @@ use App\Enums\CautionStatus;
 use App\Enums\HousekeepingStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\RequestStatus;
+use App\Enums\ReviewStatus;
 use App\Enums\ServiceType;
 use App\Models\Booking;
 use App\Models\Conversation;
 use App\Models\Payment;
+use App\Models\Report;
 use App\Models\Review;
 use App\Models\ServiceRequest;
 use App\Models\User;
-use App\Models\Report;
 use App\Modules\Build\Enums\ConstructionObjective;
 use App\Modules\Build\Enums\ConstructionRequestStatus;
 use App\Modules\Build\Enums\FinishLevel;
@@ -22,6 +23,9 @@ use App\Modules\Build\Enums\MilestoneStatus;
 use App\Modules\Build\Enums\ReportType;
 use App\Modules\Build\Models\ConstructionMilestone;
 use App\Modules\Build\Models\ConstructionRequest;
+use App\Modules\Core\Enums\ProfileType;
+use App\Modules\Core\Enums\ProfileVerificationStatus;
+use App\Modules\Core\Models\Profile;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Immo\Enums\PropertyType;
 use App\Modules\Immo\Models\Property;
@@ -42,12 +46,12 @@ use App\Modules\TeamBuilding\Enums\TeamBuildingQuoteStatus;
 use App\Modules\TeamBuilding\Enums\TeamBuildingRequestStatus;
 use App\Modules\TeamBuilding\Models\TeamBuildingRequest;
 use App\Modules\TeamBuilding\Services\TeamBuildingQuoteComposer;
-use App\Enums\ReviewStatus;
-use App\Services\RatingAggregator;
 use App\Notifications\BookingConfirmedNotification;
 use App\Notifications\QuoteReceivedNotification;
 use App\Notifications\RequestStatusChangedNotification;
+use App\Services\RatingAggregator;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -367,7 +371,7 @@ class DemoSeeder extends Seeder
             'surface_m2' => 140,
             'budget_xof' => 32_000_000,
             'finish_level' => FinishLevel::STANDARD->value,
-            'description' => "Villa R+1 sur un terrain de 300 m². Trois chambres, un salon "
+            'description' => 'Villa R+1 sur un terrain de 300 m². Trois chambres, un salon '
                 ."traversant et un studio indépendant à l'étage pour de la location.",
             'estimated_cost_xof' => 35_000_000,
             'status' => ConstructionRequestStatus::EN_CHANTIER->value,
@@ -678,7 +682,6 @@ class DemoSeeder extends Seeder
             'provider_id' => $provider->id,
         ]);
 
-
         // --- Tourisme : 5 expériences publiées ---
         TourismExperience::factory()->count(5)->published()->create([
             'provider_id' => $provider->id,
@@ -889,7 +892,7 @@ class DemoSeeder extends Seeder
      * `$reviewable` (véhicule, expérience ou prestataire). Utilitaire de
      * démonstration : contourne volontairement la vérification d'éligibilité.
      */
-    private function publishReview(User $author, \Illuminate\Database\Eloquent\Model $reviewable, int $rating, string $comment): void
+    private function publishReview(User $author, Model $reviewable, int $rating, string $comment): void
     {
         Review::create([
             'reference' => 'REV-'.Str::upper(Str::random(8)),
@@ -1299,8 +1302,8 @@ class DemoSeeder extends Seeder
      *
      * @param  array<int, array{0: User, 1: string}>  $messages  couples [auteur, corps]
      * @param  array<int, int>|string  $readBy  'all' = tout le monde a tout lu ;
-     *         sinon map [user_id => index du dernier message lu] (les messages au-delà
-     *         restent non lus). Les participants absents de la map n'ont rien lu.
+     *                                          sinon map [user_id => index du dernier message lu] (les messages au-delà
+     *                                          restent non lus). Les participants absents de la map n'ont rien lu.
      */
     private function makeConversation(string $subject, array $messages, array|string $readBy = 'all'): void
     {
@@ -1346,7 +1349,7 @@ class DemoSeeder extends Seeder
      * Crée une réservation de démonstration polymorphe pour le client, rattachée
      * au bookable donné, avec une référence unique.
      *
-     * @param  \Illuminate\Database\Eloquent\Model  $bookable
+     * @param  Model  $bookable
      * @param  array<string, mixed>  $attributes
      */
     private function makeBooking(User $client, $bookable, BookingStatus $status, array $attributes): Booking
@@ -1403,6 +1406,51 @@ class DemoSeeder extends Seeder
             $user->assignRole($role);
         }
 
+        $this->assurerLeProfil($user, $role);
+
         return $user;
+    }
+
+    /**
+     * Donne au compte de démo le PROFIL que son rôle suppose (F8.23).
+     *
+     * ⚠️ **Défaut trouvé en éprouvant F8.23 sur la base locale, et il était
+     * PRÉEXISTANT** : aucun compte prestataire de démo n'avait de ligne
+     * `profiles`. Or `VehiclePolicy::create` et `MobilityServicePolicy::create`
+     * lisent `profiles.verification_status` — **tous les dépôts d'offre
+     * répondaient donc 403**, véhicules comme circuits, depuis F5.6. Le seeder
+     * créait bien un `Provider` marketplace au statut « validé », ce qui
+     * donnait l'illusion d'un prestataire en règle.
+     *
+     * ⚠️ Le PRODUIT, lui, est cohérent : `ProviderValidationService` aligne le
+     * profil quand un agent valide un prestataire, et l'inscription
+     * (`ProviderRegistrationController`) crée le profil. Le seeder était le seul
+     * chemin qui fabriquait un prestataire sans passer par l'un des deux.
+     *
+     * ⚠️ **`?->` silencieux à surveiller** : `ProviderValidationService::syncProfileVerification()`
+     * ne fait rien si le profil manque, sans rien signaler. Tout prestataire créé
+     * hors inscription reste donc muettement incapable de publier.
+     *
+     * Idempotent : `firstOrCreate` par utilisateur, jamais de réécriture.
+     */
+    private function assurerLeProfil(User $user, string $role): void
+    {
+        $type = match ($role) {
+            'prestataire' => ProfileType::PRESTATAIRE->value,
+            'proprietaire' => ProfileType::PROPRIETAIRE->value,
+            'entreprise' => ProfileType::ENTREPRISE->value,
+            default => ProfileType::CLIENT->value,
+        };
+
+        Profile::query()->firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'type' => $type,
+                // Les comptes de démonstration sont VÉRIFIÉS : la base de démo
+                // existe pour montrer le produit en marche, pas pour rejouer un
+                // parcours de KYC.
+                'verification_status' => ProfileVerificationStatus::VERIFIE->value,
+            ],
+        );
     }
 }

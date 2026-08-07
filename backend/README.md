@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **256 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **260 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **909 tests** automatisés (3151 assertions), tous verts ✅
+- **924 tests** automatisés (3219 assertions), tous verts ✅
 
 ---
 
@@ -51,7 +51,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 909 tests automatiques** — des petits programmes
+notifications) et **vérifié par 924 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -632,6 +632,13 @@ php artisan migrate --seed        # tables + rôles/permissions + référentiel 
 php artisan db:seed --class=CommunesSeeder   # (optionnel) communes officielles ANSD
 php artisan db:seed --class=DemoSeeder       # (optionnel, dev) annonces + demandes + réservations + gestion locative + profil & missions prestataire de démonstration
                                              # → remplit les 5 catalogues publics et les espaces connectés ; idempotent
+                                             # ⚠️ F8.23 : les comptes de démo reçoivent enfin un
+                                             #   PROFIL vérifié. Sans lui, aucun prestataire de
+                                             #   démonstration ne pouvait déposer la moindre offre
+                                             #   (403 muet) — les policies lisent
+                                             #   `profiles.verification_status`, que le seeder ne
+                                             #   renseignait pas. À REJOUER sur une base de démo
+                                             #   existante.
 php artisan db:seed --class=ContentSeeder    # (optionnel, dev) contenu éditorial de démo
                                              # → FAQ publiée ; appelle PublicPagesSeeder ; idempotent
 php artisan db:seed --class=PublicPagesSeeder # ⚠️ PAS optionnel, PAS de la démo : les pages

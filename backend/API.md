@@ -150,8 +150,19 @@ TypeScript miroir côté frontend Angular (phase F0).
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
 | GET | `/mobility-services` | public | `MobilityServiceController@index` |
+| GET | `/mobility-services/mine` | auth | `MobilityServiceManagementController@mine` |
 | GET | `/mobility-services/{id}` | public | `MobilityServiceController@show` |
+| POST | `/mobility-services` | auth + vérifié (policy `create`) | `MobilityServiceManagementController@store` |
+| PATCH | `/mobility-services/{mobility_service}` | auth (policy `update`) | `MobilityServiceManagementController@update` |
+| DELETE | `/mobility-services/{mobility_service}` | auth (policy `update`) | `MobilityServiceManagementController@destroy` |
 | POST | `/mobility-services/{id}/bookings` | auth + vérifié | `MobilityServiceBookingController@store` |
+
+> **F8.23 — les départs programmés deviennent écrivables.** La table était en
+> **lecture seule depuis B7.2** : le catalogue public `/mobilite` ne pouvait
+> être alimenté que par le seeder. La validation passe par la file générique du
+> back-office sous le type **`mobility_service`** (`GET /admin/queue?type=mobility_service`,
+> `PATCH /admin/validate/mobility_service/{id}`), avec la permission
+> `valider:vehicule` — aucune permission neuve.
 
 ### Build — construction
 

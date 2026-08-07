@@ -12,6 +12,17 @@ enum MobilityServiceStatus: string
     case SUSPENDU = 'suspendu';
     case REJETE = 'rejete';
 
+    /**
+     * Retiré par le prestataire (F8.23).
+     *
+     * ⚠️ Distinct de `REJETE` (décision de l'équipe) et de `SUSPENDU` (mesure
+     * subie) : `RETIRE` est un geste volontaire du prestataire sur un départ
+     * qui a déjà servi et qu'on ne peut donc pas supprimer. Aligné sur
+     * `VehicleStatus::RETIRE`, pour que le retrait d'une offre se lise partout
+     * de la même façon (cf. `OfferRetirementService`).
+     */
+    case RETIRE = 'retire';
+
     public function label(): string
     {
         return match ($this) {
@@ -19,6 +30,7 @@ enum MobilityServiceStatus: string
             self::PUBLIE => 'Publié',
             self::SUSPENDU => 'Suspendu',
             self::REJETE => 'Rejeté',
+            self::RETIRE => 'Retiré du catalogue',
         };
     }
 

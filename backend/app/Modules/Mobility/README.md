@@ -45,14 +45,14 @@ Publiés par des prestataires, validés par un agent, réservables via `Booking`
 
 | Champ | Rôle |
 |---|---|
-| `reference` (unique) | identifiant lisible (`MOB-…`) |
+| `reference` (unique) | identifiant lisible (`TRJ-…` depuis F8.23 ; `MOB-…` pour les lignes seedées) |
 | `provider_id` | prestataire |
 | `vehicle_id` | véhicule affecté (facultatif) |
 | `type` | enum `MobilityServiceType` (`navette`, `transfert`, `liaison`, `excursion`) |
 | `departure` / `destination` | itinéraire (villes/lieux) |
 | `departure_at` | départ programmé (facultatif) |
 | `capacity` / `price_xof` | places et tarif par place |
-| `status` | modération — enum `MobilityServiceStatus` |
+| `status` | modération — enum `MobilityServiceStatus` (+ `retire` depuis F8.23) |
 | `published_at` / `approved_by` | traçabilité de validation |
 
 ### Modèle `MobilityService`
@@ -75,14 +75,53 @@ Publiés par des prestataires, validés par un agent, réservables via `Booking`
 | PATCH | `/api/v1/vehicles/{vehicle}` | prestataire propriétaire (policy `update`) |
 | PATCH | `/api/v1/vehicles/{vehicle}/approve` | agent (`can:valider:vehicule`) — bloqué si conformité incomplète |
 | PATCH | `/api/v1/vehicles/{vehicle}/reject` | agent — `rejete` (motif facultatif) |
+| DELETE | `/api/v1/vehicles/{vehicle}` | prestataire propriétaire — retrait (F8.19) |
 | GET | `/api/v1/mobility-services` | public — recherche par type/ville/date |
 | GET | `/api/v1/mobility-services/{id}` | public — **fiche d'un départ + son remplissage** (F8.10) |
+| POST | `/api/v1/mobility-services` | prestataire **vérifié** (policy) → `en_attente_validation` (F8.23) |
+| GET | `/api/v1/mobility-services/mine` | prestataire — mes départs, tous statuts (F8.23) |
+| PATCH | `/api/v1/mobility-services/{mobility_service}` | prestataire propriétaire (policy `update`) (F8.23) |
+| DELETE | `/api/v1/mobility-services/{mobility_service}` | prestataire propriétaire — retrait (F8.23) |
+
+### ⚠️ F8.23 — les départs programmés étaient en LECTURE SEULE
+
+Depuis B7.2 et jusqu'à F8.23, `mobility_services` n'avait **aucune route
+d'écriture** : ni prestataire ni agent ne pouvait créer un départ. Le catalogue
+public `/mobilite` ne pouvait donc être alimenté **que par le seeder** — aucune
+navette AIBD, aucune liaison interurbaine, aucun transfert n'était mettable en
+vente en production. Tout l'aval était pourtant branché (fiche F8.10,
+réservation de places B7.4, commission F8.4, reversement F8.16.a).
+
+**Un départ n'est pas un véhicule** : un même minibus assure une navette le lundi
+et une liaison le mardi. Ce qui se vend est le **trajet daté** ; le véhicule n'en
+est que le moyen — et la source de ses photos (F8.18).
+
+Trois règles propres au départ, absentes du cycle d'un véhicule :
+
+1. **Le véhicule rattaché doit être le vôtre**, et sa capacité plafonne les
+   places mises en vente (`MobilityServiceRequest::verifierLeVehicule()`). Sans
+   cela, un prestataire illustrait son annonce avec le minibus d'un concurrent.
+2. **La capacité ne descend jamais sous les places déjà vendues**
+   (`UpdateMobilityServiceRequest`) : annuler des réservations est une décision
+   commerciale, pas l'effet de bord d'un champ corrigé.
+3. **Un départ passé ne se publie pas** — et s'il est opéré par un véhicule non
+   conforme, il ne se publie pas non plus (`MobilityServiceValidator::approve()`).
 
 ### Events & file de validation
 
 - `VehicleCreated` → `NotifyAgentsOfNewVehicle` (notifie `valider:vehicule`).
 - `VehicleValidated` → `NotifyProviderOfVehicleValidated` (le véhicule apparaît
   dans la recherche). Enregistrés dans `AppServiceProvider`.
+- **`MobilityServiceCreated` → `NotifyAgentsOfNewMobilityService`** (F8.23).
+  L'e-mail porte la **date du départ** : un trajet validé après son heure ne se
+  vend plus, c'est elle qui donne l'ordre de traitement de la file.
+- La validation d'un départ passe par la **file générique** du back-office, type
+  **`mobility_service`** (`MobilityServiceValidator`), permission
+  `valider:vehicule` — **aucune permission neuve**. La file trie les départs par
+  **échéance** et non par date de dépôt : seul type de la file à le faire.
+  ⚠️ `mobility_service` est le premier type **composé** : la route
+  `/admin/validate/{type}/{id}` le contraignait à `[a-z]+` et répondait **404**
+  (contrainte élargie à `[a-z_]+` en F8.23).
 
 ### Conformité (`VehicleComplianceChecker`)
 
@@ -92,10 +131,21 @@ Publiés par des prestataires, validés par un agent, réservables via `Booking`
 - **Pirogue** : `capacity`, `life_jackets_count` (gilets), `weather_compliant`,
   `provider_compliant`.
 
-### Policy
+### Policies
 
-`VehiclePolicy` : `create` = prestataire/entreprise **vérifié** ; `update` =
-prestataire propriétaire ou admin (enregistrée dans `AppServiceProvider`).
+`VehiclePolicy` et **`MobilityServicePolicy`** (F8.23) portent les **mêmes
+règles**, délibérément : `create` = prestataire/entreprise au profil **vérifié**,
+`update` = propriétaire de l'offre ou admin. Deux règles divergentes obligeraient
+le prestataire à comprendre pourquoi il peut publier un minibus mais pas la
+navette qu'il opère avec. Enregistrées dans `AppServiceProvider`.
+
+⚠️ **Le profil, pas le statut marketplace.** `create` lit
+`profiles.verification_status`, que `ProviderValidationService` aligne quand un
+agent valide un prestataire. Un prestataire créé **hors du parcours
+d'inscription** (seeder, import) n'a pas de ligne `profiles` : la synchronisation
+est alors un `?->` qui ne fait rien **en silence**, et le compte reste
+définitivement incapable de publier (403 sans explication). C'était le cas de
+tous les comptes de `DemoSeeder` — corrigé en F8.23.
 
 ### Supervision back-office (F7.2.j)
 

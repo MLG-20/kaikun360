@@ -16,6 +16,7 @@ import { MediaReviewComponent } from '../../shared/media-review/media-review';
 const TYPE_LABELS: Record<ValidationType, string> = {
   property: 'Bien immobilier',
   vehicle: 'Véhicule',
+  mobility_service: 'Départ programmé',
   experience: 'Expérience touristique',
   provider: 'Prestataire',
 };
