@@ -101,6 +101,32 @@ export class ProviderOffersPageComponent {
     }
   }
 
+  /**
+   * Ce que le statut IMPLIQUE pour la visibilité au catalogue, ou `null` quand
+   * l'offre est en ligne et qu'il n'y a rien à expliquer.
+   *
+   * ⚠️ **Le badge seul ne suffisait pas** : « En attente de validation » décrit
+   * un état administratif, il ne dit pas la conséquence — que l'offre, et donc
+   * toute modification qu'on lui apporte, **n'apparaît pas au catalogue**. Un
+   * prestataire qui corrige son prix puis va vérifier en ligne conclut que
+   * l'enregistrement a échoué, et recommence.
+   */
+  protected visibilityHint(status: string | null): string | null {
+    switch (status) {
+      case 'publie':
+        return null;
+      case 'rejete':
+        return "Refusée par l'équipe : corrigez l'annonce, elle repassera en validation.";
+      case 'suspendu':
+        return "Suspendue par l'équipe Kaikun : contactez le support.";
+      case 'retire':
+        return 'Retirée du catalogue à votre demande.';
+      default:
+        return "Pas encore visible au catalogue : un agent doit valider l'annonce. "
+          + 'Vos modifications sont bien enregistrées et seront publiées avec elle.';
+    }
+  }
+
   /** Demande confirmation avant de retirer (ou annule la demande en cours). */
   protected askRemove(cle: string | null): void {
     this.removalError.set(null);

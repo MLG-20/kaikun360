@@ -227,3 +227,11 @@
   border-radius: var(--k-radius-sm);
   font-size: 0.9rem;
 }
+
+// Ce que le statut implique pour la visibilité au catalogue (F8.19 bis) : le
+// badge dit l'état, cette ligne dit la conséquence.
+.of-card-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: var(--k-muted);
+}

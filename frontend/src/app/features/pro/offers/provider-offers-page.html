@@ -75,6 +75,9 @@
                     <span>· {{ price }} / jour</span>
                   }
                 </p>
+                @if (visibilityHint(v.status); as hint) {
+                  <p class="of-card-hint">{{ hint }}</p>
+                }
               </div>
               <div class="of-card-side">
                 <span class="of-badge" [class]="statusClass(v.status)">{{ v.status_label }}</span>
@@ -140,6 +143,9 @@
                     <span>· {{ price }}</span>
                   }
                 </p>
+                @if (visibilityHint(x.status); as hint) {
+                  <p class="of-card-hint">{{ hint }}</p>
+                }
               </div>
               <div class="of-card-side">
                 <span class="of-badge" [class]="statusClass(x.status)">{{ x.status_label }}</span>
