@@ -1,0 +1,147 @@
+<header class="ba-head">
+  <h1 class="ba-title">Mon compte</h1>
+  <p class="ba-sub">
+    Vos identifiants d'accès au back-office. Ce sont eux qui protègent l'ensemble
+    de la plateforme : gardez-les à jour, et ne les partagez avec personne.
+  </p>
+</header>
+
+@if (user(); as u) {
+  <section class="ba-card ba-identity">
+    <div>
+      <p class="ba-label">Connecté en tant que</p>
+      <p class="ba-name">{{ u.name }}</p>
+      <p class="ba-email">{{ u.email }}</p>
+    </div>
+    <span class="ba-role">{{ roleLabel() }}</span>
+  </section>
+
+  <div class="ba-grid">
+    <!-- ================= Adresse de connexion ================= -->
+    <section class="ba-card">
+      <h2 class="ba-card-title">Adresse de connexion</h2>
+      <p class="ba-card-hint">
+        C'est l'adresse avec laquelle vous vous connectez, et celle qui reçoit
+        le code de vérification à chaque ouverture de session. La changer déplace
+        aussi la récupération du compte : <strong>« mot de passe oublié » partira
+        désormais vers la nouvelle adresse</strong>. L'ancienne en est prévenue
+        par e-mail.
+      </p>
+
+      <form [formGroup]="emailForm" (ngSubmit)="submitEmail()">
+        <div class="ba-field">
+          <label for="ba-email">Nouvelle adresse</label>
+          <input id="ba-email" type="email" class="k-input" formControlName="email" autocomplete="email" />
+          @if (emailForm.controls.email.touched && emailForm.controls.email.invalid) {
+            <p class="ba-error">Saisissez une adresse e-mail valide.</p>
+          }
+        </div>
+
+        <div class="ba-field">
+          <label for="ba-email-pwd">Votre mot de passe actuel</label>
+          <input
+            id="ba-email-pwd"
+            type="password"
+            class="k-input"
+            formControlName="current_password"
+            autocomplete="current-password" />
+          <p class="ba-note">
+            Demandé parce qu'une session ouverte ne suffit pas à déplacer la
+            serrure : sans cela, un poste laissé déverrouillé permettrait de
+            prendre le compte définitivement.
+          </p>
+        </div>
+
+        @if (emailError(); as err) {
+          <p class="ba-error" role="alert">{{ err }}</p>
+        }
+        @if (emailDone(); as ok) {
+          <p class="ba-ok" role="status">{{ ok }}</p>
+        }
+
+        <button type="submit" class="k-btn k-btn--primary" [disabled]="emailBusy()">
+          {{ emailBusy() ? 'Enregistrement…' : 'Changer mon adresse' }}
+        </button>
+      </form>
+    </section>
+
+    <!-- ================= Mot de passe ================= -->
+    <section class="ba-card">
+      <h2 class="ba-card-title">Mot de passe</h2>
+      <p class="ba-card-hint">
+        Le changer <strong>ferme toutes vos autres sessions</strong> (autre
+        navigateur, téléphone) et ne garde que celle-ci. C'est le geste à faire
+        au moindre doute.
+      </p>
+
+      <form [formGroup]="passwordForm" (ngSubmit)="submitPassword()">
+        <div class="ba-field">
+          <label for="ba-current">Mot de passe actuel</label>
+          <input
+            id="ba-current"
+            type="password"
+            class="k-input"
+            formControlName="current_password"
+            autocomplete="current-password" />
+        </div>
+
+        <div class="ba-field">
+          <label for="ba-new">Nouveau mot de passe</label>
+          <input
+            id="ba-new"
+            type="password"
+            class="k-input"
+            formControlName="password"
+            autocomplete="new-password" />
+          @if (passwordForm.controls.password.touched && passwordForm.controls.password.invalid) {
+            <p class="ba-error">8 caractères minimum.</p>
+          }
+        </div>
+
+        <div class="ba-field">
+          <label for="ba-confirm">Confirmer le nouveau mot de passe</label>
+          <input
+            id="ba-confirm"
+            type="password"
+            class="k-input"
+            formControlName="password_confirmation"
+            autocomplete="new-password" />
+        </div>
+
+        @if (passwordError(); as err) {
+          <p class="ba-error" role="alert">{{ err }}</p>
+        }
+        @if (passwordDone()) {
+          <p class="ba-ok" role="status">
+            Mot de passe mis à jour. Vos autres sessions ont été fermées.
+          </p>
+        }
+
+        <button type="submit" class="k-btn k-btn--primary" [disabled]="passwordBusy()">
+          {{ passwordBusy() ? 'Enregistrement…' : 'Changer mon mot de passe' }}
+        </button>
+      </form>
+    </section>
+  </div>
+
+  <!-- Ce qui protège déjà le compte, dit une fois — pour que personne ne
+       cherche à activer une double authentification qui est déjà là. -->
+  <section class="ba-card ba-shield">
+    <h2 class="ba-card-title">Ce qui protège déjà ce compte</h2>
+    <ul>
+      <li>
+        <strong>Double authentification obligatoire</strong> : un code est envoyé
+        par e-mail à chaque connexion au back-office, et il ne peut pas être
+        désactivé pour un compte d'équipe.
+      </li>
+      <li>
+        <strong>Session de back-office à durée courte</strong> : elle expire
+        d'elle-même, y compris si vous oubliez de vous déconnecter.
+      </li>
+      <li>
+        <strong>Journal d'activité</strong> : changement d'adresse, de mot de
+        passe et actions sensibles sont horodatés et attribués.
+      </li>
+    </ul>
+  </section>
+}

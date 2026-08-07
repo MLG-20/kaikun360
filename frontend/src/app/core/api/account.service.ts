@@ -24,6 +24,16 @@ export interface UpdateProfilePayload {
   commune_id?: number | null;
   city?: string | null;
   preferences?: Record<string, unknown> | null;
+  /**
+   * Mot de passe actuel — **obligatoire dès que `email` change** (F8.22).
+   *
+   * ⚠️ L'adresse de connexion commande la récupération du compte : celui qui la
+   * contrôle peut demander un nouveau mot de passe et prendre la main. Le
+   * serveur l'exige donc, comme il le fait depuis toujours pour le changement de
+   * mot de passe. Seuls les comptes Google en sont dispensés (leur mot de passe
+   * est une chaîne aléatoire qu'ils n'ont jamais vue).
+   */
+  current_password?: string;
 }
 
 /**

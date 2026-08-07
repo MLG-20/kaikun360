@@ -70,6 +70,20 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Demande — Back-office Kaikun 360',
       },
       {
+        // F8.22 — « Mon compte » : identifiants de la personne connectée.
+        // ⚠️ **Aucune permission fine ici**, volontairement : entretenir ses
+        // propres identifiants n'est pas un module métier, c'est un droit de
+        // toute personne déjà entrée dans la salle de contrôle. Le back-office
+        // n'avait aucun écran de compte — le super administrateur était le seul
+        // à ne pas pouvoir changer son mot de passe.
+        path: 'mon-compte',
+        loadComponent: () =>
+          import('./account/backoffice-account-page').then(
+            (m) => m.BackofficeAccountPageComponent,
+          ),
+        title: 'Mon compte — Back-office Kaikun 360',
+      },
+      {
         // F8.12 — Messages : la boîte de réception du support. Le socle des
         // conversations existait depuis F3.7, mais aucun écran d'équipe : un
         // client pouvait écrire… à personne.

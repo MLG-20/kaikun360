@@ -11,7 +11,7 @@ API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 - **256 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **903 tests** automatisés (3131 assertions), tous verts ✅
+- **909 tests** automatisés (3151 assertions), tous verts ✅
 
 ---
 
@@ -51,7 +51,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 903 tests automatiques** — des petits programmes
+notifications) et **vérifié par 909 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -704,7 +704,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 903 tests, 3131 assertions — verts
+# 909 tests, 3151 assertions — verts
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -733,6 +733,34 @@ structurellement pas les voir. ⚠️ `MoneyJourneyTest` **fait passer le temps*
 (`travel`) plutôt que de figer les délais : la fin du service et les 7 jours de
 sûreté sont des règles d'argent, les neutraliser rendrait le test aveugle à leur
 inversion.
+
+---
+
+### Identifiants et prise de contrôle de compte (F8.22)
+
+⚠️ **L'adresse de connexion est une serrure, pas un champ de profil.** Elle
+commande `POST /auth/password/forgot` : qui la contrôle peut se faire envoyer un
+nouveau mot de passe et prendre le compte. `PATCH /users/me` exige donc
+`current_password` **dès qu'elle change** — comme `PATCH /users/me/password` le
+fait depuis F3.2b. Avant cette tranche, une session ouverte suffisait à déplacer
+l'adresse d'un **super administrateur**, puis à s'approprier le compte sans
+jamais connaître son mot de passe.
+
+Trois garanties accompagnent le changement, à ne pas défaire :
+
+| Garantie | Pourquoi |
+| --- | --- |
+| `current_password` exigé | Une session ouverte (poste déverrouillé, jeton dérobé) ne doit pas suffire |
+| **L'ANCIENNE adresse** est prévenue (`LoginEmailChangedNotification`) | Rend une prise de contrôle détectable. Prévenir la nouvelle informerait l'attaquant de sa réussite |
+| Les **autres sessions** sont fermées | Un jeton dérobé ne doit pas survivre au changement qu'il a permis |
+
+⚠️ **Exception : les comptes Google** (`google_id` non nul) en sont dispensés —
+leur mot de passe est une chaîne aléatoire posée à la création (`Str::password`),
+qu'ils n'ont jamais vue. Le leur réclamer les empêcherait de corriger leur
+adresse.
+
+⚠️ **L'e-mail d'alerte n'a pas d'interrupteur** dans les réglages du back-office
+(contrairement aux alertes internes de F7.2.l) : c'est un e-mail de sécurité.
 
 ---
 

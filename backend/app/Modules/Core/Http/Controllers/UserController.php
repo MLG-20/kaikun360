@@ -12,10 +12,12 @@ use App\Modules\Core\Http\Resources\UserResource;
 use App\Modules\Core\Notifications\VerificationCodeNotification;
 use App\Modules\Core\Services\AccountAnonymizer;
 use App\Modules\Core\Services\VerificationService;
+use App\Notifications\LoginEmailChangedNotification;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 /**
  * Gestion du compte de l'utilisateur connecté (phase B1.5, étendue F3.2b).
@@ -54,6 +56,8 @@ class UserController extends Controller
 
         // Un changement d'e-mail / de téléphone impose une re-vérification.
         $emailChanged = array_key_exists('email', $data) && $data['email'] !== $user->email;
+        // Retenue avant l'écriture : c'est elle qu'on préviendra du changement.
+        $ancienEmail = $user->email;
         $phoneChanged = array_key_exists('phone', $data) && $data['phone'] !== $user->phone;
 
         DB::transaction(function () use ($user, $data, $emailChanged, $phoneChanged) {
@@ -93,6 +97,28 @@ class UserController extends Controller
                 $user->profile()->update(['preferences' => $data['preferences']]);
             }
         });
+
+        // F8.22 — CHANGER L'ADRESSE DE CONNEXION EST UN ACTE DE SÉCURITÉ.
+        //
+        // Elle commande toute la récupération de compte : celui qui la contrôle
+        // peut demander un nouveau mot de passe et prendre le compte. Deux
+        // conséquences, en plus du mot de passe actuel déjà exigé par la requête.
+        if ($emailChanged) {
+            // 1. Prévenir l'ANCIENNE adresse — jamais la nouvelle : l'alerte n'a
+            //    de valeur que pour celui qui perd l'accès.
+            NotificationFacade::route('mail', $ancienEmail)
+                ->notify(new LoginEmailChangedNotification($ancienEmail, $user->email));
+
+            // 2. Fermer les AUTRES sessions, comme le fait déjà le changement de
+            //    mot de passe : si l'adresse a été changée à cause d'un jeton
+            //    dérobé, laisser ce jeton vivant ne réparerait rien.
+            $current = $user->currentAccessToken();
+            $user->tokens()->when($current, fn ($q) => $q->where('id', '!=', $current->id))->delete();
+
+            activity()->causedBy($user)->performedOn($user)
+                ->withProperties(['from' => $ancienEmail, 'to' => $user->email])
+                ->log('Changement d\'adresse de connexion');
+        }
 
         // Après enregistrement (l'utilisateur porte déjà le nouveau contact), on
         // émet les codes : la notification route vers le NOUVEL e-mail / numéro.

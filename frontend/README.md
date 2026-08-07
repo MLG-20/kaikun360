@@ -259,6 +259,23 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   photo devient la couverture** — c'est elle, et elle seule, qui illustre la
   carte du catalogue. L'écran back-office, lui, n'a rien demandé : il affichait
   déjà les galeries depuis F8.1, il n'était que privé de contenu.
+  **F8.22 « Mon compte » au back-office** (`features/backoffice/account/`, route
+  `mon-compte`) : le profil (F3.2) n'est monté que dans les espaces client,
+  propriétaire, prestataire et entreprise. Un **super administrateur**, qui n'a
+  aucun de ces espaces, ne pouvait donc changer ni son mot de passe ni son
+  adresse **depuis nulle part** — le compte le plus puissant de la plateforme
+  était le seul à ne pas pouvoir entretenir ses identifiants. ⚠️ **Deux
+  formulaires séparés, jamais un seul** : changer d'adresse déplace la serrure
+  (la récupération de compte partira ailleurs), changer de mot de passe ferme les
+  autres sessions. Les fondre ferait faire les deux à qui n'en voulait qu'un.
+  ⚠️ **Hors de la liste des rubriques** du rail (qui reflète les 14 modules du
+  CDC §6 et le §7) : entretenir ses identifiants n'est pas un module métier. Il
+  vit au pied du rail et sous l'identité de l'en-tête, là où on le cherche.
+  ⚠️ **L'écran profil client a suivi** : il envoie l'e-mail à chaque
+  enregistrement et aurait buté sur un 422 depuis que le serveur exige le mot de
+  passe actuel pour un changement d'adresse. Le champ **n'apparaît que si
+  l'adresse est réellement modifiée** — le réclamer pour corriger un numéro de
+  téléphone serait une friction gratuite.
   **F8.21 Fiche d'un message de contact** (`features/backoffice/messages/detail/`,
   route `messages/contact/:id`) : la liste portait le **message entier** dans une
   colonne — choix de F8.15.c, au motif qu'il n'y avait « aucune fiche à ouvrir

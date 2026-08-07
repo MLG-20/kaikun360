@@ -120,6 +120,12 @@
     </nav>
 
     <div class="bo-side__foot">
+      <!-- ⚠️ Hors de la liste des rubriques, volontairement : celle-ci reflète
+           les 14 modules du CDC §6 et le §7. « Mon compte » n'est pas un module
+           métier, c'est l'entretien de ses propres identifiants. -->
+      <a class="bo-side__link" routerLink="/back-office/mon-compte" routerLinkActive="is-active">
+        Mon compte
+      </a>
       <a class="bo-side__link" routerLink="/">Retour au site</a>
       <button type="button" class="bo-side__link bo-side__logout" (click)="logout()">
         Se déconnecter
@@ -145,13 +151,15 @@
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
           Session sécurisée
         </span>
-        <div class="bo-user">
+        <!-- F8.22 — l'identité mène à « Mon compte » : c'est le premier endroit
+             où l'on clique pour changer son mot de passe. -->
+        <a class="bo-user" routerLink="/back-office/mon-compte" title="Mon compte">
           <span class="bo-user__avatar">{{ (user()?.name || '?').charAt(0) }}</span>
           <span class="bo-user__meta">
             <span class="bo-user__name">{{ user()?.name }}</span>
             <span class="bo-user__role">{{ roleLabel() }}</span>
           </span>
-        </div>
+        </a>
       </div>
     </header>
 

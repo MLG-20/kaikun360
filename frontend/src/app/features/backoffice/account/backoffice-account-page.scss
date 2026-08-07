@@ -1,0 +1,140 @@
+// Écran « Mon compte » du back-office (F8.22). Préfixe ba-.
+:host {
+  display: block;
+  max-width: 1000px;
+}
+
+.ba-head {
+  margin-bottom: 18px;
+}
+
+.ba-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.ba-sub {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--k-muted);
+}
+
+.ba-card {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.ba-identity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.ba-label {
+  margin: 0 0 2px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--k-muted);
+}
+
+.ba-name {
+  margin: 0;
+  font-weight: 700;
+  color: var(--k-ink);
+}
+
+.ba-email {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  color: var(--k-muted);
+}
+
+// Le rôle est affiché en clair : on protège d'autant mieux qu'on sait ce qu'on
+// tient entre les mains.
+.ba-role {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: var(--k-radius-pill);
+  background: rgba(3, 72, 251, 0.1);
+  color: var(--k-brand);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ba-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.ba-card-title {
+  margin: 0 0 6px;
+  font-size: 1.02rem;
+  color: var(--k-ink);
+}
+
+.ba-card-hint {
+  margin: 0 0 16px;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--k-muted);
+}
+
+.ba-field {
+  margin-bottom: 14px;
+
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--k-ink);
+  }
+}
+
+.ba-note {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--k-muted);
+}
+
+.ba-error {
+  margin: 8px 0 0;
+  font-size: 0.84rem;
+  color: var(--k-danger);
+}
+
+.ba-ok {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--k-radius-sm);
+  background: rgba(56, 167, 116, 0.12);
+  color: var(--k-green-600);
+  font-size: 0.86rem;
+}
+
+.ba-shield {
+  margin-top: 16px;
+
+  ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--k-muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  strong {
+    color: var(--k-ink);
+  }
+}

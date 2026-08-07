@@ -8,7 +8,9 @@ use App\Models\Region;
 use App\Models\User;
 use App\Modules\Core\Models\Profile;
 use App\Modules\Core\Notifications\VerificationCodeNotification;
+use App\Notifications\LoginEmailChangedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
@@ -31,6 +33,128 @@ class UserAccountTest extends TestCase
         Profile::factory()->create(['user_id' => $user->id]);
 
         return $user->load('profile');
+    }
+
+    // =========================================================================
+    // F8.22 — L'ADRESSE DE CONNEXION EST UNE SERRURE
+    // =========================================================================
+
+    /**
+     * ⚠️ Le trou que ces tests ferment : avec une session ouverte (poste laissé
+     * déverrouillé, jeton dérobé), n'importe qui pouvait remplacer l'e-mail d'un
+     * compte — **y compris celui d'un super administrateur** — puis demander un
+     * nouveau mot de passe sur cette adresse. Le compte changeait de mains sans
+     * que le mot de passe soit jamais connu.
+     */
+    public function test_changer_d_email_exige_le_mot_de_passe_actuel(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'titulaire@exemple.sn',
+            'password' => 'motdepasse-actuel',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->patchJson('/api/v1/users/me', ['email' => 'pirate@exemple.sn'])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('current_password');
+
+        $this->assertSame('titulaire@exemple.sn', $user->fresh()->email);
+    }
+
+    public function test_un_mauvais_mot_de_passe_ne_change_pas_l_email(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'titulaire@exemple.sn',
+            'password' => 'motdepasse-actuel',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->patchJson('/api/v1/users/me', [
+            'email' => 'pirate@exemple.sn',
+            'current_password' => 'au-hasard',
+        ])->assertStatus(422)->assertJsonValidationErrors('current_password');
+
+        $this->assertSame('titulaire@exemple.sn', $user->fresh()->email);
+    }
+
+    /** Le reste du profil ne réclame évidemment rien. */
+    public function test_modifier_son_nom_ne_demande_aucun_mot_de_passe(): void
+    {
+        $user = User::factory()->create(['email' => 'titulaire@exemple.sn']);
+
+        Sanctum::actingAs($user);
+
+        $this->patchJson('/api/v1/users/me', ['name' => 'Nouveau Nom'])->assertOk();
+
+        $this->assertSame('Nouveau Nom', $user->fresh()->name);
+    }
+
+    /** Renvoyer sa PROPRE adresse avec le formulaire ne doit rien réclamer. */
+    public function test_renvoyer_la_meme_adresse_ne_demande_aucun_mot_de_passe(): void
+    {
+        $user = User::factory()->create(['email' => 'titulaire@exemple.sn']);
+
+        Sanctum::actingAs($user);
+
+        $this->patchJson('/api/v1/users/me', [
+            'email' => 'titulaire@exemple.sn',
+            'name' => 'Titulaire',
+        ])->assertOk();
+    }
+
+    public function test_le_changement_d_email_previent_l_ancienne_adresse_et_ferme_les_autres_sessions(): void
+    {
+        NotificationFacade::fake();
+
+        $user = User::factory()->create([
+            'email' => 'titulaire@exemple.sn',
+            'password' => 'motdepasse-actuel',
+        ]);
+
+        // Une autre session ouverte ailleurs (téléphone, autre navigateur).
+        $autreSession = $user->createToken('autre-appareil');
+
+        Sanctum::actingAs($user);
+
+        $this->patchJson('/api/v1/users/me', [
+            'email' => 'nouvelle@exemple.sn',
+            'current_password' => 'motdepasse-actuel',
+        ])->assertOk();
+
+        $this->assertSame('nouvelle@exemple.sn', $user->fresh()->email);
+
+        // ⚠️ L'alerte part à l'ANCIENNE adresse : prévenir la nouvelle
+        // reviendrait à informer l'attaquant de sa réussite.
+        NotificationFacade::assertSentOnDemand(
+            LoginEmailChangedNotification::class,
+            fn ($notification, $channels, $notifiable) => $notifiable->routes['mail'] === 'titulaire@exemple.sn',
+        );
+
+        // Les autres sessions tombent : un jeton dérobé ne doit pas survivre.
+        $this->assertDatabaseMissing('personal_access_tokens', [
+            'id' => $autreSession->accessToken->id,
+        ]);
+    }
+
+    /**
+     * ⚠️ Exception assumée : un compte Google n'a jamais vu son mot de passe
+     * (chaîne aléatoire posée à la création). Le lui demander l'empêcherait
+     * purement et simplement de corriger son adresse.
+     */
+    public function test_un_compte_google_change_son_email_sans_mot_de_passe(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'via-google@exemple.sn',
+            'google_id' => 'google-123',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->patchJson('/api/v1/users/me', ['email' => 'autre@exemple.sn'])->assertOk();
+
+        $this->assertSame('autre@exemple.sn', $user->fresh()->email);
     }
 
     public function test_me_renvoie_l_utilisateur_connecte(): void
@@ -71,7 +195,13 @@ class UserAccountTest extends TestCase
         $user->forceFill(['email_verified_at' => now()])->save();
         Sanctum::actingAs($user);
 
-        $this->patchJson('/api/v1/users/me', ['email' => 'nouvel@exemple.sn'])
+        // ⚠️ F8.22 — le mot de passe actuel accompagne désormais tout changement
+        // d'adresse : elle commande la récupération du compte (`password/forgot`).
+        // Le mot de passe de la factory est « password ».
+        $this->patchJson('/api/v1/users/me', [
+            'email' => 'nouvel@exemple.sn',
+            'current_password' => 'password',
+        ])
             ->assertOk()
             ->assertJsonPath('data.verification.email_required', true);
 

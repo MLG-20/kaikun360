@@ -70,7 +70,27 @@ export class ProfilePageComponent {
     region_id: this.fb.control<number | null>(null),
     department_id: this.fb.control<number | null>(null),
     commune_id: this.fb.control<number | null>(null),
+    /**
+     * ⚠️ F8.22 — exigé par le serveur **dès que l'adresse change**, et par lui
+     * seul : l'adresse de connexion commande la récupération du compte
+     * (« mot de passe oublié » part vers elle). Le champ n'apparaît donc qu'au
+     * moment où l'on touche à l'e-mail — le réclamer pour corriger un numéro de
+     * téléphone serait une friction gratuite.
+     */
+    current_password: this.fb.nonNullable.control(''),
   });
+
+  /** L'adresse telle qu'elle est enregistrée, pour détecter un vrai changement. */
+  private readonly emailEnregistre = signal('');
+
+  /** L'utilisateur est-il en train de changer son adresse de connexion ? */
+  protected readonly emailChange = computed(
+    () => this.emailSaisi() !== '' && this.emailSaisi() !== this.emailEnregistre(),
+  );
+
+  /** Valeur courante du champ e-mail, suivie en signal pour piloter l'affichage. */
+  private readonly emailSaisi = signal('');
+
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   protected readonly formError = signal<string | null>(null);
@@ -155,6 +175,11 @@ export class ProfilePageComponent {
   constructor() {
     this.load();
     this.wireLocationCascade();
+    // Le champ « mot de passe actuel » n'apparaît qu'au moment où l'adresse de
+    // connexion est réellement modifiée : d'où ce suivi de la saisie.
+    this.form.controls.email.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((valeur) => this.emailSaisi.set(valeur ?? ''));
   }
 
   // ─────────────────────────── Chargement ───────────────────────────
@@ -174,6 +199,8 @@ export class ProfilePageComponent {
           },
           { emitEvent: false },
         );
+        this.emailEnregistre.set(user.email ?? '');
+        this.emailSaisi.set(user.email ?? '');
         this.prefillLocation(user);
         this.loading.set(false);
         this.auth.setCurrentUser(user);
@@ -277,6 +304,9 @@ export class ProfilePageComponent {
       .updateProfile({
         name: raw.name,
         email: raw.email,
+        // Envoyé UNIQUEMENT quand l'adresse change : le serveur ne le réclame
+        // pas autrement, et une clé vide déclencherait une erreur inutile.
+        ...(this.emailChange() ? { current_password: raw.current_password } : {}),
         phone: clean(raw.phone),
         address: clean(raw.address),
         region_id: raw.region_id,

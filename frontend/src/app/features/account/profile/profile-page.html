@@ -126,6 +126,29 @@
         }
       </div>
 
+      <!-- F8.22 — le mot de passe actuel n'est demandé QUE si l'adresse change.
+           C'est elle qui commande la récupération du compte : sans cette garde,
+           une session ouverte suffirait à déplacer la serrure. -->
+      @if (emailChange()) {
+        <div class="k-field">
+          <label class="k-label" for="pf-current-password">Votre mot de passe actuel</label>
+          <input
+            id="pf-current-password"
+            class="k-input"
+            type="password"
+            formControlName="current_password"
+            autocomplete="current-password" />
+          <span class="k-hint">
+            Demandé parce que vous changez d'adresse de connexion : c'est elle qui
+            reçoit les liens de récupération de votre compte. L'ancienne adresse
+            sera prévenue du changement.
+          </span>
+          @if (serverError('current_password'); as msg) {
+            <span class="k-error">{{ msg }}</span>
+          }
+        </div>
+      }
+
       <!-- Panneau de re-vérification e-mail -->
       @if (pendingEmail()) {
         <div class="pf-verify-panel">

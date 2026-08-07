@@ -285,6 +285,18 @@
 }
 
 .bo-user {
+  // F8.22 — devenu un lien vers « Mon compte » : il garde l'apparence d'un bloc
+  // d'identité et ne se signale qu'au survol. Un en-tête ne doit pas se mettre à
+  // ressembler à une barre de navigation.
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--k-radius-sm);
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--k-cream);
+  }
+
   display: flex;
   align-items: center;
   gap: 10px;
