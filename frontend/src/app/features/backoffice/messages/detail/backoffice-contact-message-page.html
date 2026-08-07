@@ -1,0 +1,89 @@
+<app-back-link class="cm-back" label="Messages de contact" fallback="/back-office/messages" direct />
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="cm-state" role="status">Chargement du message…</p>
+  }
+  @case ('failed') {
+    <div class="cm-state cm-state--error">
+      <p>Ce message est introuvable, ou n'a pas pu être chargé.</p>
+      <a class="k-btn k-btn--ghost" routerLink="/back-office/messages">Retour aux messages</a>
+    </div>
+  }
+  @default {
+    @if (message(); as m) {
+      <article class="cm-card">
+        <!-- 1. Qui écrit, et comment le joindre — la seule chose qui compte
+             d'abord : la réponse partira par e-mail ou par téléphone. -->
+        <header class="cm-head">
+          <div>
+            <h1 class="cm-name">{{ m.name }}</h1>
+            <a class="cm-email" [href]="'mailto:' + m.email">{{ m.email }}</a>
+          </div>
+
+          <span class="cm-chip" [class.is-due]="m.status === 'nouveau'">
+            {{ m.status === 'nouveau' ? 'À traiter' : 'Traité' }}
+          </span>
+        </header>
+
+        <dl class="cm-meta">
+          <div>
+            <dt>Sujet</dt>
+            <dd>{{ m.subject || 'Sans sujet' }}</dd>
+          </div>
+          <div>
+            <dt>Reçu le</dt>
+            <dd>{{ m.created_at | date: 'dd/MM/yyyy à HH:mm' : '' : 'fr' }}</dd>
+          </div>
+          @if (m.status === 'traite') {
+            <div>
+              <!-- Qui a traité : c'est ce qui évite le double rappel. -->
+              <dt>Traité par</dt>
+              <dd>
+                {{ m.handled_by || 'Équipe Kaikun' }}
+                @if (m.handled_at) {
+                  <span class="cm-muted">
+                    le {{ m.handled_at | date: 'dd/MM/yyyy à HH:mm' : '' : 'fr' }}
+                  </span>
+                }
+              </dd>
+            </div>
+          }
+        </dl>
+
+        <!-- 2. Le message ENTIER : c'est la raison d'être de cette fiche.
+             `white-space: pre-wrap` conserve les retours à la ligne du visiteur. -->
+        <section class="cm-body">
+          <h2 class="cm-body-title">Message</h2>
+          <p class="cm-text">{{ m.message }}</p>
+        </section>
+
+        @if (actionError(); as err) {
+          <p class="k-error" role="alert">{{ err }}</p>
+        }
+
+        <!-- 3. Les gestes. Répondre d'abord : c'est ce qu'on vient faire. -->
+        <footer class="cm-actions">
+          <a class="k-btn k-btn--primary" [href]="mailtoFor(m)">Répondre par e-mail</a>
+
+          <button type="button" class="k-btn k-btn--ghost" [disabled]="busy()" (click)="toggleHandled()">
+            @if (busy()) {
+              Enregistrement…
+            } @else if (m.status === 'nouveau') {
+              Marquer traité
+            } @else {
+              Rouvrir
+            }
+          </button>
+        </footer>
+
+        <p class="cm-note">
+          Ce message vient du formulaire public : son auteur n'a le plus souvent
+          pas de compte, il n'y a donc pas de fil de discussion ici. On répond
+          par e-mail ou par téléphone, puis on marque le message traité — c'est
+          ce qui évite que deux agents contactent le même prospect.
+        </p>
+      </article>
+    }
+  }
+}

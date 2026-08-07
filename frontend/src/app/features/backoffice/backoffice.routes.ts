@@ -85,6 +85,18 @@ export const BACKOFFICE_ROUTES: Routes = [
       {
         // F8.12 — Fiche d'un fil : l'échange, la réponse, la réassignation et
         // la clôture.
+        // ⚠️ F8.21 — DÉCLARÉE AVANT `messages/:id`, sinon « contact » serait
+        // pris pour l'identifiant d'un fil de discussion.
+        path: 'messages/contact/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('messages') },
+        loadComponent: () =>
+          import('./messages/detail/backoffice-contact-message-page').then(
+            (m) => m.BackofficeContactMessagePageComponent,
+          ),
+        title: 'Message de contact — Back-office Kaikun 360',
+      },
+      {
         path: 'messages/:id',
         canActivate: [permissionGuard],
         data: { permissions: permissionsFor('messages') },

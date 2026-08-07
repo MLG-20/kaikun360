@@ -286,6 +286,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // Le dépôt public est exposé dans routes/transversal.php.
     Route::middleware('can:traiter:demandes')->group(function () {
         Route::get('/contact-messages', [ContactController::class, 'index']);
+        // F8.21 — fiche d'un message : le texte entier, le suivi et les gestes.
+        Route::get('/contact-messages/{contactMessage}', [ContactController::class, 'show'])
+            ->whereNumber('contactMessage');
         Route::patch('/contact-messages/{contactMessage}', [ContactController::class, 'update'])
             ->whereNumber('contactMessage');
 

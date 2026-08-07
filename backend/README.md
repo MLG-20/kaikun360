@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **255 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **256 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **900 tests** automatisés (3124 assertions), tous verts ✅
+- **903 tests** automatisés (3131 assertions), tous verts ✅
 
 ---
 
@@ -51,7 +51,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 900 tests automatiques** — des petits programmes
+notifications) et **vérifié par 903 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -527,7 +527,7 @@ backend/
 │   └── emails/          # Gabarit unique des e-mails (HTML + texte brut)
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 255 endpoints
+├── API.md               # Référence des 256 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -704,7 +704,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 900 tests, 3124 assertions — verts
+# 903 tests, 3131 assertions — verts
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -740,7 +740,7 @@ inversion.
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 255 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 256 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |

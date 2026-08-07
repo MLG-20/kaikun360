@@ -94,12 +94,17 @@
     <p class="ms-count">{{ contactPending() }} message(s) à traiter</p>
 
     <div class="ms-table-wrap">
-      <table class="ms-table">
+      <table class="ms-table ms-table--contact">
         <thead>
           <tr>
+            <!--
+              F8.21 — TROIS colonnes au lieu de cinq. Le tableau portait le
+              message ENTIER dans une colonne : il débordait de l'écran (il
+              fallait défiler horizontalement pour atteindre le bouton) et
+              tronquait quand même les messages longs. Une liste sert à repérer
+              et à trier ; le texte se lit sur la fiche.
+            -->
             <th>Expéditeur</th>
-            <th>Sujet</th>
-            <th>Message</th>
             <th>Reçu</th>
             <th>Suivi</th>
           </tr>
@@ -108,19 +113,13 @@
           @for (m of contactRows(); track m.id) {
             <tr class="ms-row" [class.is-awaiting]="m.status === 'nouveau'">
               <td>
-                <span class="ms-strong">{{ m.name }}</span>
-                <!-- Le seul moyen de répondre : on le rend cliquable. -->
+                <!-- Le nom ouvre la fiche ; l'e-mail reste cliquable à côté,
+                     c'est le seul moyen de répondre et il doit rester à un clic. -->
+                <a class="ms-name-link" [routerLink]="['/back-office/messages/contact', m.id]">
+                  {{ m.name }}
+                </a>
                 <a class="ms-link" [href]="'mailto:' + m.email">{{ m.email }}</a>
-              </td>
-              <td>
                 <span class="ms-place">{{ m.subject || 'Sans sujet' }}</span>
-              </td>
-              <td>
-                <!--
-                  Le message ENTIER, pas un extrait : contrairement à un fil, il
-                  n'y a pas de fiche à ouvrir — cette ligne est tout ce qu'on a.
-                -->
-                <span class="ms-message">{{ m.message }}</span>
               </td>
               <td>
                 <span class="ms-strong">{{ age(m.created_at) }}</span>
@@ -152,7 +151,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="5" class="ms-empty">
+              <td colspan="3" class="ms-empty">
                 @if (contactStatus() === 'nouveau') {
                   Aucun message en attente. Tout le courrier de la page Contact a
                   été traité.

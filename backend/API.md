@@ -469,6 +469,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | DELETE | `/admin/faqs/{faq}` | auth + `can:gerer:parametres` | `FaqController@destroy` |
 | PATCH | `/admin/faqs/{faq}` | auth + `can:gerer:parametres` | `FaqController@update` |
 | GET | `/admin/contact-messages` | auth + `can:traiter:demandes` | `ContactController@index` |
+| GET | `/admin/contact-messages/{contactMessage}` | auth + `can:repondre:messages` | `ContactController@show` |
 | PATCH | `/admin/contact-messages/{contactMessage}` | auth + `can:traiter:demandes` | `ContactController@update` |
 | GET | `/admin/mandates` | auth + `can:consulter:dashboard-admin` | `AdminDossierController@mandates` |
 | GET | `/admin/mobility-services` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@mobilityServices` |

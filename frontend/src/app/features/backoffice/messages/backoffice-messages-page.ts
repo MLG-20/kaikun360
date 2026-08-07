@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Router } from '@angular/router';
 
 import {
@@ -48,7 +49,7 @@ type Tab = 'threads' | 'contact';
  */
 @Component({
   selector: 'app-backoffice-messages-page',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './backoffice-messages-page.html',
   styleUrl: './backoffice-messages-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

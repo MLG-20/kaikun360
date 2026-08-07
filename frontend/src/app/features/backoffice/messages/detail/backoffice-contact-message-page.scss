@@ -1,0 +1,129 @@
+// Fiche d'un message de contact (F8.21).
+
+.cm-back {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.cm-state {
+  margin: 2rem 0;
+  color: var(--k-muted);
+
+  &--error {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+}
+
+.cm-card {
+  max-width: 820px;
+  padding: 1.5rem;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+}
+
+.cm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--k-line);
+}
+
+.cm-name {
+  margin: 0 0 0.15rem;
+  font-size: 1.25rem;
+  color: var(--k-ink);
+}
+
+.cm-email {
+  color: var(--k-brand-600);
+  font-size: 0.92rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.cm-chip {
+  flex-shrink: 0;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--k-green) 14%, transparent);
+  color: var(--k-green-600);
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  &.is-due {
+    background: color-mix(in srgb, var(--k-gold) 16%, transparent);
+    color: var(--k-gold);
+  }
+}
+
+.cm-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1.1rem 0 0;
+
+  dt {
+    margin-bottom: 0.15rem;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--k-muted);
+  }
+
+  dd {
+    margin: 0;
+    color: var(--k-ink);
+  }
+}
+
+.cm-muted {
+  color: var(--k-muted);
+}
+
+.cm-body {
+  margin-top: 1.5rem;
+}
+
+.cm-body-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--k-muted);
+}
+
+.cm-text {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  background: var(--k-cream);
+  border-radius: var(--k-radius-sm);
+  color: var(--k-ink);
+  line-height: 1.65;
+  // Conserve les retours à la ligne saisis par le visiteur, sans laisser une
+  // URL très longue déborder de la carte.
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.cm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.cm-note {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--k-line);
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}

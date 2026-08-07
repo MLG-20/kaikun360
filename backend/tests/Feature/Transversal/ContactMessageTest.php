@@ -121,6 +121,66 @@ class ContactMessageTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
+    /**
+     * F8.21 — la fiche d'un message. La liste ne porte plus le texte entier :
+     * une colonne contenant un paragraphe rendait le tableau illisible sans
+     * défilement horizontal, et tronquait quand même les messages longs.
+     */
+    public function test_un_agent_ouvre_la_fiche_d_un_message(): void
+    {
+        $long = str_repeat('Bonjour, je cherche une villa à Saly pour août. ', 20);
+
+        $message = ContactMessage::create([
+            'name' => 'Awa Diop', 'email' => 'awa@example.com',
+            'subject' => 'Question villa', 'message' => $long,
+            'status' => ContactMessageStatus::NOUVEAU->value,
+        ]);
+
+        Sanctum::actingAs($this->agent());
+
+        $this->getJson("/api/v1/admin/contact-messages/{$message->id}")
+            ->assertOk()
+            ->assertJsonPath('data.contact_message.id', $message->id)
+            ->assertJsonPath('data.contact_message.email', 'awa@example.com')
+            // Le texte arrive ENTIER : c'est la raison d'être de la fiche.
+            ->assertJsonPath('data.contact_message.message', $long);
+    }
+
+    public function test_la_fiche_d_un_message_dit_quel_agent_l_a_traite(): void
+    {
+        $message = ContactMessage::create([
+            'name' => 'Awa', 'email' => 'awa@example.com',
+            'message' => 'Bonjour', 'status' => ContactMessageStatus::NOUVEAU->value,
+        ]);
+
+        $agent = $this->agent();
+        Sanctum::actingAs($agent);
+
+        $this->patchJson("/api/v1/admin/contact-messages/{$message->id}", [
+            'status' => ContactMessageStatus::TRAITE->value,
+        ])->assertOk();
+
+        // ⚠️ Sans le chargement de la relation, `handled_by` serait absent
+        // (`whenLoaded`) et deux agents rappelleraient le même prospect.
+        $this->getJson("/api/v1/admin/contact-messages/{$message->id}")
+            ->assertOk()
+            ->assertJsonPath('data.contact_message.handled_by', $agent->name)
+            ->assertJsonPath('data.contact_message.status', ContactMessageStatus::TRAITE->value);
+    }
+
+    public function test_la_fiche_est_fermee_a_qui_n_a_pas_la_permission(): void
+    {
+        $message = ContactMessage::create([
+            'name' => 'Awa', 'email' => 'awa@example.com',
+            'message' => 'Bonjour', 'status' => ContactMessageStatus::NOUVEAU->value,
+        ]);
+
+        $this->getJson("/api/v1/admin/contact-messages/{$message->id}")->assertUnauthorized();
+
+        Sanctum::actingAs(User::factory()->create());
+        $this->getJson("/api/v1/admin/contact-messages/{$message->id}")->assertForbidden();
+    }
+
     public function test_un_agent_marque_un_message_comme_traite(): void
     {
         $message = ContactMessage::create([

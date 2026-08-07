@@ -109,6 +109,18 @@
   th:nth-child(4) { width: 16%; }
   th:nth-child(5) { width: 15%; }
 
+  // F8.21 — la table des messages de contact n'a que TROIS colonnes. Sans cette
+  // variante, elle héritait des largeurs et du `min-width` prévus pour cinq :
+  // d'où la barre de défilement horizontale, sur un tableau qui n'avait
+  // pourtant plus rien à cacher hors de l'écran.
+  &--contact {
+    min-width: 0;
+
+    th:nth-child(1) { width: 46%; }
+    th:nth-child(2) { width: 22%; }
+    th:nth-child(3) { width: 32%; }
+  }
+
   th,
   td {
     text-align: left;
@@ -218,6 +230,21 @@
   font-weight: 600;
 }
 
+// F8.21 — le nom de l'expéditeur ouvre sa fiche. Il garde le poids visuel d'un
+// titre de ligne (`.ms-strong`) tout en se signalant comme un lien au survol :
+// une ligne cliquable qui ne le dit pas ne se clique pas.
+.ms-name-link {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--k-ink);
+
+  &:hover {
+    color: var(--k-brand-600);
+    text-decoration: underline;
+  }
+}
+
 .ms-empty {
   text-align: center;
   color: var(--k-muted);
@@ -283,16 +310,4 @@
     line-height: 1.5;
     text-align: center;
   }
-}
-
-// Le message de contact est affiché EN ENTIER (aucune fiche à ouvrir derrière) :
-// on borne sa largeur pour que la colonne ne dévore pas la table, et on respecte
-// les retours à la ligne du visiteur.
-.ms-message {
-  display: block;
-  max-width: 46ch;
-  white-space: pre-line;
-  font-size: 0.86rem;
-  line-height: 1.5;
-  color: var(--k-ink);
 }

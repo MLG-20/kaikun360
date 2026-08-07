@@ -259,6 +259,19 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   photo devient la couverture** — c'est elle, et elle seule, qui illustre la
   carte du catalogue. L'écran back-office, lui, n'a rien demandé : il affichait
   déjà les galeries depuis F8.1, il n'était que privé de contenu.
+  **F8.21 Fiche d'un message de contact** (`features/backoffice/messages/detail/`,
+  route `messages/contact/:id`) : la liste portait le **message entier** dans une
+  colonne — choix de F8.15.c, au motif qu'il n'y avait « aucune fiche à ouvrir
+  derrière ». À l'usage, un tableau de cinq colonnes dont une contient un
+  paragraphe **déborde de l'écran** (il fallait défiler horizontalement pour
+  atteindre le bouton d'action) et tronque quand même les messages longs. La
+  liste redescend à **trois colonnes** — qui écrit, quand, où ça en est — et le
+  courrier se lit sur sa fiche. ⚠️ **La route est déclarée AVANT `messages/:id`**,
+  sinon « contact » serait pris pour l'identifiant d'un fil. ⚠️ **Ce n'est
+  toujours pas une conversation** et l'écran le dit : l'auteur n'a le plus
+  souvent pas de compte, la réponse part par e-mail — d'où un bouton qui
+  **préremplit l'objet** avec le sujet du message, et « Marquer traité » qui
+  n'envoie rien mais évite que deux agents rappellent le même prospect.
   **F8.19 Corriger et retirer une offre** (`features/pro/offers/`) : l'écran
   « Mes offres » ne proposait de **modifier** que les véhicules — un circuit
   déposé était définitif, donc **impossible à illustrer après coup**, ce qui

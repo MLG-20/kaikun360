@@ -137,6 +137,26 @@ class ContactController extends Controller
     }
 
     /**
+     * Fiche d'un message. GET /api/v1/admin/contact-messages/{contactMessage}
+     *
+     * ⚠️ **Cette route n'existait pas, et c'était un choix — révisé (F8.21).**
+     * En F8.15.c, le message était affiché ENTIER dans la liste, au motif qu'il
+     * n'y avait « aucune fiche à ouvrir derrière ». La conséquence s'est vue à
+     * l'usage : un tableau à cinq colonnes dont une contient un paragraphe,
+     * illisible sans défilement horizontal, et où les messages longs sont de
+     * toute façon tronqués. La liste redevient une liste ; le texte complet, le
+     * suivi et les gestes vivent ici.
+     */
+    public function show(ContactMessage $contactMessage): JsonResponse
+    {
+        return ApiResponse::success([
+            'contact_message' => ContactMessageResource::make(
+                $contactMessage->load('handledBy:id,name'),
+            ),
+        ]);
+    }
+
+    /**
      * Change le statut d'un message. PATCH /api/v1/admin/contact-messages/{contactMessage}
      *
      * Le passage à « traité » enregistre l'agent et l'horodatage ; le retour à

@@ -2472,6 +2472,21 @@ export class AdminService {
   }
 
   /**
+   * Fiche d'un message de contact. GET /admin/contact-messages/{id}
+   *
+   * ⚠️ Route ajoutée en F8.21 : la liste portait jusque-là le **texte entier**
+   * dans une colonne, ce qui la rendait illisible sans défilement horizontal et
+   * tronquait quand même les messages longs.
+   */
+  contactMessage(id: number) {
+    return this.http
+      .get<ApiEnvelope<{ contact_message: AdminContactMessage }>>(
+        `${this.api}/admin/contact-messages/${id}`,
+      )
+      .pipe(map((res) => res.data.contact_message));
+  }
+
+  /**
    * Marque un message traité (ou le rouvre).
    * PATCH /admin/contact-messages/{id}
    *
