@@ -34,6 +34,14 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
 - ✅ **Le rendu côté serveur (SSR)** : les pages publiques sont d'abord
   **assemblées par un serveur** puis envoyées prêtes à afficher (bon pour le
   référencement Google et pour un premier affichage rapide). Voir « SSR » ci-dessous.
+- 🔜 **L'assistant (F10.1)** : le panneau de discussion — bulle flottante sur les
+  pages publiques, intégration dans l'en-tête épuré des espaces connectés, et
+  présence dans l'application installable (PWA). Le **socle serveur est déjà en
+  place** (`POST /api/v1/assistant/messages`, phase F10.0) : il renvoie un texte,
+  des fiches d'annonces réelles et des **boutons d'action** que ce panneau aura à
+  afficher (`link` → naviguer, `support` → ouvrir un fil, `contact` → formulaire).
+  ⚠️ L'assistant **ne figure pas au cahier des charges** : c'est un ajout. Voir
+  [`backend/app/Modules/Assistant/README.md`](../backend/app/Modules/Assistant/README.md).
 - ✅ **Le référencement (F9.1/F9.2)** : chaque page publique part avec son titre,
   sa description, son adresse canonique et son aperçu de partage (celui qui
   s'affiche quand on colle un lien dans WhatsApp) ; les fiches y ajoutent leur

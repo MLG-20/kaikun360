@@ -18,6 +18,7 @@ maintenable malgré les 9 univers fonctionnels.
 | `TeamBuilding` | Team building entreprises |
 | `Pro` | Marketplace prestataires |
 | `Admin` | Back-office |
+| `Assistant` | Assistant conversationnel transverse (F10) — **hors CDC** |
 
 ## Structure d'un module
 

@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 252 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 261 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -407,6 +407,21 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/pages/{page}` | public | `PageController@show` |
 | GET | `/contact-info` | public | `ContactController@info` |
 | POST | `/contact` | public (throttle 10/min) | `ContactController@store` |
+
+### Assistant (F10 — hors CDC)
+
+| Méthode | URI | Accès | Contrôleur |
+| --- | --- | --- | --- |
+| POST | `/assistant/messages` | public, auth **facultative** (throttle 12/min) | `AssistantController@message` |
+
+Endpoint **unique** pour toute la plateforme et les 8 rôles : ce n'est pas la route qui
+varie selon l'appelant, c'est la **trousse à outils** que le `ToolRegistry` lui compose.
+Sans état — l'historique voyage avec la requête (`history`, 10 tours max ; `message`,
+500 caractères max). Réponse : `{ data: { reply: { text, items, actions, tool } } }`.
+
+L'assistant **ne réalise aucune écriture** : il renvoie des actions (`link`, `support`,
+`contact`) que le frontend transforme en boutons, lesquels appellent les endpoints métier
+existants. Voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README.md).
 
 ### Référentiel géographique
 

@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **260 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
-- **11 modules** métier isolés
+- **261 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **12 modules** métier isolés (dont `Assistant`, hors CDC)
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **935 tests** automatisés (3275 assertions), tous verts ✅
+- **960 tests** automatisés (3360 assertions), tous verts ✅
 
 ---
 
@@ -37,13 +37,16 @@ réservation ») et reçoivent des réponses. Comme ce guichet est standard,
 
 ### Comment le moteur est organisé
 
-Le code est découpé en **11 modules** indépendants, qui correspondent aux univers
+Le code est découpé en **12 modules** indépendants, qui correspondent aux univers
 et aux espaces de la plateforme :
 
 - **Core** = les comptes, la connexion, les rôles (la porte d'entrée) ;
 - **Immo, Stay, Manage, Build, Explore, Mobility, Diaspora, TeamBuilding, Pro** =
   les 9 univers métier (voir [Domaines fonctionnels](#domaines-fonctionnels)) ;
-- **Admin** = le back-office, les coulisses de l'équipe Kaikun.
+- **Admin** = le back-office, les coulisses de l'équipe Kaikun ;
+- **Assistant** = l'assistant conversationnel transverse (F10), **hors cahier des
+  charges** : il n'a aucun privilège propre et passe par les mêmes autorisations
+  que le reste.
 
 Chaque module a son propre `README.md` qui explique sa logique. Chaque fichier de
 code est **abondamment commenté en français**.
@@ -51,7 +54,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 935 tests automatiques** — des petits programmes
+notifications) et **vérifié par 960 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -121,7 +124,8 @@ app/
     ├── Diaspora/     # Projets diaspora (affectation d'agents)
     ├── TeamBuilding/ # Séminaires d'entreprise (devis composés)
     ├── Pro/          # Marketplace de prestataires (validation, missions, notation)
-    └── Admin/        # Back-office (dashboard, files de validation, supervision)
+    ├── Admin/        # Back-office (dashboard, files de validation, supervision)
+    └── Assistant/    # Assistant conversationnel transverse (F10) — hors CDC
 ```
 
 Chaque module possède son propre `README.md` documentant sa logique métier.
@@ -527,7 +531,7 @@ backend/
 │   └── emails/          # Gabarit unique des e-mails (HTML + texte brut)
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 256 endpoints
+├── API.md               # Référence des 261 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -732,6 +736,9 @@ Clés principales (voir `.env.example` pour la liste exhaustive) :
 | `BRAND_SUPPORT_EMAIL` / `BRAND_SUPPORT_PHONE` / `BRAND_ADDRESS` | Coordonnées affichées en pied des e-mails (délivrabilité + confiance) |
 | `PAYTECH_BASE_URL` / `PAYTECH_API_KEY` / `PAYTECH_API_SECRET` / `PAYTECH_ENV` / `PAYTECH_IPN_URL` | Paiement PayTech — `env` = `test` \| `prod`, l'IPN doit être **publique et HTTPS** (tunnel ngrok en local). ⚠️ Pas de « signing key » : l'`API_SECRET` signe aussi les notifications. |
 | `CORS_ALLOWED_ORIGINS` | Origines autorisées (front Angular) |
+| `ASSISTANT_ENABLED` | Interrupteur de l'assistant (F10). À `false`, l'endpoint répond 503 — permet de couper le service sans déploiement. |
+| `ASSISTANT_DRIVER` | Cerveau de l'assistant : `rules` (déterministe, sans clé ni coût) ou `claude` (F10.4). Toute valeur inconnue retombe sur `rules`. |
+| `ASSISTANT_RATE_PER_MINUTE` | Plafond du limiteur `assistant` (12/min par défaut) — parade au « déni de portefeuille ». |
 
 > **Aucun secret n'est versionné** : `.env` est ignoré par git ; seuls les
 > `.env.example` (valeurs factices) sont suivis.
@@ -809,7 +816,7 @@ adresse.
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 256 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 261 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |
@@ -834,6 +841,11 @@ Le code est **abondamment commenté en français**.
 - ✅ **Paiement manuel (B20) :** mode `manuel` sur `POST /payments/initiate`
   (règlement Wave/Orange Money au numéro officiel, sans PSP) + confirmation
   admin `POST /admin/payments/{payment}/confirm` — Phase 1 du cahier des charges.
+- ✅ **Assistant transverse (F10.0 — socle) :** module `Assistant`, endpoint unique
+  `POST /assistant/messages`, trousse à outils assemblée par rôle, cerveau
+  interchangeable (`RuleBasedBrain` par défaut, `ClaudeBrain` prévu en F10.4) et
+  garde-fous (débit dédié, plafonds d'entrée, interrupteur). **Hors cahier des
+  charges** — voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README.md).
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.

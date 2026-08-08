@@ -9,6 +9,12 @@ use App\Listeners\NotifyUserOfRequestStatusChange;
 use App\Models\Quote;
 use App\Models\Review;
 use App\Models\User;
+use App\Modules\Assistant\Brains\RuleBasedBrain;
+use App\Modules\Assistant\Contracts\AssistantBrain;
+use App\Modules\Assistant\Tools\FaqTool;
+use App\Modules\Assistant\Tools\SearchCatalogTool;
+use App\Modules\Assistant\Tools\SupportEscalationTool;
+use App\Modules\Assistant\Tools\ToolRegistry;
 use App\Modules\Build\Events\ConstructionQuoteSent;
 use App\Modules\Build\Events\ConstructionRequestCreated;
 use App\Modules\Build\Listeners\NotifyAdminsOfConstructionRequest;
@@ -133,6 +139,39 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(GoogleTokenVerifier::class, function () {
             return new GoogleIdTokenVerifier(config('services.google.client_id'));
         });
+
+        $this->registerAssistant();
+    }
+
+    /**
+     * Assistant Kaikun (F10.0) : trousse à outils et cerveau interchangeable.
+     *
+     * Deux liaisons, et c'est tout le câblage du module :
+     *
+     *   - le REGISTRE reçoit la liste complète des outils connus ; c'est lui
+     *     qui filtrera ensuite selon le rôle de l'appelant. Ajouter un outil
+     *     pour les espaces connectés (F10.2) ou le back-office (F10.3) se
+     *     réduira à une ligne dans ce tableau.
+     *   - le CERVEAU est résolu depuis la configuration. Toute valeur inconnue
+     *     retombe sur le déterministe : en production, une faute de frappe dans
+     *     `ASSISTANT_DRIVER` doit dégrader le service, pas l'interrompre.
+     */
+    protected function registerAssistant(): void
+    {
+        $this->app->singleton(ToolRegistry::class, function ($app) {
+            return new ToolRegistry([
+                $app->make(SearchCatalogTool::class),
+                $app->make(FaqTool::class),
+                $app->make(SupportEscalationTool::class),
+            ]);
+        });
+
+        $this->app->bind(AssistantBrain::class, function ($app) {
+            return match (config('assistant.driver')) {
+                // 'claude' => $app->make(ClaudeBrain::class),  // F10.4
+                default => $app->make(RuleBasedBrain::class),
+            };
+        });
     }
 
     /**
@@ -233,6 +272,19 @@ class AppServiceProvider extends ServiceProvider
         // les tentatives répétées d'initiation / remboursement.
         RateLimiter::for('payment', function (Request $request) {
             return Limit::perMinute(15)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Assistant (F10.0) : plafond volontairement bas — une conversation
+        // humaine ne dépasse pas quelques messages par minute. C'est la parade
+        // au « déni de portefeuille » : dès que le driver Claude sera actif
+        // (F10.4), chaque message coûtera de l'argent réel, et un endpoint
+        // d'assistant non bridé est une facture ouverte à tout Internet.
+        //
+        // Le comptage se fait par utilisateur connecté, sinon par IP : un
+        // visiteur anonyme ne peut pas diluer son débit en ouvrant des onglets.
+        RateLimiter::for('assistant', function (Request $request) {
+            return Limit::perMinute((int) config('assistant.rate_limit.per_minute', 12))
+                ->by($request->user('sanctum')?->id ?: $request->ip());
         });
     }
 }

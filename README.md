@@ -75,12 +75,19 @@ sur téléphone (technologie PWA).
   confirmation de réservation, devis, pièce manquante…) ont été entièrement
   refaits aux couleurs de Kaikun 360 : 20 messages, un message d'accueil
   différent pour chaque type de compte. Détail en phase F8.8.
+- 🚧 **Un assistant est en cours d'ajout** (phase F10). Il oriente le visiteur
+  vers de **vraies** annonces du catalogue, répond aux questions courantes à
+  partir de la FAQ tenue par l'équipe, et passe la main à un conseiller quand il
+  ne sait pas. Le socle est posé et fonctionne **sans aucun abonnement ni frais** ;
+  un moteur plus intelligent pourra être branché ensuite, si le budget est validé.
+  ⚠️ Cet assistant **ne figure pas au cahier des charges** : c'est un bonus.
 - ⏳ **Hors code** (à faire par le client / en parallèle) : nom de domaine,
   hébergement, compte marchand pour les paiements, validation juridique. Détaillé
   en fin de document.
 
 > **La suite de ce document** est le **journal de bord détaillé** du
-> développement : chaque phase (backend `B0→B17`, frontend `F0→F9`) liste toutes
+> développement : chaque phase (backend `B0→B17`, frontend `F0→F9`, assistant
+> `F10`) liste toutes
 > les tâches, cochées au fur et à mesure. C'est un outil de suivi technique — la
 > présentation ci-dessus suffit pour comprendre le projet dans les grandes lignes.
 
