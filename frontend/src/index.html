@@ -24,7 +24,20 @@
        ⚠️ Ne jamais le retirer « parce que le site est public » : c'est
        exactement l'inverse: il ne s'applique qu'aux pages qui ne le sont pas. -->
   <meta name="robots" content="noindex, follow">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Icône d'onglet. ⚠️ Elle est restée celle d'Angular (le « A » violet) de
+       F0.1 à F9.1 : un onglet Kaikun était indiscernable d'un projet de
+       démonstration, et le raccourci d'un favori aussi.
+
+       ⚠️ Le `.ico` n'est PAS une réduction de `icons/icon-512.png` : les
+       détails d'une icône de 512 px ne survivent pas à 16 px (le « K » sort
+       flou et le liseré doré se réduit à une frange trouble). Il embarque donc
+       trois dessins distincts — 16, 32 et 48 px — le plus petit **sans liseré**
+       et à lettre plus étroite, seule façon de rester lisible.
+
+       Le PNG qui suit est déclaré pour les écrans à forte densité : les
+       navigateurs modernes le préfèrent quand ils ont la place. -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/png" href="icons/icon-192.png" sizes="192x192">
 
   <!-- PWA (F9.0) : l'application devient installable sur l'écran d'accueil —
        réponse au CDC §5 par la voie PWA plutôt qu'un projet Expo. -->

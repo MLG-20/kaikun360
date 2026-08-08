@@ -1212,6 +1212,7 @@ l'icône sur l'écran d'accueil et la tenue sur une connexion faible.
 |---|---|
 | [`public/manifest.webmanifest`](public/manifest.webmanifest) | nom, couleurs, icônes, `display: standalone`, 3 raccourcis (Rechercher, Mes demandes, Mes réservations) |
 | [`public/icons/`](public/icons/) | 192/512 px classiques **et** `maskable`, plus l'icône iOS |
+| [`public/favicon.ico`](public/favicon.ico) | icône d'onglet (F9.1). ⚠️ Elle est restée celle d'**Angular** (le « A » violet) de F0.1 à F9.1 — un onglet Kaikun était indiscernable d'un projet de démonstration. ⚠️ Ce n'est **pas** une réduction de `icon-512.png` : les détails d'une icône de 512 px ne survivent pas à 16 px. Le fichier embarque **trois dessins distincts** (16/32/48 px), le plus petit **sans le liseré doré** et à lettre plus étroite — seule façon de rester lisible. |
 | [`ngsw-config.json`](ngsw-config.json) | ce que le service worker précharge, met en cache, et **ce qu'il ne met surtout pas** |
 | [`src/app/core/pwa/`](src/app/core/pwa/) | proposer l'installation, signaler une nouvelle version |
 | `app-pwa-banner` | le bandeau, monté une fois dans `app.html` |
