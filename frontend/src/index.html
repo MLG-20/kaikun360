@@ -10,6 +10,16 @@
   <meta name="theme-color" content="#03193F">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 
+  <!-- PWA (F9.0) : l'application devient installable sur l'écran d'accueil —
+       réponse au CDC §5 par la voie PWA plutôt qu'un projet Expo. -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <!-- ⚠️ iOS ignore le manifeste pour l'icône : sans cette balise, un raccourci
+       « Sur l'écran d'accueil » affiche une capture de la page. L'image est
+       OPAQUE et à angles droits — iOS applique lui-même le masque, et une PNG
+       à coins transparents y apparaîtrait cerclée de noir. -->
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-title" content="Kaikun 360">
+
   <!-- Typographie du design system Kaikun (F0.3). -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

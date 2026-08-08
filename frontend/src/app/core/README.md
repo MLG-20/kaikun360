@@ -49,6 +49,27 @@ l'application (approche standalone, sans NgModule) :
   (gestion centralisée : 401 → login, 422 → erreurs de formulaire, 500 → page
   d'erreur).
 - **guards/** — `authGuard`, `roleGuard` (protection des routes).
+- **pwa/** (F9.0) — `PwaService` : la vie de l'**application installée**.
+  Un manifeste et un service worker suffisent à rendre le site *installable* —
+  pas à ce qu'il soit *installé* ni *à jour*. Deux comportements du navigateur
+  l'expliquent, aucun n'étant intuitif :
+  1. **Chrome n'installe rien tout seul** : il émet `beforeinstallprompt` et
+     attend qu'on lui demande. Le service met l'événement **de côté**
+     (`preventDefault()` — sinon Chrome affiche SA bannière, quand il veut et
+     dans sa langue) et l'expose via le signal `installable`.
+  2. **Une nouvelle version ne s'active pas d'elle-même** : le service worker la
+     télécharge, puis attend que **tous** les onglets du site soient fermés. Sur
+     un téléphone où l'onglet ne se ferme jamais, on peut rester des semaines sur
+     une version périmée — et signaler des bugs déjà corrigés. D'où le signal
+     `miseAJourPrete` et le bandeau qui propose d'actualiser.
+  ⚠️ **Tout est gardé par `isPlatformBrowser`** (leçon de F8.7 : toucher `window`
+  au rendu serveur lève une `ReferenceError` **silencieuse**). ⚠️ Les deux
+  signaux naissent à `false` **des deux côtés**, ce qui rend le DOM identique et
+  laisse l'hydratation tenir. ⚠️ `SwUpdate` est injecté en `optional` et testé
+  sur `isEnabled` : en développement le service worker est désactivé, et
+  l'injecter durement ferait échouer l'amorçage de toute l'application.
+  ⚠️ Une invitation **consommée ne se rejoue pas** : on la jette après le clic,
+  accepté ou refusé — la garder ne ferait qu'un bouton mort. 7 tests.
 - **state/** — état et cycles de vie transverses :
   - `favorite-store.ts` — les favoris du client, partagés entre écrans.
   - `poll-while-visible.ts` (F8.12.a) — **relève périodique** d'un écran ouvert :

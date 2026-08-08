@@ -1,0 +1,98 @@
+// Bandeau « Installer l'application » / « Nouvelle version » (F9.0).
+//
+// Ancré en BAS : c'est là que le pouce arrive sur un téléphone, et cela ne
+// recouvre pas l'en-tête ni la recherche. Décalé à gauche du bouton « retour en
+// haut » (`app-scroll-top`, en bas à droite) pour ne pas le masquer.
+
+:host {
+  // Le composant n'occupe aucune place dans le flux : le bandeau est fixe.
+  display: contents;
+}
+
+.pwa-banner {
+  position: fixed;
+  left: clamp(12px, 3vw, 24px);
+  right: clamp(12px, 3vw, 24px);
+  // Au-dessus du bouton « retour en haut » sur mobile, où les deux se
+  // rencontreraient sinon.
+  bottom: clamp(12px, 3vw, 24px);
+  z-index: 950;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.4rem;
+
+  max-width: 720px;
+  margin-inline: auto;
+  padding: 0.95rem 1.15rem;
+
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: 0 12px 34px rgb(3 25 63 / 18%);
+
+  // Laisse la place au bouton « retour en haut » à droite sur grand écran.
+  @media (min-width: 768px) {
+    right: clamp(78px, 8vw, 96px);
+  }
+
+  animation: pwa-banner-apparait 240ms ease-out both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes pwa-banner-apparait {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pwa-banner__texte {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.pwa-banner__titre {
+  margin: 0;
+  font-weight: 700;
+  color: var(--k-ink);
+  font-size: 0.98rem;
+}
+
+.pwa-banner__detail {
+  margin: 0.2rem 0 0;
+  color: var(--k-muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.pwa-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  flex-wrap: wrap;
+}
+
+.pwa-banner__fermer {
+  padding: 0.45rem 0.2rem;
+  border: none;
+  background: none;
+  color: var(--k-muted);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--k-ink);
+  }
+}

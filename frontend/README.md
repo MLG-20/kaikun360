@@ -1182,6 +1182,64 @@ npm run serve:ssr:kaikun360
 > production** (ex. `kaikun360.sn`) dans cette liste avant la mise en ligne, sinon
 > le serveur SSR renverra `400 Bad Request` (protection anti-SSRF sur l'en-tête Host).
 
+### Application installable — PWA (F9.0)
+
+Réponse au **CDC §5 (« application mobile »)**, par la voie décidée avec le
+client : une **PWA installable** plutôt qu'un projet React Native/Expo. L'API,
+les écrans et les quatre espaces existaient déjà ; ce qui manquait, c'était
+l'icône sur l'écran d'accueil et la tenue sur une connexion faible.
+
+| Pièce | Rôle |
+|---|---|
+| [`public/manifest.webmanifest`](public/manifest.webmanifest) | nom, couleurs, icônes, `display: standalone`, 3 raccourcis (Rechercher, Mes demandes, Mes réservations) |
+| [`public/icons/`](public/icons/) | 192/512 px classiques **et** `maskable`, plus l'icône iOS |
+| [`ngsw-config.json`](ngsw-config.json) | ce que le service worker précharge, met en cache, et **ce qu'il ne met surtout pas** |
+| [`src/app/core/pwa/`](src/app/core/pwa/) | proposer l'installation, signaler une nouvelle version |
+| `app-pwa-banner` | le bandeau, monté une fois dans `app.html` |
+
+**⚠️ Aucune donnée personnelle n'est mise en cache, et c'est une règle de
+sécurité — pas un réglage de performance.** Un cache de service worker vit **par
+origine, pas par utilisateur** : y laisser entrer `/users/me`, `/bookings/my` ou
+`/messages` rendrait les données d'un compte lisibles par le **suivant** sur un
+téléphone partagé. `ngsw-config.json` énumère donc une **liste blanche** de
+routes publiques (catalogues, pages éditoriales, référentiel géographique) ;
+tout ce qui n'y figure pas n'est jamais mis en cache. Vérifié dans un vrai
+Chrome : après des appels authentifiés à `/users/me`, `/bookings/my` et
+`/favorites` **répondant 200**, le cache ne contenait que les trois routes
+publiques visitées.
+
+**⚠️ Le préchargement ne prend QUE la coquille — 81 Ko, pas 2,06 Mo.** Un
+`assetGroup` unique en `prefetch` capturait `/*.js`, donc les **166 chunks
+paresseux** (back-office compris) : 2,06 Mo téléchargés dès la première visite,
+exactement le contraire du but recherché sur une connexion sénégalaise moyenne.
+Les groupes sont donc séparés — `coquille` (prefetch : `index.csr.html`, le CSS,
+`main-*.js`) et `chunks` (lazy : téléchargés à la première visite de l'écran qui
+les demande). Contrepartie assumée : **hors ligne, un écran jamais ouvert n'est
+pas disponible**.
+
+**⚠️ `index` pointe sur `/index.csr.html`**, pas `/index.html` : avec
+`outputMode: server`, la construction ne produit pas d'`index.html` — le service
+worker servirait un fichier inexistant.
+
+**⚠️ `@angular/service-worker` est épinglé à la version EXACTE** (`22.0.6`, sans
+accourt `^`) : les paquets Angular se réclament mutuellement à la patch près, et
+`^22.0.0` résout vers une version plus récente que `@angular/core` — `npm install`
+échoue alors sur un conflit de pairs. À faire évoluer **avec** le reste d'Angular.
+
+**⚠️ Le service worker est désactivé en développement** (`enabled: !isDevMode()`) :
+actif, il sert des bundles en cache et fait « mentir » le rechargement à chaud —
+on croit corriger un fichier que le navigateur ne relit jamais.
+
+Éprouvé dans un Chrome réel (protocole DevTools) : service worker **actif** sur
+la portée `/`, caches créés, et **rechargement hors ligne rendant la page**
+(titre correct, `app-root` présent, contenu affiché).
+
+```bash
+# La PWA n'existe QUE dans un build de production servi en HTTPS (ou localhost).
+npx ng build && npm run serve:ssr:kaikun360   # → http://localhost:4000/
+# Chrome → DevTools → Application → Service Workers / Manifest
+```
+
 ### Commandes utiles
 
 ```bash

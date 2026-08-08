@@ -2,9 +2,11 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 import {
   ApplicationConfig,
+  isDevMode,
   provideBrowserGlobalErrorListeners,
   provideEnvironmentInitializer,
 } from '@angular/core';
+import { provideServiceWorker } from '@angular/service-worker';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
@@ -44,5 +46,33 @@ export const appConfig: ApplicationConfig = {
     // faits pendant le rendu serveur sont réutilisés côté client, pas rejoués).
     // `withEventReplay()` : les clics survenus avant l'hydratation sont rejoués.
     provideClientHydration(withEventReplay()),
+    // --- PWA (F9.0) : l'application devient installable ---------------------
+    //
+    // Réponse au CDC §5 (« application mobile »), par la voie décidée avec le
+    // client : une **PWA installable** plutôt qu'un projet Expo. L'API, les
+    // écrans et les 4 espaces existent déjà ; ce qui manquait, c'était l'icône
+    // sur l'écran d'accueil et la tenue sur une connexion faible.
+    //
+    // ⚠️ **`isDevMode()` et pas seulement `!isDevMode()` par confort** : un
+    // service worker actif en développement sert des bundles mis en cache et
+    // fait « mentir » le rechargement à chaud — on croit corriger un fichier
+    // que le navigateur ne relit jamais.
+    //
+    // ⚠️ **`registerWhenStable:30000`** : l'enregistrement attend que
+    // l'application soit stable (30 s au plus). Sur une connexion sénégalaise
+    // moyenne, enregistrer tout de suite ferait concourir le préchargement du
+    // service worker avec l'affichage de la première page — exactement le
+    // contraire du but recherché.
+    //
+    // ⚠️ **Aucune donnée personnelle n'est mise en cache**, et c'est une règle
+    // de sécurité, pas un réglage : `ngsw-config.json` n'énumère QUE des
+    // endpoints publics (catalogues, pages, référentiel géo). Un cache de
+    // service worker vit **par origine, pas par utilisateur** — y laisser entrer
+    // `/users/me`, `/bookings` ou `/messages` rendrait les données d'un compte
+    // lisibles par le suivant sur un téléphone partagé.
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ],
 };

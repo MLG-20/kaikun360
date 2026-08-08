@@ -1,0 +1,90 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.csr.html",
+  "assetGroups": [
+    {
+      "name": "coquille",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/index.csr.html",
+          "/manifest.webmanifest",
+          "/styles-*.css",
+          "/main-*.js",
+          "/polyfills-*.js"
+        ]
+      }
+    },
+    {
+      "name": "chunks",
+      "installMode": "lazy",
+      "updateMode": "lazy",
+      "resources": {
+        "files": [
+          "/chunk-*.js",
+          "/*.js",
+          "/*.css"
+        ]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/icons/**",
+          "/**/*.(svg|webp|avif|png|jpg|jpeg|gif)"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "catalogue-public",
+      "urls": [
+        "/api/v1/properties",
+        "/api/v1/properties?*",
+        "/api/v1/stays",
+        "/api/v1/stays?*",
+        "/api/v1/vehicles",
+        "/api/v1/vehicles?*",
+        "/api/v1/experiences",
+        "/api/v1/experiences?*",
+        "/api/v1/mobility-services",
+        "/api/v1/mobility-services?*"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "timeout": "3s",
+        "maxSize": 60,
+        "maxAge": "1h"
+      }
+    },
+    {
+      "name": "contenu-editorial",
+      "urls": [
+        "/api/v1/pages/**",
+        "/api/v1/faqs",
+        "/api/v1/faqs?*",
+        "/api/v1/geo/**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 60,
+        "maxAge": "1d"
+      }
+    }
+  ],
+  "navigationUrls": [
+    "/**",
+    "!/**/*.*",
+    "!/**/*__*",
+    "!/**/*__*/**",
+    "!/api/**",
+    "!/apercu-emails/**",
+    "!/storage/**"
+  ]
+}

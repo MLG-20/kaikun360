@@ -1,0 +1,40 @@
+@if (visible()) {
+  <!-- `role="status"` et non `alert` : c'est une proposition, pas une urgence —
+       un lecteur d'écran ne doit pas interrompre la lecture en cours. -->
+  <aside class="pwa-banner" role="status">
+    @if (miseAJour()) {
+      <div class="pwa-banner__texte">
+        <p class="pwa-banner__titre">Une nouvelle version est disponible</p>
+        <p class="pwa-banner__detail">
+          Actualisez pour en profiter — vos saisies en cours seront perdues.
+        </p>
+      </div>
+      <div class="pwa-banner__actions">
+        <button type="button" class="k-btn k-btn--primary" (click)="actualiser()">
+          Actualiser
+        </button>
+        <button type="button" class="pwa-banner__fermer" (click)="fermer()"
+                aria-label="Plus tard">
+          Plus tard
+        </button>
+      </div>
+    } @else {
+      <div class="pwa-banner__texte">
+        <p class="pwa-banner__titre">Installez Kaikun 360 sur votre téléphone</p>
+        <p class="pwa-banner__detail">
+          Un accès direct depuis l'écran d'accueil, et un chargement plus rapide
+          sur connexion faible.
+        </p>
+      </div>
+      <div class="pwa-banner__actions">
+        <button type="button" class="k-btn k-btn--primary" (click)="installer()">
+          Installer
+        </button>
+        <button type="button" class="pwa-banner__fermer" (click)="fermer()"
+                aria-label="Refuser l'installation">
+          Non merci
+        </button>
+      </div>
+    }
+  </aside>
+}
