@@ -6,6 +6,7 @@ import { filter } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { UnreadStore } from '../../core/state/unread-store';
 import { AccountIconComponent } from '../../features/account/account-icon';
+import { AssistantPanelComponent } from '../../shared/components/assistant/assistant-panel';
 import { SPACE_CONFIG, SpaceNavItem } from './space.config';
 import { SpaceHeaderComponent } from './space-header';
 
@@ -37,6 +38,7 @@ import { SpaceHeaderComponent } from './space-header';
     RouterLinkActive,
     SpaceHeaderComponent,
     AccountIconComponent,
+    AssistantPanelComponent,
   ],
   templateUrl: './space-layout.html',
   styleUrl: './space-layout.scss',

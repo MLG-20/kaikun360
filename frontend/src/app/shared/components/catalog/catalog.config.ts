@@ -1,5 +1,7 @@
 import { Observable } from 'rxjs';
 
+import { formatFcfa } from '../../format/fcfa';
+
 import { Paginated } from '../../../core/api/pagination.model';
 import { CatalogService } from '../../../core/api/catalog.service';
 import { Experience } from '../../../models/experience.model';
@@ -78,14 +80,17 @@ export interface UniverseConfig {
   toCard(item: unknown): CatalogCard;
 }
 
-/** Formate un montant FCFA en entier lisible : 150000 → « 150 000 F ». */
-export function formatFcfa(value: number | null | undefined): string | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  // Espace fine insécable comme séparateur de milliers (convention FR).
-  return `${value.toLocaleString('fr-FR').replace(/ /g, ' ')} F`;
-}
+/**
+ * Formate un montant FCFA en entier lisible : 150000 -> « 150 000 F ».
+ *
+ * ⚠️ La fonction a DÉMÉNAGÉ dans `shared/format/fcfa.ts` (F10.1) ; elle n'est
+ * plus que réexportée ici, pour ne casser aucun appelant. Motif : ce fichier
+ * tire `CatalogService` et le registre des cinq univers, et il n'est chargé que
+ * par les pages de catalogue (paresseuses) — l'importer depuis un composant
+ * monté dans un *layout* (le panneau de l'assistant) aurait embarqué tout ce
+ * registre dans le **paquet initial**, pour trois lignes de formatage.
+ */
+export { formatFcfa };
 
 /** Assemble une localisation lisible à partir de fragments (ignore les vides). */
 function joinLocation(...parts: (string | null | undefined)[]): string | null {

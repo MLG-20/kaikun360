@@ -212,7 +212,7 @@ class AssistantGuardrailsTest extends TestCase
         $kinds = array_column($reponse['actions'], 'kind');
 
         $this->assertContains('contact', $kinds, 'Le visiteur doit être dirigé vers le formulaire de contact.');
-        $this->assertNotContains('support', $kinds, "Un visiteur sans compte ne peut pas ouvrir de fil de messagerie.");
+        $this->assertNotContains('support', $kinds, 'Un visiteur sans compte ne peut pas ouvrir de fil de messagerie.');
     }
 
     /**
@@ -252,5 +252,36 @@ class AssistantGuardrailsTest extends TestCase
 
         $this->assertDatabaseCount('conversations', 0);
         $this->assertDatabaseCount('messages', 0);
+    }
+
+    /**
+     * Le lien « Voir mes messages » mène à l'espace RÉEL de l'appelant.
+     *
+     * Défaut corrigé en F10.1 : le chemin « /mon-espace/messages » était écrit
+     * en dur. Or le site a QUATRE espaces connectés, et « /mon-espace » est
+     * gardé par le rôle `client` — un propriétaire cliquant sur ce bouton était
+     * refoulé. C'est exactement la raison d'être de `SpaceLink` (F8.8) : le
+     * réutiliser plutôt que de reconstruire une résolution parallèle.
+     */
+    public function test_le_lien_messagerie_mene_a_l_espace_du_role(): void
+    {
+        Role::findOrCreate(UserRole::PROPRIETAIRE->value, 'web');
+        $proprietaire = User::factory()->create();
+        $proprietaire->assignRole(UserRole::PROPRIETAIRE->value);
+
+        Sanctum::actingAs($proprietaire);
+
+        $reponse = $this->postJson(self::URL, ['message' => 'je veux parler à un conseiller'])
+            ->assertOk()
+            ->json('data.reply');
+
+        $lien = collect($reponse['actions'])->firstWhere('kind', 'link');
+
+        $this->assertNotNull($lien);
+        $this->assertSame(
+            '/espace-proprietaire/messages',
+            $lien['payload']['url'],
+            "Un propriétaire ne doit pas être envoyé sur l'espace client.",
+        );
     }
 }

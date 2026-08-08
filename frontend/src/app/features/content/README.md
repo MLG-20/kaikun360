@@ -62,6 +62,37 @@ Deux façons de nous joindre :
 On oriente enfin vers les parcours métier existants (déposer un bien, devenir
 prestataire, FAQ). Aucun bouton mort.
 
+### Pages de secours — `/erreur` et le 404 (F10.1.a)
+
+Un seul composant, `error-page/`, deux routes qui le montent avec un `data.kind`
+différent (`serveur` / `introuvable`).
+
+⚠️ **Ces deux routes n'existaient pas, et le manque était silencieux.**
+`errorInterceptor` renvoyait vers `/erreur` **depuis F0**, à chaque réponse `0` ou
+`5xx` ; aucune route « attrape-tout » ne couvrait par ailleurs les adresses
+inconnues. Résultat : `NG04002: 'erreur'` levé dans le processus Node au rendu
+serveur, et — au navigateur — une navigation **purement annulée**, laissant la
+personne sur sa page précédente sans un mot d'explication, persuadée que son clic
+n'avait rien fait. Un lien périmé partagé sur WhatsApp tombait dans le vide.
+
+- **La page n'appelle aucune API.** C'est celle qu'on atteint quand le serveur ne
+  répond plus : un appel de plus produirait une seconde erreur, donc une nouvelle
+  redirection vers elle-même.
+- **`?depuis=`** — l'intercepteur y met l'adresse quittée, ce qui permet un
+  bouton **« Réessayer »** honnête plutôt qu'un simple retour à l'accueil (=
+  abandonner ce qu'on faisait). ⚠️ Ce paramètre vient de l'URL, donc de
+  n'importe qui : **seuls les chemins internes sont suivis** (`/…`, jamais
+  `//…` ni `https://…`). Une page d'erreur est exactement le lien qu'on envoie à
+  quelqu'un d'inquiet — en faire un tremplin d'hameçonnage serait le pire
+  endroit. 4 tests vitest verrouillent ce filtre.
+- **Jamais indexées** (`seo.index: false`). ⚠️ **Limite assumée : le 404 répond
+  en HTTP 200** (« soft 404 ») — le statut se règle dans `app.routes.server.ts`,
+  dont la règle `**` couvre aussi toutes les pages publiques légitimes ; y poser
+  `status: 404` les marquerait introuvables. Le `noindex` écarte la page des
+  résultats, ce qui traite le vrai risque.
+- ⚠️ **La route `**` doit rester la dernière du fichier de routes** : elle accepte
+  tout, ce qui rendrait inatteignable n'importe quelle route déclarée après elle.
+
 ## Le contenu vient de la base
 
 Les endpoints existent (B13.4) mais la base est vide par défaut. Deux seeders,

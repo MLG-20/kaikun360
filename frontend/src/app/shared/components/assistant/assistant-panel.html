@@ -1,0 +1,171 @@
+<!--
+  Assistant Kaikun 360 (F10.1).
+
+  ⚠️ Tout est masqué quand le serveur a répondu 503 (`ASSISTANT_ENABLED=false`
+  ou incident) : un bouton qui ne sait que s'excuser vaut moins que pas de
+  bouton du tout.
+-->
+@if (!indisponible()) {
+  <!-- ===================== Bulle flottante (lanceur) ====================== -->
+  <!-- Rendue à l'identique au serveur et au navigateur (le panneau naît fermé)
+       : le DOM des deux côtés concorde, l'hydratation tient. -->
+  <button
+    type="button"
+    class="ia-bulle"
+    [class.is-ouvert]="ouvert()"
+    [attr.aria-expanded]="ouvert()"
+    aria-controls="assistant-panneau"
+    [attr.aria-label]="ouvert() ? 'Fermer l\'assistant Kaikun' : 'Ouvrir l\'assistant Kaikun'"
+    (click)="basculer()"
+  >
+    @if (ouvert()) {
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
+      </svg>
+    } @else {
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M20 12.2c0 3.7-3.6 6.7-8 6.7-.9 0-1.8-.13-2.6-.37L4.5 20l1.2-3.1C4.6 15.7 4 14 4 12.2 4 8.5 7.6 5.5 12 5.5s8 3 8 6.7z"
+          stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+        <path d="M9 11.5h6M9 14h3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+      </svg>
+    }
+  </button>
+
+  <!-- ========================== Panneau déployé =========================== -->
+  @if (ouvert()) {
+    <section
+      id="assistant-panneau"
+      class="ia-panneau"
+      role="dialog"
+      aria-label="Assistant Kaikun 360"
+      (keydown.escape)="echap()"
+    >
+      <header class="ia-tete">
+        <span class="ia-tete__marque" aria-hidden="true">K</span>
+        <span class="ia-tete__titre">
+          <b>Assistant Kaikun</b>
+          <small>Immobilier, séjours, tourisme, transport</small>
+        </span>
+        <button type="button" class="ia-tete__fermer" aria-label="Fermer l'assistant" (click)="fermer()">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
+      </header>
+
+      <!-- Le fil. `aria-live="polite"` : une réponse qui arrive est annoncée
+           sans interrompre ce qu'un lecteur d'écran est en train de dire. -->
+      <div class="ia-fil" #fil aria-live="polite" aria-atomic="false">
+        @for (bulle of bulles(); track bulle.id) {
+          <div class="ia-bloc" [class.is-moi]="bulle.speaker === 'user'">
+            <p class="ia-texte" [class.is-echec]="bulle.failed">{{ bulle.text }}</p>
+
+            <!-- Fiches de résultats. Deux formes reconnues à ce jour : entrée de
+                 FAQ, et annonce du catalogue. -->
+            @if (bulle.items.length > 0) {
+              <ul class="ia-fiches">
+                @for (item of bulle.items; track $index) {
+                  <li class="ia-fiche">
+                    @if (estFaq(item)) {
+                      <p class="ia-fiche__question">{{ texte(item, 'question') }}</p>
+                      <p class="ia-fiche__reponse">{{ texte(item, 'reponse') }}</p>
+                    } @else {
+                      <!-- Une annonce mène à SA fiche : c'est la page qui vend
+                           (photos, filtres, tunnel de réservation), pas la bulle. -->
+                      <button
+                        type="button"
+                        class="ia-fiche__lien"
+                        [disabled]="!cliquable(item)"
+                        (click)="ouvrirFiche(item)"
+                      >
+                        <span class="ia-fiche__titre">{{ texte(item, 'titre') ?? 'Annonce' }}</span>
+                        @if (texte(item, 'lieu'); as lieu) {
+                          <span class="ia-fiche__lieu">{{ lieu }}</span>
+                        }
+                        @if (prix(item); as montant) {
+                          <span class="ia-fiche__prix">
+                            {{ montant }}
+                            @if (texte(item, 'unite'); as unite) {
+                              <small>{{ unite }}</small>
+                            }
+                          </span>
+                        }
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+
+            <!-- Gestes proposés. L'assistant PROPOSE : rien n'est écrit tant
+                 que l'on n'a pas cliqué. -->
+            @if (bulle.actions.length > 0) {
+              <div class="ia-actions">
+                @for (action of bulle.actions; track $index) {
+                  <button
+                    type="button"
+                    class="ia-action"
+                    [class.is-primaire]="action.kind !== 'link'"
+                    [disabled]="attente()"
+                    (click)="agir(action)"
+                  >
+                    {{ action.label }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Indicateur de réflexion : trois points, pas un texte — il apparaît
+             et disparaît sans être annoncé en boucle par un lecteur d'écran. -->
+        @if (attente()) {
+          <div class="ia-bloc">
+            <p class="ia-texte ia-patiente" aria-label="L'assistant rédige une réponse">
+              <span></span><span></span><span></span>
+            </p>
+          </div>
+        }
+      </div>
+
+      <!-- Saisie -->
+      <form class="ia-saisie" (submit)="$event.preventDefault(); envoyer()">
+        <!-- Étiquette réservée aux lecteurs d'écran : le champ n'en porte pas à
+             l'œil (le placeholder suffit visuellement), mais un champ sans nom
+             accessible est inutilisable au clavier. -->
+        <label class="ia-label-invisible" for="assistant-champ">Votre message</label>
+        <textarea
+          id="assistant-champ"
+          #champ
+          class="ia-champ"
+          rows="1"
+          [attr.maxlength]="maxLength"
+          [disabled]="attente()"
+          placeholder="Ex. : une villa à Saly sous 60 millions"
+          [value]="brouillon()"
+          (input)="brouillon.set($any($event.target).value)"
+          (keydown)="touche($event)"
+        ></textarea>
+
+        <button
+          type="submit"
+          class="ia-envoi"
+          [disabled]="!peutEnvoyer()"
+          aria-label="Envoyer le message"
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 12l16-8-6 8 6 8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </form>
+
+      <!-- ⚠️ Mention non négociable : l'assistant oriente, il n'engage pas
+           Kaikun 360. Un prix ou un délai lus ici se confirment sur la fiche. -->
+      <p class="ia-mention">
+        Assistant automatique — les informations affichées proviennent du catalogue publié.
+        Pour un engagement ferme, un conseiller prend le relais.
+      </p>
+    </section>
+  }
+}

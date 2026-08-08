@@ -51,10 +51,10 @@ class SearchCatalogTool implements AssistantTool
 
     public function description(): string
     {
-        return "Recherche des annonces publiées dans le catalogue Kaikun 360 : biens immobiliers "
-            ."(achat, vente, location), nuitées, circuits touristiques et véhicules de transport. "
+        return 'Recherche des annonces publiées dans le catalogue Kaikun 360 : biens immobiliers '
+            .'(achat, vente, location), nuitées, circuits touristiques et véhicules de transport. '
             ."À utiliser dès que la personne décrit un besoin d'hébergement, d'achat, de séjour ou "
-            ."de déplacement, même vaguement. Paramètres : `univers` "
+            .'de déplacement, même vaguement. Paramètres : `univers` '
             .'(immobilier|nuitees|tourisme|transport), `ville` et `budget_max` (facultatifs).';
     }
 
@@ -266,9 +266,15 @@ class SearchCatalogTool implements AssistantTool
             'transport' => $count > 1 ? 'véhicules' : 'véhicule',
         };
 
+        // ⚠️ Le verbe s'accorde, sinon on lit « Voici 1 circuit qui
+        // correspondent » — une faute qui, sur un site marchand, coûte plus de
+        // confiance qu'elle n'a coûté de caractères à corriger.
+        $correspondent = $count > 1 ? 'correspondent' : 'correspond';
+        $pourraient = $count > 1 ? 'pourraient' : 'pourrait';
+
         return $city !== null
-            ? "Voici {$count} {$label} qui correspondent à votre recherche du côté de {$city}."
-            : "Voici {$count} {$label} qui pourraient vous convenir.";
+            ? "Voici {$count} {$label} qui {$correspondent} à votre recherche du côté de {$city}."
+            : "Voici {$count} {$label} qui {$pourraient} vous convenir.";
     }
 
     /**

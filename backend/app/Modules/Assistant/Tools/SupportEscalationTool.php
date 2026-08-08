@@ -6,6 +6,7 @@ use App\Modules\Assistant\Contracts\AssistantTool;
 use App\Modules\Assistant\Support\AssistantAction;
 use App\Modules\Assistant\Support\AssistantContext;
 use App\Modules\Assistant\Support\ToolResult;
+use App\Support\Mail\SpaceLink;
 
 /**
  * Passage de relais à un humain (phase F10.0).
@@ -16,7 +17,7 @@ use App\Modules\Assistant\Support\ToolResult;
  * ── Il n'écrit RIEN ─────────────────────────────────────────────────────────
  * Décision de conception importante : l'outil ne crée pas la conversation. Il
  * renvoie une ACTION que le panneau affiche en bouton ; c'est le clic de
- * l'utilisateur qui appelle `POST /messages/start-support`
+ * l'utilisateur qui appelle `POST /api/v1/messages/support`
  * (MessageController::startWithSupport), lequel sait déjà :
  *   - choisir l'agent de permanence,
  *   - reprendre le fil ouvert sur le même dossier au lieu d'en empiler un second,
@@ -66,17 +67,26 @@ class SupportEscalationTool implements AssistantTool
 
         if ($context->isAuthenticated()) {
             return ToolResult::empty(
-                "Je préfère passer la main à un conseiller Kaikun sur ce point. "
+                'Je préfère passer la main à un conseiller Kaikun sur ce point. '
                 .'Voulez-vous que je lui ouvre un fil de discussion ?',
                 [
                     AssistantAction::support('Écrire à un conseiller', $subject, $body),
-                    AssistantAction::link('Voir mes messages', '/mon-espace/messages'),
+                    // ⚠️ Le site a QUATRE espaces connectés : « /mon-espace » en dur
+                    // (état de F10.0) envoyait un propriétaire, un prestataire ou une
+                    // entreprise sur une adresse gardée par le rôle `client`, donc sur
+                    // un refoulement. `SpaceLink` est la résolution déjà éprouvée par
+                    // les 20 e-mails transactionnels (F8.8) : on la réutilise plutôt
+                    // que d'en écrire une seconde, vouée à diverger.
+                    AssistantAction::link(
+                        'Voir mes messages',
+                        SpaceLink::to($context->user, 'messages'),
+                    ),
                 ],
             );
         }
 
         return ToolResult::empty(
-            "Je préfère passer la main à un conseiller Kaikun sur ce point. "
+            'Je préfère passer la main à un conseiller Kaikun sur ce point. '
             .'Laissez-nous un message et l\'équipe vous répondra.',
             [
                 AssistantAction::contact('Nous écrire'),

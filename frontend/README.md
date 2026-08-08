@@ -34,14 +34,26 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
 - ✅ **Le rendu côté serveur (SSR)** : les pages publiques sont d'abord
   **assemblées par un serveur** puis envoyées prêtes à afficher (bon pour le
   référencement Google et pour un premier affichage rapide). Voir « SSR » ci-dessous.
-- 🔜 **L'assistant (F10.1)** : le panneau de discussion — bulle flottante sur les
-  pages publiques, intégration dans l'en-tête épuré des espaces connectés, et
-  présence dans l'application installable (PWA). Le **socle serveur est déjà en
-  place** (`POST /api/v1/assistant/messages`, phase F10.0) : il renvoie un texte,
-  des fiches d'annonces réelles et des **boutons d'action** que ce panneau aura à
-  afficher (`link` → naviguer, `support` → ouvrir un fil, `contact` → formulaire).
-  ⚠️ L'assistant **ne figure pas au cahier des charges** : c'est un ajout. Voir
-  [`backend/app/Modules/Assistant/README.md`](../backend/app/Modules/Assistant/README.md).
+- ✅ **L'assistant (F10.1)** : une **bulle flottante** en bas à droite ouvre un
+  panneau de discussion. On lui décrit un besoin (« une villa à Saly sous
+  60 millions », « un circuit en Casamance ») et il répond avec de **vraies
+  annonces** — celles du catalogue publié, aux prix du catalogue — puis des
+  **boutons** pour aller plus loin : voir la fiche, ouvrir toutes les annonces,
+  écrire à un conseiller. Il répond aussi aux questions sur le fonctionnement du
+  site à partir de la **FAQ tenue par l'équipe** au back-office, et il **passe la
+  main** dès qu'il ne comprend pas plutôt que d'inventer.
+  - **Où on le trouve** : sur tout le site public et dans les **quatre espaces
+    connectés**. Volontairement **pas** dans le back-office (ses outils de
+    gouvernance arrivent en F10.3) ni sur les pages de connexion.
+  - **La discussion suit l'utilisateur** d'une page à l'autre, y compris quand
+    l'assistant l'envoie sur une fiche puis qu'il revient. Elle n'est **jamais
+    enregistrée** sur l'ordinateur : elle disparaît avec l'onglet.
+  - **L'assistant propose, il n'écrit rien.** Ouvrir un fil avec un conseiller
+    n'a lieu qu'au clic, et passe par le circuit habituel de la messagerie.
+  - ⚠️ L'assistant **ne figure pas au cahier des charges** : c'est un ajout, et il
+    peut être **coupé côté serveur** sans déploiement — la bulle disparaît alors
+    d'elle-même. Voir
+    [`backend/app/Modules/Assistant/README.md`](../backend/app/Modules/Assistant/README.md).
 - ✅ **Le référencement (F9.1/F9.2)** : chaque page publique part avec son titre,
   sa description, son adresse canonique et son aperçu de partage (celui qui
   s'affiche quand on colle un lien dans WhatsApp) ; les fiches y ajoutent leur
@@ -1345,6 +1357,73 @@ curl -s http://localhost:4000/immobilier/98 | grep -E 'og:|canonical|robots'
 curl -s http://localhost:4000/mon-espace/profil | grep robots   # doit dire noindex
 curl -s http://localhost:4000/sitemap.xml | head
 ```
+
+### Assistant Kaikun — le panneau (F10.1)
+
+Le socle serveur (F10.0) était complet mais **invisible** : un endpoint sans écran.
+Cette tranche livre l'écran, et rien d'autre — aucun outil neuf, aucune règle métier.
+
+**Trois fichiers, trois rôles** :
+
+| Fichier | Rôle |
+|---|---|
+| `core/api/assistant.service.ts` | le **contrat** : `POST /assistant/messages` et ses types |
+| `core/state/assistant-store.ts` | la **mémoire** : conversation, ouverture, attente, gestes |
+| `shared/components/assistant/` | l'**écran** : bulle flottante + panneau |
+
+⚠️ **Le panneau est monté dans les *layouts*, pas dans la racine applicative**
+(`main-layout` et `space-layout`). C'est ce qui le tient hors du **back-office**
+— ses outils de gouvernance n'arrivent qu'en F10.3 — et hors du **parcours
+d'authentification**. Le monter dans `app.html`, comme `app-scroll-top`, l'aurait
+mis partout.
+
+⚠️ **La conversation vit dans un store `root`, pas dans le composant.** Le panneau
+propose un lien, l'utilisateur clique, arrive dans son espace : le composant est
+**détruit** au passage. Sans store, le fil disparaîtrait au moment précis où
+l'assistant vient d'être utile. En revanche **rien n'est écrit dans le
+navigateur** (ni `localStorage` ni `sessionStorage`, contrairement au comparateur
+et au panier de réservation) : une conversation porte ce que la personne a tapé.
+
+⚠️ **`SKIP_ERROR_REDIRECT` n'est pas un détail.** `errorInterceptor` renvoie vers
+la page d'erreur dès qu'un appel répond 0 ou 5xx — or l'interrupteur d'urgence de
+l'assistant répond **503**. Sans ce marqueur, couper l'assistant aurait éjecté de
+sa page quiconque lui écrit : un panneau facultatif faisant tomber la navigation
+de tout le site.
+
+⚠️ **Le coin bas-droite est partagé** entre trois éléments fixes : `app-scroll-top`
+(z-index 900), `app-pwa-banner` (950) et l'assistant. La bulle s'empile **au-dessus**
+du bouton « retour en haut » ; le panneau déployé passe devant tout (960), et
+devient une **feuille pleine largeur** sous 640 px.
+
+**Vérifier en local** : `npx ng serve`, puis la bulle en bas à droite de n'importe
+quelle page publique. Essais utiles — « une villa à Saly », « un circuit en
+Casamance », « comment fonctionne le paiement ? », « je veux parler à un
+conseiller » (connecté : le bouton ouvre un vrai fil de support et conduit à la
+messagerie de **son** espace). Assistant coupé (`ASSISTANT_ENABLED=false` côté
+backend) : la bulle disparaît après le premier message, et **la page ne bouge pas**.
+
+### Pages de secours — `/erreur` et le 404 (F10.1.a)
+
+⚠️ **Elles n'existaient pas.** `errorInterceptor` renvoyait vers `/erreur` depuis
+F0, et aucune route n'attrapait les adresses inconnues : au rendu serveur chaque
+cas levait `NG04002`, au navigateur la navigation était **annulée** — l'utilisateur
+restait sur sa page sans explication. Un lien périmé partagé sur WhatsApp tombait
+dans le vide.
+
+Un composant (`features/content/error-page/`), deux routes (`erreur` et `**`).
+Détail et pièges : [`src/app/features/content/README.md`](src/app/features/content/README.md).
+
+**Vérifier** (le rendu serveur, pas seulement l'écran) :
+
+```bash
+npx ng build && node dist/kaikun360/server/server.mjs
+
+curl -s 'http://localhost:4000/erreur?depuis=/immobilier/98' | grep -o 'Réessayer'
+curl -s http://localhost:4000/une-page-qui-nexiste-pas | grep -o '>404<'
+```
+
+⚠️ **La route `**` doit rester la dernière** de `app.routes.ts` : elle accepte
+tout, et rendrait inatteignable n'importe quelle route déclarée après elle.
 
 ### Commandes utiles
 

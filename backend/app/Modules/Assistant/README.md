@@ -107,15 +107,31 @@ L'action `support` transporte `subject` **et `body`** : `POST /api/v1/messages/s
 exige `body` (`StartSupportConversationRequest`), et le corps reprend le message d'origine
 — l'agent doit lire ce que la personne a réellement écrit, pas un sujet tronqué.
 
+⚠️ Le lien « Voir mes messages » qui accompagne l'escalade est construit par
+**`SpaceLink`** (F8.8), pas écrit en dur (correctif F10.1). Le site a **quatre espaces
+connectés** et `/mon-espace` est gardé par le rôle `client` : un propriétaire ou un
+prestataire cliquant sur ce bouton était refoulé. Toute adresse d'espace produite par ce
+module doit passer par `SpaceLink`.
+
 `rechercher_catalogue` renvoie **trois résultats maximum** puis un lien profond vers la vraie
 page : l'assistant oriente, le catalogue vend. Le transport n'est pas filtré par ville — un
 véhicule n'est pas rattaché à une commune, c'est le trajet qui l'est ; filtrer dessus
 donnerait zéro résultat et laisserait croire au catalogue vide.
 
 `RuleBasedBrain` reconnaît les lieux en confrontant le message à la liste **réelle** des
-régions et communes (mise en cache 1 h), plutôt qu'à une liste écrite en dur qui vieillirait
+régions, des communes, des **zones touristiques** des biens et des **destinations** des
+circuits publiés (mise en cache 1 h), plutôt qu'à une liste écrite en dur qui vieillirait
 mal. La salutation wolof du prototype est conservée (identité de marque), mais la
 conversation se poursuit en français — seule langue traitée correctement.
+
+⚠️ **Les deux dernières sources ont été ajoutées en F10.1, après un essai sur le serveur
+réel.** Le vocabulaire ne portait que les communes et les régions, alors que la recherche
+sait filtrer sur `tourist_zone` et `destination` : « Saly », « Casamance » ou « Gorée »
+n'étaient donc jamais transmis à l'outil, qui répondait par les trois derniers circuits
+publiés — n'importe où dans le pays, en ayant l'air d'avoir compris. **Règle à retenir :
+le vocabulaire de compréhension doit couvrir tout ce que la recherche sait exploiter.**
+Ces sources sont bornées aux annonces **publiées**, sans quoi l'assistant reconnaîtrait
+une destination que le catalogue public ignore.
 
 ---
 
@@ -134,13 +150,14 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
 
 ## Tests
 
-`tests/Feature/Assistant/` — **25 tests, 85 assertions**.
+`tests/Feature/Assistant/` — **28 tests, 97 assertions**.
 
-- `AssistantGuardrailsTest` (12) — plafonds, débit 429, interrupteur 503 (y compris
+- `AssistantGuardrailsTest` (13) — plafonds, débit 429, interrupteur 503 (y compris
   **avant la validation**), cloisonnement par rôle, charge utile d'escalade complète,
-  et **l'assistant ne crée aucune conversation**.
-- `AssistantToolsTest` (13) — données réelles, budget, accueil, repli, non-régression des
-  faux positifs de budget, et surtout
+  lien de messagerie **résolu selon le rôle**, et **l'assistant ne crée aucune conversation**.
+- `AssistantToolsTest` (15) — données réelles, budget, accueil, repli, non-régression des
+  faux positifs de budget, **destinations touristiques comprises** (et absentes du
+  vocabulaire tant qu'elles ne sont pas publiées), et surtout
   **`test_un_bien_non_publie_ne_fuite_pas_par_assistant`** : le test central du module.
   Sans lui, tout le travail de validation des annonces (F7) serait contournable en posant
   une question dans une bulle de discussion.
@@ -169,7 +186,7 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
 
 | Tranche | Contenu |
 |---|---|
-| **F10.1** | panneau Angular : bulle publique, chrome épuré des espaces connectés, PWA |
+| ~~**F10.1**~~ | ✅ **livrée** — panneau Angular : bulle publique + espaces connectés (voir `frontend/src/app/shared/components/assistant/`) |
 | **F10.2** | outils client / propriétaire / prestataire / entreprise / diaspora (via policies) + journalisation |
 | **F10.3** | outils back-office en **lecture seule** (vérification CDC §6) |
 | **F10.4** | `ClaudeBrain` derrière le contrat déjà en place |

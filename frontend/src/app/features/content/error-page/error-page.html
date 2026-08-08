@@ -1,0 +1,53 @@
+<!--
+  Pages de secours (F10.1.a). Aucune donnée n'est chargée ici : on y arrive
+  précisément quand le serveur ne répond plus.
+-->
+<section class="k-wrap er-wrap">
+  <div class="er-card" [class.er-card--introuvable]="kind() === 'introuvable'">
+    @if (kind() === 'introuvable') {
+      <span class="er-code" aria-hidden="true">404</span>
+      <h1 class="er-title">Cette page n’existe pas (ou plus)</h1>
+
+      <p class="er-text">
+        L’adresse est peut-être mal recopiée, ou l’annonce que vous cherchiez
+        n’est plus en ligne. Les annonces retirées ou expirées disparaissent du
+        site — <strong>rien n’est perdu de votre côté</strong>.
+      </p>
+    } @else {
+      <span class="er-icon" aria-hidden="true">⚠</span>
+      <h1 class="er-title">Le service ne répond pas</h1>
+
+      <!--
+        On ne dit ni « votre connexion est mauvaise » (ce serait accuser à tort)
+        ni « erreur 500 » (personne ne sait quoi en faire) : on décrit ce qui est
+        vrai des deux côtés — la demande n'est pas arrivée à destination.
+      -->
+      <p class="er-text">
+        Votre demande n’a pas abouti : soit la connexion s’est interrompue, soit
+        nos serveurs rencontrent une difficulté passagère.
+        <strong>Aucune de vos données n’est perdue</strong> et rien n’a été
+        enregistré à moitié.
+      </p>
+    }
+
+    <div class="er-actions">
+      @if (retour(); as cible) {
+        <button type="button" class="k-btn k-btn--primary" (click)="reessayer()">
+          Réessayer
+        </button>
+      }
+      <a class="k-btn" [class.k-btn--primary]="!retour()" [class.k-btn--ghost]="!!retour()" routerLink="/">
+        Retour à l’accueil
+      </a>
+      <a class="k-btn k-btn--ghost" routerLink="/contact">Nous signaler le problème</a>
+    </div>
+
+    <!-- Les quatre univers : une adresse fausse ne doit pas être un cul-de-sac. -->
+    <nav class="er-liens" aria-label="Reprendre la navigation">
+      <a routerLink="/immobilier">Immobilier</a>
+      <a routerLink="/nuitees">Nuitées</a>
+      <a routerLink="/tourisme">Tourisme</a>
+      <a routerLink="/transport">Transport</a>
+    </nav>
+  </div>
+</section>

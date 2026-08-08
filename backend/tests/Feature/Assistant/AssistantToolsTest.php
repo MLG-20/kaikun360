@@ -3,6 +3,7 @@
 namespace Tests\Feature\Assistant;
 
 use App\Models\Faq;
+use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Immo\Models\Property;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -60,6 +61,61 @@ class AssistantToolsTest extends TestCase
         $this->assertSame('rechercher_catalogue', $reply['tool']);
         $this->assertCount(1, $reply['items']);
         $this->assertSame('Villa contemporaine avec piscine', $reply['items'][0]['titre']);
+    }
+
+    /**
+     * Un lieu TOURISTIQUE est compris, au même titre qu'une commune.
+     *
+     * Défaut trouvé en F10.1 en interrogeant le serveur réel : le vocabulaire du
+     * cerveau ne contenait que les communes et les régions, alors que la
+     * recherche sait filtrer sur `tourist_zone` et sur `destination`. « Saly »,
+     * « Casamance » ou « Gorée » n'étaient donc jamais transmis — l'assistant
+     * répondait par les trois derniers circuits publiés, n'importe où dans le
+     * pays, en ayant l'air d'avoir compris.
+     */
+    public function test_une_destination_touristique_est_comprise(): void
+    {
+        TourismExperience::factory()->published()->create([
+            'title' => 'Trois jours en Casamance',
+            'destination' => 'Casamance',
+        ]);
+        TourismExperience::factory()->published()->create([
+            'title' => 'Escapade à Lompoul',
+            'destination' => 'Lompoul',
+        ]);
+
+        $reply = $this->demander('je voudrais un circuit en Casamance');
+
+        $this->assertSame('rechercher_catalogue', $reply['tool']);
+        $this->assertCount(1, $reply['items']);
+        $this->assertSame('Trois jours en Casamance', $reply['items'][0]['titre']);
+        // Le lieu est repris dans la phrase : c'est ce qui prouve à la personne
+        // qu'elle a été comprise.
+        $this->assertStringContainsString('Casamance', $reply['text']);
+        // ⚠️ Accord du verbe sur un résultat unique (« qui correspond »).
+        $this->assertStringNotContainsString('correspondent', $reply['text']);
+    }
+
+    /**
+     * Le vocabulaire des lieux ne trahit pas une annonce NON publiée.
+     *
+     * Corollaire de la règle centrale du module : si un circuit en attente de
+     * validation entrait dans le référentiel des lieux, l'assistant reconnaîtrait
+     * une destination que le catalogue public ignore — et le dirait, en
+     * répondant « du côté de X » sur une annonce que personne ne doit voir.
+     */
+    public function test_le_vocabulaire_des_lieux_ignore_les_annonces_non_publiees(): void
+    {
+        TourismExperience::factory()->create([
+            'title' => 'Circuit confidentiel',
+            'destination' => 'Kédougou',
+            'published_at' => null,
+        ]);
+
+        $reply = $this->demander('je voudrais un circuit à Kédougou');
+
+        $this->assertSame([], $reply['items']);
+        $this->assertStringNotContainsString('Kédougou', $reply['text']);
     }
 
     /**

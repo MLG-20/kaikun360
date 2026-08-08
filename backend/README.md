@@ -11,7 +11,7 @@ API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 - **261 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **960 tests** automatisés (3360 assertions), tous verts ✅
+- **963 tests** automatisés (3372 assertions), tous verts ✅
 
 ---
 
@@ -54,7 +54,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 960 tests automatiques** — des petits programmes
+notifications) et **vérifié par 963 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -846,6 +846,15 @@ Le code est **abondamment commenté en français**.
   interchangeable (`RuleBasedBrain` par défaut, `ClaudeBrain` prévu en F10.4) et
   garde-fous (débit dédié, plafonds d'entrée, interrupteur). **Hors cahier des
   charges** — voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README.md).
+  - ✅ **F10.1 (branchement du panneau Angular)** — deux correctifs côté serveur,
+    trouvés en interrogeant le **serveur réel** : le lien « Voir mes messages »
+    de l'escalade était écrit en dur sur `/mon-espace`, adresse gardée par le rôle
+    `client` (un propriétaire y était refoulé) → il passe désormais par
+    **`SpaceLink`**, comme les e-mails transactionnels ; et le vocabulaire de
+    reconnaissance des lieux ignorait les **zones touristiques** et les
+    **destinations** des circuits, alors que la recherche sait filtrer dessus —
+    « Saly », « Casamance », « Gorée » n'étaient jamais transmis et l'assistant
+    répondait n'importe où dans le pays en ayant l'air d'avoir compris.
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.

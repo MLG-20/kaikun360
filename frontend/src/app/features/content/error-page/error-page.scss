@@ -1,0 +1,94 @@
+// =============================================================================
+// Pages de secours (F10.1.a) — `/erreur` et le 404.
+//
+// Même sobriété que le retour de paiement : on arrive ici contrarié, la page
+// doit se lire en une seconde et proposer une sortie, pas se faire remarquer.
+// =============================================================================
+
+:host {
+  display: block;
+}
+
+.er-wrap {
+  padding: 64px 0 96px;
+  display: flex;
+  justify-content: center;
+}
+
+.er-card {
+  max-width: 620px;
+  width: 100%;
+  text-align: center;
+  background: var(--k-card);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-lg);
+  box-shadow: var(--k-shadow-lg);
+  padding: 44px 36px;
+}
+
+.er-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  margin-bottom: 18px;
+  border-radius: 50%;
+  font-size: 1.7rem;
+  background: color-mix(in srgb, var(--k-warning) 14%, transparent);
+  color: var(--k-warning);
+}
+
+// Le 404 affiche le nombre lui-même : il est reconnu de tous et évite un
+// pictogramme de plus.
+.er-code {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--k-font-display);
+  font-size: clamp(3rem, 12vw, 4.6rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--k-brand);
+}
+
+.er-title {
+  margin: 0 0 14px;
+  font-family: var(--k-font-display);
+  font-size: clamp(1.35rem, 4vw, 1.75rem);
+  color: var(--k-ink);
+}
+
+.er-text {
+  margin: 0 auto 26px;
+  max-width: 46ch;
+  line-height: 1.6;
+  color: var(--k-muted);
+}
+
+.er-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.er-liens {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 20px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--k-line);
+
+  a {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--k-brand);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

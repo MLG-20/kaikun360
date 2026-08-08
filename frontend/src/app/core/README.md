@@ -45,9 +45,35 @@ l'application (approche standalone, sans NgModule) :
     changé), **changement de mot de passe** `PATCH /users/me/password`,
     suppression (anonymisation RGPD) `DELETE /users/me`, et pièces justificatives
     `GET`/`POST /users/me/documents` (dépôt **multipart** PDF/JPG/PNG).
+  - `AssistantService` (F10.1) — assistant Kaikun `POST /assistant/messages`
+    (**public**, authentification facultative). Un seul endpoint pour toute la
+    plateforme : ce n'est pas le frontend qui décide de ce que l'assistant sait
+    faire, c'est le jeton envoyé qui détermine la trousse à outils côté serveur —
+    il n'y a donc rien à paramétrer selon l'espace, et rien à oublier de
+    paramétrer. Le service porte aussi les types du contrat (`AssistantReply`,
+    `AssistantAction`) ; les **fiches de résultats restent volontairement non
+    typées**, leur forme dépendant de l'outil qui répond (elle s'allongera en
+    F10.2/F10.3).
 - **interceptors/** — `tokenInterceptor` (ajoute le Bearer), `errorInterceptor`
-  (gestion centralisée : 401 → login, 422 → erreurs de formulaire, 500 → page
+  (gestion centralisée : 401 → login, 422 → erreurs de formulaire, 0/5xx → page
   d'erreur), et `serverApiOriginInterceptor` (F9.1).
+  - ⚠️ **La page `/erreur` visée par cet intercepteur N'EXISTAIT PAS jusqu'en
+    F10.1.a** — depuis F0, chaque panne réseau ou 5xx levait `NG04002` au rendu
+    serveur et se traduisait, au navigateur, par une navigation **annulée** :
+    l'utilisateur restait sur sa page sans un mot. La route existe désormais
+    (`features/content/error-page/`), avec son jumeau **404 attrape-tout**, et
+    l'intercepteur lui transmet l'adresse quittée (`?depuis=`) pour qu'elle
+    puisse proposer « Réessayer ». Il ne renvoie **pas** vers elle si l'on y est
+    déjà : cela effacerait ce `?depuis=`.
+  - ⚠️ **`SKIP_ERROR_REDIRECT` (F10.1)** — jeton de contexte HTTP qui dispense
+    une requête **accessoire** du renvoi automatique vers la page d'erreur. Ce
+    renvoi est le bon comportement pour un appel dont dépend l'écran affiché ; il
+    devient absurde pour un élément de décor. L'assistant est un panneau
+    flottant facultatif, et son interrupteur d'urgence répond justement **503** :
+    sans ce marqueur, couper l'assistant (`ASSISTANT_ENABLED=false`) éjecterait
+    de sa page quiconque lui écrit. **À réserver aux appels réellement
+    secondaires** — le poser sur le chargement d'une fiche laisserait
+    l'utilisateur devant un écran vide sans explication.
   - ⚠️ **`serverApiOriginInterceptor` corrige un défaut du rendu serveur né avec
     F2.9, entièrement silencieux.** En production `environment.apiUrl` vaut
     `/api/v1` — une adresse **relative**, qui ne se résout que dans un
@@ -136,6 +162,23 @@ l'application (approche standalone, sans NgModule) :
     fiche concernée**, **une seule fois** (elle se consomme), et **périmée au bout
     d'une heure**. Le store ne connaît pas la forme des univers : il transporte,
     la fiche interprète.
+  - `assistant-store.ts` (F10.1) — **la conversation avec l'assistant Kaikun**.
+    Le panneau étant monté dans les *layouts*, passer du site public à un espace
+    connecté le détruit — or c'est exactement le parcours que l'assistant
+    provoque (il propose un lien, on clique, on revient). Le store `root` porte
+    donc la conversation, l'ouverture du panneau, l'attente et l'exécution des
+    gestes proposés. ⚠️ **Rien n'est écrit sur le disque du navigateur** (à la
+    différence de `CompareStore` / `BookingIntentStore`) : une conversation
+    contient ce que la personne a tapé, parfois un litige ou un budget — ça ne
+    survit pas à la fermeture de l'onglet sur une machine partagée. ⚠️
+    **L'historique est borné à 10 tours** (miroir de `config/assistant.php`) :
+    le serveur tronque de toute façon, mais dès `ClaudeBrain` (F10.4) chaque
+    tour envoyé est payé. ⚠️ **Un 503 fait disparaître la bulle pour la
+    session** — l'interrupteur d'urgence du module répond 503, et un bouton qui
+    ne sait que s'excuser vaut moins que pas de bouton. ⚠️ **Aucune URL
+    sortante n'est suivie** : seuls les chemins internes (`/…`, jamais `//…`)
+    sont navigués, précaution qui prendra tout son sens le jour où c'est un
+    modèle de langage qui produira ces liens. 11 tests.
 
 Fourni via `app.config.ts` (`provideHttpClient(withInterceptors(...))`, etc.).
 Ne contient **aucun composant d'interface** (voir [`../shared`](../shared)).

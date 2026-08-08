@@ -471,6 +471,47 @@ export const routes: Routes = [
           },
         },
       },
+      {
+        // F10.1.a — LA PAGE D'ERREUR, cible de `errorInterceptor` depuis F0.
+        //
+        // ⚠️ Elle n'existait pas. L'intercepteur y renvoyait pourtant à chaque
+        // réponse 0 ou 5xx : au rendu serveur cela levait `NG04002: 'erreur'`,
+        // et au navigateur le routeur annulait la navigation — la personne
+        // restait sur sa page, sans un mot, en croyant que son clic n'avait rien
+        // fait. Défaut silencieux vieux de toute la phase F.
+        path: 'erreur',
+        loadComponent: () =>
+          import('./features/content/error-page/error-page').then((m) => m.ErrorPageComponent),
+        title: 'Service indisponible — Kaikun 360',
+        data: {
+          kind: 'serveur',
+          seo: {
+            description: 'Une difficulté technique empêche l\'affichage de cette page.',
+            // Une page d'erreur indexée abîme la réputation du domaine entier.
+            index: false,
+          },
+        },
+      },
+      {
+        // F10.1.a — LE 404, jumeau du précédent : le site n'avait AUCUNE route
+        // attrape-tout, si bien qu'une adresse inconnue (lien périmé partagé sur
+        // WhatsApp, annonce retirée, faute de frappe) produisait exactement le
+        // même silence.
+        //
+        // ⚠️ **DOIT RESTER LA TOUTE DERNIÈRE ROUTE DU FICHIER** : `**` accepte
+        // tout, une route déclarée après elle serait inatteignable.
+        path: '**',
+        loadComponent: () =>
+          import('./features/content/error-page/error-page').then((m) => m.ErrorPageComponent),
+        title: 'Page introuvable — Kaikun 360',
+        data: {
+          kind: 'introuvable',
+          seo: {
+            description: 'Cette page n\'existe pas ou n\'est plus en ligne.',
+            index: false,
+          },
+        },
+      },
     ],
   },
 ];

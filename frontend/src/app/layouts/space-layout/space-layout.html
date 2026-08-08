@@ -97,3 +97,10 @@
     </main>
   </div>
 </div>
+
+<!-- F10.1 — Assistant Kaikun, monté ici plutôt que dans la racine applicative :
+     il suit l'utilisateur dans TOUT son espace connecté, mais reste absent du
+     back-office (ses outils de gouvernance n'arrivent qu'en F10.3) et des pages
+     d'authentification. La conversation, elle, vit dans `AssistantStore` : elle
+     survit au passage du site public à l'espace, qui détruit ce composant. -->
+<app-assistant-panel />

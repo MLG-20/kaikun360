@@ -2,13 +2,15 @@
 
 namespace App\Modules\Assistant\Brains;
 
+use App\Models\Commune;
+use App\Models\Region;
 use App\Modules\Assistant\Contracts\AssistantBrain;
 use App\Modules\Assistant\Support\AssistantAction;
 use App\Modules\Assistant\Support\AssistantContext;
 use App\Modules\Assistant\Support\AssistantReply;
-use App\Models\Commune;
-use App\Models\Region;
 use App\Modules\Assistant\Tools\ToolRegistry;
+use App\Modules\Explore\Models\TourismExperience;
+use App\Modules\Immo\Models\Property;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -44,7 +46,11 @@ class RuleBasedBrain implements AssistantBrain
     private const UNIVERSE_KEYWORDS = [
         'nuitees' => ['nuit', 'nuitee', 'nuitées', 'nuitee', 'hebergement', 'sejour', 'chambre', 'meuble', 'dormir', 'weekend', 'week-end', 'gite'],
         'transport' => ['voiture', 'berline', '4x4', 'vehicule', 'navette', 'aibd', 'bus', 'minibus', 'pirogue', 'transport', 'chauffeur', 'deplacer', 'trajet', 'aeroport'],
-        'tourisme' => ['circuit', 'excursion', 'visite', 'tourisme', 'touristique', 'decouverte', 'safari', 'colonie', 'vacances'],
+        // ⚠️ La comparaison se fait par MOTS ENTIERS (voir matchesAny) : « visite »
+        // ne reconnaît donc pas « visiter », et « decouverte » pas « decouvrir ».
+        // Chaque forme conjuguée courante doit figurer ici — « je veux visiter
+        // Gorée » partait au support faute de ce seul mot.
+        'tourisme' => ['circuit', 'excursion', 'visite', 'visiter', 'tourisme', 'touristique', 'decouverte', 'decouvrir', 'safari', 'colonie', 'vacances'],
         // ⚠️ Pas de « bien » ici : c'est aussi un adverbe très courant
         // (« je voudrais bien savoir comment payer »), et il détournait vers
         // l'immobilier des questions qui relevaient de la FAQ.
@@ -182,14 +188,43 @@ class RuleBasedBrain implements AssistantBrain
      * pays (données de référence déjà en base), plutôt qu'à une liste de villes
      * écrite en dur qui vieillirait mal et raterait les petites communes.
      *
+     * ⚠️ **Les lieux TOURISTIQUES en font partie, et ce n'est pas un détail**
+     * (correctif F10.1). Ni « Saly » (une `tourist_zone` d'un bien) ni
+     * « Casamance », « Gorée » ou « Lompoul » (les `destination` des circuits)
+     * ne sont des communes ou des régions. `SearchCatalogTool` sait pourtant
+     * chercher sur ces deux colonnes — mais il ne recevait jamais le mot, faute
+     * de le reconnaître ici : mesuré sur la base réelle, « un circuit en
+     * Casamance » renvoyait les trois derniers circuits publiés, n'importe où.
+     * Le vocabulaire de compréhension doit couvrir tout ce que la recherche sait
+     * exploiter, sinon la moitié de l'outil reste hors d'atteinte.
+     *
      * La liste est mise en cache une heure : elle ne change qu'au rythme du
-     * découpage administratif, et on ne veut pas d'une requête par message.
+     * découpage administratif (et des zones saisies par les déposants), et on ne
+     * veut pas de trois requêtes par message.
      */
     private function detectPlace(string $normalized): ?string
     {
         $places = Cache::remember('assistant:places', 3600, function () {
             return Region::query()->pluck('name')
                 ->merge(Commune::query()->pluck('name'))
+                // Zones touristiques des biens et destinations des circuits.
+                // ⚠️ Bornées aux annonces PUBLIÉES, comme la recherche : le
+                // vocabulaire de l'assistant ne doit pas trahir l'existence
+                // d'une annonce en attente de validation.
+                ->merge(
+                    Property::query()
+                        ->published()
+                        ->whereNotNull('tourist_zone')
+                        ->distinct()
+                        ->pluck('tourist_zone'),
+                )
+                ->merge(
+                    TourismExperience::query()
+                        ->published()
+                        ->whereNotNull('destination')
+                        ->distinct()
+                        ->pluck('destination'),
+                )
                 ->filter(fn ($name) => is_string($name) && mb_strlen($name) >= 3)
                 ->unique()
                 // Les noms longs d'abord : « Dakar Plateau » doit gagner sur « Dakar ».
