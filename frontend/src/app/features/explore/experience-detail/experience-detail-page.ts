@@ -17,6 +17,8 @@ import { CatalogService } from '../../../core/api/catalog.service';
 import { BookingService } from '../../../core/api/booking.service';
 import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { schemaFilAriane, schemaOffre } from '../../../core/seo/json-ld';
+import { SeoService } from '../../../core/seo/seo.service';
 import { BookingIntentStore } from '../../../core/state/booking-intent-store';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Experience, ExperienceAvailability } from '../../../models/experience.model';
@@ -62,6 +64,7 @@ export class ExperienceDetailPageComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  private readonly seo = inject(SeoService);
   /** Panier : garde la saisie du visiteur le temps qu'il se connecte (F8.13). */
   private readonly intents = inject(BookingIntentStore);
 
@@ -108,6 +111,7 @@ export class ExperienceDetailPageComponent {
           switchMap((env) => {
             this.experience.set(env.data);
             this.state.set('ready');
+            this.referencer(env.data);
             return forkJoin({
               availability: this.catalog.experienceAvailability(id).pipe(
                 map((a) => a.data),
@@ -136,6 +140,50 @@ export class ExperienceDetailPageComponent {
 
   // --- Dérivés d'affichage --------------------------------------------------
   readonly priceLabel = computed(() => formatFcfa(this.experience()?.price_xof));
+
+  /**
+   * Affine les balises de référencement avec l'expérience chargée (F9.1).
+   *
+   * ⚠️ Le prix d'un circuit est **par personne** : l'annoncer comme un prix
+   * global dans les données structurées afficherait un tarif de groupe dans les
+   * résultats Google. D'où l'unité passée explicitement.
+   */
+  private referencer(experience: Experience): void {
+    const duree = `${experience.duration_days} jour${experience.duration_days > 1 ? 's' : ''}`;
+    const description =
+      experience.description?.trim() ||
+      `Circuit de ${duree} à ${experience.destination}, ${formatFcfa(
+        experience.price_xof,
+      )} par personne.`;
+
+    this.seo.apply({
+      title: `${experience.title} — ${experience.destination}`,
+      description,
+      type: 'product',
+      canonicalPath: `/tourisme/${experience.id}`,
+      image: experience.photo_url ?? null,
+    });
+    this.seo.setJsonLd(
+      'offre',
+      schemaOffre({
+        nom: experience.title,
+        description: experience.description,
+        image: experience.photo_url,
+        chemin: `/tourisme/${experience.id}`,
+        prixXof: experience.price_xof,
+        unite: 'personne',
+        lieu: experience.destination,
+      }),
+    );
+    this.seo.setJsonLd(
+      'ariane',
+      schemaFilAriane([
+        { nom: 'Accueil', chemin: '/' },
+        { nom: 'Tourisme', chemin: '/tourisme' },
+        { nom: experience.title, chemin: `/tourisme/${experience.id}` },
+      ]),
+    );
+  }
 
   /** Libellés lisibles de quelques clés d'inclusion connues. */
   private static readonly INCLUSION_LABELS: Record<string, string> = {

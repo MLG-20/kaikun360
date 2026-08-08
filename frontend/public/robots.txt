@@ -1,0 +1,42 @@
+# Kaikun 360 — consignes d'exploration (F9.2)
+#
+# ⚠️ CE FICHIER N'EST PAS UNE PROTECTION. Il demande poliment à un robot de ne
+# pas parcourir certains chemins ; il n'empêche personne d'y accéder, et une URL
+# interdite ici peut malgré tout apparaître dans un moteur si un lien externe y
+# mène. Ce qui protège réellement les espaces connectés, ce sont `authGuard` /
+# `roleGuard` côté routes et les policies côté API. Ce qui les tient hors des
+# résultats, c'est la balise `noindex` posée par `SeoService` — voir
+# `core/seo/seo-title-strategy.ts`.
+#
+# ⚠️ Ce fichier est SERVI PAR LE SITE (dossier `public/` du frontend Angular),
+# pas par l'API : `robots.txt` n'est lu qu'à la racine du domaine visité.
+# Le plan du site, lui, est produit par Laravel et relayé par le serveur de
+# rendu — voir `src/server.ts` et `backend/routes/web.php`.
+
+User-agent: *
+
+# Espaces connectés : rien d'utile à un moteur, et des URL nominatives.
+Disallow: /mon-espace
+Disallow: /espace-proprietaire
+Disallow: /espace-prestataire
+Disallow: /espace-entreprise
+Disallow: /back-office
+Disallow: /auth
+
+# Devis : chemin public, contenu nominatif.
+Disallow: /devis
+
+# Retours de paiement : pages de transition, sans contenu propre.
+Disallow: /paiement
+
+# Résultats de recherche filtrés : mêmes offres que les catalogues, sous un
+# nombre illimité d'URL. Ce sont les catalogues qu'on veut voir remonter.
+Disallow: /recherche
+
+# Comparateur : son contenu dépend d'une sélection stockée dans le navigateur,
+# donc toujours vide pour un robot.
+Disallow: /immobilier/comparer
+
+Allow: /
+
+Sitemap: https://kaikun360.com/sitemap.xml

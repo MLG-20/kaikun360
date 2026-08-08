@@ -62,7 +62,7 @@
                      saut de mise en page pendant le chargement — et surtout
                      empêche la photo de s'afficher en pleine page si la feuille
                      de style du composant n'est pas (encore) là. -->
-                <img class="of-thumb" width="72" height="54" [src]="v.photo_url" [alt]="vehicleName(v)" />
+                <img class="of-thumb" width="72" height="54" loading="lazy" decoding="async" [src]="v.photo_url" [alt]="vehicleName(v)" />
               } @else {
                 <span class="of-thumb of-thumb--empty" aria-hidden="true">📷</span>
               }
@@ -131,7 +131,7 @@
               <!-- Les photos d'un départ sont celles de son véhicule (F8.18) :
                    un départ sans véhicule rattaché n'en a donc aucune. -->
               @if (d.photo_url) {
-                <img class="of-thumb" width="72" height="54" [src]="d.photo_url"
+                <img class="of-thumb" width="72" height="54" loading="lazy" decoding="async" [src]="d.photo_url"
                      [alt]="departureName(d)" />
               } @else {
                 <span class="of-thumb of-thumb--empty" aria-hidden="true">🚐</span>
@@ -205,7 +205,7 @@
           @for (x of experiences(); track x.id) {
             <li class="of-card">
               @if (x.photo_url) {
-                <img class="of-thumb" width="72" height="54" [src]="x.photo_url" [alt]="x.title" />
+                <img class="of-thumb" width="72" height="54" loading="lazy" decoding="async" [src]="x.photo_url" [alt]="x.title" />
               } @else {
                 <span class="of-thumb of-thumb--empty" aria-hidden="true">📷</span>
               }

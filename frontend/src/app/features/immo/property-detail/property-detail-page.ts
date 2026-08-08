@@ -9,6 +9,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { CatalogService } from '../../../core/api/catalog.service';
 import { RequestService } from '../../../core/api/request.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { schemaFilAriane, schemaOffre } from '../../../core/seo/json-ld';
+import { SeoService } from '../../../core/seo/seo.service';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Property } from '../../../models/property.model';
 import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
@@ -40,6 +42,7 @@ export class PropertyDetailPageComponent {
   private readonly requests = inject(RequestService);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  private readonly seo = inject(SeoService);
 
   /** Identifiant du bien issu de l'URL. */
   private readonly id = toSignal(
@@ -76,6 +79,7 @@ export class PropertyDetailPageComponent {
             this.property.set(env.data);
             this.state.set('ready');
             this.prefillMessage(env.data);
+            this.referencer(env.data);
           }),
           catchError((err: { status?: number }) => {
             this.state.set(err?.status === 404 ? 'notfound' : 'failed');
@@ -85,6 +89,55 @@ export class PropertyDetailPageComponent {
       }),
     ),
   );
+
+  /**
+   * Affine les balises de référencement avec le bien réellement chargé (F9.1).
+   *
+   * La route posait déjà une description générique dès la navigation ; ici, on
+   * la remplace par le vrai titre, la vraie ville et la vraie photo. C'est ce
+   * qui fait qu'un lien collé dans WhatsApp affiche la villa plutôt que le logo
+   * du site — et ce canal est le principal vecteur de partage du projet.
+   *
+   * ⚠️ Appelé dans le `tap` du chargement, donc **après** la navigation : la
+   * stratégie de titre a déjà réécrit tout le jeu de balises, on l'écrase
+   * volontairement. L'ordre inverse effacerait ce travail.
+   */
+  private referencer(bien: Property): void {
+    const lieu = [bien.location.commune, bien.location.region].filter(Boolean).join(', ') || null;
+    const titre = [bien.title, lieu].filter(Boolean).join(' — ');
+    const description =
+      bien.description?.trim() ||
+      // Repli construit à partir de ce que la fiche affiche : un bien sans
+      // texte de présentation ne doit pas hériter d'une description vide.
+      [bien.type_label, lieu, formatFcfa(bien.price_xof)].filter(Boolean).join(' · ');
+
+    this.seo.apply({
+      title: titre,
+      description,
+      type: 'product',
+      canonicalPath: `/immobilier/${bien.id}`,
+      image: bien.photo_url ?? null,
+    });
+    this.seo.setJsonLd(
+      'offre',
+      schemaOffre({
+        nom: bien.title,
+        description: bien.description,
+        image: bien.photo_url,
+        chemin: `/immobilier/${bien.id}`,
+        prixXof: bien.price_xof,
+        lieu,
+      }),
+    );
+    this.seo.setJsonLd(
+      'ariane',
+      schemaFilAriane([
+        { nom: 'Accueil', chemin: '/' },
+        { nom: 'Immobilier', chemin: '/immobilier' },
+        { nom: bien.title, chemin: `/immobilier/${bien.id}` },
+      ]),
+    );
+  }
 
   // --- Formulaire de demande de visite --------------------------------------
   readonly form = this.fb.nonNullable.group({

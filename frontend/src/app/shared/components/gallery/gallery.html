@@ -8,7 +8,15 @@
         (click)="openLightbox()"
         [attr.aria-label]="'Agrandir : ' + alt()"
       >
-        <img [src]="main" [alt]="alt()" />
+        <!--
+          ⚠️ Cette image est le plus grand élément visible d'une fiche : c'est
+          elle que mesure le « Largest Contentful Paint ». Elle doit rester
+          CHARGÉE TÔT — d'où l'absence volontaire de `loading="lazy"` (qui
+          retarderait précisément ce qu'on veut voir en premier) et la priorité
+          haute, qui la fait passer devant les scripts dans la file du
+          navigateur. Les vignettes en dessous, elles, sont paresseuses.
+        -->
+        <img [src]="main" [alt]="alt()" fetchpriority="high" decoding="async" />
       </button>
 
       @if (hasMany()) {

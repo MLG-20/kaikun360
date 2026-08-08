@@ -18,4 +18,14 @@ export const environment = {
   // de Laravel. Il faut donc le renseigner ICI aussi, sinon le bouton reste
   // masqué alors que tout le reste est configuré.
   googleClientId: '924259118421-e0lbqlhfevp2ip0o23ib8d7hheatnons.apps.googleusercontent.com',
+  /**
+   * Adresse publique du site en développement (F9.1) — voir le commentaire
+   * détaillé dans `environment.ts`. En local, c'est le serveur Angular.
+   *
+   * ⚠️ Les URL absolues produites ici (`canonical`, `og:url`) pointeront donc
+   * vers `localhost` : c'est **voulu**. Vérifier les balises en local a du
+   * sens ; y voir le domaine de production n'en aurait aucun, et masquerait
+   * une erreur de configuration au déploiement.
+   */
+  siteUrl: 'http://localhost:4200',
 };

@@ -47,7 +47,7 @@
           <ul class="opd-gallery">
             @for (photo of p.photos; track photo.id) {
               <li class="opd-gallery-item" [class.is-primary]="photo.is_primary">
-                <img [src]="photo.url" [alt]="photo.original_name ?? 'Photo du bien'" />
+                <img [src]="photo.url" [alt]="photo.original_name ?? 'Photo du bien'" loading="lazy" decoding="async" />
                 @if (photo.is_primary) {
                   <span class="opd-gallery-tag">Couverture</span>
                 }

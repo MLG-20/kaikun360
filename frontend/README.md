@@ -34,6 +34,14 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
 - ✅ **Le rendu côté serveur (SSR)** : les pages publiques sont d'abord
   **assemblées par un serveur** puis envoyées prêtes à afficher (bon pour le
   référencement Google et pour un premier affichage rapide). Voir « SSR » ci-dessous.
+- ✅ **Le référencement (F9.1/F9.2)** : chaque page publique part avec son titre,
+  sa description, son adresse canonique et son aperçu de partage (celui qui
+  s'affiche quand on colle un lien dans WhatsApp) ; les fiches y ajoutent leur
+  vraie photo et leurs **données structurées** (prix, ville, disponibilité), que
+  Google sait afficher directement dans ses résultats. Le site publie aussi un
+  `robots.txt` et un **plan du site** listant toutes les annonces en ligne. Les
+  espaces connectés, eux, sont tenus **hors des moteurs**. Voir
+  « Référencement » ci-dessous.
 - ✅ **L'espace client (F3)** : l'espace personnel de la personne connectée, sous
   `/mon-espace` (menu latéral sombre, en-tête épuré). Ses écrans sont en
   place — tableau de bord, **profil** (photo, identité, coordonnées, sécurité, pièces),
@@ -1169,6 +1177,17 @@ Angular « hydrate » ce HTML (le rend interactif sans le reconstruire). Concrè
 - Sur les pages publiques (SSR), le serveur ignorant la session rend toujours la
   vue « visiteur non connecté » — exactement ce qu'un moteur d'indexation doit voir.
 
+> ⚠️ **Le serveur de rendu a besoin d'une adresse d'API ABSOLUE** — variable
+> d'environnement **`API_ORIGIN`** (défaut : `http://localhost:8000`). En
+> production `environment.apiUrl` vaut `/api/v1`, une adresse relative qui ne se
+> résout que dans un navigateur : le processus Node l'adressait à sa propre
+> origine, qui répond du HTML, et **chaque fiche du catalogue répondait
+> « introuvable » au rendu serveur**. Invisible à l'écran — le navigateur refait
+> l'appel correctement à l'hydratation — mais **c'est exactement ce que lisent
+> Google et l'aperçu WhatsApp**. Corrigé en F9.1 par un intercepteur actif au
+> seul rendu serveur ; voir « Référencement » plus bas et
+> [`core/README.md`](src/app/core/README.md).
+
 ```bash
 # 1. Construire (produit dist/kaikun360/{browser,server})
 npx ng build
@@ -1238,6 +1257,84 @@ la portée `/`, caches créés, et **rechargement hors ligne rendant la page**
 # La PWA n'existe QUE dans un build de production servi en HTTPS (ou localhost).
 npx ng build && npm run serve:ssr:kaikun360   # → http://localhost:4000/
 # Chrome → DevTools → Application → Service Workers / Manifest
+```
+
+### Référencement — balises, données structurées, plan du site (F9.1 / F9.2)
+
+Le rendu serveur était en place depuis F2.9 et **122 titres de route** étaient
+posés, mais il n'existait dans tout le frontend **aucune description, aucune URL
+canonique, aucune balise OpenGraph, aucune donnée structurée**, ni `robots.txt`
+ni `sitemap.xml`. Deux conséquences très concrètes : un lien collé sur
+**WhatsApp** — le canal de partage principal du projet — s'affichait nu, sans
+titre ni image ; et Google, faute de description, en fabriquait une à partir du
+premier texte rencontré, souvent le menu de navigation.
+
+**Où ça vit** : [`src/app/core/seo/`](src/app/core/seo/) — le service de balises,
+les constructeurs schema.org, et la stratégie de titre du routeur.
+
+**Comment une page est décrite**, en deux temps qui ne se confondent pas :
+
+1. **la route** déclare un repli dans `data: { seo: { description, index?, type? } }`
+   ([`app.routes.ts`](src/app/app.routes.ts)). Il est appliqué **dès la
+   navigation**, avant tout appel réseau ;
+2. **la fiche** l'affine une fois ses données reçues (`SeoService.apply()`), avec
+   le vrai titre, la vraie ville et la vraie photo — plus son JSON-LD
+   (`Product` + `Offer`, `BreadcrumbList`).
+
+> ⚠️ **Une route SANS `data.seo` est mise hors index** (`noindex, follow`).
+> C'est délibéré, et **à ne pas inverser** : les quatre espaces connectés et le
+> back-office représentent bien plus de routes que les pages publiques. Avec la
+> règle contraire, le prochain écran privé ajouté partirait dans l'index de
+> Google par simple oubli. Ici, l'oubli fait perdre du référencement à une page
+> publique — visible et réparable.
+>
+> ⚠️ `noindex` **n'est pas un contrôle d'accès** : il demande à un robot poli de
+> ne pas publier la page. Ce qui protège reste `authGuard` / `roleGuard` côté
+> routes et les policies côté API.
+
+> ⚠️ **`index.html` porte un `noindex` de repli, ce n'est pas une erreur.** Une
+> URL d'espace connecté demandée sans session fait annuler la navigation par la
+> garde : le serveur répond alors une page **vide en HTTP 200**, où rien n'a pu
+> écrire de balise. Sans ce repli, Google recevrait une page blanche indexable —
+> ce qu'il compte comme « soft 404 » au passif de tout le domaine. Le service le
+> remplace par `index, follow` sur chaque page publique.
+
+> ⚠️ **Le `Router` est résolu à l'usage dans `SeoService`, jamais au
+> constructeur.** Le routeur exige sa stratégie de titre pour se construire ; si
+> le service qu'elle utilise réclame le routeur en retour, la boucle est fermée
+> et le **build échoue en `NG0200`** — sous le message trompeur « An error
+> occurred while extracting routes », sans rapport apparent avec le SEO.
+
+**`siteUrl`** (dans `src/environments/`) est l'adresse publique du site, **le
+seul endroit à changer au déploiement**. Elle doit valoir exactement la même
+chose que `FRONTEND_URL` côté backend (le réglage qui sert déjà les liens des
+e-mails depuis F8.8). Une URL absolue est obligatoire : `canonical`, `og:url` et
+`og:image` sont lues par des robots sans contexte de page — et elle ne peut pas
+être déduite de `window.location`, puisqu'au rendu serveur il n'y a pas de
+`window`.
+
+**`robots.txt`** est un fichier statique de [`public/`](public/robots.txt) :
+il n'est lu qu'à la racine du domaine visité, donc il doit être servi par le
+site, pas par l'API.
+
+**`sitemap.xml`** est en revanche **produit par Laravel** (`App\Support\Seo\SitemapBuilder`) :
+lui seul connaît les fiches publiées, et la suite de tests backend peut le
+vérifier. Le serveur de rendu ([`src/server.ts`](src/server.ts)) le **relaie**
+sous le domaine du site — un moteur n'accepte un plan que servi par le domaine
+qu'il décrit, et l'API peut vivre ailleurs. Ce relais lit l'origine de l'API
+dans la variable d'environnement **`API_ORIGIN`** (défaut : `http://localhost:8000`),
+et **pas** `environment.apiUrl`, qui vaut `/api/v1` en production — une adresse
+relative n'a de sens que dans un navigateur.
+
+**Vérifier en local** (les balises ne sont complètes que dans un rendu serveur) :
+
+```bash
+npx ng build --configuration development     # apiUrl absolue → le SSR peut appeler l'API
+node dist/kaikun360/server/server.mjs        # → http://localhost:4000/
+
+curl -s http://localhost:4000/immobilier/98 | grep -E 'og:|canonical|robots'
+curl -s http://localhost:4000/mon-espace/profil | grep robots   # doit dire noindex
+curl -s http://localhost:4000/sitemap.xml | head
 ```
 
 ### Commandes utiles

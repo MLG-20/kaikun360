@@ -17,6 +17,8 @@ import { CatalogService } from '../../../core/api/catalog.service';
 import { BookingService } from '../../../core/api/booking.service';
 import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { schemaFilAriane, schemaOffre } from '../../../core/seo/json-ld';
+import { SeoService } from '../../../core/seo/seo.service';
 import { BookingIntentStore } from '../../../core/state/booking-intent-store';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Vehicle } from '../../../models/vehicle.model';
@@ -63,6 +65,7 @@ export class VehicleDetailPageComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  private readonly seo = inject(SeoService);
   /** Panier : garde la saisie du visiteur le temps qu'il se connecte (F8.13). */
   private readonly intents = inject(BookingIntentStore);
 
@@ -107,6 +110,7 @@ export class VehicleDetailPageComponent {
           switchMap((env) => {
             this.vehicle.set(env.data);
             this.state.set('ready');
+            this.referencer(env.data);
             return forkJoin({
               reviews: this.reviewsApi.forEntity('vehicle', id).pipe(
                 map((r) => r.data),
@@ -141,6 +145,58 @@ export class VehicleDetailPageComponent {
 
   readonly priceLabel = computed(() => formatFcfa(this.vehicle()?.price_per_day_xof));
   readonly cautionLabel = computed(() => formatFcfa(this.vehicle()?.caution_xof));
+
+  /**
+   * Affine les balises de référencement avec le véhicule chargé (F9.1).
+   *
+   * ⚠️ Un véhicule n'a pas de titre : son nom se compose de la marque et du
+   * modèle, avec le type en repli — exactement comme `vehicleName` plus haut.
+   * Les deux doivent rester d'accord, sinon l'onglet et la page nommeraient la
+   * même voiture différemment.
+   */
+  private referencer(vehicule: Vehicle): void {
+    const nom = [vehicule.brand, vehicule.model].filter(Boolean).join(' ') ||
+      vehicule.type_label ||
+      'Véhicule';
+    const conduite = vehicule.has_driver ? 'avec chauffeur' : 'sans chauffeur';
+    const description =
+      vehicule.description?.trim() ||
+      `${nom} en location ${conduite}, ${vehicule.capacity} places, ${formatFcfa(
+        vehicule.price_per_day_xof,
+      )} par jour.`;
+
+    this.seo.apply({
+      // ⚠️ Le mode de conduite reste dans la DESCRIPTION, pas dans le titre :
+      // quand la marque et le modèle manquent, `nom` retombe sur le libellé de
+      // type — qui vaut « Chauffeur » pour un véhicule avec chauffeur. Le titre
+      // bégayait alors (« Chauffeur en location avec chauffeur »). La mention
+      // géographique, elle, a sa place ici : c'est un terme de recherche.
+      title: `${nom} en location au Sénégal`,
+      description,
+      type: 'product',
+      canonicalPath: `/transport/${vehicule.id}`,
+      image: vehicule.photo_url ?? null,
+    });
+    this.seo.setJsonLd(
+      'offre',
+      schemaOffre({
+        nom,
+        description: vehicule.description,
+        image: vehicule.photo_url,
+        chemin: `/transport/${vehicule.id}`,
+        prixXof: vehicule.price_per_day_xof,
+        unite: 'jour',
+      }),
+    );
+    this.seo.setJsonLd(
+      'ariane',
+      schemaFilAriane([
+        { nom: 'Accueil', chemin: '/' },
+        { nom: 'Transport', chemin: '/transport' },
+        { nom, chemin: `/transport/${vehicule.id}` },
+      ]),
+    );
+  }
 
 
   // --- Formulaire de demande de réservation ---------------------------------

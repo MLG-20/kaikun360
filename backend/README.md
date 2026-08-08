@@ -11,7 +11,7 @@ API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 - **260 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **11 modules** métier isolés
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **924 tests** automatisés (3219 assertions), tous verts ✅
+- **935 tests** automatisés (3275 assertions), tous verts ✅
 
 ---
 
@@ -51,7 +51,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 924 tests automatiques** — des petits programmes
+notifications) et **vérifié par 935 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -604,6 +604,40 @@ Détail complet, règles de rédaction et ajout d'un e-mail :
 - **Benchmark** local reproductible : `php artisan catalog:benchmark`.
 
 Détail : [`PERFORMANCE.md`](PERFORMANCE.md).
+
+---
+
+## Plan du site — `GET /sitemap.xml` (F9.2)
+
+Le backend publie le **plan du site** que lisent les moteurs de recherche :
+toutes les pages publiques du site, plus **chaque fiche publiée** (biens,
+nuitées, circuits, véhicules, départs à venir, pages éditoriales). Construction
+dans [`app/Support/Seo/SitemapBuilder.php`](app/Support/Seo/SitemapBuilder.php),
+route dans [`routes/web.php`](routes/web.php), tests dans
+`tests/Feature/Transversal/SitemapTest.php`.
+
+> ⚠️ **Route `web`, pas `api`** : un robot demande ce document tel quel, sans
+> préfixe `/api/v1` ni en-tête `Accept`. Le mettre derrière l'API le rendrait
+> introuvable.
+
+> ⚠️ **Les URL produites sont celles du SITE** (`FRONTEND_URL`), jamais de l'API
+> — le même réglage que les liens des e-mails depuis F8.8. Avec `APP_URL`, on
+> publierait dans Google des liens qui répondent du JSON à des visiteurs.
+
+> ⚠️ **Ce document doit sortir sous le domaine du SITE** : un moteur refuse un
+> plan qui liste des URL d'un autre domaine que celui qui le sert. Le montage par
+> défaut est le **relais du serveur de rendu Angular** (`frontend/src/server.ts`,
+> variable `API_ORIGIN`), qui fonctionne sans configuration d'infrastructure. Une
+> règle de reverse-proxy acheminant `/sitemap.xml` vers Laravel convient aussi.
+
+> ⚠️ **Un plan du site n'est pas un contrôle d'accès** : tout ce qui y figure est
+> appelé à être visité par des robots. Il applique donc **exactement les mêmes
+> filtres que les endpoints publics** (`published()`, `bookable()`, et `aVenir()`
+> pour la mobilité). Le jour où un filtre public change, celui-ci doit changer
+> avec — sinon le plan annonce des pages qui répondent 404, ou pire, **des
+> annonces qu'aucun agent n'a validées**.
+
+Mis en cache une heure (six tables interrogées, et les robots repassent souvent).
 
 ---
 

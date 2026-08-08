@@ -17,7 +17,7 @@
   <!-- Photos déjà en ligne (édition) -->
   @for (photo of photos(); track photo.id) {
     <figure class="kpm-photo" [class.is-primary]="photo.is_primary">
-      <img [src]="photo.url" [alt]="photo.original_name ?? ('Photo — ' + subject())" />
+      <img [src]="photo.url" [alt]="photo.original_name ?? ('Photo — ' + subject())" loading="lazy" decoding="async" />
       @if (photo.is_primary) {
         <figcaption class="kpm-tag">Couverture</figcaption>
       }

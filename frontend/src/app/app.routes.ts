@@ -11,6 +11,20 @@ import { MainLayoutComponent } from './layouts/main-layout/main-layout';
  *
  * `auth` est déclaré AVANT la branche `''` (qui matche par préfixe) pour être
  * résolu en priorité.
+ *
+ * ## Référencement (F9.1) — lire avant d'ajouter une route
+ *
+ * Chaque route **publique** porte un `data: { seo: … }` : une description de
+ * 120–160 caractères servie au robot avant même que la page ait chargé ses
+ * données. Les fiches l'affinent ensuite avec leur contenu réel (titre du bien,
+ * photo de couverture) via `SeoService.apply()`.
+ *
+ * ⚠️ **Une route SANS `data.seo` est mise hors index** (`noindex, follow`) par
+ * `SeoTitleStrategy`. C'est délibéré : les quatre espaces connectés et le
+ * back-office n'ont rien à faire dans un moteur, et cette règle les protège par
+ * défaut plutôt que par vigilance. Conséquence : **oublier `seo` sur une page
+ * publique la rend invisible à Google**. C'est le sens de l'erreur qu'on
+ * préfère.
  */
 export const routes: Routes = [
   {
@@ -58,6 +72,12 @@ export const routes: Routes = [
         path: '',
         loadComponent: () => import('./features/home/home-page').then((m) => m.HomePageComponent),
         title: 'Kaikun 360 — Immobilier, tourisme & services au Sénégal',
+        data: {
+          seo: {
+            description:
+              'Immobilier vérifié, nuitées, construction, gestion locative, tourisme et mobilité au Sénégal : une seule plateforme pour habiter, investir et voyager.',
+          },
+        },
       },
       {
         // Page de résultats du moteur de recherche (F2.1). L'univers et les
@@ -66,6 +86,19 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/catalog/catalog-page').then((m) => m.CatalogPageComponent),
         title: 'Recherche — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Recherchez un bien, un séjour, une expérience ou un trajet parmi les offres vérifiées de Kaikun 360, partout au Sénégal.',
+            // ⚠️ HORS INDEX à dessein : les filtres vivent dans l'URL depuis
+            // `34fbe37`, ce qui rend le nombre d'URL distinctes combinatoire
+            // pour un contenu qui est toujours celui des catalogues. Ce sont
+            // les catalogues (`/immobilier`, `/nuitees`…) qu'on veut voir
+            // remonter, pas leurs vues filtrées. `follow` reste actif : le
+            // robot suit les liens de résultats jusqu'aux fiches.
+            index: false,
+          },
+        },
       },
       {
         // Univers Immobilier (F2.3) : page vitrine + fiche détaillée d'un bien.
@@ -75,6 +108,12 @@ export const routes: Routes = [
             (m) => m.PropertyListPageComponent,
           ),
         title: 'Immobilier vérifié — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Villas, appartements et terrains vérifiés à Dakar, Saly, Thiès et dans tout le Sénégal. Titres contrôlés, visites organisées, achat à distance possible.',
+          },
+        },
       },
       {
         // Dépôt de bien par un propriétaire (F2.7) : formulaire + sélecteurs géo.
@@ -86,6 +125,12 @@ export const routes: Routes = [
             (m) => m.PropertyDepositPageComponent,
           ),
         title: 'Déposer un bien — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Confiez votre bien à Kaikun 360 : dépôt en ligne, vérification du dossier par nos agents, publication au catalogue et mise en relation avec des acheteurs.',
+          },
+        },
       },
       {
         // Comparateur de biens (F8.15.e). ⚠️ DOIT être déclaré AVANT
@@ -97,6 +142,15 @@ export const routes: Routes = [
             (m) => m.PropertyComparePageComponent,
           ),
         title: 'Comparer des biens — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Comparez côte à côte jusqu\'à quatre biens immobiliers : prix, localisation, type et niveau de vérification, sur un seul écran.',
+            // Le contenu dépend entièrement d'une sélection stockée dans le
+            // navigateur : pour un robot, la page est toujours vide.
+            index: false,
+          },
+        },
       },
       {
         path: 'immobilier/:id',
@@ -105,6 +159,13 @@ export const routes: Routes = [
             (m) => m.PropertyDetailPageComponent,
           ),
         title: 'Bien immobilier — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Détail d\'un bien immobilier vérifié par Kaikun 360 : prix, localisation, caractéristiques et demande de visite en ligne.',
+            type: 'product',
+          },
+        },
       },
       {
         // Univers Nuitées (F2.3) : page vitrine + fiche détaillée d'une nuitée.
@@ -114,6 +175,12 @@ export const routes: Routes = [
             (m) => m.StayListPageComponent,
           ),
         title: 'Nuitées & séjours — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Appartements et maisons meublés à la nuitée au Sénégal : réservation ferme en ligne, paiement sécurisé, logements contrôlés par nos agents.',
+          },
+        },
       },
       {
         path: 'nuitees/:id',
@@ -122,6 +189,13 @@ export const routes: Routes = [
             (m) => m.StayDetailPageComponent,
           ),
         title: 'Nuitée — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Logement meublé à la nuitée au Sénégal : tarif, équipements, conditions d\'arrivée et réservation immédiate sur Kaikun 360.',
+            type: 'product',
+          },
+        },
       },
       {
         // Univers Tourisme (F2.4) : page vitrine + fiche détaillée d'une expérience.
@@ -131,6 +205,12 @@ export const routes: Routes = [
             (m) => m.ExperienceListPageComponent,
           ),
         title: 'Tourisme & expériences — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Circuits, excursions et expériences au Sénégal proposés par des prestataires vérifiés : Saint-Louis, Sine Saloum, Casamance, île de Gorée.',
+          },
+        },
       },
       {
         path: 'tourisme/:id',
@@ -139,6 +219,13 @@ export const routes: Routes = [
             (m) => m.ExperienceDetailPageComponent,
           ),
         title: 'Expérience — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Programme, durée, inclusions et tarif d\'une expérience touristique au Sénégal, réservable en ligne sur Kaikun 360.',
+            type: 'product',
+          },
+        },
       },
       {
         // Univers Transport (F2.4) : page vitrine + fiche détaillée d'un véhicule.
@@ -148,6 +235,12 @@ export const routes: Routes = [
             (m) => m.VehicleListPageComponent,
           ),
         title: 'Transport & location — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Location de véhicules au Sénégal, avec ou sans chauffeur : berlines, 4×4 et minibus contrôlés, réservation et paiement en ligne.',
+          },
+        },
       },
       {
         path: 'transport/:id',
@@ -156,6 +249,13 @@ export const routes: Routes = [
             (m) => m.VehicleDetailPageComponent,
           ),
         title: 'Véhicule — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Fiche d\'un véhicule de location au Sénégal : tarif journalier, capacité, conformité du dossier et réservation en ligne.',
+            type: 'product',
+          },
+        },
       },
       {
         // Univers Mobilité (F2.4) : vitrine seule (pas de fiche côté backend).
@@ -165,6 +265,12 @@ export const routes: Routes = [
             (m) => m.MobilityListPageComponent,
           ),
         title: 'Mobilité, navettes & transferts — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Navettes, transferts aéroport et départs programmés entre les villes du Sénégal : places réservables à l\'unité, horaires publiés.',
+          },
+        },
       },
       {
         // F8.10 — fiche d'un départ programmé. Elle n'existait pas : l'univers
@@ -176,6 +282,13 @@ export const routes: Routes = [
             (m) => m.TripDetailPageComponent,
           ),
         title: 'Départ — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Départ programmé au Sénégal : trajet, date, horaire, prix par place et nombre de places restantes. Réservation immédiate.',
+            type: 'product',
+          },
+        },
       },
       {
         // Univers Construction (F2.5) : page de conversion + simulateur de budget.
@@ -185,6 +298,12 @@ export const routes: Routes = [
             (m) => m.ConstructionPageComponent,
           ),
         title: 'Construction & simulateur de budget — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Construisez au Sénégal depuis l\'étranger : simulateur de budget gratuit, devis par lot, suivi de chantier photo et jalons de paiement.',
+          },
+        },
       },
       {
         // Univers Gestion locative (F2.5) : page de conversion.
@@ -194,6 +313,12 @@ export const routes: Routes = [
             (m) => m.ManagePageComponent,
           ),
         title: 'Gestion locative — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Confiez la gestion de votre bien au Sénégal : recherche de locataire, encaissement des loyers, entretien et rapport mensuel détaillé.',
+          },
+        },
       },
       {
         // Univers Diaspora (F2.5) : page de conversion (protocole de confiance).
@@ -203,6 +328,12 @@ export const routes: Routes = [
             (m) => m.DiasporaPageComponent,
           ),
         title: 'Diaspora — projets pilotés à distance — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Sénégalais de l\'étranger : achetez, construisez et gérez à distance avec un protocole de confiance — agent dédié, preuves photo, paiements jalonnés.',
+          },
+        },
       },
       {
         // Univers Team building (F2.5) : page de conversion.
@@ -212,6 +343,12 @@ export const routes: Routes = [
             (m) => m.TeamBuildingPageComponent,
           ),
         title: 'Team building & séminaires — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Séminaires et team building d\'entreprise au Sénégal : lieu, hébergement, transport et activités organisés de bout en bout, sur devis.',
+          },
+        },
       },
       {
         // Kaikun Pro (F2.5) : page de conversion prestataires/entreprises.
@@ -219,6 +356,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/pro/pro-page/pro-page').then((m) => m.ProPageComponent),
         title: 'Kaikun Pro — devenez prestataire vérifié — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Rejoignez le réseau de prestataires vérifiés Kaikun 360 : missions qualifiées, paiements sécurisés et visibilité auprès de la diaspora.',
+          },
+        },
       },
       {
         // Inscription prestataire dédiée (F2.7) : formulaire d'adhésion marketplace.
@@ -228,10 +371,18 @@ export const routes: Routes = [
             (m) => m.ProviderRegistrationPageComponent,
           ),
         title: 'Devenir prestataire — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Inscrivez votre entreprise ou votre activité sur Kaikun 360 : dossier en ligne, vérification par nos agents, puis accès aux missions.',
+          },
+        },
       },
       {
         // Réponse à un devis (F2.7) : consultation + acceptation/refus.
         // On y arrive par un lien reçu en notification (auth requise).
+        // ⚠️ AUCUN `seo` : la page est publique par son chemin mais son contenu
+        // est celui d'un devis nominatif. Elle reste donc hors index.
         path: 'devis/:id',
         loadComponent: () =>
           import('./features/quote/quote-detail/quote-detail-page').then(
@@ -245,6 +396,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/content/faq/faq-page').then((m) => m.FaqPageComponent),
         title: 'Foire aux questions — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Réponses aux questions fréquentes sur Kaikun 360 : vérification des biens, paiements, réservations, gestion locative et suivi de chantier.',
+          },
+        },
       },
       {
         // Page Contact (F2.8) : coordonnées + WhatsApp, sans formulaire.
@@ -252,6 +409,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/content/contact/contact-page').then((m) => m.ContactPageComponent),
         title: 'Contact — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Contactez l\'équipe Kaikun 360 à Dakar : téléphone, e-mail et WhatsApp. Une réponse sous 24 h ouvrées pour tout projet au Sénégal.',
+          },
+        },
       },
       {
         // F8.6 — Retour de PayTech. PUBLIQUES et hors espace client, à dessein :
@@ -260,7 +423,15 @@ export const routes: Routes = [
         // ⚠️ Ces pages ne prouvent RIEN — seul l'IPN signé confirme un
         // encaissement. Elles n'affichent aucune donnée de réservation.
         path: 'paiement/succes',
-        data: { succeeded: true },
+        data: {
+          succeeded: true,
+          // Publique, mais sans aucun intérêt pour un moteur — et un résultat
+          // « Paiement reçu » dans Google serait inquiétant autant qu'inutile.
+          seo: {
+            description: 'Confirmation de retour de paiement Kaikun 360.',
+            index: false,
+          },
+        },
         loadComponent: () =>
           import('./features/content/payment-return/payment-return-page').then(
             (m) => m.PaymentReturnPageComponent,
@@ -269,7 +440,13 @@ export const routes: Routes = [
       },
       {
         path: 'paiement/annule',
-        data: { succeeded: false },
+        data: {
+          succeeded: false,
+          seo: {
+            description: 'Retour de paiement interrompu — Kaikun 360.',
+            index: false,
+          },
+        },
         loadComponent: () =>
           import('./features/content/payment-return/payment-return-page').then(
             (m) => m.PaymentReturnPageComponent,
@@ -286,6 +463,13 @@ export const routes: Routes = [
             (m) => m.ContentPageComponent,
           ),
         title: 'Kaikun 360',
+        data: {
+          seo: {
+            description:
+              'Page d\'information Kaikun 360 : conditions, politiques et mentions encadrant l\'usage de la plateforme.',
+            type: 'article',
+          },
+        },
       },
     ],
   },

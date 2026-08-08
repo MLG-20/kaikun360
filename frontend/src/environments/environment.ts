@@ -17,4 +17,22 @@ export const environment = {
   // de Laravel. Il faut donc le renseigner ICI aussi, sinon le bouton reste
   // masqué alors que tout le reste est configuré.
   googleClientId: '924259118421-e0lbqlhfevp2ip0o23ib8d7hheatnons.apps.googleusercontent.com',
+  /**
+   * Adresse PUBLIQUE du site, sans barre oblique finale (F9.1).
+   *
+   * ⚠️ Ce n'est pas un doublon de `apiUrl` : `apiUrl` désigne l'API Laravel,
+   * `siteUrl` désigne le site que voient les visiteurs et les robots. Le
+   * pendant côté backend est `FRONTEND_URL` (utilisé par les e-mails depuis
+   * F8.8) — **les deux doivent porter la même valeur**.
+   *
+   * ⚠️ Une URL **absolue est obligatoire** : les balises `canonical`,
+   * `og:url` et `og:image` sont lues par des robots qui n'ont aucun contexte
+   * de page. Un chemin relatif y est ignoré (au mieux) ou résolu contre le
+   * domaine du réseau social (au pire). C'est aussi pourquoi cette valeur ne
+   * peut pas être déduite de `window.location` : au rendu serveur (SSR), il
+   * n'y a pas de `window` — et c'est précisément le rendu que le robot lit.
+   *
+   * À ajuster au déploiement : c'est le SEUL endroit à changer.
+   */
+  siteUrl: 'https://kaikun360.com',
 };

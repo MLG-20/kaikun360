@@ -8,6 +8,22 @@
   <meta name="description"
     content="La plateforme sénégalaise qui réunit immobilier, construction, gestion locative, nuitées, tourisme et mobilité.">
   <meta name="theme-color" content="#03193F">
+
+  <!-- Référencement (F9.1) — ⚠️ CE `noindex` EST UN FILET DE SÉCURITÉ, PAS UNE
+       ERREUR. `SeoService` le remplace par « index, follow » sur chaque page
+       publique, dès la navigation. Il ne survit donc que là où l'application
+       n'a JAMAIS abouti à une page publique.
+
+       Le cas réel qu'il couvre : une URL d'espace connecté (`/mon-espace/…`,
+       `/back-office/…`) demandée par un robot. Côté serveur il n'y a pas de
+       session ; la garde annule la navigation, et le rendu sort une page
+       **vide en HTTP 200**. Sans ce repli, Google recevrait une page blanche
+       indexable — ce qu'il traite comme un « soft 404 » et compte au passif de
+       tout le domaine.
+
+       ⚠️ Ne jamais le retirer « parce que le site est public » : c'est
+       exactement l'inverse: il ne s'applique qu'aux pages qui ne le sont pas. -->
+  <meta name="robots" content="noindex, follow">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 
   <!-- PWA (F9.0) : l'application devient installable sur l'écran d'accueil —

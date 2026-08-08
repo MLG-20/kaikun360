@@ -10,6 +10,8 @@ import { CatalogService } from '../../../core/api/catalog.service';
 import { BookingService } from '../../../core/api/booking.service';
 import { ReviewService, ReviewList } from '../../../core/api/review.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { schemaFilAriane, schemaOffre } from '../../../core/seo/json-ld';
+import { SeoService } from '../../../core/seo/seo.service';
 import { BookingIntentStore } from '../../../core/state/booking-intent-store';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Stay, BookedRange } from '../../../models/stay.model';
@@ -62,6 +64,7 @@ export class StayDetailPageComponent {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  private readonly seo = inject(SeoService);
   /** Panier : garde la saisie du visiteur le temps qu'il se connecte (F8.13). */
   private readonly intents = inject(BookingIntentStore);
 
@@ -97,6 +100,7 @@ export class StayDetailPageComponent {
           switchMap((env) => {
             this.stay.set(env.data);
             this.state.set('ready');
+            this.referencer(env.data);
             // Disponibilité + avis en parallèle, chacun résilient.
             return forkJoin({
               availability: this.catalog.stayAvailability(id).pipe(
@@ -154,6 +158,53 @@ export class StayDetailPageComponent {
     }
     return [loc.commune, loc.department, loc.region].filter(Boolean).join(' · ') || null;
   });
+
+  /**
+   * Affine les balises de référencement avec la nuitée chargée (F9.1).
+   *
+   * ⚠️ **Une nuitée n'a ni titre ni photo à elle** : elle décrit le mode
+   * courte durée d'un BIEN, et c'est le bien qui porte le nom, la description,
+   * la localisation et les photos. Chercher `stay.title` ne donnerait rien —
+   * le champ n'existe pas.
+   */
+  private referencer(nuitee: Stay): void {
+    const bien = nuitee.property ?? null;
+    const lieu = [bien?.location?.commune, bien?.location?.region].filter(Boolean).join(', ') || null;
+    const nom = bien?.title ?? 'Logement meublé';
+    const description =
+      bien?.description?.trim() ||
+      `Logement meublé pour ${nuitee.capacity} personne${nuitee.capacity > 1 ? 's' : ''}${
+        lieu ? ` à ${lieu}` : ''
+      } — ${formatFcfa(nuitee.price_per_night_xof)} la nuit.`;
+
+    this.seo.apply({
+      title: [nom, lieu].filter(Boolean).join(' — '),
+      description,
+      type: 'product',
+      canonicalPath: `/nuitees/${nuitee.id}`,
+      image: bien?.photo_url ?? null,
+    });
+    this.seo.setJsonLd(
+      'offre',
+      schemaOffre({
+        nom,
+        description: bien?.description ?? null,
+        image: bien?.photo_url,
+        chemin: `/nuitees/${nuitee.id}`,
+        prixXof: nuitee.price_per_night_xof,
+        unite: 'nuit',
+        lieu,
+      }),
+    );
+    this.seo.setJsonLd(
+      'ariane',
+      schemaFilAriane([
+        { nom: 'Accueil', chemin: '/' },
+        { nom: 'Nuitées', chemin: '/nuitees' },
+        { nom, chemin: `/nuitees/${nuitee.id}` },
+      ]),
+    );
+  }
 
   // --- Calendrier de disponibilité -----------------------------------------
   /** Décalage en mois par rapport au mois courant (0 = mois affiché initial). */

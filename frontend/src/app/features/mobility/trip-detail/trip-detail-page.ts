@@ -16,6 +16,8 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { BookingService } from '../../../core/api/booking.service';
 import { CatalogService } from '../../../core/api/catalog.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { schemaFilAriane, schemaOffre } from '../../../core/seo/json-ld';
+import { SeoService } from '../../../core/seo/seo.service';
 import { BookingIntentStore } from '../../../core/state/booking-intent-store';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { MobilityService } from '../../../models/mobility-service.model';
@@ -58,6 +60,7 @@ export class TripDetailPageComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly seo = inject(SeoService);
   /** Panier : garde la saisie du visiteur le temps qu'il se connecte (F8.13). */
   private readonly intents = inject(BookingIntentStore);
 
@@ -100,6 +103,7 @@ export class TripDetailPageComponent {
             this.trip.set(env.data.mobility_service);
             this.seatsLeft.set(env.data.seats_left);
             this.state.set('ready');
+            this.referencer(env.data.mobility_service, env.data.seats_left);
           }),
           catchError((err: { status?: number }) => {
             this.state.set(err?.status === 404 ? 'notfound' : 'failed');
@@ -122,6 +126,58 @@ export class TripDetailPageComponent {
   });
 
   readonly priceLabel = computed(() => formatFcfa(this.trip()?.price_xof));
+
+  /**
+   * Affine les balises de référencement avec le départ chargé (F9.1).
+   *
+   * ⚠️ **Le seul écran du catalogue dont l'offre peut être `SoldOut`** : un
+   * départ est daté et ses places s'épuisent (F8.23.a a d'ailleurs corrigé le
+   * fait qu'un départ passé restait payable). Déclarer « disponible » un car
+   * complet ferait promettre à Google une place qui n'existe plus.
+   */
+  private referencer(trajet: MobilityService, placesRestantes: number): void {
+    const nom = `${trajet.departure} → ${trajet.destination}`;
+    const passe = !!trajet.departure_at && new Date(trajet.departure_at).getTime() < Date.now();
+    const quand = trajet.departure_at
+      ? new Date(trajet.departure_at).toLocaleDateString('fr-FR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })
+      : null;
+    const description =
+      trajet.description?.trim() ||
+      `Départ ${nom}${quand ? ` le ${quand}` : ''} — ${formatFcfa(trajet.price_xof)} la place.`;
+
+    this.seo.apply({
+      title: `${nom}${quand ? ` — ${quand}` : ''}`,
+      description,
+      type: 'product',
+      canonicalPath: `/mobilite/${trajet.id}`,
+      image: trajet.photo_url ?? null,
+    });
+    this.seo.setJsonLd(
+      'offre',
+      schemaOffre({
+        nom,
+        description: trajet.description,
+        image: trajet.photo_url,
+        chemin: `/mobilite/${trajet.id}`,
+        prixXof: trajet.price_xof,
+        unite: 'place',
+        lieu: trajet.destination,
+        disponible: !passe && placesRestantes > 0,
+      }),
+    );
+    this.seo.setJsonLd(
+      'ariane',
+      schemaFilAriane([
+        { nom: 'Accueil', chemin: '/' },
+        { nom: 'Mobilité', chemin: '/mobilite' },
+        { nom, chemin: `/mobilite/${trajet.id}` },
+      ]),
+    );
+  }
 
   /** Date et heure du départ en toutes lettres : « lundi 14 septembre à 07:30 ». */
   readonly departureLabel = computed(() => {

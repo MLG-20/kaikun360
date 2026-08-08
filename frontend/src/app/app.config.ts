@@ -9,11 +9,13 @@ import {
 import { provideServiceWorker } from '@angular/service-worker';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { TitleStrategy, provideRouter, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
 import { activerPolitiqueDeDefilement } from './core/scroll/scroll-behavior';
+import { SeoTitleStrategy } from './core/seo/seo-title-strategy';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { serverApiOriginInterceptor } from './core/interceptors/server-api-origin.interceptor';
 import { tokenInterceptor } from './core/interceptors/token.interceptor';
 
 // Rend disponibles les données de locale française (noms de mois/jours, formats
@@ -36,11 +38,28 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'disabled', anchorScrolling: 'disabled' }),
     ),
     provideEnvironmentInitializer(activerPolitiqueDeDefilement),
+    // --- Référencement (F9.1) ----------------------------------------------
+    //
+    // On REMPLACE la stratégie de titre intégrée du routeur au lieu d'ajouter
+    // un abonnement à `NavigationEnd` : c'est le seul point d'extension appelé
+    // à chaque navigation, et deux écrivains concurrents sur `<title>` se
+    // seraient écrasés l'un l'autre selon leur ordre d'enregistrement.
+    // ⚠️ Les `title:` déclarés dans les routes continuent de faire autorité —
+    // la stratégie les reprend (`buildTitle`) et ajoute description, canonique
+    // et OpenGraph autour. Voir `core/seo/seo-title-strategy.ts`.
+    { provide: TitleStrategy, useClass: SeoTitleStrategy },
     // Client HTTP + interceptors fonctionnels : on ajoute d'abord le jeton
     // (tokenInterceptor), puis on traite les erreurs de la réponse (errorInterceptor).
     // `withFetch()` : au rendu serveur (SSR, F2.9) le HttpClient s'appuie sur
     // l'API fetch de Node plutôt que sur un XHR simulé — recommandé pour le SSR.
-    provideHttpClient(withInterceptors([tokenInterceptor, errorInterceptor]), withFetch()),
+    // ⚠️ `serverApiOriginInterceptor` vient EN PREMIER : il rend l'URL absolue
+    // avant que quiconque la lise. Il est inerte dans le navigateur (le jeton
+    // `API_ORIGIN` n'y est pas fourni) et n'agit qu'au rendu serveur, où une
+    // adresse d'API relative n'a aucun sens — voir son fichier.
+    provideHttpClient(
+      withInterceptors([serverApiOriginInterceptor, tokenInterceptor, errorInterceptor]),
+      withFetch(),
+    ),
     // Hydratation (F2.9) : le client reprend le DOM rendu par le serveur sans le
     // reconstruire. Le « transfer cache » HTTP est actif par défaut (les GET
     // faits pendant le rendu serveur sont réutilisés côté client, pas rejoués).

@@ -47,8 +47,41 @@ l'application (approche standalone, sans NgModule) :
     `GET`/`POST /users/me/documents` (dépôt **multipart** PDF/JPG/PNG).
 - **interceptors/** — `tokenInterceptor` (ajoute le Bearer), `errorInterceptor`
   (gestion centralisée : 401 → login, 422 → erreurs de formulaire, 500 → page
-  d'erreur).
+  d'erreur), et `serverApiOriginInterceptor` (F9.1).
+  - ⚠️ **`serverApiOriginInterceptor` corrige un défaut du rendu serveur né avec
+    F2.9, entièrement silencieux.** En production `environment.apiUrl` vaut
+    `/api/v1` — une adresse **relative**, qui ne se résout que dans un
+    navigateur. Le processus Node du rendu serveur l'adressait donc à sa propre
+    origine (le port 4000), qui répond du HTML : **chaque fiche du catalogue
+    répondait « introuvable » au rendu serveur**. Invisible à l'écran (le
+    navigateur refait l'appel correctement à l'hydratation), mais **un robot
+    n'exécute pas de JavaScript** — Google et l'aperçu WhatsApp ne voyaient que
+    la page d'erreur. L'intercepteur rend l'URL absolue à partir du jeton
+    `API_ORIGIN`, fourni **uniquement** par `app.config.server.ts` (valeur lue
+    dans `process.env['API_ORIGIN']`). Il est donc **inerte dans le navigateur**.
+    Placé **en premier** dans la chaîne, avant que quiconque lise l'URL.
 - **guards/** — `authGuard`, `roleGuard` (protection des routes).
+- **seo/** (F9.1) — les **balises que lisent les moteurs et les réseaux sociaux**.
+  - `SeoService` — écrit `<title>`, description, `canonical`, OpenGraph, Twitter
+    et les blocs **JSON-LD**. ⚠️ Il réécrit **tout le jeu à chaque page**, jamais
+    par différence : une application à page unique ne recharge pas le document,
+    et sans réécriture complète la photo d'un bien resterait en aperçu de la
+    page Contact.
+  - `SeoTitleStrategy` — remplace la stratégie de titre du routeur (le seul point
+    d'extension appelé à chaque navigation ; un abonnement concurrent à
+    `NavigationEnd` créerait une course sur `<title>`). Elle applique le repli
+    déclaré par la route dans `data.seo`. ⚠️ **Une route sans `data.seo` est
+    `noindex`** — règle de sécurité, à ne pas inverser : voir le README frontend.
+  - `json-ld.ts` — constructeurs schema.org (`Organization`, `WebSite`,
+    `BreadcrumbList`, `Product` + `Offer`). ⚠️ **Ne jamais y décrire ce que la
+    page n'affiche pas** : Google traite l'écart comme une manipulation et
+    sanctionne tout le domaine. C'est pourquoi `aggregateRating` en est absent —
+    les avis existent, mais aucune fiche publique n'affiche encore de note
+    moyenne. ⚠️ La devise est **`XOF`** et les montants sont des entiers.
+  - ⚠️ Tout ce dossier doit rester **exécutable au rendu serveur** : ni `window`
+    ni `navigator`, ni `DOMParser`. C'est précisément le rendu serveur que lisent
+    les robots — et une divergence DOM serveur/client casserait l'hydratation
+    (le piège de F8.7).
 - **pwa/** (F9.0) — `PwaService` : la vie de l'**application installée**.
   Un manifeste et un service worker suffisent à rendre le site *installable* —
   pas à ce qu'il soit *installé* ni *à jour*. Deux comportements du navigateur

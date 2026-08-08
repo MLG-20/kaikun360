@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { RouterLink } from '@angular/router';
 
 import { CatalogService } from '../../core/api/catalog.service';
+import { schemaOrganisation, schemaSite } from '../../core/seo/json-ld';
+import { SeoService } from '../../core/seo/seo.service';
 import { FavoriteStore } from '../../core/state/favorite-store';
 import { CatalogCard, UNIVERSES } from '../../shared/components/catalog/catalog.config';
 import { ListingCardComponent } from '../../shared/components/listing-card/listing-card';
@@ -77,6 +79,7 @@ interface ServiceItem {
 })
 export class HomePageComponent implements OnInit {
   private readonly catalog = inject(CatalogService);
+  private readonly seo = inject(SeoService);
   /** État partagé des favoris (cœurs sur les biens en vedette). */
   protected readonly favorites = inject(FavoriteStore);
 
@@ -262,6 +265,26 @@ export class HomePageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadFeatured();
+    this.referencer();
+  }
+
+  /**
+   * Données structurées de l'accueil (F9.1) : l'entreprise et le site.
+   *
+   * ⚠️ **Uniquement ici, et c'est voulu.** `Organization` et `WebSite` décrivent
+   * le domaine, pas la page : les répéter sur chaque écran n'apporte rien à
+   * Google et alourdit chaque document. C'est aussi l'accueil qui déclare le
+   * gabarit de recherche (`/recherche?q=…`), ce qui peut faire apparaître un
+   * champ de recherche Kaikun directement dans les résultats Google.
+   *
+   * ⚠️ Les balises `<meta>`, elles, sont déjà posées par la route
+   * (`data.seo` dans `app.routes.ts`) : l'accueil n'a rien à affiner puisque son
+   * contenu ne dépend d'aucun identifiant. On n'appelle donc PAS `apply()` —
+   * cela ne ferait que réécrire les mêmes valeurs.
+   */
+  private referencer(): void {
+    this.seo.setJsonLd('organisation', schemaOrganisation());
+    this.seo.setJsonLd('site', schemaSite());
   }
 
   /**
