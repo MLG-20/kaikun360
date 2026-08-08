@@ -423,7 +423,86 @@ class ScheduledDepartureTest extends TestCase
     }
 
     // =========================================================================
-    // 7. CHACUN CHEZ SOI
+    // 7. LE DÉPART PÉRIMÉ (F8.23.a) — trouvé en vérifiant l'écran, pas en test
+    // =========================================================================
+
+    /**
+     * ⚠️ **Défaut PRÉEXISTANT, et il était monnayable.** Le catalogue public
+     * exposait les départs passés et `POST …/bookings` les acceptait : éprouvé
+     * sur le serveur réel, une réservation de 75 128 F est passée sur un départ
+     * parti trois semaines plus tôt. Le trou datait de B7.2/B7.4 mais restait
+     * hors d'atteinte tant que rien ne pouvait créer un départ.
+     *
+     * ⚠️ La fiche disait pourtant « ce départ a déjà eu lieu » depuis F8.10 :
+     * **un écran ne protège rien**, il évite seulement de proposer la faute.
+     */
+    public function test_un_depart_passe_quitte_le_catalogue_et_n_est_plus_reservable(): void
+    {
+        $parti = MobilityService::factory()->published()->create([
+            'departure_at' => now()->subWeeks(3),
+            'capacity' => 40,
+        ]);
+        $aVenir = MobilityService::factory()->published()->create([
+            'departure_at' => now()->addWeek(),
+        ]);
+
+        // 1. Le catalogue public ne montre que celui qu'on peut encore prendre.
+        $this->getJson('/api/v1/mobility-services')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $aVenir->id);
+
+        // 2. Et le serveur REFUSE la place, même si l'on connaît l'identifiant.
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson("/api/v1/mobility-services/{$parti->id}/bookings", ['guests' => 2])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('departure_at');
+
+        $this->assertSame(0, $parti->bookings()->count());
+    }
+
+    /**
+     * ⚠️ Un départ **sans date** est un service « à la demande » (navette
+     * affrétée, transfert sans horaire fixe) : il n'a pas d'échéance à dépasser
+     * et doit rester au catalogue. L'exclure retirerait des offres vivantes.
+     */
+    public function test_un_depart_sans_date_reste_au_catalogue_et_reservable(): void
+    {
+        $aLaDemande = MobilityService::factory()->published()->create([
+            'departure_at' => null,
+            'capacity' => 8,
+        ]);
+
+        $this->getJson('/api/v1/mobility-services')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $aLaDemande->id);
+
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->postJson("/api/v1/mobility-services/{$aLaDemande->id}/bookings", ['guests' => 2])
+            ->assertCreated();
+    }
+
+    /**
+     * Le back-office, lui, continue de voir les départs passés : c'est son
+     * historique d'exploitation, et un agent doit pouvoir relire un trajet
+     * réalisé (litige, reversement, réclamation).
+     */
+    public function test_le_back_office_voit_encore_les_departs_passes(): void
+    {
+        MobilityService::factory()->published()->create(['departure_at' => now()->subMonth()]);
+
+        Sanctum::actingAs($this->agent());
+
+        $this->getJson('/api/v1/admin/mobility-services')
+            ->assertOk()
+            ->assertJsonCount(1, 'data');
+    }
+
+    // =========================================================================
+    // 8. CHACUN CHEZ SOI
     // =========================================================================
 
     public function test_un_prestataire_ne_touche_pas_au_depart_d_un_autre(): void

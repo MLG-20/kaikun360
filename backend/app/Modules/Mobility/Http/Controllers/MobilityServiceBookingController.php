@@ -30,6 +30,25 @@ class MobilityServiceBookingController extends Controller
         $service = MobilityService::query()->published()->findOrFail($id);
         $guests = (int) $request->validated()['guests'];
 
+        // F8.23.a — ON NE VEND PAS UNE PLACE DANS UN CAR DÉJÀ PARTI.
+        //
+        // ⚠️ Ce contrôle manquait depuis B7.4, et le défaut était monnayable :
+        // éprouvé sur le serveur réel, une réservation de 75 128 F a été acceptée
+        // sur un départ parti trois semaines plus tôt — avec une `start_date`
+        // dans le passé, une commission calculée, et un client à rembourser.
+        //
+        // ⚠️ La fiche affichait pourtant « ce départ a déjà eu lieu » depuis
+        // F8.10 : elle masquait le bouton, elle ne fermait pas la route. Un
+        // écran ne protège rien ; il ne fait qu'éviter de proposer la faute.
+        //
+        // `departure_at` nullable = service à la demande, sans échéance : rien
+        // à refuser dans ce cas (cf. `scopeAVenir()`).
+        if ($service->departure_at !== null && $service->departure_at->isPast()) {
+            throw ValidationException::withMessages([
+                'departure_at' => ['Ce départ a déjà eu lieu : il n\'est plus réservable.'],
+            ]);
+        }
+
         // Places restantes = capacité − participants des réservations non annulées.
         $taken = (int) $service->bookings()
             ->whereNotIn('status', BookingStatus::valeursAnnulees())

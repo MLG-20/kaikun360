@@ -43,7 +43,13 @@ class MobilityServiceController extends Controller
             // F8.18 — un trajet est illustré par le VÉHICULE qui l'opère : la
             // relation imbriquée est donc chargée en amont, sinon chaque carte
             // déclencherait deux requêtes (le véhicule, puis ses photos).
-            $query = MobilityService::query()->published()->with('vehicle.media');
+            // F8.23.a — `aVenir()` : le catalogue n'expose plus les départs
+            // passés. ⚠️ Le cache de catalogue étant invalidé à l'ÉCRITURE et
+            // non au fil du temps, un départ qui périme entre deux écritures
+            // peut survivre le temps d'un TTL (5 min) — écart assumé, sans
+            // conséquence : la réservation, elle, est refusée sur-le-champ par
+            // `MobilityServiceBookingController`.
+            $query = MobilityService::query()->published()->aVenir()->with('vehicle.media');
 
             $query->when($filters['type'] ?? null, fn ($q, $v) => $q->where('type', $v));
             $query->when($filters['departure'] ?? null, fn ($q, $v) => $q->where('departure', $v));

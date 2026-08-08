@@ -43,12 +43,22 @@ class MobilityServiceSearchTest extends TestCase
             ->assertJsonPath('data.0.type', 'navette');
     }
 
+    /**
+     * ⚠️ **Dates RELATIVES, jamais absolues.** Ce test posait `2026-07-10` et
+     * `2026-07-20` en dur : il fonctionnait à l'écriture, et se serait mis à
+     * échouer tout seul le jour où ces dates seraient devenues passées — ce qui
+     * est arrivé, révélé par le filtre `aVenir()` de F8.23.a. Un test qui dépend
+     * de la date du jour ne dit plus rien du code qu'il couvre.
+     */
     public function test_la_recherche_filtre_par_date_de_depart(): void
     {
-        MobilityService::factory()->published()->create(['departure_at' => '2026-07-10 08:00:00']);
-        MobilityService::factory()->published()->create(['departure_at' => '2026-07-20 08:00:00']);
+        $vise = now()->addDays(10)->setTime(8, 0);
+        $autre = now()->addDays(20)->setTime(8, 0);
 
-        $this->getJson('/api/v1/mobility-services?date=2026-07-10')
+        MobilityService::factory()->published()->create(['departure_at' => $vise]);
+        MobilityService::factory()->published()->create(['departure_at' => $autre]);
+
+        $this->getJson('/api/v1/mobility-services?date='.$vise->toDateString())
             ->assertOk()
             ->assertJsonCount(1, 'data');
     }

@@ -107,6 +107,29 @@ Trois règles propres au départ, absentes du cycle d'un véhicule :
 3. **Un départ passé ne se publie pas** — et s'il est opéré par un véhicule non
    conforme, il ne se publie pas non plus (`MobilityServiceValidator::approve()`).
 
+### ⚠️ F8.23.a — un départ passé quittait le catalogue… mais restait payable
+
+Défaut **préexistant** (B7.2/B7.4), resté hors d'atteinte tant que rien ne créait
+de départ, et **monnayable** : éprouvé sur le serveur réel, une réservation de
+**75 128 F** a été acceptée sur un départ parti trois semaines plus tôt, avec une
+`start_date` dans le passé et une commission calculée.
+
+- `MobilityService::scopeAVenir()` — le **catalogue public** n'expose plus les
+  départs passés (`MobilityServiceController::index()`).
+- `MobilityServiceBookingController::store()` **refuse** (422) une place sur un
+  départ dont l'heure est passée.
+- ⚠️ **La fiche affichait pourtant « ce départ a déjà eu lieu » depuis F8.10** :
+  elle masquait le bouton, elle ne fermait pas la route. **Un écran ne protège
+  rien** ; il évite seulement de proposer la faute.
+- ⚠️ **Une date `NULL` reste visible et réservable, délibérément** :
+  `departure_at` est nullable pour les services **à la demande** (navette
+  affrétée, transfert sans horaire). Ils n'ont pas d'échéance à dépasser.
+- ⚠️ Le **back-office continue de voir les départs passés** : c'est son
+  historique d'exploitation (litige, reversement, réclamation).
+- ⚠️ Le cache de catalogue est invalidé **à l'écriture**, pas au fil du temps :
+  un départ qui périme entre deux écritures peut y survivre un TTL (5 min).
+  Écart assumé — la réservation, elle, est refusée sur-le-champ.
+
 ### Events & file de validation
 
 - `VehicleCreated` → `NotifyAgentsOfNewVehicle` (notifie `valider:vehicule`).

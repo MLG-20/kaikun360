@@ -34,6 +34,7 @@ use App\Modules\Manage\Models\Incident;
 use App\Modules\Manage\Models\ManagementMandate;
 use App\Modules\Manage\Models\OwnerPayout;
 use App\Modules\Manage\Models\Rent;
+use App\Modules\Mobility\Enums\MobilityServiceStatus;
 use App\Modules\Mobility\Enums\VehicleType;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
@@ -126,6 +127,11 @@ class DemoSeeder extends Seeder
         } else {
             $this->command?->info('DemoSeeder : catalogues de démonstration déjà présents.');
         }
+
+        // Entretien, pas création : les départs de démonstration périment avec le
+        // temps et disparaissent alors du catalogue public (F8.23.a). S'exécute
+        // donc aussi — surtout — sur une base ancienne.
+        $this->rafraichirLesDeparts();
 
         // Cas de contrôle de l'écran Mobilité (F7.2.j) : véhicules non conformes,
         // offre « chauffeur », trajets en attente. Garde propre → s'ajoute même
@@ -693,6 +699,50 @@ class DemoSeeder extends Seeder
         ]);
 
         $this->command?->info('DemoSeeder : données de démonstration créées (biens, nuitées, véhicules, expériences, trajets).');
+    }
+
+    /**
+     * Reprogramme les départs de démonstration devenus passés (F8.23.a).
+     *
+     * ⚠️ **Une base de démonstration VIEILLIT, et le catalogue mobilité était le
+     * seul à s'en trouver vidé.** Les trajets sont créés à `now() + 1..30 jours` ;
+     * trois semaines plus tard ils sont tous derrière nous, et depuis que le
+     * catalogue public exclut les départs passés (F8.23.a), la page
+     * *Transport & mobilité* d'une démonstration client apparaît **vide** — alors
+     * que les six trajets sont bien en base. Aucun autre univers n'a ce problème :
+     * un bien ou un circuit ne périme pas.
+     *
+     * Ce rafraîchissement n'est PAS une création : il ne rompt donc pas
+     * l'idempotence du seeder, il l'entretient. Relancer `DemoSeeder` sur une
+     * base ancienne redonne un catalogue mobilité vivant.
+     *
+     * ⚠️ **Les départs DÉJÀ RÉSERVÉS ne bougent pas** : déplacer la date d'un
+     * trajet qu'un client a payé falsifierait son historique — sa réservation
+     * porte la date du départ.
+     */
+    private function rafraichirLesDeparts(): void
+    {
+        $perimes = MobilityService::query()
+            ->where('status', MobilityServiceStatus::PUBLIE->value)
+            ->whereNotNull('departure_at')
+            ->where('departure_at', '<', now())
+            ->whereDoesntHave('bookings')
+            ->get();
+
+        foreach ($perimes as $index => $depart) {
+            // Étalés sur trois semaines pour que le catalogue montre plusieurs
+            // dates distinctes, et non six départs le même jour.
+            $depart->update([
+                'departure_at' => now()->addDays(2 + ($index * 3))->setTime(7, 30),
+            ]);
+        }
+
+        if ($perimes->isNotEmpty()) {
+            $this->command?->info(
+                'DemoSeeder : '.$perimes->count().' départ(s) de démonstration reprogrammé(s) — '
+                .'ils étaient passés, donc invisibles au catalogue.'
+            );
+        }
     }
 
     /**

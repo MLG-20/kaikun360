@@ -95,6 +95,33 @@ class MobilityService extends Model
         return $query->where('status', MobilityServiceStatus::PUBLIE->value);
     }
 
+    /**
+     * Scope : départs qu'un client peut ENCORE prendre (F8.23.a).
+     *
+     * ⚠️ **Ce filtre n'existait pas, et son absence coûtait de l'argent** : le
+     * catalogue public exposait les départs passés, et `POST …/bookings` les
+     * acceptait — un client pouvait payer une place sur un car parti trois
+     * semaines plus tôt. Le défaut date de B7.2/B7.4 mais était **hors
+     * d'atteinte** tant que rien ne pouvait créer un départ : les seules lignes
+     * en base venaient du seeder, et personne ne parcourait ce catalogue.
+     *
+     * ⚠️ **La fiche ne suffisait pas.** L'écran de détail affiche bien « ce
+     * départ a déjà eu lieu » depuis F8.10 — mais ce n'est qu'un affichage : il
+     * masque le bouton, il ne ferme pas la route. La règle devait vivre côté
+     * serveur, là où l'argent se décide.
+     *
+     * ⚠️ **Une date NULLE reste visible, délibérément** : `departure_at` est
+     * nullable pour les services « à la demande » (une navette qu'on affrète, un
+     * transfert sans horaire fixe). Ceux-là n'ont pas d'échéance à dépasser ;
+     * les exclure retirerait du catalogue des offres parfaitement vivantes.
+     */
+    public function scopeAVenir(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            $q->whereNull('departure_at')->orWhere('departure_at', '>=', now());
+        });
+    }
+
     protected static function newFactory(): MobilityServiceFactory
     {
         return MobilityServiceFactory::new();
