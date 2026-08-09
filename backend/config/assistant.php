@@ -66,4 +66,55 @@ return [
         'per_minute' => (int) env('ASSISTANT_RATE_PER_MINUTE', 12),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Driver `claude` (F10.4)
+    |--------------------------------------------------------------------------
+    |
+    | Réglages du cerveau conversationnel. Ils ne servent QUE si
+    | `ASSISTANT_DRIVER=claude` : sans cela, rien de tout ceci n'est lu et la
+    | plateforme n'émet aucun appel sortant.
+    |
+    | ⚠️ PRÉREQUIS NON TECHNIQUE : un abonnement Claude Pro NE COUVRE PAS l'API.
+    | Il faut un compte d'organisation sur la Console Anthropic, au nom du
+    | client, avec un plafond de dépense configuré côté Console. Les plafonds
+    | ci-dessous bornent le coût d'UN message ; ils ne bornent pas le mois.
+    |
+    | Ordre de grandeur mesuré à la conception, pour une conversation de six
+    | échanges : ~10 F CFA en Haiku 4.5, ~20 F en Sonnet 5, ~50 F en Opus 5.
+    | Le modèle se change par variable d'environnement, sans redéploiement.
+    |
+    */
+    'claude' => [
+        // Clé API. Absente, le driver lève à la première requête et l'appelant
+        // retombe sur le cerveau déterministe : le service continue, dégradé.
+        'api_key' => env('ANTHROPIC_API_KEY'),
+
+        // Modèle. Haiku 4.5 par défaut : l'assistant choisit un outil et résume
+        // ce qu'il en reçoit — la difficulté est faible, le volume potentiel
+        // élevé (l'endpoint est ouvert aux visiteurs).
+        'model' => env('ASSISTANT_CLAUDE_MODEL', 'claude-haiku-4-5'),
+
+        // Plafond de tokens produits PAR RÉPONSE. C'est le garde-fou de coût le
+        // plus direct : l'invite impose deux à quatre phrases, 700 tokens les
+        // couvrent largement. Un plafond serré coupe une réponse au milieu —
+        // le cerveau relaie alors les résultats d'outils plutôt qu'une bulle vide.
+        'max_tokens' => (int) env('ASSISTANT_CLAUDE_MAX_TOKENS', 700),
+
+        // Nombre de tours d'appels d'outils autorisés dans un échange. Au-delà,
+        // les outils sont retirés au modèle, qui doit conclure en texte : c'est
+        // ce qui garantit qu'une conversation se termine toujours, en un nombre
+        // d'appels facturés borné.
+        'max_tool_rounds' => (int) env('ASSISTANT_CLAUDE_MAX_TOOL_ROUNDS', 3),
+
+        // Délai d'attente (secondes). Court volontairement : passé ce délai, le
+        // repli déterministe répond immédiatement, ce qui vaut mieux qu'une
+        // personne devant une bulle qui tourne.
+        'timeout' => (float) env('ASSISTANT_CLAUDE_TIMEOUT', 20),
+
+        // Reprises sur erreur réseau ou surcharge du fournisseur. Une seule :
+        // le repli est plus rapide qu'une seconde attente.
+        'max_retries' => (int) env('ASSISTANT_CLAUDE_MAX_RETRIES', 1),
+    ],
+
 ];

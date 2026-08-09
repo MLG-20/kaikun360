@@ -4,6 +4,7 @@ namespace App\Modules\Assistant\Tools\BackOffice;
 
 use App\Models\User;
 use App\Modules\Admin\Enums\AdminPermission;
+use App\Modules\Assistant\Contracts\ProvidesInputSchema;
 use App\Modules\Assistant\Support\AssistantAction;
 use App\Modules\Assistant\Support\AssistantContext;
 use App\Modules\Assistant\Support\ToolResult;
@@ -39,7 +40,7 @@ use App\Modules\Core\Enums\UserRole;
  * l'annuaire entier trié par date : un listing de comptes obtenu sans l'avoir
  * demandé. Deux caractères minimum, et un refus explicite sinon.
  */
-class AccountLookupTool extends BackOfficeTool
+class AccountLookupTool extends BackOfficeTool implements ProvidesInputSchema
 {
     /**
      * Longueur minimale du terme recherché.
@@ -58,6 +59,34 @@ class AccountLookupTool extends BackOfficeTool
             .'À utiliser quand un membre de l\'équipe cherche qui est un client, veut ouvrir sa '
             .'fiche ou vérifier l\'état de son compte. Paramètre obligatoire : `terme` '
             .'(au moins 2 caractères). ⚠️ Lecture seule : cet outil ne modifie aucun compte.';
+    }
+
+    /**
+     * Paramètres offerts au modèle (F10.4).
+     *
+     * Le modèle remplit `terme` là où le cerveau déterministe l'extrayait par
+     * découpage du message — et c'est précisément ce découpage qui avait
+     * produit les deux défauts trouvés en curl en F10.3 (« retrouve-moi » pris
+     * pour un nom, référence à deux tirets tronquée). Le modèle n'a pas ce
+     * problème : il sait quel bout de la phrase est le nom cherché.
+     *
+     * La garde de longueur reste dans `run()` : un schéma n'est pas une
+     * validation, et un `terme` d'un caractère ferait remonter la moitié de
+     * l'annuaire.
+     */
+    public function inputSchema(): array
+    {
+        return [
+            'properties' => [
+                'terme' => [
+                    'type' => 'string',
+                    'description' => 'Nom, prénom, adresse e-mail ou numéro de téléphone recherché. '
+                        ."Ne transmettre que l'identité cherchée, sans les mots de la question "
+                        .'(« retrouve-moi le compte de Anne-Marie Fall » → « Anne-Marie Fall »).',
+                ],
+            ],
+            'required' => ['terme'],
+        ];
     }
 
     protected function permission(): AdminPermission

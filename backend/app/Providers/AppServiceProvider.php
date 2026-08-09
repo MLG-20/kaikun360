@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Anthropic\Client;
 use App\Events\RequestCreated;
 use App\Events\RequestStatusChanged;
 use App\Listeners\NotifyAvailableAgentsOfRequest;
@@ -9,6 +10,7 @@ use App\Listeners\NotifyUserOfRequestStatusChange;
 use App\Models\Quote;
 use App\Models\Review;
 use App\Models\User;
+use App\Modules\Assistant\Brains\ClaudeBrain;
 use App\Modules\Assistant\Brains\RuleBasedBrain;
 use App\Modules\Assistant\Contracts\AssistantBrain;
 use App\Modules\Assistant\Tools\BackOffice\AccountLookupTool;
@@ -202,9 +204,21 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
 
+        // Client de l'API Anthropic (F10.4). Lié même quand le driver est
+        // `rules` : le lier ne déclenche aucun appel réseau, et le résoudre
+        // paresseusement évite d'imposer une clé aux déploiements qui n'ont pas
+        // activé l'assistant conversationnel. C'est aussi le point d'injection
+        // des tests, qui y posent un transporteur simulé — donc aucun appel
+        // sortant pendant la suite.
+        $this->app->singleton(Client::class, function () {
+            return new Client(
+                apiKey: (string) config('assistant.claude.api_key'),
+            );
+        });
+
         $this->app->bind(AssistantBrain::class, function ($app) {
             return match (config('assistant.driver')) {
-                // 'claude' => $app->make(ClaudeBrain::class),  // F10.4
+                'claude' => $app->make(ClaudeBrain::class),
                 default => $app->make(RuleBasedBrain::class),
             };
         });

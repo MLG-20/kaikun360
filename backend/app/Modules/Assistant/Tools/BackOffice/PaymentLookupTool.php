@@ -4,6 +4,7 @@ namespace App\Modules\Assistant\Tools\BackOffice;
 
 use App\Models\Payment;
 use App\Modules\Admin\Enums\AdminPermission;
+use App\Modules\Assistant\Contracts\ProvidesInputSchema;
 use App\Modules\Assistant\Support\AssistantAction;
 use App\Modules\Assistant\Support\AssistantContext;
 use App\Modules\Assistant\Support\ToolResult;
@@ -34,7 +35,7 @@ use App\Modules\Assistant\Support\ToolResult;
  * renvoie l'état, le montant, la nature et le dossier — de quoi savoir s'il faut
  * ouvrir la fiche, pas de quoi s'en passer.
  */
-class PaymentLookupTool extends BackOfficeTool
+class PaymentLookupTool extends BackOfficeTool implements ProvidesInputSchema
 {
     /**
      * Longueur minimale de la référence cherchée.
@@ -58,6 +59,31 @@ class PaymentLookupTool extends BackOfficeTool
             .'membre de l\'équipe demande si un paiement est passé, où en est une transaction ou '
             .'ce qu\'a payé un client. Paramètre obligatoire : `reference`. '
             .'⚠️ Lecture seule : cet outil ne confirme et ne rembourse RIEN.';
+    }
+
+    /**
+     * Paramètres offerts au modèle (F10.4).
+     *
+     * ⚠️ La consigne « recopier la référence telle quelle » n'est pas
+     * décorative : une référence interne comporte DEUX tirets
+     * (`PAY-ACPT-6YRYXV`), et c'est un motif à segment unique qui l'avait
+     * tronquée en F10.3 côté déterministe. Un modèle qui « normalise » en
+     * majuscules, coupe un segment ou retire les tirets produirait exactement
+     * la même panne, cette fois sans motif à corriger.
+     */
+    public function inputSchema(): array
+    {
+        return [
+            'properties' => [
+                'reference' => [
+                    'type' => 'string',
+                    'description' => 'Référence du règlement, recopiée EXACTEMENT telle que la '
+                        ."personne l'a écrite, tirets compris (référence interne « PAY-ACPT-6YRYXV » "
+                        .'ou référence du prestataire de paiement). Ne jamais la reformater ni la tronquer.',
+                ],
+            ],
+            'required' => ['reference'],
+        ];
     }
 
     protected function permission(): AdminPermission

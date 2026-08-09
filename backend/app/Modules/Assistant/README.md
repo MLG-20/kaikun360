@@ -40,6 +40,7 @@ POST /api/v1/assistant/messages     ← contrat figé ; Angular ne connaît que 
    AssistantBrain (interface)
         ├── RuleBasedBrain   ← F10.0 · déterministe · 0 clé, 0 coût, 0 réseau
         └── ClaudeBrain      ← F10.4 · modèle de langage, MÊMES outils
+                                      · retombe sur RuleBasedBrain en cas d'incident
         │
    ToolRegistry ── trousse assemblée selon le rôle de l'appelant
 ```
@@ -62,6 +63,9 @@ déterministe reste aussi le **repli** si les clés deviennent indisponibles.
 | `Tools/PersonalRecordsTool.php` | socle des outils « mes dossiers » (F10.2) |
 | `Tools/BackOffice/BackOfficeTool.php` | socle des outils du poste de commandement (F10.3) |
 | `Brains/RuleBasedBrain.php` | intentions par mots-clés → outil |
+| `Brains/ClaudeBrain.php` | boucle modèle ↔ outils (F10.4), repli, plafonds |
+| `Brains/ClaudePrompt.php` | l'invite système, isolée pour être relue sans lire de PHP |
+| `Contracts/ProvidesInputSchema.php` | schéma des paramètres, pour les 3 outils qui en prennent |
 
 ---
 
@@ -298,6 +302,83 @@ données elles-mêmes ; un type inconnu s'affiche sous sa clé brute, donc visib
 
 ---
 
+## Le driver `claude` (F10.4)
+
+Activé par `ASSISTANT_DRIVER=claude`. Il ne remplace pas le déterministe : il s'ajoute
+devant lui, et **retombe dessus au moindre incident**.
+
+### Ce qu'il apporte, et que le déterministe ne faisait pas
+
+L'**historique**. Reçu, validé et plafonné depuis F10.0, il était simplement ignoré :
+« et moins cher ? » repartait de zéro et finissait au support. C'est le gain de la
+tranche, et le seul qu'aucun mot-clé ne pouvait produire. Viennent avec : les tournures
+imprévues, les fautes de frappe, et les paramètres que le modèle extrait là où une
+heuristique se trompait (les deux défauts d'extraction trouvés en curl en F10.3 — le
+« retrouve-moi » pris pour un nom, la référence à deux tirets tronquée — ne se posent
+plus de la même façon).
+
+### La règle qui rend une hallucination inoffensive
+
+> **Le texte vient du modèle ; les fiches et les boutons viennent des outils.**
+
+`ClaudeBrain` recopie tels quels les `items` et les `actions` renvoyés par les outils
+qu'il a réellement exécutés. Ce que le modèle a *redit* de ces données n'est jamais
+réinjecté dans la réponse. Un prix inventé ne peut donc pas atteindre l'écran : **il n'y
+a pas de chemin.** Un test le verrouille (`test_une_hallucination_du_modele_ne_produit_aucune_fiche`) :
+on fait dire au modèle « un palais à 12 000 F CFA », la bulle affiche sa phrase, et la
+fiche reste la villa à 45 000 000 F de la base.
+
+Corollaire moins évident : **le modèle ne voit pas les adresses des fiches** (`url` est
+retiré de ce qu'on lui envoie). L'invite lui interdit d'écrire des liens, mais la façon
+sûre de tenir cette règle est qu'il n'en ait aucun sous les yeux — une adresse d'espace
+connecté diffère par rôle (défaut n°1 de F10.1), et un lien recraché de travers envoie
+la personne sur une page interdite. Les liens continuent de voyager vers le panneau ;
+ils ne transitent simplement pas par le modèle.
+
+### Trois garde-fous propres à ce cerveau
+
+1. **Le repli.** Clé absente, fournisseur en panne, délai dépassé, réponse vide, refus du
+   modèle → `RuleBasedBrain` reprend la main, en silence. Une bulle d'assistant n'est pas
+   l'endroit où afficher une erreur technique à un client. L'incident part dans les logs.
+2. **Le plafond de tours.** Un modèle qui boucle sur un outil vide facturerait
+   indéfiniment. Au dernier tour, les outils lui sont **retirés** (`ToolChoiceNone`) : il
+   ne peut plus qu'écrire du texte, donc l'échange se termine toujours, en un nombre
+   d'appels connu d'avance (`max_tool_rounds + 1`).
+3. **Le cloisonnement inchangé.** Le modèle ne reçoit que les outils que le registre lui
+   présente — par rôle pour les espaces, par **permission** pour le back-office. Un outil
+   réclamé hors trousse renvoie une erreur au modèle et **ne s'exécute pas** : c'est le
+   scénario de l'injection de prompt réussie, et il ne débloque rien.
+
+### Le schéma des paramètres : 3 outils sur 14
+
+`ProvidesInputSchema` est une interface **facultative**, séparée d'`AssistantTool`. Onze
+outils ne prennent aucun paramètre — « mes réservations », « la file de validation » n'ont
+rien à recevoir, le contexte suffit — et les obliger à déclarer un schéma vide aurait
+ajouté une méthode inerte à onze fichiers. Seuls `rechercher_catalogue`,
+`rechercher_compte` et `suivre_paiement` l'implémentent.
+
+⚠️ **Un schéma n'est pas une validation.** Un modèle peut renvoyer un champ hors
+énumération ou omettre un champ requis ; les outils continuent donc de vérifier ce qu'ils
+reçoivent. Le schéma réduit les erreurs, il ne remplace aucun garde-fou.
+
+### ⚠️ Le point de cache ne cache probablement rien (et c'est assumé)
+
+Un marqueur `cache_control` est posé sur l'invite système — le préfixe rendu étant
+`tools` puis `system`, il couvre les deux. Mais **le préfixe minimal cacheable de
+Haiku 4.5 est de 4 096 tokens**, que l'invite et les descriptions d'outils n'atteignent
+pas : en pratique, aucun cache n'est écrit, sans erreur ni signal. Le marqueur ne coûte
+rien et devient utile **tel quel** si le modèle est monté en gamme (le minimum tombe à
+1 024 tokens sur Sonnet 5). À vérifier le jour où il y aura une clé, via
+`usage.cache_read_input_tokens`.
+
+### Ce qui n'a PAS bougé
+
+Ni le contrat HTTP, ni le panneau Angular, ni les 14 outils, ni les policies, ni un seul
+test antérieur. C'était la promesse du contrat posé en F10.0 ; elle est tenue. Les trois
+seules retouches d'outils sont **additives** (l'ajout de `inputSchema()`).
+
+---
+
 ## Journalisation vers le back-office (F10.2)
 
 **Arbitrage produit : aucune conversation n'est stockée.** Ce qui remonte à
@@ -323,15 +404,26 @@ de la personne. On habille l'étiquette, pas le contenu.
 | `ASSISTANT_ENABLED` | `true` | interrupteur général (503 si `false`) |
 | `ASSISTANT_DRIVER` | `rules` | cerveau ; valeur inconnue → repli déterministe |
 | `ASSISTANT_RATE_PER_MINUTE` | `12` | plafond du limiteur `assistant` |
+| `ANTHROPIC_API_KEY` | *(vide)* | clé de l'API ; absente → repli déterministe |
+| `ASSISTANT_CLAUDE_MODEL` | `claude-haiku-4-5` | modèle du driver `claude` |
+| `ASSISTANT_CLAUDE_MAX_TOKENS` | `700` | plafond de tokens **produits** par réponse |
+| `ASSISTANT_CLAUDE_MAX_TOOL_ROUNDS` | `3` | tours d'appels d'outils par message |
+| `ASSISTANT_CLAUDE_TIMEOUT` | `20` | délai d'attente (secondes) |
+| `ASSISTANT_CLAUDE_MAX_RETRIES` | `1` | reprises sur panne réseau |
 
 Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns`,
 `results_per_tool`) — ajustables sans redéploiement.
+
+⚠️ **Un abonnement Claude Pro ne couvre PAS l'API.** Activer `ASSISTANT_DRIVER=claude`
+suppose un compte d'organisation sur la Console Anthropic, **au nom du client**, avec un
+plafond de dépense configuré là-bas. Les plafonds ci-dessus bornent le coût d'**un
+message** ; ils ne bornent pas le mois.
 
 ---
 
 ## Tests
 
-`tests/Feature/Assistant/` — **64 tests, 226 assertions**.
+`tests/Feature/Assistant/` — **78 tests, 278 assertions**.
 
 - `AssistantGuardrailsTest` (13) — plafonds, débit 429, interrupteur 503 (y compris
   **avant la validation**), cloisonnement par rôle, charge utile d'escalade complète,
@@ -359,6 +451,18 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
   back-office sans rien atteindre, **« aucun outil ne modifie les dossiers »**, la boîte
   personnelle qui ne montre pas les fils d'un collègue, et les deux régressions
   d'extraction trouvées en curl.
+- `AssistantClaudeBrainTest` (14) — le driver conversationnel (F10.4). Ces tests ne
+  vérifient pas que le modèle est *intelligent* — ce n'est ni testable ni de notre
+  ressort. Ils vérifient les quatre choses dont **nous** répondons : le cloisonnement
+  tient malgré le modèle, les données affichées viennent des outils
+  (`test_une_hallucination_du_modele_ne_produit_aucune_fiche`), on dégrade sans casser
+  (panne, réponse vide, clé absente), et la facture est bornée
+  (`test_le_nombre_d_appels_au_modele_est_plafonne`).
+  ⚠️ **Aucun appel réseau et aucune clé** : le transporteur PSR-18 du SDK est remplacé
+  par `tests/Support/FakeAnthropicTransport.php`, qui sert des réponses scriptées **et
+  enregistre les requêtes émises**. C'est cette seconde moitié qui rend vérifiable ce
+  qui, autrement, ne l'était pas : que l'historique part bien au modèle, que la trousse
+  transmise est celle du rôle, et que les adresses des fiches ne sortent jamais du serveur.
 
 ---
 
@@ -366,13 +470,16 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
 
 À dire franchement, pour que la démo ne promette pas plus que le code ne tient :
 
+> Ces limites sont celles du driver **`rules`**, qui reste le défaut. Le driver `claude`
+> (F10.4) lève les deux premières ; il ne s'active qu'avec une clé API.
+
 - **Pas de suivi de conversation.** L'historique est reçu, validé et plafonné, mais le
   cerveau déterministe ne s'en sert pas : chaque message est traité isolément. Une relance
-  du type « et moins cher ? » n'est donc pas comprise et retombe sur le support. Le champ
-  existe déjà dans le contrat parce que c'est `ClaudeBrain` (F10.4) qui l'exploitera —
-  le frontend n'aura rien à changer ce jour-là.
+  du type « et moins cher ? » n'est donc pas comprise et retombe sur le support.
+  ✅ **Levée par `ClaudeBrain`** — et le frontend n'a rien eu à changer, comme prévu.
 - **Compréhension par mots-clés.** Une formulation qui n'emploie aucun mot reconnu part au
   support. C'est volontaire : mieux vaut passer la main qu'inventer une réponse.
+  ✅ **Levée par `ClaudeBrain`.**
 - **Français uniquement.** Le wolof se limite aux salutations.
 - **Débit compté par IP** pour les visiteurs anonymes : derrière le partage d'adresses des
   opérateurs mobiles, plusieurs visiteurs peuvent se partager le même quota. Ajustable via
@@ -387,7 +494,7 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
 | ~~**F10.1**~~ | ✅ **livrée** — panneau Angular : bulle publique + espaces connectés (voir `frontend/src/app/shared/components/assistant/`) |
 | ~~**F10.2**~~ | ✅ **livrée** — 5 outils des espaces connectés + journalisation par préfixe d'escalade |
 | ~~**F10.3**~~ | ✅ **livrée** — 6 outils back-office en lecture seule, filtrés par permission, + montage du panneau dans le poste de commandement |
-| **F10.4** | `ClaudeBrain` derrière le contrat déjà en place |
+| ~~**F10.4**~~ | ✅ **livrée** — `ClaudeBrain` derrière le contrat déjà en place, repli déterministe, plafonds de coût |
 
 Le back-office reste en lecture seule en F10 : un assistant qui déclenche un reversement
 sur une phrase mal comprise engage de l'argent réel. Si l'écriture s'ouvre plus tard, ce

@@ -3,6 +3,7 @@
 namespace App\Modules\Assistant\Tools;
 
 use App\Modules\Assistant\Contracts\AssistantTool;
+use App\Modules\Assistant\Contracts\ProvidesInputSchema;
 use App\Modules\Assistant\Support\AssistantAction;
 use App\Modules\Assistant\Support\AssistantContext;
 use App\Modules\Assistant\Support\ToolResult;
@@ -32,7 +33,7 @@ use Illuminate\Database\Eloquent\Builder;
  * catalogue, avec ses photos, ses filtres et son tunnel de réservation, qui
  * vend. Empiler vingt fiches dans une bulle de discussion n'aiderait personne.
  */
-class SearchCatalogTool implements AssistantTool
+class SearchCatalogTool implements AssistantTool, ProvidesInputSchema
 {
     /**
      * Univers reconnus → page publique correspondante (voir app.routes.ts).
@@ -56,6 +57,42 @@ class SearchCatalogTool implements AssistantTool
             ."À utiliser dès que la personne décrit un besoin d'hébergement, d'achat, de séjour ou "
             .'de déplacement, même vaguement. Paramètres : `univers` '
             .'(immobilier|nuitees|tourisme|transport), `ville` et `budget_max` (facultatifs).';
+    }
+
+    /**
+     * Paramètres offerts au modèle (F10.4).
+     *
+     * `univers` est le seul champ requis, et il est ÉNUMÉRÉ : c'est la clé du
+     * `match` de `run()`, et un univers inventé ne renverrait rien. L'énumérer
+     * ici évite au modèle d'improviser « villas » ou « hotels ».
+     *
+     * `budget_max` est déclaré en entier et en FRANCS CFA. Sans cette précision
+     * dans la description, un modèle propose volontiers un budget en euros —
+     * l'écart de 650 vide le catalogue en silence, exactement le défaut n°2
+     * trouvé en revue de F10.0 avec le cerveau déterministe.
+     */
+    public function inputSchema(): array
+    {
+        return [
+            'properties' => [
+                'univers' => [
+                    'type' => 'string',
+                    'enum' => array_keys(self::UNIVERSES),
+                    'description' => 'Univers du catalogue où chercher.',
+                ],
+                'ville' => [
+                    'type' => 'string',
+                    'description' => 'Ville, commune, région ou zone touristique du Sénégal '
+                        .'(ex. Dakar, Saly, Casamance). À omettre si la personne ne précise pas de lieu.',
+                ],
+                'budget_max' => [
+                    'type' => 'integer',
+                    'description' => 'Budget maximum EN FRANCS CFA (XOF), jamais en euros. '
+                        .'À omettre si la personne ne donne pas de montant.',
+                ],
+            ],
+            'required' => ['univers'],
+        ];
     }
 
     /**

@@ -68,6 +68,14 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     ses droits ne couvrent pas ce dossier, exactement comme sur l'écran. Et
     l'assistant y est en **lecture seule** : il ne valide, ne confirme et ne
     rembourse rien, ces gestes se prennent sur la fiche du dossier.
+  - **Le moteur intelligent (F10.4) n'a rien changé ici.** Depuis le serveur, un
+    cerveau conversationnel a remplacé la compréhension par mots-clés — l'assistant
+    suit désormais le fil (« et moins cher ? ») — et **pas une ligne du panneau n'a
+    bougé** : ni le service, ni le store, ni l'écran. C'était la raison d'être du
+    contrat figé en F10.0. ⚠️ Conséquence à connaître pour la vérification au
+    navigateur : **on ne voit pas quel moteur répond**. Les deux remplissent la même
+    structure, et un repli (clé absente, fournisseur en panne) est **volontairement
+    indiscernable** à l'écran — c'est le serveur qui le journalise.
   - ⚠️ L'assistant **ne figure pas au cahier des charges** : c'est un ajout, et il
     peut être **coupé côté serveur** sans déploiement — la bulle disparaît alors
     d'elle-même. Voir
@@ -1428,6 +1436,16 @@ la page d'erreur dès qu'un appel répond 0 ou 5xx — or l'interrupteur d'urgen
 l'assistant répond **503**. Sans ce marqueur, couper l'assistant aurait éjecté de
 sa page quiconque lui écrit : un panneau facultatif faisant tomber la navigation
 de tout le site.
+
+⚠️ **Le moteur du serveur est invisible d'ici, et c'est voulu (F10.4).** Le panneau
+consomme `AssistantReply` — `text`, `items`, `actions` — sans jamais savoir lequel
+des deux cerveaux l'a produite. Le driver `claude` ne demande donc **aucun** travail
+frontend, et son repli sur le déterministe (clé absente, panne du fournisseur) reste
+**indiscernable à l'écran** : c'est exactement le comportement recherché, mais cela
+signifie qu'en vérification navigateur, **une réponse correcte ne prouve pas que le
+moteur intelligent est actif**. Le signe qui ne trompe pas est le suivi du fil : le
+déterministe traite chaque message isolément, donc « et moins cher ? » y retombe sur
+le support.
 
 ⚠️ **Le coin bas-droite est partagé** entre trois éléments fixes : `app-scroll-top`
 (z-index 900), `app-pwa-banner` (950) et l'assistant. La bulle s'empile **au-dessus**

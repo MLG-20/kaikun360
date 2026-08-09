@@ -11,7 +11,7 @@ API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 - **261 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **999 tests** automatisés (3502 assertions), tous verts ✅
+- **1013 tests** automatisés (3554 assertions), tous verts ✅
 
 ---
 
@@ -54,7 +54,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 999 tests automatiques** — des petits programmes
+notifications) et **vérifié par 1013 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -739,6 +739,11 @@ Clés principales (voir `.env.example` pour la liste exhaustive) :
 | `ASSISTANT_ENABLED` | Interrupteur de l'assistant (F10). À `false`, l'endpoint répond 503 — permet de couper le service sans déploiement. |
 | `ASSISTANT_DRIVER` | Cerveau de l'assistant : `rules` (déterministe, sans clé ni coût) ou `claude` (F10.4). Toute valeur inconnue retombe sur `rules`. |
 | `ASSISTANT_RATE_PER_MINUTE` | Plafond du limiteur `assistant` (12/min par défaut) — parade au « déni de portefeuille ». |
+| `ANTHROPIC_API_KEY` | Clé de l'API Anthropic (F10.4). **Lue uniquement si `ASSISTANT_DRIVER=claude`.** Absente, le driver lève à la première requête et l'assistant retombe sur le cerveau déterministe : le service continue, dégradé, sans erreur visible. ⚠️ Un abonnement Claude **Pro ne couvre pas l'API** — compte d'organisation sur la Console Anthropic requis, avec plafond de dépense. |
+| `ASSISTANT_CLAUDE_MODEL` | Modèle du driver `claude` (défaut `claude-haiku-4-5`). Ordre de grandeur pour 6 échanges : ~10 F CFA en Haiku 4.5, ~20 F en Sonnet 5, ~50 F en Opus 5. |
+| `ASSISTANT_CLAUDE_MAX_TOKENS` | Plafond de tokens **produits** par réponse (défaut 700). L'invite impose 2 à 4 phrases. |
+| `ASSISTANT_CLAUDE_MAX_TOOL_ROUNDS` | Tours d'appels d'outils par message (défaut 3). Au-delà, les outils sont **retirés** au modèle, qui doit conclure : c'est ce qui borne la facture d'un échange même si le modèle boucle. |
+| `ASSISTANT_CLAUDE_TIMEOUT` / `ASSISTANT_CLAUDE_MAX_RETRIES` | Délai d'attente (20 s) et reprises (1). Courts volontairement : le repli déterministe répond tout de suite. |
 
 > **Aucun secret n'est versionné** : `.env` est ignoré par git ; seuls les
 > `.env.example` (valeurs factices) sont suivis.
@@ -843,7 +848,7 @@ Le code est **abondamment commenté en français**.
   admin `POST /admin/payments/{payment}/confirm` — Phase 1 du cahier des charges.
 - ✅ **Assistant transverse (F10.0 — socle) :** module `Assistant`, endpoint unique
   `POST /assistant/messages`, trousse à outils assemblée par rôle, cerveau
-  interchangeable (`RuleBasedBrain` par défaut, `ClaudeBrain` prévu en F10.4) et
+  interchangeable (`RuleBasedBrain` par défaut, `ClaudeBrain` livré en F10.4) et
   garde-fous (débit dédié, plafonds d'entrée, interrupteur). **Hors cahier des
   charges** — voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README.md).
   - ✅ **F10.1 (branchement du panneau Angular)** — deux correctifs côté serveur,
@@ -884,6 +889,28 @@ Le code est **abondamment commenté en français**.
     en silence (10 au lieu de 15 sur la base de développement), et un départ a une
     date de péremption. `mobility_services_pending` ajouté, test du dashboard
     étendu. ⚠️ **Toute entrée neuve du registre doit être ajoutée à l'agrégateur.**
+  - ✅ **F10.4 (driver `ClaudeBrain`)** — le cerveau conversationnel se glisse derrière
+    le contrat posé en F10.0 : **endpoint, panneau Angular, 14 outils, policies et
+    tests antérieurs inchangés** ; les 3 seules retouches d'outils sont additives
+    (`ProvidesInputSchema`, pour les paramètres que le modèle doit remplir). Dépendance
+    neuve : `anthropic-ai/sdk`. Bascule par `ASSISTANT_DRIVER=claude`.
+    - **Le gain : l'historique**, reçu et plafonné depuis F10.0 mais jamais exploité.
+    - **La règle qui protège le client** : le texte vient du modèle, **les fiches et
+      les boutons viennent des outils**, recopiés tels quels. Un prix halluciné n'a
+      aucun chemin vers l'écran. Le modèle ne reçoit même pas les `url` des fiches.
+    - **Repli** sur `RuleBasedBrain` (clé absente, panne, délai, réponse vide, refus).
+    - **Facture bornée** : plafond de tokens produits + plafond de tours d'outils, le
+      dernier tour retirant les outils au modèle (`ToolChoiceNone`) — l'échange se
+      termine toujours, en un nombre d'appels connu d'avance.
+    - ⚠️ **Le point de cache ne cache probablement rien** : le préfixe minimal
+      cacheable de Haiku 4.5 est de 4 096 tokens, que l'invite + les descriptions
+      d'outils n'atteignent pas. Aucun cache écrit, sans erreur ni signal ; le
+      marqueur devient utile tel quel si le modèle est monté en gamme (1 024 sur
+      Sonnet 5). À confirmer via `usage.cache_read_input_tokens` le jour de la clé.
+    - **14 tests neufs**, **sans clé et sans appel réseau** : le transporteur PSR-18
+      du SDK est remplacé par `tests/Support/FakeAnthropicTransport.php`, qui sert des
+      réponses scriptées **et enregistre les requêtes émises**.
+    - ⚠️ **Non éprouvé sur l'API réelle** : la clé du client n'existe pas encore.
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.
