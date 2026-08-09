@@ -370,6 +370,27 @@ $taille-bulle: 56px;
     }
   }
 
+  // Statut d'un dossier personnel (F10.2) : pastille discrète, pas un badge
+  // coloré par état — l'assistant informe, il ne juge pas « bon » ou « mauvais ».
+  &__statut {
+    align-self: flex-start;
+    margin: 2px 0;
+    padding: 1px 8px;
+    border-radius: var(--k-radius-pill);
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  // Référence : en monospace, comme partout ailleurs dans le produit — c'est un
+  // identifiant qu'on recopie, pas une phrase qu'on lit.
+  &__ref {
+    font-family: var(--k-font-mono);
+    font-size: 0.7rem;
+    color: var(--k-muted);
+  }
+
   &__question {
     margin: 0;
     padding: 0.6rem 0.7rem 0.25rem;

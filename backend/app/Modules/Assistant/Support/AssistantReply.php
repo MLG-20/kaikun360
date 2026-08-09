@@ -16,10 +16,10 @@ namespace App\Modules\Assistant\Support;
 final class AssistantReply
 {
     /**
-     * @param  string                            $text     Message affiché dans la bulle.
-     * @param  array<int, array<string, mixed>>  $items    Fiches de résultats (peut être vide).
-     * @param  array<int, AssistantAction>       $actions  Boutons proposés.
-     * @param  string|null                       $tool     Outil ayant produit la réponse (traçabilité).
+     * @param  string  $text  Message affiché dans la bulle.
+     * @param  array<int, array<string, mixed>>  $items  Fiches de résultats (peut être vide).
+     * @param  array<int, AssistantAction>  $actions  Boutons proposés.
+     * @param  string|null  $tool  Outil ayant produit la réponse (traçabilité).
      */
     public function __construct(
         public readonly string $text,

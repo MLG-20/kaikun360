@@ -96,13 +96,32 @@ class SupportEscalationTool implements AssistantTool
     }
 
     /**
-     * Sujet du futur fil : borné et nettoyé, car il sera repris tel quel dans
-     * l'appel à `start-support` et affiché au back-office. On refuse les sauts
-     * de ligne (un sujet reste une ligne) et on plafonne la longueur.
+     * Préfixe du sujet, qui EST la journalisation de l'assistant (F10.2).
+     *
+     * Arbitrage produit : on ne stocke aucune conversation. Ce qui remonte au
+     * back-office, ce sont les seules escalades — et elles y sont déjà, puisque
+     * le fil de support porte le message d'origine dans son corps. Il manquait
+     * une chose : que l'agent SACHE d'où vient la demande. Deux fils identiques,
+     * l'un tapé dans la messagerie et l'autre passé par l'assistant, ne
+     * s'instruisent pas pareil — le second signale au passage une question que
+     * l'assistant n'a pas su traiter, donc une FAQ à compléter.
+     *
+     * Un préfixe de sujet suffit : aucune table, aucune donnée personnelle
+     * conservée en plus, rien à purger au RGPD.
+     */
+    private const PREFIXE = 'Assistant — ';
+
+    /**
+     * Sujet du futur fil : préfixé, nettoyé et borné, car il sera repris tel
+     * quel dans l'appel à `POST /messages/support` et affiché au back-office.
+     * On refuse les sauts de ligne (un sujet reste une ligne).
+     *
+     * ⚠️ Le corps du fil, lui, n'est JAMAIS retouché : l'agent doit lire les
+     * mots exacts de la personne. On habille l'étiquette, pas le contenu.
      */
     private function cleanSubject(mixed $value): string
     {
-        $default = 'Demande via l\'assistant Kaikun';
+        $default = self::PREFIXE.'demande transmise depuis le panneau';
 
         if (! is_string($value)) {
             return $default;
@@ -110,6 +129,8 @@ class SupportEscalationTool implements AssistantTool
 
         $clean = trim(preg_replace('/\s+/u', ' ', $value) ?? '');
 
-        return $clean === '' ? $default : mb_substr($clean, 0, 120);
+        // 120 caractères de message + le préfixe : on reste très en deçà des
+        // 255 acceptés par StartSupportConversationRequest.
+        return $clean === '' ? $default : self::PREFIXE.mb_substr($clean, 0, 120);
     }
 }

@@ -72,9 +72,9 @@ déterministe reste aussi le **repli** si les clés deviennent indisponibles.
 Corps : `message` (obligatoire) et `history` (facultatif, tableau de `{role, text}`).
 Réponse : `{ data: { reply: { text, items, actions, tool } } }`.
 
-L'endpoint est **sans état** : l'historique voyage avec la requête, rien n'est stocké à
-ce stade (sobriété — rien à protéger, rien à purger). La journalisation vers le back-office
-viendra en F10.2, avec les espaces connectés, où elle a une valeur d'exploitation.
+L'endpoint est **sans état** : l'historique voyage avec la requête, et **aucune
+conversation n'est stockée** — y compris après F10.2, où l'arbitrage a été de s'en tenir
+là (voir « Journalisation » plus bas). Rien à protéger, rien à purger au RGPD.
 
 L'authentification est facultative : le contrôleur résout l'appelant via
 `$request->user('sanctum')` — le garde par défaut ne résoudrait rien hors du middleware
@@ -135,6 +135,72 @@ une destination que le catalogue public ignore.
 
 ---
 
+## Outils (F10.2 — espaces connectés)
+
+| Outil | Rôles | Ce qu'il montre | Écriture |
+|---|---|---|---|
+| `mes_reservations` | client, entreprise | 3 dernières réservations : référence, période, statut, montant | non |
+| `mes_demandes` | client | demandes déposées : type, ville, statut | non |
+| `mes_biens` | propriétaire | biens déposés, **tous statuts confondus** | non |
+| `mes_missions` | prestataire | missions affectées : intitulé, statut, date, montant | non |
+| `mes_projets_diaspora` | client | projets au pays + nombre de comptes rendus | non |
+
+⚠️ **`mes_demandes` n'est PAS ouvert à l'entreprise, malgré les apparences.** Les deux
+espaces ont un écran « Mes demandes », mais ce ne sont pas les mêmes demandes :
+`/espace-entreprise/demandes` liste des **demandes de team building**, pas des
+`ServiceRequest`. Le lien d'une fiche aurait pointé vers l'écran d'un autre registre —
+au mieux une fiche introuvable, au pire celle qui porte le même numéro. Deux écrans
+homonymes ne sont pas un écran commun.
+
+Tous héritent de **`PersonalRecordsTool`**, qui rassemble les règles que ces
+outils ne doivent pas pouvoir oublier : session obligatoire, rôle attendu,
+lecture seule, sortie fermée, et adresses d'écran passées par `SpaceLink`.
+
+⚠️ **Le cloisonnement n'est pas redémontré, il est RECOPIÉ du contrôleur HTTP**
+qui sert le même écran (`where('user_id', …)`, `where('owner_id', …)`,
+`whereHas('provider', …)`). Réécrire une condition d'appartenance « à peu près
+pareil » est la façon la plus banale de créer une fuite. Cas le plus piégeux :
+`provider_missions.provider_id` pointe sur **`providers`**, pas sur `users` —
+seule relation du projet dans ce cas ; un `where('provider_id', $user->id)`
+écrit de bonne foi compilerait et montrerait les missions d'un autre.
+
+⚠️ **`mes_biens` montre des annonces NON publiées, et ce n'est pas une entorse.**
+`rechercher_catalogue` filtre par `published()` parce qu'il répond à *tout le
+monde* ; `mes_biens` filtre par `owner_id` parce qu'il répond au *seul
+propriétaire*. Dans les deux cas, l'assistant montre ce que l'appelant verrait en
+ouvrant son espace — ni plus, ni moins. C'est même l'intérêt de l'outil : un bien
+en attente de validation est invisible partout ailleurs, et son propriétaire
+croit régulièrement l'avoir mal déposé.
+
+**Reconnaissance : un possessif ET un sujet.** « je cherche une réservation »
+veut le catalogue, « où en est **ma** réservation » veut un dossier. Sans
+l'exigence d'un mot de possession, la détection avalerait la moitié des
+recherches du site. C'est aussi ce qui permet de reconnaître « mon bien » sans
+réintroduire le faux positif de « je voudrais **bien** savoir comment payer »
+(défaut corrigé en F10.0). Ces règles passent **avant** le catalogue dans
+`RuleBasedBrain` : « ma réservation de villa » contient « villa ».
+
+**Un outil hors trousse ne bloque pas.** Un client qui écrit « mes missions »
+poursuit son chemin dans les règles suivantes plutôt que de buter sur un refus.
+
+## Journalisation vers le back-office (F10.2)
+
+**Arbitrage produit : aucune conversation n'est stockée.** Ce qui remonte à
+l'équipe, ce sont les seules **escalades** — et elles y sont déjà, puisque le fil
+de support porte le message d'origine dans son corps. Il manquait une chose : que
+l'agent sache d'où vient la demande. Le sujet du fil est donc préfixé
+**« Assistant — »**.
+
+Deux fils identiques, l'un tapé dans la messagerie et l'autre passé par
+l'assistant, ne s'instruisent pas pareil : le second signale au passage une
+question que l'assistant n'a pas su traiter, donc une **FAQ à compléter**.
+
+Aucune table, aucune donnée personnelle conservée en plus, rien à purger au RGPD.
+⚠️ Le **corps** du fil n'est jamais retouché : l'agent doit lire les mots exacts
+de la personne. On habille l'étiquette, pas le contenu.
+
+---
+
 ## Configuration
 
 | Variable | Défaut | Rôle |
@@ -150,7 +216,7 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
 
 ## Tests
 
-`tests/Feature/Assistant/` — **28 tests, 97 assertions**.
+`tests/Feature/Assistant/` — **43 tests, 146 assertions**.
 
 - `AssistantGuardrailsTest` (13) — plafonds, débit 429, interrupteur 503 (y compris
   **avant la validation**), cloisonnement par rôle, charge utile d'escalade complète,
@@ -161,6 +227,13 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
   **`test_un_bien_non_publie_ne_fuite_pas_par_assistant`** : le test central du module.
   Sans lui, tout le travail de validation des annonces (F7) serait contournable en posant
   une question dans une bulle de discussion.
+- `AssistantPersonalToolsTest` (15) — les outils des espaces connectés (F10.2). La question
+  qu'ils posent n'est pas « l'assistant répond-il ? » mais **« ne répond-il qu'à la bonne
+  personne ? »** : pour chaque outil, le dossier d'un **tiers** est créé à côté de celui de
+  l'appelant. Un test qui ne vérifierait que « je vois mon dossier » passerait au vert sur un
+  code qui montre aussi celui du voisin. S'y ajoutent la trousse par rôle (un client n'a pas
+  l'outil « missions », et sa question ne bute pas dessus), la non-régression de l'adverbe
+  « bien », et **« consulter ses dossiers n'écrit rien »**.
 
 ---
 
@@ -187,6 +260,7 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
 | Tranche | Contenu |
 |---|---|
 | ~~**F10.1**~~ | ✅ **livrée** — panneau Angular : bulle publique + espaces connectés (voir `frontend/src/app/shared/components/assistant/`) |
+| ~~**F10.2**~~ | ✅ **livrée** — 5 outils des espaces connectés + journalisation par préfixe d'escalade |
 | **F10.2** | outils client / propriétaire / prestataire / entreprise / diaspora (via policies) + journalisation |
 | **F10.3** | outils back-office en **lecture seule** (vérification CDC §6) |
 | **F10.4** | `ClaudeBrain` derrière le contrat déjà en place |

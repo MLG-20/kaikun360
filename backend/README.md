@@ -11,7 +11,7 @@ API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 - **261 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **963 tests** automatisés (3372 assertions), tous verts ✅
+- **978 tests** automatisés (3421 assertions), tous verts ✅
 
 ---
 
@@ -54,7 +54,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 963 tests automatiques** — des petits programmes
+notifications) et **vérifié par 978 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -855,6 +855,14 @@ Le code est **abondamment commenté en français**.
     **destinations** des circuits, alors que la recherche sait filtrer dessus —
     « Saly », « Casamance », « Gorée » n'étaient jamais transmis et l'assistant
     répondait n'importe où dans le pays en ayant l'air d'avoir compris.
+  - ✅ **F10.2 (espaces connectés)** — 5 outils de consultation de SES propres
+    dossiers (`mes_reservations`, `mes_demandes`, `mes_biens`, `mes_missions`,
+    `mes_projets_diaspora`), tous en **lecture seule** et tous adossés à
+    `PersonalRecordsTool`. ⚠️ Le cloisonnement y est **recopié du contrôleur HTTP**
+    qui sert le même écran, jamais réécrit : c'est la parade au piège de
+    `provider_missions.provider_id`, qui pointe sur `providers` et non sur
+    `users`. **Journalisation** : aucune conversation stockée — seules les
+    escalades remontent, via un sujet de fil préfixé « Assistant — ».
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.

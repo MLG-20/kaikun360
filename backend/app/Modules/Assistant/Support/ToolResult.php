@@ -17,7 +17,7 @@ namespace App\Modules\Assistant\Support;
 final class ToolResult
 {
     /**
-     * @param  string                       $summary  Phrase de synthèse, en français.
+     * @param  string  $summary  Phrase de synthèse, en français.
      * @param  array<int, array<string, mixed>>  $items  Fiches à afficher (déjà filtrées).
      * @param  array<int, AssistantAction>  $actions  Gestes proposés.
      */

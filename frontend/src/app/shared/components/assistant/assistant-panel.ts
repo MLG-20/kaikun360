@@ -174,8 +174,21 @@ export class AssistantPanelComponent {
     return typeof valeur === 'string' && valeur.trim() !== '' ? valeur : null;
   }
 
-  /** Prix formaté à la convention FR (« 45 000 F »), ou null s'il n'y en a pas. */
+  /**
+   * Montant affiché sur une fiche.
+   *
+   * ⚠️ Deux origines, dans cet ordre. Les outils personnels (F10.2) renvoient un
+   * `montant` **déjà mis en forme par le serveur** — c'est lui qui fait foi, un
+   * second formatage local risquerait de diverger. Les outils du catalogue
+   * (F10.0) renvoient un `prix_xof` brut, mis en forme ici. Ne lire que le
+   * second laisserait les réservations, missions et projets sans leur montant.
+   */
   protected prix(item: AssistantItem): string | null {
+    const prepare = item['montant'];
+    if (typeof prepare === 'string' && prepare.trim() !== '') {
+      return prepare;
+    }
+
     const valeur = item['prix_xof'];
     return typeof valeur === 'number' ? formatFcfa(valeur) : null;
   }

@@ -94,7 +94,31 @@ class RuleBasedBrain implements AssistantBrain
             return $this->useTool($tools, $context, 'contacter_support', ['sujet' => $message]);
         }
 
-        // 2. Recherche dans le catalogue.
+        // 2. « MES » dossiers (F10.2) — AVANT le catalogue, et l'ordre est tout.
+        //    « où en est ma réservation de villa » contient « villa » : traité
+        //    plus bas, il aurait renvoyé des annonces à vendre à quelqu'un qui
+        //    demandait des nouvelles de son séjour.
+        if ($personnel = $this->detectPersonalTopic($normalized)) {
+            // Sans session, aucun de ces outils n'est ouvert — et le dire
+            // franchement vaut mieux que de passer au support : la personne a
+            // un compte, elle a juste oublié de se connecter.
+            if (! $context->isAuthenticated()) {
+                return AssistantReply::fallback(
+                    'Connectez-vous et je consulte vos dossiers directement ici.',
+                    [AssistantAction::link('Se connecter', '/auth/connexion')],
+                );
+            }
+
+            // ⚠️ On ne se branche QUE si l'outil est réellement ouvert à ce rôle.
+            // Un client qui écrit « mes missions » (rubrique qui n'existe pas
+            // chez lui) doit poursuivre son chemin dans les règles suivantes,
+            // pas buter sur un « je ne peux pas traiter cette demande ».
+            if ($tools->find($personnel, $context) !== null) {
+                return $this->useTool($tools, $context, $personnel, []);
+            }
+        }
+
+        // 3. Recherche dans le catalogue.
         if ($universe = $this->detectUniverse($normalized)) {
             return $this->useTool($tools, $context, 'rechercher_catalogue', [
                 'univers' => $universe,
@@ -103,12 +127,12 @@ class RuleBasedBrain implements AssistantBrain
             ]);
         }
 
-        // 3. Question sur le fonctionnement de la plateforme.
+        // 4. Question sur le fonctionnement de la plateforme.
         if ($this->matchesAny($normalized, self::FAQ_KEYWORDS)) {
             return $this->useTool($tools, $context, 'consulter_faq', ['question' => $message]);
         }
 
-        // 4. Simple salutation : on accueille et on oriente, sans outil.
+        // 5. Simple salutation : on accueille et on oriente, sans outil.
         if ($this->matchesAny($normalized, self::GREETINGS)) {
             return AssistantReply::fallback(
                 $this->greeting($context),
@@ -116,8 +140,58 @@ class RuleBasedBrain implements AssistantBrain
             );
         }
 
-        // 5. Rien de reconnu. On le DIT — inventer une réponse serait pire.
+        // 6. Rien de reconnu. On le DIT — inventer une réponse serait pire.
         return $this->useTool($tools, $context, 'contacter_support', ['sujet' => $message]);
+    }
+
+    /**
+     * Sujets « MES dossiers » → outil correspondant (F10.2).
+     *
+     * L'ordre compte, comme pour les univers : le premier reconnu l'emporte.
+     */
+    private const PERSONAL_KEYWORDS = [
+        'mes_reservations' => ['reservation', 'reservations', 'sejour', 'sejours'],
+        'mes_missions' => ['mission', 'missions', 'affectation', 'affectations'],
+        // ⚠️ « bien » redevient utilisable ICI, alors qu'il est banni des
+        // mots-clés du catalogue : la marque de possession exigée ci-dessous
+        // écarte l'adverbe (« je voudrais bien savoir… » n'a pas de possessif).
+        'mes_biens' => ['bien', 'biens', 'annonce', 'annonces', 'propriete', 'proprietes'],
+        'mes_projets_diaspora' => ['projet', 'projets', 'diaspora'],
+        'mes_demandes' => ['demande', 'demandes', 'dossier', 'dossiers'],
+    ];
+
+    /**
+     * Marques de possession — le filtre qui rend cette détection utilisable.
+     */
+    private const POSSESSIVES = ['ma', 'mon', 'mes', 'notre', 'nos'];
+
+    /**
+     * Reconnaît « où en est MA réservation », « MES annonces sont-elles en ligne ».
+     *
+     * ⚠️ **Deux conditions, pas une** : un mot de possession ET un sujet. Ce
+     * n'est pas un raffinement, c'est ce qui sépare deux intentions opposées —
+     * « je cherche une réservation » veut le catalogue, « où en est ma
+     * réservation » veut un dossier. Sans le possessif, la détection avalerait
+     * la moitié des recherches du site et l'assistant répondrait « vous n'avez
+     * aucune réservation » à quelqu'un qui voulait en faire une.
+     *
+     * C'est aussi ce qui permet de reconnaître « mon bien » sans réintroduire
+     * le faux positif de « je voudrais **bien** savoir comment payer » (défaut
+     * corrigé en F10.0).
+     */
+    private function detectPersonalTopic(string $normalized): ?string
+    {
+        if (! $this->matchesAny($normalized, self::POSSESSIVES)) {
+            return null;
+        }
+
+        foreach (self::PERSONAL_KEYWORDS as $tool => $keywords) {
+            if ($this->matchesAny($normalized, $keywords)) {
+                return $tool;
+            }
+        }
+
+        return null;
     }
 
     /**

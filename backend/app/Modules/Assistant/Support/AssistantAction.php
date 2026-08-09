@@ -20,11 +20,11 @@ namespace App\Modules\Assistant\Support;
 final class AssistantAction
 {
     /**
-     * @param  string  $kind     Nature du geste, interprétée par le frontend :
-     *                           `link` (naviguer), `support` (ouvrir un fil),
-     *                           `contact` (formulaire public de contact).
-     * @param  string  $label    Libellé du bouton, en français.
-     * @param  array   $payload  Données du geste (url, filtres, sujet…).
+     * @param  string  $kind  Nature du geste, interprétée par le frontend :
+     *                        `link` (naviguer), `support` (ouvrir un fil),
+     *                        `contact` (formulaire public de contact).
+     * @param  string  $label  Libellé du bouton, en français.
+     * @param  array  $payload  Données du geste (url, filtres, sujet…).
      */
     private function __construct(
         public readonly string $kind,

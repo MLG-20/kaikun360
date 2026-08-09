@@ -12,6 +12,11 @@ use App\Models\User;
 use App\Modules\Assistant\Brains\RuleBasedBrain;
 use App\Modules\Assistant\Contracts\AssistantBrain;
 use App\Modules\Assistant\Tools\FaqTool;
+use App\Modules\Assistant\Tools\MyBookingsTool;
+use App\Modules\Assistant\Tools\MyDiasporaProjectsTool;
+use App\Modules\Assistant\Tools\MyMissionsTool;
+use App\Modules\Assistant\Tools\MyPropertiesTool;
+use App\Modules\Assistant\Tools\MyRequestsTool;
 use App\Modules\Assistant\Tools\SearchCatalogTool;
 use App\Modules\Assistant\Tools\SupportEscalationTool;
 use App\Modules\Assistant\Tools\ToolRegistry;
@@ -160,9 +165,21 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(ToolRegistry::class, function ($app) {
             return new ToolRegistry([
+                // Publics (F10.0) — ouverts à tout le monde, visiteurs compris.
                 $app->make(SearchCatalogTool::class),
                 $app->make(FaqTool::class),
                 $app->make(SupportEscalationTool::class),
+
+                // Espaces connectés (F10.2) — chacun se réserve à ses rôles et
+                // ne lit que les dossiers de l'appelant. Les ajouter ici ne les
+                // ouvre à personne : c'est `isAvailableFor()` qui décide, outil
+                // par outil, et le registre ne présente au cerveau que ceux qui
+                // ont répondu oui.
+                $app->make(MyBookingsTool::class),
+                $app->make(MyRequestsTool::class),
+                $app->make(MyPropertiesTool::class),
+                $app->make(MyMissionsTool::class),
+                $app->make(MyDiasporaProjectsTool::class),
             ]);
         });
 

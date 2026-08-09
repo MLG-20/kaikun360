@@ -33,9 +33,9 @@ class FaqTool implements AssistantTool
 
     public function description(): string
     {
-        return "Cherche une réponse dans la foire aux questions publiée de Kaikun 360 "
-            ."(fonctionnement de la plateforme, paiement, vérification des annonces, garanties, "
-            ."frais, délais). À utiliser pour toute question sur le SERVICE lui-même, par "
+        return 'Cherche une réponse dans la foire aux questions publiée de Kaikun 360 '
+            .'(fonctionnement de la plateforme, paiement, vérification des annonces, garanties, '
+            .'frais, délais). À utiliser pour toute question sur le SERVICE lui-même, par '
             .'opposition à une recherche d\'annonce. Paramètre : `question` (le texte de la question).';
     }
 

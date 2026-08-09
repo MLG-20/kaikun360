@@ -80,9 +80,28 @@
                         (click)="ouvrirFiche(item)"
                       >
                         <span class="ia-fiche__titre">{{ texte(item, 'titre') ?? 'Annonce' }}</span>
+
+                        <!-- Statut : le champ que vient chercher quelqu'un qui
+                             demande « où en est mon dossier ». Absent des fiches
+                             du catalogue, présent sur toutes celles de F10.2. -->
+                        @if (texte(item, 'statut'); as statut) {
+                          <span class="ia-fiche__statut">{{ statut }}</span>
+                        }
+
                         @if (texte(item, 'lieu'); as lieu) {
                           <span class="ia-fiche__lieu">{{ lieu }}</span>
                         }
+
+                        <!-- Dates : période d'un séjour, date prévue d'une mission. -->
+                        @if (texte(item, 'periode'); as periode) {
+                          <span class="ia-fiche__lieu">{{ periode }}</span>
+                        }
+
+                        <!-- Précision libre (ex. « 2 comptes rendus déposés »). -->
+                        @if (texte(item, 'detail'); as detail) {
+                          <span class="ia-fiche__lieu">{{ detail }}</span>
+                        }
+
                         @if (prix(item); as montant) {
                           <span class="ia-fiche__prix">
                             {{ montant }}
@@ -90,6 +109,12 @@
                               <small>{{ unite }}</small>
                             }
                           </span>
+                        }
+
+                        <!-- La référence, en dernier et en petit : elle sert à
+                             citer le dossier au support, pas à le reconnaître. -->
+                        @if (texte(item, 'reference'); as reference) {
+                          <span class="ia-fiche__ref">{{ reference }}</span>
                         }
                       </button>
                     }

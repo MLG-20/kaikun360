@@ -50,6 +50,13 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     enregistrée** sur l'ordinateur : elle disparaît avec l'onglet.
   - **L'assistant propose, il n'écrit rien.** Ouvrir un fil avec un conseiller
     n'a lieu qu'au clic, et passe par le circuit habituel de la messagerie.
+  - **Connecté, il lit vos dossiers** (F10.2) : « où en est ma réservation ? »,
+    « est-ce que mon annonce est en ligne ? », « quelles sont mes missions ? ».
+    Chacun ne voit que **les siens**, et seulement ce que son espace lui montre
+    déjà — un propriétaire retrouve ainsi son bien *en attente de validation*,
+    invisible partout ailleurs. L'assistant **consulte, il ne modifie rien** :
+    payer, annuler ou accepter une mission reste un geste posé sur l'écran
+    concerné, avec sa confirmation.
   - ⚠️ L'assistant **ne figure pas au cahier des charges** : c'est un ajout, et il
     peut être **coupé côté serveur** sans déploiement — la bulle disparaît alors
     d'elle-même. Voir
