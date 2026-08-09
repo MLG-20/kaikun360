@@ -11,6 +11,12 @@ use App\Models\Review;
 use App\Models\User;
 use App\Modules\Assistant\Brains\RuleBasedBrain;
 use App\Modules\Assistant\Contracts\AssistantBrain;
+use App\Modules\Assistant\Tools\BackOffice\AccountLookupTool;
+use App\Modules\Assistant\Tools\BackOffice\PaymentLookupTool;
+use App\Modules\Assistant\Tools\BackOffice\PendingRequestsTool;
+use App\Modules\Assistant\Tools\BackOffice\PlatformActivityTool;
+use App\Modules\Assistant\Tools\BackOffice\SupportInboxTool;
+use App\Modules\Assistant\Tools\BackOffice\ValidationQueueTool;
 use App\Modules\Assistant\Tools\FaqTool;
 use App\Modules\Assistant\Tools\MyBookingsTool;
 use App\Modules\Assistant\Tools\MyDiasporaProjectsTool;
@@ -180,6 +186,19 @@ class AppServiceProvider extends ServiceProvider
                 $app->make(MyPropertiesTool::class),
                 $app->make(MyMissionsTool::class),
                 $app->make(MyDiasporaProjectsTool::class),
+
+                // Back-office (F10.3) — LECTURE SEULE, et filtrés non par rôle
+                // mais par PERMISSION FINE (cf. BackOfficeTool) : depuis F7.1.b
+                // le back-office délègue dossier par dossier, deux agents de la
+                // même équipe n'ont donc pas la même trousse. Aucun de ces
+                // outils n'écrit : valider, confirmer un règlement ou répondre à
+                // un client restent des gestes d'écran.
+                $app->make(PlatformActivityTool::class),
+                $app->make(ValidationQueueTool::class),
+                $app->make(PendingRequestsTool::class),
+                $app->make(SupportInboxTool::class),
+                $app->make(AccountLookupTool::class),
+                $app->make(PaymentLookupTool::class),
             ]);
         });
 

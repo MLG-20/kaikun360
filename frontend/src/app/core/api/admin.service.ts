@@ -29,6 +29,9 @@ export interface DashboardSnapshot {
   queues: {
     properties_pending: number;
     vehicles_pending: number;
+    // F8.23 côté file de validation, mais compté au tableau de bord seulement
+    // depuis le correctif F10.3 : l'écran ignorait ces départs.
+    mobility_services_pending: number;
     experiences_pending: number;
     providers_pending: number;
   };

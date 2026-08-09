@@ -59,6 +59,8 @@ déterministe reste aussi le **repli** si les clés deviennent indisponibles.
 | `Support/ToolResult.php` | sortie fermée d'un outil |
 | `Support/AssistantReply.php` | contrat consommé par Angular |
 | `Tools/ToolRegistry.php` | assemble et filtre la trousse par rôle |
+| `Tools/PersonalRecordsTool.php` | socle des outils « mes dossiers » (F10.2) |
+| `Tools/BackOffice/BackOfficeTool.php` | socle des outils du poste de commandement (F10.3) |
 | `Brains/RuleBasedBrain.php` | intentions par mots-clés → outil |
 
 ---
@@ -183,6 +185,119 @@ réintroduire le faux positif de « je voudrais **bien** savoir comment payer »
 **Un outil hors trousse ne bloque pas.** Un client qui écrit « mes missions »
 poursuit son chemin dans les règles suivantes plutôt que de buter sur un refus.
 
+---
+
+## Outils (F10.3 — back-office, lecture seule)
+
+| Outil | Permission exigée | Ce qu'il montre | Écriture |
+|---|---|---|---|
+| `activite_plateforme` | `consulter:dashboard-admin` | photographie du jour : file, activité, volume et commission, alertes | non |
+| `file_validation` | `consulter:dashboard-admin` | ce qui attend une validation, type par type + ancienneté du plus vieux | non |
+| `demandes_a_traiter` | `traiter:demandes` | demandes clients ouvertes, urgences d'abord | non |
+| `fils_support` | `repondre:messages` | mes fils ouverts + **combien ne sont assignés à personne** | non |
+| `rechercher_compte` | `gerer:utilisateurs` | un compte par nom / e-mail / téléphone → sa fiche | non |
+| `suivre_paiement` | `gerer:paiements` | un règlement par référence : statut, montant, nature, dossier | non |
+
+Tous héritent de **`BackOfficeTool`** (`Tools/BackOffice/`), qui porte les quatre règles de
+la famille : équipe **et** permission, lecture seule, sortie fermée, adresses d'écran
+construites depuis une racine unique.
+
+### ⚠️ La règle de la tranche : la trousse s'assemble par PERMISSION, pas par rôle
+
+C'est ce qui distingue F10.3 de tout ce qui précède. Depuis F7.1.b, le back-office
+fonctionne au **« grant pur par personne »** : le rôle `agent_kaikun` n'ouvre que l'accès,
+et chaque dossier qu'un agent a le droit de traiter lui est **délégué individuellement**.
+Un outil ouvert au seul rôle contournerait cette matrice — le nouvel agent à qui personne
+n'a coché « Gérer les paiements » lirait par la bulle ce que son écran lui refuse.
+`isAvailableFor()` interroge donc `can()`, exactement comme la route qui sert l'écran.
+
+**Conséquence voulue, à ne pas « corriger » : deux agents de la même équipe n'ont pas le
+même assistant.** C'est le reflet fidèle de leurs droits.
+
+⚠️ Le super administrateur n'a **aucune** permission assignée (il passe par `Gate::before`).
+Passer par `can()` — et non par une lecture de ses permissions — est ce qui lui ouvre
+malgré tout la trousse complète : c'est le piège de F7.4.a, où un rail vide lui avait été
+servi.
+
+⚠️ **Deux exceptions apparentes, toutes deux recopiées de l'existant.** `file_validation`
+est gardé par l'*accès* et non par `valider:*` — `ValidationQueueController` pose déjà la
+règle (« consulter un dossier n'est pas le modérer »), et filtrer par permission fine
+produirait un compteur **menteur** : un agent sans délégation lirait « rien en attente »
+alors que la file déborde. `fils_support` est ouvert à tout agent parce que
+`repondre:messages` est **portée par le rôle** depuis F8.12.b.
+
+### Lecture seule, et la règle a un coût assumé
+
+Aucun de ces outils n'écrit — pas même les deux gestes qu'on voudrait enchaîner après les
+avoir consultés (valider une annonce, confirmer un règlement). Une phrase mal comprise ne
+doit jamais publier un bien ni sortir de l'argent réel. La fiche d'un paiement (F8.2.d)
+réunit les éléments de **preuve** que l'agent doit avoir sous les yeux ; un bouton qui
+court-circuiterait cette lecture serait une régression de sécurité, pas un gain de temps.
+
+### Aiguillage : la règle back-office passe AVANT toutes les autres
+
+Le vocabulaire du poste de commandement recoupe celui du public sur presque tous ses mots.
+Sans priorité, « support » ferait **escalader vers un conseiller** un agent qui demande sa
+boîte de réception, « paiement » enverrait un responsable financier dans la FAQ client, et
+« demande » croiserait les dossiers personnels. La règle est donc en tête et **réservée au
+staff** : les cinq rôles publics gardent exactement le parcours de F10.0/F10.2 (vérifié par
+test — un administrateur qui cherche une villa obtient bien le catalogue).
+
+⚠️ **Ici, contrairement à F10.2, un outil hors trousse NE se poursuit PAS dans les règles
+suivantes.** Pour un client, « mes missions » n'a pas de sens et la suite du parcours est
+utile ; pour un agent, l'outil manque parce que la **délégation** manque — le laisser filer
+lui servirait une entrée de FAQ client en réponse à une question d'exploitation. On le lui
+dit, et ce n'est pas une fuite : on ne lui apprend que ses propres droits.
+
+### Deux outils prennent un argument — une première dans le module
+
+`rechercher_compte` et `suivre_paiement` ont besoin d'une donnée extraite du message. Le
+cerveau la passe **même vide** : c'est l'outil qui répond « précisez un nom » ou « donnez-moi
+la référence », pour que la consigne reste identique quel que soit le cerveau branché.
+
+⚠️ **Deux défauts d'extraction trouvés en curl sur le serveur réel, invisibles aux tests :**
+
+1. **La référence à deux tirets.** `PAY-ACPT-6YRYXV` (la forme des acomptes depuis F7.3.h)
+   était tronquée à « PAY-ACPT » par un motif à segment unique, puis rejetée faute de
+   chiffre : l'assistant réclamait une référence qu'on venait de lui coller en entier.
+2. **Le verbe à trait d'union.** « retrouve-moi le compte de Pierre Robert » produisait le
+   terme « retrouve-moi Pierre Robert » — le découpage garde les traits d'union (sinon
+   « Anne-Marie » se casse en deux), donc « retrouve-moi » n'était comparé à aucun mot vide
+   et passait pour un nom. Un mot composé est désormais vide si **toutes** ses parties le
+   sont.
+
+L'extraction d'un nom reste une **heuristique assumée** : un terme faux coûte un « aucun
+résultat », jamais une fuite — la requête reste bornée par `gerer:utilisateurs`.
+
+### Ce qui ne sort pas
+
+- `rechercher_compte` renvoie nom, statut, rôle et e-mail (les colonnes de l'annuaire, même
+  permission) mais **jamais le téléphone ni l'adresse**, alors qu'on peut chercher dessus :
+  confirmer une identité est légitime, recracher les coordonnées complètes dans une bulle
+  qui reste affichée ne l'est pas.
+- `suivre_paiement` renvoie l'état, le montant, la nature et le dossier — **ni
+  `signature_verified`, ni `meta`, ni la preuve Wave/OM** (données de contrôle) — et cite la
+  **réservation**, jamais le client : identifier le payeur relève de `rechercher_compte`,
+  gardé par une autre permission. Le grant pur n'aurait aucun sens si un outil recomposait
+  par la bande ce qu'une autre permission protège.
+
+### 🐛 Défaut PRÉEXISTANT trouvé et corrigé au passage (CDC §6, module 1)
+
+Les deux premiers outils se sont contredits dès le premier essai sur la base réelle : la
+file annonçait **15** éléments en attente, le tableau de bord **10**. `DashboardAggregator`
+comptait quatre types alors que `ValidatorRegistry` en porte cinq — **les départs programmés
+y sont entrés en F8.23 sans jamais être ajoutés à l'agrégat**. L'écran d'ouverture de la
+journée sous-comptait donc depuis toute une phase, en silence, et un départ a une date de
+péremption : celui qu'on ne voit pas est celui qu'on valide trop tard.
+
+Corrigé côté serveur (`mobility_services_pending`), côté écran (carte « Départs » sur la Vue
+d'ensemble) et dans le test du tableau de bord. ⚠️ **Le motif s'est répété trois fois dans
+cette seule tranche** — agrégateur, total de l'écran, ventilation de l'outil : à chaque fois
+une **énumération figée à côté d'un ensemble qui grandit**. Les trois somment désormais les
+données elles-mêmes ; un type inconnu s'affiche sous sa clé brute, donc visible.
+
+---
+
 ## Journalisation vers le back-office (F10.2)
 
 **Arbitrage produit : aucune conversation n'est stockée.** Ce qui remonte à
@@ -216,7 +331,7 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
 
 ## Tests
 
-`tests/Feature/Assistant/` — **43 tests, 146 assertions**.
+`tests/Feature/Assistant/` — **64 tests, 226 assertions**.
 
 - `AssistantGuardrailsTest` (13) — plafonds, débit 429, interrupteur 503 (y compris
   **avant la validation**), cloisonnement par rôle, charge utile d'escalade complète,
@@ -234,6 +349,16 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
   code qui montre aussi celui du voisin. S'y ajoutent la trousse par rôle (un client n'a pas
   l'outil « missions », et sa question ne bute pas dessus), la non-régression de l'adverbe
   « bien », et **« consulter ses dossiers n'écrit rien »**.
+- `AssistantBackOfficeToolsTest` (21) — les outils du poste de commandement (F10.3). La
+  question change encore de nature, parce que ces outils montrent les dossiers **des
+  autres** : **« l'assistant respecte-t-il la DÉLÉGATION ? »** D'où leur forme — pour chaque
+  outil sensible, **le même agent est interrogé deux fois**, avant et après que la
+  permission lui soit accordée. Un test qui ne vérifierait que le cas autorisé passerait au
+  vert sur un code qui ouvre tout à toute l'équipe. S'y ajoutent le super administrateur
+  sans permission directe (`Gate::before`), le client qui emploie le vocabulaire exact du
+  back-office sans rien atteindre, **« aucun outil ne modifie les dossiers »**, la boîte
+  personnelle qui ne montre pas les fils d'un collègue, et les deux régressions
+  d'extraction trouvées en curl.
 
 ---
 
@@ -261,8 +386,7 @@ Plafonds d'entrée dans `config/assistant.php` (`message_length`, `history_turns
 |---|---|
 | ~~**F10.1**~~ | ✅ **livrée** — panneau Angular : bulle publique + espaces connectés (voir `frontend/src/app/shared/components/assistant/`) |
 | ~~**F10.2**~~ | ✅ **livrée** — 5 outils des espaces connectés + journalisation par préfixe d'escalade |
-| **F10.2** | outils client / propriétaire / prestataire / entreprise / diaspora (via policies) + journalisation |
-| **F10.3** | outils back-office en **lecture seule** (vérification CDC §6) |
+| ~~**F10.3**~~ | ✅ **livrée** — 6 outils back-office en lecture seule, filtrés par permission, + montage du panneau dans le poste de commandement |
 | **F10.4** | `ClaudeBrain` derrière le contrat déjà en place |
 
 Le back-office reste en lecture seule en F10 : un assistant qui déclenche un reversement

@@ -168,3 +168,18 @@
     </main>
   </div>
 </div>
+
+<!--
+  Assistant Kaikun (F10.3) — la bulle entre enfin dans le poste de commandement.
+
+  Elle en était volontairement absente depuis F10.1 : sans outils de
+  gouvernance, elle n'aurait su répondre ici que par un renvoi au support, sur
+  le seul écran où l'équipe EST le support. Ses six outils de back-office sont
+  en **lecture seule** — la mention de pied le dit, et le serveur le garantit.
+
+  ⚠️ Monté HORS de `.bo-app`, qui est en `100dvh` + `overflow: hidden` depuis
+  F8.1 : la bulle est en `position: fixed`, donc rattachée à la fenêtre et non à
+  cette boîte, mais l'y placer la mettrait dans un conteneur qui masque ses
+  débordements. Le panneau déployé, plus haut qu'elle, y serait rogné.
+-->
+<app-assistant-panel variante="back-office" />

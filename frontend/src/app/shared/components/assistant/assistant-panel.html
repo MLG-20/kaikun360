@@ -45,7 +45,7 @@
         <span class="ia-tete__marque" aria-hidden="true">K</span>
         <span class="ia-tete__titre">
           <b>Assistant Kaikun</b>
-          <small>Immobilier, séjours, tourisme, transport</small>
+          <small>{{ sousTitre() }}</small>
         </span>
         <button type="button" class="ia-tete__fermer" aria-label="Fermer l'assistant" (click)="fermer()">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -167,7 +167,7 @@
           rows="1"
           [attr.maxlength]="maxLength"
           [disabled]="attente()"
-          placeholder="Ex. : une villa à Saly sous 60 millions"
+          [placeholder]="exemple()"
           [value]="brouillon()"
           (input)="brouillon.set($any($event.target).value)"
           (keydown)="touche($event)"
@@ -185,12 +185,10 @@
         </button>
       </form>
 
-      <!-- ⚠️ Mention non négociable : l'assistant oriente, il n'engage pas
-           Kaikun 360. Un prix ou un délai lus ici se confirment sur la fiche. -->
-      <p class="ia-mention">
-        Assistant automatique — les informations affichées proviennent du catalogue publié.
-        Pour un engagement ferme, un conseiller prend le relais.
-      </p>
+      <!-- ⚠️ Mention non négociable, et son texte dépend de l'endroit : au
+           public, l'assistant oriente sans engager Kaikun 360 ; au back-office,
+           il est en LECTURE SEULE et ne prend aucun geste (cf. `mention()`). -->
+      <p class="ia-mention">{{ mention() }}</p>
     </section>
   }
 }

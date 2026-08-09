@@ -51,10 +51,18 @@ export class BackofficeOverviewPageComponent {
     });
   }
 
-  /** Total des ressources en attente de validation (somme des files). */
+  /**
+   * Total des ressources en attente de validation (somme des files).
+   *
+   * ⚠️ **Somme de TOUTES les valeurs, pas d'une liste de clés écrite ici**
+   * (correctif F10.3). L'ancienne version additionnait quatre champs nommés ;
+   * quand les départs programmés sont entrés dans la file de validation
+   * (F8.23), personne n'a pensé à cette ligne, et l'écran d'ouverture de la
+   * journée a sous-compté pendant toute une phase — sans jamais rien afficher
+   * d'anormal. Le prochain type validable sera compté sans qu'on y pense.
+   */
   protected pendingTotal(s: DashboardSnapshot): number {
-    const q = s.queues;
-    return q.properties_pending + q.vehicles_pending + q.experiences_pending + q.providers_pending;
+    return Object.values(s.queues).reduce((total, count) => total + count, 0);
   }
 
   /** Formate un montant en FCFA (séparateurs de milliers). */

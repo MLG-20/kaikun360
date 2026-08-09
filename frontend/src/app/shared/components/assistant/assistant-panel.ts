@@ -7,6 +7,7 @@ import {
   computed,
   effect,
   inject,
+  input,
   signal,
   viewChild,
 } from '@angular/core';
@@ -51,6 +52,53 @@ import { formatFcfa } from '../../format/fcfa';
 export class AssistantPanelComponent {
   private readonly store = inject(AssistantStore);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+
+  /**
+   * Décor du panneau selon l'endroit où il est monté (F10.3).
+   *
+   * ⚠️ **Ce réglage ne change RIEN à ce que l'assistant sait faire.** La trousse
+   * à outils est composée côté serveur à partir du JETON (`ToolRegistry`), pas
+   * de la page d'où part le message : un administrateur obtient ses outils de
+   * back-office depuis le site public, et un visiteur n'en obtiendrait aucun
+   * même en ouvrant cette variante. Ce qui se joue ici est uniquement le
+   * vocabulaire affiché — sous-titre, exemple de question, mention légale — car
+   * un agent à qui l'on propose « une villa à Saly » ne devine pas que la bulle
+   * connaît sa file de validation.
+   *
+   * Le faire porter par le layout (et non déduire du rôle connecté) est
+   * délibéré : le rôle dit ce que l'on PEUT faire, la page dit ce que l'on est
+   * en train de faire — et c'est la seconde qui règle une invite.
+   */
+  readonly variante = input<'public' | 'back-office'>('public');
+
+  /** Sous-titre de l'en-tête. */
+  protected readonly sousTitre = computed(() =>
+    this.variante() === 'back-office'
+      ? 'File, demandes, comptes, règlements'
+      : 'Immobilier, séjours, tourisme, transport',
+  );
+
+  /** Exemple de question, dans le champ de saisie. */
+  protected readonly exemple = computed(() =>
+    this.variante() === 'back-office'
+      ? 'Ex. : que reste-t-il à valider ?'
+      : 'Ex. : une villa à Saly sous 60 millions',
+  );
+
+  /**
+   * Mention de pied, **non négociable dans les deux cas** mais pas pour la même
+   * raison : au public, elle dit que l'assistant n'engage pas Kaikun 360 ; à
+   * l'équipe, elle dit qu'il est en LECTURE SEULE. Un agent qui croirait pouvoir
+   * valider ou rembourser d'une phrase perdrait un temps précieux à essayer —
+   * ou, pire, croirait l'avoir fait.
+   */
+  protected readonly mention = computed(() =>
+    this.variante() === 'back-office'
+      ? 'Assistant automatique, en lecture seule : il ne valide, ne confirme et ne rembourse rien. '
+        + 'Les gestes se prennent sur l’écran du dossier.'
+      : 'Assistant automatique — les informations affichées proviennent du catalogue publié. '
+        + 'Pour un engagement ferme, un conseiller prend le relais.',
+  );
 
   /** Longueur maximale, affichée au compteur (miroir du serveur). */
   protected readonly maxLength = ASSISTANT_MAX_LENGTH;

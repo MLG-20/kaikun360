@@ -11,7 +11,7 @@ API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 - **261 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
 - **63 tables**, référentiel géographique du Sénégal inclus
-- **978 tests** automatisés (3421 assertions), tous verts ✅
+- **999 tests** automatisés (3502 assertions), tous verts ✅
 
 ---
 
@@ -54,7 +54,7 @@ code est **abondamment commenté en français**.
 ### Où en est le moteur ?
 
 **Il est terminé** (tous les univers, la sécurité, les paiements, les
-notifications) et **vérifié par 978 tests automatiques** — des petits programmes
+notifications) et **vérifié par 999 tests automatiques** — des petits programmes
 qui rejouent les scénarios importants à chaque modification pour garantir que rien
 ne casse. Détail en fin de document ([État d'avancement](#état-davancement)).
 
@@ -863,6 +863,27 @@ Le code est **abondamment commenté en français**.
     `provider_missions.provider_id`, qui pointe sur `providers` et non sur
     `users`. **Journalisation** : aucune conversation stockée — seules les
     escalades remontent, via un sujet de fil préfixé « Assistant — ».
+  - ✅ **F10.3 (back-office, lecture seule)** — 6 outils adossés à `BackOfficeTool`
+    (`Tools/BackOffice/`) : `activite_plateforme`, `file_validation`,
+    `demandes_a_traiter`, `fils_support`, `rechercher_compte`, `suivre_paiement`.
+    ⚠️ **La trousse s'y assemble par PERMISSION, pas par rôle** : depuis F7.1.b le
+    back-office délègue dossier par dossier, et un outil ouvert au seul rôle
+    rendrait cette matrice décorative. `isAvailableFor()` interroge `can()`, donc
+    **deux agents de la même équipe n'ont pas le même assistant** — et le super
+    administrateur, qui n'a aucune permission assignée, reçoit la trousse complète
+    par `Gate::before` (piège de F7.4.a). Deux gardes recopiées de l'existant :
+    `file_validation` répond à l'*accès* (consulter n'est pas modérer, et filtrer
+    plus finement donnerait un compteur **menteur**), `fils_support` à
+    `repondre:messages`, portée par le rôle depuis F8.12.b. La règle d'aiguillage
+    passe **avant toutes les autres** et n'est active que pour le staff, sinon
+    « support » ferait escalader un agent qui demande sa propre boîte.
+  - 🐛 **Défaut PRÉEXISTANT corrigé dans la foulée de F10.3 (CDC §6, module 1)** :
+    `DashboardAggregator` comptait **quatre** types en attente de validation alors
+    que `ValidatorRegistry` en porte **cinq** — les départs programmés y sont entrés
+    en F8.23 sans jamais rejoindre l'agrégat. Le tableau de bord sous-comptait donc
+    en silence (10 au lieu de 15 sur la base de développement), et un départ a une
+    date de péremption. `mobility_services_pending` ajouté, test du dashboard
+    étendu. ⚠️ **Toute entrée neuve du registre doit être ajoutée à l'agrégateur.**
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.

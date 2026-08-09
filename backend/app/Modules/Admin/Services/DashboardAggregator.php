@@ -14,7 +14,9 @@ use App\Modules\Immo\Enums\PropertyStatus;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Manage\Enums\IncidentStatus;
 use App\Modules\Manage\Models\Incident;
+use App\Modules\Mobility\Enums\MobilityServiceStatus;
 use App\Modules\Mobility\Enums\VehicleStatus;
+use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Modules\Pro\Enums\ProviderStatus;
 use App\Modules\Pro\Models\Provider;
@@ -62,6 +64,15 @@ class DashboardAggregator
         return [
             'properties_pending' => Property::where('status', PropertyStatus::EN_ATTENTE_VALIDATION->value)->count(),
             'vehicles_pending' => Vehicle::where('status', VehicleStatus::EN_ATTENTE_VALIDATION->value)->count(),
+            // ⚠️ CORRECTIF (trouvé en F10.3, défaut né avec F8.23). Les départs
+            // programmés sont entrés dans `ValidatorRegistry` en F8.23 mais
+            // JAMAIS ici : le tableau de bord annonçait donc un total inférieur
+            // à la file réelle — mesuré sur la base de développement, 10 au
+            // lieu de 15, cinq départs en attente n'apparaissant nulle part sur
+            // l'écran d'ouverture de la journée. Un départ a une date de
+            // péremption : celui qu'on ne voit pas est celui qu'on valide trop
+            // tard. Toute entrée neuve du registre doit être ajoutée ICI aussi.
+            'mobility_services_pending' => MobilityService::where('status', MobilityServiceStatus::EN_ATTENTE_VALIDATION->value)->count(),
             'experiences_pending' => TourismExperience::where('status', ExperienceStatus::EN_ATTENTE_VALIDATION->value)->count(),
             'providers_pending' => Provider::where('status', ProviderStatus::EN_ATTENTE->value)->count(),
         ];

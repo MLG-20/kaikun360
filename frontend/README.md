@@ -42,9 +42,9 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   écrire à un conseiller. Il répond aussi aux questions sur le fonctionnement du
   site à partir de la **FAQ tenue par l'équipe** au back-office, et il **passe la
   main** dès qu'il ne comprend pas plutôt que d'inventer.
-  - **Où on le trouve** : sur tout le site public et dans les **quatre espaces
-    connectés**. Volontairement **pas** dans le back-office (ses outils de
-    gouvernance arrivent en F10.3) ni sur les pages de connexion.
+  - **Où on le trouve** : sur tout le site public, dans les **quatre espaces
+    connectés**, et depuis F10.3 dans le **back-office**. Volontairement **pas**
+    sur les pages de connexion : on n'interrompt pas une saisie de mot de passe.
   - **La discussion suit l'utilisateur** d'une page à l'autre, y compris quand
     l'assistant l'envoie sur une fiche puis qu'il revient. Elle n'est **jamais
     enregistrée** sur l'ordinateur : elle disparaît avec l'onglet.
@@ -57,6 +57,17 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     invisible partout ailleurs. L'assistant **consulte, il ne modifie rien** :
     payer, annuler ou accepter une mission reste un geste posé sur l'écran
     concerné, avec sa confirmation.
+  - **Pour l'équipe, dans le back-office** (F10.3) : « que reste-t-il à valider ? »,
+    « quelles demandes restent à traiter ? », « quels messages attendent une
+    réponse ? », « retrouve-moi le compte de… », « où en est le paiement PAY-… ».
+    Le panneau y prend un **vocabulaire différent** (son sous-titre, son exemple de
+    question et sa mention de pied), mais **ce qu'il sait faire ne dépend pas de la
+    page** : la trousse est composée par le serveur à partir du compte connecté.
+    ⚠️ **Chacun n'y voit que ce que ses droits lui ouvrent déjà à l'écran** — un
+    agent à qui l'on n'a pas délégué « Gérer les paiements » se voit répondre que
+    ses droits ne couvrent pas ce dossier, exactement comme sur l'écran. Et
+    l'assistant y est en **lecture seule** : il ne valide, ne confirme et ne
+    rembourse rien, ces gestes se prennent sur la fiche du dossier.
   - ⚠️ L'assistant **ne figure pas au cahier des charges** : c'est un ajout, et il
     peut être **coupé côté serveur** sans déploiement — la bulle disparaît alors
     d'elle-même. Voir
@@ -1379,10 +1390,31 @@ Cette tranche livre l'écran, et rien d'autre — aucun outil neuf, aucune règl
 | `shared/components/assistant/` | l'**écran** : bulle flottante + panneau |
 
 ⚠️ **Le panneau est monté dans les *layouts*, pas dans la racine applicative**
-(`main-layout` et `space-layout`). C'est ce qui le tient hors du **back-office**
-— ses outils de gouvernance n'arrivent qu'en F10.3 — et hors du **parcours
-d'authentification**. Le monter dans `app.html`, comme `app-scroll-top`, l'aurait
-mis partout.
+(`main-layout`, `space-layout`, et `backoffice-layout` depuis F10.3). C'est ce qui
+le tient hors du **parcours d'authentification** — on n'interrompt pas une saisie
+de mot de passe. Le monter dans `app.html`, comme `app-scroll-top`, l'aurait mis
+partout, y compris là.
+
+#### La variante « back-office » (F10.3)
+
+Le panneau prend une entrée `variante` (`'public'` par défaut, `'back-office'`
+dans le shell de l'équipe) qui change **trois textes** : le sous-titre, l'exemple
+de question et la mention de pied — laquelle dit franchement à l'équipe que
+l'assistant est en **lecture seule**, là où elle dit au public qu'il n'engage pas
+Kaikun 360.
+
+⚠️ **Ce réglage ne change RIEN à ce que l'assistant sait faire.** La trousse est
+composée côté serveur à partir du **jeton**, pas de la page : un administrateur
+obtient ses outils de back-office depuis le site public, et un visiteur n'en
+obtiendrait aucun même en ouvrant cette variante. Le faire porter par le layout —
+plutôt que le déduire du rôle connecté — est délibéré : le rôle dit ce qu'on
+*peut* faire, la page dit ce qu'on est *en train* de faire, et c'est la seconde
+qui règle une invite. Sans cela, un agent à qui l'on propose « une villa à Saly »
+ne devine pas que la bulle connaît sa file de validation.
+
+⚠️ **Il est monté HORS de `.bo-app`**, qui est en `100dvh` + `overflow: hidden`
+depuis F8.1 : la bulle est en `position: fixed` donc rattachée à la fenêtre, mais
+la placer dans ce conteneur ferait rogner le panneau déployé, plus haut qu'elle.
 
 ⚠️ **La conversation vit dans un store `root`, pas dans le composant.** Le panneau
 propose un lien, l'utilisateur clique, arrive dans son espace : le composant est

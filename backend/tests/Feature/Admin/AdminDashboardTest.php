@@ -9,6 +9,7 @@ use App\Modules\Core\Enums\UserRole;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Manage\Models\Incident;
+use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Modules\Pro\Models\Provider;
 use App\Modules\Stay\Models\Stay;
@@ -58,6 +59,10 @@ class AdminDashboardTest extends TestCase
         // Files de validation en attente.
         Property::factory()->count(2)->create(['status' => 'en_attente_validation']);
         Vehicle::factory()->create(['status' => 'en_attente_validation']);
+        // ⚠️ Départ programmé : entré dans la file de validation en F8.23, mais
+        // absent de cet agrégat jusqu'au correctif F10.3 — le tableau de bord
+        // sous-comptait donc en silence (10 au lieu de 15 sur la base de dev).
+        MobilityService::factory()->create(['status' => 'en_attente_validation']);
         TourismExperience::factory()->create(['status' => 'en_attente_validation']);
         Provider::factory()->create(['status' => 'en_attente']);
         Provider::factory()->create(['status' => 'valide']);
@@ -81,6 +86,7 @@ class AdminDashboardTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.queues.properties_pending', 2)
             ->assertJsonPath('data.queues.vehicles_pending', 1)
+            ->assertJsonPath('data.queues.mobility_services_pending', 1)
             ->assertJsonPath('data.queues.experiences_pending', 1)
             ->assertJsonPath('data.queues.providers_pending', 1)
             ->assertJsonPath('data.today.bookings', 3)

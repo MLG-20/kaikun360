@@ -87,6 +87,37 @@ class RuleBasedBrain implements AssistantBrain
     ): AssistantReply {
         $normalized = $this->normalize($message);
 
+        // 0. ÉQUIPE BACK-OFFICE (F10.3) — avant toutes les autres règles, et
+        //    l'ordre est ici encore plus décisif qu'en F10.2. Le vocabulaire du
+        //    poste de commandement recoupe celui du public sur presque tous ses
+        //    mots : « support » déclencherait l'escalade (règle 1) pour un agent
+        //    qui demande sa boîte de réception, « paiement » enverrait un
+        //    responsable financier dans la FAQ client (règle 4), « demande »
+        //    croiserait les dossiers personnels (règle 2). Placée en tête et
+        //    réservée au staff, cette règle laisse toutes les suivantes intactes
+        //    pour les 5 rôles publics.
+        if ($context->isStaff() && ($backOffice = $this->detectBackOfficeTopic($normalized, $message))) {
+            [$outil, $entree] = $backOffice;
+
+            // ⚠️ Ici, contrairement à F10.2, un outil hors trousse NE se
+            // poursuit PAS dans les règles suivantes. Pour un client, « mes
+            // missions » n'a simplement pas de sens et la suite du parcours est
+            // utile ; pour un agent, l'outil manque parce que la DÉLÉGATION
+            // manque (grant pur, F7.1.b) — le laisser filer lui servirait une
+            // entrée de FAQ client en réponse à une question d'exploitation. On
+            // le dit, et ce n'est pas une fuite : on ne lui apprend que ses
+            // propres droits.
+            if ($tools->find($outil, $context) === null) {
+                return AssistantReply::fallback(
+                    'Vos droits ne couvrent pas ce dossier — demandez la délégation correspondante '
+                    .'au super administrateur.',
+                    [AssistantAction::link('Ouvrir le back-office', '/back-office')],
+                );
+            }
+
+            return $this->useTool($tools, $context, $outil, $entree);
+        }
+
         // 1. Demande explicite d'un humain — prioritaire sur tout le reste.
         //    Quand quelqu'un demande un conseiller, lui répondre par une liste
         //    d'annonces est la meilleure façon de le perdre.
@@ -192,6 +223,181 @@ class RuleBasedBrain implements AssistantBrain
         }
 
         return null;
+    }
+
+    /**
+     * Sujets du BACK-OFFICE → outil correspondant (F10.3).
+     *
+     * L'ordre compte, et il est réglé sur les collisions réelles : « paiement »
+     * avant « compte » (« le compte du paiement PAY-… » vise le règlement),
+     * « compte » avant « demande » (« le compte qui a fait la demande » vise la
+     * personne), et l'activité en dernier — c'est la question la plus vague, elle
+     * ne doit gagner que si aucune autre n'a reconnu de sujet précis.
+     */
+    private const BACKOFFICE_KEYWORDS = [
+        'file_validation' => ['validation', 'valider', 'moderation', 'moderer', 'attente de validation'],
+        'suivre_paiement' => ['paiement', 'paiements', 'reglement', 'reglements', 'transaction', 'transactions', 'encaisse', 'rembourse', 'remboursement'],
+        'rechercher_compte' => ['compte', 'comptes', 'utilisateur', 'utilisateurs', 'inscrit', 'inscrits', 'annuaire'],
+        'fils_support' => ['message', 'messages', 'fil', 'fils', 'conversation', 'conversations', 'support', 'boite de reception'],
+        'demandes_a_traiter' => ['demande', 'demandes', 'file', 'traiter', 'dossier', 'dossiers'],
+        'activite_plateforme' => ['activite', 'tableau de bord', 'statistiques', 'statistique', 'indicateurs', 'kpi', 'chiffres', 'plateforme', 'aujourd\'hui'],
+    ];
+
+    /**
+     * Mots vides écartés lors de l'extraction d'un terme de recherche.
+     */
+    private const MOTS_VIDES = [
+        'de', 'du', 'des', 'la', 'le', 'les', 'un', 'une', 'et', 'ou', 'a', 'au', 'aux',
+        'pour', 'sur', 'dans', 'avec', 'chez', 'est', 'sont', 'qui', 'que', 'quoi',
+        'moi', 'me', 'je', 'tu', 'il', 'elle', 'on', 'nous', 'vous',
+        'trouve', 'trouver', 'retrouve', 'retrouver', 'cherche', 'chercher', 'ouvre',
+        'ouvrir', 'montre', 'montrer', 'affiche', 'afficher', 'donne', 'donner',
+        'fiche', 'compte', 'comptes', 'utilisateur', 'utilisateurs', 'inscrit',
+        'inscrits', 'annuaire', 'client', 'cliente', 'monsieur', 'madame',
+        'paiement', 'paiements', 'reglement', 'reglements', 'transaction',
+        'transactions', 'reference', 'stp', 'svp',
+    ];
+
+    /**
+     * Reconnaît un sujet de back-office et prépare l'entrée de l'outil.
+     *
+     * ⚠️ Deux des six outils exigent un ARGUMENT (`rechercher_compte`,
+     * `suivre_paiement`) — c'est la première fois dans le module qu'un outil
+     * dépend d'une donnée extraite du message. On le passe même vide : c'est
+     * l'outil qui répond « précisez un nom » ou « donnez-moi la référence », et
+     * non le cerveau, pour que la consigne reste la même quel que soit le
+     * cerveau branché (le driver Claude de F10.4 y arrivera par un autre chemin).
+     *
+     * @return array{0: string, 1: array<string, mixed>}|null
+     */
+    private function detectBackOfficeTopic(string $normalized, string $message): ?array
+    {
+        // Une référence bien formée (PAY-XXXX, BK-XXXX) tranche à elle seule :
+        // personne ne cite une référence pour parler d'autre chose, et l'agent
+        // qui la colle sans phrase attend un règlement, pas un tableau de bord.
+        $reference = $this->extractReference($message);
+
+        foreach (self::BACKOFFICE_KEYWORDS as $outil => $keywords) {
+            if (! $this->matchesAny($normalized, $keywords)) {
+                continue;
+            }
+
+            return match ($outil) {
+                'rechercher_compte' => [$outil, ['terme' => $this->extractTerm($normalized, $message)]],
+                'suivre_paiement' => [$outil, ['reference' => $reference ?? '']],
+                default => [$outil, []],
+            };
+        }
+
+        return $reference !== null ? ['suivre_paiement', ['reference' => $reference]] : null;
+    }
+
+    /**
+     * Référence de dossier citée dans le message (`PAY-3F9K2M`, `BK-…`).
+     *
+     * ⚠️ Lue sur le message BRUT et non sur sa version normalisée : les
+     * références sont en capitales, et si la comparaison SQL les ignore, le
+     * motif ci-dessous a besoin de la forme d'origine pour ne pas confondre un
+     * identifiant avec un mot composé (« rendez-vous », « week-end »). D'où
+     * l'exigence de capitales et d'au moins un chiffre dans la partie droite.
+     */
+    private function extractReference(string $message): ?string
+    {
+        // ⚠️ Le motif accepte PLUSIEURS segments (`PAY-ACPT-6YRYXV`) et pas un
+        // seul. Défaut trouvé en curl sur la base réelle : sur une référence à
+        // deux tirets, un motif à segment unique s'arrête sur « PAY-ACPT » — la
+        // frontière de mot tombe sur le second tiret — puis se fait rejeter par
+        // le contrôle de chiffre, et l'assistant répondait « donnez-moi la
+        // référence » à quelqu'un qui venait de la coller en entier.
+        if (preg_match('/\b([A-Z]{2,6}(?:-[A-Z0-9]{2,}){1,3})\b/u', $message, $matches) === 1
+            && preg_match('/\d/', $matches[1]) === 1) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Terme de recherche d'un compte, extrait du message.
+     *
+     * Trois formes, de la plus fiable à la plus faible :
+     *   1. une adresse e-mail — sans ambiguïté possible ;
+     *   2. un numéro sénégalais à 9 chiffres ;
+     *   3. à défaut, les mots qui restent une fois retirés les mots vides et le
+     *      vocabulaire de la question elle-même (« retrouve-moi le compte de »).
+     *
+     * ⚠️ La troisième est une heuristique, et elle est assumée comme telle : sur
+     * « le compte de Fatou Ndiaye » elle rend « fatou ndiaye », sur une phrase
+     * tarabiscotée elle rendra du bruit — auquel cas la recherche ne trouve rien
+     * et l'outil renvoie à l'annuaire. Un terme faux coûte un « aucun résultat »,
+     * jamais une fuite : la requête reste bornée par `gerer:utilisateurs`.
+     *
+     * ⚠️ Le nom est repris du message BRUT (accents et capitales d'origine) pour
+     * ne pas chercher « fatou ndiaye » là où la base contient « Fatou Ndiaye » :
+     * `LIKE` est insensible à la casse, mais pas aux accents sur toutes les
+     * collations.
+     */
+    private function extractTerm(string $normalized, string $message): string
+    {
+        if (preg_match('/[\w.+-]+@[\w-]+\.[\w.]+/u', $message, $matches) === 1) {
+            return $matches[0];
+        }
+
+        // ⚠️ On concatène TOUS les chiffres du message avant de chercher, au
+        // lieu de poser des frontières de mot sur le texte : au téléphone, un
+        // numéro s'écrit « 77 123 45 67 » ou « +221 77 123 45 67 » bien plus
+        // souvent que d'un bloc, et un `\b7\d{8}\b` ne reconnaît aucune de ces
+        // deux formes (défaut trouvé au premier passage des tests).
+        $chiffres = preg_replace('/\D+/u', '', $message) ?? '';
+
+        if (preg_match('/7\d{8}/', $chiffres, $matches) === 1) {
+            return $matches[0];
+        }
+
+        // Découpage du message brut, en gardant l'ordre : on compare chaque mot
+        // à sa forme normalisée, mais on conserve la forme d'origine.
+        $mots = preg_split('/[^\p{L}\p{N}\-]+/u', trim($message), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        $retenus = array_filter(
+            $mots,
+            fn (string $mot) => ! $this->estMotVide($mot) && mb_strlen($mot) >= 2,
+        );
+
+        // Trois mots au plus : au-delà, c'est une phrase, et une phrase entière
+        // passée en `LIKE` ne correspond jamais à rien.
+        return implode(' ', array_slice(array_values($retenus), 0, 3));
+    }
+
+    /**
+     * Ce mot est-il un mot vide ?
+     *
+     * ⚠️ **Le trait d'union est traité à part**, et c'est le second défaut
+     * trouvé en curl. « retrouve-moi le compte de Pierre Robert » produisait le
+     * terme « retrouve-moi Pierre Robert » : le découpage garde les traits
+     * d'union (sans quoi « Anne-Marie » se casserait en deux), donc
+     * « retrouve-moi » n'était comparé à aucune entrée de la liste et passait
+     * pour un nom. La recherche partait alors sur une phrase et ne trouvait
+     * évidemment rien — l'assistant paraissait ne pas connaître un client
+     * parfaitement présent en base.
+     *
+     * Un mot composé est donc vide si TOUTES ses parties le sont : « Anne-Marie »
+     * survit, « retrouve-moi » disparaît.
+     */
+    private function estMotVide(string $mot): bool
+    {
+        $parties = array_filter(explode('-', $this->normalize($mot)), fn ($p) => $p !== '');
+
+        if ($parties === []) {
+            return true;
+        }
+
+        foreach ($parties as $partie) {
+            if (! in_array($partie, self::MOTS_VIDES, strict: true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

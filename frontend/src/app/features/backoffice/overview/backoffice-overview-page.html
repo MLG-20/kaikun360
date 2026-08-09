@@ -27,6 +27,9 @@
     <div class="ov-grid">
       <article class="ov-card"><span class="ov-card__value">{{ s.queues.properties_pending }}</span><span class="ov-card__label">Biens</span></article>
       <article class="ov-card"><span class="ov-card__value">{{ s.queues.vehicles_pending }}</span><span class="ov-card__label">Véhicules</span></article>
+      <!-- ⚠️ Ajoutée par le correctif F10.3 : ces départs étaient dans la file
+           de validation depuis F8.23 sans jamais apparaître ici. -->
+      <article class="ov-card"><span class="ov-card__value">{{ s.queues.mobility_services_pending }}</span><span class="ov-card__label">Départs</span></article>
       <article class="ov-card"><span class="ov-card__value">{{ s.queues.experiences_pending }}</span><span class="ov-card__label">Circuits</span></article>
       <article class="ov-card"><span class="ov-card__value">{{ s.queues.providers_pending }}</span><span class="ov-card__label">Prestataires</span></article>
     </div>
