@@ -1539,6 +1539,44 @@ supérieure, si bien qu'elle passe sous le coin arrondi de celle-ci *et*
 s'aligne sur la couture du bandeau. La déplacer suppose de vérifier les deux
 hauteurs (`.bo-brand` / `.account-brand` et `.bo-topbar` / `.acc-bar`).
 
+### Les cartes de l'accueil — la pastille qui déborde (F11.2)
+
+Les trois grilles de la page d'accueil (**Univers** ×9, **Protocole** ×3,
+**Services** ×4) portent une icône qui **sort du cadre par le haut**. La carte
+reste un rectangle lisible ; c'est la grille qui cesse d'être plate.
+
+**La règle de couleur** — la pastille s'oppose toujours à son fond :
+
+| Section | Fond | Pastille au repos | Au survol |
+| --- | --- | --- | --- |
+| Univers | crème | bleu nuit / glyphe or | bleu de marque |
+| Protocole | **navy** | **or / glyphe navy** | or éclairci |
+| Services | crème | bleu nuit / glyphe or | vert |
+
+⚠️ **L'inversion sur Protocole est obligatoire, pas décorative** : le fond de
+section y est navy et la carte n'est qu'un voile blanc à 4 % — une pastille
+sombre serait invisible sur les deux.
+
+⚠️ **Quatre pièges, si l'on retouche ces grilles :**
+
+- **Pas d'`overflow: hidden` sur `.univers-card`.** Il y était, pour contenir le
+  reflet diagonal du survol, et il **tranchait l'icône**. Le rognage vit
+  désormais sur `.univers-shine`, un calque qui épouse la carte (`inset: 0` +
+  `border-radius: inherit`) et ne contient que le reflet.
+- **Ne pas remettre `.univers-icon` dans le groupe `position: relative`** qui
+  suit dans le fichier. À spécificité égale, cette règle écrite plus bas
+  l'emporte : la pastille retombe dans le flux et cesse de déborder, **sans
+  aucune erreur**.
+- **Les gouttières sont dissymétriques** (`gap: 48px 20px`) : la pastille
+  occupe ~36px hors de la carte (22px de décalage + ~15px d'ombre au-dessus).
+  Dans les 20px d'origine elle mordait la rangée supérieure. Seules les
+  gouttières **horizontales** sont concernées.
+- **`scroll-margin-top` des cartes Services : 116px, pas 90.** Ce sont des
+  cibles d'ancre (méga-menus) ; à 90px l'arrivée coupait la pastille.
+
+Sous `prefers-reduced-motion`, les trois grilles ne basculent plus — seule la
+couleur répond au survol.
+
 ### Commandes utiles
 
 ```bash

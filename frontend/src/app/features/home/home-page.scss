@@ -128,7 +128,22 @@
 .univers-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+
+  // F11.2 — Gouttières DISSYMÉTRIQUES, et c'est la clé de cet habillage.
+  //
+  // L'icône remonte de 22px au-dessus du bord haut de sa carte, et son ombre
+  // (floutée sur 24px pour un décalage de 10px vers le bas) déborde encore
+  // d'une quinzaine de pixels plus haut : elle occupe donc près de 36px HORS
+  // de sa carte. Dans les 20px d'origine, elle venait mordre la carte de la
+  // rangée du dessus — ce qui se lisait comme un défaut d'alignement.
+  //
+  // Seules les gouttières HORIZONTALES sont concernées par ce débordement :
+  // les colonnes gardent leurs 20px, car l'icône ne dépasse que par le haut.
+  gap: 48px 20px;
+
+  // Même raison pour la première rangée, qui n'a pas de carte au-dessus d'elle
+  // mais bien le chapô de la section.
+  margin-top: 26px;
 }
 
 // Chaque univers est une carte-lien : icône, catégorie, nom produit, phrase.
@@ -137,7 +152,10 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 24px 22px;
+  // F11.2 — Haut généreux : l'icône n'occupe plus le flux (elle est en absolu,
+  // au-dessus du bord), c'est donc ce rembourrage seul qui empêche la catégorie
+  // de venir se glisser sous elle.
+  padding: 42px 22px 24px;
   transition: transform 0.16s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
@@ -147,15 +165,28 @@
   border-color: var(--k-brand);
 }
 
+// --- F11.2 : L'ICÔNE QUI DÉBORDE --------------------------------------------
+// Elle sort du cadre par le haut, en pastille bleu nuit et or. La carte reste
+// un rectangle parfaitement lisible, mais la grille cesse d'être plate : l'œil
+// accroche la ligne de pastilles avant même de lire un mot.
+//
+// ⚠️ C'est ce débordement qui a imposé de sortir le reflet du survol dans son
+// propre élément (`.univers-shine`, voir plus bas) : le `overflow: hidden` qui
+// contenait ce reflet vivait sur la CARTE, et aurait tranché l'icône.
 .univers-icon {
+  position: absolute;
+  top: -22px;
+  left: 22px;
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
-  margin-bottom: 8px;
-  border-radius: var(--k-radius);
-  background: var(--k-brand-050);
-  color: var(--k-brand);
+  width: 56px;
+  height: 56px;
+  border-radius: 17px;
+  background: var(--k-navy);
+  color: var(--k-gold-2);
+  // L'ombre est ce qui la fait flotter AU-DESSUS de la carte ; sans elle, la
+  // pastille se lit comme une découpe dans le bord plutôt que comme un relief.
+  box-shadow: 0 10px 24px rgba(3, 25, 63, 0.22);
 }
 
 .univers-icon svg {
@@ -238,26 +269,40 @@
 .protocol-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+  // Gouttières dissymétriques — même raison que la grille des univers : la
+  // pastille déborde par le HAUT seulement (voir `.univers-grid`).
+  gap: 50px 22px;
+  margin-top: 20px;
 }
 
 // Cartes semi-transparentes posées sur le fond navy.
 .protocol-card {
-  padding: 28px 24px;
+  position: relative; // repère de positionnement de la pastille débordante
+  padding: 44px 24px 28px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--k-radius-lg);
   background: rgba(255, 255, 255, 0.04);
 }
 
+// F11.2 — Pastille débordante, en OR sur cette section et non en bleu nuit.
+//
+// ⚠️ L'inversion est obligatoire, pas décorative : ici le fond de section est
+// navy et la carte n'est qu'un voile blanc à 4 % — une pastille bleu nuit y
+// serait invisible sur les deux. La règle de la plateforme se lit donc ainsi :
+// **la pastille s'oppose toujours à son fond**, sombre sur les sections claires,
+// dorée sur la section sombre.
 .protocol-icon {
+  position: absolute;
+  top: -22px;
+  left: 24px;
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 16px;
-  border-radius: var(--k-radius);
-  background: rgba(211, 174, 82, 0.16);
-  color: var(--k-gold-2);
+  width: 56px;
+  height: 56px;
+  border-radius: 17px;
+  background: var(--k-gold);
+  color: var(--k-navy);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.38);
 }
 
 .protocol-icon svg {
@@ -470,24 +515,33 @@
 .services-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  // Gouttières dissymétriques — même raison que les deux grilles précédentes.
+  gap: 46px 18px;
+  margin-top: 24px;
 }
 
 .services-card {
-  padding: 24px 20px;
+  position: relative; // repère de positionnement de la pastille débordante
+  padding: 40px 20px 24px;
   // Décalage d'ancre pour ne pas coller sous l'en-tête fixe lors du scroll.
-  scroll-margin-top: 90px;
+  // ⚠️ Relevé de 90 à 116px avec la pastille débordante (F11.2) : ces cartes
+  // sont des CIBLES D'ANCRE (`#s.anchor`, liens venus des méga-menus). À 90px,
+  // l'arrivée coupait la pastille, qui remonte de 22px hors de la carte.
+  scroll-margin-top: 116px;
 }
 
 .services-icon {
+  position: absolute;
+  top: -22px;
+  left: 20px;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  margin-bottom: 14px;
-  border-radius: var(--k-radius);
-  background: rgba(56, 167, 116, 0.12);
-  color: var(--k-green-600);
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: var(--k-navy);
+  color: var(--k-gold-2);
+  box-shadow: 0 10px 24px rgba(3, 25, 63, 0.22);
 }
 
 .services-icon svg {
@@ -769,15 +823,30 @@
 
 // --- Univers : survol plus vivant (élévation, halo, icône, reflet) ---------
 .univers-card {
-  overflow: hidden; // pour contenir le reflet diagonal.
+  // ⚠️ PAS d'`overflow: hidden` ici, contrairement à avant : l'icône déborde du
+  // bord haut (F11.2) et serait tranchée. Le rognage dont le reflet a besoin
+  // est descendu sur `.univers-shine`, juste en dessous.
   transition:
     transform 0.28s cubic-bezier(0.22, 0.7, 0.24, 1),
     box-shadow 0.28s ease,
     border-color 0.28s ease;
 }
 
+// Le calque qui ROGNE le reflet, et rien d'autre. Il épouse exactement la carte
+// (`inset: 0` + `border-radius: inherit`) : le reflet balaie donc toute la
+// surface sans jamais dépasser des coins arrondis, pendant que l'icône, elle,
+// reste libre de sortir du cadre.
+.univers-shine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
 // Reflet lumineux qui balaie la carte au survol.
-.univers-card::before {
+.univers-shine::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -789,8 +858,6 @@
   );
   transform: translateX(-120%);
   transition: transform 0.7s ease;
-  pointer-events: none;
-  z-index: 1;
 }
 
 .univers-card:hover {
@@ -799,7 +866,7 @@
   border-color: var(--k-brand);
 }
 
-.univers-card:hover::before {
+.univers-card:hover .univers-shine::before {
   transform: translateX(120%);
 }
 
@@ -807,22 +874,36 @@
   transition:
     transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
     background 0.28s ease,
-    color 0.28s ease;
+    color 0.28s ease,
+    box-shadow 0.28s ease;
 }
 
+// Au survol la pastille se soulève et bascule : c'est elle qui bouge le plus,
+// donc elle qui donne le sentiment que la carte entière est vivante. Elle passe
+// au bleu de marque — le bleu nuit du repos sert à poser, le bleu vif à
+// répondre.
 .univers-card:hover .univers-icon {
-  transform: translateY(-2px) scale(1.08) rotate(-4deg);
+  transform: translateY(-5px) scale(1.06) rotate(-6deg);
   background: var(--k-brand);
   color: #fff;
+  box-shadow: 0 14px 28px rgba(3, 72, 251, 0.32);
 }
 
 // Le contenu passe au-dessus du reflet.
 .univers-tag,
 .univers-name,
 .univers-desc,
-.univers-icon,
 .univers-arrow {
   position: relative;
+  z-index: 2;
+}
+
+// ⚠️ L'icône est traitée À PART, et il ne faut pas la rajouter dans la liste
+// ci-dessus « pour faire court » : elle est en `position: absolute` (F11.2), et
+// ce groupe impose `position: relative`. Écrit plus bas dans le fichier, à
+// spécificité égale, il l'emporterait — la pastille retomberait dans le flux et
+// cesserait de déborder, sans qu'aucune erreur ne le signale.
+.univers-icon {
   z-index: 2;
 }
 
@@ -836,7 +917,10 @@
 }
 
 .protocol-icon {
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.28s ease,
+    box-shadow 0.28s ease;
 }
 
 .protocol-card:hover {
@@ -847,7 +931,9 @@
 }
 
 .protocol-card:hover .protocol-icon {
-  transform: scale(1.1) rotate(-4deg);
+  transform: translateY(-5px) scale(1.06) rotate(-6deg);
+  background: var(--k-gold-2); // l'or s'éclaircit au lieu de changer de teinte
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
 }
 
 // --- Services : élévation + icône réactive ---------------------------------
@@ -862,7 +948,8 @@
   transition:
     transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
     background 0.28s ease,
-    color 0.28s ease;
+    color 0.28s ease,
+    box-shadow 0.28s ease;
 }
 
 .services-card:hover {
@@ -871,10 +958,13 @@
   border-color: var(--k-green);
 }
 
+// Même grammaire que les univers : bleu nuit au repos, couleur d'accent de la
+// section au survol. Le bleu nuit POSE la pastille, l'accent lui RÉPOND.
 .services-card:hover .services-icon {
-  transform: translateY(-2px) scale(1.08) rotate(-4deg);
+  transform: translateY(-5px) scale(1.06) rotate(-6deg);
   background: var(--k-green);
   color: #fff;
+  box-shadow: 0 14px 28px rgba(56, 167, 116, 0.34);
 }
 
 // --- Titres des cartes : mise en couleur douce au survol -------------------
@@ -903,7 +993,7 @@
   }
 
   .univers-card,
-  .univers-card::before,
+  .univers-shine::before,
   .univers-icon,
   .protocol-card,
   .protocol-icon,
@@ -918,7 +1008,15 @@
     transform: none;
   }
 
-  .univers-card:hover::before {
+  .univers-card:hover .univers-shine::before {
     transform: translateX(-120%); // reflet neutralisé.
+  }
+
+  // Les pastilles ne basculent plus non plus : seule leur couleur répond au
+  // survol. Les trois grilles obéissent à la même règle, sans exception.
+  .univers-card:hover .univers-icon,
+  .protocol-card:hover .protocol-icon,
+  .services-card:hover .services-icon {
+    transform: none;
   }
 }

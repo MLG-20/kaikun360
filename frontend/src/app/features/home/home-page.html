@@ -57,6 +57,16 @@
         [queryParams]="u.query ?? null"
         [fragment]="u.fragment ?? undefined"
       >
+        <!--
+          F11.2 — Le reflet diagonal du survol vit dans SON PROPRE élément, et
+          non plus dans un `::before` de la carte. Raison : c'est lui qui a
+          besoin d'un `overflow: hidden` pour rester dans les bords, or l'icône
+          déborde maintenant du haut de la carte — la découpe posée sur la carte
+          l'aurait tranchée. Le rognage est donc descendu ici, autour du seul
+          élément qui le réclame. Purement décoratif, d'où `aria-hidden`.
+        -->
+        <span class="univers-shine" aria-hidden="true"></span>
+
         <span class="univers-icon" aria-hidden="true">
           @switch (u.icon) {
             @case ('home') {
