@@ -13,6 +13,13 @@
 // provoqué par la barre d'URL des navigateurs mobiles, avec repli en `vh`.
 .bo-app {
   display: flex;
+  // F11.1 — Une gouttière tout autour : c'est elle qui transforme le rail et la
+  // colonne de contenu en deux CARTES posées sur le fond graphite, au lieu de
+  // deux blocs collés bord à bord. Sans elle, arrondir les coins ne se verrait
+  // pas : un coin rond n'existe que s'il a du vide autour.
+  gap: 12px;
+  padding: 12px;
+  box-sizing: border-box;
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
@@ -39,8 +46,22 @@
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #0d1a38 0%, #070d1c 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.82);
+
+  // F11.1 — Carte arrondie plutôt que colonne à bord franc. Le liseré clair
+  // très discret capte la lumière sur l'arête haute et détache la carte du fond
+  // graphite ; l'ombre portée l'y pose. Les deux ensemble seulement : le liseré
+  // seul donne un contour dessiné, l'ombre seule une tache floue.
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--k-radius-lg);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+
+  // ⚠️ PAS d'`overflow: hidden` ici : la poignée de pli déborde volontairement
+  // sur le bord droit, elle serait rognée. C'est `.bo-nav` qui porte l'ascenseur.
+
+  // Le pli change la largeur, donc `flex-basis`. Animer `width` serait sans
+  // effet : la largeur est imposée par le flex, pas par la propriété `width`.
+  transition: flex-basis 0.24s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bo-brand {
@@ -49,9 +70,12 @@
   gap: 2px;
   padding: 20px 22px;
   height: 69px;
+  box-sizing: border-box;
   justify-content: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   text-decoration: none;
+  overflow: hidden; // le sous-titre disparaît par la largeur, sans replier la ligne
+  white-space: nowrap;
 
   &__logo {
     font-family: var(--k-font-display);
@@ -71,13 +95,68 @@
   }
 }
 
+// --- POIGNÉE DE PLI (F11.1) --------------------------------------------------
+// Pastille ronde à cheval sur le bord droit du rail : la moitié gauche est sur
+// la carte sombre, la moitié droite sur le fond. Elle se lit donc comme la
+// charnière entre les deux, ce qu'elle est.
+.bo-plier {
+  position: absolute;
+  // 82px = les 69px du bloc de marque + une respiration. Cette hauteur est
+  // aussi celle de la barre supérieure : la pastille passe donc juste SOUS le
+  // coin arrondi de la barre au lieu de mordre dessus, et se retrouve alignée
+  // sur la couture du bandeau de marque. Un seul chiffre, deux alignements —
+  // ⚠️ le changer suppose de vérifier la hauteur de `.bo-brand` ET celle de
+  // `.bo-topbar`, qui valent 69px toutes deux.
+  top: 82px;
+  right: -14px;
+  z-index: 60; // au-dessus de la carte de contenu, qu'elle chevauche
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  background: #12244c;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+    // Une seule icône pour les deux sens : c'est la classe `--replie` du rail
+    // qui la retourne (voir plus bas). Deux SVG auraient divergé au premier
+    // changement de dessin.
+    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &:hover {
+    background: var(--k-brand);
+    color: #fff;
+    transform: scale(1.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--k-gold-2);
+    outline-offset: 2px;
+  }
+}
+
 .bo-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 14px 12px;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden; // pendant le pli, les libellés sortent sans créer d'ascenseur
 
   &__link {
     position: relative;
@@ -129,6 +208,10 @@
 
   &__icon {
     display: inline-flex;
+    // `flex: 0 0 20px` et non `width` seul : pendant le pli, le libellé encore
+    // présent comprimerait l'icône si elle était rétrécissable — on la verrait
+    // s'écraser puis reprendre sa taille. Elle est ici incompressible.
+    flex: 0 0 20px;
     width: 20px;
     height: 20px;
 
@@ -140,6 +223,8 @@
 
   &__label {
     flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   // Pastille de non-lus en bout de rubrique (F8.13), calquée sur celle du rail
@@ -183,8 +268,11 @@
 }
 
 .bo-side__link {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
+  box-sizing: border-box;
   text-align: left;
   padding: 10px 14px;
   border: 0;
@@ -202,8 +290,93 @@
   }
 }
 
+.bo-side__icon {
+  display: inline-flex;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.bo-side__texte {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 .bo-side__logout:hover {
   color: #ffb4bd;
+}
+
+// --- RAIL REPLIÉ (F11.1) -----------------------------------------------------
+// Le rail ne disparaît pas : il maigrit jusqu'à une colonne d'icônes. Toutes
+// les rubriques restent là, cliquables, dans le même ordre — seul le texte s'en
+// va. On ne perd donc jamais le fil de la navigation en repliant.
+//
+// ⚠️ Les libellés sont masqués par `display: none` et non par une opacité :
+// une opacité les laisserait occuper la place et imposer une largeur minimale
+// au lien, qui refuserait alors de descendre à 76px.
+.bo-side--replie {
+  flex-basis: 76px;
+
+  .bo-plier svg {
+    transform: rotate(180deg); // la flèche pointe vers l'ouverture à venir
+  }
+
+  .bo-brand {
+    padding: 20px 0;
+    align-items: center;
+  }
+
+  .bo-brand__sub {
+    display: none;
+  }
+
+  .bo-nav__link,
+  .bo-side__link {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .bo-nav__label,
+  .bo-nav__soon,
+  .bo-side__texte {
+    display: none;
+  }
+
+  .bo-nav__icon,
+  .bo-side__icon {
+    flex: 0 0 20px;
+  }
+
+  // L'actif ne se signale plus par un liseré à gauche — sur 76px, ce trait au
+  // ras du bord se confond avec l'arête de la carte. Le fond bleu suffit, et
+  // porte déjà seul l'information sur les autres largeurs.
+  .bo-nav__link.is-active::before {
+    display: none;
+  }
+
+  // La pastille de non-lus n'a plus de bout de ligne où se poser : elle devient
+  // un point posé sur l'angle de l'icône. Le nombre exact disparaît de l'écran,
+  // mais reste dans l'`aria-label` du lien (inchangé) et dans l'infobulle.
+  .bo-nav__badge {
+    position: absolute;
+    top: 6px;
+    right: 14px;
+    min-width: 11px;
+    width: 11px;
+    height: 11px;
+    padding: 0;
+    font-size: 0; // le chiffre reste dans le DOM (donc lisible), mais sans corps
+    // Cerne de la couleur du rail : sans lui, le point collé à l'icône se lit
+    // comme une bavure du dessin plutôt que comme une alerte posée dessus.
+    border: 2px solid #0b1530;
+  }
 }
 
 // --- COLONNE CONTENU ---------------------------------------------------------
@@ -214,9 +387,12 @@
   min-width: 0;
   min-height: 0; // autorise `.bo-main` à défiler au lieu de pousser la colonne
   background: var(--k-cream);
-  border-top-left-radius: 18px;
-  border-bottom-left-radius: 18px;
-  overflow: hidden;
+  // F11.1 — Arrondie sur les QUATRE coins : elle n'est plus adossée au rail
+  // mais posée à côté, avec la même gouttière tout autour. Les deux cartes se
+  // répondent, au lieu que l'une paraisse découpée dans l'autre.
+  border-radius: var(--k-radius-lg);
+  overflow: hidden; // c'est lui qui fait mordre la barre supérieure sur l'arrondi
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
 }
 
 // Barre horizontale FIXE : elle ne défile jamais avec le contenu. `flex-shrink`
@@ -343,23 +519,81 @@
 
 // --- Responsive : le rail devient un tiroir sous 900px ----------------------
 @media (max-width: 900px) {
+  // La gouttière n'a plus lieu d'être : le rail est sorti du flux et le contenu
+  // occupe tout l'écran. La garder ne ferait que rogner une largeur déjà rare.
+  .bo-app {
+    gap: 0;
+    padding: 0;
+  }
+
   .bo-side {
     position: fixed;
     left: 0;
     top: 0;
-    // En tiroir, le rail sort du flux : il reprend une hauteur explicite.
+    // En tiroir, le rail sort du flux : `flex-basis` ne s'applique plus à un
+    // élément positionné, il reprend donc largeur ET hauteur explicites.
+    width: 260px;
     height: 100vh;
     height: 100dvh;
     transform: translateX(-100%);
     transition: transform 0.22s ease;
 
+    // Un tiroir est ancré au bord de l'écran : ses coins gauches sont hors du
+    // champ, seuls les droits s'arrondissent.
+    border-radius: 0 var(--k-radius-lg) var(--k-radius-lg) 0;
+    border-left: 0;
+
     &--open {
       transform: translateX(0);
     }
+
+    // ⚠️ Le pli est une affaire de GRAND écran. Sur mobile, un rail à 76px
+    // sorti d'un tiroir n'aurait aucun sens : on l'ouvre pour lire, pas pour
+    // deviner. La préférence reste mémorisée et reprendra sur grand écran.
+    &--replie {
+      flex-basis: 260px;
+    }
+  }
+
+  // Corollaire : le rail retrouve ses libellés, quel que soit l'état mémorisé.
+  .bo-side--replie {
+    .bo-nav__label,
+    .bo-side__texte,
+    .bo-nav__soon,
+    .bo-brand__sub {
+      display: block;
+    }
+
+    .bo-nav__link,
+    .bo-side__link {
+      justify-content: flex-start;
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    .bo-nav__link.is-active::before {
+      display: block;
+    }
+
+    .bo-nav__badge {
+      position: static;
+      width: auto;
+      min-width: 20px;
+      height: 18px;
+      padding: 0 5px;
+      font-size: 0.66rem;
+      border: 0;
+    }
+  }
+
+  // Le tiroir se commande au hamburger : la poignée de pli n'a rien à y faire.
+  .bo-plier {
+    display: none;
   }
 
   .bo-body {
     border-radius: 0;
+    box-shadow: none;
   }
 
   .bo-burger {

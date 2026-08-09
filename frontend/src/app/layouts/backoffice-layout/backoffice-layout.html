@@ -5,11 +5,33 @@
   }
 
   <!-- RAIL SOMBRE « salle de commande » -->
-  <aside class="bo-side" [class.bo-side--open]="sidebarOpen()">
+  <aside
+    class="bo-side"
+    [class.bo-side--open]="sidebarOpen()"
+    [class.bo-side--replie]="railReplie()">
     <a class="bo-brand" [routerLink]="linkFor('')">
       <span class="bo-brand__logo">K360</span>
       <span class="bo-brand__sub">Poste de commandement</span>
     </a>
+
+    <!--
+      F11.1 — La poignée de pli, posée SUR le bord droit du rail (et non dans
+      l'en-tête) : à cheval sur la couture entre le rail et le contenu, elle
+      montre d'elle-même ce qu'elle déplace. La flèche pointe toujours vers le
+      mouvement à venir — vers la gauche pour replier, vers la droite pour
+      rouvrir — c'est la rotation CSS qui la retourne, pas deux icônes.
+      Masquée sous 900px : là, le rail est un tiroir, et c'est le hamburger de
+      la barre supérieure qui commande.
+    -->
+    <button
+      type="button"
+      class="bo-plier"
+      (click)="toggleRail()"
+      [attr.aria-expanded]="!railReplie()"
+      [attr.aria-label]="railReplie() ? 'Déplier le menu' : 'Replier le menu'"
+      [title]="railReplie() ? 'Déplier le menu' : 'Replier le menu'">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14.5 6.5 9 12l5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
 
     <nav class="bo-nav" aria-label="Navigation du back-office">
       @for (item of visibleNav(); track item.path) {
@@ -19,6 +41,7 @@
             [routerLink]="linkFor(item.path)"
             routerLinkActive="is-active"
             [routerLinkActiveOptions]="{ exact: item.path === '' }"
+            [attr.title]="infobulle(item)"
             [attr.aria-label]="
               badgeFor(item) > 0 ? item.label + ', ' + badgeFor(item) + ' non lu(s)' : null
             ">
@@ -98,7 +121,10 @@
             }
           </a>
         } @else {
-          <span class="bo-nav__link bo-nav__link--soon" aria-disabled="true">
+          <span
+            class="bo-nav__link bo-nav__link--soon"
+            aria-disabled="true"
+            [attr.title]="infobulle(item)">
             <span class="bo-nav__icon">
               @switch (item.icon) {
                 @case ('users') {
@@ -123,12 +149,34 @@
       <!-- ⚠️ Hors de la liste des rubriques, volontairement : celle-ci reflète
            les 14 modules du CDC §6 et le §7. « Mon compte » n'est pas un module
            métier, c'est l'entretien de ses propres identifiants. -->
-      <a class="bo-side__link" routerLink="/back-office/mon-compte" routerLinkActive="is-active">
-        Mon compte
+      <!-- F11.1 — Ces trois entrées étaient de simples lignes de texte : replié,
+           le rail n'en aurait plus rien montré. Chacune reçoit donc son icône,
+           seul reste visible en colonne étroite, et son `title` en secours. -->
+      <a
+        class="bo-side__link"
+        routerLink="/back-office/mon-compte"
+        routerLinkActive="is-active"
+        [attr.title]="railReplie() ? 'Mon compte' : null">
+        <span class="bo-side__icon">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6" stroke="currentColor" stroke-width="1.6"/><path d="M5 19.5a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </span>
+        <span class="bo-side__texte">Mon compte</span>
       </a>
-      <a class="bo-side__link" routerLink="/">Retour au site</a>
-      <button type="button" class="bo-side__link bo-side__logout" (click)="logout()">
-        Se déconnecter
+      <a class="bo-side__link" routerLink="/" [attr.title]="railReplie() ? 'Retour au site' : null">
+        <span class="bo-side__icon">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 11.5 12 4.5l8 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10.5v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="bo-side__texte">Retour au site</span>
+      </a>
+      <button
+        type="button"
+        class="bo-side__link bo-side__logout"
+        (click)="logout()"
+        [attr.title]="railReplie() ? 'Se déconnecter' : null">
+        <span class="bo-side__icon">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M14 5.5H7a1.5 1.5 0 0 0-1.5 1.5v10A1.5 1.5 0 0 0 7 18.5h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M17 8.5 20.5 12 17 15.5M20 12h-9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="bo-side__texte">Se déconnecter</span>
       </button>
     </div>
   </aside>

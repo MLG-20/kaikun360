@@ -20,19 +20,45 @@
   width: 264px;
   // Rail RÉELLEMENT figé : sorti du flux (position: fixed), il reste collé à
   // gauche quelle que soit la page ou la longueur du contenu (sticky était trop
-  // fragile). Le contenu est décalé de 264px via `.account-body` ci-dessous.
+  // fragile). Le contenu est décalé via `.account-body` ci-dessous.
   position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
+  // F11.1 — Décollé des bords : c'est cette gouttière de 12px qui fait exister
+  // les coins arrondis. Un coin rond collé au bord de l'écran ne se voit pas.
+  top: 12px;
+  left: 12px;
+  height: calc(100vh - 24px);
   z-index: 40;
   display: flex;
   flex-direction: column;
-  // Si le rail est plus haut que l'écran (petite hauteur), il défile en interne
-  // pour que le pied (déconnexion) reste toujours atteignable.
-  overflow-y: auto;
   background: var(--k-navy);
   color: rgba(255, 255, 255, 0.86);
+
+  // Carte arrondie posée sur le crème de la page : liseré clair sur l'arête
+  // haute pour la détacher, ombre portée pour l'y poser. Les deux ensemble
+  // seulement — le liseré seul donne un contour dessiné, l'ombre seule une
+  // tache floue.
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--k-radius-lg);
+  // ⚠️ Ombre VOLONTAIREMENT discrète, et à ne pas rappuyer.
+  //
+  // Elle déborde à droite du rail, sur la gouttière de 12px. Or la barre
+  // supérieure est collante et opaque : elle repeint son propre rectangle
+  // par-dessus, et coupe donc cette ombre net sur son bord gauche — qui est
+  // droit. Une ombre marquée laissait ainsi apparaître une bande claire à coins
+  // carrés, à côté du coin arrondi de la barre : on croyait à un angle droit
+  // dans l'arrondi, ce n'était que l'ombre tranchée. À cette intensité, la
+  // coupure ne se voit plus. Un rail bleu nuit sur du crème se détache de toute
+  // façon par sa seule couleur ; l'ombre ne fait que le poser.
+  box-shadow: 0 6px 18px rgba(3, 25, 63, 0.06);
+
+  // ⚠️ PAS d'`overflow` ici, contrairement à avant : la poignée de pli déborde
+  // volontairement sur le bord droit et serait rognée, et l'arrondi couperait
+  // les angles du contenu. Le défilement interne — qui garde le pied
+  // atteignable sur un écran bas — est descendu sur `.account-nav`.
+
+  // Le pli change la largeur : on l'anime pour que le contenu, décalé en même
+  // temps, suive le mouvement au lieu de sauter.
+  transition: width 0.24s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // Marque en haut du rail (hauteur alignée sur l'en-tête, séparateur discret).
@@ -41,10 +67,13 @@
   align-items: center;
   gap: 12px;
   min-height: 69px;
+  flex: 0 0 auto; // ne se comprime jamais, même rail court sur écran bas
   padding: 0 1.1rem;
   text-decoration: none;
   color: #fff;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden; // le nom sort par la largeur pendant le pli, sans replier la ligne
+  white-space: nowrap;
 }
 
 .account-logo {
@@ -80,10 +109,15 @@
 }
 
 // Navigation : occupe l'espace disponible (le pied est poussé en bas).
-// Pas de défilement propre : la liste des rubriques est volontairement courte
-// (l'aide est passée dans le pied), donc le menu tient sans barre de défilement.
+// La liste des rubriques est volontairement courte (l'aide est passée dans le
+// pied) : la barre de défilement n'apparaît donc qu'en écran très bas — mais
+// c'est ICI qu'elle vit désormais, et non plus sur le rail entier (F11.1), pour
+// que le pied reste visible et que la poignée de pli puisse déborder.
 .account-nav {
   flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden; // pendant le pli, les libellés sortent sans créer d'ascenseur
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -93,9 +127,63 @@
 .account-side-foot {
   display: flex;
   flex-direction: column;
+  flex: 0 0 auto;
   gap: 0.15rem;
   padding: 0.7rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+// --- POIGNÉE DE PLI (F11.1) --------------------------------------------------
+// Pastille ronde à cheval sur le bord droit du rail : la moitié gauche est sur
+// la carte sombre, la moitié droite sur le crème de la page. Elle se lit donc
+// comme la charnière entre les deux, ce qu'elle est.
+.account-plier {
+  position: absolute;
+  // 82px = les 69px du bloc de marque + une respiration. Cette hauteur est
+  // aussi celle de la barre supérieure : la pastille passe donc juste SOUS le
+  // coin arrondi de la barre au lieu de mordre dessus, et se retrouve alignée
+  // sur la couture du bandeau de marque. Un seul chiffre, deux alignements —
+  // ⚠️ le changer suppose de vérifier `min-height` de `.account-brand` ET la
+  // hauteur de `.acc-bar` dans `space-header.scss`, qui valent 69px toutes deux.
+  top: 82px;
+  right: -14px;
+  z-index: 45; // au-dessus du contenu, qu'elle chevauche
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  background: var(--k-navy);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(3, 25, 63, 0.32);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+
+  svg {
+    width: 17px;
+    height: 17px;
+    // Une seule icône pour les deux sens : c'est la classe `is-rail-replie` qui
+    // la retourne (voir plus bas). Deux SVG auraient divergé au premier
+    // changement de dessin.
+    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &:hover {
+    background: var(--k-brand);
+    color: #fff;
+    transform: scale(1.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--k-gold-2);
+    outline-offset: 2px;
+  }
 }
 
 // Lien / entrée de navigation (clair sur fond sombre).
@@ -167,6 +255,8 @@
 
 .account-nav-label {
   flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 // Pastille de non-lus au bout d'une rubrique (F8.13). En bout de ligne et non
@@ -208,16 +298,90 @@
 .account-body {
   flex: 1 1 auto;
   min-width: 0;
-  // Place laissée au rail fixe de 264px (voir `.account-side`).
-  margin-left: 264px;
+  // Place laissée au rail fixe : sa largeur (264px) PLUS la gouttière de 12px
+  // de part et d'autre (F11.1). Le rail étant hors du flux, c'est cette marge
+  // seule qui l'empêche de recouvrir le contenu — elle doit donc suivre le pli.
+  margin-left: 288px;
   display: flex;
   flex-direction: column;
+  transition: margin-left 0.24s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .account-main {
   flex: 1 1 auto;
   min-width: 0;
   padding: 2rem clamp(1rem, 3vw, 2.5rem) 3.5rem;
+}
+
+// --- RAIL REPLIÉ (F11.1) -----------------------------------------------------
+// Le rail ne disparaît pas : il maigrit jusqu'à une colonne d'icônes. Toutes
+// les rubriques restent là, cliquables, dans le même ordre — seul le texte s'en
+// va. On ne perd donc jamais le fil de la navigation en repliant.
+//
+// ⚠️ La classe est portée par `.account-app` et non par le rail : le rail est
+// hors du flux, c'est la marge de `.account-body` qui lui fait sa place, et les
+// deux doivent bouger ensemble. Une classe sur le seul rail laisserait un trou
+// de 200px entre le menu replié et le contenu.
+//
+// ⚠️ Les libellés sont masqués par `display: none` et non par une opacité :
+// une opacité les laisserait occuper la place et imposer une largeur minimale
+// au lien, qui refuserait alors de descendre à 76px.
+.account-app.is-rail-replie {
+  .account-side {
+    width: 76px;
+  }
+
+  .account-body {
+    margin-left: 100px; // 76 + les 12px de gouttière de chaque côté
+  }
+
+  .account-plier svg {
+    transform: rotate(180deg); // la flèche pointe vers l'ouverture à venir
+  }
+
+  .account-brand {
+    padding: 0;
+    justify-content: center;
+  }
+
+  .account-brand-text {
+    display: none;
+  }
+
+  .account-nav-link {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .account-nav-label,
+  .account-soon-tag {
+    display: none;
+  }
+
+  // L'actif ne se signale plus par un liseré à gauche — sur 76px, ce trait au
+  // ras du bord se confond avec l'arête de la carte. Le fond clair suffit, et
+  // porte déjà seul l'information sur les autres largeurs.
+  .account-nav-link.is-active::before {
+    display: none;
+  }
+
+  // La pastille de non-lus n'a plus de bout de ligne où se poser : elle devient
+  // un point posé sur l'angle de l'icône. Le nombre exact disparaît de l'écran,
+  // mais reste dans l'`aria-label` du lien (inchangé) et dans l'infobulle.
+  .account-nav-badge {
+    position: absolute;
+    top: 5px;
+    right: 18px;
+    min-width: 11px;
+    width: 11px;
+    height: 11px;
+    padding: 0;
+    font-size: 0; // le chiffre reste dans le DOM (donc lisible), mais sans corps
+    // Cerne de la couleur du rail : sans lui, le point collé à l'icône se lit
+    // comme une bavure du dessin plutôt que comme une alerte posée dessus.
+    border: 2px solid var(--k-navy);
+  }
 }
 
 // Fond assombri du tiroir : masqué par défaut (n'existe qu'en petit écran).
@@ -229,12 +393,17 @@
 @media (max-width: 860px) {
   .account-side {
     position: fixed;
+    // Un tiroir est ancré au bord de l'écran : la gouttière du grand écran
+    // n'aurait ici plus de sens, elle laisserait une bande de crème inutile.
     top: 0;
     left: 0;
     bottom: 0;
     height: 100vh; // tiroir plein écran (la hauteur 100vh du rail convient déjà)
     z-index: 60;
     width: min(280px, 82vw);
+    // Seuls les coins droits s'arrondissent : les gauches sont hors du champ.
+    border-radius: 0 var(--k-radius-lg) var(--k-radius-lg) 0;
+    border-left: 0;
     box-shadow: var(--k-shadow-lg);
     transform: translateX(-100%);
     visibility: hidden;
@@ -249,6 +418,62 @@
   // Le rail est un tiroir hors-écran : le contenu reprend toute la largeur.
   .account-body {
     margin-left: 0;
+    transition: none;
+  }
+
+  // ⚠️ Le pli est une affaire de GRAND écran. Sur mobile, un rail à 76px sorti
+  // d'un tiroir n'aurait aucun sens : on l'ouvre pour lire, pas pour deviner.
+  // La préférence reste mémorisée et reprendra sur grand écran.
+  .account-app.is-rail-replie {
+    .account-side {
+      width: min(280px, 82vw);
+    }
+
+    .account-body {
+      margin-left: 0;
+    }
+
+    .account-brand {
+      padding: 0 1.1rem;
+      justify-content: flex-start;
+    }
+
+    .account-nav-link {
+      justify-content: flex-start;
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+
+    // ⚠️ `flex` et non `block` : ce bloc empile le nom et le sous-titre en
+    // colonne. Un `display: block` les remettrait sur une seule ligne, `<b>` et
+    // `<small>` étant tous deux en ligne par défaut.
+    .account-brand-text {
+      display: flex;
+    }
+
+    .account-nav-label,
+    .account-soon-tag {
+      display: block;
+    }
+
+    .account-nav-link.is-active::before {
+      display: block;
+    }
+
+    .account-nav-badge {
+      position: static;
+      width: auto;
+      min-width: 20px;
+      height: 18px;
+      padding: 0 5px;
+      font-size: 0.66rem;
+      border: 0;
+    }
+  }
+
+  // Le tiroir se commande au hamburger de l'en-tête : la poignée n'a rien à y faire.
+  .account-plier {
+    display: none;
   }
 
   // Fond sombre couvrant tout, sous le tiroir mais au-dessus du contenu.

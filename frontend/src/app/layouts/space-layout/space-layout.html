@@ -1,6 +1,6 @@
 <!-- App-shell générique d'un espace connecté : menu latéral SOMBRE pleine
      hauteur collé à gauche + colonne contenu (en-tête + section). -->
-<div class="account-app">
+<div class="account-app" [class.is-rail-replie]="railReplie()">
   <!-- Fond assombri (petit écran) : un clic referme le tiroir -->
   @if (sidebarOpen()) {
     <div class="account-backdrop" (click)="closeSidebar()" aria-hidden="true"></div>
@@ -21,6 +21,28 @@
       </span>
     </a>
 
+    <!--
+      F11.1 — La poignée de pli, posée SUR le bord droit du rail (et non dans
+      l'en-tête) : à cheval sur la couture entre le rail et le contenu, elle
+      montre d'elle-même ce qu'elle déplace. La flèche pointe toujours vers le
+      mouvement à venir — c'est la rotation CSS qui la retourne, pas deux icônes.
+      Masquée sous 860px : là, le rail est un tiroir commandé par le hamburger
+      de l'en-tête.
+    -->
+    <button
+      type="button"
+      class="account-plier"
+      (click)="toggleRail()"
+      [attr.aria-expanded]="!railReplie()"
+      [attr.aria-label]="railReplie() ? 'Déplier le menu' : 'Replier le menu'"
+      [title]="railReplie() ? 'Déplier le menu' : 'Replier le menu'"
+    >
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M14.5 6.5 9 12l5.5 5.5" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+
     <!-- Navigation des rubriques -->
     <nav class="account-nav" aria-label="Rubriques">
       @for (item of space.nav; track item.path) {
@@ -30,6 +52,7 @@
             [routerLink]="linkFor(item.path)"
             [routerLinkActive]="'is-active'"
             [routerLinkActiveOptions]="{ exact: item.path === '' }"
+            [attr.title]="infobulle(item.label)"
             [attr.aria-label]="
               badgeFor(item) > 0 ? item.label + ', ' + badgeFor(item) + ' non lu(s)' : null
             "
@@ -48,7 +71,8 @@
             }
           </a>
         } @else {
-          <span class="account-nav-link is-soon" aria-disabled="true">
+          <span class="account-nav-link is-soon" aria-disabled="true"
+                [attr.title]="infobulle(item.label)">
             <span class="account-nav-ic"><app-account-icon [name]="item.icon" /></span>
             <span class="account-nav-label">{{ item.label }}</span>
             <span class="account-soon-tag">Bientôt</span>
@@ -64,6 +88,7 @@
           class="account-nav-link"
           [routerLink]="linkFor(space.helpPath)"
           [routerLinkActive]="'is-active'"
+          [attr.title]="infobulle('Aide')"
           (click)="closeSidebar()"
         >
           <span class="account-nav-ic"><app-account-icon name="help" /></span>
@@ -71,7 +96,8 @@
         </a>
       }
 
-      <a class="account-nav-link account-side-back" routerLink="/">
+      <a class="account-nav-link account-side-back" routerLink="/"
+         [attr.title]="infobulle('Retour au site')">
         <span class="account-nav-ic" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                stroke-linecap="round" stroke-linejoin="round">

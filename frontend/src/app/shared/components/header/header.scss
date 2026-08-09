@@ -11,7 +11,21 @@
 .topbar {
   background: rgba(247, 244, 235, 0.82);
   backdrop-filter: blur(12px);
+
+  // F11.1 — La barre reste COLLÉE en haut et sur les côtés ; seuls ses deux
+  // coins BAS s'arrondissent. Elle se lit alors comme un bandeau qui retombe
+  // sur la page, et non comme une carte posée dessus.
+  //
+  // ⚠️ Le liseré reste celui du BAS uniquement : les trois autres bords sont
+  // hors du champ, un contour complet n'y dessinerait que des traits collés aux
+  // arêtes de la fenêtre. Le trait du bas, lui, épouse la courbe.
+  //
+  // ⚠️ Le fond reste TRANSLUCIDE et le flou est conservé : le contenu défile
+  // visiblement derrière la barre. La rendre opaque pour « faire propre » lui
+  // ferait perdre ce qui la rend vivante.
   border-bottom: 1px solid var(--k-line);
+  border-radius: 0 0 var(--k-radius-lg) var(--k-radius-lg);
+  box-shadow: 0 6px 20px rgba(3, 25, 63, 0.07);
 }
 
 .bar {
@@ -344,6 +358,14 @@
 
 // --- Responsive -----------------------------------------------------------
 @media (max-width: 960px) {
+  // ⚠️ Les coins bas de la barre redeviennent droits DÈS QUE le menu mobile
+  // peut s'ouvrir : ce panneau est pleine largeur et vient se coller juste
+  // dessous. Une barre arrondie au-dessus d'un panneau à angles droits, sur la
+  // même arête, se lit comme un défaut d'alignement (F11.1).
+  .topbar {
+    border-radius: 0;
+  }
+
   .nav,
   .nav-cta,
   .nav-logout {

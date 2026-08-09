@@ -8,6 +8,15 @@ import { AssistantPanelComponent } from '../../shared/components/assistant/assis
 import { UnreadStore } from '../../core/state/unread-store';
 import { permissionsFor } from '../../features/backoffice/backoffice-permissions';
 
+/**
+ * Clé de mémorisation du rail replié (F11.1).
+ *
+ * Le pli est une préférence de POSTE, pas de session : l'agent qui travaille sur
+ * un petit portable replie une fois, pas à chaque connexion. On la garde donc en
+ * `localStorage` (survit à la fermeture du navigateur) et non en `sessionStorage`.
+ */
+const RAIL_REPLIE_KEY = 'k360.bo.rail-replie';
+
 /** Clé d'icône du rail (rendue en SVG inline dans le template). */
 type BoIcon =
   | 'grid'
@@ -205,6 +214,20 @@ export class BackofficeLayoutComponent {
   /** Tiroir ouvert ? (petit écran uniquement ; rail permanent en desktop). */
   protected readonly sidebarOpen = signal(false);
 
+  /**
+   * Rail replié en colonne d'icônes ? (grand écran uniquement) — F11.1.
+   *
+   * ⚠️ À ne pas confondre avec `sidebarOpen`, qui est l'affaire du **petit**
+   * écran : là, le rail est un tiroir qu'on fait entrer et sortir. Ici, il reste
+   * en place et ne fait que maigrir. Les deux ne se rencontrent jamais — sous
+   * 900px la classe `--replie` est neutralisée par la media query.
+   *
+   * Vingt rubriques, c'est un rail qui descend bas : replié, il rend ~180px de
+   * largeur au contenu (tableaux du back-office) sans rien retirer de la
+   * navigation, les icônes restant cliquables et infobullées.
+   */
+  protected readonly railReplie = signal(this.lireRailReplie());
+
   constructor() {
     this.router.events
       .pipe(
@@ -225,6 +248,54 @@ export class BackofficeLayoutComponent {
 
   protected closeSidebar(): void {
     this.sidebarOpen.set(false);
+  }
+
+  /** Replie / déplie le rail (grand écran) et mémorise le choix. */
+  protected toggleRail(): void {
+    this.railReplie.update((replie) => {
+      this.ecrireRailReplie(!replie);
+      return !replie;
+    });
+  }
+
+  /**
+   * Infobulle d'une rubrique — uniquement quand le rail est replié.
+   *
+   * Replié, l'icône seule ne dit pas où elle mène : le `title` redonne le
+   * libellé au survol. Déplié, le libellé est déjà écrit à côté ; y ajouter une
+   * infobulle qui le répète serait du bruit, d'où le `null`.
+   */
+  protected infobulle(item: BoNavItem): string | null {
+    return this.railReplie() ? item.label : null;
+  }
+
+  /** Lit la préférence de pli (SSR-safe : rien à lire côté serveur). */
+  private lireRailReplie(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    try {
+      return window.localStorage.getItem(RAIL_REPLIE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  /** Écrit la préférence de pli, sans casser si le stockage est indisponible. */
+  private ecrireRailReplie(replie: boolean): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      if (replie) {
+        window.localStorage.setItem(RAIL_REPLIE_KEY, '1');
+      } else {
+        window.localStorage.removeItem(RAIL_REPLIE_KEY);
+      }
+    } catch {
+      // Stockage indisponible (navigation privée, quota…) : le pli vaut alors
+      // pour la seule visite en cours. Sans conséquence fonctionnelle.
+    }
   }
 
   /** Déconnexion : révoque le jeton puis renvoie vers la connexion. */

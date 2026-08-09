@@ -1482,6 +1482,63 @@ curl -s http://localhost:4000/une-page-qui-nexiste-pas | grep -o '>404<'
 ⚠️ **La route `**` doit rester la dernière** de `app.routes.ts` : elle accepte
 tout, et rendrait inatteignable n'importe quelle route déclarée après elle.
 
+### Cadres de navigation — rails repliables et surfaces arrondies (F11.1)
+
+Trois cadres entourent la totalité des écrans, et ils sont **indépendants** :
+
+| Cadre | Fichier | Forme |
+| --- | --- | --- |
+| Poste de commandement | `layouts/backoffice-layout/` | deux **cartes** (rail + contenu) sur fond graphite |
+| Les 4 espaces connectés | `layouts/space-layout/` | rail fixe **décollé** + barre supérieure en carte |
+| Site public | `shared/components/header/` | bandeau **collé** en haut, coins **bas** arrondis |
+
+**Le pli.** Une poignée ronde sur le bord droit du rail le fait passer de 260px
+à 76px. Le choix est écrit en `localStorage` — clés **distinctes** par shell
+(`k360.bo.rail-replie`, `k360.espace.rail-replie`) : replier son espace client
+ne doit pas replier le poste de commandement. La lecture est **SSR-safe**
+(`typeof window === 'undefined'`) et enveloppée d'un `try` : le stockage lève
+en navigation privée.
+
+⚠️ **Trois pièges, si l'on retouche cette mécanique :**
+
+- **`display: none` sur les libellés, jamais une opacité.** Une opacité les
+  laisserait occuper la place et imposer une largeur minimale au lien, qui
+  refuserait de descendre à 76px.
+- **Dans `space-layout`, la classe du pli est sur `.account-app`, pas sur le
+  rail.** Le rail y est en `position: fixed` : c'est la marge de
+  `.account-body` qui lui fait sa place. Les deux doivent bouger ensemble,
+  sinon un trou de 200px s'ouvre entre le menu replié et le contenu.
+- **Le pli est neutralisé sous le seuil mobile** (900px au back-office, 860px
+  dans les espaces). Là, le rail est un tiroir : on l'ouvre pour lire.
+
+⚠️ **Aucun `overflow: hidden` sur un rail ni sur une barre.** La tentation est
+forte pour « nettoyer » les angles ; elle casse deux choses : la poignée de pli
+déborde volontairement du bord droit, et le **menu utilisateur** comme le
+**panneau de notifications** sont en position absolue *dans* la barre des
+espaces — ils retombent sous son bord bas et seraient tranchés. Le défilement
+interne du rail (qui garde son pied atteignable sur écran bas) vit désormais sur
+`.account-nav` / `.bo-nav`, pas sur le rail entier.
+
+⚠️ **Opaque ou translucide, ce n'est pas un goût :**
+
+- la **barre des espaces** est collante et opaque, et porte sa gouttière sur son
+  hôte avec un fond couleur page — sans quoi on verrait le contenu remonter dans
+  les 12px au-dessus d'elle ;
+- l'**en-tête public** reste translucide avec son flou : le contenu défile
+  visiblement derrière lui, c'est ce qui le rend vivant.
+
+⚠️ **Le faux « angle droit dans le coin arrondi ».** Symptôme observé sur la
+barre des espaces, cause ailleurs : l'ombre du rail déborde sur la gouttière, et
+la barre opaque repeint son rectangle par-dessus, **tranchant cette ombre net
+sur son bord gauche, qui est droit**. Réglé en ramenant l'ombre du rail au même
+niveau que celle de la barre. **Si l'on rappuie cette ombre, la bande revient.**
+
+⚠️ **La poignée est calée à `top: 82px` dans les deux shells** : 69px de bandeau
+de marque + une respiration — hauteur qui est aussi celle de la barre
+supérieure, si bien qu'elle passe sous le coin arrondi de celle-ci *et*
+s'aligne sur la couture du bandeau. La déplacer suppose de vérifier les deux
+hauteurs (`.bo-brand` / `.account-brand` et `.bo-topbar` / `.acc-bar`).
+
 ### Commandes utiles
 
 ```bash

@@ -7,11 +7,34 @@
   top: 0;
   z-index: 40;
   display: block;
+
+  // F11.1 — La gouttière AU-DESSUS et à DROITE de la barre, portée par l'hôte et
+  // non par la barre elle-même. C'est ce qui la détache en carte, au même écart
+  // que le rail (12px). À gauche, rien : la marge de `.account-body` s'en charge
+  // déjà.
+  padding: 12px 12px 0 0;
+
+  // ⚠️ Fond OPAQUE, et couleur de la page : l'hôte reste collé en haut au
+  // défilement, et sans ce fond on verrait le contenu remonter dans les 12px de
+  // gouttière, au-dessus d'une barre censée le masquer. C'est la gouttière qui
+  // doit glisser par-dessus le contenu, pas l'inverse.
+  background: var(--k-cream);
 }
 
 .acc-topbar {
   background: var(--k-card);
-  border-bottom: 1px solid var(--k-line);
+
+  // Carte arrondie, comme le rail : un liseré complet remplace le seul trait
+  // du bas, qui n'avait de sens que pour une barre allant d'un bord à l'autre.
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-lg);
+  box-shadow: 0 6px 18px rgba(3, 25, 63, 0.06);
+
+  // ⚠️ SURTOUT PAS d'`overflow: hidden` pour « faire propre » aux angles : le
+  // menu utilisateur et le panneau de notifications sont en position absolue
+  // DANS cette barre et retomberaient sous son bord — ils seraient tranchés.
+  // Rien ne dépasse de toute façon : le fond est porté par cette boîte, qui est
+  // elle-même arrondie.
 }
 
 .acc-bar {
@@ -248,6 +271,21 @@
   // Le hamburger apparaît (le rail devient un tiroir).
   .acc-burger {
     display: inline-flex;
+  }
+
+  // La barre reprend toute la largeur, d'un bord à l'autre : sur téléphone, une
+  // carte flottante ne coûterait que de la largeur utile. Elle redevient donc
+  // ce qu'elle était — un bandeau à trait bas.
+  :host {
+    padding: 0;
+    background: transparent;
+  }
+
+  .acc-topbar {
+    border: 0;
+    border-bottom: 1px solid var(--k-line);
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 

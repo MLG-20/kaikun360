@@ -174,6 +174,12 @@ sécurité renforcé — c'est là que tout passe.
 - **Design** : identité visuelle cohérente (charte Kaikun), interface moderne,
   **animations soignées** (apparitions au défilement, survols premium,
   signature « orbitale » du hero).
+- **Confort de travail au quotidien** : dans le back-office comme dans les
+  quatre espaces, le **menu latéral se replie d'un clic** en une colonne
+  d'icônes et rend la largeur au contenu — utile sur un petit portable, face à
+  des tableaux larges. Le choix est **mémorisé** : on ne le refait pas à chaque
+  connexion. Les menus et barres ont par ailleurs été harmonisés en **surfaces
+  arrondies**, pour une lecture plus douce des écrans de travail.
 - **Responsive** : l'affichage s'adapte proprement au **téléphone, à la tablette
   et à l'ordinateur** (vérifié à plusieurs largeurs d'écran).
 - **Accessibilité** : les animations se désactivent pour les personnes qui le

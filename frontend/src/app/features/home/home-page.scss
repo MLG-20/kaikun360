@@ -5,10 +5,19 @@
 
 // --- Section 1 : Hero ------------------------------------------------------
 // Fond crème dégradé + accroche à gauche, signature orbitale à droite.
+//
+// F11.1 — Le halo bleu du coin haut-droit a été RETIRÉ (décision produit). Il
+// était posé en `--k-brand-050`, une couleur OPAQUE (#eaf0ff) : dans un dégradé
+// radial, elle ne teintait pas le crème, elle le remplaçait — d'où un coin
+// franchement bleu, lu comme un aplat plutôt que comme une lueur. Le fond ne
+// garde donc que sa descente crème → blanc, qui allège la page en descendant.
+//
+// ⚠️ Ne PAS le réintroduire en jouant sur `--k-brand-050` : ce jeton sert à
+// une septantaine d'endroits comme fond bleuté PLEIN, où l'opacité est
+// justement ce qu'on attend. Si le halo devait revenir un jour, ce serait en
+// translucide (`rgba(3, 72, 251, 0.05)`) et ici seulement.
 .hero {
-  background:
-    radial-gradient(1100px 520px at 85% -10%, var(--k-brand-050), transparent 60%),
-    linear-gradient(180deg, var(--k-cream), var(--k-white));
+  background: linear-gradient(180deg, var(--k-cream), var(--k-white));
   padding: 40px 0 56px;
   // Les anneaux/nœuds de l'orbite sont des carrés à bordure ronde qui TOURNENT :
   // leur boîte englobante grandit (~×1,41) en pivotant et élargit la zone

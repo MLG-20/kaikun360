@@ -11,6 +11,16 @@ import { SPACE_CONFIG, SpaceNavItem } from './space.config';
 import { SpaceHeaderComponent } from './space-header';
 
 /**
+ * Clé de mémorisation du rail replié (F11.1).
+ *
+ * ⚠️ **Distincte de celle du back-office**, volontairement. Ce sont deux
+ * habitudes de travail sans rapport : le poste de commandement aligne vingt
+ * rubriques et se replie souvent, un espace client en compte cinq ou six et se
+ * garde ouvert. Une clé commune ferait replier l'un en repliant l'autre.
+ */
+const RAIL_REPLIE_KEY = 'k360.espace.rail-replie';
+
+/**
  * Layout **générique** des espaces connectés (F4) : coquille app-shell partagée
  * par l'espace client, l'espace propriétaire et les futurs espaces pro.
  *
@@ -58,6 +68,15 @@ export class SpaceLayoutComponent {
   /** Tiroir de navigation ouvert ? (petit écran uniquement ; rail permanent en desktop). */
   protected readonly sidebarOpen = signal(false);
 
+  /**
+   * Rail replié en colonne d'icônes ? (grand écran uniquement) — F11.1.
+   *
+   * ⚠️ À ne pas confondre avec `sidebarOpen`, qui est l'affaire du **petit**
+   * écran : là, le rail est un tiroir qu'on fait entrer et sortir. Ici, il reste
+   * en place et ne fait que maigrir. Sous 860px la classe est neutralisée.
+   */
+  protected readonly railReplie = signal(this.lireRailReplie());
+
   constructor() {
     // Toute navigation referme le tiroir (sans effet en desktop, où il est fixe).
     this.router.events
@@ -98,6 +117,54 @@ export class SpaceLayoutComponent {
   /** Ferme le tiroir (clic sur le fond ou sur un lien, petit écran). */
   protected closeSidebar(): void {
     this.sidebarOpen.set(false);
+  }
+
+  /** Replie / déplie le rail (grand écran) et mémorise le choix. */
+  protected toggleRail(): void {
+    this.railReplie.update((replie) => {
+      this.ecrireRailReplie(!replie);
+      return !replie;
+    });
+  }
+
+  /**
+   * Infobulle d'une rubrique — uniquement quand le rail est replié.
+   *
+   * Replié, l'icône seule ne dit pas où elle mène : le `title` redonne le
+   * libellé au survol. Déplié, le libellé est déjà écrit à côté ; y ajouter une
+   * infobulle qui le répète serait du bruit, d'où le `null`.
+   */
+  protected infobulle(libelle: string): string | null {
+    return this.railReplie() ? libelle : null;
+  }
+
+  /** Lit la préférence de pli (SSR-safe : rien à lire côté serveur). */
+  private lireRailReplie(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    try {
+      return window.localStorage.getItem(RAIL_REPLIE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  /** Écrit la préférence de pli, sans casser si le stockage est indisponible. */
+  private ecrireRailReplie(replie: boolean): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    try {
+      if (replie) {
+        window.localStorage.setItem(RAIL_REPLIE_KEY, '1');
+      } else {
+        window.localStorage.removeItem(RAIL_REPLIE_KEY);
+      }
+    } catch {
+      // Stockage indisponible (navigation privée, quota…) : le pli vaut alors
+      // pour la seule visite en cours. Sans conséquence fonctionnelle.
+    }
   }
 
   // La déconnexion vit désormais uniquement dans le menu utilisateur de
