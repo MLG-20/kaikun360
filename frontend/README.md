@@ -34,8 +34,8 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
 - ✅ **Le rendu côté serveur (SSR)** : les pages publiques sont d'abord
   **assemblées par un serveur** puis envoyées prêtes à afficher (bon pour le
   référencement Google et pour un premier affichage rapide). Voir « SSR » ci-dessous.
-- ✅ **L'assistant (F10.1)** : une **bulle flottante** en bas à droite ouvre un
-  panneau de discussion. On lui décrit un besoin (« une villa à Saly sous
+- ✅ **L'assistant** : un bouton **« Assistant » dans l'en-tête** ouvre un **tiroir**
+  qui glisse depuis le bord droit, sur toute la hauteur. On lui décrit un besoin (« une villa à Saly sous
   60 millions », « un circuit en Casamance ») et il répond avec de **vraies
   annonces** — celles du catalogue publié, aux prix du catalogue — puis des
   **boutons** pour aller plus loin : voir la fiche, ouvrir toutes les annonces,
@@ -1395,7 +1395,41 @@ Cette tranche livre l'écran, et rien d'autre — aucun outil neuf, aucune règl
 |---|---|
 | `core/api/assistant.service.ts` | le **contrat** : `POST /assistant/messages` et ses types |
 | `core/state/assistant-store.ts` | la **mémoire** : conversation, ouverture, attente, gestes |
-| `shared/components/assistant/` | l'**écran** : bulle flottante + panneau |
+| `shared/components/assistant/` | l'**écran** : le lanceur d'en-tête + le tiroir |
+
+#### Du coin bas-droite au tiroir (F10.5)
+
+L'assistant s'ouvrait par une **bulle flottante** en bas à droite, et le panneau
+déployé faisait 380 px de large sur une hauteur ajustée à son contenu. Trois
+défauts, tous constatés à l'écran :
+
+- la bulle **recouvrait le contenu** de chaque page sans qu'on le lui demande, et
+  disputait ce coin à `app-scroll-top` et `app-pwa-banner` ;
+- le panneau **s'ouvrait grand comme un post-it** sur le seul message d'accueil,
+  puis grandissait par à-coups à chaque réponse ;
+- 380 px ne laissaient à une réponse de cinq annonces que la place de les empiler,
+  ce qui poussait la conversation hors de vue.
+
+Livré : `assistant-launcher` (le bouton, posé dans les **trois** en-têtes — public,
+espaces connectés, back-office) et le panneau devenu **tiroir** — 480 px, toute la
+hauteur, voile de fond cliquable, angles arrondis et retrait des bords.
+⚠️ **Les deux ne se connaissent pas** : ils partagent `estOuvert` sur le
+`AssistantStore`. C'est ce qui permet de poser le bouton dans trois chromes
+différents sans qu'aucun ne monte le tiroir, ni ne le monte deux fois.
+⚠️ **`animate.leave` n'est pas décoratif** : sans lui Angular arrache l'élément du
+DOM et le tiroir **disparaît d'un coup** après être arrivé en glissant — c'est
+cette asymétrie qui rendait le geste désagréable. Entrée et sortie ont deux
+courbes différentes, volontairement : on se pose lentement, on part vite.
+
+Dans le fil, **les résultats défilent en rangée** (carrousel) dès qu'il y en a
+plusieurs — empilées, cinq annonces occupaient toute la hauteur. Le défilement est
+celui du **navigateur** (`overflow-x` + `scroll-snap`) : glissement au doigt,
+molette inclinée et tabulation marchent sans une ligne de JS. Le TypeScript ne fait
+que deux choses que CSS ignore — mesurer si quelque chose dépasse (les flèches
+n'apparaissent qu'alors) et avancer d'une carte au clic — et son écoute du
+défilement est posée **hors zone Angular**, pour qu'un glissement ne déclenche
+aucun cycle de détection. ⚠️ **La FAQ reste empilée** : une question et sa réponse
+se lisent, des cartes de 190 px les rendraient illisibles.
 
 ⚠️ **Le panneau est monté dans les *layouts*, pas dans la racine applicative**
 (`main-layout`, `space-layout`, et `backoffice-layout` depuis F10.3). C'est ce qui

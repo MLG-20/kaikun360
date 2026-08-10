@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter } from 'rxjs/operators';
 
 import { AuthService } from '../../core/auth/auth.service';
+import { AssistantLauncherComponent } from '../../shared/components/assistant/assistant-launcher';
 import { AssistantPanelComponent } from '../../shared/components/assistant/assistant-panel';
 import { UnreadStore } from '../../core/state/unread-store';
 import { permissionsFor } from '../../features/backoffice/backoffice-permissions';
@@ -71,7 +72,13 @@ interface BoNavItem {
  */
 @Component({
   selector: 'app-backoffice-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, AssistantPanelComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    AssistantPanelComponent,
+    AssistantLauncherComponent,
+  ],
   templateUrl: './backoffice-layout.html',
   styleUrl: './backoffice-layout.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

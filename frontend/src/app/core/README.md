@@ -5,6 +5,23 @@ l'application (approche standalone, sans NgModule) :
 
 - **services/** — `AuthService` (session ; jeton en `sessionStorage`, réhydraté et
   revalidé au démarrage), services d'API.
+- **scroll/** — `activerPolitiqueDeDefilement`, qui **remplace**
+  `withInMemoryScrolling` (désactivé dans `app.config.ts`). La règle, isolée et
+  testée dans `deciderDefilement` : position mémorisée > ancre demandée > vrai
+  changement de page (on remonte) > **rien** (filtre, tri, pagination — les
+  filtres vivant dans l'URL, chaque saisie est une navigation et renvoyer en haut
+  à chaque essai rendait le catalogue pénible).
+  ⚠️ **Deux pièges, payés une fois chacun :**
+  1. La remontée se déclenche dès `NavigationStart`, **pas** à l'arrivée. La page
+     d'arrivée s'affiche d'abord vide, donc bien plus courte ; le navigateur
+     écrête la position au nouveau maximum et l'on se retrouve **dans son
+     footer** jusqu'à ce que le `Scroll` arrive. Chronométré : 250 ms sur une
+     machine de développement, bien plus sur un téléphone.
+  2. `styles/_base.scss` pose `scroll-behavior: smooth` sur `html` : toute
+     remontée programmée était **animée**, c'est-à-dire une longue glissade à
+     travers la page. Les remises à zéro passent donc par
+     `window.scrollTo({ behavior: 'instant' })` et non par `ViewportScroller`.
+     Seule l'ancre garde la glissade — là, elle est le geste demandé.
 - **api/** — accès HTTP typés au backend `/api/v1` :
   - `CatalogService` — catalogues publics (index paginés) **et** détail
     (`property`, `stay`, `stayAvailability` — F2.1/F2.3 ; `experience`,

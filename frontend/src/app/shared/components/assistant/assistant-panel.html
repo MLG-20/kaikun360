@@ -6,39 +6,39 @@
   bouton du tout.
 -->
 @if (!indisponible()) {
-  <!-- ===================== Bulle flottante (lanceur) ====================== -->
-  <!-- Rendue à l'identique au serveur et au navigateur (le panneau naît fermé)
-       : le DOM des deux côtés concorde, l'hydratation tient. -->
-  <button
-    type="button"
-    class="ia-bulle"
-    [class.is-ouvert]="ouvert()"
-    [attr.aria-expanded]="ouvert()"
-    aria-controls="assistant-panneau"
-    [attr.aria-label]="ouvert() ? 'Fermer l\'assistant Kaikun' : 'Ouvrir l\'assistant Kaikun'"
-    (click)="basculer()"
-  >
-    @if (ouvert()) {
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" />
-      </svg>
-    } @else {
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path
-          d="M20 12.2c0 3.7-3.6 6.7-8 6.7-.9 0-1.8-.13-2.6-.37L4.5 20l1.2-3.1C4.6 15.7 4 14 4 12.2 4 8.5 7.6 5.5 12 5.5s8 3 8 6.7z"
-          stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-        <path d="M9 11.5h6M9 14h3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-      </svg>
-    }
-  </button>
-
-  <!-- ========================== Panneau déployé =========================== -->
+  <!-- ⚠️ Plus aucun lanceur ici : il vit dans les en-têtes
+       (`app-assistant-launcher`). Ce composant n'est plus que le TIROIR — ce qui
+       lui permet de ne rien rendre du tout tant qu'il est fermé, et donc de
+       rendre la même chose au serveur et au navigateur : l'hydratation tient. -->
   @if (ouvert()) {
+    <!-- ============================ Voile de fond ========================== -->
+    <!-- Il assombrit la page, et surtout : cliquer à côté referme. C'est le geste
+         qu'on essaie d'instinct devant un tiroir. Purement décoratif pour un
+         lecteur d'écran — `Échap` et le bouton de fermeture font le même travail
+         sans avoir à viser. -->
+    <div
+      class="ia-voile"
+      animate.enter="is-entree"
+      animate.leave="is-sortie"
+      (click)="fermer()"
+      aria-hidden="true"
+    ></div>
+
+    <!-- ================================ Tiroir ============================= -->
+    <!-- ⚠️ `animate.leave` n'est pas un ornement : sans lui, Angular arrache
+         l'élément du DOM à la fermeture et le tiroir DISPARAÎT d'un coup, alors
+         qu'il était arrivé en glissant. C'est cette asymétrie qui rendait le
+         geste désagréable. Angular attend maintenant la fin de l'animation CSS
+         avant de retirer l'élément — et ce, quelle que soit la façon de fermer
+         (croix, voile, Échap, ou le bouton de l'en-tête). -->
     <section
       id="assistant-panneau"
-      class="ia-panneau"
+      class="ia-tiroir"
       role="dialog"
+      aria-modal="true"
       aria-label="Assistant Kaikun 360"
+      animate.enter="is-entree"
+      animate.leave="is-sortie"
       (keydown.escape)="echap()"
     >
       <header class="ia-tete">
@@ -58,13 +58,47 @@
            sans interrompre ce qu'un lecteur d'écran est en train de dire. -->
       <div class="ia-fil" #fil aria-live="polite" aria-atomic="false">
         @for (bulle of bulles(); track bulle.id) {
-          <div class="ia-bloc" [class.is-moi]="bulle.speaker === 'user'">
+          <div
+            class="ia-bloc"
+            [class.is-moi]="bulle.speaker === 'user'"
+            [class.is-pleine-largeur]="enRangee(bulle.items)"
+          >
             <p class="ia-texte" [class.is-echec]="bulle.failed">{{ bulle.text }}</p>
 
             <!-- Fiches de résultats. Deux formes reconnues à ce jour : entrée de
-                 FAQ, et annonce du catalogue. -->
+                 FAQ, et annonce du catalogue.
+
+                 ⚠️ Les annonces défilent EN RANGÉE (`enRangee()`), les entrées de
+                 FAQ restent empilées : une réponse de FAQ se lit, une annonce se
+                 parcourt. Cinq villas empilées mangeaient tout le fil et
+                 repoussaient la question suivante hors de vue ; en rangée, la
+                 réponse tient sur une hauteur de carte.
+
+                 La piste est manipulée par sa référence de gabarit (`#piste`) :
+                 chaque tour de boucle a la sienne, un fil peut donc porter
+                 plusieurs rangées sans qu'elles se confondent. -->
             @if (bulle.items.length > 0) {
-              <ul class="ia-fiches">
+              <div class="ia-carrousel">
+                <!-- Flèches : posées PAR-DESSUS les bords de la piste (pas à
+                     côté), sinon elles voleraient 60 px de largeur dans un
+                     panneau qui n'en a que 380. Masquées quand rien ne dépasse,
+                     et au doigt (le glissement suffit) — cf. la feuille. -->
+                <button
+                  type="button"
+                  class="ia-carrousel__fleche is-avant"
+                  aria-label="Résultats précédents"
+                  (click)="glisser(piste, -1)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M14.5 6L9 12l5.5 6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+
+                <!-- Pas de `(scroll)` ici : l'écoute est posée en TypeScript,
+                     HORS zone Angular. Un glissement du doigt émet des dizaines
+                     d'événements — autant de cycles de détection pour des
+                     classes CSS que l'on peut poser à la main. -->
+                <ul class="ia-fiches" [class.is-carrousel]="enRangee(bulle.items)" #piste>
                 @for (item of bulle.items; track $index) {
                   <li class="ia-fiche">
                     @if (estFaq(item)) {
@@ -120,7 +154,19 @@
                     }
                   </li>
                 }
-              </ul>
+                </ul>
+
+                <button
+                  type="button"
+                  class="ia-carrousel__fleche is-apres"
+                  aria-label="Résultats suivants"
+                  (click)="glisser(piste, 1)"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M9.5 6l5.5 6-5.5 6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+              </div>
             }
 
             <!-- Gestes proposés. L'assistant PROPOSE : rien n'est écrit tant

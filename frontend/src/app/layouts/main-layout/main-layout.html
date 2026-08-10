@@ -6,7 +6,9 @@
 
 <app-footer />
 
-<!-- F10.1 — Assistant Kaikun : bulle flottante sur tout le site public. Monté
-     dans les layouts (ici et dans `space-layout`) et non dans la racine, pour
-     qu'il n'apparaisse ni au back-office ni dans le parcours d'authentification. -->
+<!-- Assistant Kaikun : le TIROIR, qui glisse depuis le bord droit. Son bouton
+     d'ouverture n'est pas ici — il est dans l'en-tête (`app-assistant-launcher`),
+     les deux se parlant par le `AssistantStore`. Monté dans les layouts et non
+     dans la racine, pour qu'il n'apparaisse pas dans le parcours
+     d'authentification : on n'interrompt pas une saisie de mot de passe. -->
 <app-assistant-panel />

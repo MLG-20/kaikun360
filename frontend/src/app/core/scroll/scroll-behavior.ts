@@ -1,6 +1,6 @@
 import { ViewportScroller, isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID, inject } from '@angular/core';
-import { Router, Scroll } from '@angular/router';
+import { NavigationStart, Router, Scroll } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
 /**
@@ -42,6 +42,37 @@ export function activerPolitiqueDeDefilement(): void {
   /** Chemin de la page courante, paramètres d'URL exclus. */
   let cheminPrecedent = chemin(router.url);
 
+  // ==========================================================================
+  // Remonter AU DÉPART d'un vrai changement de page
+  //
+  // ⚠️ Ne pas confondre avec le `Scroll` plus bas : celui-ci arrive trop tard.
+  // Symptôme observé, chronomètre à l'appui, en quittant une page longue :
+  //
+  //   +150 ms  scrollY=514  page=1416px  0 carte   ← on regarde le FOOTER
+  //   +400 ms  scrollY= 19  page=2451px  20 cartes
+  //
+  // La page d'arrivée s'affiche d'abord VIDE — ses données ne sont pas là — donc
+  // beaucoup plus courte. Le navigateur écrête alors la position de défilement au
+  // nouveau maximum : parti de 4188, on se retrouve à 514, c'est-à-dire tout en
+  // bas de cette page provisoire. Le footer, en somme. Ce n'est qu'ensuite que le
+  // `Scroll` remonte — un quart de seconde ici, bien davantage sur un téléphone
+  // ou un réseau lent, assez pour qu'on croie avoir été envoyé dans le footer.
+  //
+  // Remonter dès `NavigationStart` supprime la fenêtre de tir : on est déjà en
+  // haut quand la page d'arrivée se peint. Le décalage se voit alors sur la page
+  // que l'on QUITTE, qui disparaît dans la foulée.
+  //
+  // ⚠️ Et **seulement quand le chemin change** : c'est la même règle qu'en bas,
+  // pour la même raison — un filtre de catalogue est une navigation, et personne
+  // ne veut être renvoyé en haut à chaque saisie.
+  router.events
+    .pipe(filter((e): e is NavigationStart => e instanceof NavigationStart))
+    .subscribe((evenement) => {
+      if (chemin(evenement.url) !== chemin(router.url)) {
+        remonterSansAnimation();
+      }
+    });
+
   router.events.pipe(filter((e): e is Scroll => e instanceof Scroll)).subscribe((evenement) => {
     // ⚠️ `routerEvent` peut être un `NavigationSkipped` (navigation vers l'URL
     // déjà affichée) : seul `url` est commun aux deux types possibles.
@@ -60,10 +91,12 @@ export function activerPolitiqueDeDefilement(): void {
         scroller.scrollToPosition(evenement.position!);
         break;
       case 'ancre':
+        // Seul cas qui GARDE l'animation : on a demandé une section, la glissade
+        // montre le chemin parcouru. C'est un geste, pas une remise à zéro.
         scroller.scrollToAnchor(ancre!);
         break;
       case 'haut':
-        scroller.scrollToPosition([0, 0]);
+        remonterSansAnimation();
         break;
       // 'rien' : filtre, tri ou pagination — le regard du visiteur ne bouge pas.
     }
@@ -96,6 +129,24 @@ export function deciderDefilement(contexte: {
   }
 
   return contexte.memePage ? 'rien' : 'haut';
+}
+
+/**
+ * Remonte en haut **d'un coup**, sans glissade.
+ *
+ * ⚠️ POURQUOI ON N'UTILISE PAS `ViewportScroller` ICI. La feuille de base pose
+ * `scroll-behavior: smooth` sur `html` (`styles/_base.scss`) — excellent quand
+ * quelqu'un demande une section, désastreux pour une remise à zéro : le
+ * navigateur ANIME alors la remontée. Partis de 4 000 px sur une page longue,
+ * on descend lentement vers 0 pendant que la page d'arrivée, encore vide, se
+ * révèle bien plus courte : on passe une demi-seconde garé dans son footer.
+ *
+ * `behavior: 'instant'` court-circuite la règle CSS pour ce seul appel — il ne
+ * la désactive pas, le bouton « retour en haut » garde sa glissade, et une ancre
+ * aussi.
+ */
+function remonterSansAnimation(): void {
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 }
 
 /** L'URL sans ses paramètres ni son ancre. */

@@ -1,132 +1,134 @@
-// Assistant Kaikun 360 (F10.1) — bulle flottante + panneau de conversation.
+// Assistant Kaikun 360 — le TIROIR de conversation (F10.5).
 //
-// ⚠️ LE COIN BAS-DROITE EST PARTAGÉ. Trois éléments fixes s'y côtoient déjà :
-//   · `app-scroll-top`  — cercle de 52 px, z-index 900, tout en bas ;
-//   · `app-pwa-banner`  — bandeau, z-index 950, décalé à gauche sur grand écran ;
-//   · l'assistant, ici.
-// La bulle se pose donc AU-DESSUS du bouton « retour en haut » (même colonne,
-// décalée d'une hauteur de bouton), et le panneau déployé passe devant tout le
-// reste : c'est le seul de ces éléments que l'utilisateur a demandé à voir.
+// ⚠️ Il n'y a plus de bulle flottante ici : le lanceur vit dans les en-têtes
+// (`assistant-launcher.scss`). Le coin bas-droite est donc rendu à ses deux
+// occupants d'origine, `app-scroll-top` (z-index 900) et `app-pwa-banner` (950).
+//
+// Le tiroir glisse depuis le bord DROIT vers la gauche et tient toute la
+// hauteur. Ce qu'on y gagne, et qui était la raison du changement : une fenêtre
+// flottante de 380 px sur 600 laissait aux résultats la place d'une carte et
+// demie ; sur toute la hauteur et 480 px de large, une réponse à cinq annonces
+// se lit sans que la conversation sorte de l'écran.
 
 :host {
   // Le composant n'occupe aucune place dans le flux : tout est en position fixe.
   display: contents;
 }
 
-// Repères communs au lanceur et au panneau, pour que les deux restent alignés
-// si l'on retouche l'un.
-$marge: clamp(16px, 3vw, 28px);
-$taille-bulle: 56px;
-
 // =============================================================================
-// Bulle flottante (lanceur)
+// Voile de fond
 // =============================================================================
 
-.ia-bulle {
+.ia-voile {
   position: fixed;
-  right: $marge;
-  // Empilée au-dessus de `app-scroll-top` (52 px + une respiration).
-  bottom: calc(#{$marge} + 66px);
-  z-index: 920;
+  inset: 0;
+  z-index: 955; // sous le tiroir (960), au-dessus de tout le reste
+  background: rgb(3 25 63 / 38%);
 
-  width: $taille-bulle;
-  height: $taille-bulle;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-
-  background: var(--k-brand);
-  color: var(--k-white);
-  box-shadow:
-    0 8px 24px rgb(3 72 251 / 32%),
-    0 2px 6px rgb(3 25 63 / 18%);
-
-  transition:
-    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
-    background 0.2s ease,
-    box-shadow 0.25s ease;
-
-  svg {
-    width: 26px;
-    height: 26px;
+  // Le voile s'allume un peu plus vite qu'il ne s'éteint : à l'ouverture il doit
+  // avoir déjà assombri la page quand le tiroir arrive dessus ; à la fermeture,
+  // il accompagne le tiroir jusqu'au bout plutôt que de le lâcher à mi-course.
+  &.is-entree {
+    animation: ia-voile-parait 200ms ease-out both;
   }
 
-  &:hover {
-    background: var(--k-brand-600);
-    transform: translateY(-2px) scale(1.04);
-  }
-
-  &:focus-visible {
-    outline: 3px solid var(--k-gold);
-    outline-offset: 3px;
-  }
-
-  // Panneau ouvert : la bulle devient la croix de fermeture. Sur petit écran le
-  // panneau occupe tout l'espace, la bulle disparaît (sa croix est dans l'en-tête).
-  &.is-ouvert {
-    background: var(--k-navy);
-
-    @media (max-width: 640px) {
-      display: none;
-    }
+  &.is-sortie {
+    animation: ia-voile-parait 240ms ease-in reverse both;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    transition: none;
-
-    &:hover {
-      transform: none;
+    &.is-entree,
+    &.is-sortie {
+      animation: none;
     }
   }
 }
 
+@keyframes ia-voile-parait {
+  from {
+    opacity: 0;
+  }
+}
+
 // =============================================================================
-// Panneau
+// Tiroir
 // =============================================================================
 
-.ia-panneau {
+// Retrait du tiroir par rapport aux bords de l'écran. ⚠️ C'est LUI qui rend les
+// angles arrondis visibles : collé aux quatre côtés, un arrondi ne ferait
+// qu'ouvrir quatre encoches sur la page du dessous. Le tiroir flotte donc, et
+// le voile passe derrière ce liseré.
+$retrait: clamp(10px, 1.6vw, 18px);
+
+.ia-tiroir {
   position: fixed;
-  right: $marge;
-  bottom: calc(#{$marge} + 66px + #{$taille-bulle} + 12px);
+  top: $retrait;
+  right: $retrait;
+  bottom: $retrait;
   z-index: 960;
 
   display: flex;
   flex-direction: column;
-  width: min(380px, calc(100vw - 2 * #{$marge}));
-  // `dvh` et non `vh` : sur mobile, la barre d'adresse mange une partie de
-  // `vh` et le champ de saisie se retrouve sous le bord de l'écran.
-  max-height: min(560px, calc(100dvh - 180px));
+  width: min(480px, calc(100vw - 2 * #{$retrait}));
 
   background: var(--k-card);
   border: 1px solid var(--k-line);
-  border-radius: var(--k-radius-lg);
-  box-shadow: var(--k-shadow-lg);
+  // Franchement arrondi (22 px) : c'est ce qui distingue une carte posée sur la
+  // page d'un pan d'interface soudé au bord de l'écran.
+  border-radius: 22px;
+  box-shadow:
+    -24px 0 60px rgb(3 25 63 / 20%),
+    0 8px 24px rgb(3 25 63 / 10%);
+  // ⚠️ Non négociable : l'en-tête navy et le fil crème vont jusqu'aux bords du
+  // tiroir. Sans cette coupe, leurs angles droits déborderaient de l'arrondi.
   overflow: hidden;
 
-  animation: ia-apparait 220ms ease-out both;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
+  // ⚠️ Deux courbes DIFFÉRENTES, et c'est volontaire. À l'arrivée, une courbe
+  // qui décélère longuement (le tiroir se pose). Au départ, une courbe qui
+  // accélère et un temps plus court : on n'attend pas après quelque chose que
+  // l'on vient de congédier. Une sortie qui reprend l'entrée à l'envers donne
+  // toujours l'impression d'un tiroir qui traîne.
+  &.is-entree {
+    animation: ia-glisse 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  // Petit écran : feuille pleine largeur ancrée en bas, comme les applications
-  // de messagerie. Une fenêtre de 380 px flottante y serait illisible.
+  &.is-sortie {
+    animation: ia-part 220ms cubic-bezier(0.55, 0, 0.85, 0.35) both;
+  }
+
+  // ⚠️ Le mouvement est ce qui fait comprendre d'où vient le tiroir — mais pour
+  // qui a demandé moins d'animation, il apparaît et s'efface en place. Aucune
+  // animation déclarée : Angular retire alors l'élément sans attendre.
+  @media (prefers-reduced-motion: reduce) {
+    &.is-entree,
+    &.is-sortie {
+      animation: none;
+    }
+  }
+
+  // Petit écran : le retrait se resserre et l'arrondi avec lui — 22 px de rayon
+  // sur une carte qui fait presque toute la largeur mangerait le texte des coins.
   @media (max-width: 640px) {
+    top: 8px;
     right: 8px;
-    left: 8px;
     bottom: 8px;
+    left: 8px;
     width: auto;
-    max-height: min(80dvh, calc(100dvh - 90px));
+    border-radius: 18px;
   }
 }
 
-@keyframes ia-apparait {
+@keyframes ia-glisse {
   from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.98);
+    // Le retrait en plus : sans lui, le tiroir commencerait sa course déjà
+    // visible de quelques pixels au bord droit.
+    transform: translateX(calc(100% + #{$retrait}));
+  }
+}
+
+@keyframes ia-part {
+  to {
+    transform: translateX(calc(100% + #{$retrait}));
   }
 }
 
@@ -224,6 +226,14 @@ $taille-bulle: 56px;
 
   // Les messages de l'utilisateur sont alignés à droite : c'est la convention
   // de toutes les messageries, et elle porte à elle seule « qui parle ».
+  // Une rangée de résultats prend toute la laisse : les 8 % laissés libres pour
+  // signaler « ceci est une bulle » coûteraient ici une demi-carte de moins à
+  // l'œil, dans un panneau qui n'a déjà que 380 px.
+  &.is-pleine-largeur {
+    max-width: 100%;
+    width: 100%;
+  }
+
   &.is-moi {
     align-self: flex-end;
     align-items: flex-end;
@@ -305,14 +315,146 @@ $taille-bulle: 56px;
 
 // --- Fiches de résultats ----------------------------------------------------
 
+// Écart entre deux cartes. ⚠️ Repris tel quel dans `glisser()` (assistant-panel.ts)
+// pour calculer le pas d'une flèche : si cette valeur change, changer les 8 px
+// là-bas — sinon le défilement se décale d'un cheveu à chaque clic.
+$gap-fiches: 0.5rem;
+
 .ia-fiches {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: $gap-fiches;
   width: 100%;
+}
+
+// --- Rangée défilante (carrousel) -------------------------------------------
+//
+// Le cadre porte trois classes, posées par le composant après mesure :
+//   · `is-deborde` — quelque chose dépasse, les flèches ont un sens ;
+//   · `is-debut`   — on est collé à gauche, la flèche « précédent » n'a rien à faire ;
+//   · `is-fin`     — idem à droite.
+// Aucune des trois n'existe au premier rendu : les flèches naissent donc
+// invisibles et n'apparaissent qu'une fois la mesure faite — jamais l'inverse,
+// qui donnerait un clignotement à chaque réponse.
+
+.ia-carrousel {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.ia-fiches.is-carrousel {
+  flex-direction: row;
+  overflow-x: auto;
+  // L'accroche : on ne s'arrête jamais sur une carte coupée en deux.
+  scroll-snap-type: x mandatory;
+  // La barre de défilement horizontale barrerait le fil d'un trait gris à chaque
+  // réponse. Les flèches (souris) et le glissement (doigt) suffisent à dire qu'il
+  // y a une suite — appuyés par le dégradé de bord, plus bas.
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  > .ia-fiche {
+    // 190 px : une carte et demie visible dans un panneau de 380 px. Une carte
+    // pleine laisserait croire qu'il n'y en a qu'une ; c'est le bord coupé de la
+    // suivante qui donne envie de pousser.
+    flex: 0 0 190px;
+    scroll-snap-align: start;
+    // Les cartes d'une même rangée s'alignent en hauteur, même si l'une n'a pas
+    // de lieu et l'autre pas de prix.
+    display: flex;
+
+    .ia-fiche__lien {
+      justify-content: flex-start;
+    }
+  }
+
+  // Un titre à rallonge tient sur deux lignes, puis se coupe : sans cela, une
+  // seule annonce bavarde imposerait sa hauteur à toute la rangée.
+  .ia-fiche__titre {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+}
+
+// Dégradé au bord droit tant qu'il reste des cartes : le seul indice dont
+// dispose quelqu'un qui n'a ni souris ni flèches.
+.ia-carrousel.is-deborde:not(.is-fin) .ia-fiches.is-carrousel {
+  mask-image: linear-gradient(to right, #000 84%, transparent 100%);
+}
+
+.ia-carrousel__fleche {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  // Posées PAR-DESSUS les bords de la piste : à côté, elles lui prendraient
+  // 60 px de large — un tiers d'une carte.
+  transform: translateY(-50%);
+
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--k-line);
+  border-radius: 50%;
+  background: var(--k-white);
+  color: var(--k-ink);
+  box-shadow: var(--k-shadow);
+  cursor: pointer;
+
+  // Invisibles par défaut. `visibility` et non `display` : une flèche cachée
+  // ainsi sort AUSSI de l'ordre de tabulation, on ne tabule pas dans le vide.
+  visibility: hidden;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  &.is-avant {
+    left: -6px;
+  }
+
+  &.is-apres {
+    right: -6px;
+  }
+
+  &:hover {
+    border-color: var(--k-brand);
+    color: var(--k-brand);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--k-brand);
+    outline-offset: 2px;
+  }
+
+  // Au doigt, le glissement EST le geste : deux pastilles de 28 px posées sur
+  // les cartes ne feraient que gêner la prise.
+  @media (hover: none) {
+    display: none;
+  }
+}
+
+.ia-carrousel.is-deborde .ia-carrousel__fleche {
+  visibility: visible;
+}
+
+// Bout de course : la flèche disparaît plutôt que de rester grisée. Un bouton
+// éteint invite quand même à cliquer.
+.ia-carrousel.is-debut .ia-carrousel__fleche.is-avant,
+.ia-carrousel.is-fin .ia-carrousel__fleche.is-apres {
+  visibility: hidden;
 }
 
 .ia-fiche {

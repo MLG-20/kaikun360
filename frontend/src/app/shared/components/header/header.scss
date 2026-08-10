@@ -222,6 +222,92 @@
   flex: 0 0 auto;
 }
 
+// Menu de compte : « Mon espace » replié, la déconnexion à l'intérieur.
+.compte {
+  position: relative;
+}
+
+.compte-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  .caret {
+    font-size: 0.8em;
+    line-height: 1;
+    transition: transform 0.16s ease;
+  }
+
+  .caret.is-ouvert {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .caret {
+      transition: none;
+    }
+  }
+}
+
+// Ancré à DROITE (`right: 0`) et non à gauche comme les méga-menus : c'est le
+// dernier bloc de la barre, un menu aligné à gauche déborderait de la fenêtre.
+.compte-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  min-width: 210px;
+  padding: 6px;
+  background: var(--k-white);
+  border: 1px solid var(--k-line);
+  border-radius: 14px;
+  box-shadow: var(--k-shadow-lg);
+  animation: mega-in 0.16s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.compte-item {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--k-ink);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--k-brand);
+    outline-offset: -2px;
+  }
+
+  // Le seul geste du menu dont on ne revient pas d'un clic : un filet l'isole
+  // des autres, pour qu'on ne le prenne pas en glissant.
+  &--sortie {
+    margin-top: 4px;
+    border-top: 1px solid var(--k-line);
+    border-radius: 0 0 9px 9px;
+    color: var(--k-muted);
+
+    &:hover {
+      background: color-mix(in srgb, var(--k-danger) 8%, var(--k-white));
+      color: var(--k-danger);
+    }
+  }
+}
+
 // Bouton texte « Déconnexion » (desktop) affiché à côté de « Mon espace ».
 .nav-logout {
   border: 0;
@@ -368,7 +454,10 @@
 
   .nav,
   .nav-cta,
-  .nav-logout {
+  .nav-logout,
+  // Le menu de compte suit ses deux boutons d'origine : sous 960 px, « Mon
+  // espace » et « Déconnexion » vivent dans le panneau mobile, plus bas.
+  .compte {
     display: none;
   }
 

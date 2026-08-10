@@ -63,9 +63,47 @@
 
     <!-- Actions -->
     <div class="actions">
+      <!-- L'assistant est une entrée du produit, pas un gadget flottant : il se
+           tient ici, à côté de « Mon espace ». Le bouton n'ouvre rien lui-même,
+           il bascule l'état que le tiroir observe. -->
+      <app-assistant-launcher />
+
       @if (isAuthenticated()) {
-        <a class="k-btn k-btn--ghost nav-cta" [routerLink]="spaceHome()">Mon espace</a>
-        <button class="nav-logout" type="button" (click)="logout()">Déconnexion</button>
+        <!-- ⚠️ « Mon espace » et « Déconnexion » tenaient côte à côte dans la
+             barre. À deux boutons pleins, ils poussaient la navigation qui se
+             cassait en deux lignes (« Séjours & / Tourisme »). Ils sont
+             maintenant repliés dans un seul menu : la barre respire, et la
+             déconnexion cesse d'être à un clic de distraction du reste. -->
+        <div class="compte" (focusout)="onCompteBlur($event)">
+          <button
+            class="k-btn k-btn--ghost nav-cta compte-btn"
+            type="button"
+            aria-haspopup="menu"
+            [attr.aria-expanded]="compteOuvert()"
+            (click)="toggleCompte()"
+          >
+            Mon espace
+            <span class="caret" [class.is-ouvert]="compteOuvert()" aria-hidden="true">⌄</span>
+          </button>
+
+          @if (compteOuvert()) {
+            <div class="compte-menu" role="menu">
+              <a class="compte-item" [routerLink]="spaceHome()" role="menuitem">
+                Aller à mon espace
+              </a>
+              <!-- La déconnexion est séparée du reste par un filet : c'est le seul
+                   geste du menu dont on ne revient pas d'un clic. -->
+              <button
+                class="compte-item compte-item--sortie"
+                type="button"
+                role="menuitem"
+                (click)="logout()"
+              >
+                Déconnexion
+              </button>
+            </div>
+          }
+        </div>
       } @else {
         <a class="k-btn k-btn--primary nav-cta" routerLink="/auth/connexion">Connexion</a>
       }

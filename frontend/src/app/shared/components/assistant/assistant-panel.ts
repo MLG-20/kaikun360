@@ -2,7 +2,9 @@ import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
+  NgZone,
   PLATFORM_ID,
   computed,
   effect,
@@ -21,8 +23,14 @@ import { ASSISTANT_MAX_LENGTH, AssistantStore } from '../../../core/state/assist
 import { formatFcfa } from '../../format/fcfa';
 
 /**
- * Le panneau de l'**assistant Kaikun 360** (F10.1) : une bulle flottante qui
- * déploie une conversation.
+ * Le **tiroir** de l'assistant Kaikun 360 : une conversation qui glisse depuis le
+ * bord droit de l'écran, sur toute la hauteur.
+ *
+ * ── Il ne s'ouvre pas lui-même ──────────────────────────────────────────────
+ * Le bouton qui l'ouvre est ailleurs — `AssistantLauncherComponent`, posé dans
+ * les en-têtes. Les deux ne se connaissent pas : ils partagent l'état `estOuvert`
+ * du `AssistantStore`. La bulle flottante qui tenait ce rôle a disparu, elle
+ * recouvrait le contenu de chaque page sans qu'on le lui demande.
  *
  * ── Ce qu'il remplace ───────────────────────────────────────────────────────
  * Le prototype du client avait un bouton « Téranga IA » qui ouvrait six phrases
@@ -31,11 +39,11 @@ import { formatFcfa } from '../../format/fcfa';
  * a traversé un outil serveur.
  *
  * ── Où il apparaît, et où il n'apparaît PAS ─────────────────────────────────
- * Monté dans le layout public (`main-layout`) et dans le shell des quatre
- * espaces connectés (`space-layout`). **Pas dans le back-office** : ses outils
- * de gouvernance n'existent qu'en F10.3, une bulle qui ne saurait rien faire y
- * serait un décor. **Pas dans le parcours d'authentification** non plus : on
- * n'interrompt pas quelqu'un qui saisit un mot de passe.
+ * Monté dans le layout public (`main-layout`), dans le shell des quatre espaces
+ * connectés (`space-layout`) et au back-office (`backoffice-layout`, avec
+ * `variante="back-office"` depuis que ses outils de gouvernance existent).
+ * **Pas dans le parcours d'authentification** : on n'interrompt pas quelqu'un
+ * qui saisit un mot de passe.
  *
  * ── Ce qui n'est pas ici ────────────────────────────────────────────────────
  * Ni la conversation, ni l'appel réseau, ni l'exécution des gestes : tout cela
@@ -51,6 +59,7 @@ import { formatFcfa } from '../../format/fcfa';
 })
 export class AssistantPanelComponent {
   private readonly store = inject(AssistantStore);
+  private readonly zone = inject(NgZone);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   /**
@@ -149,10 +158,40 @@ export class AssistantPanelComponent {
         requestAnimationFrame(() => this.champ()?.nativeElement.focus());
       }
     });
-  }
 
-  protected basculer(): void {
-    this.store.basculer();
+    // Rangées de résultats : chaque réponse neuve amène ses pistes, qu'il faut
+    // mesurer (les flèches ne s'affichent que si quelque chose dépasse) et
+    // écouter. `requestAnimationFrame` pour la même raison qu'au-dessus : avant
+    // le rendu, `scrollWidth` vaut celui d'une piste vide.
+    effect(() => {
+      this.bulles().length;
+
+      if (!this.isBrowser || !this.ouvert()) {
+        return;
+      }
+
+      requestAnimationFrame(() => this.reglerRangees());
+    });
+
+    // Le panneau change de largeur (rotation du téléphone, fenêtre redimensionnée)
+    // sans qu'une bulle arrive : sans cette veille, une flèche resterait affichée
+    // alors que plus rien ne dépasse — ou l'inverse, plus gênant encore.
+    if (this.isBrowser && typeof ResizeObserver !== 'undefined') {
+      // Hors zone : redimensionner ne change aucun signal, seulement des classes.
+      const veille = this.zone.runOutsideAngular(
+        () => new ResizeObserver(() => this.reglerRangees()),
+      );
+
+      effect(() => {
+        const element = this.fil()?.nativeElement;
+        veille.disconnect(); // le fil précédent a été détruit avec le panneau
+        if (element) {
+          veille.observe(element);
+        }
+      });
+
+      inject(DestroyRef).onDestroy(() => veille.disconnect());
+    }
   }
 
   protected fermer(): void {
@@ -201,6 +240,114 @@ export class AssistantPanelComponent {
    */
   protected ouvrirFiche(item: AssistantItem): void {
     this.store.executer({ kind: 'link', label: '', payload: { url: item['url'] } });
+  }
+
+  // ==========================================================================
+  // Rangées de résultats (carrousel)
+  //
+  // Les annonces défilent horizontalement plutôt que de s'empiler : cinq villas
+  // empilées occupaient toute la hauteur du fil et poussaient la conversation
+  // hors de vue. Le défilement lui-même est celui du navigateur (`overflow-x` +
+  // `scroll-snap`), pas une mécanique maison : le glissement au doigt, la molette
+  // inclinée et le déplacement au clavier — quand la tabulation atteint une carte
+  // hors cadre, le navigateur l'amène — fonctionnent alors sans une ligne de JS.
+  // Ne restent ici que les deux choses que CSS ne sait pas faire : savoir si
+  // quelque chose dépasse, et avancer d'une carte au clic.
+  // ==========================================================================
+
+  /** Pistes déjà écoutées — une seule écoute par rangée, même après un redessin. */
+  private readonly pistesEcoutees = new WeakSet<HTMLElement>();
+
+  /**
+   * Ces résultats se parcourent-ils en rangée ?
+   *
+   * Non pour la FAQ : une question et sa réponse se LISENT, les couper en cartes
+   * de 190 px les rendrait illisibles. Non plus pour un résultat unique — un
+   * carrousel d'un seul élément n'est qu'une carte étroite sans raison.
+   */
+  protected enRangee(items: AssistantItem[]): boolean {
+    return items.length > 1 && !this.estFaq(items[0]);
+  }
+
+  /**
+   * Avance (ou recule) d'une carte.
+   *
+   * Appelé depuis le gabarit avec la référence de la piste : c'est la rangée
+   * cliquée qui bouge, pas la première du fil.
+   */
+  protected glisser(piste: HTMLElement, sens: 1 | -1): void {
+    const carte = piste.querySelector<HTMLElement>('.ia-fiche');
+
+    // Un pas = une carte + l'espace qui la sépare de la suivante (0.5 rem, soit
+    // 8 px — miroir du `gap` de la feuille de style). Sans carte à mesurer, on
+    // avance d'une fenêtre presque pleine, en laissant un repère visible.
+    const pas = carte ? carte.getBoundingClientRect().width + 8 : piste.clientWidth * 0.8;
+
+    piste.scrollBy({
+      left: sens * pas,
+      behavior: this.animationReduite() ? 'auto' : 'smooth',
+    });
+  }
+
+  /**
+   * Mesure toutes les rangées du fil, et pose l'écoute du défilement sur celles
+   * qui viennent d'apparaître.
+   *
+   * ⚠️ Le DOM est parcouru à la main plutôt que par des `viewChildren` : les
+   * pistes naissent à l'intérieur d'une double boucle `@for`, et l'on n'a besoin
+   * que de leur élément — un signal de plus par bulle coûterait plus qu'il ne
+   * rapporte.
+   */
+  private reglerRangees(): void {
+    const racine = this.fil()?.nativeElement;
+    if (!racine) {
+      return;
+    }
+
+    for (const cadre of Array.from(racine.querySelectorAll<HTMLElement>('.ia-carrousel'))) {
+      const piste = cadre.querySelector<HTMLElement>('.ia-fiches');
+      if (!piste) {
+        continue;
+      }
+
+      if (!this.pistesEcoutees.has(piste)) {
+        this.pistesEcoutees.add(piste);
+
+        // `passive` : on ne bloquera jamais le défilement, autant le promettre au
+        // navigateur. Hors zone Angular : voir le commentaire du gabarit.
+        this.zone.runOutsideAngular(() =>
+          piste.addEventListener('scroll', () => this.majBords(cadre, piste), { passive: true }),
+        );
+      }
+
+      this.majBords(cadre, piste);
+    }
+  }
+
+  /**
+   * Pose sur le cadre l'état de sa piste, que la feuille de style traduit en
+   * flèches visibles ou non.
+   *
+   * Écrit des classes directement, sans passer par un signal : rien de ce qui est
+   * décidé ici ne concerne le gabarit, et un cycle de détection par image de
+   * défilement se paierait cher sur un téléphone modeste.
+   */
+  private majBords(cadre: HTMLElement, piste: HTMLElement): void {
+    // Tolérance : les largeurs de cartes sont fractionnaires, et `scrollLeft`
+    // n'atteint pas toujours exactement le maximum théorique.
+    const marge = 2;
+
+    cadre.classList.toggle('is-deborde', piste.scrollWidth - piste.clientWidth > marge);
+    cadre.classList.toggle('is-debut', piste.scrollLeft <= marge);
+    cadre.classList.toggle(
+      'is-fin',
+      piste.scrollLeft + piste.clientWidth >= piste.scrollWidth - marge,
+    );
+  }
+
+  /** L'utilisateur a-t-il demandé moins d'animation ? (réglage du système) */
+  private animationReduite(): boolean {
+    return this.isBrowser && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   // ==========================================================================

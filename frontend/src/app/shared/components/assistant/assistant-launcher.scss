@@ -1,0 +1,72 @@
+// Déclencheur de l'assistant dans les en-têtes (F10.5).
+//
+// Les trois en-têtes qui l'accueillent — public, espaces connectés, back-office —
+// sont sur fond blanc : un seul habillage suffit, inutile de le paramétrer.
+
+:host {
+  display: inline-flex;
+}
+
+.ia-lanceur {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.42rem 0.8rem;
+  border: 1px solid var(--k-line-strong);
+  border-radius: var(--k-radius-pill);
+  background: var(--k-white);
+  color: var(--k-ink);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+
+  &:hover {
+    border-color: var(--k-brand);
+    background: var(--k-brand-050);
+    color: var(--k-brand-600);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--k-brand);
+    outline-offset: 2px;
+  }
+
+  // Tiroir ouvert : le bouton reste allumé. Il ne se transforme PAS en croix —
+  // la fermeture est dans le tiroir, et un bouton qui change de sens sous le
+  // curseur se reclique par erreur.
+  &.is-ouvert {
+    border-color: var(--k-brand);
+    background: var(--k-brand);
+    color: var(--k-white);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// Sous 900 px, la place du header est disputée : le bouton se réduit à sa
+// pastille ronde.
+@media (max-width: 900px) {
+  .ia-lanceur {
+    padding: 0.42rem;
+    border-radius: 50%;
+  }
+
+  .ia-lanceur__mot {
+    display: none;
+  }
+}
