@@ -155,3 +155,41 @@
     grid-column: 1 / -1;
   }
 }
+
+// --- Mise à la corbeille (F11.4) --------------------------------------------
+.opd-trash {
+  // Le geste destructeur ne se signale qu'au survol : au repos il reste discret,
+  // à côté de l'action principale qui, elle, doit attirer l'œil.
+  color: var(--k-muted);
+
+  &:hover {
+    color: var(--k-danger);
+    border-color: var(--k-danger);
+  }
+}
+
+.opd-trash-confirm {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--k-line-strong);
+  border-radius: var(--k-radius);
+  background: var(--k-cream);
+
+  p {
+    margin: 0 0 12px;
+    max-width: 68ch;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+}
+
+.opd-trash-error {
+  color: var(--k-danger);
+  font-weight: 500;
+}
+
+.opd-trash-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}

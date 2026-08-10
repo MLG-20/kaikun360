@@ -113,6 +113,24 @@ export class PropertyManagementService {
     return this.http.get<ApiEnvelope<Property>>(`${this.api}/properties/mine/${id}`);
   }
 
+  /**
+   * DELETE /properties/{id} — met le bien à la CORBEILLE (F11.4).
+   *
+   * ⚠️ Ce n'est pas un effacement : le bien quitte la liste du propriétaire et
+   * reste récupérable 30 jours depuis l'écran « Corbeille ». Ses photos et ses
+   * documents sont conservés — ils ne partent qu'à la purge définitive.
+   *
+   * ⚠️ **Peut échouer en 422 avec un motif à AFFICHER tel quel** : un bien
+   * engagé (réservation en cours, mandat de gestion actif) est refusé, et le
+   * message du serveur dit ce qu'il faut faire pour débloquer. L'avaler pour
+   * afficher « une erreur est survenue » laisserait le propriétaire sans issue.
+   */
+  trash(id: number | string): Observable<ApiEnvelope<{ deleted: boolean; retention_days: number }>> {
+    return this.http.delete<ApiEnvelope<{ deleted: boolean; retention_days: number }>>(
+      `${this.api}/properties/${id}`,
+    );
+  }
+
   /** POST /properties — dépose un bien (auth + vérifié). */
   create(payload: CreatePropertyPayload): Observable<ApiEnvelope<{ property: Property }>> {
     return this.http.post<ApiEnvelope<{ property: Property }>>(

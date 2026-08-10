@@ -11,6 +11,7 @@ use App\Modules\Core\Models\Profile;
 use App\Modules\Explore\Enums\ExperienceStatus;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Mobility\Enums\VehicleStatus;
+use App\Support\Trash\ListingTrash;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -173,11 +174,18 @@ class OfferLifecycleJourneyTest extends TestCase
     // =========================================================================
 
     /**
-     * Une offre jamais réservée disparaît pour de bon — avec ses photos et les
-     * fichiers correspondants, sinon le disque garderait des images que plus
-     * rien ne référence.
+     * Une offre jamais réservée part à la CORBEILLE, ses photos avec elle — puis
+     * tout disparaît à la purge des 30 jours, fichiers compris.
+     *
+     * ⚠️ **Ce test vérifie les deux moitiés, et c'est délibéré.** Il ne
+     * demandait autrefois qu'une chose : que tout disparaisse d'un coup. Depuis
+     * la corbeille (F11.4), l'effacement se fait en DEUX temps, et le défaut
+     * qui guette est précisément entre les deux — détruire les fichiers dès la
+     * mise à la corbeille rendrait la restauration illusoire, l'offre revenant
+     * sans une seule image. La vérification du milieu (les photos survivent)
+     * est donc le cœur du test, pas un détail.
      */
-    public function test_une_offre_jamais_reservee_est_reellement_supprimee_avec_ses_photos(): void
+    public function test_une_offre_jamais_reservee_part_a_la_corbeille_puis_disparait_a_la_purge(): void
     {
         $loueur = $this->prestataire();
         $vehicle = Vehicle::factory()->published()->create(['provider_id' => $loueur->id]);
@@ -193,6 +201,21 @@ class OfferLifecycleJourneyTest extends TestCase
             ->assertJsonPath('data.deleted', true)
             ->assertJsonPath('data.reason', null);
 
+        // — Premier temps : la corbeille. La ligne est datée, PAS effacée…
+        $this->assertSoftDeleted('vehicles', ['id' => $vehicle->id]);
+
+        // …et les photos sont intactes, sans quoi « restaurer » serait un mot vide.
+        $this->assertSame(1, Media::query()->count());
+        Storage::disk('public')->assertExists($chemin);
+
+        // — Second temps : le délai s'écoule, la purge passe.
+        Vehicle::withTrashed()->findOrFail($vehicle->id)
+            ->forceFill(['deleted_at' => now()->subDays(ListingTrash::JOURS_DE_CONSERVATION + 1)])
+            ->saveQuietly();
+
+        $this->artisan('corbeille:purger')->assertExitCode(0);
+
+        // Là seulement tout s'en va : la ligne, la métadonnée ET le fichier.
         $this->assertDatabaseMissing('vehicles', ['id' => $vehicle->id]);
         $this->assertSame(0, Media::query()->count());
         Storage::disk('public')->assertMissing($chemin);
@@ -288,7 +311,8 @@ class OfferLifecycleJourneyTest extends TestCase
         $this->deleteJson("/api/v1/experiences/{$jamaisReserve->id}")
             ->assertOk()
             ->assertJsonPath('data.deleted', true);
-        $this->assertDatabaseMissing('tourism_experiences', ['id' => $jamaisReserve->id]);
+        // F11.4 — corbeille : la ligne est rangée, pas effacée.
+        $this->assertSoftDeleted('tourism_experiences', ['id' => $jamaisReserve->id]);
 
         $this->deleteJson("/api/v1/experiences/{$dejaReserve->id}")
             ->assertOk()

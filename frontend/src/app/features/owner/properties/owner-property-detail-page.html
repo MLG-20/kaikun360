@@ -33,12 +33,53 @@
       <!-- Bandeau explicatif du statut -->
       <p class="opd-status-hint" [attr.data-tone]="status().tone">{{ status().hint }}</p>
 
-      <!-- Action : éditer le bien -->
+      <!-- Actions : éditer le bien, ou le ranger -->
       <div class="opd-actions">
         <a class="k-btn k-btn--primary" [routerLink]="['/espace-proprietaire/biens', p.id, 'modifier']">
           Modifier le bien
         </a>
+
+        <!--
+          F11.4 — Mise à la corbeille. Le geste vit sur la FICHE et non dans la
+          liste : ranger un bien est une décision, pas un tri en rafale.
+          Deux temps obligatoires — on ne range jamais du premier clic.
+        -->
+        @if (!askingTrash()) {
+          <button type="button" class="k-btn k-btn--ghost opd-trash" (click)="askTrash(true)">
+            Mettre à la corbeille
+          </button>
+        }
       </div>
+
+      @if (askingTrash()) {
+        <div class="opd-trash-confirm">
+          <p>
+            <strong>Mettre ce bien à la corbeille ?</strong>
+            Il quittera votre liste mais restera récupérable <strong>30 jours</strong>,
+            avec ses photos et ses documents. Passé ce délai, il sera supprimé
+            définitivement.
+          </p>
+
+          <!-- Motif de refus du serveur, affiché tel quel : il dit ce qu'il faut
+               faire pour débloquer (terminer une réservation, clore un mandat). -->
+          @if (trashError(); as err) {
+            <p class="opd-trash-error" role="alert">{{ err }}</p>
+          }
+
+          <div class="opd-trash-actions">
+            <button
+              type="button"
+              class="k-btn k-btn--primary"
+              [disabled]="trashing()"
+              (click)="confirmTrash()">
+              {{ trashing() ? 'Mise à la corbeille…' : 'Confirmer' }}
+            </button>
+            <button type="button" class="k-btn k-btn--ghost" (click)="askTrash(false)">
+              Annuler
+            </button>
+          </div>
+        </div>
+      }
 
       <!-- Photos du bien (couverture d'abord) -->
       <section class="opd-block">

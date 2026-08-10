@@ -43,3 +43,17 @@ Schedule::command('reservations:cloturer')
 Schedule::command('reversements:calculer')
     ->dailyAt('03:30')
     ->withoutOverlapping();
+
+// F11.4 — vide la corbeille des espaces utilisateurs : supprime DÉFINITIVEMENT
+// les annonces qui y dorment depuis plus de 30 jours.
+//
+// ⚠️ C'est la moitié invisible de la corbeille. Sans cette ligne, « supprimé »
+// ne veut plus rien dire : les annonces s'accumulent en base pour toujours, et
+// le compte à rebours affiché à l'utilisateur (« supprimé définitivement dans
+// 12 jours ») devient un mensonge.
+//
+// ⚠️ Passée à 04:00, donc APRÈS `reversements:calculer` : une annonce effacée
+// ne doit pas disparaître sous une dette qu'on est en train de calculer.
+Schedule::command('corbeille:purger')
+    ->dailyAt('04:00')
+    ->withoutOverlapping();

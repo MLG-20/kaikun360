@@ -40,6 +40,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Documents d'un bien (F4.5) — liste, dépôt et suppression, réservés au
     // propriétaire via la policy `manageDocuments`. Le téléchargement, lui,
     // passe par une URL signée dédiée (définie plus bas, hors auth session).
+    // F11.4 — Mettre un bien à la corbeille. Cette route N'EXISTAIT PAS : un
+    // bien ne pouvait qu'être archivé, donc rester à vie dans la liste de son
+    // propriétaire. C'est précisément ce que la corbeille vient soulager.
+    // ⚠️ `whereNumber` comme les autres, sinon `/properties/mine` entrerait ici.
+    Route::delete('/properties/{property}', [PropertyManagementController::class, 'destroy'])
+        ->whereNumber('property');
+
     Route::get('/properties/{property}/documents', [PropertyManagementController::class, 'listDocuments'])
         ->whereNumber('property');
     Route::post('/properties/{property}/documents', [PropertyManagementController::class, 'storeDocument'])

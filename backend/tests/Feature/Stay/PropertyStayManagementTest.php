@@ -147,7 +147,11 @@ class PropertyStayManagementTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.message', 'Mode nuitées retiré.');
 
-        $this->assertDatabaseMissing('stays', ['property_id' => $property->id]);
+        // ⚠️ Depuis la corbeille (F11.4), retirer le mode nuitées n'efface plus
+        // la ligne : la configuration part à la corbeille du propriétaire et
+        // reste récupérable 30 jours. Le bien, lui, cesse bien d'être réservable
+        // à la nuit — c'est ce que vérifient les tests de catalogue.
+        $this->assertSoftDeleted('stays', ['property_id' => $property->id]);
     }
 
     public function test_retirer_le_mode_nuitees_desactive_si_reservations(): void

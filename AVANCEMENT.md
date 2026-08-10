@@ -174,6 +174,12 @@ sécurité renforcé — c'est là que tout passe.
 - **Design** : identité visuelle cohérente (charte Kaikun), interface moderne,
   **animations soignées** (apparitions au défilement, survols premium,
   signature « orbitale » du hero).
+- **Rien ne se perd** : ce que vous retirez de vos listes (un bien vendu, un
+  véhicule cédé, un circuit qui ne tourne plus) part dans une **corbeille** et
+  reste récupérable **30 jours**, avec un compte à rebours visible. Vous pouvez
+  donc alléger vos écrans sans craindre de perdre quelque chose. ⚠️ Un élément
+  restauré revient **hors ligne** : c'est vous qui le republiez, après avoir
+  vérifié que son prix et ses informations sont toujours justes.
 - **Confort de travail au quotidien** : dans le back-office comme dans les
   quatre espaces, le **menu latéral se replie d'un clic** en une colonne
   d'icônes et rend la largeur au contenu — utile sur un petit portable, face à

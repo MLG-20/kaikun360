@@ -599,6 +599,42 @@ Détail complet, règles de rédaction et ajout d'un e-mail :
 
 ---
 
+## Corbeille des annonces — effacement différé (F11.4)
+
+Les **cinq annonces** qui remplissent les onglets d'un espace ne sont plus
+effacées : elles partent à la corbeille de leur propriétaire, récupérables
+**30 jours**, puis supprimées définitivement par tâche planifiée.
+
+| | |
+| --- | --- |
+| Tables concernées | `properties`, `vehicles`, `mobility_services`, `tourism_experiences`, `stays` |
+| Mécanisme | trait `SoftDeletes` + `deleted_at` **indexé** |
+| Règles | [`app/Support/Trash/ListingTrash.php`](app/Support/Trash/ListingTrash.php) |
+| API | `GET /me/trash` · `POST /me/trash/{type}/{id}/restore` |
+| Purge | `php artisan corbeille:purger` (planifiée à 04h00, `--dry-run` disponible) |
+
+⚠️ **`deleted_at` est indexé, et ce n'est pas du confort.** `SoftDeletes` ajoute
+un `where deleted_at is null` à **toutes** les requêtes de ces tables — y compris
+le catalogue public, l'écran le plus consulté du site.
+
+⚠️ **Ce qui sort de la corbeille sort ÉTEINT.** `ListingTrash::eteindre()` remet
+l'annonce en `archive` / `suspendu` : elle ne se republie jamais d'elle-même.
+Entre-temps le bien a pu être vendu ou le prix devenir faux.
+
+⚠️ **Ne pas ajouter de seconde garde sur les offres de prestataire.** Véhicules,
+expériences et départs ont déjà leur doctrine depuis F8.19
+(`OfferRetirementService` : *toute* réservation, même annulée, interdit
+l'effacement et déclenche un retrait conservatoire). `ListingTrash::raisonDeBlocage()`
+est **réservée aux biens**, que rien ne couvrait.
+
+⚠️ **Les fichiers ne se détruisent qu'à la purge.** `OfferRetirementService::retirer()`
+effaçait les médias *avant* `delete()` ; devenu différé, ce `delete()` aurait
+envoyé l'offre à la corbeille sans ses images, et elle en serait revenue vide.
+`supprimerLesMedias()` n'est donc appelée que par `corbeille:purger` — ne
+l'appeler nulle part ailleurs.
+
+---
+
 ## Performance
 
 - **Index** de base de données sur les colonnes de filtrage/tri des catalogues.

@@ -1,0 +1,129 @@
+// Corbeille d'un espace connecté (F11.4).
+
+:host {
+  display: block;
+}
+
+.tr-head {
+  margin-bottom: 22px;
+
+  h1 {
+    font-family: var(--k-font-display);
+    font-size: clamp(24px, 3vw, 32px);
+    margin: 0 0 8px;
+  }
+
+  p {
+    max-width: 62ch;
+    margin: 0;
+  }
+}
+
+.tr-done {
+  margin: 0 0 18px;
+  padding: 11px 14px;
+  border-radius: var(--k-radius-sm);
+  background: rgba(56, 167, 116, 0.12);
+  color: var(--k-green-600);
+  font-size: 0.9rem;
+}
+
+.tr-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+  padding: 11px 14px;
+  border-radius: var(--k-radius-sm);
+  background: rgba(199, 59, 77, 0.1);
+  color: var(--k-danger);
+  font-size: 0.9rem;
+}
+
+.tr-empty {
+  padding: 34px 24px;
+  border: 1px dashed var(--k-line-strong);
+  border-radius: var(--k-radius-lg);
+  text-align: center;
+
+  p {
+    margin: 0 auto;
+    max-width: 52ch;
+
+    + p {
+      margin-top: 8px;
+    }
+  }
+}
+
+.tr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tr-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__type {
+    font-family: var(--k-font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--k-muted);
+  }
+
+  &__label {
+    font-weight: 600;
+    color: var(--k-ink);
+    // Un intitulé long ne doit pas repousser le bouton hors de la carte.
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Le compte à rebours est l'information qui fait AGIR : il vire au rouge
+  // sous une semaine, là où attendre commence à coûter quelque chose.
+  &__countdown {
+    font-size: 0.82rem;
+    color: var(--k-muted);
+
+    &.is-urgent {
+      color: var(--k-danger);
+      font-weight: 600;
+    }
+  }
+}
+
+.tr-note {
+  margin: 20px 0 0;
+  max-width: 68ch;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 560px) {
+  .tr-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .tr-item__label {
+    white-space: normal;
+  }
+}

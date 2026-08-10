@@ -53,6 +53,12 @@ import { AccountIcon } from './account-nav';
           <path d="M9.2 9.3a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.3-2.6 4" />
           <path d="M12 17.4h.01" />
         }
+        @case ('trash') {
+          <path d="M4 7h16" />
+          <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+          <path d="M6 7v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7" />
+          <path d="M10 11.5v5M14 11.5v5" />
+        }
         @case ('building') {
           <path d="M3 21h18" />
           <path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16" />

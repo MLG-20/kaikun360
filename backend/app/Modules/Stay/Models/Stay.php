@@ -9,6 +9,7 @@ use App\Support\Cache\CatalogCache;
 use Database\Factories\StayFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  */
 class Stay extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * Invalide le cache du catalogue des nuitées à chaque écriture (B17.2).

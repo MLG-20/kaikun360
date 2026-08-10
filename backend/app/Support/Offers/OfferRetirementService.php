@@ -94,10 +94,18 @@ class OfferRetirementService
         }
 
         DB::transaction(function () use ($offre) {
-            // ⚠️ Les fichiers d'abord, la ligne ensuite : supprimer l'offre sans
-            // ses images laisserait des fichiers orphelins sur le disque, que
-            // plus rien ne référencerait et que personne ne nettoierait jamais.
-            $this->supprimerLesMedias($offre);
+            // ⚠️ **LES MÉDIAS NE SONT PLUS EFFACÉS ICI** (F11.4), et c'est le
+            // point à ne surtout pas « re-corriger » en les remettant.
+            //
+            // Depuis la corbeille, ce `delete()` n'efface plus la ligne : il la
+            // met de côté 30 jours, récupérable. Détruire les fichiers au
+            // passage rendrait la restauration illusoire — l'offre reviendrait
+            // sans une seule photo, définitivement, alors même que l'écran
+            // promet de la rendre intacte.
+            //
+            // Le ménage des fichiers appartient désormais au SEUL moment où
+            // l'effacement devient irréversible : la purge des 30 jours
+            // (`corbeille:purger`), qui appelle `supprimerLesMedias()`.
             $offre->delete();
         });
 
@@ -105,9 +113,14 @@ class OfferRetirementService
     }
 
     /**
-     * Efface la galerie de l'offre, fichiers physiques compris.
+     * Efface la galerie d'une offre, fichiers physiques compris.
+     *
+     * ⚠️ Publique depuis F11.4 : c'est la commande de purge qui l'appelle, au
+     * moment où l'effacement devient définitif. Ne l'appeler nulle part
+     * ailleurs — tout autre point d'appel détruirait les images d'une offre
+     * encore récupérable.
      */
-    private function supprimerLesMedias(Model $offre): void
+    public function supprimerLesMedias(Model $offre): void
     {
         $medias = Media::query()
             ->where('mediable_type', $offre->getMorphClass())

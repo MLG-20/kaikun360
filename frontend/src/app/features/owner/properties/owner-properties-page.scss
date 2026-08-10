@@ -131,3 +131,22 @@
   font-size: 0.9rem;
   color: var(--k-muted);
 }
+
+// Accusé de réception d'une mise à la corbeille (F11.4).
+.op-trashed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+  padding: 11px 14px;
+  border-radius: var(--k-radius-sm);
+  background: rgba(56, 167, 116, 0.12);
+  color: var(--k-green-600);
+  font-size: 0.9rem;
+
+  a {
+    color: var(--k-brand);
+    font-weight: 600;
+  }
+}

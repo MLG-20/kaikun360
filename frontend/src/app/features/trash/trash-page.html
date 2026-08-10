@@ -1,0 +1,68 @@
+<header class="tr-head">
+  <h1>Corbeille</h1>
+  <p class="k-muted">
+    Ce que vous retirez de vos listes atterrit ici et reste récupérable
+    {{ retentionDays() }} jours. Passé ce délai, c'est supprimé définitivement.
+  </p>
+</header>
+
+@if (done()) {
+  <p class="tr-done" role="status">{{ done() }}</p>
+}
+
+@if (error()) {
+  <p class="tr-error" role="alert">
+    {{ error() }}
+    <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+  </p>
+}
+
+@if (loading()) {
+  <p class="k-muted">Chargement…</p>
+} @else if (empty()) {
+  <!-- Un vide qui EXPLIQUE : une corbeille vide est le cas normal, pas une
+       panne. On en profite pour dire d'où viennent les éléments, sinon la
+       rubrique reste une énigme tant qu'on ne s'en est jamais servi. -->
+  <div class="tr-empty">
+    <p><strong>Votre corbeille est vide.</strong></p>
+    <p class="k-muted">
+      Quand vous retirez une annonce de vos listes, elle vient ici — le temps de
+      changer d'avis. Rien n'est perdu tant que le délai court.
+    </p>
+  </div>
+} @else {
+  <ul class="tr-list">
+    @for (item of items(); track key(item)) {
+      <li class="tr-item k-card">
+        <div class="tr-item__main">
+          <span class="tr-item__type">{{ typeLabel(item.type) }}</span>
+          <span class="tr-item__label">{{ item.label }}</span>
+          <span class="tr-item__countdown" [class.is-urgent]="urgent(item.days_left)">
+            {{ countdown(item.days_left) }}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="k-btn k-btn--primary"
+          [disabled]="restoring() === key(item)"
+          (click)="restore(item)">
+          @if (restoring() === key(item)) {
+            Restauration…
+          } @else {
+            Restaurer
+          }
+        </button>
+      </li>
+    }
+  </ul>
+
+  <!-- ⚠️ Dit AVANT le clic, pas après : une annonce restaurée ne revient pas
+       en ligne toute seule. Sans cette phrase, on croit à un bug en la
+       cherchant au catalogue. -->
+  <p class="tr-note k-muted">
+    Un élément restauré revient dans votre liste <strong>hors ligne</strong>.
+    C'est vous qui le republiez ensuite — le temps de vérifier que son prix et
+    ses informations sont toujours justes.
+  </p>
+}

@@ -11,6 +11,16 @@
   </a>
 </section>
 
+<!-- F11.4 — Accusé de réception après une mise à la corbeille. Sans lui, le
+     bien aurait juste disparu de la liste, sans un mot : exactement la
+     sensation de perte que la corbeille cherche à éviter. -->
+@if (justTrashed()) {
+  <p class="op-trashed" role="status">
+    Le bien est dans votre corbeille : vous pouvez le restaurer pendant 30 jours.
+    <a routerLink="/espace-proprietaire/corbeille">Ouvrir la corbeille</a>
+  </p>
+}
+
 @if (loading()) {
   <p class="pf-state" role="status">Chargement de vos biens…</p>
 } @else if (loadError()) {

@@ -382,6 +382,28 @@ TypeScript miroir côté frontend Angular (phase F0).
 | PATCH | `/media/{media}/primary` | auth | `MediaController@setPrimary` |
 | DELETE | `/media/{media}` | auth | `MediaController@destroy` |
 
+### Corbeille des espaces (transversal, F11.4)
+
+| Méthode | URI | Accès | Contrôleur |
+| --- | --- | --- | --- |
+| GET | `/me/trash` | auth | `TrashController@index` |
+| POST | `/me/trash/{type}/{id}/restore` | auth | `TrashController@restore` |
+
+> Ce qu'un utilisateur retire de ses listes n'est plus effacé : l'annonce part à
+> la **corbeille**, récupérable **30 jours**, puis supprimée définitivement par
+> `php artisan corbeille:purger` (planifiée). `type` ∈ {property, stay, vehicle,
+> experience, mobility} — les mêmes slugs que les favoris.
+>
+> ⚠️ **Aucune route de suppression ici** : mettre à la corbeille reste le geste
+> des contrôleurs métier (`DELETE /properties/{id}`, `/vehicles/{id}`,
+> `/experiences/{id}`, `/mobility-services/{id}`, `/properties/{id}/stay`), qui
+> portent leurs policies et leurs refus. Ce contrôleur ne sait que **regarder**
+> et **restaurer**.
+>
+> ⚠️ **Ce qui revient de la corbeille revient ÉTEINT** (statut `archive` /
+> `suspendu`) : une annonce ne se republie jamais d'elle-même — entre-temps le
+> bien a pu être vendu ou le prix devenir faux.
+
 ### Favoris (transversal, polymorphe)
 
 | Méthode | URI | Accès | Contrôleur |

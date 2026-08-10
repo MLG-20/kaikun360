@@ -29,8 +29,10 @@
     </div>
   }
   @default {
-    <!-- Résultat du dernier retrait : « supprimé » et « retiré mais conservé »
-         ne veulent pas dire la même chose, et le prestataire doit le lire. -->
+    <!-- Résultat du dernier retrait : « parti à la corbeille » et « retiré du
+         catalogue mais conservé » ne veulent pas dire la même chose, et le
+         prestataire doit le lire. Le premier se récupère en un clic pendant
+         30 jours ; le second reste dans la liste, avec le statut « Retiré ». -->
     @if (removalNotice(); as notice) {
       <p class="of-notice" role="status">{{ notice }}</p>
     }
@@ -85,7 +87,12 @@
                   <span class="of-nophoto">Sans photo</span>
                 }
                 @if (pendingRemoval() === 'vehicle-' + v.id) {
-                  <p class="of-confirm">Retirer cette offre du catalogue ?</p>
+                  <!-- F11.4 — La question dit maintenant CE QUI VA SE PASSER.
+                       « Retirer du catalogue ? » laissait croire à un geste
+                       définitif : on n'osait pas ranger. -->
+                  <p class="of-confirm">
+                    Retirer cette offre ? Elle ira à la corbeille, récupérable 30 jours.
+                  </p>
                   <div class="of-confirm-actions">
                     <button
                       type="button"
@@ -161,7 +168,9 @@
                   <span class="of-nophoto">Sans photo</span>
                 }
                 @if (pendingRemoval() === 'departure-' + d.id) {
-                  <p class="of-confirm">Retirer ce départ du catalogue ?</p>
+                  <p class="of-confirm">
+                    Retirer ce départ ? Il ira à la corbeille, récupérable 30 jours.
+                  </p>
                   <div class="of-confirm-actions">
                     <button
                       type="button"
@@ -229,7 +238,9 @@
                   <span class="of-nophoto">Sans photo</span>
                 }
                 @if (pendingRemoval() === 'experience-' + x.id) {
-                  <p class="of-confirm">Retirer ce circuit du catalogue ?</p>
+                  <p class="of-confirm">
+                    Retirer ce circuit ? Il ira à la corbeille, récupérable 30 jours.
+                  </p>
                   <div class="of-confirm-actions">
                     <button
                       type="button"

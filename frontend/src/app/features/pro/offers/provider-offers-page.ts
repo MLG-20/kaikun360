@@ -187,9 +187,15 @@ export class ProviderOffersPageComponent {
   private announce(kind: OfferKind, resultat: OfferRemoval): void {
     const quoi = { vehicle: 'Le véhicule', departure: 'Le départ', experience: 'Le circuit' }[kind];
 
+    // ⚠️ F11.4 — cette phrase disait « a été supprimé, avec ses photos », et
+    // elle est devenue DOUBLEMENT fausse le jour de la corbeille : l'offre
+    // n'est plus effacée mais rangée 30 jours, et ses photos sont justement
+    // conservées pour qu'elle puisse revenir intacte. Une phrase fausse à cet
+    // endroit coûte cher : le prestataire renonce à ranger, ou croit avoir
+    // perdu son travail.
     this.removalNotice.set(
       resultat.deleted
-        ? `${quoi} a été supprimé, avec ses photos.`
+        ? `${quoi} est allé à la corbeille. Vous pouvez le restaurer pendant 30 jours.`
         : `${quoi} a été retiré du catalogue. ${resultat.reason ?? ''}`.trim(),
     );
   }

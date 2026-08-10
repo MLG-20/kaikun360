@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { PropertyManagementService } from '../../../core/api/property-management.service';
 import { PageMeta } from '../../../core/api/pagination.model';
@@ -30,6 +30,19 @@ import { propertyLocality, propertyStatus } from './property-status';
  */
 export class OwnerPropertiesPageComponent {
   private readonly properties = inject(PropertyManagementService);
+  private readonly route = inject(ActivatedRoute);
+
+  /**
+   * Accusé de réception d'une mise à la corbeille (F11.4).
+   *
+   * ⚠️ La fiche renvoie ici après avoir rangé un bien : sans ce message, le
+   * propriétaire retomberait sur une liste où son bien a simplement disparu,
+   * sans un mot — la sensation exacte d'avoir perdu quelque chose, qui est tout
+   * ce que la corbeille cherche à éviter.
+   */
+  protected readonly justTrashed = signal(
+    this.route.snapshot.queryParamMap.get('corbeille') !== null,
+  );
 
   // — État de l'écran —
   protected readonly loading = signal(true);

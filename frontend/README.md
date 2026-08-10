@@ -1577,6 +1577,32 @@ sombre serait invisible sur les deux.
 Sous `prefers-reduced-motion`, les trois grilles ne basculent plus — seule la
 couleur répond au survol.
 
+### Corbeille des espaces — ranger sans détruire (F11.4)
+
+Ce qu'on retire d'une liste (« Mes biens », « Mes offres »…) ne disparaît plus :
+ça part à la **corbeille**, récupérable 30 jours.
+
+- **Écran** : [`features/trash/`](src/app/features/trash/) — un **seul** écran
+  pour les cinq types d'annonces.
+- **Service** : [`core/api/trash.service.ts`](src/app/core/api/trash.service.ts).
+- **Monté dans les espaces propriétaire et prestataire seulement** : un client
+  ou une entreprise ne possède aucune annonce, sa corbeille serait vide à vie.
+
+⚠️ **Aucune suppression depuis cet écran, et c'est délibéré.** Ranger une
+annonce reste le geste de son propre écran, qui connaît ses règles et sait
+refuser (bien sous mandat actif, offre déjà réservée). La corbeille ne sait que
+**regarder** et **restaurer**.
+
+⚠️ **Un élément restauré revient hors ligne**, et l'écran le dit **avant** le
+clic. Sans cette phrase, on le cherche au catalogue et on croit à un bug.
+
+⚠️ **`days_left: 0` ne veut pas dire « déjà supprimé »** : la purge est une
+tâche planifiée qui passe une fois par nuit. L'écran dit donc « aujourd'hui »,
+seule formulation honnête.
+
+⚠️ La durée de conservation vient du **serveur** (`retention_days`), jamais
+écrite en dur côté écran : une seule source, pas deux vérités qui divergent.
+
 ### Commandes utiles
 
 ```bash

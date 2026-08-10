@@ -13,6 +13,7 @@ use App\Modules\Immo\Http\Resources\PropertyResource;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Immo\Models\PropertyDocument;
 use App\Support\ApiResponse;
+use App\Support\Trash\ListingTrash;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -151,6 +152,47 @@ class PropertyManagementController extends Controller
         return PropertyDocumentResource::collection(
             $property->documents()->latest()->get(),
         );
+    }
+
+    /**
+     * Met un bien à la corbeille. DELETE /api/v1/properties/{property}
+     *
+     * Nouvelle route en F11.4 : jusqu'ici un bien ne pouvait qu'être **archivé**,
+     * donc rester à vie dans la liste de son propriétaire. Un propriétaire qui
+     * a vendu trois biens en gardait trois lignes mortes pour toujours.
+     *
+     * ⚠️ **Ce n'est pas un effacement** : le bien part à la corbeille, d'où il
+     * revient pendant 30 jours. Ses documents et ses photos ne sont donc PAS
+     * touchés ici — ils ne partent qu'à la purge définitive, sans quoi un bien
+     * restauré reviendrait vide de ses pièces (`corbeille:purger`).
+     *
+     * ⚠️ **Un bien engagé ne part pas** : réservation en cours, mandat de
+     * gestion actif. La raison est renvoyée telle quelle pour être affichée —
+     * un refus sans motif laisse le propriétaire sans issue.
+     */
+    public function destroy(Request $request, Property $property, ListingTrash $corbeille): JsonResponse
+    {
+        // Même autorisation que la modification : qui peut corriger un bien
+        // peut le ranger. Réutilisée plutôt que redéfinie — une policy « à peu
+        // près pareille » est une faille en puissance.
+        abort_unless($request->user()?->can('update', $property) ?? false, 403);
+
+        if ($raison = $corbeille->raisonDeBlocage($property)) {
+            return ApiResponse::error($raison, 422);
+        }
+
+        $property->delete();
+
+        activity()->causedBy($request->user())->performedOn($property)->log('Bien mis à la corbeille');
+
+        // ⚠️ Le message voyage DANS `data` : le second argument de
+        // `ApiResponse::success()` est réservé aux métadonnées (tableau).
+        return ApiResponse::success([
+            'deleted' => true,
+            'retention_days' => ListingTrash::JOURS_DE_CONSERVATION,
+            'message' => 'Bien mis à la corbeille. Vous pouvez le restaurer pendant '
+                .ListingTrash::JOURS_DE_CONSERVATION.' jours.',
+        ]);
     }
 
     /**

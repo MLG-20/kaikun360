@@ -50,6 +50,16 @@ export const OWNER_NAV: readonly SpaceNavItem[] = [
     icon: 'document',
     ready: true, // F4.5 ✅ (documents par bien : dépôt / téléchargement / suppression)
   },
+  {
+    // F11.4 — Placée EN DERNIER, et volontairement : une corbeille n'est pas
+    // un lieu de travail quotidien, c'est un filet de sécurité. La hisser dans
+    // le menu la mettrait au même rang que les rubriques métier.
+    label: 'Corbeille',
+    description: 'Ce que vous avez retiré de vos listes, récupérable 30 jours.',
+    path: 'corbeille',
+    icon: 'trash',
+    ready: true, // F11.4 ✅
+  },
 ];
 
 /** Configuration de l'espace propriétaire pour le shell générique (F4). */

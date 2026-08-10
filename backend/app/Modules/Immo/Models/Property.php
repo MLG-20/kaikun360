@@ -13,6 +13,7 @@ use App\Support\Cache\CatalogCache;
 use Database\Factories\PropertyFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -26,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class Property extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     use HasMedia;
 
     /**

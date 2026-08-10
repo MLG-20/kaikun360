@@ -1,7 +1,7 @@
 import { DatePipe, SlicePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
@@ -36,6 +36,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
 export class OwnerPropertyDetailPageComponent {
   private readonly properties = inject(PropertyManagementService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   // — État de l'écran —
   protected readonly state = signal<LoadState>('loading');
@@ -52,6 +53,61 @@ export class OwnerPropertyDetailPageComponent {
 
   /** Config nuitées du bien (présente si le bien est loué en courte durée). */
   protected readonly stay = computed(() => this.property()?.stay ?? null);
+
+  // === Corbeille (F11.4) ====================================================
+  //
+  // ⚠️ Le geste vit sur la FICHE et non dans la liste, délibérément : ranger un
+  // bien est une décision, pas un tri en rafale. Sur la liste, un bouton par
+  // ligne invite au clic distrait.
+
+  /** Confirmation demandée ? (le bouton ne range jamais du premier clic) */
+  protected readonly askingTrash = signal(false);
+
+  /** Requête en cours. */
+  protected readonly trashing = signal(false);
+
+  /**
+   * Motif de refus renvoyé par le serveur, affiché TEL QUEL.
+   *
+   * ⚠️ Un bien engagé — réservation en cours, mandat de gestion actif — est
+   * refusé en 422 avec une phrase qui dit *quoi faire pour débloquer*. La
+   * remplacer par « une erreur est survenue » laisserait le propriétaire devant
+   * un mur, sans comprendre ce qui le retient.
+   */
+  protected readonly trashError = signal<string | null>(null);
+
+  protected askTrash(oui: boolean): void {
+    this.askingTrash.set(oui);
+    this.trashError.set(null);
+  }
+
+  protected confirmTrash(): void {
+    const bien = this.property();
+
+    if (!bien) {
+      return;
+    }
+
+    this.trashing.set(true);
+    this.trashError.set(null);
+
+    this.properties.trash(bien.id).subscribe({
+      next: () => {
+        // Retour à la liste : le bien n'y est plus, et rester sur la fiche d'un
+        // bien rangé n'aurait aucun sens.
+        void this.router.navigate(['/espace-proprietaire/biens'], {
+          queryParams: { corbeille: bien.id },
+        });
+      },
+      error: (err: unknown) => {
+        this.trashing.set(false);
+        const message = (err as { error?: { message?: string } })?.error?.message;
+        this.trashError.set(
+          message ?? 'La mise à la corbeille a échoué. Réessayez dans un instant.',
+        );
+      },
+    });
+  }
 
   /** Prix par nuit formaté (ou null). */
   protected readonly nightlyLabel = computed(() =>

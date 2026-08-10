@@ -188,6 +188,17 @@ export const PROVIDER_ROUTES: Routes = [
           ),
         title: 'Mes notifications — Kaikun 360',
       },
+      {
+        // F11.4 — Corbeille : ce qui a été retiré des listes, récupérable 30
+        // jours. Composant TRANSVERSE (il lit la corbeille du compte connecté,
+        // pas celle d'un espace), monté ici comme les écrans de messagerie —
+        // un propriétaire ne doit jamais être éjecté vers un autre espace pour
+        // récupérer son propre bien.
+        path: 'corbeille',
+        loadComponent: () =>
+          import('../trash/trash-page').then((m) => m.TrashPageComponent),
+        title: 'Corbeille — Kaikun 360',
+      },
     ],
   },
 ];

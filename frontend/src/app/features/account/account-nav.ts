@@ -32,7 +32,8 @@ export type AccountIcon =
   | 'wallet' // reversements / finances (espace propriétaire, F4)
   | 'car' // offres réservables — véhicules & circuits (espace prestataire, F5.6)
   | 'globe' // projets diaspora — pilotés à distance (espace client, F3.8)
-  | 'document'; // documents / rapports (espaces pro)
+  | 'document' // documents / rapports (espaces pro)
+  | 'trash'; // corbeille des annonces rangées (F11.4, espaces propriétaire & prestataire)
 
 /** Une entrée de navigation de l'espace client. */
 export interface AccountNavItem {

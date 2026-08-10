@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\TrashController;
 use App\Http\Controllers\WhatsAppLinkController;
 use App\Modules\Admin\Http\Controllers\FaqController;
 use App\Modules\Admin\Http\Controllers\PageController;
@@ -120,6 +121,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('favorites/ids', [FavoriteController::class, 'ids']);
     Route::post('favorites', [FavoriteController::class, 'store']);
     Route::delete('favorites/{type}/{id}', [FavoriteController::class, 'destroy'])
+        ->whereNumber('id');
+
+    // --- Corbeille des espaces utilisateurs (F11.4) --------------------------
+    // Un SEUL écran pour les cinq types d'annonces : le besoin est d'alléger
+    // les onglets, une corbeille par onglet aurait raté le but.
+    // ⚠️ Aucune route de suppression ici : mettre à la corbeille reste le geste
+    // des contrôleurs métier (qui portent leurs policies) — `SoftDeletes` fait
+    // le reste. Ce contrôleur ne sait que regarder et restaurer.
+    Route::get('me/trash', [TrashController::class, 'index']);
+    Route::post('me/trash/{type}/{id}/restore', [TrashController::class, 'restore'])
         ->whereNumber('id');
 
     // --- Paiement : initiation (B14.2) ---------------------------------------

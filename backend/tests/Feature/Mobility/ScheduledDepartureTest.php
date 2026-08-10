@@ -375,7 +375,13 @@ class ScheduledDepartureTest extends TestCase
     // 6. LE RETRAIT — la règle commune à toutes les offres
     // =========================================================================
 
-    public function test_un_depart_jamais_reserve_est_reellement_supprime(): void
+    /**
+     * ⚠️ Depuis la corbeille (F11.4), « supprimer » ne veut plus dire « effacer
+     * la ligne » : le départ quitte la liste du prestataire et devient
+     * récupérable 30 jours. Ce test vérifiait l'ancien contrat — la ligne
+     * disparue — et c'est exactement ce qui a changé.
+     */
+    public function test_un_depart_jamais_reserve_part_a_la_corbeille(): void
     {
         $prestataire = $this->prestataire();
         $service = MobilityService::factory()->published()->create(['provider_id' => $prestataire->id]);
@@ -386,7 +392,13 @@ class ScheduledDepartureTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.deleted', true);
 
-        $this->assertDatabaseMissing('mobility_services', ['id' => $service->id]);
+        // La ligne existe toujours, mais datée : c'est la corbeille.
+        $this->assertSoftDeleted('mobility_services', ['id' => $service->id]);
+
+        // Et elle a bien quitté la liste du prestataire.
+        $this->getJson('/api/v1/mobility-services/mine')
+            ->assertOk()
+            ->assertJsonMissing(['id' => $service->id]);
     }
 
     /**

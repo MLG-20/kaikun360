@@ -121,6 +121,17 @@ export const OWNER_ROUTES: Routes = [
         title: 'Conversation — Kaikun 360',
       },
       {
+        // F11.4 — Corbeille : ce qui a été retiré des listes, récupérable 30
+        // jours. Composant TRANSVERSE (il lit la corbeille du compte connecté,
+        // pas celle d'un espace), monté ici comme les écrans de messagerie —
+        // un propriétaire ne doit jamais être éjecté vers un autre espace pour
+        // récupérer son propre bien.
+        path: 'corbeille',
+        loadComponent: () =>
+          import('../trash/trash-page').then((m) => m.TrashPageComponent),
+        title: 'Corbeille — Kaikun 360',
+      },
+      {
         // Profil — écrans transverses montés DANS l'espace propriétaire.
         // On réutilise les composants de l'espace client (ils portent sur
         // l'utilisateur connecté, pas sur un espace), mais sous le shell
