@@ -205,10 +205,35 @@
           </div>
 
           @if (mode === 'paytech') {
-            <p class="pay-note">
-              Vous allez être redirigé vers <strong>PayTech</strong>, notre
-              prestataire de paiement, pour saisir vos coordonnées. Kaikun 360 ne
-              conserve jamais votre numéro de carte.
+            <!--
+              F11.3 — Le logo du prestataire, à l'endroit exact où l'on quitte
+              Kaikun : juste sous le bouton de paiement. C'est un repère de
+              confiance, pas une décoration — on annonce la redirection vers un
+              tiers, et voir sa marque AVANT d'y arriver évite le doute au
+              moment où la page change.
+
+              ⚠️ `alt` volontairement vide et `aria-hidden` : le nom « PayTech »
+              est déjà écrit juste à côté, en toutes lettres. Un `alt="PayTech"`
+              le ferait annoncer DEUX FOIS par un lecteur d'écran.
+              ⚠️ Dimensions écrites dans le HTML : sans elles, l'image réserve
+              zéro pixel puis pousse le texte à son arrivée — un décalage juste
+              sous le bouton qu'on vient de viser.
+            -->
+            <p class="pay-note pay-note--paytech">
+              <img
+                class="pay-paytech-logo"
+                src="/partenaires/paytech.png"
+                width="110"
+                height="30"
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async" />
+              <span>
+                Vous allez être redirigé vers <strong>PayTech</strong>, notre
+                prestataire de paiement, pour saisir vos coordonnées. Kaikun 360 ne
+                conserve jamais votre numéro de carte.
+              </span>
             </p>
           }
         </article>

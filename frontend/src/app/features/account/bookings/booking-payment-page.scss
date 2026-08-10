@@ -241,4 +241,40 @@
     background: rgba(216, 135, 24, 0.1);
     color: var(--k-ink);
   }
+
+  // F11.3 — La mention de redirection porte désormais le logo du prestataire.
+  // Encadrée pour se détacher du reste du texte de la carte : c'est le dernier
+  // repère lu avant de quitter le site, il ne doit pas se confondre avec les
+  // notes secondaires.
+  &--paytech {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--k-line);
+    border-radius: var(--k-radius-sm);
+    background: var(--k-cream);
+  }
+}
+
+.pay-paytech-logo {
+  // `flex: 0 0 auto` : sans lui, le logo se ferait comprimer par le texte à sa
+  // droite dès que la carte devient étroite — une marque déformée est pire que
+  // pas de marque du tout.
+  flex: 0 0 auto;
+  width: 110px;
+  height: auto;
+  // Léger décalage vers le bas pour aligner le logo sur la première ligne de
+  // texte plutôt que sur le haut de sa boîte.
+  margin-top: 2px;
+}
+
+// Sur écran étroit, le logo passe au-dessus du texte : côte à côte, il ne
+// resterait qu'une trentaine de caractères par ligne.
+@media (max-width: 520px) {
+  .pay-note--paytech {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
