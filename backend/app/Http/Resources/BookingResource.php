@@ -3,6 +3,8 @@
 namespace App\Http\Resources;
 
 use App\Enums\BookingStatus;
+use App\Models\Booking;
+use App\Support\Trash\PersonalHiding;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,7 +20,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * n'est pas déjà annulée). Le libellé de l'élément n'est calculé que si la
  * relation `bookable` a été chargée en amont (évite les requêtes N+1).
  *
- * @mixin \App\Models\Booking
+ * @mixin Booking
  */
 class BookingResource extends JsonResource
 {
@@ -74,6 +76,15 @@ class BookingResource extends JsonResource
             // Le titulaire peut-il encore annuler cette réservation lui-même ?
             'cancellable' => in_array($type, self::CANCELLABLE_TYPES, true)
                 && ! ($this->status?->estAnnulee() ?? false),
+            // F11.5 — le titulaire peut-il ranger cette réservation dans sa
+            // corbeille ? Miroir EXACT de `PersonalHiding::raisonDeBlocage()`.
+            // ⚠️ « Rangeable » n'est PAS le contraire de « annulable » : une
+            // réservation à venir n'est ni l'un ni l'autre pour une nuitée (pas
+            // d'endpoint d'annulation client), et les deux drapeaux peuvent
+            // parfaitement être faux en même temps.
+            'hideable' => $request->user()
+                ? (new PersonalHiding)->estRangeable($this->resource, $request->user())
+                : false,
             // --- Avis (F8.15.a) ---------------------------------------------
             // La cible d'un avis n'est PAS la réservation mais la chose réservée
             // (`Review::TYPES`) : on note un logement, pas son contrat. Le front

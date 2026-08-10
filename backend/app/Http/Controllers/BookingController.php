@@ -8,11 +8,12 @@ use App\Models\Quote;
 use App\Modules\Build\Models\ConstructionQuote;
 use App\Modules\Stay\Models\Stay;
 use App\Modules\TeamBuilding\Models\TeamBuildingQuote;
+use App\Support\ApiResponse;
+use App\Support\Trash\PersonalHiding;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use App\Support\ApiResponse;
 
 /**
  * Réservations de l'utilisateur — couche transversale (phase B11.3).
@@ -25,6 +26,12 @@ class BookingController extends Controller
     public function my(Request $request): AnonymousResourceCollection
     {
         $bookings = Booking::where('user_id', $request->user()->id)
+            // F11.5 — les réservations rangées par le client quittent SA liste.
+            // ⚠️ Filtre d'AFFICHAGE seulement : la ligne reste entière en base.
+            // Le back-office, la comptabilité et les reversements au partenaire
+            // continuent de la voir — une réservation est un contrat, pas un
+            // objet dont le client dispose seul.
+            ->whereNull('hidden_at')
             // Charge la chose réservée en une passe (évite les N+1 sur le libellé
             // exposé par BookingResource) ; pour une nuitée, on remonte aussi son
             // bien immobilier, dont le titre sert de libellé.
@@ -66,5 +73,32 @@ class BookingController extends Controller
         ]), 'payments']);
 
         return ApiResponse::success(['booking' => BookingResource::make($booking)]);
+    }
+
+    /**
+     * Range une de MES réservations dans ma corbeille. POST /api/v1/bookings/{booking}/hide
+     *
+     * ⚠️ **Ne supprime rien, et ne peut pas le faire** : `Booking` n'est pas en
+     * `SoftDeletes` et ne le sera pas. Seule la colonne `hidden_at` est écrite,
+     * honorée par la seule liste du client. Le geste vit ici plutôt que dans
+     * `TrashController` pour la même raison qu'en F11.4 : ranger appartient à
+     * l'écran d'origine, qui sait refuser et dire pourquoi.
+     */
+    public function hide(Request $request, Booking $booking, PersonalHiding $corbeille): JsonResponse
+    {
+        abort_unless($booking->user_id === $request->user()->id, 403);
+
+        // ⚠️ Une réservation à venir ne se range pas : elle s'annule. La cacher
+        // n'allègerait pas la liste, ça effacerait un rendez-vous des yeux de la
+        // seule personne qui doit s'y présenter.
+        if ($raison = $corbeille->raisonDeBlocage($booking, $request->user())) {
+            return ApiResponse::error($raison, 422);
+        }
+
+        $corbeille->masquer($booking, $request->user());
+
+        return ApiResponse::success([
+            'message' => 'Réservation rangée dans votre corbeille. Elle y reste disponible : rien n’est supprimé.',
+        ]);
     }
 }

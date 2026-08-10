@@ -118,6 +118,24 @@ export class MessageService {
   // La route existe toujours côté serveur : la rebrancher ici serait le seul
   // travail à refaire si l'on veut un jour qu'un agent écrive le premier.
 
+  /**
+   * POST /messages/{id}/hide — range un fil dans MA corbeille (F11.5).
+   *
+   * ⚠️ **Le fil n'est ni supprimé ni clos** : le masque est posé sur ma seule
+   * ligne de participation. L'agent qui supervise le fil continue de le voir
+   * en entier.
+   *
+   * ⚠️ **Ranger n'est pas se taire** : si quelqu'un écrit, le fil revient tout
+   * seul dans la liste. Le serveur refuse (422) un fil qui contient encore des
+   * messages non lus.
+   */
+  hide(id: number): Observable<ApiEnvelope<{ message: string }>> {
+    return this.http.post<ApiEnvelope<{ message: string }>>(
+      `${this.api}/messages/${id}/hide`,
+      {},
+    );
+  }
+
   /** GET /messages/unread-count — total de messages non lus (pastille de menu). */
   unreadCount(): Observable<ApiEnvelope<{ unread_count: number }>> {
     return this.http.get<ApiEnvelope<{ unread_count: number }>>(

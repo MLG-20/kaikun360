@@ -120,6 +120,22 @@ export class BookingService {
   }
 
   /**
+   * POST /bookings/{id}/hide — range une réservation dans la corbeille (F11.5).
+   *
+   * ⚠️ **Ne supprime rien, et ne peut pas le faire** : une réservation est un
+   * contrat entre le client, Kaikun et un partenaire. Elle quitte la seule
+   * liste du client ; la comptabilité et les reversements continuent de la
+   * voir. Le serveur refuse (422) tout ce qui n'est pas TERMINÉ ou ANNULÉ —
+   * c'est ce que dit déjà le drapeau `hideable` de la ressource.
+   */
+  hide(id: number): Observable<ApiEnvelope<{ message: string }>> {
+    return this.http.post<ApiEnvelope<{ message: string }>>(
+      `${this.api}/bookings/${id}/hide`,
+      {},
+    );
+  }
+
+  /**
    * POST /experiences/{id}/bookings — **réserve des places sur un circuit**
    * (F8.10). Le serveur contrôle les places restantes et refuse en 422 en
    * annonçant combien il en reste.

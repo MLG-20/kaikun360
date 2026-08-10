@@ -1,8 +1,18 @@
 <header class="tr-head">
   <h1>Corbeille</h1>
+  <!-- ⚠️ Le sous-titre ne parle du délai de 30 jours QUE s'il y a une annonce
+       concernée. Dans l'espace client, où rien n'est jamais supprimé, annoncer
+       une purge ferait craindre une perte qui n'arrivera pas. -->
   <p class="k-muted">
-    Ce que vous retirez de vos listes atterrit ici et reste récupérable
-    {{ retentionDays() }} jours. Passé ce délai, c'est supprimé définitivement.
+    Ce que vous retirez de vos listes atterrit ici.
+    @if (hasListings()) {
+      Vos annonces y restent récupérables {{ retentionDays() }} jours ; passé ce
+      délai, elles sont supprimées définitivement. Vos demandes, réservations,
+      discussions et notifications, elles, ne sont jamais supprimées.
+    } @else {
+      Rien n'y est supprimé : vos dossiers vous attendent, le temps qu'il
+      faudra.
+    }
   </p>
 </header>
 
@@ -26,8 +36,8 @@
   <div class="tr-empty">
     <p><strong>Votre corbeille est vide.</strong></p>
     <p class="k-muted">
-      Quand vous retirez une annonce de vos listes, elle vient ici — le temps de
-      changer d'avis. Rien n'est perdu tant que le délai court.
+      Quand vous rangez quelque chose depuis vos listes, cela vient ici — le
+      temps de changer d'avis. Rien n'est perdu.
     </p>
   </div>
 } @else {
@@ -37,8 +47,8 @@
         <div class="tr-item__main">
           <span class="tr-item__type">{{ typeLabel(item.type) }}</span>
           <span class="tr-item__label">{{ item.label }}</span>
-          <span class="tr-item__countdown" [class.is-urgent]="urgent(item.days_left)">
-            {{ countdown(item.days_left) }}
+          <span class="tr-item__countdown" [class.is-urgent]="urgent(item)">
+            {{ countdown(item) }}
           </span>
         </div>
 
@@ -57,12 +67,32 @@
     }
   </ul>
 
+  <!-- ⚠️ Annoncé, jamais silencieux : une corbeille qui cache une partie de ce
+       qu'elle contient ne remplit plus son seul office. -->
+  @if (truncated()) {
+    <p class="tr-note k-muted">
+      Les <strong>{{ items().length }}</strong> rangements les plus récents sont
+      affichés, sur {{ total() }}. Les plus anciens sont toujours là — restaurez
+      quelques éléments pour les voir réapparaître.
+    </p>
+  }
+
   <!-- ⚠️ Dit AVANT le clic, pas après : une annonce restaurée ne revient pas
        en ligne toute seule. Sans cette phrase, on croit à un bug en la
-       cherchant au catalogue. -->
-  <p class="tr-note k-muted">
-    Un élément restauré revient dans votre liste <strong>hors ligne</strong>.
-    C'est vous qui le republiez ensuite — le temps de vérifier que son prix et
-    ses informations sont toujours justes.
-  </p>
+       cherchant au catalogue. Un dossier, lui, revient tel quel — le dire
+       aussi éviterait de laisser croire qu'il change d'état. -->
+  @if (hasListings()) {
+    <p class="tr-note k-muted">
+      Une <strong>annonce</strong> restaurée revient dans votre liste
+      <strong>hors ligne</strong> : c'est vous qui la republiez ensuite, le temps
+      de vérifier que son prix et ses informations sont toujours justes. Un
+      <strong>dossier</strong> (demande, réservation, discussion, notification)
+      revient tel que vous l'aviez laissé.
+    </p>
+  } @else {
+    <p class="tr-note k-muted">
+      Un élément restauré revient dans votre liste <strong>tel que vous l'aviez
+      laissé</strong> — rien n'a changé pendant qu'il était rangé ici.
+    </p>
+  }
 }

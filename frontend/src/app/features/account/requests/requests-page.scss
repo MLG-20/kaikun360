@@ -72,3 +72,12 @@
   font-size: 0.9rem;
   color: var(--k-muted);
 }
+
+/* F11.5 — la barre d'actions d'une carte de demande. Alignée à droite et
+   discrète : « Ranger » est un geste de ménage, il ne doit pas concurrencer
+   la lecture du suivi qui le précède. */
+.rq-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 1rem 0.85rem;
+}

@@ -100,6 +100,21 @@ export class RequestService {
   }
 
   /**
+   * POST /requests/{id}/hide — range une demande dans la corbeille (F11.5).
+   *
+   * ⚠️ **Ne supprime rien** : la demande quitte la liste du client et de nulle
+   * part ailleurs — elle reste la pièce d'un dossier que Kaikun continue de
+   * voir. Le serveur refuse (422) tout ce qui n'est pas CLÔTURÉ ; c'est ce que
+   * dit déjà le drapeau `hideable` de la ressource.
+   */
+  hide(id: number): Observable<ApiEnvelope<{ message: string }>> {
+    return this.http.post<ApiEnvelope<{ message: string }>>(
+      `${this.api}/requests/${id}/hide`,
+      {},
+    );
+  }
+
+  /**
    * Retire les clés optionnelles vides (null/undefined/chaîne vide) pour ne
    * transmettre que ce que l'utilisateur a réellement renseigné.
    */

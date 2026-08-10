@@ -135,6 +135,18 @@ export const ACCOUNT_ROUTES: Routes = [
         title: 'Conversation — Kaikun 360',
       },
       {
+        // F11.5 — Corbeille : ce que le client a rangé de ses listes. Composant
+        // TRANSVERSE, déjà monté chez le propriétaire et le prestataire depuis
+        // F11.4 (il lit la corbeille du compte connecté, pas celle d'un espace).
+        // ⚠️ Ici elle ne contient QUE des dossiers masqués — un client ne
+        // possède aucune annonce — donc aucun compte à rebours : rien n'y est
+        // jamais supprimé, et l'écran le dit lui-même.
+        path: 'corbeille',
+        loadComponent: () =>
+          import('../trash/trash-page').then((m) => m.TrashPageComponent),
+        title: 'Corbeille — Kaikun 360',
+      },
+      {
         // F3.2 — Profil : identité, pièces justificatives, suppression du compte.
         path: 'profil',
         loadComponent: () =>

@@ -84,7 +84,10 @@ class TrashTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.retention_days', ListingTrash::JOURS_DE_CONSERVATION)
             ->assertJsonPath('data.items.0.type', 'property')
-            ->assertJsonPath('data.items.0.id', $bien->id)
+            // ⚠️ CHAÎNE depuis F11.5 : la corbeille mêle désormais des
+            // identifiants entiers (annonces, dossiers) et l'UUID d'une
+            // notification — un seul type pour toute la liste.
+            ->assertJsonPath('data.items.0.id', (string) $bien->id)
             ->assertJsonPath('data.items.0.days_left', ListingTrash::JOURS_DE_CONSERVATION);
     }
 
@@ -225,7 +228,7 @@ class TrashTest extends TestCase
         $this->getJson('/api/v1/me/trash')
             ->assertOk()
             ->assertJsonCount(1, 'data.items')
-            ->assertJsonPath('data.items.0.id', $leMien->id);
+            ->assertJsonPath('data.items.0.id', (string) $leMien->id);
     }
 
     public function test_on_ne_restaure_pas_l_element_d_un_autre(): void

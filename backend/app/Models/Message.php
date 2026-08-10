@@ -26,6 +26,43 @@ class Message extends Model
         'body',
     ];
 
+    /**
+     * Un message neuf FAIT REVENIR le fil chez ceux qui l'avaient rangé (F11.5).
+     *
+     * ⚠️ **Sans cette règle, la corbeille deviendrait un silencieux.** Un client
+     * range un fil réglé, l'agent y répond trois jours plus tard : la réponse
+     * arriverait dans un fil invisible, et personne ne saurait pourquoi le
+     * client ne répond plus. Ranger dit « je n'ai plus rien à y faire », pas
+     * « ne me parlez plus ».
+     *
+     * ⚠️ **Posé sur l'événement du modèle, et pas dans les contrôleurs, parce
+     * qu'il y a QUATRE endroits qui créent un message** (espace client ×3,
+     * back-office ×1) : une règle recopiée quatre fois est une règle qu'on
+     * oubliera au cinquième. Ici, aucun chemin ne peut y échapper.
+     *
+     * L'auteur est exclu : il vient d'écrire, son propre message n'a pas à lui
+     * ressortir un fil qu'il avait rangé.
+     */
+    protected static function booted(): void
+    {
+        static::created(function (Message $message): void {
+            $fil = $message->conversation;
+
+            if ($fil === null) {
+                return;
+            }
+
+            $aPrevenir = $fil->participants()
+                ->wherePivotNotNull('hidden_at')
+                ->where('users.id', '!=', $message->sender_id)
+                ->pluck('users.id');
+
+            if ($aPrevenir->isNotEmpty()) {
+                $fil->participants()->updateExistingPivot($aPrevenir->all(), ['hidden_at' => null]);
+            }
+        });
+    }
+
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);

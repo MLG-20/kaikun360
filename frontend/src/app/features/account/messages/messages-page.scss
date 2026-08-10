@@ -198,3 +198,12 @@
   font-size: 0.9rem;
   color: var(--k-muted);
 }
+
+/* F11.5 — barre d'action d'une ligne de conversation, POSÉE HORS du lien du
+   fil : un bouton imbriqué dans un lien est invalide en HTML, et le clic sur
+   « Ranger » ouvrirait la discussion qu'on fait disparaître. */
+.ms-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 1rem 0.6rem;
+}

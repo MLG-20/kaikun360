@@ -415,3 +415,54 @@ exact de la policy, et laissent l'écran d'avis trancher.
 séjour, ce qu'un champ coincé entre deux cartes n'invite pas à faire. La
 réservation est rappelée au-dessus du formulaire. Les étoiles sont de **vrais
 boutons** portant leur libellé (`aria-label`), pas un `input[type=range]`.
+
+---
+
+## Ranger dans la corbeille (F11.5)
+
+Quatre des rubriques de cet espace s'allongent toutes seules : **Mes demandes**,
+**Réservations**, **Messages**, **Notifications**. Le client peut désormais en
+ranger les lignes terminées — sans que rien ne soit supprimé.
+
+**Le geste vit sur l'écran d'origine**, pas dans la corbeille : chaque écran
+appelle son propre `hide()` (`RequestService`, `BookingService`,
+`MessageService`, `NotificationService`), et n'affiche le bouton partagé
+[`shared/components/hide-button/`](../../shared/components/hide-button/) que si
+le serveur l'autorise.
+
+| Rubrique | Le serveur accepte de ranger… |
+| --- | --- |
+| Mes demandes | une demande **clôturée** |
+| Réservations | une réservation **terminée ou annulée** |
+| Messages | un fil **entièrement lu** |
+| Notifications | une notification **déjà lue** |
+
+⚠️ **`hideable` est la seule autorité.** Ne jamais rejouer la règle ici (« le
+statut vaut *terminee* », « `unread_count === 0` ») : deux calculs qui divergent
+d'une seconde donnent un bouton qui refuse ce que l'écran affiche comme prêt.
+
+⚠️ **Le bouton est posé HORS du lien ou du bouton de la carte** sur les quatre
+écrans (`.rq-card-actions`, `.bk-actions`, `.ms-item-actions`,
+`.nt-card-actions`). Imbriqué, il ouvrirait l'élément qu'on fait disparaître —
+et un `<button>` dans un `<a>` est du HTML invalide.
+
+⚠️ **Rien n'est supprimé, et le vocabulaire doit le porter.** Le bouton dit
+« Ranger », l'infobulle et le message de confirmation répètent que l'élément
+reste récupérable. Écrire « Supprimer » sur une réservation ferait croire au
+client qu'il efface un contrat — ce qu'il ne peut pas faire, et c'est heureux :
+la ligne reste entière pour la comptabilité, les reversements et le back-office.
+
+⚠️ **Une discussion rangée REVIENT si quelqu'un écrit.** C'est le serveur qui
+s'en charge ; la relève périodique de l'écran Messages (30 s) la fait donc
+réapparaître sans code supplémentaire ici. L'infobulle du bouton le dit d'avance.
+
+⚠️ **Notifications — piège corrigé** : `markAll()` et `applyRead()` posent
+`hideable: true` en même temps que `read: true` sur la liste locale. Sans cela,
+« Tout marquer comme lu » ne ferait apparaître aucun bouton « Ranger » avant le
+prochain chargement de page.
+
+La **rubrique Corbeille** (`/mon-espace/corbeille`) réutilise le composant
+transverse [`features/trash/`](../trash/), déjà monté chez le propriétaire et le
+prestataire depuis F11.4. ⚠️ Ici elle ne contient **que des dossiers masqués**
+(un client ne possède aucune annonce), donc **aucun compte à rebours** : l'écran
+écrit « Conservé — rien ne sera supprimé » et adapte son sous-titre.

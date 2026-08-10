@@ -57,6 +57,21 @@ export class NotificationService {
     );
   }
 
+  /**
+   * POST /users/me/notifications/{id}/hide — range une notification (F11.5).
+   *
+   * ⚠️ **Ne supprime rien** : la trace reste, et c'est ce qui permet de
+   * répondre un jour à « quand ai-je été prévenu ? ». Le serveur refuse (422)
+   * une notification NON LUE — la masquer avant de l'avoir ouverte effacerait
+   * l'information sans l'avoir reçue.
+   */
+  hide(id: string): Observable<ApiEnvelope<{ message: string }>> {
+    return this.http.post<ApiEnvelope<{ message: string }>>(
+      `${this.api}/users/me/notifications/${id}/hide`,
+      {},
+    );
+  }
+
   /** PATCH /users/me/notifications/read-all — marque TOUTES mes non-lues comme lues. */
   markAllAsRead(): Observable<ApiEnvelope<{ message: string; unread_count: number }>> {
     return this.http.patch<ApiEnvelope<{ message: string; unread_count: number }>>(

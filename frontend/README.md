@@ -1603,6 +1603,62 @@ seule formulation honnête.
 ⚠️ La durée de conservation vient du **serveur** (`retention_days`), jamais
 écrite en dur côté écran : une seule source, pas deux vérités qui divergent.
 
+### La corbeille de l'espace CLIENT (F11.5)
+
+Le même écran est désormais monté dans `/mon-espace`, mais il y montre une
+**seconde famille** d'éléments, qui n'obéit pas aux mêmes règles.
+
+| | `kind: 'listing'` (F11.4) | `kind: 'record'` (F11.5) |
+| --- | --- | --- |
+| Quoi | les 5 annonces | demande, réservation, discussion, notification |
+| Supprimé ? | oui, au bout de 30 jours | **jamais** |
+| `days_left` | un nombre | **`null`** |
+| Au retour | **éteint** (hors ligne) | **tel quel**, statut compris |
+
+⚠️ **`days_left: null` n'est pas une valeur manquante, c'est l'information.**
+L'écran écrit alors « Conservé — rien ne sera supprimé ». Lui coller un compte à
+rebours de 30 jours serait faux dans les deux sens : ça inquiéterait pour rien,
+et ça ferait croire à un ménage automatique qui n'aura jamais lieu.
+
+⚠️ **Le sous-titre et la note de bas de liste sont CONDITIONNELS**
+(`hasListings()`). Dans l'espace client, qui n'a aucune annonce, parler de purge
+ou de republication n'aurait aucun sens.
+
+⚠️ **`TrashItem.id` est une CHAÎNE**, pas un nombre : l'identifiant d'une
+notification est un **UUID**. Le typer `number` le ramènerait à `NaN` et rendrait
+toutes les notifications indiscernables.
+
+⚠️ **La liste est plafonnée à 200 côté serveur** (`truncated`, `total`) : les
+dossiers masqués n'étant jamais purgés, la réponse serait autrement sans borne.
+L'écran le **dit** au lieu de s'arrêter en silence.
+
+**Le geste de rangement**, lui, reste sur l'écran d'origine — quatre écrans, un
+seul bouton partagé
+([`shared/components/hide-button/`](src/app/shared/components/hide-button/)) :
+
+| Écran | Service | Condition (décidée par le serveur) |
+| --- | --- | --- |
+| Mes demandes | `RequestService.hide` | demande **clôturée** |
+| Mes réservations | `BookingService.hide` | réservation **terminée ou annulée** |
+| Messages | `MessageService.hide` | fil **entièrement lu** |
+| Notifications | `NotificationService.hide` | notification **déjà lue** |
+
+⚠️ **Le bouton n'apparaît que si `hideable` le dit** — jamais sur une règle
+rejouée côté écran. Un bouton qui échoue en 422 est pire que pas de bouton.
+
+⚠️ **Le mot est « Ranger », jamais « Supprimer ».** Ce n'est pas de la
+politesse : rien n'est supprimé. Un client qui lit « Supprimer » sur sa
+réservation croirait effacer un contrat.
+
+⚠️ **Le bouton est posé HORS du lien / du bouton de la carte** sur les quatre
+écrans. Imbriqué, il ouvrirait l'élément qu'on est en train de faire
+disparaître — et un `<button>` dans un `<a>` est du HTML invalide.
+
+⚠️ **Piège corrigé sur les notifications** : « Tout marquer comme lu » (et le
+clic sur une carte) mettent `hideable: true` en même temps que `read: true` sur
+la liste locale. Sans cela, les boutons « Ranger » n'apparaîtraient qu'au
+prochain chargement de page.
+
 ### Commandes utiles
 
 ```bash

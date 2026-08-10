@@ -283,6 +283,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/requests` | auth | `RequestController@store` |
 | GET | `/requests/my` | auth | `RequestController@my` |
 | GET | `/requests/{serviceRequest}` | auth | `RequestController@show` |
+| POST | `/requests/{serviceRequest}/hide` | auth | `RequestController@hide` |
 | POST | `/requests/{serviceRequest}/quotes` | auth + `can:traiter:demandes` | `QuoteController@store` |
 | PATCH | `/requests/{serviceRequest}/status` | auth + `can:traiter:demandes` | `RequestController@updateStatus` |
 
@@ -299,6 +300,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | --- | --- | --- | --- |
 | GET | `/bookings/my` | auth | `BookingController@my` |
 | GET | `/bookings/{booking}` | auth | `BookingController@show` |
+| POST | `/bookings/{booking}/hide` | auth | `BookingController@hide` |
 
 ### Messagerie (transversal)
 
@@ -310,6 +312,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/messages/unread-count` | auth | `MessageController@unreadCount` |
 | GET | `/messages/{conversation}` | auth | `MessageController@show` |
 | POST | `/messages/{conversation}/messages` | auth | `MessageController@store` |
+| POST | `/messages/{conversation}/hide` | auth | `MessageController@hide` |
 
 > Socle **générique** (conversations à participants + messages), réutilisable par
 > les espaces pro (F4/F5/F6). Accès **scopé** à l'utilisateur courant : un fil dont
@@ -382,7 +385,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | PATCH | `/media/{media}/primary` | auth | `MediaController@setPrimary` |
 | DELETE | `/media/{media}` | auth | `MediaController@destroy` |
 
-### Corbeille des espaces (transversal, F11.4)
+### Corbeille des espaces (transversal, F11.4 + F11.5)
 
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
@@ -393,6 +396,43 @@ TypeScript miroir côté frontend Angular (phase F0).
 > la **corbeille**, récupérable **30 jours**, puis supprimée définitivement par
 > `php artisan corbeille:purger` (planifiée). `type` ∈ {property, stay, vehicle,
 > experience, mobility} — les mêmes slugs que les favoris.
+>
+> **F11.5 — l'espace client.** `type` accepte en plus `request` et `booking`,
+> qui obéissent à une règle DIFFÉRENTE : ces dossiers sont partagés avec Kaikun
+> et un partenaire, ils ne sont **jamais supprimés**. Seule la colonne
+> `hidden_at` est écrite, honorée par `GET /requests/my` et `GET /bookings/my`
+> uniquement — le back-office continue de tout voir. Leur `days_left` vaut donc
+> `null` (aucun compte à rebours), et la restauration les rend **tels quels**,
+> statut compris.
+>
+> Quatre types de dossiers : `request`, `booking`, `conversation`,
+> `notification`. ⚠️ Le masque d'un **fil** est porté par le pivot
+> `conversation_user` et non par `conversations` — l'agent qui le supervise
+> continue de le voir en entier. ⚠️ L'identifiant d'une **notification** est un
+> **UUID** : la route de restauration a perdu sa contrainte `whereNumber`.
+>
+> Le rangement lui-même se fait sur l'écran d'origine, et n'accepte que ce qui
+> est terminé, vu ou lu — 422 avec le motif sinon :
+>
+> | Route | Condition |
+> | --- | --- |
+> | `POST /requests/{id}/hide` | demande **clôturée** |
+> | `POST /bookings/{id}/hide` | réservation **terminée ou annulée** |
+> | `POST /messages/{id}/hide` | fil **entièrement lu** |
+> | `POST /users/me/notifications/{uuid}/hide` | notification **déjà lue** |
+>
+> Les quatre ressources exposent `hideable`, miroir exact de la règle serveur.
+>
+> ⚠️ **`GET /me/trash` n'est pas paginé mais PLAFONNÉ à 200 lignes** (liste
+> fusionnée et triée, tous types confondus), avec `truncated` et `total` dans la
+> réponse. Les annonces se purgeaient seules au bout de 30 jours ; les dossiers
+> masqués, eux, ne le sont **jamais** — sans plafond la réponse n'aurait plus
+> aucune borne. Le plafond est **annoncé**, jamais silencieux.
+>
+> ⚠️ **Un message neuf fait revenir le fil rangé** (règle posée sur
+> `Message::created`, pas dans les contrôleurs — quatre endroits créent des
+> messages). Ranger dit « je n'ai plus rien à y faire », pas « ne me parlez
+> plus ».
 >
 > ⚠️ **Aucune route de suppression ici** : mettre à la corbeille reste le geste
 > des contrôleurs métier (`DELETE /properties/{id}`, `/vehicles/{id}`,
@@ -489,6 +529,7 @@ existants. Voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README
 | GET | `/users/me/notifications/unread-count` | auth | `NotificationController@unreadCount` |
 | PATCH | `/users/me/notifications/read-all` | auth | `NotificationController@markAllAsRead` |
 | PATCH | `/users/me/notifications/{notification}/read` | auth | `NotificationController@markAsRead` |
+| POST | `/users/me/notifications/{notification}/hide` | auth | `NotificationController@hide` |
 | GET | `/whatsapp/link` | public | `WhatsAppLinkController@generate` |
 
 ### Back-office (Admin)

@@ -81,6 +81,13 @@ export interface Conversation {
   messages?: ConversationMessage[];
   /** Nombre de messages non lus par l'utilisateur courant. */
   unread_count: number;
+  /**
+   * F11.5 — ce participant peut-il ranger le fil dans sa corbeille ? Décidé par
+   * le serveur (fil entièrement lu). ⚠️ Ne pas le recalculer depuis
+   * `unread_count` : deux calculs qui divergent d'une seconde donneraient un
+   * bouton qui refuse un fil affiché comme lu.
+   */
+  hideable?: boolean;
   /** Horodatage du dernier message (tri par activité). */
   last_message_at: string | null;
   /** Horodatage de création du fil. */

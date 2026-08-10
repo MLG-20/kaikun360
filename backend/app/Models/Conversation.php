@@ -74,7 +74,9 @@ class Conversation extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
-            ->withPivot('last_read_at')
+            // `hidden_at` (F11.5) : ce participant a rangé le fil dans SA
+            // corbeille. Sur le pivot, jamais sur le fil — voir `User::conversations`.
+            ->withPivot('last_read_at', 'hidden_at')
             ->withTimestamps();
     }
 

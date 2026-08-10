@@ -41,6 +41,13 @@ export interface Booking {
   cancelled_at: string | null;
   created_at: string | null;
   cancellable: boolean;
+  /**
+   * F11.5 — le titulaire peut-il ranger cette réservation dans sa corbeille ?
+   * ⚠️ Ce n'est PAS le contraire de `cancellable` : les deux peuvent être faux
+   * en même temps (une nuitée à venir n'est ni annulable ici, ni rangeable).
+   * Décidé par le serveur (terminée ou annulée).
+   */
+  hideable?: boolean;
 
   // --- État de règlement (F8.6) ---------------------------------------------
   // Le client pouvait réserver sans jamais pouvoir payer : l'API ne disait pas

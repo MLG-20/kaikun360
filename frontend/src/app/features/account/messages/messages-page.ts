@@ -10,10 +10,17 @@ import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { Conversation } from '../../../models/message.model';
 import { ContactSupportComponent } from '../../../shared/components/contact-support/contact-support';
 import { AccountIconComponent } from '../account-icon';
+import { HideButtonComponent } from '../../../shared/components/hide-button/hide-button';
 
 @Component({
   selector: 'app-messages-page',
-  imports: [DatePipe, RouterLink, AccountIconComponent, ContactSupportComponent],
+  imports: [
+    DatePipe,
+    RouterLink,
+    AccountIconComponent,
+    ContactSupportComponent,
+    HideButtonComponent,
+  ],
   templateUrl: './messages-page.html',
   styleUrl: './messages-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,6 +60,12 @@ export class MessagesPageComponent {
    * ci-dessous éteint la pastille dès qu'un fil a été lu ailleurs.
    */
   protected readonly unreadCount = this.unread.messages;
+
+  // — Rangement dans la corbeille (F11.5) —
+  /** Fil dont le rangement est en vol (endort son seul bouton, pas la liste). */
+  protected readonly hidingId = signal<number | null>(null);
+  /** Issue du dernier rangement, affichée au-dessus de la liste. */
+  protected readonly hidden = signal<string | null>(null);
 
   /** Y a-t-il d'autres pages avant / après la page courante ? */
   protected readonly hasPrev = computed(() => (this.meta()?.current_page ?? 1) > 1);
@@ -111,6 +124,37 @@ export class MessagesPageComponent {
   }
 
   /** Libellé du/des correspondant(s) d'un fil (« Support Kaikun », un nom, ou plusieurs). */
+  /**
+   * Range un fil ENTIÈREMENT LU dans la corbeille (F11.5).
+   *
+   * ⚠️ **Le fil n'est ni supprimé ni clos** : il quitte ma seule liste. L'agent
+   * qui le supervise continue de le voir en entier.
+   *
+   * ⚠️ **Ranger n'est pas se taire** : si quelqu'un écrit, le fil revient tout
+   * seul — c'est le serveur qui s'en charge. La relève périodique de cet écran
+   * (30 s) le fera donc réapparaître sans rien faire de plus ici.
+   */
+  protected hide(conversation: Conversation): void {
+    this.hidingId.set(conversation.id);
+    this.hidden.set(null);
+
+    this.messages.hide(conversation.id).subscribe({
+      next: () => {
+        this.items.update((list) => list.filter((c) => c.id !== conversation.id));
+        this.hidingId.set(null);
+        this.hidden.set(
+          'Discussion rangée dans votre corbeille. Elle revient si quelqu’un vous écrit.',
+        );
+      },
+      error: () => {
+        this.hidingId.set(null);
+        this.hidden.set(
+          'Cette discussion ne peut pas être rangée — ouvrez-la d’abord, elle contient des messages non lus.',
+        );
+      },
+    });
+  }
+
   protected counterpartLabel(conversation: Conversation): string {
     const names = conversation.counterparts.map((c) => c.name).filter(Boolean);
     if (names.length === 0) {

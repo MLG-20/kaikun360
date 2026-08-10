@@ -85,6 +85,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/me/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::patch('/users/me/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::patch('/users/me/notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
+    // F11.5 — ranger une notification DÉJÀ LUE dans sa corbeille personnelle.
+    // ⚠️ Ne supprime rien : écrit `hidden_at`, honorée par la seule liste
+    // ci-dessus. Une notification est la trace d'un « quand ai-je été prévenu ? ».
+    Route::post('/users/me/notifications/{notification}/hide', [NotificationController::class, 'hide']);
 });
 
 // Téléchargement d'un document : accès via URL signée temporaire uniquement

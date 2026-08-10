@@ -66,6 +66,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('requests/{serviceRequest}', [RequestController::class, 'show'])
         ->whereNumber('serviceRequest');
 
+    // F11.5 — ranger une demande CLÔTURÉE dans sa corbeille personnelle.
+    // ⚠️ Ne supprime rien : écrit `hidden_at`, honorée par la seule liste du
+    // client. Placée AVANT `{serviceRequest}/status` n'a pas d'importance ici
+    // (les segments diffèrent), mais elle reste sous `whereNumber` comme ses
+    // voisines pour qu'un `requests/my/hide` ne l'atteigne jamais.
+    Route::post('requests/{serviceRequest}/hide', [RequestController::class, 'hide'])
+        ->whereNumber('serviceRequest');
+
     // Changement de statut réservé aux agents/admin (machine à états).
     Route::patch('requests/{serviceRequest}/status', [RequestController::class, 'updateStatus'])
         ->whereNumber('serviceRequest')
@@ -85,6 +93,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Détail d'une de mes réservations (titulaire uniquement — 403 sinon).
     Route::get('bookings/{booking}', [BookingController::class, 'show'])
+        ->whereNumber('booking');
+
+    // F11.5 — ranger une réservation TERMINÉE ou ANNULÉE dans sa corbeille
+    // personnelle. ⚠️ `Booking` n'est PAS en `SoftDeletes` et ne le sera pas :
+    // une réservation est un contrat, elle ne quitte que la vue du client.
+    Route::post('bookings/{booking}/hide', [BookingController::class, 'hide'])
         ->whereNumber('booking');
 
     // --- Messagerie (F3.7) ---------------------------------------------------
@@ -113,6 +127,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('messages/{conversation}/messages', [MessageController::class, 'store'])
         ->whereNumber('conversation');
 
+    // F11.5 — ranger un fil ENTIÈREMENT LU dans sa corbeille personnelle.
+    // ⚠️ Le masque va sur le PIVOT `conversation_user` : l'agent qui supervise
+    // le fil continue de le voir. Et un message neuf le fait revenir tout seul
+    // (règle sur `Message::created`) — ranger n'est pas se taire.
+    Route::post('messages/{conversation}/hide', [MessageController::class, 'hide'])
+        ->whereNumber('conversation');
+
     // --- Favoris POLYMORPHES (tous univers) ----------------------------------
     // Généralisation des favoris (autrefois immobilier seul) : bien, nuitée,
     // véhicule, expérience, service de mobilité. `/ids` (fixe) est déclarée AVANT
@@ -123,15 +144,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('favorites/{type}/{id}', [FavoriteController::class, 'destroy'])
         ->whereNumber('id');
 
-    // --- Corbeille des espaces utilisateurs (F11.4) --------------------------
-    // Un SEUL écran pour les cinq types d'annonces : le besoin est d'alléger
-    // les onglets, une corbeille par onglet aurait raté le but.
-    // ⚠️ Aucune route de suppression ici : mettre à la corbeille reste le geste
-    // des contrôleurs métier (qui portent leurs policies) — `SoftDeletes` fait
-    // le reste. Ce contrôleur ne sait que regarder et restaurer.
+    // --- Corbeille des espaces utilisateurs (F11.4 + F11.5) ------------------
+    // Un SEUL écran pour tout ce qu'on range : le besoin est d'alléger les
+    // onglets, une corbeille par onglet aurait raté le but.
+    // ⚠️ Aucune route de suppression ici : ranger reste le geste des
+    // contrôleurs métier (qui portent leurs policies). Ce contrôleur ne sait
+    // que regarder et restaurer.
+    // ⚠️ `{type}` couvre DEUX familles : les 5 annonces de `ListingTrash`
+    // (effacées pour de bon au bout de 30 jours) et les 2 dossiers de
+    // `PersonalHiding` (`request`, `booking` — jamais effacés, seulement
+    // masqués au client). Le contrôleur aiguille sur le slug.
     Route::get('me/trash', [TrashController::class, 'index']);
+    // ⚠️ `{id}` n'est PLUS contraint à un nombre depuis F11.5 : l'identifiant
+    // d'une notification est un **UUID**. Le contrôleur refuse lui-même un
+    // identifiant non numérique pour les cinq types d'annonces.
     Route::post('me/trash/{type}/{id}/restore', [TrashController::class, 'restore'])
-        ->whereNumber('id');
+        ->where('id', '[0-9a-fA-F-]+');
 
     // --- Paiement : initiation (B14.2) ---------------------------------------
     // Crée l'intention côté PSP et renvoie l'URL de redirection. La confirmation

@@ -7,11 +7,12 @@ import { PageMeta } from '../../../core/api/pagination.model';
 import { ServiceRequest } from '../../../models/service-request.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { HideButtonComponent } from '../../../shared/components/hide-button/hide-button';
 import { REQUEST_STEPS, RequestStep, stepState } from './request-timeline';
 
 @Component({
   selector: 'app-requests-page',
-  imports: [DatePipe, RouterLink, BackLinkComponent],
+  imports: [DatePipe, RouterLink, BackLinkComponent, HideButtonComponent],
   templateUrl: './requests-page.html',
   styleUrl: './requests-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +39,15 @@ export class RequestsPageComponent {
   protected readonly loadError = signal(false);
   protected readonly items = signal<ServiceRequest[]>([]);
   protected readonly meta = signal<PageMeta | null>(null);
+
+  /**
+   * Demande dont le rangement est en cours (requête en vol). ⚠️ Un identifiant
+   * et non un booléen global : un drapeau unique figerait toute la liste
+   * pendant qu'une seule carte travaille.
+   */
+  protected readonly hidingId = signal<number | null>(null);
+  /** Confirmation de rangement, affichée en tête de liste. */
+  protected readonly hidden = signal<string | null>(null);
 
   /** Y a-t-il d'autres pages avant / après la page courante ? */
   protected readonly hasPrev = computed(() => (this.meta()?.current_page ?? 1) > 1);
@@ -82,6 +92,40 @@ export class RequestsPageComponent {
     if (this.hasNext()) {
       this.load((this.meta()?.current_page ?? 0) + 1);
     }
+  }
+
+  /**
+   * Range une demande clôturée dans la corbeille (F11.5).
+   *
+   * ⚠️ **Rien n'est supprimé** : la demande quitte cette liste et reste dans le
+   * dossier de Kaikun. On la retire de l'affichage sans recharger — le serveur
+   * vient de confirmer, une seconde requête ne dirait rien de plus — et sans
+   * décrémenter la pagination : la page suivante se recalculera d'elle-même au
+   * prochain chargement.
+   */
+  protected hide(req: ServiceRequest): void {
+    this.hidingId.set(req.id);
+    this.hidden.set(null);
+
+    this.requests.hide(req.id).subscribe({
+      next: () => {
+        this.items.update((liste) => liste.filter((r) => r.id !== req.id));
+        this.hidingId.set(null);
+        this.hidden.set(
+          `Demande ${req.reference} rangée dans votre corbeille. Rien n'est supprimé : vous pouvez la restaurer.`,
+        );
+      },
+      error: () => {
+        this.hidingId.set(null);
+        this.hidden.set(null);
+        this.loadError.set(false);
+        // ⚠️ Le refus est le cas NORMAL d'une demande encore en cours (422) :
+        // on le dit sans dramatiser, et sans casser la liste affichée.
+        this.hidden.set(
+          'Cette demande ne peut pas être rangée pour le moment — elle est encore en cours de traitement.',
+        );
+      },
+    });
   }
 
   /** Montant formaté en FCFA (ou null si non renseigné). */

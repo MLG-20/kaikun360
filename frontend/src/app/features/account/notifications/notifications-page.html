@@ -40,6 +40,10 @@
     }
   </div>
 
+  @if (hidden()) {
+    <p class="pf-state" role="status">{{ hidden() }}</p>
+  }
+
   <!-- ======================= Liste des notifications ======================= -->
   <ul class="nt-list">
     @for (item of items(); track item.id) {
@@ -70,6 +74,19 @@
             }
           </span>
         </button>
+
+        <!-- F11.5 — HORS du bouton d'ouverture : cliquer « Ranger » ne doit pas
+             ouvrir la notification qu'on est en train de faire disparaître.
+             N'apparaît que sur une notification DÉJÀ LUE (`hideable`, décidé
+             par le serveur) : la ranger avant de l'avoir ouverte effacerait
+             l'information sans l'avoir reçue. -->
+        <div class="nt-card-actions">
+          <app-hide-button
+            [hideable]="!!item.hideable"
+            [busy]="hidingId() === item.id"
+            title="Ranger dans la corbeille. La notification reste consultable : rien n'est supprimé."
+            (ranger)="hide(item)" />
+        </div>
       </li>
     }
   </ul>

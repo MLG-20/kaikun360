@@ -7,6 +7,7 @@ import { PageMeta } from '../../../core/api/pagination.model';
 import { Booking } from '../../../models/booking.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { HideButtonComponent } from '../../../shared/components/hide-button/hide-button';
 import { BookingTone, bookingTone } from './booking-display';
 import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 
@@ -19,7 +20,7 @@ interface RefundNotice {
 
 @Component({
   selector: 'app-bookings-page',
-  imports: [DatePipe, RouterLink, BackLinkComponent],
+  imports: [DatePipe, RouterLink, BackLinkComponent, HideButtonComponent],
   templateUrl: './bookings-page.html',
   styleUrl: './bookings-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,6 +59,12 @@ export class BookingsPageComponent {
   protected readonly cancelError = signal<string | null>(null);
   /** Résultat de remboursement de la dernière annulation réussie. */
   protected readonly refund = signal<RefundNotice | null>(null);
+
+  // — Rangement dans la corbeille (F11.5) —
+  /** Réservation dont le rangement est en vol (endort ce bouton, pas la liste). */
+  protected readonly hidingId = signal<number | null>(null);
+  /** Issue du dernier rangement (succès ou refus), affichée en tête de liste. */
+  protected readonly hidden = signal<string | null>(null);
 
   protected readonly hasPrev = computed(() => (this.meta()?.current_page ?? 1) > 1);
   protected readonly hasNext = computed(() => {
@@ -140,6 +147,39 @@ export class BookingsPageComponent {
         this.busyId.set(null);
         this.cancelError.set(
           "L'annulation n'a pas pu aboutir. Merci de réessayer plus tard.",
+        );
+      },
+    });
+  }
+
+  // — Rangement (F11.5) —
+
+  /**
+   * Range une réservation terminée ou annulée dans la corbeille.
+   *
+   * ⚠️ **Rien n'est supprimé, et il faut que l'écran le dise** : une
+   * réservation est un contrat. Elle quitte cette liste ; la comptabilité, les
+   * reversements au partenaire et le back-office continuent de la voir. C'est
+   * précisément pour cela qu'on ne peut pas offrir une vraie suppression ici.
+   */
+  protected hide(booking: Booking): void {
+    this.hidingId.set(booking.id);
+    this.hidden.set(null);
+
+    this.bookings.hide(booking.id).subscribe({
+      next: () => {
+        // Retirée de l'affichage sans recharger : le serveur vient de
+        // confirmer, une seconde requête ne dirait rien de plus.
+        this.items.update((list) => list.filter((b) => b.id !== booking.id));
+        this.hidingId.set(null);
+        this.hidden.set(
+          `Réservation ${booking.reference} rangée dans votre corbeille. Rien n'est supprimé : vous pouvez la restaurer.`,
+        );
+      },
+      error: () => {
+        this.hidingId.set(null);
+        this.hidden.set(
+          "Cette réservation ne peut pas être rangée pour le moment — elle n'est pas terminée.",
         );
       },
     });

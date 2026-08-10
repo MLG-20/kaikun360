@@ -5,6 +5,7 @@ namespace App\Modules\Core\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Core\Http\Resources\NotificationResource;
 use App\Support\ApiResponse;
+use App\Support\Trash\PersonalHiding;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -35,7 +36,14 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $notifications = $user->notifications()->paginate(15);
+        $notifications = $user->notifications()
+            // F11.5 — les notifications rangées quittent la liste. ⚠️ Le
+            // compteur de non-lues, lui, n'est PAS filtré : par construction on
+            // ne range qu'une notification déjà LUE, donc aucune non-lue ne peut
+            // être masquée — et si la règle changeait un jour, mieux vaut que la
+            // pastille continue de dire la vérité plutôt que de se taire.
+            ->whereNull('hidden_at')
+            ->paginate(15);
 
         return NotificationResource::collection($notifications)
             ->additional(['unread_count' => $user->unreadNotifications()->count()]);
@@ -69,6 +77,35 @@ class NotificationController extends Controller
         return ApiResponse::success([
             'notification' => NotificationResource::make($item),
             'unread_count' => $request->user()->unreadNotifications()->count(),
+        ]);
+    }
+
+    /**
+     * Range UNE notification dans ma corbeille (F11.5).
+     * POST /api/v1/users/me/notifications/{notification}/hide
+     *
+     * ⚠️ **Ne supprime rien** : écrit `hidden_at`, honorée par la seule liste
+     * ci-dessus. Une notification est la trace d'un événement — la garder
+     * permet de retrouver « quand ai-je été prévenu ? », question qui se pose
+     * exactement le jour d'un désaccord.
+     *
+     * ⚠️ On ne range qu'une notification **déjà lue** : la masquer avant de
+     * l'avoir ouverte reviendrait à effacer l'information sans l'avoir reçue.
+     */
+    public function hide(Request $request, string $notification, PersonalHiding $corbeille): JsonResponse
+    {
+        // `findOrFail` sur la relation de l'utilisateur : une notification
+        // inexistante OU appartenant à autrui renvoie 404 (jamais de fuite).
+        $item = $request->user()->notifications()->findOrFail($notification);
+
+        if ($raison = $corbeille->raisonDeBlocage($item, $request->user())) {
+            return ApiResponse::error($raison, 422);
+        }
+
+        $corbeille->masquer($item, $request->user());
+
+        return ApiResponse::success([
+            'message' => 'Notification rangée dans votre corbeille. Rien n’est supprimé.',
         ]);
     }
 

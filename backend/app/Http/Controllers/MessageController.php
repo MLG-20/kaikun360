@@ -14,6 +14,7 @@ use App\Notifications\NewMessageNotification;
 use App\Services\SupportAssignmentService;
 use App\Support\ApiResponse;
 use App\Support\Messaging\ConversationContext;
+use App\Support\Trash\PersonalHiding;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,6 +47,11 @@ class MessageController extends Controller
         $user = $request->user();
 
         $conversations = $user->conversations()
+            // F11.5 — les fils que CE participant a rangés quittent SA liste.
+            // ⚠️ `wherePivotNull` et non `whereNull` : le masque est sur le
+            // pivot `conversation_user`. Un fil a plusieurs lecteurs — le ménage
+            // du client ne retire rien de la file de l'agent qui le supervise.
+            ->wherePivotNull('hidden_at')
             // Correspondant(s) + aperçu du dernier message pour la liste.
             // `assignedAgent` : le client voit le nom de qui lui répond (F8.12).
             // `participants.roles` : la ressource affiche le RÔLE de chaque
@@ -96,6 +102,40 @@ class MessageController extends Controller
         }
 
         return ConversationResource::make($conversation);
+    }
+
+    /**
+     * Range un fil dans MA corbeille (F11.5).
+     * POST /api/v1/messages/{conversation}/hide
+     *
+     * ⚠️ **Le fil n'est ni supprimé ni clos** : seul le pivot de CE participant
+     * porte le masque. L'agent qui supervise le fil continue de le voir
+     * intégralement dans sa file — c'est toute la raison pour laquelle la
+     * colonne est sur `conversation_user` et non sur `conversations`.
+     *
+     * ⚠️ **Ranger n'est pas se taire** : un message neuf fait revenir le fil
+     * automatiquement (règle posée sur `Message::created`, hors de ce
+     * contrôleur parce que quatre endroits créent des messages). Sans elle, la
+     * réponse d'un agent atterrirait dans un fil invisible.
+     */
+    public function hide(Request $request, Conversation $conversation, PersonalHiding $corbeille): JsonResponse
+    {
+        $user = $request->user();
+
+        // Accès scopé : 404 si l'utilisateur ne participe pas au fil.
+        $conversation = $user->conversations()->findOrFail($conversation->id);
+
+        // On ne range qu'un fil entièrement lu — sinon on masque une question
+        // qui attend encore une réponse de soi.
+        if ($raison = $corbeille->raisonDeBlocage($conversation, $user)) {
+            return ApiResponse::error($raison, 422);
+        }
+
+        $corbeille->masquer($conversation, $user);
+
+        return ApiResponse::success([
+            'message' => 'Discussion rangée dans votre corbeille. Elle revient si quelqu’un vous écrit.',
+        ]);
     }
 
     /**

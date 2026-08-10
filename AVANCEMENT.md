@@ -180,6 +180,16 @@ sécurité renforcé — c'est là que tout passe.
   donc alléger vos écrans sans craindre de perdre quelque chose. ⚠️ Un élément
   restauré revient **hors ligne** : c'est vous qui le republiez, après avoir
   vérifié que son prix et ses informations sont toujours justes.
+- **Et côté client, rien ne se perd non plus — au sens fort.** Un client peut
+  ranger ses **demandes clôturées**, ses **réservations terminées ou annulées**,
+  ses **discussions** et ses **notifications** déjà lues : ses écrans
+  s'allègent, sa corbeille les garde. ⚠️ **Ici, rien n'est jamais supprimé, pas
+  même au bout de 30 jours** : une réservation est un contrat, une demande est
+  un dossier suivi par un agent — ils restent entiers de notre côté, ce qui
+  protège aussi bien le client que la plateforme le jour d'un désaccord. Ranger
+  ne fait donc que retirer une ligne de **sa** vue. ⚠️ Et **ranger n'est pas se
+  taire** : si quelqu'un répond dans une discussion rangée, elle revient d'elle-
+  même dans la liste.
 - **Confort de travail au quotidien** : dans le back-office comme dans les
   quatre espaces, le **menu latéral se replie d'un clic** en une colonne
   d'icônes et rend la largeur au contenu — utile sur un petit portable, face à

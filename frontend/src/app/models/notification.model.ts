@@ -30,6 +30,11 @@ export interface AppNotification {
   read: boolean;
   /** Horodatage de lecture (null tant que non lue). */
   read_at: string | null;
+  /**
+   * F11.5 — peut-elle être rangée dans la corbeille ? Décidé par le serveur :
+   * on ne range qu'une notification DÉJÀ LUE.
+   */
+  hideable?: boolean;
   /** Horodatage de création. */
   created_at: string | null;
 }

@@ -633,6 +633,90 @@ envoyé l'offre à la corbeille sans ses images, et elle en serait revenue vide.
 `supprimerLesMedias()` n'est donc appelée que par `corbeille:purger` — ne
 l'appeler nulle part ailleurs.
 
+
+## Corbeille de l'espace CLIENT — masquage personnel (F11.5)
+
+Le client aussi veut alléger ses onglets. Mais **ses objets ne lui appartiennent
+pas seul** : une demande est la file de travail d'un agent, une réservation est
+un **contrat**, un fil de discussion est supervisé par le support. `SoftDeletes`
+y est donc **INTERDIT** — il retirerait la ligne des requêtes de *tout le monde*,
+back-office compris, et le client rangerait sa liste en effaçant une pièce dont
+dépendent la comptabilité, le reversement au partenaire et le règlement d'un
+litige.
+
+D'où un mécanisme **distinct** : une colonne `hidden_at`, honorée **uniquement**
+par les listes de l'espace client.
+
+| | |
+| --- | --- |
+| Où vit le masque | `requests.hidden_at` · `bookings.hidden_at` · `notifications.hidden_at` · **`conversation_user.hidden_at`** |
+| Règles | [`app/Support/Trash/PersonalHiding.php`](app/Support/Trash/PersonalHiding.php) |
+| Lecture | `GET /me/trash` (même écran que F11.4) |
+| Retour | `POST /me/trash/{type}/{id}/restore`, `type` ∈ {request, booking, conversation, notification} |
+| Rangement | `POST /requests/{id}/hide` · `POST /bookings/{id}/hide` · `POST /messages/{id}/hide` · `POST /users/me/notifications/{uuid}/hide` |
+
+⚠️ **Le masque d'un FIL est sur le PIVOT `conversation_user`, pas sur
+`conversations`.** Un fil a plusieurs lecteurs : le poser sur le fil ferait
+disparaître la conversation de l'écran de l'agent parce que le client a fait le
+ménage — exactement l'accident que toute la tranche cherche à éviter.
+
+⚠️ **Un message neuf FAIT REVENIR le fil rangé.** La règle est posée sur
+`Message::created`, et non dans les contrôleurs, parce que **quatre** endroits
+créent un message (espace client ×3, back-office ×1) : recopiée quatre fois, on
+l'oublierait au cinquième. Sans elle, la réponse d'un agent atterrirait dans un
+fil invisible et personne ne comprendrait le silence du client. *Ranger dit « je
+n'ai plus rien à y faire », pas « ne me parlez plus ».*
+
+⚠️ **On ne range que ce qui est terminé, vu ou lu** — un dossier vivant reste
+sous les yeux. Refus en **422 avec le motif** : « impossible » tout court laisse
+la personne sans issue.
+
+| Type | Condition |
+| --- | --- |
+| Demande | statut **clôturé** |
+| Réservation | **terminée** ou **annulée** (une réservation à venir s'annule, elle ne se cache pas) |
+| Fil | **entièrement lu** |
+| Notification | **déjà lue** |
+
+⚠️ **Les quatre ressources exposent `hideable`**, miroir exact de
+`PersonalHiding::raisonDeBlocage()`. Le front n'a jamais à rejouer la règle : un
+bouton qui échoue en 422 est pire que pas de bouton.
+
+⚠️ **Un dossier restauré revient TEL QUEL, statut compris** — aucune symétrie
+avec `ListingTrash::eteindre()`. Une annonce revient éteinte parce qu'elle est
+*publiée à des tiers* et que le monde a pu changer ; un dossier masqué n'a
+jamais cessé d'exister pour Kaikun ni pour le partenaire, et toucher à son
+statut reviendrait à **réécrire un contrat**.
+
+⚠️ **`notifications.id` est un UUID.** La route `me/trash/{type}/{id}/restore` a
+donc perdu sa contrainte `whereNumber` (`->where('id', '[0-9a-fA-F-]+')`), et le
+contrôleur refuse lui-même un identifiant non numérique pour les cinq types
+d'annonces. Toute la corbeille rend son `id` en **chaîne**, y compris pour les
+annonces : un type d'identifiant qui change d'une ligne à l'autre finit par se
+comparer de travers.
+
+⚠️ **`GET /me/trash` est PLAFONNÉ (200), et c'est F11.5 qui l'a rendu
+nécessaire.** Tant que la corbeille ne contenait que des annonces, elle se
+vidait seule au bout de 30 jours : elle ne pouvait pas grossir, d'où l'absence
+de pagination. Les dossiers masqués ne sont jamais purgés — la réponse n'aurait
+plus eu de borne. Le plafond porte sur la liste **fusionnée et triée** (« les
+200 derniers rangements », ce que l'écran lit naturellement) et il est
+**annoncé** (`truncated`, `total`) : une corbeille qui cache une partie de ce
+qu'elle contient ne remplit plus son seul office.
+
+⚠️ **`hidden_at` n'est dans aucun `$fillable`** : ce n'est pas une donnée du
+dossier, c'est une préférence d'affichage. Elle ne s'écrit que par
+`PersonalHiding`, jamais par un `create()` / `update()` de masse.
+
+⚠️ **Le compteur de non-lues n'est PAS filtré.** Par construction, seule une
+notification déjà lue peut être rangée — et si la règle changeait un jour, mieux
+vaut que la pastille continue de dire la vérité plutôt que de se taire.
+
+Tests : [`tests/Feature/Transversal/ClientTrashTest.php`](tests/Feature/Transversal/ClientTrashTest.php)
+(14). Le plus important est `test_ranger_ne_supprime_rien_la_ligne_reste_entiere_en_base`
+— si quelqu'un remplace un jour `hidden_at` par `SoftDeletes` « pour faire comme
+les annonces », c'est là que ça casse.
+
 ---
 
 ## Performance

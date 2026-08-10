@@ -96,7 +96,11 @@ class User extends Authenticatable
     public function conversations(): BelongsToMany
     {
         return $this->belongsToMany(Conversation::class)
-            ->withPivot('last_read_at')
+            // `hidden_at` (F11.5) : le fil rangé par CE participant dans sa
+            // corbeille. ⚠️ Sur le pivot et pas sur `conversations` — un fil a
+            // plusieurs lecteurs, et le ménage du client ne doit rien retirer
+            // de la file de l'agent qui le supervise.
+            ->withPivot('last_read_at', 'hidden_at')
             ->withTimestamps();
     }
 

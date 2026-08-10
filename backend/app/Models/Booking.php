@@ -61,6 +61,11 @@ class Booking extends Model
             'checked_in_at' => 'datetime',
             'checked_out_at' => 'datetime',
             'housekeeping_status' => HousekeepingStatus::class,
+            // F11.5 — rangée par le client dans sa corbeille. ⚠️ VOLONTAIREMENT
+            // absente de `$fillable` : une réservation est un contrat, ce champ
+            // n'en fait pas partie — c'est une préférence d'affichage, écrite
+            // par `PersonalHiding` et par rien d'autre.
+            'hidden_at' => 'datetime',
         ];
     }
 

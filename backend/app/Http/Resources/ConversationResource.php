@@ -2,9 +2,11 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Conversation;
 use App\Models\User;
 use App\Modules\Core\Enums\UserRole;
 use App\Support\Messaging\ConversationContext;
+use App\Support\Trash\PersonalHiding;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;
@@ -22,7 +24,7 @@ use Illuminate\Support\Str;
  * Les relations ne sont projetées que si elles ont été chargées en amont
  * (`whenLoaded`), pour maîtriser les requêtes.
  *
- * @mixin \App\Models\Conversation
+ * @mixin Conversation
  */
 class ConversationResource extends JsonResource
 {
@@ -74,6 +76,14 @@ class ConversationResource extends JsonResource
             'messages' => MessageResource::collection($this->whenLoaded('messages')),
             // Messages non lus pour l'utilisateur courant (pastille de la liste).
             'unread_count' => $user ? $this->unreadCountFor($user) : 0,
+            // F11.5 — ce participant peut-il ranger le fil dans sa corbeille ?
+            // ⚠️ Le calcul n'est PAS `unread_count === 0` recopié à la main :
+            // il passe par `PersonalHiding`, seule écriture de la règle. La
+            // relation `participants` doit être chargée (elle l'est sur la liste
+            // comme sur le détail), sans quoi le service la relirait par fil.
+            'hideable' => $user
+                ? (new PersonalHiding)->estRangeable($this->resource, $user)
+                : false,
             'last_message_at' => $this->last_message_at,
             'created_at' => $this->created_at,
         ];

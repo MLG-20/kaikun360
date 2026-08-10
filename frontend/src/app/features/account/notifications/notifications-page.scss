@@ -176,3 +176,12 @@
   font-size: 0.9rem;
   color: var(--k-muted);
 }
+
+/* F11.5 — barre d'action d'une carte de notification, POSÉE HORS du bouton
+   d'ouverture : imbriquer un bouton dans un bouton est invalide en HTML, et le
+   clic sur « Ranger » ouvrirait la notification qu'on fait disparaître. */
+.nt-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 1rem 0.75rem;
+}

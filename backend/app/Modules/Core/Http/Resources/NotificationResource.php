@@ -2,8 +2,10 @@
 
 namespace App\Modules\Core\Http\Resources;
 
+use App\Support\Trash\PersonalHiding;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Notifications\DatabaseNotification;
 
 /**
  * Représentation JSON d'une notification "base de données" pour l'espace client (F3.6).
@@ -18,7 +20,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * Les valeurs par défaut (`??`) garantissent un rendu robuste même si une
  * notification ancienne ou externe n'a pas rempli tous les champs attendus.
  *
- * @mixin \Illuminate\Notifications\DatabaseNotification
+ * @mixin DatabaseNotification
  */
 class NotificationResource extends JsonResource
 {
@@ -39,6 +41,13 @@ class NotificationResource extends JsonResource
             // État de lecture exposé en booléen : plus simple à consommer côté Angular
             // que l'horodatage brut (que l'on conserve tout de même ci-dessous).
             'read' => $this->read_at !== null,
+            // F11.5 — peut-elle être rangée dans la corbeille ? Miroir exact de
+            // `PersonalHiding` : on ne range qu'une notification DÉJÀ LUE, la
+            // masquer avant de l'avoir ouverte effacerait l'information sans
+            // l'avoir reçue.
+            'hideable' => $request->user()
+                ? (new PersonalHiding)->estRangeable($this->resource, $request->user())
+                : false,
             'read_at' => $this->read_at,
             'created_at' => $this->created_at,
         ];

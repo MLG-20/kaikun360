@@ -73,6 +73,12 @@
     }
   </div>
 } @else {
+  <!-- F11.5 — issue du rangement, en tête de liste : la carte concernée vient
+       de disparaître, le message ne peut donc pas vivre sur elle. -->
+  @if (hidden()) {
+    <p class="pf-state" role="status">{{ hidden() }}</p>
+  }
+
   <!-- ============================ Liste des réservations =================== -->
   <ul class="bk-list">
     @for (bk of items(); track bk.id) {
@@ -186,6 +192,23 @@
                 Annuler la réservation
               </button>
             }
+          </footer>
+        }
+
+        <!--
+          F11.5 — Ranger une réservation TERMINÉE ou ANNULÉE. ⚠️ Ce n'est ni
+          l'inverse ni le complément de « Annuler » : les deux boutons peuvent
+          être absents en même temps (une nuitée à venir n'est ni annulable ici,
+          ni rangeable). Et surtout, ranger ne SUPPRIME rien — le mot du bouton
+          le dit, l'infobulle le répète.
+        -->
+        @if (bk.hideable) {
+          <footer class="bk-actions">
+            <app-hide-button
+              [hideable]="true"
+              [busy]="hidingId() === bk.id"
+              title="Ranger dans la corbeille. La réservation reste enregistrée : rien n'est supprimé."
+              (ranger)="hide(bk)" />
           </footer>
         }
       </li>

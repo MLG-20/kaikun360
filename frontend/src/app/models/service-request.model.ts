@@ -15,4 +15,10 @@ export interface ServiceRequest {
   priority: string | null;
   created_at: string | null;
   allowed_transitions: string[];
+  /**
+   * F11.5 — le client peut-il ranger cette demande dans sa corbeille ?
+   * ⚠️ Décidé par le SERVEUR (seule une demande clôturée se range) : ne jamais
+   * rejouer la règle ici, l'écran proposerait un bouton qui échoue.
+   */
+  hideable?: boolean;
 }

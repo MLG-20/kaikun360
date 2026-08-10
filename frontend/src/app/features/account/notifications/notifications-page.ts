@@ -9,13 +9,14 @@ import { AppNotification, NotificationCategory } from '../../../models/notificat
 import { SPACE_CONFIG } from '../../../layouts/space-layout/space.config';
 import { AccountIcon } from '../account-nav';
 import { AccountIconComponent } from '../account-icon';
+import { HideButtonComponent } from '../../../shared/components/hide-button/hide-button';
 
 /** Préfixe des espaces client — celui pour lequel le serveur produit les `action_url`. */
 const CLIENT_BASE = '/mon-espace';
 
 @Component({
   selector: 'app-notifications-page',
-  imports: [DatePipe, AccountIconComponent],
+  imports: [DatePipe, AccountIconComponent, HideButtonComponent],
   templateUrl: './notifications-page.html',
   styleUrl: './notifications-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,6 +59,10 @@ export class NotificationsPageComponent {
   protected readonly unreadCount = this.unread.notifications;
   /** Notification en cours de marquage (désactive sa carte le temps de l'appel). */
   protected readonly busyId = signal<string | null>(null);
+  /** Notification dont le rangement est en vol (F11.5) — endort son seul bouton. */
+  protected readonly hidingId = signal<string | null>(null);
+  /** Issue du dernier rangement, affichée au-dessus de la liste. */
+  protected readonly hidden = signal<string | null>(null);
 
   /** Y a-t-il d'autres pages avant / après la page courante ? */
   protected readonly hasPrev = computed(() => (this.meta()?.current_page ?? 1) > 1);
@@ -171,7 +176,10 @@ export class NotificationsPageComponent {
   protected markAll(): void {
     this.notifications.markAllAsRead().subscribe({
       next: () => {
-        this.items.update((list) => list.map((n) => ({ ...n, read: true })));
+        // ⚠️ `hideable` suit `read`, sinon le bouton « Ranger » n'apparaîtrait
+        // qu'au prochain chargement de page : la règle serveur est « lue ⇒
+        // rangeable », on l'applique à l'identique sur la liste locale.
+        this.items.update((list) => list.map((n) => ({ ...n, read: true, hideable: true })));
         this.unread.setNotifications(0);
       },
     });
@@ -179,7 +187,37 @@ export class NotificationsPageComponent {
 
   /** Passe une notification à l'état lu dans la liste locale (immutable). */
   private applyRead(id: string): void {
-    this.items.update((list) => list.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    // Même raison qu'au-dessus : lue ⇒ rangeable, sans attendre un rechargement.
+    this.items.update((list) =>
+      list.map((n) => (n.id === id ? { ...n, read: true, hideable: true } : n)),
+    );
+  }
+
+  /**
+   * Range une notification LUE dans la corbeille (F11.5).
+   *
+   * ⚠️ **Rien n'est supprimé** : la trace reste, et c'est elle qui permet de
+   * répondre un jour à « quand ai-je été prévenu ? ». On ne touche PAS au
+   * compteur de non-lues : par construction, seule une notification déjà lue
+   * peut être rangée, elle n'y comptait donc plus.
+   */
+  protected hide(item: AppNotification): void {
+    this.hidingId.set(item.id);
+    this.hidden.set(null);
+
+    this.notifications.hide(item.id).subscribe({
+      next: () => {
+        this.items.update((list) => list.filter((n) => n.id !== item.id));
+        this.hidingId.set(null);
+        this.hidden.set('Notification rangée dans votre corbeille. Rien n’est supprimé.');
+      },
+      error: () => {
+        this.hidingId.set(null);
+        this.hidden.set(
+          'Cette notification ne peut pas être rangée — ouvrez-la d’abord pour la marquer comme lue.',
+        );
+      },
+    });
   }
 
   /** Icône (réutilise le jeu de l'espace) selon la catégorie de la notification. */

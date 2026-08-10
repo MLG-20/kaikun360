@@ -40,6 +40,10 @@
     </p>
   </div>
 
+  @if (hidden()) {
+    <p class="pf-state" role="status">{{ hidden() }}</p>
+  }
+
   <!-- ======================= Liste des conversations ======================= -->
   <ul class="ms-list">
     @for (conv of items(); track conv.id) {
@@ -78,6 +82,18 @@
             </span>
           }
         </a>
+
+        <!-- F11.5 — HORS du lien du fil : cliquer « Ranger » ne doit pas ouvrir
+             la conversation qu'on fait disparaître. N'apparaît que sur un fil
+             ENTIÈREMENT LU (`hideable`, décidé par le serveur) — ranger un fil
+             qui attend encore ma réponse masquerait une question. -->
+        <div class="ms-item-actions">
+          <app-hide-button
+            [hideable]="!!conv.hideable"
+            [busy]="hidingId() === conv.id"
+            title="Ranger dans la corbeille. Le fil revient si quelqu'un vous écrit."
+            (ranger)="hide(conv)" />
+        </div>
       </li>
     }
   </ul>

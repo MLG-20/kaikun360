@@ -50,6 +50,11 @@ class ServiceRequest extends Model
             'budget_xof' => 'integer',
             'status' => RequestStatus::class,
             'priority' => RequestPriority::class,
+            // F11.5 — rangée par le client dans sa corbeille. ⚠️ VOLONTAIREMENT
+            // absente de `$fillable` : ce n'est pas une donnée de la demande,
+            // c'est une préférence d'affichage. Elle ne s'écrit que par
+            // `PersonalHiding`, jamais par un `create()`/`update()` de masse.
+            'hidden_at' => 'datetime',
         ];
     }
 

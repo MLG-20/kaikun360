@@ -26,6 +26,12 @@
     <a class="k-btn k-btn--primary" routerLink="/immobilier">Explorer l'immobilier</a>
   </div>
 } @else {
+  <!-- F11.5 — issue du rangement (succès comme refus), en tête de liste pour
+       être lue sans avoir à chercher la carte concernée, qui vient de partir. -->
+  @if (hidden()) {
+    <p class="pf-state" role="status">{{ hidden() }}</p>
+  }
+
   <!-- ============================ Liste des demandes ======================= -->
   <ul class="rq-list">
     @for (req of items(); track req.id) {
@@ -83,6 +89,17 @@
             </li>
           }
         </ol>
+
+        <!-- F11.5 — hors du lien de la carte : cliquer « Ranger » ne doit pas
+             ouvrir le détail de la demande qu'on vient de faire disparaître.
+             Le bouton ne s'affiche que si le SERVEUR l'autorise (demande
+             clôturée) : `hideable` est le miroir exact de sa règle. -->
+        <div class="rq-card-actions">
+          <app-hide-button
+            [hideable]="!!req.hideable"
+            [busy]="hidingId() === req.id"
+            (ranger)="hide(req)" />
+        </div>
       </li>
     }
   </ul>

@@ -112,6 +112,19 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     ready: true, // F3.7 ✅
     badge: 'messages', // F8.13 — pastille de non-lus
   },
+  {
+    // F11.5 — Placée EN DERNIER, et volontairement : une corbeille n'est pas un
+    // lieu de travail quotidien, c'est un filet de sécurité. La hisser dans le
+    // menu la mettrait au même rang que les rubriques métier.
+    // ⚠️ La description ne parle d'AUCUN délai, contrairement à celle des
+    // espaces propriétaire et prestataire : chez le client, rien n'est jamais
+    // supprimé — ses dossiers sont partagés avec Kaikun.
+    label: 'Corbeille',
+    description: 'Ce que vous avez rangé de vos listes. Rien n’y est supprimé.',
+    path: 'corbeille',
+    icon: 'trash',
+    ready: true, // F11.5 ✅
+  },
   // NB : « Profil » et « Se déconnecter » ne sont PAS dans le menu de gauche :
   // ils sont accessibles depuis le menu utilisateur de l'en-tête (haut droite),
   // ce qui garde le rail court (pas de défilement). De même, « Aide » (mode

@@ -10,6 +10,7 @@ use App\Http\Requests\UpdateRequestStatusRequest;
 use App\Http\Resources\ServiceRequestResource;
 use App\Models\ServiceRequest;
 use App\Support\ApiResponse;
+use App\Support\Trash\PersonalHiding;
 use App\Support\Webhooks\WebhookDispatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -45,10 +46,41 @@ class RequestController extends Controller
     public function my(Request $request): AnonymousResourceCollection
     {
         $requests = ServiceRequest::where('user_id', $request->user()->id)
+            // F11.5 — les demandes rangées par le client quittent SA liste.
+            // ⚠️ Ce filtre n'existe qu'ici et dans `BookingController::my` : la
+            // ligne reste entière en base et le back-office continue de la voir,
+            // parce qu'une demande clôturée reste une pièce du dossier de Kaikun.
+            ->whereNull('hidden_at')
             ->latest()
             ->paginate(15);
 
         return ServiceRequestResource::collection($requests);
+    }
+
+    /**
+     * Range une de MES demandes dans ma corbeille. POST /api/v1/requests/{request}/hide
+     *
+     * ⚠️ **Ne supprime rien** (voir la migration `add_hidden_at_…`) : la demande
+     * disparaît de la liste du client et de nulle part ailleurs. C'est pour
+     * cela que le geste vit ici, dans le contrôleur qui possède déjà la règle
+     * « cette demande est-elle à moi ? », et non dans `TrashController` — qui,
+     * lui, ne sait que regarder et restaurer.
+     */
+    public function hide(Request $request, ServiceRequest $serviceRequest, PersonalHiding $corbeille): JsonResponse
+    {
+        abort_unless($serviceRequest->user_id === $request->user()->id, 403);
+
+        // ⚠️ On ne range que ce qui est TERMINÉ : masquer une demande qu'un
+        // agent traite encore fabriquerait un oubli, pas un allègement.
+        if ($raison = $corbeille->raisonDeBlocage($serviceRequest, $request->user())) {
+            return ApiResponse::error($raison, 422);
+        }
+
+        $corbeille->masquer($serviceRequest, $request->user());
+
+        return ApiResponse::success([
+            'message' => 'Demande rangée dans votre corbeille. Elle y reste disponible : rien n’est supprimé.',
+        ]);
     }
 
     /**
