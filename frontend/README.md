@@ -1855,6 +1855,18 @@ Ce qu'il faut retenir hors de ce dossier :
   tracé, pas le graphique absent.*
 - ⚠️ **Un graphique ne se juge pas au test.** Les trois défauts corrigés en
   F13.1 étaient tous invisibles aux tests et évidents sur une capture d'écran.
+- ⚠️ **La dernière graduation d'un axe sert d'ÉCHELLE** : elle doit couvrir le
+  maximum des données, pas s'arrêter juste en dessous. Sinon le tracé sort de
+  son cadre — vu en recette, une courbe débordant par-dessus le bouton
+  « Données ». Et une exigence de graduations entières s'applique au **pas**,
+  jamais en filtrant les valeurs non entières après coup : ce filtrage jette
+  aussi le sommet. Verrouillé par `charts/chart-tokens.spec.ts`.
+- ⚠️ **`white-space: nowrap` se pose sur le fragment court, jamais sur son
+  conteneur.** Posé sur un paragraphe, il rend insécable *tout* ce qui peut y
+  passer — y compris un message de repli d'une phrase entière, qui impose alors
+  sa largeur en minimum à toute la colonne de grille. Même famille de piège que
+  `1fr` (qui vaut `minmax(auto, 1fr)`, donc un plancher à min-content) : dans
+  une grille dont les pistes doivent rester égales, écrire `minmax(0, 1fr)`.
 
 ### Commandes utiles
 

@@ -144,6 +144,45 @@ La règle générale : **l'absence d'animation doit donner le graphique tracé, 
 le graphique absent.** Tous les composants d'ici suivent ce motif, et tous
 respectent `prefers-reduced-motion`.
 
+### ⚠️ Deux pièges de largeur, vus en recette sur des données réelles
+
+Les deux venaient d'un cas que les données de démonstration ne contenaient pas :
+**aucun historique avant la fenêtre analysée**, donc les six tuiles affichant
+« Première activité sur ce poste ».
+
+- **`white-space: nowrap` se pose sur le fragment court, jamais sur son
+  conteneur.** Posé sur le paragraphe de variation, il rendait insécable *tout*
+  ce qui pouvait y passer — y compris ce message d'une phrase entière. Chaque
+  tuile imposait alors sa largeur en minimum à sa colonne, et la tuile de tête,
+  seule assez compressible pour céder, se retrouvait écrasée à 75 px.
+- **`1fr` vaut `minmax(auto, 1fr)`**, et ce minimum `auto` est le min-content de
+  la piste : une seule tuile au contenu insécable suffit à rendre les colonnes
+  inégales. Dans une grille dont les pistes doivent rester égales, écrire
+  **`minmax(0, 1fr)`**.
+
+La grille des tuiles est passée à **6 → 3 → 2 colonnes** : ces trois nombres
+divisent six exactement, donc jamais de case vide en fin de rangée à aucune
+largeur. C'est ce qui a fait renoncer à la tuile de tête sur deux colonnes
+(2 + 5 = 7 unités) : sept ne se répartit proprement qu'en une rangée, laquelle
+exige plus de largeur que le back-office n'en offre son rail déduit.
+
+### ⚠️ La dernière graduation d'un axe est une ÉCHELLE
+
+`niceTicks` doit produire un sommet **au-dessus** du maximum, jamais le dernier
+multiple en dessous : les composants s'en servent pour convertir une valeur en
+position. Vu en recette — un volume de 5 508 000 F sur un axe qui s'arrêtait à
+4 M, courbe débordant de sa carte et passant derrière le bouton « Données ». Le
+tracé était juste, l'axe était faux.
+
+Corollaire : une exigence de graduations **entières** (les réservations se
+comptent) s'applique au **pas**, via l'argument `integerOnly`. La filtrer après
+coup — écarter les valeurs non entières de la liste rendue — jette aussi le
+sommet, et rabaisse l'échelle sous les données.
+
+Du calcul pur, donc verrouillé : `charts/chart-tokens.spec.ts` teste la
+propriété « la dernière graduation couvre le maximum » sur une plage de valeurs,
+avec le cas exact de la recette.
+
 ### Un seul appel, un seul filtre
 
 `AdminService.statistics(periode)` sert **tous** les graphiques. Le filtre de

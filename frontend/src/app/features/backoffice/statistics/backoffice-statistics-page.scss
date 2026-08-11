@@ -105,41 +105,35 @@
   }
 }
 
-// Tuiles : la première occupe deux colonnes et porte le chiffre d'affaires.
+// Tuiles d'indicateurs : SIX, donc une grille de 6 → 3 → 2 colonnes.
 //
-// La grille est EXPLICITE (sept colonnes pour six tuiles, dont une double) et
-// non en `auto-fit`. L'ajustement automatique laissait la sixième tuile tomber
-// seule sur une deuxième ligne, orpheline sous cinq voisines — une rangée
-// d'indicateurs se lit d'un balayage, il lui faut une seule ligne.
+// ⚠️ Ces trois nombres divisent tous six exactement : il n'y a donc JAMAIS de
+// case vide en fin de rangée, à aucune largeur. C'est ce qui a fait renoncer à
+// la tuile de tête sur deux colonnes (2 + 5 = 7 unités) : sept ne se répartit
+// proprement qu'en une seule rangée, laquelle exige plus de largeur que le
+// back-office n'en offre une fois son rail déduit — d'où des tuiles trop
+// étroites pour leur montant. La tuile de tête se distingue par sa COULEUR et
+// la taille de son chiffre, ce qui suffit à la hiérarchie.
+//
+// ⚠️ `minmax(0, 1fr)` et non `1fr` : `1fr` vaut `minmax(auto, 1fr)`, et ce
+// minimum `auto` vaut le min-content de la piste. Une seule tuile au contenu
+// insécable impose alors sa largeur à la grille entière, et les colonnes
+// cessent d'être égales. Le plancher à 0 rend la répartition réellement égale.
 .st-tiles {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 14px;
 }
 
-.st-tiles__hero {
-  grid-column: span 2;
-}
-
-// Sous 1080 px, sept colonnes deviendraient illisibles : on repasse à trois
-// (le chiffre d'affaires en bandeau), puis à deux sur mobile.
-@media (max-width: 1080px) {
+@media (max-width: 1240px) {
   .st-tiles {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .st-tiles__hero {
-    grid-column: span 3;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 680px) {
   .st-tiles {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .st-tiles__hero {
-    grid-column: span 2;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

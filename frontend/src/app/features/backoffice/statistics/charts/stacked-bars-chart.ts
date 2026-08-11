@@ -259,8 +259,10 @@ export class StackedBarsChartComponent {
     const max = Math.max(0, ...this.points().map((point) => this.total(point)));
 
     // Des réservations se comptent en entiers : une graduation « 2,5 » n'aurait
-    // pas de sens. On force donc des pas d'au moins 1.
-    return niceTicks(max).filter((tick) => Number.isInteger(tick));
+    // pas de sens. ⚠️ C'est `niceTicks` qui doit le savoir — filtrer les valeurs
+    // non entières APRÈS coup jetterait aussi la dernière graduation, donc le
+    // sommet de l'échelle, et les piles sortiraient du cadre par le haut.
+    return niceTicks(max, 4, true);
   });
 
   private readonly maxValue = computed(() => {

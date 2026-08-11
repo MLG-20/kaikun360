@@ -142,13 +142,25 @@ function trimZero(value: number): string {
 }
 
 /**
- * Graduations « rondes » couvrant [0, max].
+ * Graduations « rondes » couvrant [0, max] — la DERNIÈRE est toujours ≥ `max`.
  *
  * Un axe qui va de 0 à 87 342 par pas de 21 835,5 est exact et illisible. On
- * arrondit le sommet à la puissance de dix supérieure la plus proche (1, 2, 2,5
- * ou 5 fois), ce qui donne des repères que l'œil retient : 0, 25 k, 50 k…
+ * arrondit le pas à la puissance de dix la plus proche (1, 2, 2,5, 5 ou 10
+ * fois), ce qui donne des repères que l'œil retient : 0, 25 k, 50 k…
+ *
+ * ⚠️ **Le sommet est le premier multiple du pas AU-DESSUS du maximum, pas le
+ * dernier en dessous.** La différence n'est pas cosmétique : l'appelant se sert
+ * de la dernière graduation comme échelle, si bien qu'un sommet trop bas fait
+ * sortir la donnée de son cadre. Vu en recette — un volume de 5 508 000 F sur
+ * un axe qui s'arrêtait à 4 M : la courbe débordait par le haut de sa carte et
+ * passait derrière le bouton « Données ». Le tracé était juste, l'axe était
+ * faux.
+ *
+ * `integerOnly` sert aux grandeurs qui se comptent (des réservations) : un pas
+ * de 2,5 y produirait des graduations sans signification — et, une fois les
+ * valeurs non entières écartées à l'affichage, un sommet à nouveau trop bas.
  */
-export function niceTicks(max: number, count = 4): number[] {
+export function niceTicks(max: number, count = 4, integerOnly = false): number[] {
   if (max <= 0) {
     // Un graphique entièrement vide garde quand même un axe : sans lui, la
     // carte paraîtrait cassée plutôt que calme.
@@ -158,10 +170,17 @@ export function niceTicks(max: number, count = 4): number[] {
   const rough = max / count;
   const magnitude = 10 ** Math.floor(Math.log10(rough));
   const normalized = rough / magnitude;
-  const step = (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10) * magnitude;
+  let step = (normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10) * magnitude;
+
+  if (integerOnly) {
+    step = Math.max(1, Math.ceil(step));
+  }
+
+  // Sommet arrondi vers le HAUT : il couvre le maximum, il ne l'effleure pas.
+  const top = Math.ceil(max / step) * step;
 
   const ticks: number[] = [];
-  for (let value = 0; value <= max + step * 0.001; value += step) {
+  for (let value = 0; value <= top + step * 0.001; value += step) {
     ticks.push(value);
   }
 

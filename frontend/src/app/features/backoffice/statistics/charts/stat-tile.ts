@@ -27,7 +27,9 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
       @if (variation(); as v) {
         <p class="st__delta" [class.st__delta--good]="v.good" [class.st__delta--bad]="!v.good">
           <span aria-hidden="true">{{ v.up ? '↑' : '↓' }}</span>
-          {{ v.text }}
+          <!-- Le pourcentage porte lui-même l'insécabilité, PAS le paragraphe :
+               voir la note sur .st__pct. -->
+          <span class="st__pct">{{ v.text }}</span>
           <span class="st__vs">{{ comparison() }}</span>
         </p>
       } @else {
@@ -40,6 +42,8 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   styles: `
     :host {
       display: block;
+      /* Autorise la tuile à rétrécir avec sa colonne de grille. */
+      min-width: 0;
     }
 
     .st {
@@ -64,7 +68,10 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
       margin: 0;
       font-family: var(--k-font-body);
       font-weight: 700;
-      font-size: 1.32rem;
+      /* Taille FLUIDE : six tuiles côte à côte laissent peu de place, et un
+         montant en francs est long. Le clamp évite qu'un « 1 225 080 F » aille
+         à la ligne au milieu du nombre. */
+      font-size: clamp(1.02rem, 1.35vw, 1.32rem);
       line-height: 1.15;
       color: var(--k-ink);
       letter-spacing: -0.01em;
@@ -83,7 +90,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
       .st__value {
         color: #fff;
-        font-size: 1.95rem;
+        font-size: clamp(1.3rem, 1.8vw, 1.95rem);
       }
 
       .st__vs {
@@ -98,7 +105,16 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
     /* La variation tient sur DEUX lignes : le pourcentage, puis la période de
        comparaison en dessous. Sur une seule ligne, une tuile étroite coupait
        « +43,4 » de son « % » et « vs 12 mois » de ses « précédents » — trois
-       fragments empilés qui ne se lisaient plus comme une phrase. */
+       fragments empilés qui ne se lisaient plus comme une phrase.
+
+       ⚠️ L'insécabilité est portée par les FRAGMENTS (.st__pct, .st__vs), jamais
+       par ce paragraphe. Posée ici, elle s'appliquait aussi au message de repli
+       « Première activité sur ce poste » : une phrase longue devenue insécable
+       impose sa largeur en minimum à toute la tuile, donc à toute la colonne de
+       grille. Vu en recette sur des données réelles sans historique — les six
+       tuiles affichaient ce message, et la tuile de tête, seule assez
+       compressible pour céder, se retrouvait écrasée à 75 px. Invisible sur des
+       données de démonstration, qui avaient toutes une période précédente. */
     .st__delta {
       display: flex;
       align-items: baseline;
@@ -107,7 +123,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
       margin: 9px 0 0;
       font-size: 0.78rem;
       font-weight: 600;
-      white-space: nowrap;
 
       &--good {
         color: var(--k-success);
@@ -132,6 +147,11 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
     .st--hero .st__delta--bad {
       color: #ff9aa7;
+    }
+
+    /* « +43,4 % » ne se coupe jamais entre le nombre et son signe. */
+    .st__pct {
+      white-space: nowrap;
     }
 
     .st__vs {

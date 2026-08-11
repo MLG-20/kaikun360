@@ -39,7 +39,6 @@
     <!-- Les grands chiffres. Un seul est traité en tête : le chiffre d'affaires. -->
     <section class="st-tiles">
       <app-stat-tile
-        class="st-tiles__hero"
         label="Volume brut encaissable"
         [display]="xof(s.headline.gross_volume_xof.value)"
         [value]="s.headline.gross_volume_xof.value"
@@ -215,7 +214,7 @@
     <!-- Palmarès -->
     <app-chart-card
       title="Ce qui rapporte le plus"
-      subtitle="Les six annonces au plus fort volume encaissable sur la période."
+      subtitle="Les annonces au plus fort volume encaissable sur la période, six au maximum."
     >
       <app-ranking-bars-chart [listings]="s.top_listings" />
 
