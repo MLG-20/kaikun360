@@ -98,6 +98,20 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  // Files de validation : cinq colonnes égales, donc cinq tuiles sur UNE seule
+  // ligne. Avec la grille à 4 colonnes, la cinquième file tombait seule sur un
+  // deuxième rang, large comme un quart d'écran : elle se lisait comme une
+  // catégorie à part alors que c'est une file comme les autres.
+  &--queues {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+
+    // Palier intermédiaire : à trois par ligne, les tuiles restent lisibles.
+    @media (max-width: 900px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
   @media (max-width: 720px) {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -153,5 +167,169 @@
       color: var(--k-brand-600);
       font-size: 1.25rem;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Tuiles des files de validation
+  //
+  // Plus étroites que les cartes ordinaires (5 par ligne), donc plus serrées :
+  // padding réduit, chiffre légèrement plus petit, libellé qui ne casse pas.
+  // Chaque tuile porte sa propre teinte via `--q` : le halo, la barre du haut,
+  // le fond et le chiffre en découlent, une seule variable à changer.
+  // ---------------------------------------------------------------------------
+  &--queue {
+    position: relative;
+    overflow: hidden;
+    padding: 16px 14px 14px;
+    border-color: color-mix(in srgb, var(--q) 28%, var(--k-line));
+    background:
+      linear-gradient(180deg, #fff 45%, color-mix(in srgb, var(--q) 10%, #fff));
+    box-shadow: 0 1px 2px rgba(3, 25, 63, 0.05),
+      0 10px 24px color-mix(in srgb, var(--q) 14%, transparent);
+
+    // Apparition en cascade. ⚠️ L'état masqué vit dans le `from` + `backwards`,
+    // jamais sur la règle de base : sinon la tuile reste invisible partout où
+    // l'animation ne joue pas (SSR, animations coupées) — défaut vécu en F13.
+    animation: ov-queue-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
+    // Barre de couleur en haut : la signature de la file, visible au premier
+    // coup d'œil. Elle se déploie de la gauche vers la droite à l'apparition.
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: linear-gradient(
+        90deg,
+        var(--q),
+        color-mix(in srgb, var(--q) 45%, #fff)
+      );
+      transform-origin: left;
+      transition: height 0.25s ease;
+      animation: ov-queue-bar 0.7s 0.15s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    }
+
+    // Halo diffus derrière le chiffre — c'est lui qui donne la profondeur au
+    // survol, sans repeindre la tuile entière.
+    &::after {
+      content: '';
+      position: absolute;
+      top: -40%;
+      right: -30%;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        color-mix(in srgb, var(--q) 30%, transparent),
+        transparent 70%
+      );
+      opacity: 0.55;
+      transition: opacity 0.3s ease, transform 0.4s ease;
+      pointer-events: none;
+    }
+
+    .ov-card__value {
+      color: var(--q);
+      font-size: 1.5rem;
+      // Le chiffre monte à sa place : c'est lui qu'on vient lire.
+      animation: ov-queue-value 0.6s 0.1s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    }
+
+    .ov-card__label {
+      font-weight: 600;
+      color: color-mix(in srgb, var(--q) 55%, var(--k-ink));
+      white-space: nowrap;
+    }
+
+    &:hover {
+      transform: translateY(-4px);
+      border-color: color-mix(in srgb, var(--q) 55%, transparent);
+      box-shadow: 0 2px 6px rgba(3, 25, 63, 0.07),
+        0 18px 38px color-mix(in srgb, var(--q) 28%, transparent);
+
+      &::before {
+        height: 6px;
+      }
+
+      &::after {
+        opacity: 1;
+        transform: scale(1.35);
+      }
+    }
+
+    transition:
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  // Les cinq teintes : palette catégorielle mesurée en F13 (daltonisme + contraste
+  // > 3:1 sur blanc, cf. `charts/chart-tokens.ts`). L'ORDRE fait partie de ce qui
+  // a été validé — ne pas permuter sans revalider.
+  // Le `animation-delay` décale la cascade : les tuiles entrent l'une après
+  // l'autre, de gauche à droite, dans le sens de lecture.
+  &--q1 {
+    --q: #0348fb; // bleu de marque — Biens
+    animation-delay: 0s;
+    &::before { animation-delay: 0.15s; }
+  }
+
+  &--q2 {
+    --q: #eb6834; // orange — Véhicules
+    animation-delay: 0.07s;
+    &::before { animation-delay: 0.22s; }
+  }
+
+  &--q3 {
+    --q: #38a774; // vert de marque — Départs
+    animation-delay: 0.14s;
+    &::before { animation-delay: 0.29s; }
+  }
+
+  &--q4 {
+    --q: #b0862b; // or de la charte, assombri pour le contraste — Circuits
+    animation-delay: 0.21s;
+    &::before { animation-delay: 0.36s; }
+  }
+
+  &--q5 {
+    --q: #c4517f; // rose profond — Prestataires
+    animation-delay: 0.28s;
+    &::before { animation-delay: 0.43s; }
+  }
+}
+
+@keyframes ov-queue-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+
+@keyframes ov-queue-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes ov-queue-value {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+// Accessibilité : qui a demandé moins de mouvement voit les tuiles en place,
+// sans cascade ni décollement au survol. La couleur, elle, reste.
+@media (prefers-reduced-motion: reduce) {
+  .ov-card--queue,
+  .ov-card--queue::before,
+  .ov-card--queue .ov-card__value {
+    animation: none;
+  }
+
+  .ov-card--queue:hover {
+    transform: none;
   }
 }

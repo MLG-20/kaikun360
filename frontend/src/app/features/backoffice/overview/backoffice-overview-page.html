@@ -24,14 +24,28 @@
       <h2 class="ov-block__title">Files de validation</h2>
       <span class="ov-pill">{{ pendingTotal(s) }} en attente</span>
     </div>
-    <div class="ov-grid">
-      <article class="ov-card"><span class="ov-card__value">{{ s.queues.properties_pending }}</span><span class="ov-card__label">Biens</span></article>
-      <article class="ov-card"><span class="ov-card__value">{{ s.queues.vehicles_pending }}</span><span class="ov-card__label">Véhicules</span></article>
+    <!-- Cinq files, cinq couleurs, une seule ligne. Les teintes reprennent la
+         palette catégorielle mesurée en F13 (`charts/chart-tokens.ts`) : le
+         back-office parle d'une seule voix, et chaque file se reconnaît à sa
+         couleur avant même d'être lue. -->
+    <div class="ov-grid ov-grid--queues">
+      <article class="ov-card ov-card--queue ov-card--q1">
+        <span class="ov-card__value">{{ s.queues.properties_pending }}</span><span class="ov-card__label">Biens</span>
+      </article>
+      <article class="ov-card ov-card--queue ov-card--q2">
+        <span class="ov-card__value">{{ s.queues.vehicles_pending }}</span><span class="ov-card__label">Véhicules</span>
+      </article>
       <!-- ⚠️ Ajoutée par le correctif F10.3 : ces départs étaient dans la file
            de validation depuis F8.23 sans jamais apparaître ici. -->
-      <article class="ov-card"><span class="ov-card__value">{{ s.queues.mobility_services_pending }}</span><span class="ov-card__label">Départs</span></article>
-      <article class="ov-card"><span class="ov-card__value">{{ s.queues.experiences_pending }}</span><span class="ov-card__label">Circuits</span></article>
-      <article class="ov-card"><span class="ov-card__value">{{ s.queues.providers_pending }}</span><span class="ov-card__label">Prestataires</span></article>
+      <article class="ov-card ov-card--queue ov-card--q3">
+        <span class="ov-card__value">{{ s.queues.mobility_services_pending }}</span><span class="ov-card__label">Départs</span>
+      </article>
+      <article class="ov-card ov-card--queue ov-card--q4">
+        <span class="ov-card__value">{{ s.queues.experiences_pending }}</span><span class="ov-card__label">Circuits</span>
+      </article>
+      <article class="ov-card ov-card--queue ov-card--q5">
+        <span class="ov-card__value">{{ s.queues.providers_pending }}</span><span class="ov-card__label">Prestataires</span>
+      </article>
     </div>
   </section>
 
