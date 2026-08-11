@@ -1080,3 +1080,8 @@ Projet propriétaire — Kaikun 360. Tous droits réservés.
   sinon elle tombe silencieusement dans « Sur-mesure » — les montants restent
   justes, la lecture business devient fausse (même famille de défaut que le
   correctif F10.3 sur les files de validation).
+  ⚠️ **F13.2** : le filtre s'ouvre désormais sur les jours courts (`7j`, `15j`,
+  `30j`, puis `6m`, `12m`), et `top_listings` renvoie **cinq** annonces et non
+  six — l'écran en a fait un diagramme circulaire, qui y ajoute une part
+  « Autres » calculée par différence avec le volume total de la période. Un
+  camembert dont les parts ne totalisent pas le tout est un mensonge de forme.

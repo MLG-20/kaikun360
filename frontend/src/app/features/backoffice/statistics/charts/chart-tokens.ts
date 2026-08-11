@@ -63,6 +63,69 @@ export const SERIES_COLORS: readonly string[] = [
 export const FUNNEL_RAMP: readonly string[] = ['#9ab4fd', '#6d8ffb', '#3f6afa', '#0348fb'];
 
 /**
+ * Rampe ORDINALE du palmarès (F13.2) — cinq paliers, du foncé au clair.
+ *
+ * Un classement est ORDONNÉ : le premier n'est pas « une autre catégorie » que
+ * le troisième, il est devant. Cinq couleurs d'identité auraient dit « voici
+ * cinq choses différentes » ; la teinte qui s'éclaircit à mesure qu'on descend
+ * fait voir le rang dans la couleur. C'est la même raison qu'à l'entonnoir.
+ *
+ * Validée en rampe ordinale sur le fond des cartes : clarté strictement
+ * décroissante, écart adjacent ΔL ≥ 0,06 partout, extrémité claire à 2,11:1
+ * (au-dessus du plancher de 2:1), une seule teinte (dispersion 4°).
+ *
+ * ⚠️ **Cinq paliers, pas six.** Une sixième marche ne tient pas dans la plage
+ * de clarté utilisable sans passer sous l'un des deux seuils — mesuré. C'est ce
+ * qui fixe le palmarès à cinq annonces ; le reste du volume est regroupé sous
+ * `NEUTRAL_SHARE`, qui n'appartient pas au classement.
+ */
+export const RANKING_RAMP: readonly string[] = [
+  '#0d366b',
+  '#1c5cab',
+  '#2a78d6',
+  '#5598e7',
+  '#86b6ef',
+];
+
+/**
+ * Le gris du « reste » — la part « Autres annonces » d'un part-à-tout.
+ *
+ * Volontairement HORS de la rampe : cet agrégat n'a pas de rang, il est ce qui
+ * n'est pas classé. Lui donner le sixième palier de la rampe le ferait passer
+ * pour le sixième du classement.
+ */
+export const NEUTRAL_SHARE = '#8792a8';
+
+/**
+ * Accents des TUILES d'indicateurs (F13.3) — un repère de navigation, pas un
+ * encodage.
+ *
+ * ⚠️ **Ces couleurs ne veulent rien dire.** Chaque tuile porte son libellé
+ * écrit en toutes lettres ; la teinte sert à retrouver « la tuile violette »
+ * d'un coup d'œil, elle ne code aucune valeur. C'est ce qui les dispense des
+ * contrôles de séparation qu'on impose aux séries — mais pas du **contraste**,
+ * vérifié sur le fond blanc : 4,03 · 5,24 · 6,22 · 5,05 · 3,34 pour 1, tous
+ * au-dessus du seuil de 3:1.
+ *
+ * ⚠️ **Volontairement DIFFÉRENTES des couleurs de séries.** Sur cet écran, le
+ * bleu de marque veut déjà dire « Nuitées » et l'orange « Mobilité » : reprendre
+ * ces teintes sur les tuiles aurait suggéré un lien entre une tuile et un
+ * univers métier — un lien qui n'existe pas. D'où un teal, un indigo et un
+ * violet, absents de `SERIES_COLORS`.
+ *
+ * Deux exceptions qui, elles, portent bien du sens : le **rouge** du taux
+ * d'annulation (l'indicateur est mauvais quand il monte) et l'**or**, tous deux
+ * repris de la charte.
+ */
+export const TILE_ACCENTS = {
+  commission: '#0a8f78',
+  bookings: '#2f5fef',
+  basket: '#8b3fa8',
+  cancellation: '#c73b4d',
+  users: '#b0862b',
+} as const;
+
+/**
  * Couleurs d'ÉTAT — réservées, jamais réutilisées comme « série n° 6 ».
  *
  * Elles disent bon/attention/grave, pas « ceci est le quatrième machin ». Les

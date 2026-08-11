@@ -4,12 +4,12 @@ import { AdminService } from '../../../core/api/admin.service';
 import { BusinessStatistics } from '../../../models/statistics.model';
 import { ChartCardComponent, LegendEntry } from './charts/chart-card';
 import { FunnelChartComponent } from './charts/funnel-chart';
-import { RankingBarsChartComponent } from './charts/ranking-bars-chart';
+import { RankingDonutChartComponent } from './charts/ranking-donut-chart';
 import { RevenueAreaChartComponent } from './charts/revenue-area-chart';
 import { StackedBarsChartComponent } from './charts/stacked-bars-chart';
 import { StatTileComponent } from './charts/stat-tile';
 import { StatusSplitChartComponent } from './charts/status-split-chart';
-import { fullNumber, fullXof, seriesColor } from './charts/chart-tokens';
+import { TILE_ACCENTS, fullNumber, fullXof, seriesColor } from './charts/chart-tokens';
 
 /**
  * Rubrique « Statistiques » du back-office (F13.1) — le business de la
@@ -39,7 +39,7 @@ import { fullNumber, fullXof, seriesColor } from './charts/chart-tokens';
   imports: [
     ChartCardComponent,
     FunnelChartComponent,
-    RankingBarsChartComponent,
+    RankingDonutChartComponent,
     RevenueAreaChartComponent,
     StackedBarsChartComponent,
     StatTileComponent,
@@ -64,6 +64,17 @@ export class BackofficeStatisticsPageComponent {
 
   protected readonly xof = fullXof;
   protected readonly number = fullNumber;
+
+  /**
+   * Teintes d'habillage des tuiles (F13.3), demandées par le client.
+   *
+   * ⚠️ **Elles ne codent rien** : chaque tuile porte son libellé écrit, la
+   * couleur n'est qu'un repère visuel. Elles sont volontairement PRISES HORS de
+   * la palette des séries — sur cet écran le bleu de marque veut déjà dire
+   * « Nuitées » et l'orange « Mobilité », et reprendre ces teintes ici aurait
+   * suggéré un lien entre une tuile et un univers métier.
+   */
+  protected readonly accents = TILE_ACCENTS;
 
   constructor() {
     this.load('12m');
@@ -125,14 +136,18 @@ export class BackofficeStatisticsPageComponent {
    * « période précédente » quand on vient de changer le filtre.
    */
   protected readonly comparison = computed(() => {
-    switch (this.stats()?.period.key) {
-      case '30j':
-        return 'vs 30 jours précédents';
-      case '6m':
-        return 'vs 6 mois précédents';
-      default:
-        return 'vs 12 mois précédents';
+    const label = this.stats()?.period.label;
+
+    if (!label) {
+      return 'sur la période précédente';
     }
+
+    // Dérivé du LIBELLÉ servi par le serveur, et non d'une liste de cas écrite
+    // ici : « 7 derniers jours » donne « vs 7 jours précédents ». Une période
+    // ajoutée côté serveur est ainsi accompagnée sans retouche — la liste de
+    // cas qui existait ici est justement tombée en défaut à l'ajout de 7 et 15
+    // jours, qui se comparaient à « 12 mois précédents ».
+    return 'vs ' + label.replace('derniers ', '').replace('dernières ', '') + ' précédents';
   });
 
   /** Taux d'annulation mis en forme (une décimale, virgule française). */

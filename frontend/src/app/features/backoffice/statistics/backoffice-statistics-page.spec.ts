@@ -18,6 +18,15 @@ import { BackofficeStatisticsPageComponent } from './backoffice-statistics-page'
  *     précédent le temps du rechargement).
  */
 describe('BackofficeStatisticsPageComponent', () => {
+  /** Le catalogue de périodes servi par le serveur depuis F13.2. */
+  const periodes = [
+    { key: '7j', label: '7 derniers jours' },
+    { key: '15j', label: '15 derniers jours' },
+    { key: '30j', label: '30 derniers jours' },
+    { key: '6m', label: '6 derniers mois' },
+    { key: '12m', label: '12 derniers mois' },
+  ];
+
   /** Douze mois dont plusieurs vides — le cas qui casse les courbes naïves. */
   function statistics(periodKey = '12m'): BusinessStatistics {
     const months = ['sept. 25', 'oct. 25', 'nov. 25', 'déc. 25', 'janv. 26', 'févr. 26', 'mars 26', 'avr. 26', 'mai 26', 'juin 26', 'juil. 26', 'août 26'];
@@ -45,12 +54,17 @@ describe('BackofficeStatisticsPageComponent', () => {
     ];
 
     return {
-      period: { key: periodKey, label: '12 derniers mois', granularity: 'month', from: '2025-09-01', to: '2026-08-11' },
-      periods: [
-        { key: '30j', label: '30 derniers jours' },
-        { key: '6m', label: '6 derniers mois' },
-        { key: '12m', label: '12 derniers mois' },
-      ],
+      // ⚠️ Le libellé SUIT la clé, comme le fait le vrai serveur. Le laisser
+      // figé à « 12 derniers mois » ferait passer au vert un test qui ne
+      // vérifierait que ce double.
+      period: {
+        key: periodKey,
+        label: periodes.find((p) => p.key === periodKey)?.label ?? '12 derniers mois',
+        granularity: periodKey.endsWith('j') ? 'day' : 'month',
+        from: '2025-09-01',
+        to: '2026-08-11',
+      },
+      periods: periodes,
       headline: {
         gross_volume_xof: { value: 44_750_000, previous: 31_200_000 },
         commission_xof: { value: 5_370_000, previous: 3_744_000 },
@@ -85,7 +99,6 @@ describe('BackofficeStatisticsPageComponent', () => {
         { label: 'Toyota Land Cruiser', line: 'Mobilité', bookings: 31, gross_volume_xof: 4_960_000 },
         { label: 'Circuit Sine-Saloum 3 jours', line: 'Tourisme', bookings: 12, gross_volume_xof: 3_600_000 },
         { label: 'Dakar → Saint-Louis', line: 'Mobilité', bookings: 48, gross_volume_xof: 2_400_000 },
-        { label: 'Devis TB-2026-014', line: 'Team building', bookings: 1, gross_volume_xof: 1_850_000 },
       ],
       booking_statuses: [
         { key: 'en_attente', label: 'En attente', count: 14 },
@@ -126,7 +139,7 @@ describe('BackofficeStatisticsPageComponent', () => {
 
     expect(host.querySelectorAll('app-stat-tile').length).toBe(6);
     expect(host.querySelectorAll('app-chart-card').length).toBe(5);
-    expect(host.querySelectorAll('.st-filter__btn').length).toBe(3);
+    expect(host.querySelectorAll('.st-filter__btn').length).toBe(5);
 
     // La tuile de tête est unique : deux « chiffres les plus importants » ne
     // forment plus une hiérarchie.
@@ -167,13 +180,48 @@ describe('BackofficeStatisticsPageComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
 
     const boutons = host.querySelectorAll<HTMLButtonElement>('.st-filter__btn');
+    // Le premier bouton est « 7 derniers jours » depuis F13.2.
     boutons[0].click();
     await fixture.whenStable();
 
-    expect(calls).toEqual(['12m', '30j']);
+    expect(calls).toEqual(['12m', '7j']);
     // Le corps de page est toujours là — jamais remplacé par un écran d'attente.
     expect(host.querySelector('.st-body')).toBeTruthy();
     expect(host.querySelectorAll('app-chart-card').length).toBe(5);
+  });
+
+  it('ferme le camembert avec une part « Autres annonces »', async () => {
+    const fixture = TestBed.createComponent(BackofficeStatisticsPageComponent);
+    await fixture.whenStable();
+    const host = fixture.nativeElement as HTMLElement;
+
+    // Les cinq annonces de tête ne font pas tout le chiffre d'affaires : sans
+    // la part du reste, les parts totaliseraient 100 % d'un ensemble qui n'est
+    // pas le tout, et le disque exagérerait le poids des premières.
+    const parts = host.querySelectorAll('app-ranking-donut-chart .dn__item');
+    expect(parts.length).toBe(6);
+    expect(parts[5].textContent).toContain('Autres annonces');
+
+    // Et les parts couvrent bien le tour complet.
+    const pourcentages = Array.from(parts).map((part) =>
+      Number((part.textContent?.match(/([\d,]+) %/)?.[1] ?? '0').replace(',', '.')),
+    );
+    expect(pourcentages.reduce((a, b) => a + b, 0)).toBeCloseTo(100, 0);
+  });
+
+  it('accorde la formule de comparaison à la période choisie', async () => {
+    const fixture = TestBed.createComponent(BackofficeStatisticsPageComponent);
+    await fixture.whenStable();
+    const host = fixture.nativeElement as HTMLElement;
+
+    host.querySelectorAll<HTMLButtonElement>('.st-filter__btn')[0].click();
+    await fixture.whenStable();
+
+    // Dérivée du libellé servi par le serveur, donc juste pour toute période
+    // ajoutée côté serveur sans retouche ici.
+    expect(host.querySelector('app-stat-tile .st__vs')?.textContent?.trim()).toBe(
+      'vs 7 jours précédents',
+    );
   });
 
   it('affiche un taux de passage entre chaque étage du tunnel', async () => {

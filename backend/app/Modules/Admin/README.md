@@ -999,6 +999,18 @@ Une période inconnue **n'est pas une erreur** : l'agrégateur retombe sur `12m`
 Un écran de pilotage qui renvoie 422 sur un lien mis en favori, puis n'affiche
 rien, sert moins bien qu'un écran qui montre les douze derniers mois.
 
+### F13.2 — ajustements demandés après essai
+
+- **Périodes** : `7j`, `15j`, `30j`, `6m`, `12m` (le filtre s'ouvre sur les
+  jours courts). Le pas reste choisi par le serveur : jour pour les trois
+  premières, mois pour les deux dernières.
+- **`top_listings` passe de six à cinq annonces.** L'écran en a fait un
+  diagramme circulaire, auquel il ajoute une part « Autres annonces » calculée
+  par différence avec le volume total de la période — un camembert dont les
+  parts ne totalisent pas le tout est un mensonge de forme, et il exagère le
+  poids des premières. Cinq gagnants plus le reste font six parts, le maximum
+  lisible sur un disque.
+
 **Tests** : `tests/Feature/Admin/AdminStatisticsTest.php` (8 tests) — la garde
 `gerer:paiements` (dont le refus opposé à un agent régulier), la dissymétrie
 montants/dénombrements, les mois vides présents à zéro, l'ordre figé des univers,

@@ -20,7 +20,38 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <article class="st" [class.st--hero]="hero()">
+    <article
+      class="st"
+      [class.st--hero]="hero()"
+      [style.--tile]="accent()"
+    >
+      <!-- Liseré coloré et pastille d'icône : la couleur habille la tuile sans
+           jamais toucher au chiffre, qui reste en encre pour rester lisible. -->
+      <span class="st__rule" aria-hidden="true"></span>
+
+      <span class="st__icon" aria-hidden="true">
+        @switch (icon()) {
+          @case ('wallet') {
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h11A2.5 2.5 0 0 1 19 8.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 3 15.5z" stroke="currentColor" stroke-width="1.7"/><path d="M19 11h1.5a1.5 1.5 0 0 1 0 3H19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          }
+          @case ('percent') {
+            <svg viewBox="0 0 24 24" fill="none"><path d="M6.5 17.5 17.5 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="8" r="2.4" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="16" r="2.4" stroke="currentColor" stroke-width="1.7"/></svg>
+          }
+          @case ('calendar') {
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5.5" width="17" height="14" rx="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 10h17M8 3.5v4M16 3.5v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m9 14.5 2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          }
+          @case ('basket') {
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5h16l-1.5 9.2a2 2 0 0 1-2 1.8H7.5a2 2 0 0 1-2-1.8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.5 8.5 12 3.5l3.5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          }
+          @case ('cancel') {
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.3" stroke="currentColor" stroke-width="1.7"/><path d="m9.2 9.2 5.6 5.6M14.8 9.2l-5.6 5.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          }
+          @case ('user-plus') {
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="10" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M4 19a6 6 0 0 1 12 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18.5 7.5v5M16 10h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          }
+        }
+      </span>
+
       <p class="st__label">{{ label() }}</p>
       <p class="st__value">{{ display() }}</p>
 
@@ -47,16 +78,47 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
     }
 
     .st {
+      position: relative;
       background: var(--k-card);
       border: 1px solid var(--k-line);
       border-radius: var(--k-radius-lg);
-      padding: 15px 16px;
+      padding: 14px 16px 15px;
       height: 100%;
       box-shadow: var(--k-shadow);
+      overflow: hidden;
+    }
+
+    /* Liseré supérieur : la touche de couleur la plus visible, et la moins
+       coûteuse — elle n'empiète sur aucun contenu. */
+    .st__rule {
+      position: absolute;
+      inset: 0 0 auto;
+      height: 3px;
+      background: var(--tile, var(--k-brand));
+    }
+
+    /* Pastille d'icône : la teinte à 12 % pour le fond, pleine pour le trait.
+       Un aplat saturé de cette taille écraserait le chiffre juste en dessous. */
+    .st__icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      margin-bottom: 9px;
+      border-radius: 9px;
+      color: var(--tile, var(--k-brand));
+      background: color-mix(in srgb, var(--tile, var(--k-brand)) 12%, transparent);
+
+      svg {
+        width: 17px;
+        height: 17px;
+        display: block;
+      }
     }
 
     .st__label {
-      margin: 0 0 8px;
+      margin: 0 0 6px;
       font-size: 0.78rem;
       color: var(--k-muted);
     }
@@ -83,6 +145,17 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
     .st--hero {
       background: linear-gradient(160deg, var(--k-navy) 0%, var(--k-navy-2) 100%);
       border-color: transparent;
+
+      /* Sur le fond marine, la pastille s'éclaircit au lieu de se teinter :
+         une couleur d'accent y perdrait tout son contraste. */
+      .st__icon {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.16);
+      }
+
+      .st__rule {
+        background: var(--k-gold);
+      }
 
       .st__label {
         color: rgba(255, 255, 255, 0.7);
@@ -177,6 +250,16 @@ export class StatTileComponent {
   readonly hero = input<boolean>(false);
   /** Formule de comparaison, ex. « vs 12 mois précédents ». */
   readonly comparison = input<string>('sur la période précédente');
+  /**
+   * Teinte d'habillage de la tuile (liseré + pastille d'icône).
+   *
+   * ⚠️ **Elle ne code rien** : chaque tuile porte son libellé écrit, la couleur
+   * n'est qu'un repère pour retrouver la bonne d'un coup d'œil. C'est pourquoi
+   * elle ne touche ni au chiffre ni au libellé, qui restent en encre.
+   */
+  readonly accent = input<string>('');
+  /** Pictogramme de la tuile (voir le `@switch` du gabarit). */
+  readonly icon = input<string>('wallet');
 
   /**
    * La variation, ou `null` quand elle n'a pas de sens.

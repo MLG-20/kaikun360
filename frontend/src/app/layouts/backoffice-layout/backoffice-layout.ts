@@ -133,6 +133,19 @@ export class BackofficeLayoutComponent {
     // CDC §6 — module 1 « Tableau de bord ».
     { label: 'Vue d’ensemble', path: '', icon: 'grid', ready: true },
 
+    // F13.1 — Statistiques business : les graphiques de pilotage (revenus dans
+    // le temps, univers métier, tunnel commercial, palmarès).
+    //
+    // Placée JUSTE APRÈS la Vue d'ensemble (choix du client, F13.2) : les deux
+    // prolongent le même module 1 du §6 (« Tableau de bord ») et se lisent
+    // ensemble — l'une dit ce qu'il y a à faire aujourd'hui, l'autre où va
+    // l'entreprise. Un premier placement au milieu du bloc financier les avait
+    // séparées au motif qu'elles partagent `gerer:paiements` avec Paiements et
+    // Reversements ; le voisinage par le SUJET l'emporte sur le voisinage par
+    // le droit. ⚠️ Reste invisible pour qui n'a pas `gerer:paiements` : le rail
+    // est filtré par les permissions, ce placement n'ouvre rien à personne.
+    { label: 'Statistiques', path: 'statistiques', icon: 'chart', ready: true },
+
     // Hors §6 : file d'approbation TRANSVERSE (biens, véhicules, circuits,
     // prestataires). Maintenue en tête malgré tout — c'est le premier écran
     // ouvert chaque matin, et la fonction « valider » de quatre modules à la
@@ -179,18 +192,6 @@ export class BackofficeLayoutComponent {
     // Rubrique à part et non un onglet de Paiements : ce ne sont ni les mêmes
     // objets (une dette n'est pas un règlement), ni le même moment du métier.
     { label: 'Reversements', path: 'reversements', icon: 'payout', ready: true },
-    // F13.1 — Statistiques business : les graphiques de pilotage (revenus dans
-    // le temps, univers métier, tunnel commercial, palmarès).
-    //
-    // Prolonge le module 1 du §6 (« Tableau de bord »), et pourtant placée ICI
-    // plutôt qu'en deuxième ligne, sous Vue d'ensemble. Deux raisons. D'abord
-    // le rythme : Vue d'ensemble s'ouvre chaque matin, Statistiques se consulte
-    // en fin de mois — la mettre en tête aurait éloigné les files d'attente du
-    // haut du rail sans que personne y gagne. Ensuite le droit : elle est
-    // gardée par `gerer:paiements`, comme Paiements et Reversements, et n'est
-    // donc visible QUE par ceux qui voient déjà ces deux-là. Une rubrique
-    // apparaît naturellement au milieu de celles qui partagent sa clé.
-    { label: 'Statistiques', path: 'statistiques', icon: 'chart', ready: true },
     // CDC §6 — module 13 « Avis et qualité ». (Le 12 est dans Comptes.)
     { label: 'Avis & qualité', path: 'qualite', icon: 'star', ready: true },
     // CDC §6 — module 14 « Paramètres ».

@@ -21,7 +21,7 @@ tendance.
 | D'où vient l'activité | Quel univers métier produit les réservations ? |
 | Tunnel commercial | À quel étage perd-on les clients ? |
 | Où en sont les réservations | Combien d'annulations, combien d'honorées ? |
-| Ce qui rapporte le plus | Quelles annonces font le chiffre ? |
+| Ce qui rapporte le plus | Quelle part chaque annonce prend-elle dans le total ? |
 
 ### Qui y a accès
 
@@ -166,6 +166,53 @@ largeur. C'est ce qui a fait renoncer à la tuile de tête sur deux colonnes
 (2 + 5 = 7 unités) : sept ne se répartit proprement qu'en une rangée, laquelle
 exige plus de largeur que le back-office n'en offre son rail déduit.
 
+### Les couleurs des tuiles ne codent rien — et c'est écrit
+
+Demandées par le client en F13.3 « pour l'UI ». Un liseré et une pastille
+d'icône par tuile, dans `TILE_ACCENTS`.
+
+⚠️ **La couleur n'y encode aucune donnée** : chaque tuile porte son libellé en
+toutes lettres. C'est ce qui la dispense des contrôles de séparation imposés aux
+séries — mais **pas du contraste**, mesuré sur le fond blanc.
+
+⚠️ **Ces teintes sont prises HORS de `SERIES_COLORS`**, délibérément. Sur cet
+écran le bleu de marque veut déjà dire « Nuitées » et l'orange « Mobilité » :
+une tuile bleue aurait suggéré un lien avec un univers métier. Teal, indigo et
+violet n'existent nulle part ailleurs dans les graphiques.
+
+⚠️ **Le chiffre et le libellé restent en encre.** La couleur habille le cadre
+(liseré, pastille), jamais le texte : une valeur en teinte claire se lit mal, et
+c'est justement la valeur qu'on vient chercher.
+
+### Le camembert du palmarès : deux règles qui le rendent honnête
+
+Demandé par le client en F13.2 (c'était une liste de barres). Un disque a deux
+défauts connus, tous deux traités plutôt qu'ignorés :
+
+1. **Un part-à-tout doit vraiment faire le tout.** Les cinq annonces de tête ne
+   font pas le chiffre d'affaires de la période à elles seules ; une part
+   **« Autres annonces »**, calculée par différence avec le volume total des
+   tuiles d'en-tête, ferme le disque. Sans elle, les parts totaliseraient 100 %
+   d'un ensemble qui n'est pas le tout, et le disque **exagérerait
+   mécaniquement** le poids des premières.
+2. **L'œil compare mal des angles.** Deux parts voisines ne se départagent pas à
+   la vue. C'est pourquoi **chaque part est chiffrée dans la légende** (montant
+   et pourcentage) : le disque répond à « quelle place cela prend-il ? », les
+   nombres répondent à « laquelle est la plus grosse ? ». Sans cette légende
+   chiffrée, la forme serait le mauvais choix.
+
+**Cinq parts + le reste**, jamais plus : c'est aussi ce qui fixe le palmarès à
+cinq entrées côté serveur. La rampe ordinale ne compte que cinq paliers — une
+sixième marche ne tient pas dans la plage de clarté utilisable sans passer sous
+l'un des deux seuils (mesuré). Le gris du « reste » est **hors rampe** : cet
+agrégat n'a pas de rang, lui donner le palier suivant le ferait passer pour le
+sixième du classement.
+
+Détail d'implémentation qui vaut d'être connu : les arcs sont des `<circle>`
+portant `pathLength="100"`, ce qui fait travailler le tracé **en centièmes de
+tour** — les longueurs d'arc sont alors directement des pourcentages, sans
+calcul de circonférence.
+
 ### ⚠️ La dernière graduation d'un axe est une ÉCHELLE
 
 `niceTicks` doit produire un sommet **au-dessus** du maximum, jamais le dernier
@@ -209,7 +256,7 @@ délai qui se compte en dixièmes de seconde.
 | `charts/stacked-bars-chart.ts` | colonnes empilées par univers métier |
 | `charts/funnel-chart.ts` | tunnel commercial + taux de passage entre étages |
 | `charts/status-split-chart.ts` | barre part-à-tout des statuts |
-| `charts/ranking-bars-chart.ts` | palmarès des annonces (une seule couleur) |
+| `charts/ranking-donut-chart.ts` | part-à-tout des annonces (rampe ordinale + « Autres ») |
 
 ### Ce que les tests protègent
 

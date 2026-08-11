@@ -55,6 +55,8 @@ class BusinessMetricsAggregator
      * @var array<string, array{label: string, length: int, unit: string, granularity: string}>
      */
     private const PERIODS = [
+        '7j' => ['label' => '7 derniers jours', 'length' => 7, 'unit' => 'day', 'granularity' => 'day'],
+        '15j' => ['label' => '15 derniers jours', 'length' => 15, 'unit' => 'day', 'granularity' => 'day'],
         '30j' => ['label' => '30 derniers jours', 'length' => 30, 'unit' => 'day', 'granularity' => 'day'],
         '6m' => ['label' => '6 derniers mois', 'length' => 6, 'unit' => 'month', 'granularity' => 'month'],
         '12m' => ['label' => '12 derniers mois', 'length' => 12, 'unit' => 'month', 'granularity' => 'month'],
@@ -485,11 +487,19 @@ class BusinessMetricsAggregator
     // =========================================================================
 
     /**
-     * Les six annonces qui ont rapporté le plus sur la période.
+     * Les CINQ annonces qui ont rapporté le plus sur la période.
      *
      * Le classement se fait en base (regroupement sur le couple polymorphe,
-     * tri, limite), et seuls les six gagnants voient leur libellé résolu : on
-     * ne charge jamais le catalogue entier pour n'en afficher que six lignes.
+     * tri, limite), et seuls les gagnants voient leur libellé résolu : on ne
+     * charge jamais le catalogue entier pour n'en afficher que cinq lignes.
+     *
+     * ⚠️ **Cinq et non six depuis F13.2**, parce que l'écran en a fait un
+     * diagramme circulaire. Un disque se lit d'un coup d'œil jusqu'à cinq ou six
+     * parts, pas au-delà ; et surtout le frontend y ajoute une part « Autres
+     * annonces » calculée par différence avec le volume total de la période —
+     * un camembert dont les parts ne totalisent pas le tout est un mensonge de
+     * forme. Cinq gagnants plus le reste font donc six parts, le maximum
+     * lisible.
      *
      * @return array<int, array{label: string, line: string, bookings: int, gross_volume_xof: int}>
      */
@@ -501,7 +511,7 @@ class BusinessMetricsAggregator
             ->selectRaw('bookable_type, bookable_id, count(*) as bookings, sum(amount_xof) as gross')
             ->groupBy('bookable_type', 'bookable_id')
             ->orderByDesc('gross')
-            ->limit(6)
+            ->limit(5)
             ->get();
 
         $labels = $this->resolveListingLabels($rows);
