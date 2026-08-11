@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { CatalogComponent } from '../../../shared/components/catalog/catalog';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /**
  * Page univers Tourisme (F2.4) — route `/tourisme`.
@@ -12,7 +13,7 @@ import { CatalogComponent } from '../../../shared/components/catalog/catalog';
  */
 @Component({
   selector: 'app-experience-list-page',
-  imports: [CatalogComponent],
+  imports: [PageHeroComponent, CatalogComponent],
   templateUrl: './experience-list-page.html',
   styleUrl: './experience-list-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

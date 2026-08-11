@@ -4,6 +4,7 @@ import { Observable, catchError, debounceTime, distinctUntilChanged, map, of, st
 
 import { ConstructionRequestFormComponent } from '../construction-request-form/construction-request-form';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 import {
   ConstructionObjective,
   ConstructionService,
@@ -57,7 +58,7 @@ type SimState =
  */
 @Component({
   selector: 'app-construction-page',
-  imports: [ConstructionRequestFormComponent],
+  imports: [PageHeroComponent, ConstructionRequestFormComponent],
   templateUrl: './construction-page.html',
   styleUrl: './construction-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

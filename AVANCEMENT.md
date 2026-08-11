@@ -81,6 +81,12 @@ Toute la logique métier est en place et **automatiquement testée** (voir §4) 
 - **Fiches détaillées** (biens, séjours, véhicules, expériences) avec galerie
   photo, avis et bouton de contact WhatsApp.
 - **Recherche globale** par univers, ville et budget.
+- **Bandeaux d'accueil pilotés par votre équipe** : chaque grande page — et
+  désormais la page de résultats — s'ouvre sur une photo et quelques phrases que
+  **vous changez vous-même depuis le back-office**, sans nous appeler et sans
+  remise en ligne. Une photo chargée sur un univers habille automatiquement les
+  pages qui en dépendent, et un champ laissé vide garde simplement le texte
+  actuel du site.
 
 ### 3.3 L'espace client — livré
 
@@ -155,6 +161,10 @@ sécurité renforcé — c'est là que tout passe.
   actions : tableau de bord, comptes & documents, biens immobiliers, nuitées,
   gestion locative, construction, mobilité, tourisme, team building, diaspora,
   paiements, avis & qualité, paramètres & contenu.
+- **L'habillage du site public se pilote aussi de là** : un onglet « Bandeaux »
+  permet de déposer la photo d'accueil de chaque grande page et d'en retoucher
+  le titre. Les pages qui dépendent d'un univers reprennent sa photo toutes
+  seules — une image suffit pour en habiller plusieurs.
 - Quelques exemples concrets de ce que l'équipe fait depuis cet outil : valider
   ou refuser une annonce (et corriger une annonce mal saisie, ou l'archiver),
   enregistrer une arrivée et un départ de séjour puis trancher la caution,

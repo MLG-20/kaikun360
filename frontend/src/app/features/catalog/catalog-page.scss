@@ -1,4 +1,9 @@
-/* Page de résultats /recherche (F2.1). */
+/* Page de résultats /recherche (F2.1), sous son bandeau depuis F12.
+ *
+ * Le titre de la page a quitté ce fichier : il vit maintenant dans le bandeau
+ * (`app-page-hero`), dont les styles sont partagés avec les autres grandes
+ * pages (`src/styles/_universe.scss`). Ne reste ici que le rythme du corps de
+ * page — moteur de recherche puis résultats. */
 
 .catalog-page {
   display: flex;
@@ -6,16 +11,4 @@
   gap: 1.5rem;
   padding-top: 2rem;
   padding-bottom: 3rem;
-}
-
-.catalog-page-head {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.catalog-page-title {
-  font-family: var(--k-font-display);
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  color: var(--k-ink);
 }

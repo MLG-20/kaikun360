@@ -26,6 +26,22 @@ CREATE TABLE `activity_log` (
   KEY `activity_log_log_name_index` (`log_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `attendances`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `attendances` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint unsigned NOT NULL,
+  `started_at` timestamp NOT NULL,
+  `ended_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `attendances_user_id_started_at_index` (`user_id`,`started_at`),
+  KEY `attendances_user_id_ended_at_index` (`user_id`,`ended_at`),
+  CONSTRAINT `attendances_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `bookings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -48,6 +64,7 @@ CREATE TABLE `bookings` (
   `housekeeping_status` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `cancelled_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
+  `hidden_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `bookings_reference_unique` (`reference`),
@@ -55,6 +72,7 @@ CREATE TABLE `bookings` (
   KEY `bookings_bookable_type_bookable_id_index` (`bookable_type`,`bookable_id`),
   KEY `bookings_bookable_type_bookable_id_start_date_end_date_index` (`bookable_type`,`bookable_id`,`start_date`,`end_date`),
   KEY `bookings_status_index` (`status`),
+  KEY `bookings_hidden_at_index` (`hidden_at`),
   CONSTRAINT `bookings_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -114,6 +132,34 @@ CREATE TABLE `construction_milestones` (
   CONSTRAINT `construction_milestones_construction_request_id_foreign` FOREIGN KEY (`construction_request_id`) REFERENCES `construction_requests` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `construction_quotes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `construction_quotes` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `reference` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `construction_request_id` bigint unsigned NOT NULL,
+  `lines` json NOT NULL,
+  `subtotal_xof` bigint unsigned NOT NULL DEFAULT '0',
+  `margin_rate` decimal(5,2) NOT NULL DEFAULT '0.00',
+  `margin_xof` bigint unsigned NOT NULL DEFAULT '0',
+  `total_xof` bigint unsigned NOT NULL DEFAULT '0',
+  `valid_until` date DEFAULT NULL,
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'brouillon',
+  `sent_at` timestamp NULL DEFAULT NULL,
+  `accepted_at` timestamp NULL DEFAULT NULL,
+  `created_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `construction_quotes_reference_unique` (`reference`),
+  KEY `construction_quotes_construction_request_id_foreign` (`construction_request_id`),
+  KEY `construction_quotes_created_by_foreign` (`created_by`),
+  KEY `construction_quotes_status_index` (`status`),
+  CONSTRAINT `construction_quotes_construction_request_id_foreign` FOREIGN KEY (`construction_request_id`) REFERENCES `construction_requests` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `construction_quotes_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `construction_requests`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -166,11 +212,13 @@ CREATE TABLE `conversation_user` (
   `conversation_id` bigint unsigned NOT NULL,
   `user_id` bigint unsigned NOT NULL,
   `last_read_at` timestamp NULL DEFAULT NULL,
+  `hidden_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `conversation_user_conversation_id_user_id_unique` (`conversation_id`,`user_id`),
   KEY `conversation_user_user_id_foreign` (`user_id`),
+  KEY `conversation_user_hidden_at_index` (`hidden_at`),
   CONSTRAINT `conversation_user_conversation_id_foreign` FOREIGN KEY (`conversation_id`) REFERENCES `conversations` (`id`) ON DELETE CASCADE,
   CONSTRAINT `conversation_user_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -181,14 +229,18 @@ DROP TABLE IF EXISTS `conversations`;
 CREATE TABLE `conversations` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `subject` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `assigned_agent_id` bigint unsigned DEFAULT NULL,
   `context_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `context_id` bigint unsigned DEFAULT NULL,
   `last_message_at` timestamp NULL DEFAULT NULL,
+  `closed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `conversations_context_type_context_id_index` (`context_type`,`context_id`),
-  KEY `conversations_last_message_at_index` (`last_message_at`)
+  KEY `conversations_last_message_at_index` (`last_message_at`),
+  KEY `conversations_assigned_agent_id_closed_at_index` (`assigned_agent_id`,`closed_at`),
+  CONSTRAINT `conversations_assigned_agent_id_foreign` FOREIGN KEY (`assigned_agent_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `departments`;
@@ -301,6 +353,25 @@ CREATE TABLE `favorites` (
   UNIQUE KEY `favorites_user_favoritable_unique` (`user_id`,`favoritable_type`,`favoritable_id`),
   KEY `favorites_favoritable_type_favoritable_id_index` (`favoritable_type`,`favoritable_id`),
   CONSTRAINT `favorites_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `hero_banners`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `hero_banners` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `image_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `eyebrow` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lead` text COLLATE utf8mb4_unicode_ci,
+  `updated_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `hero_banners_key_unique` (`key`),
+  KEY `hero_banners_updated_by_foreign` (`updated_by`),
+  CONSTRAINT `hero_banners_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `incidents`;
@@ -460,6 +531,7 @@ CREATE TABLE `mobility_services` (
   `approved_by` bigint unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `mobility_services_reference_unique` (`reference`),
   KEY `mobility_services_provider_id_foreign` (`provider_id`),
@@ -470,6 +542,7 @@ CREATE TABLE `mobility_services` (
   KEY `mobility_services_status_index` (`status`),
   KEY `mobility_services_departure_index` (`departure`),
   KEY `mobility_services_destination_index` (`destination`),
+  KEY `mobility_services_deleted_at_index` (`deleted_at`),
   CONSTRAINT `mobility_services_approved_by_foreign` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `mobility_services_provider_id_foreign` FOREIGN KEY (`provider_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `mobility_services_vehicle_id_foreign` FOREIGN KEY (`vehicle_id`) REFERENCES `vehicles` (`id`) ON DELETE SET NULL
@@ -509,10 +582,12 @@ CREATE TABLE `notifications` (
   `notifiable_id` bigint unsigned NOT NULL,
   `data` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `read_at` timestamp NULL DEFAULT NULL,
+  `hidden_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `notifications_notifiable_type_notifiable_id_index` (`notifiable_type`,`notifiable_id`)
+  KEY `notifications_notifiable_type_notifiable_id_index` (`notifiable_type`,`notifiable_id`),
+  KEY `notifications_hidden_at_index` (`hidden_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `owner_payouts`;
@@ -528,6 +603,9 @@ CREATE TABLE `owner_payouts` (
   `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_attente',
   `paid_at` timestamp NULL DEFAULT NULL,
   `proof_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `proof_disk` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `proof_original_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `paid_by` bigint unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -535,8 +613,10 @@ CREATE TABLE `owner_payouts` (
   KEY `owner_payouts_mandate_id_foreign` (`mandate_id`),
   KEY `owner_payouts_owner_id_foreign` (`owner_id`),
   KEY `owner_payouts_status_index` (`status`),
+  KEY `owner_payouts_paid_by_foreign` (`paid_by`),
   CONSTRAINT `owner_payouts_mandate_id_foreign` FOREIGN KEY (`mandate_id`) REFERENCES `management_mandates` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `owner_payouts_owner_id_foreign` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  CONSTRAINT `owner_payouts_owner_id_foreign` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `owner_payouts_paid_by_foreign` FOREIGN KEY (`paid_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `pages`;
@@ -555,6 +635,67 @@ CREATE TABLE `pages` (
   UNIQUE KEY `pages_slug_unique` (`slug`),
   KEY `pages_updated_by_foreign` (`updated_by`),
   CONSTRAINT `pages_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `partner_dues`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `partner_dues` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `reference` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `beneficiary_id` bigint unsigned NOT NULL,
+  `source_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `source_id` bigint unsigned NOT NULL,
+  `gross_xof` bigint unsigned NOT NULL,
+  `commission_xof` bigint unsigned NOT NULL DEFAULT '0',
+  `net_xof` bigint unsigned NOT NULL,
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_attente',
+  `eligible_at` timestamp NULL DEFAULT NULL,
+  `payout_id` bigint unsigned DEFAULT NULL,
+  `cancelled_reason` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cancelled_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `partner_dues_source_type_source_id_unique` (`source_type`,`source_id`),
+  UNIQUE KEY `partner_dues_reference_unique` (`reference`),
+  KEY `partner_dues_payout_id_foreign` (`payout_id`),
+  KEY `partner_dues_beneficiary_id_status_index` (`beneficiary_id`,`status`),
+  KEY `partner_dues_status_index` (`status`),
+  KEY `partner_dues_eligible_at_index` (`eligible_at`),
+  CONSTRAINT `partner_dues_beneficiary_id_foreign` FOREIGN KEY (`beneficiary_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `partner_dues_payout_id_foreign` FOREIGN KEY (`payout_id`) REFERENCES `partner_payouts` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `partner_payouts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `partner_payouts` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `reference` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `beneficiary_id` bigint unsigned NOT NULL,
+  `amount_xof` bigint unsigned NOT NULL,
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_attente',
+  `method` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `external_reference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `paid_at` timestamp NULL DEFAULT NULL,
+  `proof_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `proof_disk` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `proof_original_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `note` text COLLATE utf8mb4_unicode_ci,
+  `created_by` bigint unsigned DEFAULT NULL,
+  `paid_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `partner_payouts_reference_unique` (`reference`),
+  KEY `partner_payouts_created_by_foreign` (`created_by`),
+  KEY `partner_payouts_paid_by_foreign` (`paid_by`),
+  KEY `partner_payouts_beneficiary_id_status_index` (`beneficiary_id`,`status`),
+  KEY `partner_payouts_status_index` (`status`),
+  CONSTRAINT `partner_payouts_beneficiary_id_foreign` FOREIGN KEY (`beneficiary_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `partner_payouts_created_by_foreign` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `partner_payouts_paid_by_foreign` FOREIGN KEY (`paid_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `password_reset_tokens`;
@@ -577,6 +718,7 @@ CREATE TABLE `payments` (
   `provider` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'paytech',
   `amount_xof` bigint unsigned NOT NULL,
   `commission_xof` bigint unsigned NOT NULL DEFAULT '0',
+  `kind` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'integral',
   `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'initie',
   `mode` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `provider_reference` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -588,6 +730,7 @@ CREATE TABLE `payments` (
   UNIQUE KEY `payments_reference_unique` (`reference`),
   KEY `payments_booking_id_foreign` (`booking_id`),
   KEY `payments_status_index` (`status`),
+  KEY `payments_kind_index` (`kind`),
   CONSTRAINT `payments_booking_id_foreign` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -631,6 +774,7 @@ CREATE TABLE `profiles` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint unsigned NOT NULL,
   `type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `avatar_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `verification_status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'non_verifie',
   `preferences` json DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -666,6 +810,7 @@ CREATE TABLE `properties` (
   `published_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `properties_owner_id_foreign` (`owner_id`),
   KEY `properties_region_id_foreign` (`region_id`),
@@ -678,6 +823,7 @@ CREATE TABLE `properties` (
   KEY `properties_tourist_zone_index` (`tourist_zone`),
   KEY `properties_status_index` (`status`),
   KEY `properties_verification_level_index` (`verification_level`),
+  KEY `properties_deleted_at_index` (`deleted_at`),
   CONSTRAINT `properties_approved_by_foreign` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `properties_commune_id_foreign` FOREIGN KEY (`commune_id`) REFERENCES `communes` (`id`) ON DELETE SET NULL,
   CONSTRAINT `properties_department_id_foreign` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE SET NULL,
@@ -715,6 +861,10 @@ CREATE TABLE `provider_certifications` (
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `issuer` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `file_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `disk` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'local',
+  `original_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `mime_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `size` bigint unsigned DEFAULT NULL,
   `verified` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -731,12 +881,16 @@ CREATE TABLE `provider_missions` (
   `reference` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `provider_id` bigint unsigned NOT NULL,
   `client_id` bigint unsigned DEFAULT NULL,
+  `team_building_request_id` bigint unsigned DEFAULT NULL,
+  `construction_request_id` bigint unsigned DEFAULT NULL,
+  `category` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
   `amount_xof` bigint unsigned NOT NULL,
   `commission_xof` bigint unsigned NOT NULL DEFAULT '0',
   `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'affectee',
   `scheduled_at` timestamp NULL DEFAULT NULL,
+  `completed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -744,8 +898,45 @@ CREATE TABLE `provider_missions` (
   KEY `provider_missions_provider_id_foreign` (`provider_id`),
   KEY `provider_missions_client_id_foreign` (`client_id`),
   KEY `provider_missions_status_index` (`status`),
+  KEY `provider_missions_team_building_request_id_foreign` (`team_building_request_id`),
+  KEY `provider_missions_construction_request_id_foreign` (`construction_request_id`),
   CONSTRAINT `provider_missions_client_id_foreign` FOREIGN KEY (`client_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `provider_missions_provider_id_foreign` FOREIGN KEY (`provider_id`) REFERENCES `providers` (`id`) ON DELETE CASCADE
+  CONSTRAINT `provider_missions_construction_request_id_foreign` FOREIGN KEY (`construction_request_id`) REFERENCES `construction_requests` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `provider_missions_provider_id_foreign` FOREIGN KEY (`provider_id`) REFERENCES `providers` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `provider_missions_team_building_request_id_foreign` FOREIGN KEY (`team_building_request_id`) REFERENCES `team_building_requests` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `provider_unavailabilities`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `provider_unavailabilities` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `provider_id` bigint unsigned NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `reason` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `provider_unavailabilities_provider_id_start_date_index` (`provider_id`,`start_date`),
+  CONSTRAINT `provider_unavailabilities_provider_id_foreign` FOREIGN KEY (`provider_id`) REFERENCES `providers` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `provider_weekly_availabilities`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `provider_weekly_availabilities` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `provider_id` bigint unsigned NOT NULL,
+  `weekday` tinyint unsigned NOT NULL,
+  `is_open` tinyint(1) NOT NULL DEFAULT '0',
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `provider_weekly_availabilities_provider_id_weekday_unique` (`provider_id`,`weekday`),
+  CONSTRAINT `provider_weekly_availabilities_provider_id_foreign` FOREIGN KEY (`provider_id`) REFERENCES `providers` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `providers`;
@@ -782,6 +973,7 @@ CREATE TABLE `quotes` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `reference` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `request_id` bigint unsigned NOT NULL,
+  `agent_id` bigint unsigned DEFAULT NULL,
   `amount_xof` bigint unsigned NOT NULL,
   `details` json DEFAULT NULL,
   `valid_until` date DEFAULT NULL,
@@ -792,6 +984,8 @@ CREATE TABLE `quotes` (
   UNIQUE KEY `quotes_reference_unique` (`reference`),
   KEY `quotes_request_id_foreign` (`request_id`),
   KEY `quotes_status_index` (`status`),
+  KEY `quotes_agent_id_foreign` (`agent_id`),
+  CONSTRAINT `quotes_agent_id_foreign` FOREIGN KEY (`agent_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `quotes_request_id_foreign` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -867,6 +1061,7 @@ CREATE TABLE `requests` (
   `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'recu',
   `priority` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'normale',
   `created_at` timestamp NULL DEFAULT NULL,
+  `hidden_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `requests_reference_unique` (`reference`),
@@ -874,6 +1069,7 @@ CREATE TABLE `requests` (
   KEY `requests_service_type_index` (`service_type`),
   KEY `requests_status_index` (`status`),
   KEY `requests_priority_index` (`priority`),
+  KEY `requests_hidden_at_index` (`hidden_at`),
   CONSTRAINT `requests_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -979,10 +1175,12 @@ CREATE TABLE `stays` (
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `stays_property_id_unique` (`property_id`),
   KEY `stays_is_active_index` (`is_active`),
   KEY `stays_price_per_night_xof_index` (`price_per_night_xof`),
+  KEY `stays_deleted_at_index` (`deleted_at`),
   CONSTRAINT `stays_property_id_foreign` FOREIGN KEY (`property_id`) REFERENCES `properties` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1053,6 +1251,7 @@ CREATE TABLE `tourism_experiences` (
   `approved_by` bigint unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `tourism_experiences_reference_unique` (`reference`),
   KEY `tourism_experiences_provider_id_foreign` (`provider_id`),
@@ -1060,6 +1259,7 @@ CREATE TABLE `tourism_experiences` (
   KEY `tourism_experiences_status_index` (`status`),
   KEY `tourism_experiences_destination_index` (`destination`),
   KEY `tourism_experiences_price_xof_index` (`price_xof`),
+  KEY `tourism_experiences_deleted_at_index` (`deleted_at`),
   CONSTRAINT `tourism_experiences_approved_by_foreign` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `tourism_experiences_provider_id_foreign` FOREIGN KEY (`provider_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1144,6 +1344,7 @@ CREATE TABLE `vehicles` (
   `approved_by` bigint unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `vehicles_reference_unique` (`reference`),
   KEY `vehicles_provider_id_foreign` (`provider_id`),
@@ -1151,6 +1352,7 @@ CREATE TABLE `vehicles` (
   KEY `vehicles_type_index` (`type`),
   KEY `vehicles_status_index` (`status`),
   KEY `vehicles_price_per_day_xof_index` (`price_per_day_xof`),
+  KEY `vehicles_deleted_at_index` (`deleted_at`),
   CONSTRAINT `vehicles_approved_by_foreign` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `vehicles_provider_id_foreign` FOREIGN KEY (`provider_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1233,3 +1435,22 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (49,'2026_07_17_100
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (50,'2026_07_17_100100_create_conversation_user_table',6);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (51,'2026_07_17_100200_create_messages_table',6);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (52,'2026_07_18_100000_make_favorites_polymorphic',7);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (53,'2026_07_23_100000_create_provider_weekly_availabilities_table',8);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (54,'2026_07_23_100100_create_provider_unavailabilities_table',8);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (55,'2026_07_26_100000_create_attendances_table',9);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (56,'2026_07_28_100000_add_team_building_link_to_provider_missions_table',10);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (57,'2026_07_29_220000_create_construction_quotes_table',11);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (58,'2026_07_30_090000_add_construction_link_to_provider_missions_table',12);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (59,'2026_07_30_150000_add_kind_to_payments_table',13);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (60,'2026_07_31_100000_add_avatar_to_profiles_table',14);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (61,'2026_07_31_100500_add_file_metadata_to_provider_certifications_table',14);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (62,'2026_08_02_140000_add_agent_id_to_quotes_table',15);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (63,'2026_08_04_090000_add_support_fields_to_conversations_table',16);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (64,'2026_08_05_115000_create_partner_payouts_table',17);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (65,'2026_08_05_120000_create_partner_dues_table',17);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (66,'2026_08_05_121000_add_completed_at_to_provider_missions_table',17);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (67,'2026_08_06_100000_add_proof_metadata_to_owner_payouts_table',18);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (68,'2026_08_09_230000_add_soft_deletes_to_listing_tables',19);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (69,'2026_08_10_090000_add_hidden_at_to_client_records_tables',20);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (70,'2026_08_10_091000_add_hidden_at_to_notifications_and_conversation_user_tables',21);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (71,'2026_08_10_150000_create_hero_banners_table',22);

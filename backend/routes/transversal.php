@@ -4,6 +4,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GeoController;
+use App\Http\Controllers\HeroController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PaymentController;
@@ -41,6 +42,11 @@ Route::get('whatsapp/link', [WhatsAppLinkController::class, 'generate']);
 // FAQ publiée et pages de contenu (adressées par slug). Édition = back-office.
 Route::get('faqs', [FaqController::class, 'published']);
 Route::get('pages/{page}', [PageController::class, 'show']);
+
+// --- Bandeaux d'en-tête des pages publiques (F12) -----------------------------
+// Image de fond et textes des « héros », pilotés au back-office. Appelé une
+// seule fois par le frontend, qui sert ensuite toutes ses pages avec.
+Route::get('heroes', [HeroController::class, 'index']);
 
 // --- Contact public (F2.8.1) -------------------------------------------------
 // Coordonnées du siège (lecture, pour affichage + carte) et dépôt de message

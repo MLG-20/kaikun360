@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { CatalogComponent } from '../../../shared/components/catalog/catalog';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /**
  * Page univers Immobilier (F2.3) — route `/immobilier`.
@@ -13,7 +14,7 @@ import { CatalogComponent } from '../../../shared/components/catalog/catalog';
  */
 @Component({
   selector: 'app-property-list-page',
-  imports: [CatalogComponent, RouterLink],
+  imports: [PageHeroComponent, CatalogComponent, RouterLink],
   templateUrl: './property-list-page.html',
   styleUrl: './property-list-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

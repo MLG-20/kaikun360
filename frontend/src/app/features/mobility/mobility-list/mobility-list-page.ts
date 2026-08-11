@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { CatalogComponent } from '../../../shared/components/catalog/catalog';
 import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /**
  * Page univers Mobilité (F2.4) — route `/mobilite`.
@@ -17,7 +18,7 @@ import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-but
  */
 @Component({
   selector: 'app-mobility-list-page',
-  imports: [CatalogComponent, RouterLink, WhatsAppButtonComponent],
+  imports: [PageHeroComponent, CatalogComponent, RouterLink, WhatsAppButtonComponent],
   templateUrl: './mobility-list-page.html',
   styleUrl: './mobility-list-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

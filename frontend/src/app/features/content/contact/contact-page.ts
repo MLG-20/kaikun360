@@ -10,6 +10,7 @@ import { catchError } from 'rxjs/operators';
 import { ContactService } from '../../../core/api/contact.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /**
  * Page Contact (F2.8, formulaire ajouté en F2.8.1) — route `/contact`.
@@ -25,7 +26,7 @@ import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-but
  */
 @Component({
   selector: 'app-contact-page',
-  imports: [ReactiveFormsModule, RouterLink, WhatsAppButtonComponent],
+  imports: [PageHeroComponent, ReactiveFormsModule, RouterLink, WhatsAppButtonComponent],
   templateUrl: './contact-page.html',
   styleUrl: './contact-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

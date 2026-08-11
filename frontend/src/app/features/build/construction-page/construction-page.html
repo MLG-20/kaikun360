@@ -1,24 +1,21 @@
 <!-- Page univers Construction (F2.5, enrichie). Le chiffrage vient du backend. -->
-<section class="uni-hero">
-  <div class="k-wrap uni-hero-inner">
-    <p class="k-eyebrow">Univers Construction</p>
-    <h1 class="uni-hero-title">Construisez ou rénovez, même à distance</h1>
-    <p class="uni-hero-lead">
-      Kaikun Build coordonne votre chantier au Sénégal avec des artisans
-      vérifiés, un devis ferme et un suivi filmé et daté à chaque étape.
-      Estimez votre budget complet en quelques secondes, puis lancez votre demande.
-    </p>
-
-    <ul class="uni-hero-points">
-      @for (point of highlights; track point.title) {
-        <li class="uni-hero-point">
-          <span class="uni-hero-point-title">{{ point.title }}</span>
-          <span class="uni-hero-point-text">{{ point.text }}</span>
-        </li>
-      }
-    </ul>
-  </div>
-</section>
+<!-- Textes par défaut : le back-office peut les remplacer et poser une photo
+     de fond, sans redéploiement (F12). -->
+<app-page-hero
+  heroKey="construction"
+  eyebrow="Univers Construction"
+  title="Construisez ou rénovez, même à distance"
+  lead="Kaikun Build coordonne votre chantier au Sénégal avec des artisans vérifiés, un devis ferme et un suivi filmé et daté à chaque étape. Estimez votre budget complet en quelques secondes, puis lancez votre demande."
+>
+  <ul class="uni-hero-points">
+    @for (point of highlights; track point.title) {
+      <li class="uni-hero-point">
+        <span class="uni-hero-point-title">{{ point.title }}</span>
+        <span class="uni-hero-point-text">{{ point.text }}</span>
+      </li>
+    }
+  </ul>
+</app-page-hero>
 
 <!-- Comment ça marche -->
 <section class="k-wrap conv-steps">

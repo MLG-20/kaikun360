@@ -1,0 +1,24 @@
+<!--
+  Bandeau d'en-tête d'une page publique (F12).
+
+  ⚠️ La classe `uni-hero` et ses enfants restent ceux de `styles/_universe.scss` :
+  ce composant reprend l'ossature existante au lieu d'en inventer une, pour que
+  les douze pages migrées gardent exactement la même allure tant qu'aucune image
+  n'a été chargée.
+-->
+<section class="uni-hero" [class.uni-hero--image]="!!background()" [style.background-image]="background()">
+  <div class="k-wrap uni-hero-inner">
+    @if (resolvedEyebrow()) {
+      <p class="k-eyebrow">{{ resolvedEyebrow() }}</p>
+    }
+
+    <h1 class="uni-hero-title">{{ resolvedTitle() }}</h1>
+
+    @if (resolvedLead()) {
+      <p class="uni-hero-lead">{{ resolvedLead() }}</p>
+    }
+
+    <!-- Points forts, renvois, boutons : propres à chaque page. -->
+    <ng-content />
+  </div>
+</section>

@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { LeadFormComponent } from '../../../shared/components/lead-form/lead-form';
 import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /**
  * Page univers Diaspora (F2.5) — route `/diaspora`.
@@ -15,7 +16,7 @@ import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-but
  */
 @Component({
   selector: 'app-diaspora-page',
-  imports: [LeadFormComponent, WhatsAppButtonComponent, RouterLink],
+  imports: [PageHeroComponent, LeadFormComponent, WhatsAppButtonComponent, RouterLink],
   templateUrl: './diaspora-page.html',
   styleUrl: './diaspora-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

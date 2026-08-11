@@ -1,14 +1,24 @@
-<!-- Page de résultats /recherche (F2.1). -->
+<!-- Page de résultats /recherche (F2.1), dotée de son bandeau en F12. -->
+
+<!--
+  Le bandeau change avec l'univers sélectionné : la clé, le surtitre, le titre
+  et l'accroche viennent tous du même registre (`catalog-page.ts`). Côté
+  back-office, `recherche.immobilier` hérite de l'image de l'univers Immobilier
+  tant qu'on ne lui en donne pas une : une seule photo par univers suffit à
+  habiller les deux pages.
+-->
+<app-page-hero
+  [heroKey]="heroKey()"
+  [eyebrow]="intro().eyebrow"
+  [title]="intro().title"
+  [lead]="intro().lead"
+/>
+
 <div class="k-wrap catalog-page">
   <!-- `live` : sur une page de RÉSULTATS, cliquer un onglet d'univers doit
        changer les résultats tout de suite (F8.11). Sur l'accueil, il n'y a rien
        à changer : l'onglet se contente de préparer la recherche. -->
   <app-search-engine [live]="true" />
-
-  <header class="catalog-page-head">
-    <p class="k-eyebrow">Catalogue</p>
-    <h1 class="catalog-page-title">{{ universeLabel() }}</h1>
-  </header>
 
   <!-- Le composant catalogue lit ses filtres/tri/page dans l'URL. -->
   <app-catalog [universe]="universe()" />

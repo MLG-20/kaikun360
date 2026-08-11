@@ -877,7 +877,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 909 tests, 3151 assertions — verts
+# 1050 tests, 3725 assertions — verts (mesuré après F12)
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -1031,6 +1031,16 @@ Le code est **abondamment commenté en français**.
       du SDK est remplacé par `tests/Support/FakeAnthropicTransport.php`, qui sert des
       réponses scriptées **et enregistre les requêtes émises**.
     - ⚠️ **Non éprouvé sur l'API réelle** : la clé du client n'existe pas encore.
+- ✅ **Bandeaux d'en-tête pilotés (F12)** : `GET /heroes` (public) +
+  `GET|POST|DELETE /admin/heroes[/{key}]` (`gerer:parametres`). Modèle
+  `HeroBanner`, catalogue `App\Support\Heroes\HeroCatalog` — voir la section
+  dédiée de [`app/Modules/Admin/README.md`](app/Modules/Admin/README.md).
+  ⚠️ **L'image hérite de la page parente, le texte JAMAIS** : un titre est écrit
+  *pour* une page, le faire descendre afficherait un titre faux. L'héritage est
+  résolu **côté serveur** (cache `kaikun.heroes`) pour que le frontend n'ait
+  aucune règle de parenté à dupliquer. ⚠️ **Une chaîne vide retire la surcharge**
+  et rend à la page son texte d'origine : il n'existe aucun état dans lequel le
+  back-office laisse une page sans titre.
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.

@@ -7,6 +7,7 @@ use App\Modules\Admin\Http\Controllers\AdminDashboardController;
 use App\Modules\Admin\Http\Controllers\AdminDocumentController;
 use App\Modules\Admin\Http\Controllers\AdminDossierController;
 use App\Modules\Admin\Http\Controllers\AdminGeoController;
+use App\Modules\Admin\Http\Controllers\AdminHeroController;
 use App\Modules\Admin\Http\Controllers\AdminPartnerPayoutController;
 use App\Modules\Admin\Http\Controllers\AdminPaymentController;
 use App\Modules\Admin\Http\Controllers\AdminPropertyController;
@@ -147,6 +148,19 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/settings', [AdminSettingsController::class, 'index'])
         ->middleware('can:gerer:parametres');
     Route::patch('/settings', [AdminSettingsController::class, 'update'])
+        ->middleware('can:gerer:parametres');
+
+    // F12 — Bandeaux d'en-tête des pages publiques (image + textes). Même
+    // permission que le paramétrage : c'est du contenu de vitrine, pas un
+    // dossier client. La clé est une chaîne pointée (`recherche.nuitees`),
+    // d'où la contrainte de format plutôt qu'un `whereNumber`.
+    Route::get('/heroes', [AdminHeroController::class, 'index'])
+        ->middleware('can:gerer:parametres');
+    Route::post('/heroes/{key}', [AdminHeroController::class, 'update'])
+        ->where('key', '[a-z0-9\-\.]+')
+        ->middleware('can:gerer:parametres');
+    Route::delete('/heroes/{key}', [AdminHeroController::class, 'destroy'])
+        ->where('key', '[a-z0-9\-\.]+')
         ->middleware('can:gerer:parametres');
 
     // B13.4 — Nomenclatures de référence en lecture seule (catégories, régions).

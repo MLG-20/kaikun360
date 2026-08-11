@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { CatalogComponent } from '../../../shared/components/catalog/catalog';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /**
  * Page univers Nuitées (F2.3) — route `/nuitees`.
@@ -11,7 +12,7 @@ import { CatalogComponent } from '../../../shared/components/catalog/catalog';
  */
 @Component({
   selector: 'app-stay-list-page',
-  imports: [CatalogComponent],
+  imports: [PageHeroComponent, CatalogComponent],
   templateUrl: './stay-list-page.html',
   styleUrl: './stay-list-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

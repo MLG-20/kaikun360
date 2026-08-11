@@ -1,24 +1,21 @@
 <!-- Page univers Gestion locative (F2.5). -->
-<section class="uni-hero">
-  <div class="k-wrap uni-hero-inner">
-    <p class="k-eyebrow">Univers Gestion locative</p>
-    <h1 class="uni-hero-title">Confiez vos biens, gardez le contrôle</h1>
-    <p class="uni-hero-lead">
-      Kaikun Manage prend en charge la gestion de vos biens — locataires, loyers,
-      entretien, quittances — et vous suivez tout à distance, avec un reporting
-      clair et des décaissements réguliers en FCFA.
-    </p>
-
-    <ul class="uni-hero-points">
-      @for (point of highlights; track point.title) {
-        <li class="uni-hero-point">
-          <span class="uni-hero-point-title">{{ point.title }}</span>
-          <span class="uni-hero-point-text">{{ point.text }}</span>
-        </li>
-      }
-    </ul>
-  </div>
-</section>
+<!-- Textes par défaut : le back-office peut les remplacer et poser une photo
+     de fond, sans redéploiement (F12). -->
+<app-page-hero
+  heroKey="gestion-locative"
+  eyebrow="Univers Gestion locative"
+  title="Confiez vos biens, gardez le contrôle"
+  lead="Kaikun Manage prend en charge la gestion de vos biens — locataires, loyers, entretien, quittances — et vous suivez tout à distance, avec un reporting clair et des décaissements réguliers en FCFA."
+>
+  <ul class="uni-hero-points">
+    @for (point of highlights; track point.title) {
+      <li class="uni-hero-point">
+        <span class="uni-hero-point-title">{{ point.title }}</span>
+        <span class="uni-hero-point-text">{{ point.text }}</span>
+      </li>
+    }
+  </ul>
+</app-page-hero>
 
 <section class="k-wrap conv-steps">
   <h2 class="conv-section-title">Comment ça marche</h2>

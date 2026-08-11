@@ -48,7 +48,17 @@ La toute première brique de l'application (`App`) ne fait qu'une chose : affich
   vérification, mot de passe oublié). 👉 Voir le README détaillé :
   [`auth/README.md`](auth/README.md).
 - **`catalog/`** — la **page de résultats de recherche** (`/recherche`, F2.1) :
-  moteur de recherche + catalogue générique piloté par l'URL.
+  moteur de recherche + catalogue générique piloté par l'URL. Depuis **F12**,
+  elle s'ouvre enfin sur un **bandeau** — et pas un seul : *une page, cinq
+  visages*, le titre et l'image suivant l'onglet d'univers actif (clés
+  `recherche.immobilier`, `recherche.nuitees`…). Un visiteur qui cherche une
+  villa à la nuit et un autre qui cherche un 4×4 ne font pas la même chose ;
+  les accueillir avec la même phrase générique était une occasion perdue.
+  ⚠️ Les textes d'ouverture sont écrits **pour la page de résultats**, pas
+  recopiés de la grande page de l'univers : ici le visiteur a déjà choisi ce
+  qu'il cherche, on l'aide à trier — c'est la même raison qui fait qu'une
+  surcharge de texte saisie au back-office ne se transmet jamais d'une page à
+  l'autre, alors que l'image, elle, est héritée.
 - **`immo/`** — l'**univers Immobilier** (F2.3) : la page vitrine `/immobilier`
   (bandeau de confiance + catalogue filtrable) et la **fiche d'un bien**
   `/immobilier/:id` (description, localisation, vérification, **formulaire de

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { LeadFormComponent } from '../../../shared/components/lead-form/lead-form';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /**
  * Page univers Team building (F2.5) — route `/team-building`.
@@ -12,7 +13,7 @@ import { LeadFormComponent } from '../../../shared/components/lead-form/lead-for
  */
 @Component({
   selector: 'app-team-building-page',
-  imports: [LeadFormComponent],
+  imports: [PageHeroComponent, LeadFormComponent],
   templateUrl: './team-building-page.html',
   styleUrl: './team-building-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

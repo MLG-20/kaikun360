@@ -1715,6 +1715,39 @@ export interface SettingsSnapshot {
   notification_events: NotificationEventOption[];
 }
 
+/**
+ * Un bandeau d'en-tête pilotable (F12), tel que le voit le back-office.
+ *
+ * ⚠️ **`image` et `inherited_image` ne disent pas la même chose**, et confondre
+ * les deux rendrait l'écran incompréhensible :
+ *  - `image` = la photo chargée POUR CETTE PAGE (`null` = aucune, donc rien à
+ *    retirer) ;
+ *  - `inherited_image` = la photo que le visiteur voit RÉELLEMENT, héritée de
+ *    la page parente le cas échéant.
+ * Une page peut donc afficher une image sans en avoir une à elle.
+ */
+export interface HeroBannerAdmin {
+  key: string;
+  label: string;
+  group: string;
+  group_label: string;
+  parent: string | null;
+  parent_label: string | null;
+  hint: string;
+  image: string | null;
+  inherited_image: string | null;
+  eyebrow: string | null;
+  title: string | null;
+  lead: string | null;
+  updated_at: string | null;
+}
+
+/** Réponse de `GET /admin/heroes` : les bandeaux + les libellés de groupes. */
+export interface HeroSnapshot {
+  heroes: HeroBannerAdmin[];
+  groups: Record<string, string>;
+}
+
 /** Une entrée de FAQ (miroir de `FaqResource`). */
 export interface FaqEntry {
   id: number;
@@ -3211,6 +3244,51 @@ export class AdminService {
   updateSettings(settings: Record<string, unknown>): Observable<SettingsSnapshot> {
     return this.http
       .patch<ApiEnvelope<SettingsSnapshot>>(`${this.api}/admin/settings`, { settings })
+      .pipe(map((response) => response.data));
+  }
+
+  // --- Bandeaux d'en-tête des pages publiques (F12) ---------------------------
+
+  /** Tous les bandeaux connus, saisis ou non. GET /admin/heroes */
+  heroes(): Observable<HeroSnapshot> {
+    return this.http
+      .get<ApiEnvelope<HeroSnapshot>>(`${this.api}/admin/heroes`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Enregistre le bandeau d'une page. POST /admin/heroes/{key}
+   *
+   * ⚠️ **POST et non PATCH, et `FormData` toujours** : PHP ne décode
+   * `multipart/form-data` que sur un POST (`$_FILES` reste vide sur un PATCH) —
+   * même piège que le justificatif de reversement plus haut.
+   *
+   * Seuls les champs présents dans `changes` sont transmis, et le serveur ne
+   * touche qu'à ceux-là : enregistrer une image ne perd pas les textes, et
+   * inversement. Une chaîne vide est un geste à part entière — elle RETIRE la
+   * surcharge et rend à la page son texte d'origine.
+   */
+  updateHero(
+    key: string,
+    changes: { image?: File; removeImage?: boolean; eyebrow?: string; title?: string; lead?: string },
+  ): Observable<HeroSnapshot> {
+    const form = new FormData();
+
+    if (changes.image) form.append('image', changes.image);
+    if (changes.removeImage) form.append('remove_image', '1');
+    if (changes.eyebrow !== undefined) form.append('eyebrow', changes.eyebrow);
+    if (changes.title !== undefined) form.append('title', changes.title);
+    if (changes.lead !== undefined) form.append('lead', changes.lead);
+
+    return this.http
+      .post<ApiEnvelope<HeroSnapshot>>(`${this.api}/admin/heroes/${key}`, form)
+      .pipe(map((response) => response.data));
+  }
+
+  /** Réinitialise un bandeau (image ET textes). DELETE /admin/heroes/{key} */
+  resetHero(key: string): Observable<HeroSnapshot> {
+    return this.http
+      .delete<ApiEnvelope<HeroSnapshot>>(`${this.api}/admin/heroes/${key}`)
       .pipe(map((response) => response.data));
   }
 

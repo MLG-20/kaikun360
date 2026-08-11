@@ -6,6 +6,7 @@ import { catchError, map } from 'rxjs/operators';
 
 import { ContentService } from '../../../core/api/content.service';
 import { Faq } from '../../../models/content.model';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /** État de chargement de la FAQ. */
 type LoadState = 'loading' | 'ready' | 'empty' | 'failed';
@@ -27,7 +28,7 @@ interface FaqGroup {
  */
 @Component({
   selector: 'app-faq-page',
-  imports: [RouterLink],
+  imports: [PageHeroComponent, RouterLink],
   templateUrl: './faq-page.html',
   styleUrl: './faq-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

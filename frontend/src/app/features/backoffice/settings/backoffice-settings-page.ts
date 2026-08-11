@@ -9,6 +9,8 @@ import {
   FaqEntry,
   GeoDepartment,
   GeoRegion,
+  HeroBannerAdmin,
+  HeroSnapshot,
   NotificationEventOption,
   PlatformSetting,
   ReferenceCatalog,
@@ -17,7 +19,22 @@ import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor/rich-text-editor';
 
 /** Onglet actif de l'écran Paramètres. */
-type SettingsTab = 'settings' | 'notifications' | 'content' | 'reference';
+type SettingsTab = 'settings' | 'notifications' | 'content' | 'reference' | 'heroes';
+
+/**
+ * Ce qui est en cours de saisie pour un bandeau, avant enregistrement.
+ *
+ * Séparé des données renvoyées par le serveur : tant que l'équipe n'a pas
+ * cliqué « Enregistrer », l'écran doit pouvoir montrer à la fois ce qui est
+ * publié et ce qui est en train d'être écrit.
+ */
+interface HeroDraft {
+  eyebrow: string;
+  title: string;
+  lead: string;
+  /** Fichier choisi mais pas encore envoyé (`null` = aucun nouveau choix). */
+  file: File | null;
+}
 
 /** Sous-onglet du contenu éditorial. */
 type ContentTab = 'pages' | 'faqs';
@@ -243,6 +260,35 @@ export class BackofficeSettingsPageComponent {
     ];
   });
 
+  // --- Onglet Bandeaux (F12) --------------------------------------------------
+
+  protected readonly heroesLoading = signal(false);
+  protected readonly heroesLoaded = signal(false);
+  protected readonly heroesError = signal(false);
+  protected readonly heroActionError = signal<string | null>(null);
+  protected readonly heroMessage = signal<string | null>(null);
+
+  /** Clé du bandeau en cours d'enregistrement (une seule à la fois). */
+  protected readonly heroSaving = signal<string | null>(null);
+
+  /** Bandeaux tels que publiés, renvoyés par le serveur. */
+  protected readonly heroes = signal<HeroBannerAdmin[]>([]);
+
+  /** Libellés des groupes d'affichage, fournis par le serveur. */
+  private readonly heroGroups = signal<Record<string, string>>({});
+
+  /** Saisie en cours, par clé de bandeau. */
+  protected readonly heroDrafts = signal<Record<string, HeroDraft>>({});
+
+  /** Groupes présents, dans l'ordre où le serveur les a envoyés. */
+  protected readonly heroGroupKeys = computed(() => {
+    const seen: string[] = [];
+    for (const hero of this.heroes()) {
+      if (!seen.includes(hero.group)) seen.push(hero.group);
+    }
+    return seen;
+  });
+
   constructor() {
     this.loadSettings();
   }
@@ -253,10 +299,176 @@ export class BackofficeSettingsPageComponent {
     this.tab.set(tab);
 
     if (tab === 'content' && !this.pagesLoaded()) this.loadPages();
+    if (tab === 'heroes' && !this.heroesLoaded()) this.loadHeroes();
     if (tab === 'reference') {
       if (!this.geoLoaded()) this.loadGeography();
       if (!this.reference()) this.loadReference();
     }
+  }
+
+  // ===========================================================================
+  // Onglet Bandeaux (F12)
+  // ===========================================================================
+
+  protected loadHeroes(): void {
+    this.heroesLoading.set(true);
+    this.heroesError.set(false);
+
+    this.admin.heroes().subscribe({
+      next: (snapshot) => {
+        this.applyHeroSnapshot(snapshot);
+        this.heroesLoaded.set(true);
+        this.heroesLoading.set(false);
+      },
+      error: () => {
+        this.heroesError.set(true);
+        this.heroesLoading.set(false);
+      },
+    });
+  }
+
+  protected heroGroupLabel(group: string): string {
+    return this.heroGroups()[group] ?? group;
+  }
+
+  protected heroesOf(group: string): HeroBannerAdmin[] {
+    return this.heroes().filter((hero) => hero.group === group);
+  }
+
+  protected heroDraft(key: string): HeroDraft {
+    return this.heroDrafts()[key] ?? { eyebrow: '', title: '', lead: '', file: null };
+  }
+
+  protected setHeroDraft(key: string, field: 'eyebrow' | 'title' | 'lead', value: string): void {
+    this.heroDrafts.update((drafts) => ({
+      ...drafts,
+      [key]: { ...this.heroDraft(key), [field]: value },
+    }));
+  }
+
+  /** Mémorise le fichier choisi ; rien n'est envoyé avant « Enregistrer ». */
+  protected onHeroFile(key: string, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    this.heroDrafts.update((drafts) => ({
+      ...drafts,
+      [key]: { ...this.heroDraft(key), file },
+    }));
+  }
+
+  /** Nom du fichier choisi mais pas encore envoyé, pour l'afficher à l'écran. */
+  protected heroPendingFile(key: string): string | null {
+    return this.heroDraft(key).file?.name ?? null;
+  }
+
+  /**
+   * Y a-t-il quelque chose à enregistrer pour ce bandeau ?
+   *
+   * On compare la saisie à ce qui est publié pour ne pas envoyer un formulaire
+   * qu'on vient d'ouvrir sans y toucher — ce qui écrirait une ligne en base et
+   * ferait passer le bandeau pour « personnalisé » alors qu'il ne l'est pas.
+   */
+  protected heroIsDirty(hero: HeroBannerAdmin): boolean {
+    const draft = this.heroDraft(hero.key);
+
+    return (
+      draft.file !== null ||
+      draft.eyebrow !== (hero.eyebrow ?? '') ||
+      draft.title !== (hero.title ?? '') ||
+      draft.lead !== (hero.lead ?? '')
+    );
+  }
+
+  protected saveHero(hero: HeroBannerAdmin): void {
+    const draft = this.heroDraft(hero.key);
+
+    this.heroActionError.set(null);
+    this.heroMessage.set(null);
+    this.heroSaving.set(hero.key);
+
+    // On n'envoie que ce qui a bougé : une image seule ne doit pas réécrire les
+    // textes, et l'inverse non plus.
+    const changes: { image?: File; eyebrow?: string; title?: string; lead?: string } = {};
+    if (draft.file) changes.image = draft.file;
+    if (draft.eyebrow !== (hero.eyebrow ?? '')) changes.eyebrow = draft.eyebrow;
+    if (draft.title !== (hero.title ?? '')) changes.title = draft.title;
+    if (draft.lead !== (hero.lead ?? '')) changes.lead = draft.lead;
+
+    this.admin.updateHero(hero.key, changes).subscribe({
+      next: (snapshot) => {
+        this.applyHeroSnapshot(snapshot);
+        this.heroSaving.set(null);
+        this.heroMessage.set(`Bandeau « ${hero.label} » enregistré.`);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.heroSaving.set(null);
+        this.heroActionError.set(this.messageFor(error));
+      },
+    });
+  }
+
+  /** Retire l'image PROPRE : la page retombe sur celle de sa page parente. */
+  protected removeHeroImage(hero: HeroBannerAdmin): void {
+    this.heroActionError.set(null);
+    this.heroMessage.set(null);
+    this.heroSaving.set(hero.key);
+
+    this.admin.updateHero(hero.key, { removeImage: true }).subscribe({
+      next: (snapshot) => {
+        this.applyHeroSnapshot(snapshot);
+        this.heroSaving.set(null);
+        this.heroMessage.set(`Image retirée du bandeau « ${hero.label} ».`);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.heroSaving.set(null);
+        this.heroActionError.set(this.messageFor(error));
+      },
+    });
+  }
+
+  /** Efface toute la personnalisation : la page redevient celle d'origine. */
+  protected resetHero(hero: HeroBannerAdmin): void {
+    this.heroActionError.set(null);
+    this.heroMessage.set(null);
+    this.heroSaving.set(hero.key);
+
+    this.admin.resetHero(hero.key).subscribe({
+      next: (snapshot) => {
+        this.applyHeroSnapshot(snapshot);
+        this.heroSaving.set(null);
+        this.heroMessage.set(`Bandeau « ${hero.label} » réinitialisé.`);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.heroSaving.set(null);
+        this.heroActionError.set(this.messageFor(error));
+      },
+    });
+  }
+
+  /**
+   * Réaligne l'écran sur ce que le serveur vient de renvoyer.
+   *
+   * ⚠️ Les brouillons sont RECONSTRUITS à chaque réponse, y compris les
+   * fichiers choisis qui repassent à `null`. C'est voulu : après un
+   * enregistrement, l'image est publiée — garder le fichier en mémoire ferait
+   * réapparaître « nouvelle image en attente » sous une image déjà en ligne, et
+   * un second clic la renverrait pour rien.
+   */
+  private applyHeroSnapshot(snapshot: HeroSnapshot): void {
+    this.heroes.set(snapshot.heroes);
+    this.heroGroups.set(snapshot.groups);
+
+    const drafts: Record<string, HeroDraft> = {};
+    for (const hero of snapshot.heroes) {
+      drafts[hero.key] = {
+        eyebrow: hero.eyebrow ?? '',
+        title: hero.title ?? '',
+        lead: hero.lead ?? '',
+        file: null,
+      };
+    }
+    this.heroDrafts.set(drafts);
   }
 
   // ===========================================================================

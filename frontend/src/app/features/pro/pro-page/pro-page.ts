@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /**
  * Page univers Kaikun Pro (F2.5) — route `/pro`.
@@ -13,7 +14,7 @@ import { RouterLink } from '@angular/router';
  */
 @Component({
   selector: 'app-pro-page',
-  imports: [RouterLink],
+  imports: [PageHeroComponent, RouterLink],
   templateUrl: './pro-page.html',
   styleUrl: './pro-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

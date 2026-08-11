@@ -1,24 +1,21 @@
 <!-- Page univers Kaikun Pro (F2.5). -->
-<section class="uni-hero">
-  <div class="k-wrap uni-hero-inner">
-    <p class="k-eyebrow">Kaikun Pro</p>
-    <h1 class="uni-hero-title">Développez votre activité avec Kaikun 360</h1>
-    <p class="uni-hero-lead">
-      Rejoignez le réseau des prestataires vérifiés Kaikun 360 : recevez des
-      demandes qualifiées de clients au Sénégal et dans la diaspora, gagnez en
-      visibilité et sécurisez vos paiements.
-    </p>
-
-    <ul class="uni-hero-points">
-      @for (point of highlights; track point.title) {
-        <li class="uni-hero-point">
-          <span class="uni-hero-point-title">{{ point.title }}</span>
-          <span class="uni-hero-point-text">{{ point.text }}</span>
-        </li>
-      }
-    </ul>
-  </div>
-</section>
+<!-- Textes par défaut : le back-office peut les remplacer et poser une photo
+     de fond, sans redéploiement (F12). -->
+<app-page-hero
+  heroKey="pro"
+  eyebrow="Kaikun Pro"
+  title="Développez votre activité avec Kaikun 360"
+  lead="Rejoignez le réseau des prestataires vérifiés Kaikun 360 : recevez des demandes qualifiées de clients au Sénégal et dans la diaspora, gagnez en visibilité et sécurisez vos paiements."
+>
+  <ul class="uni-hero-points">
+    @for (point of highlights; track point.title) {
+      <li class="uni-hero-point">
+        <span class="uni-hero-point-title">{{ point.title }}</span>
+        <span class="uni-hero-point-text">{{ point.text }}</span>
+      </li>
+    }
+  </ul>
+</app-page-hero>
 
 <!-- À qui s'adresse Kaikun Pro -->
 <section class="k-wrap conv-features">

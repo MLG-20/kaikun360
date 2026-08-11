@@ -469,6 +469,15 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/pages/{page}` | public | `PageController@show` |
 | GET | `/contact-info` | public | `ContactController@info` |
 | POST | `/contact` | public (throttle 10/min) | `ContactController@store` |
+| GET | `/heroes` | public | `HeroController@index` |
+
+> **Bandeaux d'en-tête (F12).** `GET /heroes` renvoie une **map** clé → bandeau
+> (`{ image, eyebrow, title, lead }`), **héritage d'image déjà résolu côté
+> serveur** : le frontend lit l'entrée de sa clé sans connaître la parenté des
+> pages. Les clés sans aucune personnalisation sont **omises**, et une
+> plateforme vierge renvoie `{}` — chaque page affiche alors ses textes
+> d'origine sur le dégradé de marque. Catalogue des clés :
+> `App\Support\Heroes\HeroCatalog`.
 
 ### Assistant (F10 — hors CDC)
 
@@ -560,6 +569,9 @@ existants. Voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README
 | GET | `/admin/contact-messages` | auth + `can:traiter:demandes` | `ContactController@index` |
 | GET | `/admin/contact-messages/{contactMessage}` | auth + `can:repondre:messages` | `ContactController@show` |
 | PATCH | `/admin/contact-messages/{contactMessage}` | auth + `can:traiter:demandes` | `ContactController@update` |
+| GET | `/admin/heroes` | auth + `can:gerer:parametres` | `AdminHeroController@index` |
+| POST | `/admin/heroes/{key}` | auth + `can:gerer:parametres` | `AdminHeroController@update` |
+| DELETE | `/admin/heroes/{key}` | auth + `can:gerer:parametres` | `AdminHeroController@destroy` |
 | GET | `/admin/mandates` | auth + `can:consulter:dashboard-admin` | `AdminDossierController@mandates` |
 | GET | `/admin/mobility-services` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@mobilityServices` |
 | GET | `/admin/mobility-services/{service}` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@mobilityService` |

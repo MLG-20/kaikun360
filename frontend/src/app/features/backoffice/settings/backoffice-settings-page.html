@@ -42,6 +42,15 @@
     type="button"
     class="st-tab"
     role="tab"
+    [class.is-active]="tab() === 'heroes'"
+    [attr.aria-selected]="tab() === 'heroes'"
+    (click)="switchTab('heroes')">
+    Bandeaux
+  </button>
+  <button
+    type="button"
+    class="st-tab"
+    role="tab"
     [class.is-active]="tab() === 'reference'"
     [attr.aria-selected]="tab() === 'reference'"
     (click)="switchTab('reference')">
@@ -430,6 +439,162 @@
           </tbody>
         </table>
       </div>
+    }
+  }
+}
+
+<!-- ===================== ONGLET BANDEAUX (F12) ===================== -->
+@if (tab() === 'heroes') {
+  @if (heroesLoading()) {
+    <p class="st-state" role="status">Chargement des bandeaux…</p>
+  } @else if (heroesError()) {
+    <p class="st-state st-state--error" role="alert">
+      Impossible de charger les bandeaux. Cet écran demande le droit « paramètres ».
+    </p>
+  } @else {
+    @if (heroActionError()) {
+      <p class="st-state st-state--error" role="alert">{{ heroActionError() }}</p>
+    }
+    @if (heroMessage()) {
+      <p class="st-state st-state--ok" role="status">{{ heroMessage() }}</p>
+    }
+
+    <section class="st-card">
+      <h2 class="st-card-title">Comment ça marche</h2>
+      <p class="st-card-sub">
+        Chaque grande page du site s’ouvre sur un bandeau. Chargez-y une photo :
+        elle s’affiche aussitôt, avec un voile sombre qui garde le texte lisible.
+        <strong>Les pages qui dépendent d’un univers reprennent automatiquement
+        sa photo</strong> — une image par univers suffit. Les champs de texte
+        sont facultatifs : laissés vides, la page garde les mots d’origine.
+      </p>
+    </section>
+
+    @for (group of heroGroupKeys(); track group) {
+      <section class="st-card">
+        <h2 class="st-card-title">{{ heroGroupLabel(group) }}</h2>
+
+        <div class="st-heroes">
+          @for (hero of heroesOf(group); track hero.key) {
+            <article class="st-hero">
+              <!-- Aperçu : ce que le visiteur voit VRAIMENT sur cette page. -->
+              <div class="st-hero-preview">
+                @if (hero.inherited_image) {
+                  <img class="st-hero-img" [src]="hero.inherited_image" [alt]="'Bandeau ' + hero.label" />
+                } @else {
+                  <span class="st-hero-empty">Dégradé de marque</span>
+                }
+
+                @if (!hero.image && hero.inherited_image) {
+                  <span class="st-hero-badge" [title]="'Photo reprise de : ' + (hero.parent_label ?? '')">
+                    héritée
+                  </span>
+                }
+              </div>
+
+              <div class="st-hero-body">
+                <h3 class="st-hero-title">{{ hero.label }}</h3>
+                <p class="st-hint">{{ hero.hint }}</p>
+
+                @if (!hero.image && hero.parent_label) {
+                  <p class="st-hint">
+                    Sans photo propre, cette page reprend celle de
+                    <strong>{{ hero.parent_label }}</strong>.
+                  </p>
+                }
+
+                <!-- Image -->
+                <div class="st-hero-file">
+                  <label class="st-hero-choose k-btn k-btn--ghost">
+                    Choisir une image
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      (change)="onHeroFile(hero.key, $event)" />
+                  </label>
+
+                  @if (heroPendingFile(hero.key); as name) {
+                    <span class="st-hero-pending">{{ name }} — à enregistrer</span>
+                  }
+
+                  @if (hero.image) {
+                    <button
+                      type="button"
+                      class="k-btn k-btn--ghost st-hero-remove"
+                      [disabled]="heroSaving() === hero.key"
+                      (click)="removeHeroImage(hero)">
+                      Retirer la photo
+                    </button>
+                  }
+                </div>
+
+                <!-- Textes : facultatifs, vides = textes d'origine de la page -->
+                <div class="st-grid">
+                  <label class="st-field">
+                    <span class="st-label">Surtitre</span>
+                    <input
+                      class="k-input"
+                      type="text"
+                      maxlength="120"
+                      placeholder="Vide = texte d’origine de la page"
+                      [name]="hero.key + '-eyebrow'"
+                      [ngModel]="heroDraft(hero.key).eyebrow"
+                      (ngModelChange)="setHeroDraft(hero.key, 'eyebrow', $event)" />
+                  </label>
+
+                  <label class="st-field">
+                    <span class="st-label">Titre</span>
+                    <input
+                      class="k-input"
+                      type="text"
+                      maxlength="180"
+                      placeholder="Vide = texte d’origine de la page"
+                      [name]="hero.key + '-title'"
+                      [ngModel]="heroDraft(hero.key).title"
+                      (ngModelChange)="setHeroDraft(hero.key, 'title', $event)" />
+                  </label>
+                </div>
+
+                <label class="st-field">
+                  <span class="st-label">Accroche</span>
+                  <textarea
+                    class="k-input st-hero-lead"
+                    rows="3"
+                    maxlength="600"
+                    placeholder="Vide = texte d’origine de la page"
+                    [name]="hero.key + '-lead'"
+                    [ngModel]="heroDraft(hero.key).lead"
+                    (ngModelChange)="setHeroDraft(hero.key, 'lead', $event)"></textarea>
+                </label>
+
+                <div class="st-hero-actions">
+                  <button
+                    type="button"
+                    class="k-btn k-btn--primary"
+                    [disabled]="heroSaving() === hero.key || !heroIsDirty(hero)"
+                    (click)="saveHero(hero)">
+                    {{ heroSaving() === hero.key ? 'Enregistrement…' : 'Enregistrer' }}
+                  </button>
+
+                  <!-- Visible seulement si quelque chose a été personnalisé :
+                       un bouton « Réinitialiser » sur une page vierge ne
+                       proposerait rien. -->
+                  @if (hero.image || hero.eyebrow || hero.title || hero.lead) {
+                    <button
+                      type="button"
+                      class="k-btn k-btn--ghost"
+                      [disabled]="heroSaving() === hero.key"
+                      (click)="resetHero(hero)">
+                      Tout réinitialiser
+                    </button>
+                    <span class="st-hint">Modifié le {{ shortDate(hero.updated_at) }}</span>
+                  }
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
     }
   }
 }

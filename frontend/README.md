@@ -30,7 +30,10 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   conversion, formulaires intelligents, FAQ, contact et pages légales. Les cartes
   du catalogue et de l'accueil portent un **cœur de favori** (tous univers) :
   le client connecté ajoute/retire d'un clic ; un visiteur anonyme est invité à
-  se connecter. 👉 Détail : [`src/app/features/README.md`](src/app/features/README.md).
+  se connecter. Chaque grande page — **et enfin la page de résultats** — s'ouvre
+  sur un **bandeau dont l'image et les mots se pilotent depuis le back-office**,
+  sans redéploiement (voir « Les bandeaux d'en-tête » plus bas).
+  👉 Détail : [`src/app/features/README.md`](src/app/features/README.md).
 - ✅ **Le rendu côté serveur (SSR)** : les pages publiques sont d'abord
   **assemblées par un serveur** puis envoyées prêtes à afficher (bon pour le
   référencement Google et pour un premier affichage rapide). Voir « SSR » ci-dessous.
@@ -1692,6 +1695,64 @@ disparaître — et un `<button>` dans un `<a>` est du HTML invalide.
 clic sur une carte) mettent `hideable: true` en même temps que `read: true` sur
 la liste locale. Sans cela, les boutons « Ranger » n'apparaîtraient qu'au
 prochain chargement de page.
+
+### Les bandeaux d'en-tête, pilotés depuis le back-office (F12)
+
+Chaque grande page publique s'ouvre sur un **bandeau** : un surtitre, un titre,
+une accroche. Jusqu'ici ce bandeau était toujours posé sur le même dégradé bleu,
+et ses mots vivaient dans le code : **changer une photo d'accueil ou une phrase
+supposait un redéploiement**. La page de résultats `/recherche`, elle, n'avait
+carrément aucun bandeau — un titre nu au-dessus des filtres.
+
+Désormais l'équipe charge une image et retouche les mots depuis le back-office
+(*Paramètres & contenu → onglet **Bandeaux***), et le site suit.
+
+**Ce qu'il faut retenir, en clair :**
+
+- **Une photo par univers suffit.** Les pages qui dépendent d'un univers
+  reprennent automatiquement son image : charger la photo d'*Immobilier* habille
+  aussi la page de résultats filtrée sur l'immobilier.
+- **Les textes du site restent la valeur par défaut.** Un champ laissé vide au
+  back-office ne vide rien : la page garde la phrase écrite dans son gabarit.
+- **La page `/recherche` a cinq visages** : titre, accroche et image suivent
+  l'onglet d'univers actif.
+
+**Côté technique.** Composant unique
+[`shared/components/page-hero/`](src/app/shared/components/page-hero/), alimenté
+par `core/api/hero.service.ts` (`GET /heroes`, **un seul appel** partagé par
+toutes les pages). Douze pages ont migré du bloc `.uni-hero` recopié vers ce
+composant.
+
+⚠️ **L'héritage d'image est résolu côté SERVEUR**, pas ici : le composant lit
+l'entrée de sa clé (`immobilier`, `recherche.nuitees`…) et n'a aucune règle de
+parenté à connaître. Faire remonter la chaîne dans le navigateur l'aurait obligé
+à **dupliquer le catalogue** du serveur — et à le laisser diverger au premier
+ajout de page.
+
+⚠️ **Le texte n'hérite jamais, l'image si.** Un titre est écrit *pour* une page ;
+faire descendre « Des biens vérifiés » sur une liste filtrée afficherait un
+titre **faux**, ce qui est pire que pas de personnalisation.
+
+⚠️ **Les styles de la variante `--image` sont dans le style GLOBAL**
+(`styles/_universe.scss`), pas dans la feuille du composant. Le contenu propre à
+chaque page (points forts, renvois, boutons) y est **projeté** : sous
+encapsulation émulée, une feuille de composant ne touche pas les nœuds projetés,
+la règle n'aurait donc rien atteint — **sans la moindre erreur pour le
+signaler**.
+
+⚠️ **La photo est posée sous un voile dégradé**, avec ombre portée sur le texte
+et cartes de points forts assombries. Le bandeau écrit en **blanc** : sans ce
+voile, une plage ou une façade au soleil rendrait le titre illisible — et on ne
+peut pas faire confiance à la photo que l'équipe choisira.
+
+⚠️ **L'invitation « Contactez-nous » de la FAQ a quitté l'accroche** pour devenir
+une ligne à part : l'accroche est devenue une donnée réécrivable, et un texte
+saisi au back-office ne peut pas contenir de lien interne — un `routerLink` s'y
+afficherait tel quel.
+
+⚠️ **Hydratation** : l'appel `GET /heroes` part pendant le rendu serveur et son
+résultat est **rejoué depuis le transfer cache** côté client — le navigateur ne
+le redemande pas, et le bandeau ne change pas d'aspect après l'hydratation.
 
 ### Commandes utiles
 

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 import { LeadFormComponent } from '../../../shared/components/lead-form/lead-form';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /**
  * Page univers Gestion locative (F2.5) — route `/gestion-locative`.
@@ -13,7 +14,7 @@ import { LeadFormComponent } from '../../../shared/components/lead-form/lead-for
  */
 @Component({
   selector: 'app-manage-page',
-  imports: [LeadFormComponent],
+  imports: [PageHeroComponent, LeadFormComponent],
   templateUrl: './manage-page.html',
   styleUrl: './manage-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

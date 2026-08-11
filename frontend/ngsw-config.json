@@ -69,7 +69,8 @@
         "/api/v1/pages/**",
         "/api/v1/faqs",
         "/api/v1/faqs?*",
-        "/api/v1/geo/**"
+        "/api/v1/geo/**",
+        "/api/v1/heroes"
       ],
       "cacheConfig": {
         "strategy": "performance",

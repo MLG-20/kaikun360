@@ -836,3 +836,72 @@ l'argent, exactement la nature d'acte que garde déjà cette permission de
 deux permissions qu'on aurait de toute façon accordées ensemble — et fabriqué un
 agent capable de virer sans pouvoir rembourser.
 
+
+---
+
+## F12 — Bandeaux d'en-tête des pages publiques
+
+Permission `gerer:parametres` (même garde que le paramétrage : c'est du contenu
+de vitrine). Modèle `App\Models\HeroBanner`, catalogue
+`App\Support\Heroes\HeroCatalog`, écran back-office = onglet **Bandeaux** de
+« Paramètres & contenu ».
+
+**Le problème résolu.** Chaque grande page publique s'ouvre sur un bandeau
+(surtitre, titre, accroche) posé sur un dégradé de marque. La page de résultats
+`/recherche`, elle, n'avait **aucun bandeau** — un titre nu au-dessus des
+filtres. Et changer la moindre photo d'accueil exigeait un redéploiement.
+
+### Le catalogue de clés
+
+`HeroCatalog::BANNERS` déclare les bandeaux pilotables : `defaut`, les 10
+univers, `contact`, `faqs`, `recherche` et ses 5 déclinaisons par univers
+(`recherche.immobilier`…). Chaque entrée porte un **libellé**, un **groupe**
+d'affichage, une **note** et un **parent**.
+
+⚠️ **Ajouter une entrée ici suffit** : la clé devient pilotable au back-office et
+lisible par le frontend, sans migration ni retouche d'écran.
+
+⚠️ **La parenté est déclarée, pas déduite des points.** `recherche.nuitees` a
+pour parent `nuitees` (l'univers), et non `recherche` : la page de résultats
+filtrée sur les nuitées doit reprendre la photo de son univers. Aucune
+convention de nommage n'exprimerait ce lien.
+
+### Les deux règles d'héritage, qui diffèrent
+
+| | Hérite du parent ? | Pourquoi |
+| --- | --- | --- |
+| **Image** | ✅ oui, en remontant jusqu'à `defaut` | Une photo par univers suffit à habiller toutes ses pages. |
+| **Texte** | ❌ non, jamais | Un titre est écrit **pour** une page. Faire descendre « Des biens vérifiés » sur une liste filtrée afficherait un titre faux — pire que pas de surcharge. |
+
+La résolution se fait **côté serveur** (`HeroCatalog::published()`, en cache
+`kaikun.heroes` invalidé à chaque écriture) : le frontend lit l'entrée de sa clé
+et n'a aucune règle d'héritage à connaître — donc aucune à laisser diverger.
+
+### Endpoints
+
+- **`GET /heroes`** (public) → `{ heroes: { "<clé>": { image, eyebrow, title, lead } } }`.
+  Héritage d'image déjà appliqué. **Les clés sans aucune personnalisation sont
+  omises** ; une plateforme vierge renvoie `{}` — et chaque page affiche alors
+  exactement ce qu'elle affichait avant l'existence de cet écran.
+- **`GET /admin/heroes`** → toutes les clés connues, saisies ou non, avec
+  `image` (photo **propre**, `null` = rien à retirer) **et** `inherited_image`
+  (ce que le visiteur voit **réellement**). ⚠️ Confondre les deux rendrait
+  l'écran trompeur : une page qui affiche déjà la photo de son univers
+  passerait pour « sans image » et l'équipe rechargerait la même partout.
+- **`POST /admin/heroes/{key}`** — **multipart**, tous champs facultatifs
+  (`image` ≤ 8 Mo, `eyebrow`, `title`, `lead`, `remove_image`). Seuls les champs
+  transmis sont touchés. Clé inconnue → **404** (pas de bandeau fantôme en base).
+  ⚠️ **POST et non PATCH** : PHP ne décode `multipart/form-data` que sur un POST.
+- **`DELETE /admin/heroes/{key}`** — efface image **et** textes : la page
+  redevient celle d'origine.
+
+⚠️ **Une chaîne vide n'est pas un texte vide, c'est un retrait de surcharge.**
+Vider le champ « Titre » et enregistrer rend à la page le titre de son gabarit ;
+il n'existe aucun état dans lequel le back-office laisse un bandeau sans titre.
+
+⚠️ L'image est **recompressée** (`ImageProcessor`, 1600 px / JPEG 80) et l'ancien
+fichier est **supprimé du disque** au remplacement comme au retrait.
+
+**Tests** : `tests/Feature/Admin/HeroBannerTest.php` (14 tests) — l'accent est
+mis sur l'héritage et son asymétrie, pas sur le téléversement (déjà éprouvé par
+les médias d'annonce).

@@ -1,15 +1,21 @@
 <!-- Bandeau -->
-<section class="uni-hero">
-  <div class="k-wrap uni-hero-inner">
-    <p class="k-eyebrow">Aide &amp; support</p>
-    <h1 class="uni-hero-title">Foire aux questions</h1>
-    <p class="uni-hero-lead">
-      Les réponses aux questions les plus fréquentes sur Kaikun 360 : confiance,
-      réservations, paiements, diaspora et prestataires. Vous ne trouvez pas ?
-      <a routerLink="/contact">Contactez-nous</a>.
-    </p>
-  </div>
-</section>
+<!-- Textes par défaut : le back-office peut les remplacer et poser une photo
+     de fond, sans redéploiement (F12).
+
+     ⚠️ L'invitation à écrire est sortie de l'accroche pour devenir une ligne à
+     part : l'accroche est désormais une donnée que l'équipe peut réécrire, et
+     un texte modifiable ne peut pas contenir de lien interne — un `routerLink`
+     saisi au back-office ne serait pas rendu, il s'afficherait tel quel. -->
+<app-page-hero
+  heroKey="faqs"
+  eyebrow="Aide & support"
+  title="Foire aux questions"
+  lead="Les réponses aux questions les plus fréquentes sur Kaikun 360 : confiance, réservations, paiements, diaspora et prestataires."
+>
+  <p class="uni-hero-cross">
+    Vous ne trouvez pas ? <a routerLink="/contact">Contactez-nous →</a>
+  </p>
+</app-page-hero>
 
 <section class="k-wrap faq-body">
   @switch (state()) {

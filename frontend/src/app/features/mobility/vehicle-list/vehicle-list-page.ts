@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { CatalogComponent } from '../../../shared/components/catalog/catalog';
+import { PageHeroComponent } from '../../../shared/components/page-hero/page-hero';
 
 /**
  * Page univers Transport (F2.4) — route `/transport`.
@@ -13,7 +14,7 @@ import { CatalogComponent } from '../../../shared/components/catalog/catalog';
  */
 @Component({
   selector: 'app-vehicle-list-page',
-  imports: [CatalogComponent, RouterLink],
+  imports: [PageHeroComponent, CatalogComponent, RouterLink],
   templateUrl: './vehicle-list-page.html',
   styleUrl: './vehicle-list-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

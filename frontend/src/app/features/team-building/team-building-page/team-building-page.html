@@ -1,24 +1,21 @@
 <!-- Page univers Team building (F2.5). -->
-<section class="uni-hero">
-  <div class="k-wrap uni-hero-inner">
-    <p class="k-eyebrow">Univers Team building</p>
-    <h1 class="uni-hero-title">Des équipes soudées, un événement sans souci</h1>
-    <p class="uni-hero-lead">
-      Kaikun Team organise vos séminaires et activités de cohésion clés en main
-      partout au Sénégal : lieu, activités, restauration et logistique, avec des
-      prestataires vérifiés et une coordination sur place.
-    </p>
-
-    <ul class="uni-hero-points">
-      @for (point of highlights; track point.title) {
-        <li class="uni-hero-point">
-          <span class="uni-hero-point-title">{{ point.title }}</span>
-          <span class="uni-hero-point-text">{{ point.text }}</span>
-        </li>
-      }
-    </ul>
-  </div>
-</section>
+<!-- Textes par défaut : le back-office peut les remplacer et poser une photo
+     de fond, sans redéploiement (F12). -->
+<app-page-hero
+  heroKey="team-building"
+  eyebrow="Univers Team building"
+  title="Des équipes soudées, un événement sans souci"
+  lead="Kaikun Team organise vos séminaires et activités de cohésion clés en main partout au Sénégal : lieu, activités, restauration et logistique, avec des prestataires vérifiés et une coordination sur place."
+>
+  <ul class="uni-hero-points">
+    @for (point of highlights; track point.title) {
+      <li class="uni-hero-point">
+        <span class="uni-hero-point-title">{{ point.title }}</span>
+        <span class="uni-hero-point-text">{{ point.text }}</span>
+      </li>
+    }
+  </ul>
+</app-page-hero>
 
 <!-- Formules -->
 <section class="k-wrap conv-features">

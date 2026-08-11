@@ -1,0 +1,18 @@
+/* Bandeau d'en-tête d'une page publique (F12).
+ *
+ * ⚠️ **Presque rien ici, et c'est volontaire.** L'apparence du bandeau — dégradé,
+ * variante `--image`, cartes de points forts — vit dans le style GLOBAL
+ * `src/styles/_universe.scss`, sous `.uni-hero`.
+ *
+ * La raison est technique et vaut d'être retenue : le contenu particulier de
+ * chaque page (points forts, renvois, boutons) est **projeté** dans ce
+ * composant. Or, sous encapsulation émulée, une feuille de style de composant
+ * ne s'applique qu'aux éléments écrits dans SON gabarit — les nœuds projetés
+ * portent la signature de la page d'origine. Une règle sur `.uni-hero-point`
+ * écrite ici ne toucherait donc rien du tout. */
+
+// Le bandeau occupe toute la largeur, comme la `<section>` qu'il remplace :
+// sans cela, l'élément hôte s'intercalerait en `inline` dans la mise en page.
+:host {
+  display: block;
+}

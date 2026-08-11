@@ -1,35 +1,32 @@
 <!-- Page univers Mobilité (F2.4). -->
-<section class="uni-hero">
-  <div class="k-wrap uni-hero-inner">
-    <p class="k-eyebrow">Univers Mobilité</p>
-    <h1 class="uni-hero-title">Navettes, transferts et excursions</h1>
-    <p class="uni-hero-lead">
-      Trouvez une liaison aéroport, un transfert interurbain ou une excursion
-      organisée, opérés par des prestataires vérifiés. Indiquez votre départ,
-      votre destination et votre date pour comparer les trajets disponibles.
-    </p>
+<!-- Textes par défaut : le back-office peut les remplacer et poser une photo
+     de fond, sans redéploiement (F12). -->
+<app-page-hero
+  heroKey="mobilite"
+  eyebrow="Univers Mobilité"
+  title="Navettes, transferts et excursions"
+  lead="Trouvez une liaison aéroport, un transfert interurbain ou une excursion organisée, opérés par des prestataires vérifiés. Indiquez votre départ, votre destination et votre date pour comparer les trajets disponibles."
+>
+  <ul class="uni-hero-points">
+    @for (point of highlights; track point.title) {
+      <li class="uni-hero-point">
+        <span class="uni-hero-point-title">{{ point.title }}</span>
+        <span class="uni-hero-point-text">{{ point.text }}</span>
+      </li>
+    }
+  </ul>
 
-    <ul class="uni-hero-points">
-      @for (point of highlights; track point.title) {
-        <li class="uni-hero-point">
-          <span class="uni-hero-point-title">{{ point.title }}</span>
-          <span class="uni-hero-point-text">{{ point.text }}</span>
-        </li>
-      }
-    </ul>
+  <p class="uni-hero-cross">
+    Vous cherchez plutôt à louer un véhicule ?
+    <a routerLink="/transport">Voir le Transport →</a>
+  </p>
 
-    <p class="uni-hero-cross">
-      Vous cherchez plutôt à louer un véhicule ?
-      <a routerLink="/transport">Voir le Transport →</a>
-    </p>
-
-    <!-- La réservation d'un trajet se fait via un conseiller : contact WhatsApp
-         direct, prérempli avec le sujet Mobilité (F2.6). -->
-    <div class="uni-hero-actions">
-      <app-whatsapp-button subject="Mobilité — navette ou transfert" />
-    </div>
+  <!-- La réservation d'un trajet se fait via un conseiller : contact WhatsApp
+       direct, prérempli avec le sujet Mobilité (F2.6). -->
+  <div class="uni-hero-actions">
+    <app-whatsapp-button subject="Mobilité — navette ou transfert" />
   </div>
-</section>
+</app-page-hero>
 
 <div class="k-wrap uni-catalog">
   <app-catalog universe="mobilite" />

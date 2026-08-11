@@ -1,24 +1,21 @@
 <!-- Page univers Nuitées (F2.3). -->
-<section class="uni-hero">
-  <div class="k-wrap uni-hero-inner">
-    <p class="k-eyebrow">Univers Nuitées</p>
-    <h1 class="uni-hero-title">Des logements à la nuit, en toute sérénité</h1>
-    <p class="uni-hero-lead">
-      Appartements meublés, villas et maisons d'hôtes réservables à la nuit.
-      Consultez le calendrier de disponibilité, les équipements et le montant de
-      la caution avant de réserver.
-    </p>
-
-    <ul class="uni-hero-points">
-      @for (point of highlights; track point.title) {
-        <li class="uni-hero-point">
-          <span class="uni-hero-point-title">{{ point.title }}</span>
-          <span class="uni-hero-point-text">{{ point.text }}</span>
-        </li>
-      }
-    </ul>
-  </div>
-</section>
+<!-- Textes par défaut : le back-office peut les remplacer et poser une photo
+     de fond, sans redéploiement (F12). -->
+<app-page-hero
+  heroKey="nuitees"
+  eyebrow="Univers Nuitées"
+  title="Des logements à la nuit, en toute sérénité"
+  lead="Appartements meublés, villas et maisons d'hôtes réservables à la nuit. Consultez le calendrier de disponibilité, les équipements et le montant de la caution avant de réserver."
+>
+  <ul class="uni-hero-points">
+    @for (point of highlights; track point.title) {
+      <li class="uni-hero-point">
+        <span class="uni-hero-point-title">{{ point.title }}</span>
+        <span class="uni-hero-point-text">{{ point.text }}</span>
+      </li>
+    }
+  </ul>
+</app-page-hero>
 
 <div class="k-wrap uni-catalog">
   <app-catalog universe="nuitees" />

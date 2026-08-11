@@ -11,6 +11,43 @@
   padding: clamp(2.4rem, 5vw, 4rem) 0;
 }
 
+// Variante « photo de fond » (F12) : le bandeau porte une image chargée depuis
+// le back-office. L'image elle-même est posée par une liaison de style dans
+// `PageHeroComponent` (elle change d'une page à l'autre) ; on ne décrit ici que
+// la manière de la cadrer et de garder le texte lisible par-dessus.
+//
+// ⚠️ Ces règles sont GLOBALES et non dans `page-hero.scss` : le contenu de
+// chaque page est projeté dans le composant, donc hors de portée d'une feuille
+// de style encapsulée. Voir l'en-tête de `page-hero.scss`.
+.uni-hero--image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  // Une photo n'a pas la densité d'un aplat : le bandeau respire davantage pour
+  // lui laisser de la place.
+  padding-top: clamp(3rem, 6vw, 5.5rem);
+  padding-bottom: clamp(3rem, 6vw, 5.5rem);
+
+  // Le voile dégradé (posé avec l'image) fait l'essentiel du contraste, mais une
+  // photo très détaillée — feuillage, foule, façade au soleil — reste bruyante
+  // sous du texte blanc. Cette ombre portée tient le titre lisible dans ce
+  // cas-là aussi, sans qu'on ait à faire confiance à la photo choisie.
+  .uni-hero-title,
+  .uni-hero-lead {
+    text-shadow: 0 1px 12px rgba(3, 12, 33, 0.45);
+  }
+
+  // Les cartes de points forts sont translucides : sur une photo, elles
+  // laisseraient passer trop de détails et cesseraient de se lire comme des
+  // cartes. On les assombrit et on floute ce qu'il y a dessous.
+  .uni-hero-point {
+    background: rgba(6, 20, 45, 0.42);
+    border-color: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(6px);
+  }
+}
+
 .uni-hero-inner {
   display: flex;
   flex-direction: column;
