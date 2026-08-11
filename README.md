@@ -61,6 +61,17 @@ plus tard : comme le moteur expose déjà une API standard, elle pourra être aj
 **sans rien refaire côté moteur**. En attendant, le site web sera « installable »
 sur téléphone (technologie PWA).
 
+### Montrer le site à quelqu'un
+
+```bash
+./scripts/demo.sh
+```
+
+Une seule commande démarre le moteur, le site et une **adresse publique
+temporaire** : le lien s'ouvre depuis n'importe quel téléphone, sans rien
+déployer. `Ctrl+C` arrête tout. Le mode d'emploi et les pièges d'une
+présentation à distance sont dans [`scripts/README.md`](scripts/README.md).
+
 ---
 
 ## Où en est le projet ?

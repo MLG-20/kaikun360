@@ -4,5 +4,11 @@
     "target": "http://localhost:8000",
     "secure": false,
     "changeOrigin": true
+  },
+  "//storage": "Photos des annonces. Laravel les expose sur /storage (lien symbolique vers storage/app/public) et en fabrique des URL ABSOLUES à partir de APP_URL. Sans ce relais, la démonstration publique (scripts/demo.sh) montrerait un site dont chaque image est cassée : le visiteur distant n'a évidemment pas de localhost:8000.",
+  "/storage": {
+    "target": "http://localhost:8000",
+    "secure": false,
+    "changeOrigin": true
   }
 }

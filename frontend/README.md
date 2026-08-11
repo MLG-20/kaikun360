@@ -1879,7 +1879,28 @@ npx ng build
 
 # Lancer les tests
 npx ng test
+
+# Montrer le site à distance (moteur + site + adresse publique ngrok)
+../scripts/demo.sh
 ```
 
 > Node ≥ 22 requis. Le projet utilise `npx` (pas d'installation globale d'Angular
 > CLI nécessaire).
+
+#### La configuration `demo` (présentation à distance)
+
+`angular.json` porte une troisième configuration, à côté de `development` et
+`production` : **`demo`**. Elle ne diffère que par son fichier d'environnement,
+`environment.demo.ts`, dans lequel **`apiUrl` est relative** (`/api/v1`).
+
+C'est toute la difficulté d'une démonstration à distance : en développement,
+`apiUrl` vaut `http://localhost:8000/api/v1`, une adresse qui ne veut rien dire
+sur le téléphone du visiteur — le site s'ouvrirait sans jamais charger la
+moindre donnée. Avec une adresse relative, tout passe par l'origine publique
+unique, le serveur de développement relayant `/api` **et `/storage`** (les
+photos) vers Laravel.
+
+⚠️ `environment.demo.ts` est **généré à chaque lancement** par
+[`scripts/demo.sh`](../scripts/README.md) — il porte l'adresse publique du jour —
+et n'est donc pas versionné. Lancer `ng serve --configuration demo` à la main
+échouera faute de ce fichier.

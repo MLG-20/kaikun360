@@ -70,6 +70,17 @@
                   "with": "src/environments/environment.development.ts"
                 }
               ]
+            },
+            "demo": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.demo.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -85,6 +96,9 @@
             },
             "development": {
               "buildTarget": "kaikun360:build:development"
+            },
+            "demo": {
+              "buildTarget": "kaikun360:build:demo"
             }
           },
           "defaultConfiguration": "development"

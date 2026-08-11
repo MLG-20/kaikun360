@@ -42,3 +42,7 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Environnement de DÉMONSTRATION : régénéré à chaque lancement de
+# scripts/demo.sh (il porte l’adresse publique ngrok du jour, qui change).
+/src/environments/environment.demo.ts
