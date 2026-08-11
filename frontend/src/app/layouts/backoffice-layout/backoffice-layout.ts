@@ -21,6 +21,7 @@ const RAIL_REPLIE_KEY = 'k360.bo.rail-replie';
 /** Clé d'icône du rail (rendue en SVG inline dans le template). */
 type BoIcon =
   | 'grid'
+  | 'chart'
   | 'check'
   | 'layers'
   | 'car'
@@ -178,6 +179,18 @@ export class BackofficeLayoutComponent {
     // Rubrique à part et non un onglet de Paiements : ce ne sont ni les mêmes
     // objets (une dette n'est pas un règlement), ni le même moment du métier.
     { label: 'Reversements', path: 'reversements', icon: 'payout', ready: true },
+    // F13.1 — Statistiques business : les graphiques de pilotage (revenus dans
+    // le temps, univers métier, tunnel commercial, palmarès).
+    //
+    // Prolonge le module 1 du §6 (« Tableau de bord »), et pourtant placée ICI
+    // plutôt qu'en deuxième ligne, sous Vue d'ensemble. Deux raisons. D'abord
+    // le rythme : Vue d'ensemble s'ouvre chaque matin, Statistiques se consulte
+    // en fin de mois — la mettre en tête aurait éloigné les files d'attente du
+    // haut du rail sans que personne y gagne. Ensuite le droit : elle est
+    // gardée par `gerer:paiements`, comme Paiements et Reversements, et n'est
+    // donc visible QUE par ceux qui voient déjà ces deux-là. Une rubrique
+    // apparaît naturellement au milieu de celles qui partagent sa clé.
+    { label: 'Statistiques', path: 'statistiques', icon: 'chart', ready: true },
     // CDC §6 — module 13 « Avis et qualité ». (Le 12 est dans Comptes.)
     { label: 'Avis & qualité', path: 'qualite', icon: 'star', ready: true },
     // CDC §6 — module 14 « Paramètres ».

@@ -44,6 +44,19 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Back-office — Kaikun 360',
       },
       {
+        // F13.1 — Statistiques : le business de la plateforme en graphiques.
+        // Écran de pilotage, distinct de la Vue d'ensemble qui reste l'écran
+        // opérationnel d'ouverture de journée.
+        path: 'statistiques',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('statistiques') },
+        loadComponent: () =>
+          import('./statistics/backoffice-statistics-page').then(
+            (m) => m.BackofficeStatisticsPageComponent,
+          ),
+        title: 'Statistiques — Back-office Kaikun 360',
+      },
+      {
         // F8.9 — Demandes : la file de traitement des demandes clients. Elle
         // n'existait pas : l'alerte interne « Nouvelle demande à traiter »
         // renvoyait vers un back-office où le dossier était compté, jamais

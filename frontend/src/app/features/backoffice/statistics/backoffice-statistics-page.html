@@ -1,0 +1,251 @@
+<header class="st-head">
+  <div>
+    <h1 class="st-title">Statistiques</h1>
+    <p class="st-sub">
+      Le business de la plateforme : ce qu'elle encaisse, d'où vient l'activité,
+      et où les affaires se perdent en chemin.
+    </p>
+  </div>
+
+  <!-- Le filtre de période est UNIQUE et placé au-dessus de tout ce qu'il cadre :
+       chaque chiffre de l'écran parle donc forcément de la même tranche de temps. -->
+  @if (stats(); as s) {
+    <div class="st-filter" role="group" aria-label="Période analysée">
+      @for (choice of s.periods; track choice.key) {
+        <button
+          type="button"
+          class="st-filter__btn"
+          [class.st-filter__btn--on]="choice.key === s.period.key"
+          [attr.aria-pressed]="choice.key === s.period.key"
+          (click)="select(choice.key)"
+        >
+          {{ choice.label }}
+        </button>
+      }
+    </div>
+  }
+</header>
+
+@if (loading()) {
+  <p class="st-state" role="status">Calcul des indicateurs…</p>
+} @else if (error()) {
+  <p class="st-state st-state--error" role="alert">
+    Impossible de charger les statistiques. Vérifiez votre session, puis réessayez.
+  </p>
+} @else if (stats(); as s) {
+  <!-- Pendant un rechargement, le dessin précédent reste en place et pâlit :
+       pas de trame de chargement, pas de saut de mise en page. -->
+  <div class="st-body" [class.st-body--refreshing]="refreshing()" [attr.aria-busy]="refreshing()">
+    <!-- Les grands chiffres. Un seul est traité en tête : le chiffre d'affaires. -->
+    <section class="st-tiles">
+      <app-stat-tile
+        class="st-tiles__hero"
+        label="Volume brut encaissable"
+        [display]="xof(s.headline.gross_volume_xof.value)"
+        [value]="s.headline.gross_volume_xof.value"
+        [previous]="s.headline.gross_volume_xof.previous"
+        [comparison]="comparison()"
+        [hero]="true"
+      />
+      <app-stat-tile
+        label="Commission plateforme"
+        [display]="xof(s.headline.commission_xof.value)"
+        [value]="s.headline.commission_xof.value"
+        [previous]="s.headline.commission_xof.previous"
+        [comparison]="comparison()"
+      />
+      <app-stat-tile
+        label="Réservations"
+        [display]="number(s.headline.bookings.value)"
+        [value]="s.headline.bookings.value"
+        [previous]="s.headline.bookings.previous"
+        [comparison]="comparison()"
+      />
+      <app-stat-tile
+        label="Panier moyen"
+        [display]="xof(s.headline.average_basket_xof.value)"
+        [value]="s.headline.average_basket_xof.value"
+        [previous]="s.headline.average_basket_xof.previous"
+        [comparison]="comparison()"
+      />
+      <app-stat-tile
+        label="Taux d'annulation"
+        [display]="percent(s.headline.cancellation_rate.value)"
+        [value]="s.headline.cancellation_rate.value"
+        [previous]="s.headline.cancellation_rate.previous"
+        [comparison]="comparison()"
+        [goodWhenUp]="false"
+      />
+      <app-stat-tile
+        label="Nouveaux comptes"
+        [display]="number(s.headline.new_users.value)"
+        [value]="s.headline.new_users.value"
+        [previous]="s.headline.new_users.previous"
+        [comparison]="comparison()"
+      />
+    </section>
+
+    <!-- Revenus dans le temps -->
+    <app-chart-card
+      title="Revenus dans le temps"
+      subtitle="Volume encaissable et part revenant à la plateforme. Les réservations annulées sont exclues des montants."
+      note="Estimation : l'encaissement réel est constaté par PayTech."
+      [legend]="revenueLegend"
+    >
+      <app-revenue-area-chart [points]="s.revenue_series" />
+
+      <div chartTable>
+        <table>
+          <caption class="sr-only">Volume brut et commission par période</caption>
+          <thead>
+            <tr>
+              <th scope="col">Période</th>
+              <th scope="col" class="num">Volume brut</th>
+              <th scope="col" class="num">Commission</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (point of s.revenue_series; track point.key) {
+              <tr>
+                <td>{{ point.label }}</td>
+                <td class="num">{{ xof(point.gross_volume_xof) }}</td>
+                <td class="num">{{ xof(point.commission_xof) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </app-chart-card>
+
+    <!-- Réservations par univers métier -->
+    <app-chart-card
+      title="D'où vient l'activité"
+      subtitle="Réservations par univers métier. La hauteur totale donne le volume de la période, les tranches disent qui l'a produit."
+      [legend]="lineLegend()"
+    >
+      <app-stacked-bars-chart
+        [lines]="s.bookings_by_line.lines"
+        [points]="s.bookings_by_line.points"
+      />
+
+      <div chartTable>
+        <table>
+          <caption class="sr-only">Réservations par univers métier et par période</caption>
+          <thead>
+            <tr>
+              <th scope="col">Période</th>
+              @for (line of s.bookings_by_line.lines; track line.key) {
+                <th scope="col" class="num">{{ line.label }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (point of s.bookings_by_line.points; track point.key) {
+              <tr>
+                <td>{{ point.label }}</td>
+                @for (line of s.bookings_by_line.lines; track line.key) {
+                  <td class="num">{{ lineValue(point.values, line.key) }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </app-chart-card>
+
+    <div class="st-cols">
+      <!-- Tunnel commercial -->
+      <app-chart-card
+        title="Tunnel commercial"
+        subtitle="Les quatre étages par lesquels passe une affaire, du premier contact à la prestation honorée."
+        note="Entonnoir de volumes : les quatre étages sont comptés sur la même période, mais une réservation du mois peut venir d'une demande du mois précédent."
+      >
+        <app-funnel-chart [stages]="s.funnel" />
+
+        <div chartTable>
+          <table>
+            <caption class="sr-only">Volumes par étage du tunnel commercial</caption>
+            <thead>
+              <tr>
+                <th scope="col">Étape</th>
+                <th scope="col" class="num">Volume</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (stage of s.funnel; track stage.key) {
+                <tr>
+                  <td>{{ stage.label }}</td>
+                  <td class="num">{{ number(stage.count) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </app-chart-card>
+
+      <!-- Statuts -->
+      <app-chart-card
+        title="Où en sont les réservations"
+        subtitle="Répartition des réservations créées sur la période, annulations comprises."
+      >
+        <app-status-split-chart [statuses]="s.booking_statuses" />
+
+        <div chartTable>
+          <table>
+            <caption class="sr-only">Réservations par statut</caption>
+            <thead>
+              <tr>
+                <th scope="col">Statut</th>
+                <th scope="col" class="num">Réservations</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (status of s.booking_statuses; track status.key) {
+                <tr>
+                  <td>{{ status.label }}</td>
+                  <td class="num">{{ number(status.count) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </app-chart-card>
+    </div>
+
+    <!-- Palmarès -->
+    <app-chart-card
+      title="Ce qui rapporte le plus"
+      subtitle="Les six annonces au plus fort volume encaissable sur la période."
+    >
+      <app-ranking-bars-chart [listings]="s.top_listings" />
+
+      <div chartTable>
+        <table>
+          <caption class="sr-only">Palmarès des annonces par volume</caption>
+          <thead>
+            <tr>
+              <th scope="col">Annonce</th>
+              <th scope="col">Univers</th>
+              <th scope="col" class="num">Réservations</th>
+              <th scope="col" class="num">Volume</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (listing of s.top_listings; track listing.label) {
+              <tr>
+                <td>{{ listing.label }}</td>
+                <td>{{ listing.line }}</td>
+                <td class="num">{{ number(listing.bookings) }}</td>
+                <td class="num">{{ xof(listing.gross_volume_xof) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </app-chart-card>
+
+    <p class="st-foot">
+      Période analysée : du {{ s.period.from }} au {{ s.period.to }}.
+    </p>
+  </div>
+}

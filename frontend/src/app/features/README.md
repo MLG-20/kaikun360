@@ -59,6 +59,13 @@ La toute première brique de l'application (`App`) ne fait qu'une chose : affich
   qu'il cherche, on l'aide à trier — c'est la même raison qui fait qu'une
   surcharge de texte saisie au back-office ne se transmet jamais d'une page à
   l'autre, alors que l'image, elle, est héritée.
+- **`backoffice/`** — le **poste de commandement de l'équipe** (F7, sous
+  `/back-office`, shell dédié). Depuis **F13.1**, il a sa rubrique
+  **Statistiques** : le business de la plateforme en graphiques (revenus dans le
+  temps, origine de l'activité par univers métier, tunnel commercial, palmarès
+  des annonces), réservée aux profils qui ont déjà accès à l'argent
+  (`gerer:paiements`). 👉 README détaillé de la rubrique et de ses règles de
+  dessin : [`backoffice/statistics/README.md`](backoffice/statistics/README.md).
 - **`immo/`** — l'**univers Immobilier** (F2.3) : la page vitrine `/immobilier`
   (bandeau de confiance + catalogue filtrable) et la **fiche d'un bien**
   `/immobilier/:id` (description, localisation, vérification, **formulaire de

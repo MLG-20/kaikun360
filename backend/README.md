@@ -8,7 +8,7 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **261 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **262 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
 - **63 tables**, référentiel géographique du Sénégal inclus
 - **1013 tests** automatisés (3554 assertions), tous verts ✅
@@ -531,7 +531,7 @@ backend/
 │   └── emails/          # Gabarit unique des e-mails (HTML + texte brut)
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 261 endpoints
+├── API.md               # Référence des 262 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -887,7 +887,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 1050 tests, 3725 assertions — verts (mesuré après F12)
+# 1059 tests, 3762 assertions — verts (mesuré après F13.1, ~9,7 min)
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -951,7 +951,7 @@ adresse.
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 261 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 262 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |
@@ -1061,3 +1061,22 @@ Le code est **abondamment commenté en français**.
 ## Licence
 
 Projet propriétaire — Kaikun 360. Tous droits réservés.
+- ✅ **Statistiques business (F13.1)** : `GET /admin/statistiques?periode=30j|6m|12m`,
+  gardé par **`gerer:paiements`** — et non par `consulter:dashboard-admin`.
+  `BusinessMetricsAggregator` + `AdminStatisticsController` ; voir la section
+  dédiée de [`app/Modules/Admin/README.md`](app/Modules/Admin/README.md).
+  ⚠️ **Ne pas confondre avec `DashboardAggregator`** : celui-là rend des
+  compteurs instantanés (« que traiter maintenant »), celui-ci des **séries**
+  datées et comparées à la période précédente (« comment va l'entreprise »).
+  Un compteur ne se dessine pas ; c'est exactement ce qui manquait pour tracer
+  la moindre courbe. ⚠️ **Un montant ne compte jamais une réservation annulée,
+  un dénombrement les compte toutes** — sans cette dissymétrie, le taux
+  d'annulation serait nul par construction. ⚠️ **L'axe du temps est fabriqué
+  avant d'être rempli** : une agrégation SQL n'aurait renvoyé que les mois
+  actifs, et la courbe aurait relié juillet à septembre en sautant août.
+  ⚠️ **L'expression de découpage est choisie par driver** (`DATE_FORMAT` /
+  `strftime` / `to_char`) : le projet tourne sur MySQL et teste sur SQLite.
+  ⚠️ **Toute nouvelle cible réservable doit rejoindre `LINE_OF_BUSINESS`**,
+  sinon elle tombe silencieusement dans « Sur-mesure » — les montants restent
+  justes, la lecture business devient fausse (même famille de défaut que le
+  correctif F10.3 sur les files de validation).

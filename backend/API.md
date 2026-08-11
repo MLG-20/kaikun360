@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 261 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 262 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -639,6 +639,7 @@ existants. Voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README
 | GET | `/admin/reviews/{review}` | auth + `can:moderer:avis` | `AdminReviewController@show` |
 | GET | `/admin/settings` | auth + `can:gerer:parametres` | `AdminSettingsController@index` |
 | PATCH | `/admin/settings` | auth + `can:gerer:parametres` | `AdminSettingsController@update` |
+| GET | `/admin/statistiques` | auth + `can:gerer:paiements` | `AdminStatisticsController@show` |
 | PATCH | `/admin/stay-bookings/{booking}/check-in` | auth + `can:gerer:nuitees` | `StayOperationsController@checkIn` |
 | PATCH | `/admin/stay-bookings/{booking}/check-out` | auth + `can:gerer:nuitees` | `StayOperationsController@checkOut` |
 | PATCH | `/admin/stay-bookings/{booking}/housekeeping` | auth + `can:gerer:nuitees` | `StayOperationsController@housekeeping` |

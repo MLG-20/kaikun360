@@ -15,6 +15,7 @@ import {
 import { Property } from '../../models/property.model';
 import { Provider } from '../../models/provider.model';
 import { Review } from '../../models/review.model';
+import { BusinessStatistics } from '../../models/statistics.model';
 import { User } from '../../models/user.model';
 import { AdminVehicle } from '../../models/vehicle.model';
 import { ApiEnvelope } from './api-response.model';
@@ -1883,6 +1884,25 @@ export class AdminService {
   dashboard(): Observable<DashboardSnapshot> {
     return this.http
       .get<ApiEnvelope<DashboardSnapshot>>(`${this.api}/admin/dashboard`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Statistiques business de la période. GET /admin/statistiques
+   *
+   * Un SEUL appel sert tous les graphiques de la rubrique : le filtre de
+   * période, en haut de l'écran, cadre l'ensemble des visuels d'un coup, et
+   * tous les chiffres affichés proviennent donc forcément de la même tranche de
+   * temps. Des appels séparés par graphique auraient fini par montrer, le temps
+   * d'un chargement, un chiffre d'affaires et un nombre de réservations qui ne
+   * parlent pas de la même période.
+   */
+  statistics(periode?: string): Observable<BusinessStatistics> {
+    let params = new HttpParams();
+    if (periode) params = params.set('periode', periode);
+
+    return this.http
+      .get<ApiEnvelope<BusinessStatistics>>(`${this.api}/admin/statistiques`, { params })
       .pipe(map((response) => response.data));
   }
 

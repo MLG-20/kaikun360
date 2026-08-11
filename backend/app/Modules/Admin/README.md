@@ -25,6 +25,7 @@ pour les actions sensibles (`gerer:utilisateurs`, `gerer:parametres`,
 | F7.1.b | Délégation des dossiers par personne (« grant pur ») | ✅ |
 | F7.1.c | Pointeuse de l'équipe (entrée/sortie + feuille mensuelle) | ✅ |
 | F7.2.l | Paramètres & contenu : villes éditables + pilotage des notifications | ✅ |
+| F13.1 | Statistiques business (`GET /admin/statistiques`) — les séries des graphiques | ✅ |
 
 ## F7.1.a — Équipe back-office (« poste de commandement »)
 
@@ -915,3 +916,91 @@ l'écran annonce la taille attendue (≥ 2000 px de large).
 **Tests** : `tests/Feature/Admin/HeroBannerTest.php` (14 tests) — l'accent est
 mis sur l'héritage et son asymétrie, pas sur le téléversement (déjà éprouvé par
 les médias d'annonce).
+
+
+## F13.1 — Statistiques business (la matière des graphiques)
+
+`BusinessMetricsAggregator` + `AdminStatisticsController`
+(`GET /admin/statistiques?periode=30j|6m|12m`).
+
+### Ne pas confondre avec `DashboardAggregator`
+
+Les deux agrègent, et c'est tout ce qu'ils partagent.
+
+| | `DashboardAggregator` (B13.1) | `BusinessMetricsAggregator` (F13.1) |
+|---|---|---|
+| Question | « que dois-je traiter **maintenant** ? » | « comment va **l'entreprise** ? » |
+| Nature | compteurs instantanés | **séries** situées dans le temps |
+| Écran | Vue d'ensemble (ouverture de journée) | Statistiques (pilotage) |
+| Garde | `consulter:dashboard-admin` | **`gerer:paiements`** |
+
+Un compteur ne se dessine pas ; une série, oui. C'est très exactement ce qui
+manquait pour tracer la moindre courbe : avant F13.1, aucun endpoint du
+back-office ne renvoyait de valeur datée.
+
+### Pourquoi `gerer:paiements` garde cet écran
+
+L'écran consolide chiffre d'affaires, commission et panier moyen : c'est la vue
+la plus financière du produit. Le CDC §7 borne l'agent Kaikun à un « accès
+financier limité », et le back-office range déjà derrière ce droit tout ce qui
+touche à l'argent (Paiements, Reversements). Créer une permission dédiée aurait
+fabriqué une troisième porte sur le même coffre. ⚠️ L'argument « c'est en
+lecture seule, donc c'est ouvert » a été écarté : on ne protège pas un chiffre
+en interdisant seulement de le modifier.
+
+### La règle de calcul, unique et constante
+
+Un **montant** ne compte jamais une réservation annulée. Un **dénombrement** de
+réservations les compte toutes — sans quoi le taux d'annulation, qui est un
+indicateur de santé à part entière, serait nul par construction. Cette dissymétrie
+est voulue et testée.
+
+### Les trois pièges traités
+
+1. **Les segments vides.** Une agrégation SQL ne renvoie que les mois où il s'est
+   passé quelque chose. Tracer directement dessus relierait juillet à septembre
+   en sautant août — une pente régulière là où il y a un trou. L'axe est donc
+   **fabriqué d'abord** (`buckets()`), les valeurs y sont **versées ensuite** ;
+   un mois vide vaut zéro et se voit comme tel. Testé.
+2. **La portabilité du découpage temporel.** `DATE_FORMAT` est du MySQL,
+   `strftime` du SQLite, `to_char` du PostgreSQL. L'expression est choisie par
+   driver (`bucketExpression()`) : le projet tourne sur MySQL mais teste sur
+   SQLite, et un agrégat qui ne s'exécuterait que sur l'un des deux serait un
+   agrégat non testé.
+3. **Le nombre d'univers.** `bookings.bookable_type` connaît sept cibles
+   polymorphes ; les afficher telles quelles donnerait sept séries de couleurs,
+   au-delà du seuil où l'œil distingue deux teintes voisines. On regroupe en
+   **cinq lignes de métier** (`LINE_OF_BUSINESS`), qui est de toute façon la
+   maille à laquelle un dirigeant raisonne — un véhicule de location et un
+   départ programmé sont un seul métier.
+
+⚠️ **Toute nouvelle cible réservable doit être ajoutée à `LINE_OF_BUSINESS`.**
+À défaut elle tombe dans `sur_mesure` : les montants restent justes, la lecture
+business devient fausse. (Même famille de défaut que le correctif F10.3 sur les
+files de validation.)
+
+⚠️ **L'ordre de `LINE_LABELS` est figé** : c'est lui que le frontend suit pour
+attribuer les couleurs. Une couleur suit un métier, jamais son rang du moment.
+
+⚠️ Plusieurs `selectRaw` lient exactement **trois** paramètres à leur
+`in (?, ?, ?)` de statuts annulés. Un quatrième statut d'annulation dans
+`BookingStatus` ferait lever une erreur de liaison — bruyamment, et c'est voulu :
+mieux vaut une exception au premier appel qu'un chiffre d'affaires faux affiché
+sans broncher.
+
+### Ce que renvoie l'endpoint
+
+`period` (+ `periods`, le catalogue du filtre, servi pour n'exister qu'une fois),
+`headline` (6 indicateurs, chacun avec sa valeur sur la **période précédente** de
+même longueur, sans chevauchement d'une seconde), `revenue_series`,
+`bookings_by_line`, `funnel`, `top_listings`, `booking_statuses`.
+
+Une période inconnue **n'est pas une erreur** : l'agrégateur retombe sur `12m`.
+Un écran de pilotage qui renvoie 422 sur un lien mis en favori, puis n'affiche
+rien, sert moins bien qu'un écran qui montre les douze derniers mois.
+
+**Tests** : `tests/Feature/Admin/AdminStatisticsTest.php` (8 tests) — la garde
+`gerer:paiements` (dont le refus opposé à un agent régulier), la dissymétrie
+montants/dénombrements, les mois vides présents à zéro, l'ordre figé des univers,
+le palmarès qui nomme les annonces au lieu de leur identifiant, et le repli de
+période.

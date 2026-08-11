@@ -1,0 +1,180 @@
+// Rubrique « Statistiques » du back-office (F13.1).
+//
+// La mise en page suit une règle simple : ce qui se compare doit tenir sur une
+// même ligne, ce qui se lit dans le temps doit être large. Les tuiles se
+// comparent (grille), les séries temporelles se lisent (pleine largeur).
+
+:host {
+  display: block;
+  // Plus large que les autres rubriques du back-office (1100 px) : une courbe
+  // de douze mois écrasée dans une colonne étroite perd exactement ce qu'on
+  // vient y chercher — la forme de la tendance.
+  max-width: 1240px;
+}
+
+.st-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.st-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.st-sub {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 58ch;
+}
+
+// Filtre de période : des onglets-pastilles, la sélection marquée par le fond
+// plein de la marque. Rien d'autre sur cette ligne — c'est le seul réglage de
+// l'écran, il n'a pas à être cherché.
+.st-filter {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: #f2f5fa;
+  border-radius: var(--k-radius-pill);
+  flex: none;
+}
+
+.st-filter__btn {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--k-muted);
+  padding: 7px 15px;
+  border-radius: var(--k-radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover:not(&--on) {
+    color: var(--k-ink);
+  }
+
+  &--on {
+    background: var(--k-brand);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(3, 72, 251, 0.35);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--k-brand);
+    outline-offset: 2px;
+  }
+}
+
+.st-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.st-body {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  transition: opacity 0.2s ease;
+
+  // Rechargement : le dessin reste, il pâlit. Aucune trame, aucun saut.
+  &--refreshing {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+}
+
+// Tuiles : la première occupe deux colonnes et porte le chiffre d'affaires.
+//
+// La grille est EXPLICITE (sept colonnes pour six tuiles, dont une double) et
+// non en `auto-fit`. L'ajustement automatique laissait la sixième tuile tomber
+// seule sur une deuxième ligne, orpheline sous cinq voisines — une rangée
+// d'indicateurs se lit d'un balayage, il lui faut une seule ligne.
+.st-tiles {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 14px;
+}
+
+.st-tiles__hero {
+  grid-column: span 2;
+}
+
+// Sous 1080 px, sept colonnes deviendraient illisibles : on repasse à trois
+// (le chiffre d'affaires en bandeau), puis à deux sur mobile.
+@media (max-width: 1080px) {
+  .st-tiles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .st-tiles__hero {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 620px) {
+  .st-tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .st-tiles__hero {
+    grid-column: span 2;
+  }
+}
+
+// Deux cartes côte à côte, empilées sur écran étroit.
+//
+// `align-items: start` : chacune garde sa hauteur naturelle. Étirées à la même
+// hauteur, la plus courte des deux traînait deux cents pixels de blanc sous son
+// dernier chiffre — un vide qu'on lit comme un contenu manquant.
+.st-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 22px;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.st-foot {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--k-muted);
+}
+
+// Légende de tableau destinée aux seules technologies d'assistance : elle nomme
+// le tableau sans doubler visuellement le titre de la carte, déjà affiché.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -15,6 +15,7 @@ use App\Modules\Admin\Http\Controllers\AdminProviderController;
 use App\Modules\Admin\Http\Controllers\AdminRequestController;
 use App\Modules\Admin\Http\Controllers\AdminReviewController;
 use App\Modules\Admin\Http\Controllers\AdminSettingsController;
+use App\Modules\Admin\Http\Controllers\AdminStatisticsController;
 use App\Modules\Admin\Http\Controllers\AdminTeamController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
 use App\Modules\Admin\Http\Controllers\AttendanceController;
@@ -44,6 +45,16 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     // B13.1 — Tableau de bord : indicateurs de pilotage agrégés.
     Route::get('/dashboard', [AdminDashboardController::class, 'show'])
         ->middleware('can:consulter:dashboard-admin');
+
+    // F13.1 — Statistiques business : les SÉRIES qui alimentent les graphiques
+    // (revenus dans le temps, univers métier, tunnel commercial, palmarès).
+    //
+    // ⚠️ Gardée par `gerer:paiements`, PAS par la permission de base du
+    // back-office : cet écran consolide le chiffre d'affaires de la plateforme.
+    // Le CDC §7 borne l'agent Kaikun à un « accès financier limité », et tout ce
+    // qui touche à l'argent (Paiements, Reversements) passe déjà par ce droit.
+    Route::get('/statistiques', [AdminStatisticsController::class, 'show'])
+        ->middleware('can:gerer:paiements');
 
     // B13.2 — File de validation générique + décision par type de ressource.
     // L'accès back-office est gardé par `consulter:dashboard-admin` ; la

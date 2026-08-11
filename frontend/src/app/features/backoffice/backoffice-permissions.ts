@@ -81,6 +81,14 @@ export const BO_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
   // financière sur deux permissions qu'on aurait de toute façon accordées
   // ensemble, et fabriqué un agent qui peut virer sans pouvoir rembourser.
   reversements: ['gerer:paiements'],
+  // Statistiques (F13.1) : MÊME permission que Paiements, pour la même raison.
+  // L'écran consolide le chiffre d'affaires, la commission et le panier moyen —
+  // c'est la vue la plus financière du produit, et le CDC §7 borne l'agent
+  // Kaikun à un « accès financier limité ». Ouvrir cet écran à toute l'équipe
+  // au motif qu'il est « en lecture seule » aurait vidé cette limite de son
+  // sens : on ne protège pas un chiffre en interdisant seulement de le
+  // modifier.
+  statistiques: ['gerer:paiements'],
   parametres: ['gerer:parametres'],
 
   // Pointeuse : périmètre PERSONNEL (on pointe pour soi). Toute l'équipe y a

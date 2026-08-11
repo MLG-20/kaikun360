@@ -1826,6 +1826,36 @@ le flux à la première panne de réseau et plus aucun rechargement ne serait
 possible ensuite. Les trois comportements sont tenus par
 `core/api/hero.service.spec.ts`.
 
+### Les graphiques du business, au back-office (F13.1)
+
+Une rubrique **Statistiques** (`/back-office/statistiques`) : six chiffres
+d'en-tête comparés à la période précédente, puis les revenus dans le temps,
+l'origine de l'activité par univers métier, le tunnel commercial, la
+répartition par statut et le palmarès des annonces. Le détail — les règles de
+dessin, les couleurs mesurées, les pièges — vit dans
+[`features/backoffice/statistics/README.md`](src/app/features/backoffice/statistics/README.md).
+
+Ce qu'il faut retenir hors de ce dossier :
+
+- **Aucune bibliothèque de graphiques.** Tout est du SVG écrit à la main, dans
+  des composants autonomes. Une bibliothèque impose son allure et Chart.js
+  dessine dans un `<canvas>` qui ne rend rien au **rendu serveur** — actif ici.
+  Coût réel : **40 ko** pour toute la rubrique, 10 ko compressés.
+- ⚠️ **Les couleurs de données ne s'inventent pas.** Elles vivent toutes dans
+  `charts/chart-tokens.ts` et ont été **validées** (daltonisme, contraste, bande
+  de clarté) sur le fond réel des cartes. L'**ordre** de la palette fait partie
+  de ce qui est validé. N'écrivez jamais une teinte en dur dans un composant de
+  graphique.
+- ⚠️ **L'état masqué d'une animation d'entrée vit dans le `from` de la
+  `@keyframes`, avec `backwards` — jamais sur la règle de base de l'élément.**
+  Dans l'autre sens, l'élément reste invisible partout où l'animation ne se joue
+  pas : rendu serveur, animations coupées par le navigateur. C'est ainsi que le
+  graphique principal de l'écran s'est affiché **vide** en F13.1, sans la
+  moindre erreur en console. *L'absence d'animation doit donner le graphique
+  tracé, pas le graphique absent.*
+- ⚠️ **Un graphique ne se juge pas au test.** Les trois défauts corrigés en
+  F13.1 étaient tous invisibles aux tests et évidents sur une capture d'écran.
+
 ### Commandes utiles
 
 ```bash
