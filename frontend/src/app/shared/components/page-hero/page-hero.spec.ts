@@ -69,7 +69,7 @@ describe('PageHeroComponent', () => {
     expect(el.querySelector('.uni-hero-lead')?.textContent).toContain('Accroche d’origine.');
   });
 
-  it('pose l’image en fond, sous un voile qui protège la lisibilité', async () => {
+  it('pose l’image en fond, seule — le voile est affaire de CSS', async () => {
     heroes.banners['immobilier'] = {
       image: 'https://exemple.test/storage/heroes/villa.jpg',
       eyebrow: null,
@@ -82,9 +82,11 @@ describe('PageHeroComponent', () => {
 
     expect(section.classList.contains('uni-hero--image')).toBe(true);
     expect(section.style.backgroundImage).toContain('villa.jpg');
-    // Le dégradé est empilé AVANT l'image : sans lui, un titre blanc posé sur
-    // une photo claire deviendrait illisible.
-    expect(section.style.backgroundImage).toContain('linear-gradient');
+    // ⚠️ Aucun dégradé en style en ligne. Le voile de lisibilité est posé par
+    // `.uni-hero--image::before`, précisément pour pouvoir changer selon la
+    // largeur de l'écran — ce qu'un style en ligne ne sait pas faire. Le
+    // réempiler ici l'appliquerait deux fois et éteindrait la photo.
+    expect(section.style.backgroundImage).not.toContain('linear-gradient');
   });
 
   it('ne lit que le bandeau de sa propre clé', async () => {

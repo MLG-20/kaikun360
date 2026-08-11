@@ -62,13 +62,16 @@ export class PageHeroComponent {
   protected readonly image = computed(() => this.banner()?.image ?? null);
 
   /**
-   * Fond du bandeau : la photo, **assombrie par un voile dégradé**.
+   * Fond du bandeau : **la photo seule**.
    *
-   * ⚠️ Le voile n'est pas une coquetterie. Le bandeau écrit en blanc ; posé sur
-   * une photo claire (une plage, une façade au soleil) le titre deviendrait
-   * illisible. On empile donc le dégradé de marque, en semi-transparent,
-   * par-dessus l'image — le texte garde son contraste quelle que soit la photo
-   * que l'équipe choisit, et on n'a pas à faire confiance à ce choix.
+   * ⚠️ Le voile qui garde le texte lisible n'est PLUS empilé ici. Il l'a été,
+   * et c'était une erreur d'emplacement : un dégradé écrit en style en ligne ne
+   * peut pas être réglé par une requête média, si bien que le même voile —
+   * pensé pour un large écran, où le texte n'occupe que la gauche — s'appliquait
+   * aussi au téléphone, où le texte couvre toute la largeur. Le voile vit
+   * désormais dans `.uni-hero--image::before` (`styles/_universe.scss`), où il
+   * peut s'adapter ; ne pas le réintroduire ici, on le paierait deux fois et la
+   * photo redeviendrait sourde.
    *
    * Sans image, on renvoie `null` : la règle CSS d'origine s'applique telle
    * quelle et la page est strictement identique à ce qu'elle était.
@@ -76,13 +79,6 @@ export class PageHeroComponent {
   protected readonly background = computed(() => {
     const url = this.image();
 
-    if (!url) {
-      return null;
-    }
-
-    return (
-      'linear-gradient(160deg, rgba(11, 31, 63, 0.86), rgba(3, 72, 251, 0.72)), ' +
-      `url("${encodeURI(url)}")`
-    );
+    return url ? `url("${encodeURI(url)}")` : null;
   });
 }

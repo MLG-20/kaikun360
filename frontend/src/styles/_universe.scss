@@ -20,6 +20,7 @@
 // chaque page est projeté dans le composant, donc hors de portée d'une feuille
 // de style encapsulée. Voir l'en-tête de `page-hero.scss`.
 .uni-hero--image {
+  position: relative;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -29,13 +30,58 @@
   padding-top: clamp(3rem, 6vw, 5.5rem);
   padding-bottom: clamp(3rem, 6vw, 5.5rem);
 
-  // Le voile dégradé (posé avec l'image) fait l'essentiel du contraste, mais une
-  // photo très détaillée — feuillage, foule, façade au soleil — reste bruyante
-  // sous du texte blanc. Cette ombre portée tient le titre lisible dans ce
-  // cas-là aussi, sans qu'on ait à faire confiance à la photo choisie.
+  // --- Le voile ------------------------------------------------------------
+  //
+  // Le texte du bandeau est blanc : sans rien par-dessus, une photo claire le
+  // rendrait illisible. Mais un voile UNIFORME — ce que faisait la version
+  // précédente, un aplat bleu à 86 % posé sur toute la surface — noie la photo
+  // que l'équipe vient de choisir : on ne voit plus qu'un rectangle bleu.
+  //
+  // La sortie n'est pas de baisser l'opacité partout (le titre y perdrait), mais
+  // de la mettre LÀ OÙ IL Y A DU TEXTE. Sur mobile, le texte occupe toute la
+  // largeur : le voile descend donc du haut, en s'appuyant vers le bas où se
+  // trouvent l'accroche et les cartes. Sur large écran (règle plus bas), le
+  // texte est borné à 18ch et le voile devient horizontal. Une seule teinte,
+  // dérivée du navy de marque : le bleu vif d'origine TEINTAIT la photo au lieu
+  // de l'assombrir, et c'est ce qui la rendait méconnaissable.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(6, 18, 40, 0.62) 0%,
+      rgba(6, 18, 40, 0.78) 100%
+    );
+    pointer-events: none;
+  }
+
+  @media (min-width: 900px) {
+    &::before {
+      background: linear-gradient(
+        95deg,
+        rgba(6, 18, 40, 0.84) 0%,
+        rgba(6, 18, 40, 0.7) 30%,
+        rgba(6, 18, 40, 0.3) 62%,
+        rgba(6, 18, 40, 0.08) 100%
+      );
+    }
+  }
+
+  // Le contenu repasse AU-DESSUS du voile. Sans cela, le pseudo-élément,
+  // dernier positionné, recouvrirait le texte qu'il est censé servir.
+  .uni-hero-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  // Le voile fait l'essentiel du contraste, mais une photo très détaillée —
+  // feuillage, foule, façade au soleil — reste bruyante sous du texte blanc.
+  // Cette ombre portée tient le titre lisible dans ce cas-là aussi, sans qu'on
+  // ait à faire confiance à la photo choisie.
   .uni-hero-title,
   .uni-hero-lead {
-    text-shadow: 0 1px 12px rgba(3, 12, 33, 0.45);
+    text-shadow: 0 1px 12px rgba(3, 12, 33, 0.55);
   }
 
   // Les cartes de points forts sont translucides : sur une photo, elles

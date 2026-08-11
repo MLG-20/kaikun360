@@ -13,8 +13,11 @@ use Illuminate\Foundation\Http\FormRequest;
  *
  * ⚠️ Le champ `image` est une IMAGE DE FOND plein écran : la limite de poids est
  * plus généreuse que celle des photos d'annonce (5 Mo), car une photo de héros
- * arrive souvent brute d'appareil. Elle est de toute façon recompressée et
- * ramenée à 1600 px de large avant stockage.
+ * arrive souvent brute d'appareil — et on a tout intérêt à la recevoir grande.
+ * Elle est recompressée et ramenée à `ImageProcessor::BACKGROUND_MAX_WIDTH`
+ * (2560 px) avant stockage, soit bien plus que les 1600 px d'une photo
+ * d'annonce : étirée sur toute la largeur de l'écran, une image plus étroite
+ * serait agrandie par le navigateur, donc floue.
  */
 class UpdateHeroBannerRequest extends FormRequest
 {
@@ -29,7 +32,17 @@ class UpdateHeroBannerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image' => ['sometimes', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
+            // ⚠️ La règle de DIMENSIONS n'est pas un excès de zèle : c'est le
+            // seul endroit où le problème peut encore être signalé. Une fois la
+            // photo stockée, plus rien ne la sauve — `scaleDown` réduit, il
+            // n'agrandit pas — et le défaut ne se voit qu'à l'écran, en
+            // production, sur un bandeau devenu flou. Constaté en recette : une
+            // vignette de 360 × 360 px déposée comme fond de page, agrandie
+            // sept fois par le navigateur.
+            'image' => [
+                'sometimes', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192',
+                'dimensions:min_width=1400,min_height=500',
+            ],
             // `nullable` et non `filled` : envoyer une chaîne vide est le geste
             // qui RETIRE une surcharge de texte et rend à la page son libellé
             // d'origine. C'est un usage normal, pas une erreur de saisie.
@@ -49,6 +62,7 @@ class UpdateHeroBannerRequest extends FormRequest
     {
         return [
             'image.max' => 'L’image ne doit pas dépasser 8 Mo.',
+            'image.dimensions' => 'L’image est trop petite pour un fond de page : il faut au moins 1400 px de large et 500 px de haut (idéalement 2560 × 1000 px, en paysage). Une image plus petite serait agrandie par le navigateur et paraîtrait floue.',
             'image.mimes' => 'Formats acceptés : JPEG, PNG ou WebP.',
             'title.max' => 'Le titre ne doit pas dépasser 180 caractères.',
             'lead.max' => 'L’accroche ne doit pas dépasser 600 caractères.',

@@ -726,6 +726,16 @@ les annonces », c'est là que ça casse.
   automatique (versioning) sur écriture des modèles.
 - **Eager loading** systématique (chasse aux N+1, garde-fous testés).
 - **Benchmark** local reproductible : `php artisan catalog:benchmark`.
+- **Images recompressées au dépôt** par `App\Services\ImageProcessor` : largeur
+  bornée puis JPEG. ⚠️ **Deux jeux de bornes, et les confondre se voit à l'œil
+  nu.** Une photo d'annonce vit dans une vignette de 600 à 900 px : 1600 px /
+  q80 lui suffisent. Une image de **fond** (bandeaux F12) est étirée sur toute
+  la largeur de l'écran — en 1600 px elle est *agrandie* par le navigateur dès
+  un moniteur de 1920 px, donc floue, et les artefacts JPEG invisibles sur une
+  vignette deviennent du grain bien visible : `BACKGROUND_MAX_WIDTH` vaut
+  **2560 px / q88**. ⚠️ `scaleDown` ne fait que **réduire** — une photo déposée
+  trop petite n'est rattrapable par aucun réglage, d'où le refus à la
+  validation (min. 1400 × 500 px pour un fond).
 
 Détail : [`PERFORMANCE.md`](PERFORMANCE.md).
 

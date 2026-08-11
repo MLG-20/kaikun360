@@ -899,8 +899,18 @@ et n'a aucune règle d'héritage à connaître — donc aucune à laisser diverg
 Vider le champ « Titre » et enregistrer rend à la page le titre de son gabarit ;
 il n'existe aucun état dans lequel le back-office laisse un bandeau sans titre.
 
-⚠️ L'image est **recompressée** (`ImageProcessor`, 1600 px / JPEG 80) et l'ancien
-fichier est **supprimé du disque** au remplacement comme au retrait.
+⚠️ L'image est **recompressée** (`ImageProcessor`) et l'ancien fichier est
+**supprimé du disque** au remplacement comme au retrait.
+
+⚠️ **Le bandeau ne suit PAS la borne des photos d'annonce**, et la confondre se
+voit à l'œil nu. Une photo d'annonce vit dans une vignette de 600 à 900 px :
+1600 px lui suffisent. Un bandeau est étiré sur **toute la largeur de l'écran** —
+en 1600 px il est *agrandi* par le navigateur dès un moniteur de 1920 px, donc
+flou, et les artefacts JPEG invisibles sur une vignette deviennent du grain bien
+visible. D'où `ImageProcessor::BACKGROUND_MAX_WIDTH` (**2560 px / JPEG 88**),
+passé explicitement par ce contrôleur. ⚠️ `scaleDown` ne fait que **réduire** :
+aucun réglage ici ne rattrape une photo déposée trop petite, c'est pourquoi
+l'écran annonce la taille attendue (≥ 2000 px de large).
 
 **Tests** : `tests/Feature/Admin/HeroBannerTest.php` (14 tests) — l'accent est
 mis sur l'héritage et son asymétrie, pas sur le téléversement (déjà éprouvé par

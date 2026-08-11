@@ -1187,6 +1187,18 @@ Sont également visés : `/back-office…` (alertes internes),
 - Design system maison : jetons de style dans
   [`src/styles/_tokens.scss`](src/styles/_tokens.scss), primitives (boutons,
   champs de formulaire, cartes…) dans [`src/styles/_base.scss`](src/styles/_base.scss).
+  ⚠️ **Une classe portée par plus d'un composant est un style GLOBAL.** Les
+  composants Angular sont sous encapsulation **émulée** : leur feuille de style
+  ne touche que les éléments écrits dans *leur* gabarit. Une règle laissée dans
+  la feuille d'un composant, mais dont la classe est réécrite ailleurs, n'y
+  produit **rien** — et rien ne le signale, ni erreur, ni avertissement de
+  compilation ; le défaut ne se voit qu'à l'écran. Cela s'est produit deux fois :
+  `.uni-hero` (contenu **projeté** dans `page-hero`) et `.lead-form`
+  (classes reprises par `construction-request-form`, carte affichée **sans
+  marges**). Les deux sont maintenant globales, dans `_universe.scss` et
+  `_conversion.scss`. Le symptôme jumeau à connaître : une classe **jamais
+  définie** (`.k-hint`, employée dans deux gabarits) se comporte exactement
+  pareil — sans bruit.
 - Adresse de l'API du moteur configurée dans `src/environments/`.
 - **Politique de défilement maison**
   ([`core/scroll/scroll-behavior.ts`](src/app/core/scroll/scroll-behavior.ts), F8.20)
@@ -1745,6 +1757,47 @@ et cartes de points forts assombries. Le bandeau écrit en **blanc** : sans ce
 voile, une plage ou une façade au soleil rendrait le titre illisible — et on ne
 peut pas faire confiance à la photo que l'équipe choisira.
 
+⚠️ **Le voile est DIRECTIONNEL, et il vit dans le CSS — pas dans le style en
+ligne.** Première version : un aplat de marque à 86 % d'opacité, empilé avec
+l'image par `PageHeroComponent`. Résultat constaté à l'écran, le client l'a
+signalé : *on ne voyait plus la photo, seulement un rectangle bleu*. Deux
+défauts distincts, corrigés ensemble. (1) La teinte était le **bleu vif** de
+marque, qui *teinte* la photo au lieu de l'assombrir — le voile est maintenant
+un navy neutre. (2) L'opacité était **uniforme**, alors que le texte n'occupe
+que la gauche du bandeau (titre borné à 18ch) : elle décroît désormais de 84 % à
+gauche à 8 % à droite, où la photo se donne enfin à voir. Ce dégradé-là ne
+pouvait pas rester en style en ligne : un style en ligne **ignore les requêtes
+média**, et sur téléphone le texte occupe toute la largeur — il y faut un voile
+vertical. Le voile est donc passé dans `.uni-hero--image::before`, horizontal
+au-delà de 900 px, vertical en dessous ; le composant ne pose plus que
+`url(...)`. ⚠️ Le pseudo-élément étant posé **après** le contenu dans l'ordre
+d'empilement, `.uni-hero-inner` reprend `position: relative; z-index: 1` — sans
+quoi le voile recouvrirait le texte qu'il est censé servir.
+
+⚠️ **Une image de fond n'est pas une photo d'annonce, et le back-office le dit.**
+Le bandeau est étiré sur **toute la largeur de l'écran** : une image de 1600 px
+(la borne des photos d'annonce) y est *agrandie* par le navigateur sur un
+moniteur courant, et un agrandissement ne peut que flouter. Côté serveur, la
+borne des bandeaux est passée à **2560 px / JPEG 88** (`ImageProcessor::BACKGROUND_MAX_WIDTH`) ;
+côté écran, la fiche annonce la taille attendue — car aucun réglage serveur ne
+rattrape une photo déposée trop petite, `scaleDown` ne **réduisant** jamais que
+ce qui dépasse.
+
+⚠️ **L'image est MESURÉE dans le navigateur, avant tout envoi.** Le serveur
+refuse déjà les fonds de moins de 1400 × 500 px, mais son refus arrivait au
+mauvais endroit : le message d'erreur de l'écran Bandeaux est **unique pour la
+page entière** et s'affiche en haut, alors que les fiches se comptent par
+vingtaines et qu'on choisit son fichier après avoir beaucoup défilé. Constaté en
+recette, et c'est exactement ce qu'a vécu le client : une image de 750 × 465 px
+déposée, « Enregistrer » cliqué, **rien ne semble se passer**. Le refus est donc
+prononcé au moment du **choix du fichier**, sous le bouton même, et il annonce
+les dimensions trouvées — `URL.createObjectURL` + `naturalWidth`, aucun
+aller-retour réseau. ⚠️ Le champ `<input type="file">` est **vidé après chaque
+choix** : sans cela, rechoisir le même fichier corrigé ne redéclencherait aucun
+`change` et l'écran resterait figé sur son erreur. ⚠️ Une mesure **impossible**
+(format exotique, fichier illisible) laisse passer : c'est le serveur qui
+tranche, refuser sur un doute écarterait une image valable.
+
 ⚠️ **L'invitation « Contactez-nous » de la FAQ a quitté l'accroche** pour devenir
 une ligne à part : l'accroche est devenue une donnée réécrivable, et un texte
 saisi au back-office ne peut pas contenir de lien interne — un `routerLink` s'y
@@ -1753,6 +1806,25 @@ afficherait tel quel.
 ⚠️ **Hydratation** : l'appel `GET /heroes` part pendant le rendu serveur et son
 résultat est **rejoué depuis le transfer cache** côté client — le navigateur ne
 le redemande pas, et le bandeau ne change pas d'aspect après l'hydratation.
+
+⚠️ **« Une seule fois » voulait dire « une seule fois pour la session », et
+c'était un piège.** `HeroService` partage sa liste entre les douze pages
+publiques ; jusqu'ici l'appel ne repartait donc **jamais** de toute la vie de
+l'onglet. Constaté en recette : l'équipe dépose dix photos au back-office, revient
+sur le site *sans recharger le navigateur* — ce qu'une application d'une seule
+page ne demande jamais — et n'en voit **qu'une**, celle qui existait déjà au
+chargement de l'application. L'envoi paraît perdu alors que la base et l'API sont
+justes. Le service expose maintenant `refresh()`, appelé par l'écran Bandeaux
+après chaque enregistrement, retrait d'image et réinitialisation. ⚠️ Le
+déclencheur est un **`Subject` + `startWith`**, et surtout pas un signal passé à
+`toObservable` : ce dernier n'émet que depuis un **effet**, donc au premier cycle
+de détection et non à la construction du service — la première requête cessait de
+partir au montage (les tests l'ont pris sur le fait), ce qui retarde le bandeau et
+fragilise le rendu serveur, lequel doit voir l'appel partir pour l'attendre.
+⚠️ Le `catchError` est **à l'intérieur** du `switchMap` : au-dehors, il achèverait
+le flux à la première panne de réseau et plus aucun rechargement ne serait
+possible ensuite. Les trois comportements sont tenus par
+`core/api/hero.service.spec.ts`.
 
 ### Commandes utiles
 

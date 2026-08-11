@@ -468,6 +468,13 @@
         sa photo</strong> — une image par univers suffit. Les champs de texte
         sont facultatifs : laissés vides, la page garde les mots d’origine.
       </p>
+      <p class="st-card-sub">
+        <strong>Format attendu : au moins 2000 px de large</strong>, en paysage
+        (idéalement 2560 × 1000 px), jusqu’à 8 Mo. Le bandeau s’étire sur toute
+        la largeur de l’écran : une photo plus petite y est agrandie et paraîtra
+        floue. Le texte s’affiche à gauche — préférez une image dont le sujet est
+        <em>à droite</em>, et dont la gauche est calme.
+      </p>
     </section>
 
     @for (group of heroGroupKeys(); track group) {
@@ -527,6 +534,18 @@
                     </button>
                   }
                 </div>
+
+                <!--
+                  Refus du fichier choisi (image trop petite pour un fond).
+                  Il s'affiche ICI, sous le bouton qui vient de servir : le
+                  bandeau d'erreur général est en haut d'une page longue, donc
+                  hors de l'écran au moment où l'on choisit une image.
+                -->
+                @if (heroFileError(hero.key); as fileError) {
+                  <p class="st-state st-state--error" role="alert">{{ fileError }}</p>
+                } @else {
+                  <p class="st-hint">Paysage, au moins 2000 px de large (2560 × 1000 px conseillé).</p>
+                }
 
                 <!-- Textes : facultatifs, vides = textes d'origine de la page -->
                 <div class="st-grid">

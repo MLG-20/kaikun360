@@ -182,7 +182,10 @@ masquée, qui aurait disparu de la vue de l'agent lui-même.
 - **Compression** : à l'upload, les images sont redimensionnées (largeur max
   1600 px) et recompressées en **JPEG q80** par `App\Services\ImageProcessor`
   (isolé pour un futur passage en Job de queue, B16), puis stockées sur le disque
-  `public`. Les vidéos sont référencées par URL externe.
+  `public`. Les vidéos sont référencées par URL externe. ⚠️ Ces bornes valent
+  pour une image **vue en vignette** ; une image de **fond plein écran** en
+  demande d'autres — `ImageProcessor::BACKGROUND_MAX_WIDTH` (2560 px / q88),
+  utilisée par les bandeaux (F12).
 - **Image principale** : passer `is_primary=true` retire l'ancienne image de une
   de la même ressource (unicité garantie).
 

@@ -98,6 +98,27 @@ class HeroBannerTest extends TestCase
         $this->assertSame('Des biens vérifiés, prêts à visiter', $banner->title);
     }
 
+    /**
+     * Une vignette n'est pas un fond de page.
+     *
+     * Le cas vient de la recette : une image de 360 × 360 px avait été déposée
+     * comme fond, et le bandeau paraissait flou sans qu'aucune erreur ne le
+     * signale. Rien ne peut le rattraper après coup — `ImageProcessor` réduit,
+     * il n'agrandit pas ; le refus à l'envoi est donc le seul moment où l'équipe
+     * peut encore l'apprendre.
+     */
+    public function test_une_image_trop_petite_pour_un_fond_est_refusee(): void
+    {
+        Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
+
+        $this->post('/api/v1/admin/heroes/immobilier', [
+            'image' => UploadedFile::fake()->image('vignette.jpg', 360, 360),
+        ])->assertStatus(422)->assertJsonValidationErrors('image');
+
+        // Rien n'a été écrit : ni ligne en base, ni fichier sur le disque.
+        $this->assertDatabaseCount('hero_banners', 0);
+    }
+
     public function test_l_image_d_un_univers_descend_sur_sa_page_de_resultats(): void
     {
         Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));

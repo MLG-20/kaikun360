@@ -72,7 +72,16 @@ class AdminHeroController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $stored = $images->storeCompressed($request->file('image'), 'heroes');
+            // Bornes propres aux images de FOND : plus larges et moins
+            // compressées que les photos d'annonce, sans quoi le navigateur
+            // agrandit l'image sur toute la largeur de l'écran et le bandeau
+            // paraît flou. Voir ImageProcessor::BACKGROUND_MAX_WIDTH.
+            $stored = $images->storeCompressed(
+                $request->file('image'),
+                'heroes',
+                ImageProcessor::BACKGROUND_MAX_WIDTH,
+                ImageProcessor::BACKGROUND_JPEG_QUALITY,
+            );
             $banner->image_path = $stored['path'];
         }
 

@@ -16,6 +16,7 @@ import {
   ReferenceCatalog,
 } from '../../../core/api/admin.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
+import { HeroService } from '../../../core/api/hero.service';
 import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor/rich-text-editor';
 
 /** Onglet actif de l'écran Paramètres. */
@@ -35,6 +36,19 @@ interface HeroDraft {
   /** Fichier choisi mais pas encore envoyé (`null` = aucun nouveau choix). */
   file: File | null;
 }
+
+/**
+ * Dimensions minimales d'une image de FOND de bandeau.
+ *
+ * ⚠️ Ces deux nombres sont la copie de la règle `dimensions:` de
+ * `UpdateHeroBannerRequest` côté serveur. Le serveur reste l'autorité — c'est
+ * lui qui refuse — mais répéter la borne ici permet de le dire **au moment du
+ * choix du fichier**, à côté du bouton, plutôt qu'après un aller-retour dont le
+ * message s'affiche en haut d'une page longue, souvent hors de l'écran. Les
+ * changer d'un seul côté ne casse rien, cela ne fait que déplacer le refus.
+ */
+const HERO_MIN_WIDTH = 1400;
+const HERO_MIN_HEIGHT = 500;
 
 /** Sous-onglet du contenu éditorial. */
 type ContentTab = 'pages' | 'faqs';
@@ -92,6 +106,17 @@ interface PricingField {
 })
 export class BackofficeSettingsPageComponent {
   private readonly admin = inject(AdminService);
+
+  /**
+   * Service qui alimente les bandeaux du SITE PUBLIC.
+   *
+   * ⚠️ Injecté ici pour une seule raison : le prévenir qu'un bandeau vient de
+   * changer. Il ne lit `GET /heroes` **qu'une fois par session de navigation**,
+   * si bien que l'agent qui dépose une photo puis retourne sur le site — sans
+   * jamais recharger le navigateur, ce qu'aucune application d'une seule page ne
+   * demande — continuait de voir l'ancien bandeau et croyait son envoi perdu.
+   */
+  private readonly publicHeroes = inject(HeroService);
 
   protected readonly tab = signal<SettingsTab>('settings');
 
@@ -280,6 +305,14 @@ export class BackofficeSettingsPageComponent {
   /** Saisie en cours, par clé de bandeau. */
   protected readonly heroDrafts = signal<Record<string, HeroDraft>>({});
 
+  /**
+   * Refus d'un fichier choisi, par clé de bandeau (image trop petite).
+   *
+   * Séparé de `heroActionError`, qui est unique pour tout l'écran : ce
+   * message-ci doit s'afficher **sous le bouton concerné**, parmi vingt fiches.
+   */
+  protected readonly heroFileErrors = signal<Record<string, string>>({});
+
   /** Groupes présents, dans l'ordre où le serveur les a envoyés. */
   protected readonly heroGroupKeys = computed(() => {
     const seen: string[] = [];
@@ -346,15 +379,87 @@ export class BackofficeSettingsPageComponent {
     }));
   }
 
-  /** Mémorise le fichier choisi ; rien n'est envoyé avant « Enregistrer ». */
-  protected onHeroFile(key: string, event: Event): void {
+  /**
+   * Mémorise le fichier choisi ; rien n'est envoyé avant « Enregistrer ».
+   *
+   * ⚠️ **L'image est mesurée AVANT d'être retenue.** Un fond de bandeau trop
+   * petit est agrandi par le navigateur sur toute la largeur de l'écran, donc
+   * flou : le serveur le refuse (voir `UpdateHeroBannerRequest`), mais attendre
+   * son refus fait perdre un aller-retour et affiche l'explication en haut d'une
+   * page qui, à cet endroit, a déjà beaucoup défilé — l'équipe voit alors un
+   * bouton qui « ne marche pas », sans savoir pourquoi. On le dit donc ici, sous
+   * le bouton même qui vient de servir.
+   */
+  protected async onHeroFile(key: string, event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
+
+    // Le champ est vidé aussitôt : sans cela, rechoisir LE MÊME fichier après
+    // un refus ne déclencherait aucun `change` et l'écran resterait figé sur
+    // son message d'erreur.
+    input.value = '';
+
+    this.setHeroFileError(key, null);
+
+    if (!file) {
+      return;
+    }
+
+    const size = await this.measureImage(file);
+
+    // Mesure impossible (fichier illisible, format exotique) : on laisse passer
+    // et c'est le serveur qui tranchera. Refuser ici sur un doute empêcherait
+    // une image parfaitement valable d'être chargée.
+    if (size && (size.width < HERO_MIN_WIDTH || size.height < HERO_MIN_HEIGHT)) {
+      this.setHeroFileError(
+        key,
+        `Cette image fait ${size.width} × ${size.height} px : c’est trop petit pour un fond de page. ` +
+          `Il en faut au moins ${HERO_MIN_WIDTH} × ${HERO_MIN_HEIGHT} px (idéalement 2560 × 1000 px, en paysage), ` +
+          `sinon le bandeau paraîtra flou une fois étiré sur toute la largeur de l’écran.`,
+      );
+
+      return;
+    }
 
     this.heroDrafts.update((drafts) => ({
       ...drafts,
       [key]: { ...this.heroDraft(key), file },
     }));
+  }
+
+  /** Message de refus attaché au choix de fichier d'un bandeau, s'il y en a un. */
+  protected heroFileError(key: string): string | null {
+    return this.heroFileErrors()[key] || null;
+  }
+
+  private setHeroFileError(key: string, message: string | null): void {
+    this.heroFileErrors.update((errors) => ({ ...errors, [key]: message ?? '' }));
+  }
+
+  /**
+   * Dimensions réelles d'un fichier image, ou `null` si elles sont illisibles.
+   *
+   * Passe par un `blob:` local — l'image n'est jamais envoyée au serveur pour
+   * être mesurée. L'URL est révoquée dans les deux issues, sinon chaque essai
+   * laisserait le fichier en mémoire jusqu'au rechargement de la page.
+   */
+  private measureImage(file: File): Promise<{ width: number; height: number } | null> {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(file);
+      const image = new Image();
+
+      image.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve({ width: image.naturalWidth, height: image.naturalHeight });
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+
+      image.src = url;
+    });
   }
 
   /** Nom du fichier choisi mais pas encore envoyé, pour l'afficher à l'écran. */
@@ -398,6 +503,9 @@ export class BackofficeSettingsPageComponent {
     this.admin.updateHero(hero.key, changes).subscribe({
       next: (snapshot) => {
         this.applyHeroSnapshot(snapshot);
+        // Le site public relit ses bandeaux : sans cela, l'agent retournerait
+        // sur la page qu'il vient d'habiller et la trouverait inchangée.
+        this.publicHeroes.refresh();
         this.heroSaving.set(null);
         this.heroMessage.set(`Bandeau « ${hero.label} » enregistré.`);
       },
@@ -417,6 +525,7 @@ export class BackofficeSettingsPageComponent {
     this.admin.updateHero(hero.key, { removeImage: true }).subscribe({
       next: (snapshot) => {
         this.applyHeroSnapshot(snapshot);
+        this.publicHeroes.refresh();
         this.heroSaving.set(null);
         this.heroMessage.set(`Image retirée du bandeau « ${hero.label} ».`);
       },
@@ -436,6 +545,7 @@ export class BackofficeSettingsPageComponent {
     this.admin.resetHero(hero.key).subscribe({
       next: (snapshot) => {
         this.applyHeroSnapshot(snapshot);
+        this.publicHeroes.refresh();
         this.heroSaving.set(null);
         this.heroMessage.set(`Bandeau « ${hero.label} » réinitialisé.`);
       },
