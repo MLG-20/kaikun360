@@ -77,7 +77,18 @@ après étude du projet.
   qu'un champ — la description, pré-remplie du récapitulatif (qui garde ce
   qu'aucune colonne ne stocke : niveaux, foncier, estimation affichée, projection
   locative). Il réutilise les classes `.k-card.lead-form` pour que la page ne
-  change pas d'aspect. Le succès nomme le dossier (`CST-…`) et **dit où le
+  change pas d'aspect. ⚠️ **Et pendant un temps, elle en a changé** : ces classes
+  vivaient dans `lead-form.scss`, la feuille du composant `app-lead-form`. Sous
+  encapsulation émulée, une feuille de composant ne touche que les éléments écrits
+  dans SON gabarit — les mêmes classes, réécrites ici, n'étaient donc habillées
+  par rien, et la carte s'affichait **sans marge intérieure ni espacement des
+  champs**, texte collé aux bords, *sans qu'aucune erreur ne le signale*. Elles
+  sont désormais dans `styles/_conversion.scss` (global). La règle : une classe
+  partagée par deux composants est un style global, sinon elle ne vaut que pour le
+  premier. ⚠️ Dans la même carte, `.k-hint` était employée **sans avoir jamais été
+  définie** nulle part — un sélecteur absent ne lève rien, l'explication sous le
+  champ s'affichait en corps de page ; elle est maintenant dans `_base.scss`, aux
+  côtés de `.k-error`. Le succès nomme le dossier (`CST-…`) et **dit où le
   suivre** (`/mon-espace/diaspora`, « Mes chantiers & devis ») : un chantier a une
   vie, contrairement à une demande de rappel.
   ⚠️ Côté serveur, le dépôt **ne prévenait personne** — `ConstructionRequestCreated`

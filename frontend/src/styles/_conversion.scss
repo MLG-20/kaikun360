@@ -174,3 +174,60 @@
   gap: 0.75rem;
   margin-top: 1.5rem;
 }
+
+// --- Formulaire de demande (F2.5) -----------------------------------------
+//
+// ⚠️ **Ces règles étaient dans `shared/components/lead-form/lead-form.scss`, et
+// c'est ce qui a cassé la page Construction.** Le composant `app-lead-form` n'est
+// pas seul à porter ces classes : `construction-request-form` les reprend
+// délibérément, pour que la page ne change pas d'aspect en changeant de
+// destination d'envoi. Or, sous encapsulation émulée, une feuille de style de
+// composant ne s'applique qu'aux éléments écrits dans SON gabarit — les mêmes
+// classes, écrites dans le gabarit d'un autre composant, n'étaient touchées par
+// rien. La carte s'affichait donc **sans marge intérieure ni espacement**, texte
+// collé aux bords, sans qu'aucune erreur ne le signale : le style existait, il
+// ne s'appliquait simplement pas là.
+//
+// La règle à retenir, la même que pour `.uni-hero` : **une classe partagée par
+// plusieurs composants est un style GLOBAL**, sinon elle ne vaut que pour le
+// premier.
+.lead-form {
+  padding: 1.5rem;
+}
+
+.lead-form-title {
+  font-family: var(--k-font-display);
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.lead-form-intro {
+  color: var(--k-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.lead-form-authnote {
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: var(--k-ink);
+}
+
+.lead-form-alt {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--k-muted);
+}
+
+.lead-form-alt a {
+  color: var(--k-brand);
+  font-weight: 600;
+}
+
+.lead-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

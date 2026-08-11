@@ -1,41 +1,16 @@
-// Formulaire de demande réutilisable (F2.5), partagé par les pages de conversion.
-.lead-form {
-  padding: 1.5rem;
-}
-
-.lead-form-title {
-  font-family: var(--k-font-display);
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-}
-
-.lead-form-intro {
-  color: var(--k-muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin-bottom: 1rem;
-}
-
-.lead-form-authnote {
-  margin-bottom: 1rem;
-  font-size: 0.95rem;
-  color: var(--k-ink);
-}
-
-.lead-form-alt {
-  margin-top: 0.75rem;
-  font-size: 0.9rem;
-  text-align: center;
-  color: var(--k-muted);
-}
-
-.lead-form-alt a {
-  color: var(--k-brand);
-  font-weight: 600;
-}
-
-.lead-form-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+/* Formulaire de demande réutilisable (F2.5).
+ *
+ * ⚠️ **Vide, et c'est volontaire.** L'apparence de ce formulaire — carte,
+ * marges, titre, espacement des champs — vit dans le style GLOBAL
+ * `src/styles/_conversion.scss`, sous `.lead-form`.
+ *
+ * La raison a été payée comptant sur la page Construction : ce composant n'est
+ * pas seul à porter ces classes. `features/build/construction-request-form`
+ * reprend la même ossature pour déposer un dossier de chantier, et sous
+ * encapsulation émulée une feuille de style de composant ne s'applique qu'aux
+ * éléments écrits dans SON gabarit. Les règles laissées ici habillaient donc ce
+ * composant-ci et lui seul ; la carte du jumeau s'affichait sans la moindre
+ * marge, texte collé aux bords, **sans qu'aucune erreur ne le signale**.
+ *
+ * Ne rien réintroduire ici tant qu'une classe est partagée. Une règle qui ne
+ * concernerait QUE ce composant aurait en revanche sa place. */

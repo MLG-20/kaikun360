@@ -222,6 +222,20 @@ h3 {
   color: var(--k-danger);
 }
 
+// Explication paisible sous un champ (ce qu'on attend, ce qui est déjà rempli).
+//
+// ⚠️ Cette classe était **employée sans jamais avoir été définie** — dans le
+// dépôt de dossier de chantier et dans la fiche de profil. Rien ne le signale :
+// un sélecteur CSS absent ne lève aucune erreur, le texte s'affichait
+// simplement en corps de page, aussi noir et aussi gros que le contenu qu'il
+// était censé accompagner. Elle se distingue de `.k-error` par le seul fait
+// qu'elle n'annonce rien de fâcheux : même discrétion, teinte neutre.
+.k-hint {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--k-muted);
+}
+
 // Bandeau d'erreur global d'un formulaire (ex. identifiants invalides).
 .k-form-error {
   font-size: 14px;
