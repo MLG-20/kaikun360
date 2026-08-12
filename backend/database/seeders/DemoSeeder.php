@@ -35,6 +35,7 @@ use App\Modules\Manage\Models\ManagementMandate;
 use App\Modules\Manage\Models\OwnerPayout;
 use App\Modules\Manage\Models\Rent;
 use App\Modules\Mobility\Enums\MobilityServiceStatus;
+use App\Modules\Mobility\Enums\VehicleStatus;
 use App\Modules\Mobility\Enums\VehicleType;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
@@ -694,9 +695,41 @@ class DemoSeeder extends Seeder
         ]);
 
         // --- Mobilité : 6 trajets publiés (types tirés aléatoirement par la factory) ---
-        MobilityService::factory()->count(6)->published()->create([
-            'provider_id' => $provider->id,
-        ]);
+        //
+        // ⚠️ **Chaque départ est rattaché à un véhicule, et sa capacité y est
+        // ramenée.** Les deux règles se tiennent :
+        //
+        //  - un départ **hérite des photos de son véhicule** (F8.18) ; sans
+        //    véhicule, il n'a aucune image, et la mobilité était le seul univers
+        //    dont TOUTES les cartes s'affichaient en vignette de repli — sur
+        //    l'univers où l'image décide presque seule du clic ;
+        //  - la validation refuse de vendre **plus de places que le véhicule
+        //    n'en transporte**. La factory tirant des capacités jusqu'à 50 pour
+        //    un parc qui plafonne à 25, aucun rattachement n'était possible : en
+        //    démonstration, l'écran renvoyait une erreur sur le champ *Places*
+        //    alors qu'on venait de choisir un *Véhicule*.
+        //
+        // Repartir des véhicules PUBLIÉS et illustrés garde donc la base de
+        // démonstration cohérente avec ses propres règles métier.
+        $vehiculesPourDeparts = Vehicle::query()
+            ->where('provider_id', $provider->id)
+            ->where('status', VehicleStatus::PUBLIE->value)
+            ->where('capacity', '>', 1)
+            ->get();
+
+        foreach (range(1, 6) as $rang) {
+            $vehicule = $vehiculesPourDeparts->isNotEmpty()
+                ? $vehiculesPourDeparts[($rang - 1) % $vehiculesPourDeparts->count()]
+                : null;
+
+            MobilityService::factory()->published()->create([
+                'provider_id' => $provider->id,
+                'vehicle_id' => $vehicule?->id,
+                // Quelques places de moins que le véhicule : un départ complet
+                // au siège près ne ressemble pas à une offre réelle.
+                'capacity' => $vehicule ? max(1, $vehicule->capacity - 1) : 4,
+            ]);
+        }
 
         $this->command?->info('DemoSeeder : données de démonstration créées (biens, nuitées, véhicules, expériences, trajets).');
     }
