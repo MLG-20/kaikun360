@@ -13,6 +13,52 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
+ * En-têtes de sécurité HTTP (revue de sécurité 2026-08).
+ *
+ * ⚠️ Seconde ligne de défense, pas la première : l'application échappe déjà
+ * systématiquement les entrées utilisateur (cf. `rich-text.sanitizer.ts`) et
+ * ne stocke le jeton d'authentification qu'en `sessionStorage`. La CSP réduit
+ * ce qu'une XSS résiduelle pourrait accomplir (exfiltration vers un domaine
+ * tiers, script injecté) — elle ne remplace pas l'assainissement en amont.
+ *
+ * Origines externes réellement utilisées par l'application (à tenir à jour
+ * si une nouvelle intégration tierce apparaît) :
+ *   - `accounts.google.com` : script + appels du bouton de connexion Google ;
+ *   - `fonts.googleapis.com` / `fonts.gstatic.com` : typographie du design
+ *     system (F0.3) ;
+ *   - `maps.google.com` : carte intégrée de la page Contact.
+ *
+ * `style-src` garde `'unsafe-inline'` : Angular injecte lui-même des styles
+ * de composants au runtime (encapsulation de vue), sans passer par une entrée
+ * utilisateur — un `nonce` par requête serait plus strict mais demanderait de
+ * le propager jusqu'au moteur de rendu Angular, hors de portée de ce correctif
+ * ciblé.
+ */
+app.use((_req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' https://accounts.google.com",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: blob:",
+      "connect-src 'self' https://accounts.google.com",
+      "frame-src https://maps.google.com https://www.google.com",
+      "frame-ancestors 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; '),
+  );
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
+/**
  * Origine de l'API Laravel, vue **depuis ce processus Node** (F9.2).
  *
  * ⚠️ Ce n'est PAS `environment.apiUrl` : en production celui-ci vaut `/api/v1`,

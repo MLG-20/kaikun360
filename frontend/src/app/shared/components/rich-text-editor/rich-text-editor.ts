@@ -140,7 +140,12 @@ export class RichTextEditorComponent implements ControlValueAccessor {
     // caractère.
     effect(() => {
       const element = this.surface()?.nativeElement;
-      const value = this.html();
+      // Revue de sécurité (2026-08) : `this.html` n'est aujourd'hui alimenté
+      // que par des appels déjà passés au filtre `sanitizeRichText` (chargement,
+      // collage, sortie de champ). On réassainit quand même ici, au point exact
+      // d'écriture dans le DOM : un futur appel à `this.html.set(...)` qui
+      // oublierait de filtrer en amont ne doit jamais pouvoir y échapper.
+      const value = sanitizeRichText(this.html());
       if (!element || this.focused) {
         return;
       }

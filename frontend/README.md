@@ -1262,6 +1262,17 @@ npm run serve:ssr:kaikun360
 > production** (ex. `kaikun360.sn`) dans cette liste avant la mise en ligne, sinon
 > le serveur SSR renverra `400 Bad Request` (protection anti-SSRF sur l'en-tête Host).
 
+**En-têtes de sécurité HTTP** (revue de sécurité, 2026-08-12) : `server.ts`
+pose désormais une `Content-Security-Policy` (liste blanche des seules
+origines tierces réellement utilisées : `accounts.google.com` pour la
+connexion Google, `fonts.googleapis.com`/`fonts.gstatic.com` pour la
+typographie, `maps.google.com` pour la carte de la page Contact), plus
+`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` et
+`Permissions-Policy`. Seconde ligne de défense contre une XSS résiduelle — pas
+un substitut à l'assainissement des entrées (`rich-text.sanitizer.ts`), qui
+reste la première. **Si une nouvelle intégration tierce est ajoutée (script,
+police, iframe), penser à l'ajouter à cette liste blanche.**
+
 ### Application installable — PWA (F9.0)
 
 Réponse au **CDC §5 (« application mobile »)**, par la voie décidée avec le
