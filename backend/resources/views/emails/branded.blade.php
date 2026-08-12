@@ -309,7 +309,7 @@
                                         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="kk-soft" style="background-color:{{ $c['cream'] }}; border-left:3px solid {{ $c['gold'] }}; border-radius:0 10px 10px 0;">
                                             <tr>
                                                 <td class="kk-muted" style="padding:14px 18px; font-family:{{ $font }}; font-size:14px; line-height:22px; color:{{ $c['muted'] }};">
-                                                    {!! $note !!}
+                                                    {{ $note }}
                                                 </td>
                                             </tr>
                                         </table>

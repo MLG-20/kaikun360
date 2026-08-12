@@ -567,8 +567,13 @@ Détail complet : [`app/Support/README.md`](app/Support/README.md) et
   suppressions.
 - **Documents privés** (KYC, documents de biens) sur disque `local`, accès par
   **URL signée temporaire**.
-- **Webhook PayTech** vérifié par **signature HMAC-SHA256** (avec réconciliation
-  de montant).
+- **Webhook PayTech** vérifié par **signature HMAC-SHA256 uniquement** (avec
+  réconciliation de montant) — le repli historique par empreintes SHA-256
+  constantes (rejouable) a été supprimé en revue de sécurité (2026-08-12), voir
+  [`app/Support/Payments/README.md`](app/Support/Payments/README.md).
+- **Code de vérification / 2FA** : au-delà de 5 essais ratés, un code est
+  invalidé même si le bon code est fourni ensuite — anti brute-force distribué
+  sur plusieurs IP, voir [`app/Modules/Core/README.md`](app/Modules/Core/README.md#mécanisme-de-codes).
 - **RGPD** : anonymisation du compte sur demande (`DELETE /users/me`) — voir
   [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md).
 
@@ -593,6 +598,11 @@ bleu `#0348FB`, navy `#03193F`, or `#D3AE52`, crème `#F7F4EB`).
 | Compatibilité | Tables, styles inline, aucune image distante, bouton « à toute épreuve » Outlook, responsive + mode sombre |
 | Relecture | `http://127.0.0.1:8000/apercu-emails` — les 22 e-mails dans le navigateur, données fictives, **aucun envoi** (local uniquement) |
 | Relecture en conditions réelles | `php artisan mail:apercu <adresse>` — envoie les 22 e-mails (données fictives) dans une vraie boîte de réception |
+
+⚠️ **Le seul encart libre (`->note()`) est échappé (`{{ }}`), jamais en HTML
+brut** (`{!! !!}`) : le formulaire de contact public y transmet du texte saisi
+par un visiteur anonyme — une injection HTML confirmée par preuve de concept
+a été corrigée en revue de sécurité (2026-08-12).
 
 Détail complet, règles de rédaction et ajout d'un e-mail :
 [`app/Support/Mail/README.md`](app/Support/Mail/README.md).

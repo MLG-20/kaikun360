@@ -183,6 +183,12 @@ Codes à **6 chiffres**, **usage unique**, **valables 15 min**, stockés **hach�
 (table `verification_codes`, modèle `VerificationCode`). Toute la logique est dans
 `App\Modules\Core\Services\VerificationService` (génération, envoi, vérification).
 
+> 🔒 **Anti brute-force par code** (revue de sécurité, 2026-08) : le throttle
+> IP de la route ne bornait pas un attaquant distribuant ses tentatives sur
+> plusieurs IP. `VerificationService::MAX_ATTEMPTS` (5) compte les essais
+> ratés **par code** (`failed_attempts`) ; au-delà, le code est invalidé même
+> si le bon code est fourni ensuite — il faut en redemander un.
+
 Envoi via la **Notification** `VerificationCodeNotification`. Le canal du code
 (`email` / `phone`) dit ce qu'il **confirme** ; le média employé, lui, dépend de
 la configuration SMS : un code « téléphone » part par **e-mail** tant qu'aucun

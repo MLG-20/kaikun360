@@ -144,29 +144,24 @@ class PaymentWebhookTest extends TestCase
         $this->send($payload)->assertStatus(401);
     }
 
-    public function test_le_repli_par_empreintes_sha256_est_accepte(): void
+    /**
+     * Revue de sécurité (2026-08) : les empreintes SHA-256 des clés sont
+     * CONSTANTES d'une notification à l'autre — les accepter en repli rendait
+     * un rejeu indéfiniment possible dès qu'une seule notification authentique
+     * avait été captée quelque part (PoC réalisée : paiement `en_attente`
+     * basculé en `complete` sans jamais connaître l'`API_SECRET`). Le repli est
+     * supprimé : seul le HMAC, lié au montant et à la référence, fait foi.
+     */
+    public function test_le_repli_par_empreintes_sha256_est_desormais_rejete(): void
     {
-        // Certains événements n'embarquent pas de HMAC : PayTech documente alors
-        // la comparaison des empreintes des deux clés.
         $payment = $this->payment();
         $payload = $this->ipn($payment, 'sale_complete');
         unset($payload['hmac_compute']);
         $payload['api_key_sha256'] = hash('sha256', self::API_KEY);
         $payload['api_secret_sha256'] = hash('sha256', self::API_SECRET);
 
-        $this->send($payload)->assertOk();
-        $this->assertSame(PaymentStatus::COMPLETE, $payment->fresh()->status);
-    }
-
-    public function test_une_empreinte_de_secret_erronee_est_rejetee(): void
-    {
-        $payment = $this->payment();
-        $payload = $this->ipn($payment, 'sale_complete');
-        unset($payload['hmac_compute']);
-        $payload['api_key_sha256'] = hash('sha256', self::API_KEY);
-        $payload['api_secret_sha256'] = hash('sha256', 'mauvais_secret');
-
         $this->send($payload)->assertStatus(401);
+        $this->assertNotSame(PaymentStatus::COMPLETE, $payment->fresh()->status);
     }
 
     /**

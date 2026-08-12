@@ -398,6 +398,7 @@ présentation à distance sont dans [`scripts/README.md`](scripts/README.md).
 - [x] Rate limiting sur les endpoints sensibles (auth, paiement).
 - [x] Politique de confidentialité techniquement reflétée (durée de conservation par type de donnée, anonymisation/suppression sur demande).
 - [x] Revue de sécurité : aucun endpoint ne renvoie de données hors du périmètre autorisé du rôle appelant.
+- [x] **Revue de sécurité complète (2026-08-12)** : audit statique + actif (PoC réelles) du backend et du frontend. 2 failles confirmées et corrigées le jour même — injection HTML dans l'e-mail du formulaire de contact (`branded.blade.php`, échappement rétabli) et rejeu du webhook PayTech via un repli par empreintes SHA-256 constantes (`PaytechWebhookVerifier`, repli supprimé, seul le HMAC lié au contenu fait foi). 3 points de défense en profondeur ajoutés : compteur d'essais dédié sur le code 2FA (`VerificationService::MAX_ATTEMPTS`), en-têtes CSP côté SSR frontend (`server.ts`), réassainissement au point d'écriture DOM de l'éditeur de texte riche. Détail dans `app/Support/Payments/README.md` et `app/Modules/Core/README.md`.
 
 ### Phase B16 — Notifications et communication
 

@@ -33,6 +33,13 @@ class VerificationService
     /** Durée de validité d'un code, en minutes. */
     public const TTL_MINUTES = 15;
 
+    // Revue de sécurité (2026-08) : le throttle IP (10/min sur la route) ne
+    // borne pas un attaquant distribué sur plusieurs IP — il resterait libre
+    // de deviner un code sur 10⁶ combinaisons pendant toute sa durée de vie.
+    // Au-delà de ce nombre d'essais ratés, le code est invalidé, quelle que
+    // soit l'IP d'origine des tentatives.
+    public const MAX_ATTEMPTS = 5;
+
     /**
      * Génère un nouveau code, l'enregistre (haché) et l'envoie à l'utilisateur.
      *
@@ -80,13 +87,25 @@ class VerificationService
             ->latest()
             ->first();
 
-        if (! $record || ! Hash::check($code, $record->code_hash)) {
+        if (! $record) {
             return false;
         }
 
-        // Usage unique : on marque le code comme consommé.
-        $record->update(['consumed_at' => now()]);
+        if (Hash::check($code, $record->code_hash)) {
+            // Usage unique : on marque le code comme consommé.
+            $record->update(['consumed_at' => now()]);
 
-        return true;
+            return true;
+        }
+
+        // Essai raté : au-delà du seuil, le code est invalidé (consommé sans
+        // avoir été deviné) — un nouveau code devra être demandé.
+        $record->increment('failed_attempts');
+
+        if ($record->failed_attempts >= self::MAX_ATTEMPTS) {
+            $record->update(['consumed_at' => now()]);
+        }
+
+        return false;
     }
 }

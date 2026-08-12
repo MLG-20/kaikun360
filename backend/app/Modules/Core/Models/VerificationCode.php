@@ -22,6 +22,7 @@ class VerificationCode extends Model
         'purpose',
         'channel',
         'code_hash',
+        'failed_attempts',
         'expires_at',
         'consumed_at',
     ];

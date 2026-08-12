@@ -141,8 +141,22 @@ Tests : `tests/Feature/Payment/PartialPaymentTest.php` (10 cas).
 ## B14.3 — Webhook (sécurité)
 
 **`POST /api/v1/payments/webhook`** (public, signé). `PaytechWebhookVerifier`
-recalcule le HMAC-SHA256 du **corps brut** avec la Signing Key et compare en
-temps constant (`hash_equals`). Ordre strict dans `PaymentWebhookController` :
+recalcule le HMAC-SHA256 du champ `hmac_compute` — message
+`{final_item_price}|{ref_command}|{api_key}`, clé `api_secret` — et compare en
+temps constant (`hash_equals`). C'est la **seule** preuve d'authenticité
+acceptée : elle est liée au CONTENU (montant + référence), contrairement aux
+empreintes `api_key_sha256`/`api_secret_sha256` que PayTech envoie aussi.
+
+> ⚠️ **Revue de sécurité (2026-08-12)** : une version antérieure acceptait ces
+> empreintes en repli quand `hmac_compute` manquait. Ce sont des valeurs
+> **constantes** d'une notification à l'autre — une seule notification
+> authentique captée quelque part (log, outil de monitoring) suffisait à
+> forger indéfiniment de fausses confirmations de paiement, sans jamais
+> connaître l'`API_SECRET`. PoC réalisée en local : un paiement `en_attente`
+> basculé en `complete` avec les seules empreintes. Le repli est supprimé —
+> une notification sans `hmac_compute` valide est rejetée, point.
+
+Ordre strict dans `PaymentWebhookController` :
 
 1. **signature d'abord** — invalide/absente → **401**, aucun effet ;
 2. transaction retrouvée par `provider_reference`/`reference` (sinon 404) ;

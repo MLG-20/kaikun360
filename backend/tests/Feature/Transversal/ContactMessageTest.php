@@ -284,6 +284,31 @@ class ContactMessageTest extends TestCase
         NotificationFacade::assertNotSentTo($simple, NewContactMessageNotification::class);
     }
 
+    /**
+     * Revue de sécurité (2026-08) : le message d'un visiteur anonyme finissait
+     * en clair, non échappé (`{!! !!}`), dans l'e-mail HTML reçu par l'équipe —
+     * une injection HTML/XSS confirmée par PoC. `note()` ne doit plus jamais
+     * rendre autre chose que du texte échappé.
+     */
+    public function test_le_html_du_visiteur_est_echappe_dans_l_alerte_email(): void
+    {
+        $message = new ContactMessage([
+            'name' => 'Awa Diop',
+            'email' => 'awa@example.com',
+            'subject' => 'Villa à Saly',
+            'message' => '<img src=x onerror=alert(1)><a href="http://evil.example">cliquez ici</a>',
+        ]);
+        $message->created_at = now();
+
+        $notification = new NewContactMessageNotification($message);
+        $mailMessage = $notification->toMail(User::factory()->make());
+
+        $html = view('emails.branded', $mailMessage->viewData)->render();
+
+        $this->assertStringNotContainsString('<img src=x onerror=alert(1)>', $html);
+        $this->assertStringContainsString('&lt;img src=x onerror=alert(1)&gt;', $html);
+    }
+
     public function test_le_compteur_des_messages_a_traiter_ignore_le_filtre(): void
     {
         ContactMessage::create([

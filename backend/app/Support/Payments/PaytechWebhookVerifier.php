@@ -4,7 +4,7 @@ namespace App\Support\Payments;
 
 /**
  * Vérification de l'authenticité des notifications PayTech (IPN) — B14.3,
- * réécrite en F8.5.
+ * réécrite en F8.5, repli rejouable retiré en F14 (revue de sécurité).
  *
  * ⚠️ **La version précédente ne pouvait rien valider.** Elle recalculait un
  * HMAC-SHA256 du corps brut avec une « signing key », comparé à un en-tête
@@ -13,21 +13,25 @@ namespace App\Support\Payments;
  * Toute notification réelle aurait été rejetée en 401.
  *
  * **Le contrat réel**, tel que documenté (docs.intech.sn) : PayTech poste un
- * formulaire contenant, entre autres champs, trois preuves d'authenticité.
+ * formulaire contenant `hmac_compute`, un HMAC-SHA256 du message
+ * `{final_item_price}|{ref_command}|{api_key}` avec l'`api_secret` pour clé —
+ * la SEULE preuve retenue ici.
  *
- *  1. `hmac_compute` (recommandé) — HMAC-SHA256 du message
- *     `{final_item_price}|{ref_command}|{api_key}`, avec l'`api_secret` pour clé ;
- *  2. `api_key_sha256` / `api_secret_sha256` — simples empreintes SHA-256 des
- *     deux clés, à comparer aux nôtres.
+ * ⚠️ **PayTech expose aussi `api_key_sha256` / `api_secret_sha256`**, deux
+ * simples empreintes SHA-256 des clés. Une version antérieure les acceptait en
+ * repli quand `hmac_compute` manquait. Ces empreintes sont **constantes**
+ * d'une notification à l'autre — elles ne prouvent que la connaissance des
+ * clés, pas l'authenticité du CONTENU (montant + référence) — donc rejouables
+ * indéfiniment dès qu'une seule notification authentique a été captée
+ * (log, outil de monitoring qui journalise le corps brut, etc.). Preuve de
+ * concept réalisée en revue de sécurité : un paiement `en_attente` a pu être
+ * basculé en `complete` avec les seules empreintes, sans jamais connaître
+ * l'`API_SECRET`. Le repli est donc supprimé : une notification sans
+ * `hmac_compute` valide est rejetée, jamais acceptée sur la seule foi des
+ * empreintes.
  *
- * On accepte les deux, **mais dans cet ordre** : le HMAC lie la preuve au
- * CONTENU de la notification (montant + référence), alors que les empreintes ne
- * prouvent que la connaissance des clés — un rejeu d'une ancienne notification
- * les satisferait. Le repli n'existe que parce que le HMAC peut manquer sur
- * certains événements ; il n'est jamais préférable.
- *
- * Toutes les comparaisons passent par `hash_equals` (temps constant) : comparer
- * deux signatures avec `===` laisse fuir, par le temps de réponse, le nombre de
+ * La comparaison passe par `hash_equals` (temps constant) : comparer deux
+ * signatures avec `===` laisse fuir, par le temps de réponse, le nombre de
  * caractères devinés.
  */
 class PaytechWebhookVerifier
@@ -51,15 +55,11 @@ class PaytechWebhookVerifier
             return false;
         }
 
-        if ($this->verifyHmac($payload)) {
-            return true;
-        }
-
-        return $this->verifyDigests($payload);
+        return $this->verifyHmac($payload);
     }
 
     /**
-     * Méthode 1 — HMAC-SHA256 lié au contenu (recommandée par PayTech).
+     * HMAC-SHA256 lié au contenu (seule preuve d'authenticité retenue).
      *
      * @param  array<string, mixed>  $payload
      */
@@ -81,26 +81,5 @@ class PaytechWebhookVerifier
         $expected = hash_hmac('sha256', $message, (string) $this->apiSecret);
 
         return hash_equals($expected, $received);
-    }
-
-    /**
-     * Méthode 2 — empreintes SHA-256 des deux clés.
-     *
-     * Repli uniquement : ces empreintes sont identiques d'une notification à
-     * l'autre, donc rejouables. Les DEUX doivent correspondre.
-     *
-     * @param  array<string, mixed>  $payload
-     */
-    private function verifyDigests(array $payload): bool
-    {
-        $keyDigest = $payload['api_key_sha256'] ?? null;
-        $secretDigest = $payload['api_secret_sha256'] ?? null;
-
-        if (! is_string($keyDigest) || ! is_string($secretDigest)) {
-            return false;
-        }
-
-        return hash_equals(hash('sha256', (string) $this->apiKey), $keyDigest)
-            && hash_equals(hash('sha256', (string) $this->apiSecret), $secretDigest);
     }
 }

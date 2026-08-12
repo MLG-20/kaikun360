@@ -132,6 +132,30 @@ class VerificationTest extends TestCase
         $res->assertStatus(422);
     }
 
+    /**
+     * Revue de sécurité (2026-08) : seul le throttle IP de la route (10/min)
+     * bornait le nombre d'essais sur un code — insuffisant contre un
+     * attaquant distribuant ses tentatives sur plusieurs IP. Au-delà de
+     * `VerificationService::MAX_ATTEMPTS` essais ratés, le BON code lui-même
+     * ne doit plus être accepté : il faut en redemander un.
+     */
+    public function test_le_code_est_invalide_apres_trop_d_essais_rates(): void
+    {
+        [$token, , $code] = $this->inscrireEtCapturerCode();
+        $headers = ['Authorization' => "Bearer {$token}"];
+
+        for ($i = 0; $i < \App\Modules\Core\Services\VerificationService::MAX_ATTEMPTS; $i++) {
+            $this->withHeaders($headers)
+                ->postJson('/api/v1/auth/verify', ['channel' => 'email', 'code' => '000000'])
+                ->assertStatus(422);
+        }
+
+        $res = $this->withHeaders($headers)
+            ->postJson('/api/v1/auth/verify', ['channel' => 'email', 'code' => $code]);
+
+        $res->assertStatus(422);
+    }
+
     public function test_la_verification_exige_d_etre_authentifie(): void
     {
         $this->postJson('/api/v1/auth/verify', ['channel' => 'email', 'code' => '123456'])
