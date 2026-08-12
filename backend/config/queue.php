@@ -68,7 +68,12 @@ return [
             'driver' => 'redis',
             'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
+            // Doit rester nettement au-dessus de `mail.mailers.smtp.timeout`
+            // (30 s) : sinon un envoi SMTP normal mais lent fait croire à
+            // Redis que le job est perdu, qui le rejoue — le destinataire
+            // reçoit alors deux fois le même e-mail alors que le premier est
+            // déjà parti.
+            'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 120),
             'block_for' => null,
             'after_commit' => false,
         ],

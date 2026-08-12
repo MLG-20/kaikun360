@@ -45,7 +45,13 @@ return [
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            // Sans plafond, un SMTP distant qui traîne (Gmail, réseau) peut
+            // dépasser `queue.connections.redis.retry_after` : le job est alors
+            // considéré perdu et rejoué, alors que le mail est déjà parti — le
+            // destinataire le reçoit une seconde fois. Le timeout doit rester
+            // nettement sous `retry_after` (120 s) pour échouer proprement au
+            // lieu de laisser la file dupliquer l'envoi.
+            'timeout' => (int) env('MAIL_TIMEOUT', 30),
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
