@@ -1,5 +1,22 @@
-<!-- Bandeau de titre : fil d'Ariane + titre + informations clés. -->
-<header class="uni-detail-hero">
+<!-- Bandeau de titre : fil d'Ariane + titre + informations clés, posés sur la
+     photo principale de l'annonce (F13.6). -->
+<header class="uni-detail-hero" [class.uni-detail-hero--illustre]="photoPrincipale()">
+  @if (photoPrincipale(); as photo) {
+    <!-- ⚠️ Une vraie balise <img>, et non un `background-image` : le navigateur
+         découvre un fond CSS très tard (il lui faut la feuille de style, puis le
+         calcul de style), or c'est ici le plus grand élément peint de la page.
+         En balise, il est trouvé dès la lecture du HTML et peut être priorisé.
+         `aria-hidden` : l'image ne porte aucune information que le titre juste
+         à côté ne dise déjà, et la galerie plus bas la présente correctement. -->
+    <img
+      class="uni-detail-hero-photo"
+      [src]="photo"
+      alt=""
+      aria-hidden="true"
+      fetchpriority="high" />
+    <span class="uni-detail-hero-voile" aria-hidden="true"></span>
+  }
+
   <div class="k-wrap uni-detail-hero-inner">
     <nav class="uni-detail-crumbs">
       <ng-content select="[crumbs]" />

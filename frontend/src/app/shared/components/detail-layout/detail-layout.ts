@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
 import { GalleryComponent } from '../gallery/gallery';
 
@@ -40,4 +40,18 @@ export class DetailLayoutComponent {
 
   /** Texte alternatif des photos (par défaut : le titre). */
   readonly galleryAlt = input<string>('');
+
+  /**
+   * Photo de couverture du bandeau : la **première** de la liste (F13.6).
+   *
+   * ⚠️ « La première » n'est pas un choix arbitraire : côté serveur, la relation
+   * `media` est triée principale d'abord, et c'est déjà cette même image que le
+   * catalogue affiche en couverture (`photo_url`). Le bandeau de la fiche montre
+   * donc exactement la photo sur laquelle le visiteur a cliqué — sans quoi il
+   * douterait un instant d'être arrivé sur la bonne annonce.
+   *
+   * Vaut `null` quand l'annonce n'a aucune photo : le bandeau retombe alors sur
+   * son dégradé de marque, et rien ne se casse.
+   */
+  readonly photoPrincipale = computed<string | null>(() => this.images()[0] ?? null);
 }

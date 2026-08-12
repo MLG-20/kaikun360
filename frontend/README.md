@@ -1868,6 +1868,50 @@ Ce qu'il faut retenir hors de ce dossier :
   `1fr` (qui vaut `minmax(auto, 1fr)`, donc un plancher à min-content) : dans
   une grille dont les pistes doivent rester égales, écrire `minmax(0, 1fr)`.
 
+### La vitrine tournante de l'accueil (F13.5)
+
+La section « Sélection du moment » passe les **cinq univers** en revue toutes les
+7 secondes. Trois règles à ne pas défaire :
+
+- **Un cache par univers + préchargement du suivant.** Une vitrine qui tourne
+  indéfiniment rappellerait l'API tant que l'onglet reste ouvert, et chaque
+  bascule montrerait un chargement. C'est ce cache qui fait la fluidité.
+- **Le signal `universCourant` est posé AVANT l'affichage.** `montrer()` vérifie
+  au retour de la requête que l'univers demandé est toujours celui qu'on
+  regarde ; dans l'autre ordre, cette garde échoue à tous les coups et la
+  vitrine reste bloquée sur le premier univers.
+- **Le minuteur est réservé au navigateur** et arrêté dans `ngOnDestroy`.
+
+⚠️ **Deux pièges de mise en pause, tous deux vécus.** (1) La pause au survol
+posée sur toute la section gelait le tour dès que la souris traînait dans la
+hauteur réservée à la grille : elle ne porte que sur les **pastilles et les
+cartes**. (2) Suspendre sur tout `focusin` figeait la vitrine **pour de bon**
+après un simple clic — un clic laisse le bouton focalisé, et `focusout` peut ne
+jamais venir. Seul le focus **clavier** compte (`:focus-visible`), et un
+garde-fou repart après une minute de pause.
+
+⚠️ **Règle CSS générale, rencontrée deux fois le même jour** : `.x:hover` compte
+**une classe de plus** que `.x--active` et l'emporte donc **quel que soit l'ordre
+d'écriture**. Sans règle `.x--active:hover` explicite, l'état actif se délave au
+survol — sur le moteur de recherche, le libellé blanc tombait à 1,14:1 de
+contraste. Le cas s'est reproduit à l'identique sur les pastilles de la vitrine.
+
+### Le bandeau illustré des fiches (F13.6)
+
+`app-detail-layout` pose la **photo principale** de l'annonce en fond du bandeau
+de titre — donc pour les cinq univers d'un coup. Sans photo, le dégradé de marque
+d'origine reste.
+
+⚠️ **Une balise `<img>`, jamais un `background-image`** : un fond CSS n'est
+découvert qu'après la feuille de style et le calcul de style, or c'est le plus
+grand élément peint de ces pages.
+
+⚠️ **Les opacités du voile sont mesurées, pas choisies** : n'importe quel
+prestataire dépose n'importe quelle image, le contraste doit tenir sur une photo
+**blanche**. 0,70 en haut (fil d'Ariane à 4,53:1) → 0,88 en bas (titre à
+12,34:1). Une première version à 0,45 donnait 2,32:1 au fil d'Ariane, qui est
+justement l'élément le plus haut du bandeau.
+
 ### Commandes utiles
 
 ```bash
