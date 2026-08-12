@@ -34,16 +34,48 @@
   border: 1px solid transparent;
   border-radius: var(--k-radius-pill);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  /* Assez lente pour qu'on voie le fondu en passant d'un onglet à l'autre,
+     assez courte pour que le clic reste sec. */
+  transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease,
+    transform 0.22s ease;
 }
 
+/* Survol d'un onglet NON choisi : le fond se teinte de bleu, le texte reste
+   en encre — c'est le seul cas où `--k-brand-050` est lisible. */
 .search-tab:hover {
   background: var(--k-brand-050);
+  border-color: var(--k-brand-050);
+  transform: translateY(-1px);
 }
 
 .search-tab--active {
   color: var(--k-white);
   background: var(--k-brand);
+}
+
+/* ⚠️ Cette règle est INDISPENSABLE, et son ordre ne suffit pas à l'expliquer :
+   `.search-tab:hover` vaut une classe DE PLUS que `.search-tab--active` (classe
+   + pseudo-classe), il l'emportait donc quel que soit l'ordre d'écriture. Au
+   survol de l'onglet choisi, le fond repassait au bleu très pâle pendant que le
+   texte restait blanc — d'où un libellé délavé, presque illisible, sur le seul
+   onglet qu'on regarde. L'onglet actif GARDE son bleu ; il fonce à peine, juste
+   assez pour répondre au geste. */
+.search-tab--active:hover {
+  color: var(--k-white);
+  background: var(--k-brand-600);
+  border-color: var(--k-brand-600);
+}
+
+/* Le déplacement est un agrément : qui demande moins de mouvement garde la
+   couleur et perd le décollement. */
+@media (prefers-reduced-motion: reduce) {
+  .search-tab {
+    transition: background 0.22s ease, color 0.22s ease;
+  }
+
+  .search-tab:hover {
+    transform: none;
+  }
 }
 
 /* --- Champs --- */
