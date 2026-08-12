@@ -156,23 +156,68 @@
      Données RÉELLES chargées depuis l'API (CatalogService). Se replie
      proprement si l'API est indisponible.
      ========================================================================= -->
-<section id="catalogue" class="featured k-wrap" aria-labelledby="featured-title">
+<!-- La vitrine passe les cinq univers en revue (F13.5).
+     ⚠️ La pause au survol est posée sur les PASTILLES et les CARTES, jamais sur
+     la section : celle-ci réserve deux rangées de hauteur, si bien qu'une souris
+     laissée n'importe où dans ce grand vide gelait le tour sans que rien ne
+     l'explique à l'écran. On ne suspend que ce qu'on est réellement en train de
+     lire. Le focus clavier, lui, se surveille au niveau de la section. -->
+<section
+  id="catalogue"
+  class="featured k-wrap"
+  aria-labelledby="featured-title"
+  (focusin)="focusEntrant($event)"
+  (focusout)="focusSortant()">
   <header class="section-head-row" appReveal>
     <div>
       <span class="k-eyebrow">Sélection du moment</span>
-      <h2 id="featured-title">Des biens vérifiés, prêts à visiter</h2>
+      <h2 id="featured-title">{{ universTitres[universCourant()] }}</h2>
     </div>
-    <a class="k-btn k-btn--ghost" [routerLink]="['/recherche']" [queryParams]="{ univers: 'immobilier' }">
+    <a
+      class="k-btn k-btn--ghost"
+      [routerLink]="['/recherche']"
+      [queryParams]="{ univers: universCourant() }">
       Voir tout le catalogue
     </a>
   </header>
 
+  <!-- Pastilles : elles disent ce qui défile, et permettent d'aller droit à un
+       univers sans attendre son tour. `aria-live` est volontairement ABSENT —
+       une annonce toutes les sept secondes rendrait la page inutilisable au
+       lecteur d'écran ; les pastilles restent des boutons qu'on actionne. -->
+  <div
+    class="featured-tabs"
+    role="group"
+    aria-label="Univers en vitrine"
+    (mouseenter)="suspendre()"
+    (mouseleave)="reprendre()">
+    @for (u of universKeys; track u) {
+      <button
+        type="button"
+        class="featured-tab"
+        [class.featured-tab--active]="universCourant() === u"
+        [attr.aria-pressed]="universCourant() === u"
+        (click)="choisirUnivers(u)">
+        {{ libelle(u) }}
+      </button>
+    }
+  </div>
+
   @switch (featuredState()) {
     @case ('ready') {
       @if (featured().length) {
+        <!-- ⚠️ La boucle porte sur UN seul élément — l'univers courant — et ce
+             n'est pas une bizarrerie : `track` sur sa clé fait recréer la grille
+             à chaque bascule. C'est cette recréation qui rejoue la cascade
+             d'apparition (`appReveal="group"`), donc le fondu d'un univers à
+             l'autre. Une grille simplement remplie de nouvelles cartes
+             changerait de contenu d'un coup, sans transition. -->
+        @for (courant of [universCourant()]; track courant) {
         <div class="featured-grid" appReveal="group">
           @for (card of featured(); track card.id) {
             <app-listing-card
+              (mouseenter)="suspendre()"
+              (mouseleave)="reprendre()"
               [title]="card.title"
               [location]="card.location"
               [price]="card.price"
@@ -186,14 +231,16 @@
               (favoriteToggle)="favorites.toggle(card.favoritable)" />
           }
         </div>
+        }
       } @else {
         <p class="featured-msg k-muted">Le catalogue s’enrichit — revenez très vite.</p>
       }
     }
     @case ('loading') {
-      <!-- Squelettes de chargement (placeholders animés). -->
+      <!-- Squelettes de chargement (placeholders animés) : autant que de cartes
+           attendues, pour que la grille ne saute pas au moment du remplissage. -->
       <div class="featured-grid">
-        @for (i of [1, 2, 3]; track i) {
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
           <div class="featured-skeleton k-card" aria-hidden="true"></div>
         }
       </div>
@@ -201,7 +248,9 @@
     @case ('failed') {
       <p class="featured-msg k-muted">
         Impossible de charger la sélection pour l’instant.
-        <a [routerLink]="['/recherche']" [queryParams]="{ univers: 'immobilier' }">Ouvrir le catalogue</a>.
+        <a [routerLink]="['/recherche']" [queryParams]="{ univers: universCourant() }">
+          Ouvrir le catalogue
+        </a>.
       </p>
     }
   }

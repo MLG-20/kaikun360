@@ -234,12 +234,29 @@
 
 // --- Section 3 : Protocole de confiance (navy) -----------------------------
 .protocol {
-  margin-top: 64px;
+  /* Bande décollée des bords et arrondie : elle se lit comme une grande carte
+     posée sur le crème, dans la continuité des surfaces arrondies du reste du
+     site (F11.1), au lieu d'un bandeau qui coupe la page d'un trait. */
+  margin: 64px 24px 0;
   padding: 68px 24px;
   background:
     radial-gradient(700px 340px at 15% 0%, var(--k-navy-2), transparent 65%),
     var(--k-navy);
   color: #fff;
+  border-radius: var(--k-radius-lg);
+  /* Le dégradé radial est ancré en haut à gauche : sans cette coupe, il
+     déborderait des angles qu'on vient d'arrondir. */
+  overflow: hidden;
+}
+
+@media (max-width: 620px) {
+  .protocol {
+    /* Sur petit écran, une marge large mangerait la largeur utile ; l'arrondi
+       reste, l'écart se resserre. */
+    margin-inline: 12px;
+    padding: 52px 20px;
+    border-radius: var(--k-radius);
+  }
 }
 
 .protocol-head {
@@ -340,10 +357,78 @@
   margin-top: 8px;
 }
 
+/* --- Vitrine tournante (F13.5) : pastilles d'univers ---------------------- */
+
+.featured-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.featured-tab {
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--k-ink);
+  background: var(--k-white);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-pill);
+  cursor: pointer;
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.22s ease;
+}
+
+.featured-tab:hover {
+  border-color: var(--k-brand);
+  transform: translateY(-1px);
+}
+
+.featured-tab--active {
+  color: var(--k-white);
+  background: var(--k-brand);
+  border-color: var(--k-brand);
+}
+
+/* ⚠️ Même piège que sur le moteur de recherche : `.featured-tab:hover` compte
+   une classe DE PLUS que `.featured-tab--active`, il l'emporte donc quel que
+   soit l'ordre d'écriture. Sans cette règle, survoler la pastille active lui
+   rendrait un fond blanc sous un texte blanc. */
+.featured-tab--active:hover {
+  color: var(--k-white);
+  background: var(--k-brand-600);
+  border-color: var(--k-brand-600);
+}
+
 .featured-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  /* ⚠️ Deux rangées réservées d'avance. Les univers n'ont pas tous six annonces
+     (la mobilité en a trois) : sans ce plancher, la page se replierait puis se
+     redéploierait à chaque bascule, et tout ce qui suit la vitrine sauterait
+     sous les yeux du visiteur. */
+  min-height: 620px;
+  align-content: start;
+}
+
+@media (max-width: 900px) {
+  .featured-grid {
+    min-height: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featured-tab {
+    transition: background 0.22s ease, color 0.22s ease;
+  }
+
+  .featured-tab:hover {
+    transform: none;
+  }
 }
 
 .featured-msg {
@@ -641,11 +726,23 @@
 }
 
 // --- Section 8 : Statistiques ----------------------------------------------
+/* Même traitement que le protocole de confiance : une bande décollée des bords
+   et arrondie. Les deux surfaces navy de la page se répondent ainsi, au lieu que
+   l'une soit une carte et l'autre un trait en travers de l'écran. */
 .stats {
-  margin-top: 56px;
+  margin: 56px 24px 0;
   padding: 48px 24px;
   background: var(--k-navy);
   color: #fff;
+  border-radius: var(--k-radius-lg);
+}
+
+@media (max-width: 620px) {
+  .stats {
+    margin-inline: 12px;
+    padding: 40px 20px;
+    border-radius: var(--k-radius);
+  }
 }
 
 .stats-grid {
