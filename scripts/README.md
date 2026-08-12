@@ -41,10 +41,25 @@ propre au portable de développement.
 
 ### Ce qu'il faut savoir avant de présenter
 
-- **L'avertissement ngrok** : au premier accès, le forfait gratuit affiche une
-  page « You are about to visit… ». Un clic sur *Visit Site* et on n'en reparle
-  plus. Ouvrir le lien soi-même avant la réunion évite de le découvrir devant
-  le client.
+- **L'avertissement ngrok, et le piège des photos.** Au premier accès, le
+  forfait gratuit affiche une page « You are about to visit… ». Un clic sur
+  *Visit Site* et on n'en reparle plus. Ouvrir le lien soi-même avant la
+  réunion évite de le découvrir devant le client.
+
+  ⚠️ **Cet avertissement est levé par un cookie, et un cookie vaut pour UN
+  domaine.** D'où la règle : **ouvrir l'adresse publique, pas
+  `localhost:4200`**. Regarder le site en local pendant que ses photos viennent
+  du domaine ngrok donne un site **entièrement sans images** — le navigateur
+  n'ayant jamais accepté l'avertissement sur ce domaine, chaque `<img>` reçoit
+  la page d'avertissement à la place du JPEG. Le symptôme est trompeur : aucune
+  erreur nulle part, et `curl` télécharge parfaitement l'image (ngrok ne
+  déclenche l'avertissement que pour les navigateurs).
+
+- **Un seul ngrok à la fois.** Le forfait gratuit n'autorise qu'une session
+  d'agent. Si un tunnel tourne déjà (vers l'API, vers un autre projet), celui du
+  script ne démarrera pas : il le détecte, vérifie **quel port** le tunnel
+  existant dessert, le réutilise s'il s'agit bien du site, et **refuse de
+  continuer sinon** plutôt que d'emprunter une adresse qui mène ailleurs.
 - **L'adresse change à chaque lancement**, sauf avec `--domaine` (un domaine
   fixe est offert avec un compte ngrok : le réserver rend le lien stable d'une
   démonstration à l'autre).

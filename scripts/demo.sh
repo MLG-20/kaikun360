@@ -149,25 +149,70 @@ trap nettoyage INT TERM EXIT
 # =============================================================================
 case "$mode" in
   public)
-    info "${C_GRIS}Ouverture du tunnel ngrok…${C_RAZ}"
-    # --host-header=rewrite : ngrok présente au serveur Angular un en-tête Host
-    # « localhost:4200 ». Sans cela, le serveur de développement refuse la
-    # requête (« Blocked request »), car il n'autorise que localhost.
-    if [ -n "$domaine_ngrok" ]; then
-      ngrok http "$PORT_WEB" --host-header=rewrite --domain="$domaine_ngrok" --log=stdout >/tmp/kaikun360-ngrok.log 2>&1 &
-    else
-      ngrok http "$PORT_WEB" --host-header=rewrite --log=stdout >/tmp/kaikun360-ngrok.log 2>&1 &
-    fi
+    # ⚠️ On cherche le tunnel qui dessert LE PORT DU SITE, jamais « la première
+    # adresse publiée ».
+    #
+    # Le forfait gratuit n'autorise qu'une session d'agent : si un ngrok tourne
+    # déjà (vers l'API, vers un autre projet…), celui du script ne démarre pas —
+    # et prendre l'adresse de l'autre a produit exactement le défaut qu'on
+    # cherchait à éviter. Le site se servait alors depuis localhost pendant que
+    # ses photos venaient du domaine ngrok : le navigateur n'ayant jamais
+    # accepté l'avertissement de ngrok SUR CE DOMAINE, chaque image recevait la
+    # page d'avertissement à la place du JPEG. Un site entier sans photos, sans
+    # la moindre erreur nulle part.
+    #
+    # ⚠️ Le `|| true` final n'est pas décoratif. Ce script tourne sous
+    # `set -e -o pipefail` : tant que le tunnel n'écoute pas, `curl` échoue,
+    # `pipefail` propage cet échec au tuyau, et l'affectation
+    # `url_publique="$(tunnel_du_site)"` sort alors du script — la boucle
+    # d'attente de 40 essais n'en faisait jamais qu'un, et le script s'arrêtait
+    # sans un mot juste après avoir lancé ngrok. Ici l'échec est l'état NORMAL
+    # des premières secondes : il doit rendre une chaîne vide, pas un code
+    # d'erreur.
+    tunnel_du_site() {
+      curl -s "http://127.0.0.1:$PORT_NGROK/api/tunnels" 2>/dev/null | PORT="$PORT_WEB" php -r '
+        $j = json_decode(stream_get_contents(STDIN), true);
+        foreach ($j["tunnels"] ?? [] as $t) {
+          $vise_le_site = str_contains($t["config"]["addr"] ?? "", ":" . getenv("PORT"));
+          if ($vise_le_site && str_starts_with($t["public_url"] ?? "", "https")) {
+            echo $t["public_url"];
+            return;
+          }
+        }
+      ' 2>/dev/null || true
+    }
 
-    url_publique=""
-    for _ in $(seq 1 40); do
-      url_publique="$(curl -s "http://127.0.0.1:$PORT_NGROK/api/tunnels" 2>/dev/null \
-        | sed -n 's/.*"public_url":"\(https:[^"]*\)".*/\1/p' | head -1)"
-      [ -n "$url_publique" ] && break
-      sleep 0.5
-    done
-    [ -n "$url_publique" ] || echec "ngrok n'a pas publié d'adresse. Détail : /tmp/kaikun360-ngrok.log"
-    ok "Adresse publique : $url_publique"
+    if curl -sf -o /dev/null "http://127.0.0.1:$PORT_NGROK/api/tunnels" 2>/dev/null; then
+      # Un agent tourne déjà : soit il expose le site (on le réutilise), soit il
+      # expose autre chose et il faut le fermer — le forfait gratuit ne permet
+      # pas d'en ouvrir un second.
+      url_publique="$(tunnel_du_site)"
+      [ -n "$url_publique" ] || echec "Un ngrok tourne déjà, mais il n'expose PAS le port $PORT_WEB (celui du site).
+   Le forfait gratuit n'autorise qu'une session : fermez-le d'abord (pkill ngrok),
+   puis relancez. Laisser les deux donnerait un site dont toutes les PHOTOS
+   seraient cassées — elles viendraient d'un domaine que le navigateur n'a pas
+   encore accepté."
+      ok "Tunnel ngrok déjà ouvert sur le site, réutilisé : $url_publique"
+    else
+      info "${C_GRIS}Ouverture du tunnel ngrok…${C_RAZ}"
+      # --host-header=rewrite : ngrok présente au serveur Angular un en-tête Host
+      # « localhost:4200 ». Sans cela, le serveur de développement refuse la
+      # requête (« Blocked request »), car il n'autorise que localhost.
+      if [ -n "$domaine_ngrok" ]; then
+        ngrok http "$PORT_WEB" --host-header=rewrite --domain="$domaine_ngrok" --log=stdout >/tmp/kaikun360-ngrok.log 2>&1 &
+      else
+        ngrok http "$PORT_WEB" --host-header=rewrite --log=stdout >/tmp/kaikun360-ngrok.log 2>&1 &
+      fi
+
+      url_publique=""
+      for _ in $(seq 1 40); do
+        url_publique="$(tunnel_du_site)"
+        [ -n "$url_publique" ] && break
+        sleep 0.5
+      done
+      [ -n "$url_publique" ] || echec "ngrok n'a pas publié d'adresse pour le port $PORT_WEB. Détail : /tmp/kaikun360-ngrok.log"
+      ok "Adresse publique : $url_publique"
+    fi
     ;;
   lan)
     ip_locale="$(hostname -I 2>/dev/null | awk '{print $1}')"
@@ -249,7 +294,8 @@ ${C_TITRE}═══════════════════════�
 
   Back-office : $url_publique/back-office
 $( [ "$mode" = "public" ] && printf '  Trafic en direct : http://localhost:%s\n' "$PORT_NGROK" )
-$( [ "$mode" = "public" ] && printf '  %sAu premier accès, ngrok affiche un avertissement : cliquer\n  sur « Visit Site ». La connexion Google, elle, ne fonctionne\n  que sur les domaines déclarés chez Google — pas sur ngrok.%s\n' "$C_GRIS" "$C_RAZ" )
+$( [ "$mode" = "public" ] && printf '\n  %s⚠️ Ouvrez CETTE adresse, pas localhost:%s : les photos sont\n  servies par le même domaine, et le navigateur ne les affichera\n  qu'"'"'après avoir accepté l'"'"'avertissement de ngrok.%s\n' "$C_ERR" "$PORT_WEB" "$C_RAZ" )
+$( [ "$mode" = "public" ] && printf '  %sAu premier accès, ngrok affiche donc un avertissement : cliquer\n  sur « Visit Site » une fois, et tout le site suit. La connexion\n  Google, elle, ne marche que sur les domaines déclarés chez\n  Google — pas sur ngrok.%s\n' "$C_GRIS" "$C_RAZ" )
 
   Ctrl+C pour tout arrêter.
 ${C_TITRE}═══════════════════════════════════════════════════════════${C_RAZ}
