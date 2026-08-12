@@ -12,6 +12,17 @@
 Le script démarre **l'API Laravel**, **le site Angular** et **l'ouverture
 publique ngrok**, puis affiche l'adresse à partager. `Ctrl+C` arrête les trois.
 
+Si `Ctrl+C` n'est pas possible — script lancé en arrière-plan, terminal fermé
+entre-temps — tout s'arrête avec :
+
+```bash
+pkill -f "[d]emo.sh"; pkill -f "[a]rtisan serve"; pkill -f "[n]g serve"; pkill -f "[n]grok http"
+```
+
+⚠️ **Les crochets ne sont pas une coquetterie** : `pkill -f` compare le motif à
+*toutes* les lignes de commande, y compris celle qui le lance. Écrit sans eux, le
+`pkill` se tue lui-même — et le terminal avec, s'il s'y trouve.
+
 Prévu pour une **présentation client** : brancher, ouvrir le lien sur le
 téléphone de la personne en face, montrer. Aucun déploiement, aucun serveur à
 louer, et rien à remettre en place après.

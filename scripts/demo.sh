@@ -8,6 +8,10 @@
 #   ./scripts/demo.sh --lan        → sur le réseau local (téléphone, même wifi)
 #   ./scripts/demo.sh --domaine mon-site.ngrok-free.app
 #
+#   Tout arrêter quand Ctrl+C n'est pas possible (script lancé en arrière-plan,
+#   terminal fermé) — les crochets évitent que le motif se reconnaisse lui-même :
+#   pkill -f "[d]emo.sh"; pkill -f "[a]rtisan serve"; pkill -f "[n]g serve"; pkill -f "[n]grok http"
+#
 # Lance l'API Laravel, le site Angular et l'ouverture publique ngrok, puis
 # affiche L'ADRESSE À PARTAGER. Ctrl+C arrête tout d'un coup.
 #
@@ -70,8 +74,10 @@ while [ $# -gt 0 ]; do
     --local) mode="local" ;;
     --lan)   mode="lan" ;;
     --domaine|--domain) domaine_ngrok="${2:-}"; shift ;;
+    # ⚠️ La plage suit l'en-tête ci-dessus : y ajouter une ligne d'exemple sans
+    # l'élargir la ferait disparaître de l'aide.
     -h|--aide|--help)
-      sed -n '3,10p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      sed -n '3,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
       exit 0 ;;
     *) echec "Option inconnue : $1 (essayez --aide)" ;;
   esac
