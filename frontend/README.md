@@ -1257,6 +1257,10 @@ npx ng build
 npm run serve:ssr:kaikun360
 ```
 
+> **Alternative conteneurisée** : `docker/frontend/Dockerfile` construit puis
+> sert exactement ce même `server.mjs` — jamais un `dist/` statique, qui
+> perdrait le SSR. Voir `docker/README.md` à la racine du dépôt.
+
 > ⚠️ **Sécurité (déploiement)** : `angular.json → build.options.security.allowedHosts`
 > ne contient pour l'instant que `localhost`. **Ajouter le(s) domaine(s) de
 > production** (ex. `kaikun360.sn`) dans cette liste avant la mise en ligne, sinon
