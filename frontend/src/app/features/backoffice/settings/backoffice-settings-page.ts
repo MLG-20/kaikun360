@@ -142,8 +142,17 @@ export class BackofficeSettingsPageComponent {
    * spécial (signal dédié), même logique que `emailEnabled`/`smsEnabled` —
    * une case à cocher n'a rien à faire dans la boucle générique des champs
    * texte/nombre.
+   *
+   * ⚠️ **Bouton d'enregistrement DÉDIÉ** (pas celui, générique, de l'onglet
+   * Réglages) : cet interrupteur ferme toute la plateforme, il ne doit pas
+   * dépendre d'un bouton placé loin en dessous, partagé avec des réglages
+   * sans rapport (barème de construction…) — piège rencontré en recette,
+   * l'utilisateur cochait la case puis rechargeait sans avoir rien enregistré.
    */
   protected readonly platformGateEnabled = signal(false);
+  protected readonly platformGateSaving = signal(false);
+  protected readonly platformGateMessage = signal<string | null>(null);
+  protected readonly platformGateError = signal<string | null>(null);
 
   /** Libellés lisibles des réglages simples. */
   private readonly settingLabels: Record<string, { label: string; hint: string }> = {
@@ -717,12 +726,6 @@ export class BackofficeSettingsPageComponent {
       changed['build.pricing'] = this.rebuildPricing(pricing.value);
     }
 
-    // Fermeture d'accès avant ouverture (2026-08-14).
-    const gate = this.rawSettings().find((setting) => setting.key === 'platform.gate_enabled');
-    if (gate && !!gate.value !== this.platformGateEnabled()) {
-      changed['platform.gate_enabled'] = this.platformGateEnabled();
-    }
-
     if (Object.keys(changed).length === 0) {
       this.settingsMessage.set('Aucune modification à enregistrer.');
       return;
@@ -742,6 +745,30 @@ export class BackofficeSettingsPageComponent {
       error: (error: HttpErrorResponse) => {
         this.settingsSaving.set(false);
         this.settingsActionError.set(this.messageFor(error));
+      },
+    });
+  }
+
+  /**
+   * Enregistre l'interrupteur de fermeture d'accès (2026-08-14), SEUL — bouton
+   * dédié, voir la note sur `platformGateEnabled`.
+   */
+  protected savePlatformGate(): void {
+    this.platformGateSaving.set(true);
+    this.platformGateError.set(null);
+    this.platformGateMessage.set(null);
+
+    this.admin.updateSettings({ 'platform.gate_enabled': this.platformGateEnabled() }).subscribe({
+      next: (snapshot) => {
+        this.rawSettings.set(snapshot.settings);
+        this.platformGateSaving.set(false);
+        this.platformGateMessage.set(
+          this.platformGateEnabled() ? 'Plateforme fermée au public.' : 'Plateforme ouverte au public.',
+        );
+      },
+      error: (error: HttpErrorResponse) => {
+        this.platformGateSaving.set(false);
+        this.platformGateError.set(this.messageFor(error));
       },
     });
   }

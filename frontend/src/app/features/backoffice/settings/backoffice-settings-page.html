@@ -115,6 +115,13 @@
         redirigé vers la liste d'attente. Le back-office n'est jamais concerné.
       </p>
 
+      @if (platformGateError()) {
+        <p class="st-state st-state--error" role="alert">{{ platformGateError() }}</p>
+      }
+      @if (platformGateMessage()) {
+        <p class="st-state st-state--ok" role="status">{{ platformGateMessage() }}</p>
+      }
+
       <label class="st-switch">
         <input
           type="checkbox"
@@ -126,6 +133,16 @@
           <em>À décocher le jour de l'ouverture officielle.</em>
         </span>
       </label>
+
+      <div class="st-actions">
+        <button
+          type="button"
+          class="k-btn k-btn--primary"
+          [disabled]="platformGateSaving()"
+          (click)="savePlatformGate()">
+          {{ platformGateSaving() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
     </section>
 
     <!-- Barème du simulateur de construction (« tarifs » du CDC) -->
