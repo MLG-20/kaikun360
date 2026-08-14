@@ -798,6 +798,41 @@ toute la plateforme au public le temps de la préparer, sans en priver son
 
 - [x] **L'écran back-office de consultation de la liste d'attente, puis l'invitation automatique du prospect.** Une inscription n'était jusque-là visible nulle part au back-office (elle n'a pas de compte, donc pas de fiche dans l'annuaire) — seule trace, l'e-mail d'alerte à l'équipe. Écran `/back-office/liste-attente` (liste filtrable par statut/catégorie + fiche détail restituant **tous** les champs saisis par le prospect, y compris ceux propres à sa catégorie), gardé par `traiter:demandes` — même patron que la file des messages de contact. Marquer une inscription « traitée » enregistre l'agent et l'horodatage, **et déclenche l'envoi d'une invitation par e-mail au prospect** (s'il a laissé une adresse — le formulaire n'exige que le téléphone) : contenu entièrement différent selon ses 5 catégories, bouton vers l'inscription. ⚠️ **Destinataire sans compte** : premier e-mail du projet envoyé par routage anonyme plutôt qu'à un `User`. ⚠️ **La bascule seule déclenche l'envoi** (`nouveau → traité`), jamais une confirmation d'un statut déjà traité ni un retour à « nouveau » — sinon l'e-mail partirait en double. ⚠️ **Ce que cet e-mail ne fait pas encore** : il n'accorde pas lui-même l'« Accès anticipé » du point précédent — un super admin doit toujours le cocher séparément sur le compte que le prospect créera. **13 tests backend neufs**, suite complète verte (**1095 tests / 3876 assertions**).
 
+### Infrastructure — Conteneurisation Docker et intégration continue ⚠️ **HORS CAHIER DES CHARGES**
+
+Premier des trois chantiers de déploiement convenus avec le client (2026-08-14) :
+CI d'abord, Docker ensuite, publication sur le VPS Contabo en dernier. Cette
+tranche couvre les deux premiers.
+
+- [x] **Sept services Docker, testés de bout en bout en local.** `mysql` ·
+  `redis` · `backend` (API Laravel, PHP-FPM) · `scheduler` (`schedule:work`,
+  sans lequel aucune réservation ne se clôture ni aucun reversement ne part) ·
+  `queue-worker` (`queue:work`, les e-mails/notifications) · `frontend`
+  (Angular en **SSR**, jamais un `dist/` statique) · `nginx` (point d'entrée
+  unique — `/api`, `/storage`, `/sitemap.xml` vers le backend, le reste vers le
+  frontend, exactement le découpage du proxy de développement). Détail complet
+  et **cinq pièges Docker/MySQL/nginx résolus** (PHP 8.4 imposé par le lock
+  malgré `^8.3`, client `mysql` absent des images Alpine, TLS, plugin
+  d'authentification, cache DNS nginx figé sur l'ancienne IP d'un conteneur
+  recréé) dans `docker/README.md`. Vérifié en conditions réelles : inscription
+  complète (écriture MySQL, rôle assigné, jeton émis), e-mail transactionnel
+  consommé par le worker via Redis, page d'accueil rendue en SSR, image servie
+  par `/storage`.
+- [x] **`DatabaseSeeder` tourne au démarrage du conteneur `backend`, jamais les seeders de démonstration.** Sans les rôles/permissions, la première inscription échoue en 500 (`RoleDoesNotExist`) — ce seeder est indispensable au fonctionnement, pas une commodité de développement. Idempotent, donc rejoué sans risque à chaque redémarrage.
+- [x] **Un vrai bug de production démasqué, pas un défaut Docker.** Premier
+  regard jamais posé sur le build de production (`server.mjs`) dans un
+  navigateur réel — jusqu'ici le site n'était vu qu'à travers `ng serve`
+  (dev). La mise en page était intégralement cassée (liens soulignés partout,
+  styles quasi absents) alors que le CSS se chargeait bien (`200`, bon
+  `Content-Type`, octet pour octet identique). Cause : la CSP durcie de
+  `server.ts` (revue de sécurité 2026-08, `script-src` sans `'unsafe-inline'`,
+  délibérément) bloque le `onload` **inline** qu'Angular pose par défaut en
+  production pour charger le CSS non critique de façon asynchrone
+  (`<link media="print" onload="this.media='all'">`) — la feuille reste donc
+  en `media="print"` pour toujours, jamais appliquée à l'écran. Corrigé sans
+  affaiblir la CSP : `angular.json → production.optimization.styles.inlineCritical: false`, Angular émet alors un `<link>` synchrone classique.
+- [x] **CI GitHub Actions, deux jobs indépendants.** `backend` (PHP 8.4, service MySQL, `php artisan test`) et `frontend` (Node 24, `npm test` — le nouveau lanceur vitest d'Angular 22 tourne seul par défaut, pas de flag `--watch` à ajouter —, puis `npm run build` en configuration production). ⚠️ **Pint volontairement absent de la CI** : `./vendor/bin/pint --test` échoue aujourd'hui sur ~130 fichiers préexistants — l'inclure ferait échouer CI sur du code sans rapport avec ce qui vient d'être écrit.
+
 ---
 
 ## Critères d'acceptation transverses

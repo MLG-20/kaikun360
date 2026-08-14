@@ -836,6 +836,11 @@ php artisan storage:link
 php artisan serve                 # http://127.0.0.1:8000
 ```
 
+> **Alternative conteneurisée** : `docker/backend/Dockerfile` (PHP-FPM) fait
+> tourner cette même image pour l'API, le worker de queue **et** le scheduler
+> (une seule commande diffère). Voir `docker/README.md` à la racine du dépôt —
+> démarrage complet en une commande, cinq pièges MySQL/nginx déjà résolus.
+
 > Un **worker de queue** est nécessaire en production pour les notifications
 > asynchrones (`php artisan queue:work`), supervisé (Supervisor/systemd).
 

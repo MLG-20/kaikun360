@@ -1,0 +1,21 @@
+# Contexte de build = racine du dépôt. On exclut tout ce qui n'a pas besoin
+# de voyager jusqu'à l'image (dépendances déjà installées dans l'image,
+# builds locaux, secrets).
+**/.git
+**/node_modules
+**/vendor
+backend/storage/*.key
+backend/storage/logs/*
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/public/storage
+backend/public/build
+frontend/dist
+frontend/.angular
+frontend/public/build
+.env.docker
+*.md
