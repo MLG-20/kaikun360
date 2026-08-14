@@ -23,14 +23,22 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Applique la limitation de débit à TOUTES les routes API.
         // Le limiteur nommé "api" est défini dans app/Providers/AppServiceProvider.php.
+        //
+        // `platform.gate` (2026-08-14) : fermeture d'accès avant ouverture
+        // officielle, appliquée elle aussi à TOUTE l'API — voir
+        // App\Http\Middleware\EnsurePlatformOpen pour sa liste blanche interne
+        // (waitlist, contact, back-office…). Sans effet tant que le réglage
+        // `platform.gate_enabled` n'est pas activé au back-office.
         $middleware->api(append: [
             'throttle:api',
+            'platform.gate',
         ]);
 
         // Alias du garde « compte vérifié » (B15.2), appliqué aux actions
         // sensibles (réservation, paiement, publication).
         $middleware->alias([
             'verified.account' => \App\Http\Middleware\EnsureAccountVerified::class,
+            'platform.gate' => \App\Http\Middleware\EnsurePlatformOpen::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -98,6 +98,20 @@
             }
           </select>
         </div>
+
+        <!-- Accès anticipé (fermeture avant ouverture, 2026-08-14) — réservé au super_admin -->
+        @if (isSuperAdmin()) {
+          <div class="ad-block">
+            <span class="ad-block__label">Accès anticipé</span>
+            <label class="ad-checkbox">
+              <input
+                type="checkbox"
+                [ngModel]="u.early_access ?? false"
+                (ngModelChange)="setEarlyAccess($event)" />
+              Peut utiliser la plateforme même fermée au public
+            </label>
+          </div>
+        }
       </div>
 
       <!-- Demande de pièce -->

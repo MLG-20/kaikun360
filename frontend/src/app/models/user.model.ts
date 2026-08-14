@@ -28,6 +28,12 @@ export interface User {
    * Absent partout ailleurs, d'où l'optionnalité.
    */
   permissions?: string[];
+  /**
+   * Accès anticipé pendant la fermeture avant ouverture (2026-08-14) —
+   * présent uniquement sur la FICHE compte du back-office
+   * (`->withEarlyAccess()`, jamais dans une liste).
+   */
+  early_access?: boolean;
   /** Présent uniquement si chargé côté backend (->load('profile')). */
   profile?: Profile;
   email_verified_at: string | null;

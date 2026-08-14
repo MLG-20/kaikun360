@@ -4,6 +4,7 @@ namespace Tests\Feature\Performance;
 
 use App\Modules\Immo\Models\Property;
 use App\Support\Cache\CatalogCache;
+use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -21,6 +22,18 @@ use Tests\TestCase;
 class CatalogLoadTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Préchauffe le cache des RÉGLAGES (2026-08-14, EnsurePlatformOpen,
+        // middleware global sur toute l'API) : sans ce préchauffage, le tout
+        // premier appel HTTP du test paie une requête SQL pour le lire, et le
+        // second (identique) non — un coût qui n'a rien à voir avec le
+        // CATALOGUE, mais que ce test mesurerait par erreur comme tel.
+        Settings::get('platform.gate_enabled', false);
+    }
 
     public function test_le_nombre_de_requetes_sql_du_catalogue_est_independant_du_volume(): void
     {

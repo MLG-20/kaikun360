@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 262 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 264 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -478,6 +478,36 @@ TypeScript miroir côté frontend Angular (phase F0).
 > plateforme vierge renvoie `{}` — chaque page affiche alors ses textes
 > d'origine sur le dégradé de marque. Catalogue des clés :
 > `App\Support\Heroes\HeroCatalog`.
+
+### Fermeture d'accès avant ouverture (2026-08-14)
+
+| Méthode | URI | Accès | Contrôleur |
+| --- | --- | --- | --- |
+| GET | `/platform-status` | public | `PlatformStatusController@show` |
+
+> Dit si la plateforme est actuellement fermée (`platform.gate_enabled`) et si
+> le visiteur courant (anonyme ou connecté) a un accès anticipé (`bypass`). Ne
+> bloque rien elle-même : le blocage réel est appliqué par le middleware
+> `platform.gate` (`App\Http\Middleware\EnsurePlatformOpen`), présent sur TOUTE
+> l'API `/api/v1` (comme `throttle:api`), avec une liste blanche courte
+> (back-office, connexion, liste d'attente, contact, FAQ, pages légales…).
+> Sans effet tant que le réglage n'est pas activé au back-office. L'accès
+> anticipé s'accorde compte par compte (`early_access` sur `PATCH
+> /admin/users/{user}`, réservé au super_admin) via la permission directe
+> `acces:plateforme` — jamais portée par un rôle public.
+
+### Liste d'attente (2026-08-14)
+
+| Méthode | URI | Accès | Contrôleur |
+| --- | --- | --- | --- |
+| POST | `/waitlist` | public (throttle 10/min) | `WaitlistController@store` |
+
+> Inscription avant ouverture officielle, détachée de la page statique que le
+> client maintient sur le domaine public. 5 catégories (`proprietaire`,
+> `prestataire`, `client`, `team_building`, `diaspora`), chacune avec ses
+> propres champs dans `details` (JSON). Pas d'écran de consultation
+> back-office pour l'instant (reporté) : l'équipe est alertée par e-mail
+> ({@see App\Notifications\NewWaitlistEntryNotification}).
 
 ### Assistant (F10 — hors CDC)
 

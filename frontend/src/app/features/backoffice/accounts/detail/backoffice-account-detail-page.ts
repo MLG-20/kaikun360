@@ -272,6 +272,24 @@ export class BackofficeAccountDetailPageComponent {
     });
   }
 
+  /**
+   * Accorde/retire l'accès anticipé (fermeture avant ouverture, 2026-08-14).
+   * Réservé au super_admin — le serveur refuse sinon (403), l'écran ne montre
+   * même pas la case à qui d'autre.
+   */
+  protected setEarlyAccess(enabled: boolean): void {
+    const target = this.user();
+    if (!target) return;
+    this.actionError.set(null);
+    this.admin.updateUser(target.id, { early_access: enabled }).subscribe({
+      next: (updated) => {
+        this.user.set(updated);
+        this.load(updated.id);
+      },
+      error: (error: HttpErrorResponse) => this.actionError.set(this.messageFor(error)),
+    });
+  }
+
   /** Envoie la demande de pièce. */
   protected sendDocumentRequest(): void {
     const target = this.user();

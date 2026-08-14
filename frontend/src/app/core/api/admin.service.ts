@@ -1149,10 +1149,12 @@ export interface AccountQuery {
   page?: number;
 }
 
-/** Corps de mise à jour d'un compte (PATCH /admin/users/{id}). Au moins l'un des deux. */
+/** Corps de mise à jour d'un compte (PATCH /admin/users/{id}). Au moins l'un des trois. */
 export interface UpdateUserPayload {
   role?: string;
   status?: string;
+  /** Accès anticipé (fermeture avant ouverture, 2026-08-14) — réservé au super_admin. */
+  early_access?: boolean;
 }
 
 /** Une pièce justificative (KYC) déposée par un utilisateur (fiche compte). */

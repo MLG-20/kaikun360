@@ -99,7 +99,7 @@ class AdminUserController extends Controller
             ]);
 
         return ApiResponse::success([
-            'user' => UserResource::make($user),
+            'user' => UserResource::make($user)->withEarlyAccess(),
             'documents' => $documents,
             'activity' => $activity,
         ]);
@@ -139,12 +139,29 @@ class AdminUserController extends Controller
             $user->update(['status' => $data['status']]);
         }
 
+        if (isset($data['early_access'])) {
+            // Fermeture d'accès avant ouverture (2026-08-14) : réservé au
+            // super_admin, comme l'attribution des rôles d'administration
+            // ci-dessus — c'est LUI qui décide qui voit la plateforme avant
+            // tout le monde, pas n'importe quel agent porteur de
+            // `gerer:utilisateurs`.
+            if (! $actor->hasRole(UserRole::SUPER_ADMIN->value)) {
+                abort(403, "Seul un super administrateur peut donner l'accès anticipé.");
+            }
+
+            if ($data['early_access']) {
+                $user->givePermissionTo('acces:plateforme');
+            } else {
+                $user->revokePermissionTo('acces:plateforme');
+            }
+        }
+
         activity()->causedBy($actor)->performedOn($user)
             ->withProperties($data)
             ->log('Mise à jour de compte (back-office)');
 
         return ApiResponse::success([
-            'user' => UserResource::make($user->fresh()->load('profile')),
+            'user' => UserResource::make($user->fresh()->load('profile'))->withEarlyAccess(),
         ]);
     }
 

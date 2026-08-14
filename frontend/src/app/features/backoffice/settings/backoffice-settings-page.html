@@ -104,6 +104,30 @@
       </section>
     }
 
+    <!-- Fermeture d'accès avant ouverture officielle (2026-08-14) -->
+    <section class="st-card">
+      <h2 class="st-card-title">Ouverture de la plateforme</h2>
+      <p class="st-card-sub">
+        Tant que c'est coché, seuls le super administrateur et les comptes
+        autorisés individuellement (case « Accès anticipé » sur une fiche du
+        carnet de comptes) peuvent utiliser la plateforme — tout le reste
+        (visiteurs, comptes client/propriétaire/prestataire/entreprise) est
+        redirigé vers la liste d'attente. Le back-office n'est jamais concerné.
+      </p>
+
+      <label class="st-switch">
+        <input
+          type="checkbox"
+          name="platformGateEnabled"
+          [ngModel]="platformGateEnabled()"
+          (ngModelChange)="platformGateEnabled.set($event)" />
+        <span class="st-switch-text">
+          <strong>Fermer la plateforme au public</strong>
+          <em>À décocher le jour de l'ouverture officielle.</em>
+        </span>
+      </label>
+    </section>
+
     <!-- Barème du simulateur de construction (« tarifs » du CDC) -->
     <section class="st-card">
       <h2 class="st-card-title">Barème du simulateur de construction</h2>

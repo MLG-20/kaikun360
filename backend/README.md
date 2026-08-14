@@ -8,7 +8,7 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **262 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **264 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
 - **63 tables**, référentiel géographique du Sénégal inclus
 - **1013 tests** automatisés (3554 assertions), tous verts ✅
@@ -531,7 +531,7 @@ backend/
 │   └── emails/          # Gabarit unique des e-mails (HTML + texte brut)
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 262 endpoints
+├── API.md               # Référence des 264 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -897,7 +897,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 1059 tests, 3762 assertions — verts (mesuré après F13.1, ~9,7 min)
+# 1082 tests, 3841 assertions — verts (mesuré après F14, ~11 min)
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -961,7 +961,7 @@ adresse.
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 262 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 264 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |
@@ -1061,6 +1061,34 @@ Le code est **abondamment commenté en français**.
   aucune règle de parenté à dupliquer. ⚠️ **Une chaîne vide retire la surcharge**
   et rend à la page son texte d'origine : il n'existe aucun état dans lequel le
   back-office laisse une page sans titre.
+- ✅ **Liste d'attente avant ouverture (F14, hors CDC)** : `POST /waitlist`
+  (public, throttle 10/min), 5 catégories (`proprietaire`, `prestataire`,
+  `client`, `team_building`, `diaspora`), champs propres à chacune dans
+  `details` (JSON). Patron suivi : **Contact** (F2.8.1), seul flux public
+  réellement anonyme du projet — `requests`/`team_building_requests`/
+  `diaspora_projects` exigent tous une session. Alerte e-mail à l'équipe
+  (`NewWaitlistEntryNotification`), pas encore d'écran de consultation
+  (reporté).
+- ✅ **Fermeture d'accès avant ouverture (F14, hors CDC)** : réglage
+  `platform.gate_enabled` (back-office, décoché par défaut) + middleware
+  global `App\Http\Middleware\EnsurePlatformOpen` (alias `platform.gate`,
+  appliqué à **toute** l'API comme `throttle:api`), liste blanche courte
+  (`admin/*`, `auth/*`, `waitlist`, `contact`, `contact-info`, `faqs`,
+  `pages/*`, `heroes`, `platform-status`, `version`, `whatsapp/link`,
+  `payments/webhook`). ⚠️ **Le back-office n'est jamais concerné**, quel que
+  soit le réglage. Octroi individuel via une permission Spatie **directe**
+  `acces:plateforme` (jamais portée par un rôle public), accordée compte par
+  compte par `PATCH /admin/users/{user}` (`early_access`, **réservé au
+  super_admin** — même garde que l'attribution des rôles d'administration).
+  Le super_admin passe toujours via `Gate::before`, sans permission
+  explicite. `GET /platform-status` (public) expose l'état courant
+  (`gate_enabled`, `bypass`) pour que le frontend sache rediriger vers la
+  liste d'attente sans attendre un 423. ⚠️ **Piège** : un middleware global
+  qui lit les réglages fait échouer tout test qui compte les requêtes SQL
+  entre deux appels consécutifs (`CatalogLoadTest`, B17.4) — le premier appel
+  du test réchauffe désormais le cache des réglages, le second non. Corrigé en
+  préchauffant ce cache dans le `setUp()` du test concerné, pas dans le
+  middleware.
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.

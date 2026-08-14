@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { platformGateGuard } from './core/guards/platform-gate.guard';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
 
 /**
@@ -67,6 +68,10 @@ export const routes: Routes = [
   {
     path: '',
     component: MainLayoutComponent,
+    // Fermeture d'accès avant ouverture (2026-08-14) : s'applique à TOUTES les
+    // pages publiques ci-dessous, sauf celles marquées `data.gateExempt`
+    // (liste d'attente, contact, FAQ, pages légales).
+    canActivateChild: [platformGateGuard],
     children: [
       {
         path: '',
@@ -397,6 +402,8 @@ export const routes: Routes = [
           import('./features/content/faq/faq-page').then((m) => m.FaqPageComponent),
         title: 'Foire aux questions — Kaikun 360',
         data: {
+          // Fermeture d'accès (2026-08-14) : reste accessible même plateforme fermée.
+          gateExempt: true,
           seo: {
             description:
               'Réponses aux questions fréquentes sur Kaikun 360 : vérification des biens, paiements, réservations, gestion locative et suivi de chantier.',
@@ -410,9 +417,30 @@ export const routes: Routes = [
           import('./features/content/contact/contact-page').then((m) => m.ContactPageComponent),
         title: 'Contact — Kaikun 360',
         data: {
+          // Fermeture d'accès (2026-08-14) : reste accessible même plateforme fermée.
+          gateExempt: true,
           seo: {
             description:
               'Contactez l\'équipe Kaikun 360 à Dakar : téléphone, e-mail et WhatsApp. Une réponse sous 24 h ouvrées pour tout projet au Sénégal.',
+          },
+        },
+      },
+      {
+        // Liste d'attente avant ouverture officielle (2026-08-14). Détachée de
+        // la page statique du client sur le domaine public : route interne,
+        // pas encore liée à la navigation.
+        path: 'liste-attente',
+        loadComponent: () =>
+          import('./features/content/waitlist-page/waitlist-page').then(
+            (m) => m.WaitlistPageComponent,
+          ),
+        title: "Liste d'attente — Kaikun 360",
+        data: {
+          // Elle-même : sinon on redirigerait /liste-attente vers /liste-attente.
+          gateExempt: true,
+          seo: {
+            description:
+              "Propriétaire, prestataire, client, entreprise ou diaspora : inscrivez-vous à la liste d'attente Kaikun 360 avant l'ouverture officielle au Sénégal.",
           },
         },
       },
@@ -464,6 +492,8 @@ export const routes: Routes = [
           ),
         title: 'Kaikun 360',
         data: {
+          // Fermeture d'accès (2026-08-14) : CGU/confidentialité doivent rester lisibles.
+          gateExempt: true,
           seo: {
             description:
               'Page d\'information Kaikun 360 : conditions, politiques et mentions encadrant l\'usage de la plateforme.',

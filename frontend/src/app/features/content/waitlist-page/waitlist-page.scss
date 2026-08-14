@@ -1,0 +1,59 @@
+// Styles propres à la page Liste d'attente (2026-08-14). Le bandeau réutilise
+// `app-page-hero`, les champs réutilisent les classes `.k-*` transverses.
+
+.waitlist-body {
+  max-width: 640px;
+  margin-inline: auto;
+  padding-block: 2.5rem 4rem;
+}
+
+// Sélecteur segmenté des 5 catégories.
+.waitlist-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.waitlist-category {
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-sm);
+  padding: 0.5rem 1rem;
+  background: #fff;
+  color: var(--k-navy);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--k-brand);
+  }
+
+  // Priorité sur `:hover` : sans le composé, l'état actif se délave au survol.
+  &--active:hover,
+  &--active {
+    background: var(--k-navy);
+    border-color: var(--k-navy);
+    color: #fff;
+  }
+}
+
+.waitlist-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+
+  .k-btn {
+    margin-top: 0.35rem;
+  }
+}
+
+.waitlist-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.15rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}

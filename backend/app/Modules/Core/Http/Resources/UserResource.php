@@ -49,6 +49,21 @@ class UserResource extends JsonResource
     }
 
     /**
+     * Fermeture d'accès avant ouverture (2026-08-14) : faut-il joindre
+     * `early_access` ? Opt-in pour la même raison que `withPermissions()` — un
+     * `hasPermissionTo()` par ligne ferait un N+1 sur l'annuaire des comptes.
+     * N'appeler que sur la FICHE d'un compte (`AdminUserController::show()`).
+     */
+    private bool $withEarlyAccess = false;
+
+    public function withEarlyAccess(): static
+    {
+        $this->withEarlyAccess = true;
+
+        return $this;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -78,6 +93,13 @@ class UserResource extends JsonResource
             'permissions' => $this->when(
                 $this->withPermissions && $this->estStaff(),
                 fn () => $this->permissionsBackOffice(),
+            ),
+            // Fermeture d'accès avant ouverture (2026-08-14) — sur demande
+            // explicite (`->withEarlyAccess()`), fiche compte du back-office
+            // uniquement.
+            'early_access' => $this->when(
+                $this->withEarlyAccess,
+                fn () => $this->hasPermissionTo('acces:plateforme'),
             ),
             // Profil inclus uniquement s'il a été explicitement chargé (->load('profile')).
             'profile' => ProfileResource::make($this->whenLoaded('profile')),

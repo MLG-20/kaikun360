@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { platformGateGuard } from '../../core/guards/platform-gate.guard';
 import { roleGuard } from '../../core/guards/role.guard';
 import { SpaceLayoutComponent } from '../../layouts/space-layout/space-layout';
 import { SPACE_CONFIG } from '../../layouts/space-layout/space.config';
@@ -22,7 +23,8 @@ export const OWNER_ROUTES: Routes = [
   {
     path: '',
     component: SpaceLayoutComponent,
-    canActivate: [roleGuard],
+    // Fermeture d'accès (2026-08-14) : le gate passe AVANT le rôle.
+    canActivate: [platformGateGuard, roleGuard],
     data: { roles: ['proprietaire'] },
     providers: [{ provide: SPACE_CONFIG, useValue: OWNER_SPACE }],
     children: [

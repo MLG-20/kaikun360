@@ -231,6 +231,16 @@
   max-width: 220px;
 }
 
+// Accès anticipé (fermeture avant ouverture, 2026-08-14).
+.ad-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--k-navy);
+  cursor: pointer;
+}
+
 .ad-doc-form {
   display: flex;
   gap: 8px;

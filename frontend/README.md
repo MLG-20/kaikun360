@@ -1923,6 +1923,33 @@ prestataire dépose n'importe quelle image, le contraste doit tenir sur une phot
 12,34:1). Une première version à 0,45 donnait 2,32:1 au fil d'Ariane, qui est
 justement l'élément le plus haut du bandeau.
 
+### Liste d'attente et fermeture d'accès avant ouverture (F14, hors CDC)
+
+Deux demandes du client (2026-08-14), en marge du cahier des charges.
+
+**Liste d'attente** — `features/content/waitlist-page/`, route `/liste-attente`.
+Détachée de la page statique que le client maintient lui-même sur le domaine
+public (hors de ce dépôt) : 5 catégories (propriétaire, prestataire, client,
+team building, diaspora) au lieu de 3, champs spécifiques par catégorie
+(`WaitlistService`, `core/api/waitlist.service.ts`). ⚠️ **Volontairement pas
+liée à la navigation** — accès direct par URL seulement, la bascule sur le
+domaine public reste une décision du client.
+
+**Fermeture d'accès** — `core/api/platform-gate.service.ts` +
+`core/guards/platform-gate.guard.ts`. Tant que le réglage est actif au
+back-office, `platformGateGuard` redirige vers `/liste-attente` quiconque n'a
+pas d'accès anticipé — appliqué en `canActivateChild` sur les pages publiques
+(`app.routes.ts`, exceptions via `data: { gateExempt: true }` sur liste
+d'attente/contact/FAQ/pages légales) et en `canActivate` **avant** `roleGuard`
+sur les 4 espaces connectés. ⚠️ **Pas de mise en cache** (à la différence de
+`HeroService`) : la réponse dépend de la session courante, elle doit être
+relue à chaque navigation. ⚠️ **Échec réseau = bloqué**, pas ouvert : mieux
+vaut un excès de prudence qu'une plateforme fermée exposée sur un doute.
+`error.interceptor.ts` gère aussi le code `423` en filet de sécurité (session
+qui perd son accès en cours de route, sans nouvelle navigation pour le
+révéler). `back-office` et `auth` ne portent aucun garde — l'équipe travaille
+normalement quel que soit le réglage.
+
 ### Commandes utiles
 
 ```bash

@@ -56,6 +56,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'gerer:paiements',
             'gerer:parametres',
             'moderer:avis',
+            // Fermeture d'accès avant ouverture (2026-08-14) : permission DIRECTE,
+            // jamais portée par un rôle public (les 4 rôles publics restent à []
+            // dans la matrice ci-dessous) — accordée compte par compte par le
+            // super_admin depuis la fiche « Comptes ». Voir EnsurePlatformOpen.
+            'acces:plateforme',
         ];
 
         foreach ($permissions as $name) {

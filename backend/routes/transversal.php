@@ -9,10 +9,12 @@ use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentWebhookController;
+use App\Http\Controllers\PlatformStatusController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TrashController;
+use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\WhatsAppLinkController;
 use App\Modules\Admin\Http\Controllers\FaqController;
 use App\Modules\Admin\Http\Controllers\PageController;
@@ -54,6 +56,18 @@ Route::get('heroes', [HeroController::class, 'index']);
 // consultation/traitement des messages sont réservés à l'équipe (routes admin).
 Route::get('contact-info', [ContactController::class, 'info']);
 Route::post('contact', [ContactController::class, 'store'])->middleware('throttle:10,1');
+
+// --- Fermeture d'accès avant ouverture officielle (2026-08-14) ----------------
+// Route publique : dit si la plateforme est fermée et si LE VISITEUR COURANT
+// (anonyme ou connecté) a un accès anticipé. Le blocage réel est appliqué par
+// le middleware `platform.gate` (EnsurePlatformOpen), pas ici.
+Route::get('platform-status', [PlatformStatusController::class, 'show']);
+
+// --- Liste d'attente avant ouverture officielle (2026-08-14) ------------------
+// Détachée de la page statique du client sur le domaine public : dépôt ouvert
+// à tous, 5 catégories (propriétaire/prestataire/client/team building/
+// diaspora). Pas d'écran de consultation back-office pour l'instant (reporté).
+Route::post('waitlist', [WaitlistController::class, 'store'])->middleware('throttle:10,1');
 
 // --- Référentiel géographique public (F2.7.0) --------------------------------
 // Régions / départements / communes du Sénégal, en LECTURE SEULE. Alimente les

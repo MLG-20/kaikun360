@@ -25,6 +25,7 @@ export const SKIP_ERROR_REDIRECT = new HttpContextToken<boolean>(() => false);
 /**
  * Gestion centralisée des erreurs HTTP (cahier des charges F0) :
  *   - 401 : session invalide → on vide la session et on renvoie vers la connexion ;
+ *   - 423 : plateforme fermée avant ouverture (2026-08-14) → liste d'attente ;
  *   - 0 / 5xx : erreur réseau ou serveur → page d'erreur générique,
  *     **sauf** si la requête porte `SKIP_ERROR_REDIRECT` ;
  *   - 422 : laissé passer tel quel pour que le formulaire affiche les erreurs de champ.
@@ -40,6 +41,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 401) {
         auth.clearSession();
         void router.navigate(['/auth/connexion'], { queryParams: { redirect: router.url } });
+      } else if (error.status === 423 && !router.url.startsWith('/liste-attente')) {
+        // Filet de sécurité EN PLUS de `platformGateGuard` (qui, lui, ne
+        // s'exécute qu'à la navigation) : une session déjà ouverte perd son
+        // accès anticipé pendant qu'un onglet reste ouvert, le prochain appel
+        // API échoue en 423 sans qu'aucune navigation n'ait eu lieu.
+        void router.navigate(['/liste-attente']);
       } else if (
         (error.status === 0 || error.status >= 500) &&
         !req.context.get(SKIP_ERROR_REDIRECT) &&

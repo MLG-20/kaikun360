@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { platformGateGuard } from '../../core/guards/platform-gate.guard';
 import { roleGuard } from '../../core/guards/role.guard';
 import { SpaceLayoutComponent } from '../../layouts/space-layout/space-layout';
 import { SPACE_CONFIG } from '../../layouts/space-layout/space.config';
@@ -21,7 +22,10 @@ export const ACCOUNT_ROUTES: Routes = [
   {
     path: '',
     component: SpaceLayoutComponent,
-    canActivate: [roleGuard],
+    // Fermeture d'accès (2026-08-14) : le gate passe AVANT le rôle — un
+    // visiteur non connecté qui vise cet espace doit atterrir sur la liste
+    // d'attente, pas sur l'écran de connexion, tant que c'est fermé.
+    canActivate: [platformGateGuard, roleGuard],
     data: { roles: ['client'] },
     providers: [{ provide: SPACE_CONFIG, useValue: CLIENT_SPACE }],
     children: [

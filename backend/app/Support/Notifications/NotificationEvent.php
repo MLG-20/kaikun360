@@ -40,6 +40,7 @@ enum NotificationEvent: string
     case CONSTRUCTION_REQUEST = 'construction_request';
     case CONTACT_MESSAGE = 'contact_message';
     case QUOTE_ANSWERED = 'quote_answered';
+    case WAITLIST_ENTRY = 'waitlist_entry';
 
     /**
      * Libellé lisible, affiché dans la liste des interrupteurs.
@@ -62,6 +63,7 @@ enum NotificationEvent: string
             self::CONSTRUCTION_REQUEST => 'Nouvelle demande de chantier',
             self::CONTACT_MESSAGE => 'Nouveau message depuis la page Contact',
             self::QUOTE_ANSWERED => 'Réponse du client à un devis',
+            self::WAITLIST_ENTRY => 'Nouvelle inscription à la liste d’attente',
         };
     }
 
@@ -86,6 +88,7 @@ enum NotificationEvent: string
             self::CONSTRUCTION_REQUEST => 'À l’équipe, à l’arrivée d’une demande de construction ou de rénovation, avec son estimation automatique.',
             self::CONTACT_MESSAGE => 'À l’équipe, à chaque message déposé sur la page Contact. L’e-mail porte le message entier : la plupart se règlent d’une réponse directe. Le dépôt étant ouvert à tous, c’est l’alerte à éteindre en premier si le volume gêne.',
             self::QUOTE_ANSWERED => 'À l’agent qui a chiffré le devis — lui seul, pas toute l’équipe — quand son client l’accepte ou le refuse.',
+            self::WAITLIST_ENTRY => 'À l’équipe, à chaque inscription à la liste d’attente avant ouverture (propriétaire, prestataire, client, team building, diaspora).',
         };
     }
 
@@ -100,7 +103,8 @@ enum NotificationEvent: string
             self::TEAM_BUILDING_REQUEST,
             self::CONSTRUCTION_REQUEST,
             self::CONTACT_MESSAGE,
-            self::QUOTE_ANSWERED => 'Équipe Kaikun',
+            self::QUOTE_ANSWERED,
+            self::WAITLIST_ENTRY => 'Équipe Kaikun',
             default => 'Clients & partenaires',
         };
     }

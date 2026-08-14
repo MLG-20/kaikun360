@@ -33,6 +33,12 @@ class SettingsRepository
         // comme celle du team building : c'est un paramètre commercial, pas du code.
         'build.margin_rate' => ['value' => 15.0, 'type' => 'float', 'group' => 'commissions'],
         'platform.currency' => ['value' => 'XOF', 'type' => 'string', 'group' => 'general'],
+        // Fermeture d'accès avant ouverture officielle (2026-08-14). Tant que ce
+        // réglage est actif, seuls le super_admin et les comptes portant la
+        // permission directe `acces:plateforme` peuvent utiliser la plateforme —
+        // voir App\Http\Middleware\EnsurePlatformOpen. Défaut `false` : aucun
+        // impact tant que l'équipe ne l'a pas explicitement activé.
+        'platform.gate_enabled' => ['value' => false, 'type' => 'boolean', 'group' => 'general'],
         'support.email' => ['value' => 'support@kaikun360.sn', 'type' => 'string', 'group' => 'general'],
         'support.phone' => ['value' => '+221 33 000 00 00', 'type' => 'string', 'group' => 'general'],
 

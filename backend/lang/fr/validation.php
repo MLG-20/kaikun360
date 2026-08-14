@@ -225,5 +225,17 @@ return [
         // Avis
         'rating' => 'note',
         'comment' => 'commentaire',
+
+        // Liste d'attente (2026-08-14)
+        'category' => 'catégorie',
+        'precisions' => 'précisions',
+        'details.type_bien' => 'type de bien',
+        'details.nb_biens' => 'nombre de biens',
+        'details.type_service' => 'type de service',
+        'details.univers' => 'univers qui vous intéresse',
+        'details.taille_equipe' => 'taille de l’équipe',
+        'details.budget_xof' => 'budget',
+        'details.pays_residence' => 'pays de résidence',
+        'details.type_projet' => 'type de projet',
     ],
 ];

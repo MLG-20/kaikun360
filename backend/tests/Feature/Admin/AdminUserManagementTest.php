@@ -178,4 +178,49 @@ class AdminUserManagementTest extends TestCase
             ->assertStatus(422)
             ->assertJsonValidationErrors(['role', 'status']);
     }
+
+    // =========================================================================
+    // Fermeture d'accès avant ouverture (2026-08-14) — `early_access`
+    // =========================================================================
+
+    public function test_un_admin_simple_ne_peut_pas_accorder_l_acces_anticipe(): void
+    {
+        $target = $this->withRole(UserRole::CLIENT->value);
+        Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
+
+        $this->patchJson("/api/v1/admin/users/{$target->id}", ['early_access' => true])
+            ->assertStatus(403);
+
+        $this->assertFalse($target->fresh()->hasPermissionTo('acces:plateforme'));
+    }
+
+    public function test_le_super_admin_accorde_puis_retire_l_acces_anticipe(): void
+    {
+        $target = $this->withRole(UserRole::CLIENT->value);
+        Sanctum::actingAs($this->withRole(UserRole::SUPER_ADMIN->value));
+
+        $this->patchJson("/api/v1/admin/users/{$target->id}", ['early_access' => true])
+            ->assertOk()
+            ->assertJsonPath('data.user.early_access', true);
+
+        $this->assertTrue($target->fresh()->hasPermissionTo('acces:plateforme'));
+
+        $this->patchJson("/api/v1/admin/users/{$target->id}", ['early_access' => false])
+            ->assertOk()
+            ->assertJsonPath('data.user.early_access', false);
+
+        $this->assertFalse($target->fresh()->hasPermissionTo('acces:plateforme'));
+    }
+
+    public function test_la_fiche_compte_expose_l_acces_anticipe(): void
+    {
+        $target = $this->withRole(UserRole::CLIENT->value);
+        $target->givePermissionTo('acces:plateforme');
+
+        Sanctum::actingAs($this->withRole(UserRole::SUPER_ADMIN->value));
+
+        $this->getJson("/api/v1/admin/users/{$target->id}")
+            ->assertOk()
+            ->assertJsonPath('data.user.early_access', true);
+    }
 }

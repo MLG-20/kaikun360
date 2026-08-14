@@ -137,6 +137,14 @@ export class BackofficeSettingsPageComponent {
   /** Barème de construction aplati et éditable. */
   protected readonly pricingFields = signal<PricingField[]>([]);
 
+  /**
+   * Fermeture d'accès avant ouverture (2026-08-14) : traité comme un cas
+   * spécial (signal dédié), même logique que `emailEnabled`/`smsEnabled` —
+   * une case à cocher n'a rien à faire dans la boucle générique des champs
+   * texte/nombre.
+   */
+  protected readonly platformGateEnabled = signal(false);
+
   /** Libellés lisibles des réglages simples. */
   private readonly settingLabels: Record<string, { label: string; hint: string }> = {
     'commission.default_rate': {
@@ -603,6 +611,10 @@ export class BackofficeSettingsPageComponent {
             if (setting.key === 'notifications.sms_enabled') this.smsEnabled.set(!!setting.value);
             continue;
           }
+          if (setting.key === 'platform.gate_enabled') {
+            this.platformGateEnabled.set(!!setting.value);
+            continue;
+          }
           if (setting.type === 'json') {
             if (setting.key === 'build.pricing') {
               this.pricingFields.set(this.flattenPricing(setting.value));
@@ -625,7 +637,14 @@ export class BackofficeSettingsPageComponent {
   /** Réglages simples d'un groupe, prêts à rendre. */
   protected fieldsOf(group: string): SettingField[] {
     return this.rawSettings()
-      .filter((setting) => setting.group === group && setting.type !== 'json')
+      .filter(
+        (setting) =>
+          setting.group === group &&
+          setting.type !== 'json' &&
+          // Cases à cocher : rendues à part (ex. `platform.gate_enabled`), pas
+          // comme un champ texte/nombre générique.
+          setting.type !== 'boolean',
+      )
       .map((setting) => ({
         key: setting.key,
         label: this.settingLabels[setting.key]?.label ?? setting.key,
@@ -680,7 +699,9 @@ export class BackofficeSettingsPageComponent {
     const draft = this.draft();
 
     for (const setting of this.rawSettings()) {
-      if (setting.group === 'notifications' || setting.type === 'json') continue;
+      if (setting.group === 'notifications' || setting.type === 'json' || setting.type === 'boolean') {
+        continue;
+      }
 
       const next = draft[setting.key] ?? '';
       const before = String(setting.value ?? '');
@@ -694,6 +715,12 @@ export class BackofficeSettingsPageComponent {
     const pricing = this.rawSettings().find((setting) => setting.key === 'build.pricing');
     if (pricing && this.pricingChanged(pricing.value)) {
       changed['build.pricing'] = this.rebuildPricing(pricing.value);
+    }
+
+    // Fermeture d'accès avant ouverture (2026-08-14).
+    const gate = this.rawSettings().find((setting) => setting.key === 'platform.gate_enabled');
+    if (gate && !!gate.value !== this.platformGateEnabled()) {
+      changed['platform.gate_enabled'] = this.platformGateEnabled();
     }
 
     if (Object.keys(changed).length === 0) {

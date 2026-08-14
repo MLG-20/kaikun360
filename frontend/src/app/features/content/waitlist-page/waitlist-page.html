@@ -1,0 +1,265 @@
+<app-page-hero
+  heroKey="liste-attente"
+  eyebrow="Ouverture prochaine"
+  title="Rejoignez la liste d'attente"
+  lead="Propriétaire, prestataire, client, entreprise ou membre de la diaspora : laissez vos coordonnées, nous vous recontactons personnellement à l'ouverture."
+/>
+
+<section class="k-wrap waitlist-body">
+  @if (sent()) {
+    <div class="k-form-info" role="status">
+      <p><strong>Merci, votre inscription est bien enregistrée&nbsp;!</strong></p>
+      <p>Notre équipe vous recontactera personnellement.</p>
+      <button type="button" class="k-btn k-btn--ghost" (click)="reset()">
+        Inscrire quelqu'un d'autre
+      </button>
+    </div>
+  } @else {
+    <!-- Sélecteur de catégorie -->
+    <div class="waitlist-categories" role="tablist" aria-label="Vous êtes…">
+      @for (option of categories; track option.value) {
+        <button
+          type="button"
+          role="tab"
+          class="waitlist-category"
+          [class.waitlist-category--active]="category() === option.value"
+          [attr.aria-selected]="category() === option.value"
+          (click)="selectCategory(option.value)"
+        >
+          {{ option.label }}
+        </button>
+      }
+    </div>
+
+    <form class="waitlist-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (formError()) {
+        <div class="k-form-error" role="alert">{{ formError() }}</div>
+      }
+
+      <!-- Champs communs -->
+      <div class="waitlist-grid">
+        <div class="k-field">
+          <label class="k-label" for="wl-name">Nom complet</label>
+          <input
+            id="wl-name"
+            class="k-input"
+            [class.k-input--error]="error('name')"
+            type="text"
+            formControlName="name"
+            autocomplete="name"
+          />
+          @if (error('name')) {
+            <p class="k-error">{{ error('name') }}</p>
+          }
+        </div>
+
+        <div class="k-field">
+          <label class="k-label" for="wl-phone">Téléphone</label>
+          <input
+            id="wl-phone"
+            class="k-input"
+            [class.k-input--error]="error('phone')"
+            type="tel"
+            formControlName="phone"
+            autocomplete="tel"
+            placeholder="+221…"
+          />
+          @if (error('phone')) {
+            <p class="k-error">{{ error('phone') }}</p>
+          }
+        </div>
+
+        <div class="k-field">
+          <label class="k-label" for="wl-email">
+            E-mail <span class="k-optional">(facultatif)</span>
+          </label>
+          <input
+            id="wl-email"
+            class="k-input"
+            [class.k-input--error]="error('email')"
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+          />
+          @if (error('email')) {
+            <p class="k-error">{{ error('email') }}</p>
+          }
+        </div>
+
+        <div class="k-field">
+          <label class="k-label" for="wl-city">
+            Ville <span class="k-optional">(facultatif)</span>
+          </label>
+          <input
+            id="wl-city"
+            class="k-input"
+            [class.k-input--error]="error('city')"
+            type="text"
+            formControlName="city"
+            placeholder="Ex. Dakar, Saly, Thiès…"
+          />
+          @if (error('city')) {
+            <p class="k-error">{{ error('city') }}</p>
+          }
+        </div>
+      </div>
+
+      <!-- Champs spécifiques à la catégorie -->
+      <div class="waitlist-grid" formGroupName="details">
+        @switch (category()) {
+          @case ('proprietaire') {
+            <div class="k-field">
+              <label class="k-label" for="wl-type-bien">Type de bien</label>
+              <select
+                id="wl-type-bien"
+                class="k-input"
+                [class.k-input--error]="error('details.type_bien')"
+                formControlName="type_bien"
+              >
+                <option value="" disabled>Choisir…</option>
+                <option value="villa">Villa</option>
+                <option value="appartement">Appartement</option>
+                <option value="terrain">Terrain</option>
+                <option value="commerce">Commerce</option>
+                <option value="autre">Autre</option>
+              </select>
+              @if (error('details.type_bien')) {
+                <p class="k-error">{{ error('details.type_bien') }}</p>
+              }
+            </div>
+            <div class="k-field">
+              <label class="k-label" for="wl-nb-biens">
+                Nombre de biens <span class="k-optional">(facultatif)</span>
+              </label>
+              <input
+                id="wl-nb-biens"
+                class="k-input"
+                type="number"
+                min="1"
+                formControlName="nb_biens"
+              />
+            </div>
+          }
+          @case ('prestataire') {
+            <div class="k-field">
+              <label class="k-label" for="wl-type-service">Type de service</label>
+              <select
+                id="wl-type-service"
+                class="k-input"
+                [class.k-input--error]="error('details.type_service')"
+                formControlName="type_service"
+              >
+                <option value="" disabled>Choisir…</option>
+                <option value="mobilite">Mobilité (véhicules, trajets)</option>
+                <option value="tourisme">Tourisme (séjours, circuits)</option>
+                <option value="btp">BTP (construction)</option>
+                <option value="team_building">Team building</option>
+                <option value="autre">Autre</option>
+              </select>
+              @if (error('details.type_service')) {
+                <p class="k-error">{{ error('details.type_service') }}</p>
+              }
+            </div>
+          }
+          @case ('client') {
+            <div class="k-field">
+              <label class="k-label" for="wl-univers">Ce qui vous intéresse</label>
+              <select
+                id="wl-univers"
+                class="k-input"
+                [class.k-input--error]="error('details.univers')"
+                formControlName="univers"
+              >
+                <option value="" disabled>Choisir…</option>
+                <option value="immobilier">Immobilier</option>
+                <option value="sejours">Séjours</option>
+                <option value="transport">Transport</option>
+                <option value="services">Services</option>
+              </select>
+              @if (error('details.univers')) {
+                <p class="k-error">{{ error('details.univers') }}</p>
+              }
+            </div>
+          }
+          @case ('team_building') {
+            <div class="k-field">
+              <label class="k-label" for="wl-taille-equipe">Taille de l'équipe</label>
+              <input
+                id="wl-taille-equipe"
+                class="k-input"
+                [class.k-input--error]="error('details.taille_equipe')"
+                type="number"
+                min="1"
+                formControlName="taille_equipe"
+              />
+              @if (error('details.taille_equipe')) {
+                <p class="k-error">{{ error('details.taille_equipe') }}</p>
+              }
+            </div>
+            <div class="k-field">
+              <label class="k-label" for="wl-budget">
+                Budget approximatif (FCFA) <span class="k-optional">(facultatif)</span>
+              </label>
+              <input
+                id="wl-budget"
+                class="k-input"
+                type="number"
+                min="0"
+                formControlName="budget_xof"
+              />
+            </div>
+          }
+          @case ('diaspora') {
+            <div class="k-field">
+              <label class="k-label" for="wl-pays">Pays de résidence</label>
+              <input
+                id="wl-pays"
+                class="k-input"
+                [class.k-input--error]="error('details.pays_residence')"
+                type="text"
+                formControlName="pays_residence"
+              />
+              @if (error('details.pays_residence')) {
+                <p class="k-error">{{ error('details.pays_residence') }}</p>
+              }
+            </div>
+            <div class="k-field">
+              <label class="k-label" for="wl-type-projet">Type de projet</label>
+              <select
+                id="wl-type-projet"
+                class="k-input"
+                [class.k-input--error]="error('details.type_projet')"
+                formControlName="type_projet"
+              >
+                <option value="" disabled>Choisir…</option>
+                <option value="achat">Achat</option>
+                <option value="gestion_locative">Gestion locative</option>
+                <option value="construction">Construction</option>
+              </select>
+              @if (error('details.type_projet')) {
+                <p class="k-error">{{ error('details.type_projet') }}</p>
+              }
+            </div>
+          }
+        }
+      </div>
+
+      <div class="k-field">
+        <label class="k-label" for="wl-precisions">
+          Précisions <span class="k-optional">(facultatif)</span>
+        </label>
+        <textarea
+          id="wl-precisions"
+          class="k-input"
+          rows="4"
+          formControlName="precisions"
+          placeholder="Ex. Villa 4 pièces à Ngor, disponible en gestion locative…"
+        ></textarea>
+      </div>
+
+      <button type="submit" class="k-btn k-btn--primary k-btn--block" [disabled]="submitting()">
+        {{ submitting() ? 'Envoi…' : "Rejoindre la liste d'attente" }}
+      </button>
+    </form>
+  }
+</section>
