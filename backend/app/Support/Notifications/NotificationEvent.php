@@ -32,6 +32,7 @@ enum NotificationEvent: string
     case RESOURCE_VALIDATED = 'resource_validated';
     case TEAM_BUILDING_QUOTE = 'team_building_quote';
     case TEAM_BUILDING_QUOTE_ACCEPTED = 'team_building_quote_accepted';
+    case WAITLIST_ENTRY_PROCESSED = 'waitlist_entry_processed';
 
     // ---- Destinataire : l'équipe Kaikun -----------------------------------
     case NEW_REQUEST_TO_HANDLE = 'new_request_to_handle';
@@ -57,6 +58,7 @@ enum NotificationEvent: string
             self::RESOURCE_VALIDATED => 'Offre validée (bien, véhicule)',
             self::TEAM_BUILDING_QUOTE => 'Devis team building envoyé',
             self::TEAM_BUILDING_QUOTE_ACCEPTED => 'Devis team building accepté (à régler)',
+            self::WAITLIST_ENTRY_PROCESSED => 'Invitation à rejoindre la plateforme (liste d’attente)',
             self::NEW_REQUEST_TO_HANDLE => 'Nouvelle demande à traiter',
             self::RESOURCE_TO_VALIDATE => 'Nouvelle offre à valider',
             self::TEAM_BUILDING_REQUEST => 'Nouvelle demande team building',
@@ -82,6 +84,7 @@ enum NotificationEvent: string
             self::RESOURCE_VALIDATED => 'Au propriétaire ou au prestataire, quand son offre est approuvée et publiée.',
             self::TEAM_BUILDING_QUOTE => 'À l’entreprise, quand son devis pack lui est envoyé.',
             self::TEAM_BUILDING_QUOTE_ACCEPTED => 'À l’entreprise, dès qu’elle accepte son devis : la réservation est créée et le montant devient exigible. Sans cet e-mail, l’accord resterait sans suite visible.',
+            self::WAITLIST_ENTRY_PROCESSED => 'Au prospect de la liste d’attente, quand un agent marque son inscription « traitée » : il est invité à créer son compte et à découvrir la plateforme. N’est envoyé que si le prospect a laissé une adresse e-mail.',
             self::NEW_REQUEST_TO_HANDLE => 'À l’équipe, à l’arrivée d’une demande de service.',
             self::RESOURCE_TO_VALIDATE => 'À l’équipe, quand un bien ou un véhicule est déposé et attend une décision.',
             self::TEAM_BUILDING_REQUEST => 'À l’équipe, à l’arrivée d’une demande d’entreprise.',

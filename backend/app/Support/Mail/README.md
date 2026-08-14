@@ -29,7 +29,7 @@ Conséquences :
 
 | Bénéfice | Détail |
 |---|---|
-| Cohérence | Les 20 e-mails sont visuellement identiques, sans HTML recopié 20 fois. |
+| Cohérence | Les 27 e-mails sont visuellement identiques, sans HTML recopié 27 fois. |
 | Maintenance | Retoucher la charte = modifier **un** fichier. |
 | Délivrabilité | Chaque envoi part en HTML **et** en texte brut, automatiquement. |
 | Sûreté | Un lien d'espace privé ne peut plus pointer vers une page inexistante (voir `SpaceLink`). |
@@ -194,7 +194,7 @@ Elles expliquent la forme du gabarit, qui ne ressemble pas à du HTML moderne :
 ## 8. Tests
 
 `tests/Feature/Notification/BrandedMailTest.php` — 13 tests, sans base de
-données. Le dernier rend les 20 e-mails du catalogue dans leurs deux versions :
+données. Le dernier rend les 27 e-mails du catalogue dans leurs deux versions :
 c'est le garde-fou qui rattrapera une propriété de modèle renommée, puisqu'un
 envoi de notification échoue en silence (asynchrone, en file d'attente).
 

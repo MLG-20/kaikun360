@@ -1950,6 +1950,24 @@ qui perd son accès en cours de route, sans nouvelle navigation pour le
 révéler). `back-office` et `auth` ne portent aucun garde — l'équipe travaille
 normalement quel que soit le réglage.
 
+**Écran back-office de consultation** — `features/backoffice/liste-attente/`
+(liste, `/back-office/liste-attente`) et son sous-dossier `detail/` (fiche,
+`/back-office/liste-attente/:id`). Jusqu'ici une inscription n'était visible
+nulle part au back-office — pas de compte, donc pas de fiche dans l'annuaire
+des comptes. La liste ne montre que ce qui tient sur une ligne (nom,
+catégorie, date, statut) ; la fiche restitue **tous** les champs saisis par le
+prospect, y compris ceux propres à sa catégorie (`details`) et ses
+précisions libres — demandé explicitement pour que l'équipe voie exactement
+ce que le client a écrit. Filtrable par statut (à traiter/traitées/toutes) et
+par catégorie ; bouton « Marquer traité »/« Rouvrir » présent aux deux
+endroits, patron identique à l'onglet « Messages de contact » (nom cliquable
+qui ouvre la fiche, agent + horodatage affichés une fois traité). Entrée
+« Liste d'attente » ajoutée au rail juste après « Demandes », gardée par
+`traiter:demandes` dans `backoffice-permissions.ts`. ⚠️ **Marquer une
+inscription « traitée » envoie désormais une invitation par e-mail au
+prospect** (côté backend, s'il a laissé une adresse) — l'écran n'a rien de
+plus à faire, l'envoi est déclenché par le serveur au changement de statut.
+
 ### Commandes utiles
 
 ```bash

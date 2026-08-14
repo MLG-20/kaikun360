@@ -18,6 +18,7 @@ use App\Modules\Admin\Http\Controllers\AdminSettingsController;
 use App\Modules\Admin\Http\Controllers\AdminStatisticsController;
 use App\Modules\Admin\Http\Controllers\AdminTeamController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
+use App\Modules\Admin\Http\Controllers\AdminWaitlistController;
 use App\Modules\Admin\Http\Controllers\AttendanceController;
 use App\Modules\Admin\Http\Controllers\FaqController;
 use App\Modules\Admin\Http\Controllers\MediaModerationController;
@@ -332,6 +333,18 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         Route::get('/requests', [AdminRequestController::class, 'index']);
         Route::get('/requests/{serviceRequest}', [AdminRequestController::class, 'show'])
             ->whereNumber('serviceRequest');
+
+        // 2026-08-14 — Écran de consultation de la liste d'attente avant
+        // ouverture. Le dépôt public (POST /waitlist) reste dans
+        // routes/transversal.php. Même permission que les demandes de contact :
+        // un inscrit à la liste d'attente est un prospect anonyme, pas un
+        // dossier différent.
+        Route::get('/waitlist/filters', [AdminWaitlistController::class, 'filters']);
+        Route::get('/waitlist', [AdminWaitlistController::class, 'index']);
+        Route::get('/waitlist/{waitlistEntry}', [AdminWaitlistController::class, 'show'])
+            ->whereNumber('waitlistEntry');
+        Route::patch('/waitlist/{waitlistEntry}', [AdminWaitlistController::class, 'update'])
+            ->whereNumber('waitlistEntry');
     });
 
     // --- Messagerie du support (F8.12) ---------------------------------------

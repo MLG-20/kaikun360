@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 264 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 278 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -665,6 +665,10 @@ existants. Voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README
 | GET | `/admin/requests` | auth + `can:traiter:demandes` | `AdminRequestController@index` |
 | GET | `/admin/requests/filters` | auth + `can:traiter:demandes` | `AdminRequestController@filters` |
 | GET | `/admin/requests/{serviceRequest}` | auth + `can:traiter:demandes` | `AdminRequestController@show` |
+| GET | `/admin/waitlist` | auth + `can:traiter:demandes` | `AdminWaitlistController@index` |
+| GET | `/admin/waitlist/filters` | auth + `can:traiter:demandes` | `AdminWaitlistController@filters` |
+| GET | `/admin/waitlist/{waitlistEntry}` | auth + `can:traiter:demandes` | `AdminWaitlistController@show` |
+| PATCH | `/admin/waitlist/{waitlistEntry}` | auth + `can:traiter:demandes` | `AdminWaitlistController@update` |
 | GET | `/admin/reviews` | auth + `can:moderer:avis` | `AdminReviewController@index` |
 | GET | `/admin/reviews/{review}` | auth + `can:moderer:avis` | `AdminReviewController@show` |
 | GET | `/admin/settings` | auth + `can:gerer:parametres` | `AdminSettingsController@index` |

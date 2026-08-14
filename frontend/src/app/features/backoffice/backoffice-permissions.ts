@@ -37,6 +37,11 @@ export const BO_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
   // team building depuis F7.4.b.
   demandes: ['traiter:demandes'],
 
+  // Liste d'attente (2026-08-14) : même permission que « Demandes » — un
+  // inscrit sans compte suit le même patron qu'un message de contact, et
+  // marquer une inscription traitée EST un geste, pas de la supervision.
+  'liste-attente': ['traiter:demandes'],
+
   // Messagerie du support (F8.12) : l'écran EST un geste — on y répond au
   // client. Permission dédiée, qui sert AUSSI de vivier d'assignation côté
   // serveur : ne la voient que ceux qui sont réellement de permanence.

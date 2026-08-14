@@ -83,6 +83,31 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Demande — Back-office Kaikun 360',
       },
       {
+        // 2026-08-14 — Liste d'attente : consultation des inscriptions reçues
+        // avant l'ouverture officielle. N'existait auparavant que sous forme
+        // d'e-mail d'alerte, aucune trace consultable au back-office.
+        path: 'liste-attente',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('liste-attente') },
+        loadComponent: () =>
+          import('./liste-attente/backoffice-waitlist-page').then(
+            (m) => m.BackofficeWaitlistPageComponent,
+          ),
+        title: "Liste d'attente — Back-office Kaikun 360",
+      },
+      {
+        // 2026-08-14 — Fiche d'une inscription : tout ce que le prospect a
+        // saisi dans le formulaire public (champs de sa catégorie compris).
+        path: 'liste-attente/:id',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('liste-attente') },
+        loadComponent: () =>
+          import('./liste-attente/detail/backoffice-waitlist-detail-page').then(
+            (m) => m.BackofficeWaitlistDetailPageComponent,
+          ),
+        title: "Inscription — Back-office Kaikun 360",
+      },
+      {
         // F8.22 — « Mon compte » : identifiants de la personne connectée.
         // ⚠️ **Aucune permission fine ici**, volontairement : entretenir ses
         // propres identifiants n'est pas un module métier, c'est un droit de

@@ -17,6 +17,8 @@ use App\Modules\Core\Services\VerificationService;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Models\ContactMessage;
+use App\Models\WaitlistEntry;
+use App\Notifications\WaitlistEntryProcessedNotification;
 use App\Modules\Build\Enums\ConstructionObjective;
 use App\Modules\Build\Enums\FinishLevel;
 use App\Modules\Build\Models\ConstructionRequest;
@@ -72,6 +74,11 @@ class MailPreview
             'interne-team-building' => 'Interne — Demande team building',
             'interne-chantier' => 'Interne — Nouvelle demande de chantier',
             'interne-contact' => 'Interne — Message depuis la page Contact',
+            'liste-attente-proprietaire' => 'Liste d’attente — Invitation propriétaire',
+            'liste-attente-prestataire' => 'Liste d’attente — Invitation prestataire',
+            'liste-attente-client' => 'Liste d’attente — Invitation client',
+            'liste-attente-team-building' => 'Liste d’attente — Invitation team building',
+            'liste-attente-diaspora' => 'Liste d’attente — Invitation diaspora',
         ];
     }
 
@@ -241,6 +248,36 @@ class MailPreview
                 'email' => 'awa.diop@example.com',
                 'subject' => 'Villa à Saly pour août',
                 'message' => "Bonjour,\n\nJe cherche une villa à Saly pour la première quinzaine d'août, 6 personnes. Est-ce encore disponible ? Quel est le tarif à la semaine ?\n\nMerci d'avance.",
+            ])),
+
+            // 2026-08-14 — Invitation envoyée au PROSPECT (pas à l'équipe) quand
+            // un agent marque son inscription « traitée ». Une entrée par
+            // catégorie : le contenu diffère entièrement d'une catégorie à
+            // l'autre (voir WaitlistEntryProcessedNotification::toMail()).
+            'liste-attente-proprietaire' => new WaitlistEntryProcessedNotification(new WaitlistEntry([
+                'name' => 'Awa Diop',
+                'category' => 'proprietaire',
+                'details' => ['type_bien' => 'villa', 'nb_biens' => 2],
+            ])),
+            'liste-attente-prestataire' => new WaitlistEntryProcessedNotification(new WaitlistEntry([
+                'name' => 'Moussa Ba',
+                'category' => 'prestataire',
+                'details' => ['type_service' => 'mobilite'],
+            ])),
+            'liste-attente-client' => new WaitlistEntryProcessedNotification(new WaitlistEntry([
+                'name' => 'Fatou Sy',
+                'category' => 'client',
+                'details' => ['univers' => 'sejours'],
+            ])),
+            'liste-attente-team-building' => new WaitlistEntryProcessedNotification(new WaitlistEntry([
+                'name' => 'Cheikh Diallo',
+                'category' => 'team_building',
+                'details' => ['taille_equipe' => 25, 'budget_xof' => 3000000],
+            ])),
+            'liste-attente-diaspora' => new WaitlistEntryProcessedNotification(new WaitlistEntry([
+                'name' => 'Ibrahima Fall',
+                'category' => 'diaspora',
+                'details' => ['pays_residence' => 'France', 'type_projet' => 'construction'],
             ])),
 
             default => abort(404, 'Aperçu inconnu.'),

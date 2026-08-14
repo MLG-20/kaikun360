@@ -1,0 +1,246 @@
+// Écran Liste d'attente du back-office (2026-08-14). Même grille que les
+// écrans Demandes/Messages : des files de triage qui se lisent pareil doivent
+// se ressembler. Préfixe wl- (styles encapsulés par le composant).
+:host {
+  display: block;
+  max-width: 1160px;
+}
+
+.wl-head {
+  margin-bottom: 18px;
+}
+
+.wl-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.wl-sub {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 68ch;
+}
+
+// --- Filtres : statut + catégorie ---
+.wl-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.wl-scopes {
+  display: inline-flex;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius-pill);
+  overflow: hidden;
+  background: #fff;
+}
+
+.wl-scope {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  padding: 8px 14px;
+
+  &.is-on {
+    background: var(--k-brand);
+    color: #fff;
+  }
+
+  &:not(.is-on):hover {
+    background: var(--k-cream);
+  }
+}
+
+// --- États ---
+.wl-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.wl-count {
+  font-size: 0.82rem;
+  color: var(--k-muted);
+  margin: 0 0 8px;
+}
+
+// --- Table ---
+.wl-table-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+}
+
+.wl-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 760px;
+
+  th:nth-child(1) { width: 22%; }
+  th:nth-child(2) { width: 14%; }
+  th:nth-child(3) { width: 30%; }
+  th:nth-child(4) { width: 17%; }
+  th:nth-child(5) { width: 17%; }
+
+  th,
+  td {
+    text-align: left;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--k-line);
+    vertical-align: top;
+  }
+
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    background: var(--k-cream);
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.wl-row {
+  // Une inscription non traitée porte un liseré : c'est la seule ligne sur
+  // laquelle l'équipe doit agir aujourd'hui.
+  &.is-awaiting td:first-child {
+    box-shadow: inset 3px 0 0 var(--k-brand);
+  }
+}
+
+// Le nom ouvre la fiche : garde le poids visuel d'un titre de ligne tout en
+// se signalant comme un lien au survol.
+.wl-name-link {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--k-ink);
+
+  &:hover {
+    color: var(--k-brand-600);
+    text-decoration: underline;
+  }
+}
+
+.wl-strong {
+  display: block;
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.9rem;
+}
+
+.wl-place {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--k-muted);
+}
+
+.wl-link {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--k-brand-600);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.wl-chip {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: var(--k-cream);
+  color: var(--k-navy-2);
+  border: 1px solid var(--k-line);
+}
+
+// Champs `details`, propres à la catégorie : une ligne « libellé : valeur ».
+.wl-detail {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--k-ink);
+  line-height: 1.4;
+
+  &__label {
+    color: var(--k-muted);
+
+    &::after {
+      content: ' : ';
+    }
+  }
+}
+
+.wl-precisions {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--k-muted);
+  line-height: 1.35;
+}
+
+.wl-tag {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 9px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.74rem;
+  font-weight: 600;
+
+  &.is-due {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+  }
+}
+
+.wl-owner-cell {
+  white-space: nowrap;
+}
+
+.wl-empty {
+  text-align: center;
+  color: var(--k-muted);
+  padding: 26px;
+}
+
+.wl-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+
+  &__info {
+    font-size: 0.85rem;
+    color: var(--k-muted);
+  }
+}

@@ -1383,6 +1383,31 @@ export interface SupportInboxQuery {
   page?: number;
 }
 
+// --- Liste d'attente (2026-08-14) -------------------------------------------
+
+/**
+ * Inscription à la liste d'attente pour l'écran back-office de consultation.
+ * Miroir de `WaitlistEntryResource` — même patron que `AdminContactMessage`,
+ * l'inscrit étant lui aussi un prospect sans compte.
+ */
+export interface AdminWaitlistEntry {
+  id: number;
+  name: string;
+  phone: string;
+  email: string | null;
+  city: string | null;
+  category: string;
+  category_label: string;
+  details: Record<string, unknown>;
+  precisions: string | null;
+  /** `nouveau` · `traite`. */
+  status: string;
+  status_label: string;
+  handled_by?: string | null;
+  handled_at: string | null;
+  created_at: string | null;
+}
+
 // --- Avis & qualité (F7.2.g) ------------------------------------------------
 
 
@@ -2572,6 +2597,48 @@ export class AdminService {
         { status },
       )
       .pipe(map((res) => res.data.contact_message));
+  }
+
+  /**
+   * Inscriptions à la liste d'attente. GET /admin/waitlist
+   *
+   * `category`/`status` filtrent ; le total des **non traitées** voyage dans
+   * `meta.pending`, indépendamment du filtre — même patron que
+   * `contactMessages()`.
+   */
+  waitlistEntries(query: { category?: string; status?: string; page?: number } = {}) {
+    let params = new HttpParams();
+    if (query.category) params = params.set('category', query.category);
+    if (query.status) params = params.set('status', query.status);
+    if (query.page) params = params.set('page', String(query.page));
+    return this.http.get<Paginated<AdminWaitlistEntry> & { meta: { pending?: number } }>(
+      `${this.api}/admin/waitlist`,
+      { params },
+    );
+  }
+
+  /**
+   * Fiche d'une inscription. GET /admin/waitlist/{id}
+   *
+   * La liste ne montre que ce qui tient sur une ligne ; la fiche restitue
+   * TOUT ce que le prospect a saisi dans le formulaire (champs `details` de
+   * sa catégorie compris), même patron que la fiche d'un message de contact.
+   */
+  waitlistEntry(id: number) {
+    return this.http
+      .get<ApiEnvelope<{ waitlist_entry: AdminWaitlistEntry }>>(`${this.api}/admin/waitlist/${id}`)
+      .pipe(map((res) => res.data.waitlist_entry));
+  }
+
+  /**
+   * Marque une inscription traitée (ou la rouvre). PATCH /admin/waitlist/{id}
+   */
+  setWaitlistEntryStatus(id: number, status: 'nouveau' | 'traite') {
+    return this.http
+      .patch<ApiEnvelope<{ waitlist_entry: AdminWaitlistEntry }>>(`${this.api}/admin/waitlist/${id}`, {
+        status,
+      })
+      .pipe(map((res) => res.data.waitlist_entry));
   }
 
   /**

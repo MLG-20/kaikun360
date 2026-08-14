@@ -161,6 +161,13 @@ export class BackofficeLayoutComponent {
     // arrive de l'extérieur.
     { label: 'Demandes', path: 'demandes', icon: 'inbox', ready: true },
 
+    // 2026-08-14 — Liste d'attente avant ouverture officielle. Même famille
+    // que Demandes (ce qui arrive de l'extérieur) : jusqu'ici, une inscription
+    // n'était visible nulle part au back-office, seule trace l'e-mail
+    // d'alerte. Icône réutilisée (« clock », déjà portée par Pointeuse) : les
+    // 20 icônes disponibles sont toutes déjà affectées une à une.
+    { label: "Liste d'attente", path: 'liste-attente', icon: 'clock', ready: true },
+
     // CDC §5 — module « Messages » (« conversation avec support Kaikun ou
     // prestataire affecté », pour TOUS les profils). Contractuel, et pourtant
     // sans écran d'équipe jusqu'en F8.12 : le client écrivait dans le vide.

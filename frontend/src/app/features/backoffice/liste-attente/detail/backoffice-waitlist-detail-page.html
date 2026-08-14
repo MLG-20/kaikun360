@@ -1,0 +1,82 @@
+<button type="button" class="k-btn k-btn--ghost wld-back" (click)="back()">← Retour à la liste</button>
+
+@if (loading()) {
+  <p class="wld-state" role="status">Chargement de l'inscription…</p>
+} @else if (error() || !entry()) {
+  <p class="wld-state wld-state--error" role="alert">Impossible de charger cette inscription.</p>
+} @else {
+  @let e = entry()!;
+
+  <header class="wld-dhead">
+    <div>
+      <h1 class="wld-dtitle">{{ e.name }}</h1>
+      <p class="wld-dsub">{{ e.category_label }} · inscrit le {{ dateTime(e.created_at) }}</p>
+    </div>
+    <span class="wld-badge" [class.is-off]="e.status === 'traite'" [class.is-pending]="e.status === 'nouveau'">
+      {{ e.status_label }}
+    </span>
+  </header>
+
+  <!-- ===================== SUIVI ===================== -->
+  <section class="wld-card">
+    <h2 class="wld-card__title">Suivi</h2>
+    @if (e.status === 'traite') {
+      <p class="wld-muted">
+        Traité par <strong>{{ e.handled_by || 'un agent' }}</strong>, le {{ dateTime(e.handled_at) }}.
+      </p>
+    } @else {
+      <p class="wld-muted">Cette inscription n'a pas encore été prise en charge.</p>
+    }
+    <button type="button" class="k-btn k-btn--primary" [disabled]="busy()" (click)="toggleHandled()">
+      @if (busy()) {
+        …
+      } @else if (e.status === 'nouveau') {
+        Marquer traitée
+      } @else {
+        Rouvrir
+      }
+    </button>
+  </section>
+
+  <!-- ===================== COORDONNÉES =====================
+       Tout ce que le prospect a saisi dans le formulaire public : c'est la
+       seule raison d'être de cette fiche. -->
+  <section class="wld-card">
+    <h2 class="wld-card__title">Coordonnées</h2>
+    <dl class="wld-grid">
+      <div><dt>Téléphone</dt><dd><a class="wld-link" [href]="'tel:' + e.phone">{{ e.phone }}</a></dd></div>
+      <div>
+        <dt>E-mail</dt>
+        <dd>
+          @if (e.email) {
+            <a class="wld-link" [href]="'mailto:' + e.email">{{ e.email }}</a>
+          } @else {
+            —
+          }
+        </dd>
+      </div>
+      <div><dt>Ville</dt><dd>{{ e.city || '—' }}</dd></div>
+      <div><dt>Catégorie</dt><dd>{{ e.category_label }}</dd></div>
+    </dl>
+  </section>
+
+  <!-- ===================== CHAMPS DE LA CATÉGORIE ===================== -->
+  <section class="wld-card">
+    <h2 class="wld-card__title">Détails déclarés</h2>
+    @if (detailLines(e.details).length) {
+      <dl class="wld-grid">
+        @for (line of detailLines(e.details); track line.label) {
+          <div><dt>{{ line.label }}</dt><dd>{{ line.value }}</dd></div>
+        }
+      </dl>
+    } @else {
+      <p class="wld-muted wld-empty-inline">Aucun champ complémentaire pour cette catégorie.</p>
+    }
+
+    @if (e.precisions) {
+      <!-- Le texte libre, tel que le prospect l'a écrit : c'est la seule
+           chose qu'il a formulée lui-même, elle ne se résume pas. -->
+      <p class="wld-desc wld-message">{{ e.precisions }}</p>
+    }
+  </section>
+}

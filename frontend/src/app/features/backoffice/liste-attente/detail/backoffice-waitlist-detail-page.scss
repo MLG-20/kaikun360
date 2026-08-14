@@ -1,0 +1,146 @@
+// Fiche d'une inscription à la liste d'attente (2026-08-14) — reprend la
+// grille des autres fiches du back-office (classes `tb-*`/`wld-*`), pour que
+// l'agent n'ait pas à réapprendre où regarder. Préfixe wld- (styles
+// encapsulés par le composant).
+
+:host {
+  display: block;
+  max-width: 900px;
+}
+
+.wld-back {
+  margin-bottom: 16px;
+}
+
+.wld-state {
+  padding: 18px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+  margin: 0 0 14px;
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.wld-dhead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.wld-dtitle {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.wld-dsub {
+  color: var(--k-muted);
+  margin: 0;
+}
+
+.wld-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: var(--k-radius-pill);
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: var(--k-cream);
+  color: var(--k-navy-2);
+  border: 1px solid var(--k-line);
+
+  &.is-pending {
+    background: rgba(216, 135, 24, 0.16);
+    color: var(--k-warning);
+    border-color: transparent;
+  }
+
+  &.is-off {
+    background: rgba(56, 167, 116, 0.14);
+    color: var(--k-green-600);
+    border-color: transparent;
+  }
+}
+
+.wld-card {
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+
+  &__title {
+    font-family: var(--k-font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--k-ink);
+    margin: 0 0 14px;
+  }
+}
+
+.wld-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 0;
+
+  dt {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+    margin-bottom: 3px;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--k-ink);
+    font-size: 0.9rem;
+  }
+}
+
+.wld-muted {
+  color: var(--k-muted);
+  font-size: 0.85rem;
+  margin: 0 0 14px;
+}
+
+.wld-empty-inline {
+  margin: 0;
+}
+
+.wld-link {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--k-brand-600);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.wld-desc {
+  margin: 16px 0 0;
+  color: var(--k-ink);
+  font-size: 0.9rem;
+  white-space: pre-line;
+}
+
+// Le texte libre du prospect, cité tel quel : un filet à gauche le montre
+// comme une parole rapportée, et non comme un texte de l'interface.
+.wld-message {
+  border-left: 3px solid var(--k-brand-050);
+  padding-left: 14px;
+}

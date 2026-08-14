@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **264 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **278 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
-- **63 tables**, référentiel géographique du Sénégal inclus
-- **1013 tests** automatisés (3554 assertions), tous verts ✅
+- **65 tables**, référentiel géographique du Sénégal inclus
+- **1095 tests** automatisés (3876 assertions), tous verts ✅
 
 ---
 
@@ -531,7 +531,7 @@ backend/
 │   └── emails/          # Gabarit unique des e-mails (HTML + texte brut)
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 264 endpoints
+├── API.md               # Référence des 278 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -897,7 +897,7 @@ Suite **PHPUnit** (pas Pest), base dédiée `kaikun360_test`. Les tests chargent
 
 ```bash
 php artisan test
-# 1082 tests, 3841 assertions — verts (mesuré après F14, ~11 min)
+# 1095 tests, 3876 assertions — verts (mesuré après F14.3, ~9,6 min)
 ```
 
 > Après toute nouvelle migration : régénérer le dump
@@ -961,7 +961,7 @@ adresse.
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 264 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 278 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |
@@ -1067,8 +1067,17 @@ Le code est **abondamment commenté en français**.
   `details` (JSON). Patron suivi : **Contact** (F2.8.1), seul flux public
   réellement anonyme du projet — `requests`/`team_building_requests`/
   `diaspora_projects` exigent tous une session. Alerte e-mail à l'équipe
-  (`NewWaitlistEntryNotification`), pas encore d'écran de consultation
-  (reporté).
+  (`NewWaitlistEntryNotification`).
+  **Écran de consultation** (`AdminWaitlistController` : `GET|PATCH
+  /admin/waitlist[/{id}][/filters]`, garde `traiter:demandes`) : liste
+  filtrable par catégorie/statut + fiche, changement de statut qui enregistre
+  l'agent et l'horodatage (patron `ContactController`). **La bascule vers
+  « traité » invite le prospect par e-mail** s'il a laissé une adresse
+  (`WaitlistEntryProcessedNotification`, routage anonyme — le destinataire n'a
+  pas de compte — 5 contenus différents selon sa catégorie, événement pilotable
+  `WAITLIST_ENTRY_PROCESSED`). ⚠️ Seule la bascule `nouveau → traité` déclenche
+  l'envoi, jamais une confirmation d'un statut déjà traité ni un retour à
+  « nouveau ».
 - ✅ **Fermeture d'accès avant ouverture (F14, hors CDC)** : réglage
   `platform.gate_enabled` (back-office, décoché par défaut) + middleware
   global `App\Http\Middleware\EnsurePlatformOpen` (alias `platform.gate`,

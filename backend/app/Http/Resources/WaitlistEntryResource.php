@@ -29,6 +29,8 @@ class WaitlistEntryResource extends JsonResource
             'precisions' => $this->precisions,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
+            'handled_by' => $this->whenLoaded('handledBy', fn () => $this->handledBy?->name),
+            'handled_at' => $this->handled_at,
             'created_at' => $this->created_at,
         ];
     }

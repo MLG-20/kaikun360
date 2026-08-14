@@ -1,0 +1,163 @@
+<header class="wl-head">
+  <div>
+    <h1 class="wl-title">Liste d'attente</h1>
+    <p class="wl-sub">
+      Les inscriptions reçues avant l'ouverture officielle, <strong>5 catégories</strong>
+      confondues. Chaque inscription déclenche déjà une alerte par e-mail à
+      l'équipe ; cet écran sert à retrouver et à suivre le prospect.
+    </p>
+  </div>
+</header>
+
+<section class="wl-filters">
+  <div class="wl-scopes" role="tablist" aria-label="Statut des inscriptions">
+    <button
+      type="button"
+      role="tab"
+      class="wl-scope"
+      [class.is-on]="status === 'nouveau'"
+      [attr.aria-selected]="status === 'nouveau'"
+      (click)="status = 'nouveau'; applyFilters()">
+      À traiter
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="wl-scope"
+      [class.is-on]="status === 'traite'"
+      [attr.aria-selected]="status === 'traite'"
+      (click)="status = 'traite'; applyFilters()">
+      Traitées
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="wl-scope"
+      [class.is-on]="status === ''"
+      [attr.aria-selected]="status === ''"
+      (click)="status = ''; applyFilters()">
+      Toutes
+    </button>
+  </div>
+
+  <select
+    class="k-input"
+    name="category"
+    [(ngModel)]="category"
+    (change)="applyFilters()"
+    aria-label="Filtrer par catégorie">
+    <option value="">Toutes les catégories</option>
+    @for (opt of categories; track opt.value) {
+      <option [value]="opt.value">{{ opt.label }}</option>
+    }
+  </select>
+</section>
+
+@if (loading()) {
+  <p class="wl-state" role="status">Chargement de la liste d'attente…</p>
+} @else if (error()) {
+  <p class="wl-state wl-state--error" role="alert">
+    Impossible de charger la liste d'attente. Réessayez.
+  </p>
+} @else {
+  <p class="wl-count">{{ pending() }} inscription(s) à traiter</p>
+
+  <div class="wl-table-wrap">
+    <table class="wl-table">
+      <thead>
+        <tr>
+          <th>Inscrit</th>
+          <th>Catégorie</th>
+          <th>Détails</th>
+          <th>Reçu</th>
+          <th>Suivi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of rows(); track e.id) {
+          <tr class="wl-row" [class.is-awaiting]="e.status === 'nouveau'">
+            <td>
+              <!-- Le nom ouvre la fiche : c'est là que tiennent tous les
+                   champs saisis par le prospect. -->
+              <a class="wl-name-link" [routerLink]="['/back-office/liste-attente', e.id]">{{ e.name }}</a>
+              <a class="wl-link" [href]="'tel:' + e.phone">{{ e.phone }}</a>
+              @if (e.email) {
+                <a class="wl-link" [href]="'mailto:' + e.email">{{ e.email }}</a>
+              }
+              @if (e.city) {
+                <span class="wl-place">{{ e.city }}</span>
+              }
+            </td>
+            <td>
+              <span class="wl-chip">{{ e.category_label }}</span>
+            </td>
+            <td>
+              @for (line of detailLines(e.details); track line.label) {
+                <span class="wl-detail">
+                  <span class="wl-detail__label">{{ line.label }}</span>
+                  {{ line.value }}
+                </span>
+              }
+              @if (e.precisions) {
+                <span class="wl-precisions">{{ e.precisions }}</span>
+              }
+            </td>
+            <td>
+              <span class="wl-strong">{{ age(e.created_at) }}</span>
+              @if (e.status === 'nouveau') {
+                <span class="wl-tag is-due">À traiter</span>
+              }
+            </td>
+            <td class="wl-owner-cell">
+              @if (e.status === 'traite') {
+                <span class="wl-strong">{{ e.handled_by || 'Traité' }}</span>
+                <span class="wl-place">{{ age(e.handled_at) }}</span>
+              }
+              <button
+                type="button"
+                class="k-btn"
+                [class.k-btn--primary]="e.status === 'nouveau'"
+                [class.k-btn--ghost]="e.status === 'traite'"
+                [disabled]="busyId() === e.id"
+                (click)="toggleHandled(e)">
+                @if (busyId() === e.id) {
+                  …
+                } @else if (e.status === 'nouveau') {
+                  Marquer traité
+                } @else {
+                  Rouvrir
+                }
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="wl-empty">
+              @if (status === 'nouveau') {
+                Aucune inscription en attente. Toute la liste d'attente a été traitée.
+              } @else {
+                Aucune inscription dans cette vue.
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (lastPage() > 1) {
+    <nav class="wl-pager" aria-label="Pagination">
+      <button type="button" class="k-btn k-btn--ghost" [disabled]="page() === 1" (click)="goTo(page() - 1)">
+        ← Précédent
+      </button>
+      <span class="wl-pager__info">Page {{ page() }} / {{ lastPage() }}</span>
+      <button
+        type="button"
+        class="k-btn k-btn--ghost"
+        [disabled]="page() === lastPage()"
+        (click)="goTo(page() + 1)">
+        Suivant →
+      </button>
+    </nav>
+  }
+}
