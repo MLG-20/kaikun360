@@ -13,6 +13,23 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
+ * Origine de l'API Laravel, vue **depuis ce processus Node** (F9.2).
+ *
+ * ⚠️ Ce n'est PAS `environment.apiUrl` : en production celui-ci vaut `/api/v1`,
+ * une adresse relative qui n'a de sens que dans un navigateur. Ce serveur, lui,
+ * doit savoir à quelle machine s'adresser. D'où une variable d'environnement
+ * dédiée, à renseigner au déploiement.
+ *
+ * ⚠️ **Déclarée avant la CSP** (2026-08-14) : `environment.development.ts` du
+ * NAVIGATEUR pointe directement sur `http://localhost:8000/api/v1` (absolu,
+ * hors origine de `:4200`) — sans cette valeur dans `connect-src`, **tout**
+ * appel API échoue en local dès qu'on ouvre une page qui en fait un, avec un
+ * message qui ressemble à une panne réseau (« Refused to connect… Content
+ * Security Policy ») et rien côté serveur Laravel, jamais atteint.
+ */
+const apiOrigin = (process.env['API_ORIGIN'] ?? 'http://localhost:8000').replace(/\/+$/, '');
+
+/**
  * En-têtes de sécurité HTTP (revue de sécurité 2026-08).
  *
  * ⚠️ Seconde ligne de défense, pas la première : l'application échappe déjà
@@ -26,7 +43,10 @@ const angularApp = new AngularNodeAppEngine();
  *   - `accounts.google.com` : script + appels du bouton de connexion Google ;
  *   - `fonts.googleapis.com` / `fonts.gstatic.com` : typographie du design
  *     system (F0.3) ;
- *   - `maps.google.com` : carte intégrée de la page Contact.
+ *   - `maps.google.com` : carte intégrée de la page Contact ;
+ *   - `apiOrigin` : notre propre API — `'self'` seul ne la couvre QUE quand
+ *     `environment.apiUrl` est relatif (le cas en production). En local, le
+ *     navigateur appelle `http://localhost:8000` directement.
  *
  * `style-src` garde `'unsafe-inline'` : Angular injecte lui-même des styles
  * de composants au runtime (encapsulation de vue), sans passer par une entrée
@@ -43,7 +63,7 @@ app.use((_req, res, next) => {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob:",
-      "connect-src 'self' https://accounts.google.com",
+      `connect-src 'self' https://accounts.google.com ${apiOrigin}`,
       "frame-src https://maps.google.com https://www.google.com",
       "frame-ancestors 'self'",
       "object-src 'none'",
@@ -57,16 +77,6 @@ app.use((_req, res, next) => {
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   next();
 });
-
-/**
- * Origine de l'API Laravel, vue **depuis ce processus Node** (F9.2).
- *
- * ⚠️ Ce n'est PAS `environment.apiUrl` : en production celui-ci vaut `/api/v1`,
- * une adresse relative qui n'a de sens que dans un navigateur. Ce serveur, lui,
- * doit savoir à quelle machine s'adresser. D'où une variable d'environnement
- * dédiée, à renseigner au déploiement.
- */
-const apiOrigin = (process.env['API_ORIGIN'] ?? 'http://localhost:8000').replace(/\/+$/, '');
 
 /**
  * Plan du site — relais vers Laravel (F9.2).
