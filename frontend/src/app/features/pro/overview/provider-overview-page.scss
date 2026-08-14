@@ -154,6 +154,12 @@
   margin-top: 2rem;
 }
 
+// Suit directement .account-tiles (styles globaux, sans marge basse) : il faut
+// son propre espace avant la carte de statut qui vient juste après elle ici.
+.account-tiles {
+  margin-bottom: 2rem;
+}
+
 .prov-certs {
   list-style: none;
   margin: 0 0 1rem;

@@ -28,6 +28,40 @@
     </a>
   </div>
 } @else if (provider(); as p) {
+  <!-- ===================== Indicateurs (tableau de bord) ==================== -->
+  <section class="prov-kpis" aria-label="Indicateurs de votre activité">
+    @for (stat of stats(); track stat.label) {
+      <div class="prov-kpi" [attr.data-tone]="stat.tone">
+        <span class="prov-kpi-label">{{ stat.label }}</span>
+        <strong class="prov-kpi-value">{{ stat.value }}</strong>
+      </div>
+    }
+  </section>
+
+  <!-- ===================== Tuiles des sections ============================== -->
+  <h2 class="prov-sections-title">Votre espace</h2>
+  <section class="account-tiles">
+    @for (item of sections; track item.path) {
+      @if (item.ready) {
+        <a class="account-tile" [routerLink]="['/espace-prestataire', item.path]">
+          <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
+          <span class="account-tile-body">
+            <strong>{{ item.label }}</strong>
+            <span>{{ item.description }}</span>
+          </span>
+        </a>
+      } @else {
+        <div class="account-tile is-soon">
+          <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
+          <span class="account-tile-body">
+            <strong>{{ item.label }} <span class="account-soon-tag">Bientôt</span></strong>
+            <span>{{ item.description }}</span>
+          </span>
+        </div>
+      }
+    }
+  </section>
+
   <!-- ===================== Bandeau de statut de validation ================= -->
   <section class="prov-status-card" aria-label="Statut de votre dossier">
     <div class="prov-status-head">
@@ -59,16 +93,6 @@
     }
   </section>
 
-  <!-- ===================== Indicateurs (tableau de bord) ==================== -->
-  <section class="prov-kpis" aria-label="Indicateurs de votre activité">
-    @for (stat of stats(); track stat.label) {
-      <div class="prov-kpi" [attr.data-tone]="stat.tone">
-        <span class="prov-kpi-label">{{ stat.label }}</span>
-        <strong class="prov-kpi-value">{{ stat.value }}</strong>
-      </div>
-    }
-  </section>
-
   <!-- ===================== Certifications =================================== -->
   <h2 class="prov-block-title">Mes certifications</h2>
   @if (certifications().length) {
@@ -95,27 +119,3 @@
 } @else {
   <p class="prov-state">Aucune donnée à afficher.</p>
 }
-
-<!-- ===================== Tuiles des sections ============================== -->
-<h2 class="prov-sections-title">Votre espace</h2>
-<section class="account-tiles">
-  @for (item of sections; track item.path) {
-    @if (item.ready) {
-      <a class="account-tile" [routerLink]="['/espace-prestataire', item.path]">
-        <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
-        <span class="account-tile-body">
-          <strong>{{ item.label }}</strong>
-          <span>{{ item.description }}</span>
-        </span>
-      </a>
-    } @else {
-      <div class="account-tile is-soon">
-        <span class="account-tile-ic"><app-account-icon [name]="item.icon" /></span>
-        <span class="account-tile-body">
-          <strong>{{ item.label }} <span class="account-soon-tag">Bientôt</span></strong>
-          <span>{{ item.description }}</span>
-        </span>
-      </div>
-    }
-  }
-</section>
