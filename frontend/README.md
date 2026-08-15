@@ -1261,10 +1261,16 @@ npm run serve:ssr:kaikun360
 > sert exactement ce même `server.mjs` — jamais un `dist/` statique, qui
 > perdrait le SSR. Voir `docker/README.md` à la racine du dépôt.
 
-> ⚠️ **Sécurité (déploiement)** : `angular.json → build.options.security.allowedHosts`
-> ne contient pour l'instant que `localhost`. **Ajouter le(s) domaine(s) de
-> production** (ex. `kaikun360.sn`) dans cette liste avant la mise en ligne, sinon
-> le serveur SSR renverra `400 Bad Request` (protection anti-SSRF sur l'en-tête Host).
+> ⚠️ **Sécurité (déploiement)** : le serveur SSR refuse en `400 Bad Request`
+> tout en-tête `Host` non explicitement autorisé (protection anti-SSRF
+> intégrée à `@angular/ssr`). `angular.json → build.options.security.allowedHosts`
+> ne contient que `localhost` (figé au build) — **ne pas le modifier pour
+> chaque environnement**, ça imposerait de reconstruire l'image à chaque
+> changement d'adresse publique. La variable d'environnement
+> **`NG_ALLOWED_HOSTS`** (lue au démarrage, prioritaire sur `angular.json`)
+> est le bon endroit : un domaine par valeur, séparés par une virgule, réglée
+> dans `.env.docker` sans jamais toucher au build. Piège réellement rencontré
+> au premier déploiement VPS (2026-08-15), voir `docker/README.md`.
 
 **En-têtes de sécurité HTTP** (revue de sécurité, 2026-08-12) : `server.ts`
 pose désormais une `Content-Security-Policy` (liste blanche des seules

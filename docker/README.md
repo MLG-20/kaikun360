@@ -65,6 +65,14 @@ Le site est ensuite sur `http://localhost:${HTTP_PORT:-80}`.
   `resolver 127.0.0.11 valid=10s;` + des `set $backend_fpm …` /
   `set $frontend_ssr …` : nginx redemande l'IP à Docker à chaque expiration
   du TTL, sans jamais avoir besoin d'être relancé lui-même.
+- ⚠️ **Le serveur SSR Angular refuse tout `Host` non explicitement autorisé**
+  (protection anti-SSRF intégrée à `@angular/ssr`, indépendante de notre
+  code) : `curl http://<IP ou domaine du serveur>/` renvoie **400** « Header
+  "host" ... is not allowed », visible uniquement dans les logs du conteneur
+  `frontend`, AVANT même que le routeur Angular ne s'exécute. Corrigé par la
+  variable `NG_ALLOWED_HOSTS` (voir `.env.docker.example`) — à tenir à jour à
+  **chaque changement d'adresse publique** (IP de test, sous-domaine, puis
+  `kaikun360.com` au jour de la bascule).
 
 ## Un vrai bug de production, trouvé grâce à Docker (pas un défaut Docker)
 

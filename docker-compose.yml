@@ -101,6 +101,11 @@ services:
       # Vu DEPUIS ce conteneur : nginx est le seul chemin http vers Laravel
       # (php-fpm ne parle pas HTTP). Sert au relais /sitemap.xml et à la CSP.
       API_ORIGIN: http://nginx
+      # Protection anti-SSRF intégrée à @angular/ssr (node.mjs) : toute
+      # requête dont l'en-tête `Host` n'est pas dans cette liste est rejetée
+      # en 400, AVANT même d'atteindre le routeur Angular. Sans elle, le site
+      # entier est inaccessible dès qu'on ne l'ouvre pas en `localhost`.
+      NG_ALLOWED_HOSTS: ${NG_ALLOWED_HOSTS}
     depends_on:
       - backend
 
