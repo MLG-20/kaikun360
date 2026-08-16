@@ -117,6 +117,10 @@ services:
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - storage-public:/var/www/html/public/storage:ro
+      # Partagé avec le conteneur certbot : fichiers de vérification
+      # (webroot) et certificats obtenus. Lecture seule ici, certbot y écrit.
+      - certbot-webroot:/var/www/certbot:ro
+      - certbot-certs:/etc/letsencrypt:ro
     depends_on:
       - backend
       - frontend
@@ -127,3 +131,5 @@ volumes:
   storage-public:
   storage-private:
   storage-logs:
+  certbot-webroot:
+  certbot-certs:

@@ -112,10 +112,21 @@ secours ne sert à rien puisque JavaScript est actif (c'est une SPA Angular).
 synchrone classique, sans handler inline, compatible avec la CSP stricte
 telle quelle (pas d'affaiblissement de la CSP pour contourner le problème).
 
+## TLS (Let's Encrypt, en cours)
+
+`nginx` écoute toujours en clair sur le port 80 ; Cloudflare (mode
+"Flexible") sert de HTTPS temporaire côté visiteur en attendant un vrai
+certificat sur le VPS. Deux volumes préparent le terrain, montés en lecture
+seule dans `nginx` : `certbot-webroot` (fichier de vérification du défi
+HTTP, `location /.well-known/acme-challenge/` dans `default.conf`) et
+`certbot-certs` (`/etc/letsencrypt`, où Certbot dépose le certificat une fois
+obtenu). Le certificat est obtenu **manuellement une fois** via un conteneur
+`certbot/certbot` ponctuel qui partage ces mêmes volumes (méthode webroot,
+pas d'arrêt de nginx nécessaire) ; le port 443 et le bloc `server` HTTPS ne
+sont ajoutés à `default.conf` qu'une fois le certificat déjà présent, sinon
+nginx refuse de démarrer (fichier de certificat introuvable).
+
 ## Ce qui reste hors de ce chantier
 
-- **TLS** : nginx écoute en clair sur le port 80 — le VPS (Contabo) termine
-  HTTPS en amont (reverse proxy / certificat), voir la mémoire de
-  déploiement.
-- **CD** (publication automatique sur le VPS) : pas encore fait, c'est
-  l'étape suivante une fois ce socle Docker validé.
+- Renouvellement automatique du certificat (Certbot re-signe tous les
+  ~60 jours) — à planifier une fois le certificat initial obtenu.
