@@ -65,6 +65,22 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Canal dédié au pilote de mail `log` (MAIL_MAILER=log — dépannage
+        // sans SMTP réel, avant que de vraies identifiants soient branchés).
+        // ⚠️ Niveau `debug` FIGÉ, jamais `env('LOG_LEVEL')` : le transport
+        // `Illuminate\Mail\Transport\LogTransport` écrit avec `->debug(...)`,
+        // et un `LOG_LEVEL=info` (le réglage de test VPS) fait taire ce canal
+        // en silence — aucune erreur, juste un e-mail invisible nulle part
+        // (trouvé le 2026-08-15 en cherchant un code de vérification 2FA,
+        // reproduit en local). Un fichier séparé pour ne pas rendre TOUTE
+        // l'application bavarde juste pour lire un e-mail de test.
+        'mail_debug' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/mail.log'),
+            'level' => 'debug',
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

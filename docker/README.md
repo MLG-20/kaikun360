@@ -73,6 +73,16 @@ Le site est ensuite sur `http://localhost:${HTTP_PORT:-80}`.
   variable `NG_ALLOWED_HOSTS` (voir `.env.docker.example`) — à tenir à jour à
   **chaque changement d'adresse publique** (IP de test, sous-domaine, puis
   `kaikun360.com` au jour de la bascule).
+- ⚠️ **`MAIL_MAILER=log` n'écrit RIEN, en silence, dès que `LOG_LEVEL` dépasse
+  `debug`.** `Illuminate\Mail\Transport\LogTransport` écrit le contenu de
+  chaque e-mail avec `Logger::debug(...)` — avec `LOG_LEVEL=info` (le réglage
+  de test VPS), ce niveau est filtré et l'e-mail disparaît sans erreur nulle
+  part. Trouvé le 2026-08-15 en cherchant un code de vérification 2FA
+  introuvable dans `storage/logs/laravel.log`. Corrigé par un canal dédié à
+  niveau `debug` **figé** (`config/logging.php → mail_debug`,
+  `storage/logs/mail.log`), branché via `MAIL_LOG_CHANNEL=mail_debug` (voir
+  `.env.docker.example`) — indépendant de `LOG_LEVEL`, sans rendre toute
+  l'application bavarde pour autant.
 
 ## Un vrai bug de production, trouvé grâce à Docker (pas un défaut Docker)
 
