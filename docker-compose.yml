@@ -1,6 +1,7 @@
-# Orchestration locale/VPS de Kaikun360. Un seul point d'entrée HTTP (nginx,
-# port 80) ; tout le reste dialogue sur le réseau interne Docker. Pas de TLS
-# ici — voir docker/README.md pour ce que ça change en déploiement réel.
+# Orchestration locale/VPS de Kaikun360. Un seul point d'entrée (nginx,
+# ports 80/443) ; tout le reste dialogue sur le réseau interne Docker. Le
+# certificat TLS (443) est obtenu via un conteneur certbot ponctuel, pas
+# géré par ce fichier — voir docker/README.md.
 #
 # Démarrage : cp .env.docker.example .env.docker (à remplir), puis
 #   docker compose --env-file .env.docker up --build
@@ -114,6 +115,7 @@ services:
     restart: unless-stopped
     ports:
       - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - storage-public:/var/www/html/public/storage:ro

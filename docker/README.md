@@ -112,21 +112,41 @@ secours ne sert à rien puisque JavaScript est actif (c'est une SPA Angular).
 synchrone classique, sans handler inline, compatible avec la CSP stricte
 telle quelle (pas d'affaiblissement de la CSP pour contourner le problème).
 
-## TLS (Let's Encrypt, en cours)
+## TLS (Let's Encrypt) — FAIT (2026-08-16)
 
-`nginx` écoute toujours en clair sur le port 80 ; Cloudflare (mode
-"Flexible") sert de HTTPS temporaire côté visiteur en attendant un vrai
-certificat sur le VPS. Deux volumes préparent le terrain, montés en lecture
+`nginx` écoute en 80 **et** 443, avec un certificat Let's Encrypt réel pour
+`kaikun360.com`/`www.kaikun360.com`. Deux volumes dédiés, montés en lecture
 seule dans `nginx` : `certbot-webroot` (fichier de vérification du défi
 HTTP, `location /.well-known/acme-challenge/` dans `default.conf`) et
-`certbot-certs` (`/etc/letsencrypt`, où Certbot dépose le certificat une fois
-obtenu). Le certificat est obtenu **manuellement une fois** via un conteneur
-`certbot/certbot` ponctuel qui partage ces mêmes volumes (méthode webroot,
-pas d'arrêt de nginx nécessaire) ; le port 443 et le bloc `server` HTTPS ne
-sont ajoutés à `default.conf` qu'une fois le certificat déjà présent, sinon
-nginx refuse de démarrer (fichier de certificat introuvable).
+`certbot-certs` (`/etc/letsencrypt`, où Certbot dépose le certificat).
 
-## Ce qui reste hors de ce chantier
+Obtention initiale, **manuelle et ponctuelle** (pas un service
+docker-compose — certbot ne tourne pas en continu) :
 
-- Renouvellement automatique du certificat (Certbot re-signe tous les
-  ~60 jours) — à planifier une fois le certificat initial obtenu.
+```bash
+docker run --rm \
+  -v kaikun360_certbot-webroot:/var/www/certbot \
+  -v kaikun360_certbot-certs:/etc/letsencrypt \
+  certbot/certbot certonly --webroot -w /var/www/certbot \
+  -d kaikun360.com -d www.kaikun360.com \
+  --email <email-du-dev> --agree-tos --no-eff-email --non-interactive
+```
+
+⚠️ **Ordre important** : le bloc `server { listen 443 ssl; ... }` dans
+`default.conf` référence les fichiers de certificat — nginx refuse de
+démarrer si le port 443 est activé avant que le certificat existe. D'où le
+déploiement en deux temps : d'abord le port 80 seul avec la location du défi
+ACME, obtention du certificat, *puis* activation du 443.
+
+**Renouvellement automatique** : `docker/certbot-renew.sh`, à lancer par
+cron sur le VPS (certificat valable 90 jours, Certbot ne renouvelle
+réellement que dans les 30 derniers jours — sans risque de le lancer tous
+les jours) :
+
+```
+17 3 * * * /opt/kaikun360/docker/certbot-renew.sh >> /var/log/certbot-renew.log 2>&1
+```
+
+Côté Cloudflare, passer le mode SSL/TLS de "Flexible" à **"Full (strict)"**
+une fois le certificat en place — Cloudflare vérifie alors un vrai
+certificat public sur le VPS plutôt que de faire confiance à n'importe quoi.
