@@ -36,15 +36,11 @@
   font-size: 20px;
 }
 
+// F16 — Vrai logo du client, comme dans l'en-tête (header.scss).
 .auth-logo-mark {
-  display: grid;
-  place-items: center;
   width: 38px;
   height: 38px;
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  font-size: 20px;
+  object-fit: contain;
 }
 
 .auth-brand-title {

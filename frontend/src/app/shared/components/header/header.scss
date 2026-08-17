@@ -43,27 +43,14 @@
   flex: 0 0 auto;
 }
 
+// F16 — Vrai logo du client (K + orbite verte), fourni le 2026-08-16 : la
+// marque n'est plus composée en CSS (carré navy + lettre), c'est une image.
+// `object-fit: contain` évite toute déformation si les proportions changent
+// le jour où le client fournit une version vectorielle.
 .logo-mark {
   width: 42px;
   height: 42px;
-  border-radius: 12px;
-  background: var(--k-navy);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-family: var(--k-font-display);
-  font-weight: 800;
-  font-size: 18px;
-  position: relative;
-}
-
-.logo-mark::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border: 1.5px solid var(--k-gold);
-  border-radius: 15px;
-  opacity: 0.6;
+  object-fit: contain;
 }
 
 .brand-text b {

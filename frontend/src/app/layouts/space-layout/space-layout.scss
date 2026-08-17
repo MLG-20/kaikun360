@@ -76,18 +76,12 @@
   white-space: nowrap;
 }
 
+// F16 — Vrai logo du client, comme dans l'en-tête public (header.scss).
 .account-logo {
-  display: grid;
-  place-items: center;
   width: 40px;
   height: 40px;
   flex: 0 0 auto;
-  border-radius: 11px;
-  background: var(--k-brand);
-  color: #fff;
-  font-family: var(--k-font-display);
-  font-weight: 800;
-  font-size: 20px;
+  object-fit: contain;
 }
 
 .account-brand-text {

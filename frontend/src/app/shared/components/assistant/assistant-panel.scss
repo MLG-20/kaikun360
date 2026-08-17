@@ -143,15 +143,11 @@ $retrait: clamp(10px, 1.6vw, 18px);
   background: var(--k-navy);
   color: var(--k-white);
 
+  // F16 — Vrai logo du client, comme dans l'en-tête public (header.scss).
   &__marque {
-    display: grid;
-    place-items: center;
     width: 34px;
     height: 34px;
-    border-radius: 50%;
-    background: var(--k-brand);
-    font-family: var(--k-font-display);
-    font-weight: 700;
+    object-fit: contain;
   }
 
   &__titre {

@@ -77,6 +77,20 @@
   overflow: hidden; // le sous-titre disparaît par la largeur, sans replier la ligne
   white-space: nowrap;
 
+  // F16 — Vrai logo du client à côté du texte « K360 ».
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__icon {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+  }
+
   &__logo {
     font-family: var(--k-font-display);
     font-weight: 800;
@@ -332,7 +346,8 @@
     align-items: center;
   }
 
-  .bo-brand__sub {
+  .bo-brand__sub,
+  .bo-brand__logo {
     display: none;
   }
 
@@ -560,7 +575,8 @@
     .bo-nav__label,
     .bo-side__texte,
     .bo-nav__soon,
-    .bo-brand__sub {
+    .bo-brand__sub,
+    .bo-brand__logo {
       display: block;
     }
 

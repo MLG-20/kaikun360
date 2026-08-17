@@ -22,17 +22,13 @@
   margin-bottom: 14px;
 }
 
+// F16 — Vrai logo du client, comme dans l'en-tête (header.scss). Le fond du
+// pied de page étant sombre, l'image (fond transparent) s'y détache d'elle-même
+// sans plaque de couleur derrière.
 .logo-mark {
   width: 40px;
   height: 40px;
-  border-radius: 11px;
-  background: linear-gradient(135deg, var(--k-gold), var(--k-gold-2));
-  color: var(--k-navy);
-  display: grid;
-  place-items: center;
-  font-family: var(--k-font-display);
-  font-weight: 800;
-  font-size: 17px;
+  object-fit: contain;
 }
 
 .about .brand b {
