@@ -25,7 +25,80 @@
   // cercle VISIBLE reste dans ses limites. `clip` contient ce débordement
   // invisible sans rien rogner de visible — et, contrairement à `hidden`, ne
   // transforme pas la section en conteneur de défilement (le sticky reste sain).
-  overflow-x: clip;
+  // `clip` sur les deux axes (pas seulement X) : sans lui, la couche vidéo du
+  // héros (`.hero-media`, position absolute) déborderait des coins arrondis
+  // ajoutés par `.hero--image` — `clip` ne crée pas de conteneur défilable,
+  // contrairement à `hidden`, donc le sticky du header reste sain.
+  overflow: clip;
+  position: relative;
+}
+
+// Variante « média de fond » (F15.1/F16) : un diaporama de photos ou une
+// vidéo, chargés au back-office, remplace le dégradé. Essai demandé par
+// l'utilisateur : voile SOMBRE (navy, comme `.uni-hero--image`) plutôt que
+// le lavis crème d'origine — donc texte BLANC ici, pas en encre.
+.hero--image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.6s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(90deg, rgba(3, 25, 63, 0.72) 0%, rgba(3, 25, 63, 0.45) 30%, rgba(3, 25, 63, 0) 58%);
+    pointer-events: none;
+  }
+
+  // Voile sombre → tout le texte passe en clair (comme `.uni-hero--image`).
+  // `.hl` (mot-clé surligné) garde sa couleur de marque, déjà assez claire
+  // sur le navy pour rester lisible.
+  .hero-text h1,
+  .hero-text .lead,
+  .hero-text .trust-value,
+  .hero-text .trust-label {
+    color: #fff;
+  }
+
+  // Le bleu de marque manquait de contraste sur le voile navy (retour
+  // utilisateur) — retour à l'or, déjà éprouvé sur `.uni-hero .k-eyebrow`
+  // pour exactement ce même fond.
+  .hero-text .k-eyebrow {
+    color: var(--k-gold);
+  }
+
+  .hero-grid {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+// Couche vidéo (fichier déposé ou embed) : sous le voile de `.hero--image`
+// (z-index 1), au-dessus du fond de la section (0).
+.hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.hero-media-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+  // Une iframe d'embed (YouTube/Vimeo) est bien plus large que le cadre visé
+  // pour masquer ses propres bordures/contrôles au maximum sans dépendre de
+  // paramètres d'URL propres à chaque plateforme.
+  transform: scale(1.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero--image {
+    transition: none;
+  }
 }
 
 .hero-grid {
@@ -99,9 +172,13 @@
 }
 
 // La signature orbitale respire un peu à droite.
+// F16 (essai) — colonne vide : plus de carte ni de halo, la photo du
+// diaporama est directement le fond de toute la section `.hero`. Ce
+// `min-height` garde juste la même proportion de mise en page qu'avant
+// (texte à gauche, respiration à droite) pendant que le fond s'étend
+// derrière les deux colonnes.
 .hero-visual {
-  display: flex;
-  justify-content: center;
+  min-height: 340px;
 }
 
 // En-tête de section réutilisé (eyebrow + titre + chapô centrés).
@@ -230,6 +307,55 @@
 .univers-card:hover .univers-arrow {
   opacity: 1;
   transform: translateX(0);
+}
+
+// --- Section 2 (variante) : Actualités Kaikun (F15) -------------------------
+// Occupe le même emplacement que la grille des univers ci-dessus — voir la
+// bascule automatique dans home-page.ts (`aDesActualites`).
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.news-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 16px 22px;
+  overflow: hidden;
+}
+
+.news-media {
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--k-sand);
+}
+
+.news-image,
+.news-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+  display: block;
+}
+
+.news-card-title {
+  font-size: 1.05rem;
+  margin: 4px 0 0;
+}
+
+.news-card-desc {
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .news-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 // --- Section 3 : Protocole de confiance (navy) -----------------------------
@@ -844,6 +970,13 @@
   // l'accroche.
   .hero-visual {
     order: 1;
+  }
+
+  // Colonne unique : le texte occupe toute la largeur, le lavis horizontal du
+  // desktop laisserait donc sa moitié droite illisible sur la photo. Il
+  // redevient un aplat crème quasi plein, uniforme sur toute la largeur.
+  .hero--image::before {
+    background: linear-gradient(180deg, rgba(3, 25, 63, 0.78) 55%, rgba(3, 25, 63, 0.5) 100%);
   }
 
   .univers-grid,

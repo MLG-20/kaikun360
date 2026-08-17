@@ -5,13 +5,17 @@ import {
   OnDestroy,
   OnInit,
   PLATFORM_ID,
+  computed,
   inject,
   signal,
 } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 
 import { CatalogService } from '../../core/api/catalog.service';
+import { HomeHero, HomeHeroService } from '../../core/api/home-hero.service';
+import { NewsArticle, NewsService } from '../../core/api/news.service';
 import { schemaOrganisation, schemaSite } from '../../core/seo/json-ld';
 import { SeoService } from '../../core/seo/seo.service';
 import { FavoriteStore } from '../../core/state/favorite-store';
@@ -22,7 +26,6 @@ import {
   Universe,
 } from '../../shared/components/catalog/catalog.config';
 import { ListingCardComponent } from '../../shared/components/listing-card/listing-card';
-import { OrbitHeroComponent } from '../../shared/components/orbit-hero/orbit-hero';
 import { CountUpDirective } from '../../shared/directives/count-up.directive';
 import { RevealDirective } from '../../shared/directives/reveal.directive';
 
@@ -103,7 +106,7 @@ const PAUSE_MAX_MS = 60000;
  */
 @Component({
   selector: 'app-home-page',
-  imports: [OrbitHeroComponent, ListingCardComponent, RouterLink, RevealDirective, CountUpDirective],
+  imports: [ListingCardComponent, RouterLink, RevealDirective, CountUpDirective],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -111,8 +114,49 @@ const PAUSE_MAX_MS = 60000;
 export class HomePageComponent implements OnInit, OnDestroy {
   private readonly catalog = inject(CatalogService);
   private readonly seo = inject(SeoService);
+  private readonly homeHero = inject(HomeHeroService);
+  private readonly news = inject(NewsService);
+  private readonly sanitizer = inject(DomSanitizer);
   /** État partagé des favoris (cœurs sur les biens en vedette). */
   protected readonly favorites = inject(FavoriteStore);
+
+  /**
+   * Héros de l'accueil (F15.1) : un diaporama de photos, une courte vidéo, ou
+   * rien (fond de marque d'origine). Distinct des bandeaux F12 (une image par
+   * page) — c'est le seul endroit du site à porter plusieurs médias.
+   */
+  protected readonly heroMedia = signal<HomeHero>({ images: [], video: null });
+
+  /** Une vidéo, quand elle existe, REMPLACE entièrement le diaporama. */
+  protected readonly heroHasVideo = computed(() => !!this.heroMedia().video);
+
+  /** Index de la photo actuellement affichée dans le diaporama. */
+  protected readonly heroSlideIndex = signal(0);
+
+  /** Valeur CSS prête à l'emploi pour la photo courante du diaporama. */
+  protected readonly heroSlideBackground = computed(() => {
+    const images = this.heroMedia().images;
+    const url = images[this.heroSlideIndex() % Math.max(images.length, 1)];
+
+    return url ? `url("${encodeURI(url)}")` : null;
+  });
+
+  /** Minuteur du diaporama du héros (navigateur uniquement). */
+  private heroMinuteur: ReturnType<typeof setInterval> | null = null;
+
+  /**
+   * Articles publiés de la section « Actualités Kaikun ».
+   *
+   * ⚠️ **C'est ce signal qui décide de la Section 2 de l'accueil** : un
+   * article publié → la section Actualités s'affiche à la place de la grille
+   * des univers ; aucun → la grille reprend sa place. Bascule automatique,
+   * sans geste de l'équipe — demande explicite de l'utilisateur (2026-08-16) :
+   * l'actualité est « obligatoire » quand elle existe, la grille des univers
+   * n'est qu'un repli le temps qu'il n'y en ait aucune. La navigation vers les
+   * univers reste de toute façon accessible par le méga-menu de l'en-tête.
+   */
+  protected readonly actualites = signal<NewsArticle[]>([]);
+  protected readonly aDesActualites = computed(() => this.actualites().length > 0);
 
   private readonly estNavigateur = isPlatformBrowser(inject(PLATFORM_ID));
 
@@ -381,7 +425,62 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadFeatured();
+    this.chargerActualites();
+    this.chargerHeroMedia();
     this.referencer();
+  }
+
+  /**
+   * Charge les actualités publiées. Une panne réseau n'affiche pas d'erreur —
+   * comme les bandeaux (F12), c'est de la décoration : la page retombe alors
+   * sur la grille des univers, son état sans surcharge.
+   */
+  private chargerActualites(): void {
+    this.news
+      .list()
+      .pipe(catchError(() => of([] as NewsArticle[])))
+      .subscribe((articles) => this.actualites.set(articles));
+  }
+
+  /**
+   * Charge le héros de l'accueil (diaporama ou vidéo). Même tolérance de
+   * panne que les actualités : c'est de la décoration, pas un contenu dont
+   * l'absence doit se voir comme une erreur.
+   */
+  private chargerHeroMedia(): void {
+    this.homeHero
+      .get()
+      .pipe(catchError(() => of({ images: [], video: null } as HomeHero)))
+      .subscribe((media) => {
+        this.heroMedia.set(media);
+        this.demarrerLeDiaporamaDuHeros();
+      });
+  }
+
+  /**
+   * Fait défiler le diaporama de photos du héros, une image toutes les 7 s —
+   * même cadence que la vitrine du catalogue. Rien à faire si une vidéo est
+   * présente (elle remplace le diaporama) ou s'il y a moins de deux photos.
+   */
+  private demarrerLeDiaporamaDuHeros(): void {
+    if (!this.estNavigateur || this.heroMinuteur) return;
+    if (this.heroHasVideo() || this.heroMedia().images.length < 2) return;
+
+    this.heroMinuteur = setInterval(() => {
+      this.heroSlideIndex.update((i) => i + 1);
+    }, ROTATION_MS);
+  }
+
+  /**
+   * URL d'embed assainie pour l'iframe vidéo d'un article.
+   *
+   * ⚠️ Même modèle de confiance que la carte de la page Contact
+   * (`bypassSecurityTrustResourceUrl`) : la valeur ne vient pas d'un visiteur
+   * mais d'un agent titulaire de `gerer:parametres`, le même niveau de
+   * confiance que le corps HTML des pages de contenu (déjà rendu brut).
+   */
+  protected videoEmbed(url: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
   /**
@@ -563,6 +662,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
    */
   ngOnDestroy(): void {
     this.arreterLeTour();
+    if (this.heroMinuteur) clearInterval(this.heroMinuteur);
   }
 
   private arreterLeTour(): void {

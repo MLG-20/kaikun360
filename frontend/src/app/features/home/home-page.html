@@ -2,7 +2,26 @@
      PAGE D'ACCUEIL KAIKUN 360 (F2.2)
      Section 1 — Hero : promesse + preuve de confiance + recherche + orbite.
      ========================================================================= -->
-<section class="hero">
+<!--
+  Héros de l'accueil pilotée au back-office (F15.1) : diaporama de photos ou
+  courte vidéo, PAS derrière le texte seul — pour ne pas concurrencer la
+  signature orbitale animée (colonne de droite). `hero--image` ajoute un voile
+  léger uniquement sous le texte (voir home-page.scss) — sans média chargé, la
+  section garde exactement son dégradé de marque d'origine.
+-->
+<section
+  class="hero"
+  [class.hero--image]="heroHasVideo() || heroMedia().images.length > 0"
+  [style.background-image]="heroHasVideo() ? null : heroSlideBackground()">
+  @if (heroHasVideo(); as video) {
+    <div class="hero-media" aria-hidden="true">
+      @if (heroMedia().video?.file; as file) {
+        <video class="hero-media-el" [src]="file" autoplay muted loop playsinline></video>
+      } @else if (heroMedia().video?.url; as url) {
+        <iframe class="hero-media-el" [src]="videoEmbed(url)" allow="autoplay; encrypted-media" loading="lazy"></iframe>
+      }
+    </div>
+  }
   <div class="k-wrap hero-grid">
     <!-- Colonne texte : accroche, bandeau de confiance, moteur de recherche. -->
     <div class="hero-text">
@@ -28,13 +47,62 @@
       </ul>
     </div>
 
-    <!-- Colonne visuelle : signature orbitale animée (F0.4). -->
-    <div class="hero-visual">
-      <app-orbit-hero />
-    </div>
+    <!--
+      Colonne visuelle (F16, essai demandé par l'utilisateur) : plus de carte
+      ni de halo — la photo du diaporama du héros est carrément le fond de
+      toute la section (voir `[style.background-image]` sur `.hero` plus
+      haut). Cette colonne ne reste que pour garder la mise en page en deux
+      temps du texte (le fond, lui, s'étend sur toute la largeur).
+    -->
+    <div class="hero-visual"></div>
   </div>
 </section>
 
+<!-- =========================================================================
+     Section 2 — Actualités Kaikun (F15), ou à défaut la grille des Univers.
+
+     ⚠️ Bascule AUTOMATIQUE selon le contenu, pas un réglage manuel : dès
+     qu'un article est publié au back-office, il remplace la grille à cet
+     emplacement ; sans aucun article publié, la grille reprend sa place. La
+     navigation vers les univers reste de toute façon accessible via le
+     méga-menu de l'en-tête — ce n'est donc pas une perte de navigation,
+     seulement un choix de ce qui occupe CETTE position de la page.
+     ========================================================================= -->
+@if (aDesActualites()) {
+  <section class="news k-wrap" aria-labelledby="news-title">
+    <header class="section-head" appReveal>
+      <span class="k-eyebrow">Actualités Kaikun</span>
+      <h2 id="news-title">Ce qui se passe en ce moment chez Kaikun 360</h2>
+    </header>
+
+    <div class="news-grid" appReveal="group">
+      @for (a of actualites(); track a.id) {
+        <article class="news-card k-card">
+          <div class="news-media">
+            @if (a.videoFile) {
+              <video class="news-video" [src]="a.videoFile" controls preload="metadata"></video>
+            } @else if (a.videoUrl) {
+              <iframe
+                class="news-video"
+                [src]="videoEmbed(a.videoUrl)"
+                title="Vidéo — {{ a.title }}"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+                loading="lazy">
+              </iframe>
+            } @else {
+              <img class="news-image" [src]="a.image" [alt]="a.title" loading="lazy" />
+            }
+          </div>
+          <h3 class="news-card-title">{{ a.title }}</h3>
+          @if (a.excerpt) {
+            <p class="news-card-desc k-muted">{{ a.excerpt }}</p>
+          }
+        </article>
+      }
+    </div>
+  </section>
+} @else {
 <!-- =========================================================================
      Section 2 — Univers : la grille des 9 services Kaikun 360.
      Chaque tuile mène au catalogue filtré ou à la section dédiée plus bas.
@@ -106,6 +174,7 @@
     }
   </div>
 </section>
+}
 
 <!-- =========================================================================
      Section 3 — Protocole de confiance (fond navy).

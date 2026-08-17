@@ -3,6 +3,8 @@ import { provideRouter } from '@angular/router';
 import { Observable, Subject, of } from 'rxjs';
 
 import { CatalogService } from '../../core/api/catalog.service';
+import { HomeHero, HomeHeroService } from '../../core/api/home-hero.service';
+import { NewsArticle, NewsService } from '../../core/api/news.service';
 import { FavoriteStore } from '../../core/state/favorite-store';
 import { HomePageComponent } from './home-page';
 
@@ -44,7 +46,12 @@ describe('HomePageComponent — vitrine tournante', () => {
    * retenir la réponse du premier univers pour rejouer le cas de la réponse
    * tardive.
    */
-  function monter(options: { immobilierVide?: boolean; immobilierEnAttente?: Subject<unknown> } = {}) {
+  function monter(options: {
+    immobilierVide?: boolean;
+    immobilierEnAttente?: Subject<unknown>;
+    actualites?: NewsArticle[];
+    heroMedia?: HomeHero;
+  } = {}) {
     appels = { properties: 0, stays: 0, vehicles: 0, experiences: 0, mobility: 0 };
 
     const catalogue = {
@@ -71,6 +78,11 @@ describe('HomePageComponent — vitrine tournante', () => {
           provide: FavoriteStore,
           useValue: { isFavorited: () => false, isBusy: () => false, toggle: () => undefined },
         },
+        {
+          provide: HomeHeroService,
+          useValue: { get: () => of(options.heroMedia ?? { images: [], video: null }) },
+        },
+        { provide: NewsService, useValue: { list: () => of(options.actualites ?? []) } },
       ],
     });
 
@@ -184,5 +196,130 @@ describe('HomePageComponent — vitrine tournante', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+/**
+ * Tests F15 : bascule entre la section « Actualités Kaikun » et la grille des
+ * univers, et photo de fond du héros.
+ *
+ * Le comportement protégé n'est pas l'affichage lui-même (visible à l'œil)
+ * mais la RÈGLE de bascule : elle doit suivre le CONTENU (au moins un article
+ * publié), pas un réglage qu'on aurait pu oublier de synchroniser.
+ */
+describe('HomePageComponent — actualités & héros (F15)', () => {
+  const article: NewsArticle = {
+    id: 1,
+    title: 'Un article',
+    excerpt: 'Résumé',
+    body: null,
+    image: 'https://cdn.test/news.jpg',
+    videoFile: null,
+    videoUrl: null,
+  };
+
+  function page(data: unknown[]) {
+    return of({ data } as never);
+  }
+
+  function monter(options: { actualites?: NewsArticle[]; heroMedia?: HomeHero } = {}) {
+    const catalogue = {
+      properties: () => page([]),
+      stays: () => page([]),
+      vehicles: () => page([]),
+      experiences: () => page([]),
+      mobilityServices: () => page([]),
+    };
+
+    TestBed.configureTestingModule({
+      imports: [HomePageComponent],
+      providers: [
+        provideRouter([]),
+        { provide: CatalogService, useValue: catalogue },
+        {
+          provide: FavoriteStore,
+          useValue: { isFavorited: () => false, isBusy: () => false, toggle: () => undefined },
+        },
+        {
+          provide: HomeHeroService,
+          useValue: { get: () => of(options.heroMedia ?? { images: [], video: null }) },
+        },
+        { provide: NewsService, useValue: { list: () => of(options.actualites ?? []) } },
+      ],
+    });
+
+    const fixture = TestBed.createComponent(HomePageComponent);
+    fixture.detectChanges();
+
+    return fixture;
+  }
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+  });
+
+  it('affiche la grille des univers quand aucune actualité n’est publiée', () => {
+    const fixture = monter({ actualites: [] });
+    const hote = fixture.nativeElement as HTMLElement;
+
+    expect(hote.querySelector('.univers-grid')).toBeTruthy();
+    expect(hote.querySelector('.news-grid')).toBeFalsy();
+
+    fixture.destroy();
+  });
+
+  it('remplace la grille des univers par les actualités dès qu’il y en a une', () => {
+    const fixture = monter({ actualites: [article] });
+    const hote = fixture.nativeElement as HTMLElement;
+
+    expect(hote.querySelector('.news-grid')).toBeTruthy();
+    expect(hote.querySelector('.univers-grid')).toBeFalsy();
+    expect(hote.textContent).toContain('Un article');
+
+    fixture.destroy();
+  });
+
+  it('n’ajoute aucun média de fond au héros sans photo ni vidéo au back-office', () => {
+    const fixture = monter({ heroMedia: { images: [], video: null } });
+    const hote = fixture.nativeElement as HTMLElement;
+    const hero = hote.querySelector('.hero') as HTMLElement;
+
+    expect(hero.classList.contains('hero--image')).toBe(false);
+    expect(hero.style.backgroundImage).toBe('');
+    expect(hote.querySelector('.hero-media')).toBeFalsy();
+
+    fixture.destroy();
+  });
+
+  it('affiche la première photo du diaporama en fond du héros', () => {
+    const fixture = monter({
+      heroMedia: { images: ['https://cdn.test/hero1.jpg', 'https://cdn.test/hero2.jpg'], video: null },
+    });
+    const hote = fixture.nativeElement as HTMLElement;
+    const hero = hote.querySelector('.hero') as HTMLElement;
+
+    expect(hero.classList.contains('hero--image')).toBe(true);
+    expect(hero.style.backgroundImage).toContain('hero1.jpg');
+
+    fixture.destroy();
+  });
+
+  it('une vidéo remplace entièrement le diaporama', () => {
+    const fixture = monter({
+      heroMedia: {
+        images: ['https://cdn.test/hero1.jpg'],
+        video: { file: 'https://cdn.test/clip.mp4', url: null },
+      },
+    });
+    const hote = fixture.nativeElement as HTMLElement;
+    const hero = hote.querySelector('.hero') as HTMLElement;
+    const video = hote.querySelector('.hero-media video') as HTMLVideoElement | null;
+
+    // Aucun `background-image` : la couche vidéo occupe seule le fond.
+    expect(hero.style.backgroundImage).toBe('');
+    expect(video).toBeTruthy();
+    expect(video?.getAttribute('src')).toBe('https://cdn.test/clip.mp4');
+
+    fixture.destroy();
   });
 });

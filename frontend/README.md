@@ -1978,6 +1978,93 @@ inscription « traitée » envoie désormais une invitation par e-mail au
 prospect** (côté backend, s'il a laissé une adresse) — l'écran n'a rien de
 plus à faire, l'envoi est déclenché par le serveur au changement de statut.
 
+### Actualités Kaikun & héros illustré de l'accueil (F15/F15.1, hors CDC)
+
+Demande directe de l'utilisateur (2026-08-16), après l'audit du prototype
+client (le client retenait la section « Actualités » avec vidéo de son propre
+prototype). Tout se pilote depuis l'écran Paramètres du back-office
+(`backoffice-settings-page.ts`) : l'onglet **Actualités**, et une section
+dédiée en tête de l'onglet **Bandeaux**.
+
+**Héros de l'accueil (F15.1)** — `core/api/home-hero.service.ts`,
+**mécanisme dédié**, distinct de `HeroService` (F12, une image par page).
+La demande initiale (F15) posait juste une clé `home` dans le catalogue F12 ;
+l'utilisateur a demandé, en cours de session, de pouvoir charger **plusieurs**
+photos ou une vidéo — changement de nature, pas un champ en plus. `home-page.ts`
+lit `HomeHeroService.get()` (`heroMedia` signal) et pose soit un **diaporama**
+(`heroSlideBackground` computed, un minuteur dédié `heroMinuteur` à 7 s — même
+cadence que la vitrine du catalogue), soit une **vidéo** (`<video>` pour un
+fichier déposé, `<iframe>` assainie pour un lien d'embed) qui **remplace
+entièrement** le diaporama quand elle existe (`heroHasVideo` computed). Le
+tout se pose en fond de la section `.hero` existante. ⚠️ **Le voile et la
+colonne visuelle décrits ici ont depuis été retravaillés en F16** (retrait de
+la signature orbitale, voile passé en navy) — voir la section F16 plus bas,
+qui fait foi sur l'état actuel de `.hero`. **2 vitest neufs** sur la priorité
+vidéo/diaporama (`home-page.spec.ts`).
+
+**Section Actualités** — `core/api/news.service.ts` (lecture publique) +
+`aDesActualites` (computed) dans `home-page.ts`, qui **décide seule** de ce
+qui occupe la Section 2 de l'accueil : au moins un article publié → la grille
+`.news-grid` s'affiche à sa place ; aucun → la grille `.univers-grid` reprend
+sa place. Bascule **automatique**, pas un réglage à synchroniser — demande
+explicite de l'utilisateur, avec un garde-fou produit assumé : les univers
+restent de toute façon accessibles par le méga-menu de l'en-tête (F2.7),
+donc rien n'est réellement perdu en navigation. ⚠️ **L'iframe d'un lien vidéo
+est assainie via `DomSanitizer.bypassSecurityTrustResourceUrl`**, même modèle
+de confiance que la carte Google Maps de la page Contact : la valeur vient
+d'un agent `gerer:parametres`, jamais d'un visiteur.
+
+**Back-office** — `admin.service.ts` (`news()`/`createNews()`/`updateNews()`/
+`deleteNews()`, multipart avec fichiers image/vidéo) + un formulaire dans
+`backoffice-settings-page.html` repris du patron « Pages » (liste + édition),
+avec deux champs vidéo mutuellement informatifs : un fichier ou un lien, le
+fichier l'emportant à l'affichage si les deux sont saisis. **4 vitest neufs**
+sur la bascule Actualités/Univers et la photo de héros
+(`home-page.spec.ts`).
+
+### Vrai logo du client, et essai visuel du héros d'accueil (F16, hors CDC)
+
+Le client a transmis ses fichiers logo (2026-08-16, JPEG WhatsApp, fond
+blanc). Nettoyés en dehors du dépôt (fond transparent, recadrage, Pillow) et
+posés en un seul asset réutilisé partout : `public/brand/logo-mark.png`.
+
+**Marque** — chaque badge CSS (carré + lettre « K ») devient une balise
+`<img src="/brand/logo-mark.png">` : `shared/components/header/`,
+`shared/components/footer/`, `features/auth/auth-layout/`,
+`layouts/space-layout/` (rail de l'espace client), `layouts/backoffice-layout/`
+(rail du back-office — icône seule quand le rail est replié, texte « K360 »
+gardé à côté quand il est ouvert), `shared/components/assistant/` (en-tête du
+panneau IA). `object-fit: contain` partout, aucune déformation si une version
+vectorielle remplace un jour ces PNG. Favicon (`favicon.ico`), icônes PWA
+(`public/icons/`, variantes *maskable* à fond blanc) et image de partage
+social (`og-image.png`) régénérées à partir du même symbole — voir
+`backend/README.md`/racine pour la liste complète.
+
+**Essai visuel du héros d'accueil — EN COURS, pas figé.** Demande du client,
+relayée par l'utilisateur : « toute la plateforme doit être réactive ».
+Plusieurs allers-retours en direct sur `home-page.ts/html/scss` :
+- `app-orbit-hero` retiré de la colonne visuelle (`OrbitHeroComponent` sorti
+  des imports du composant — le composant partagé, lui, n'est pas supprimé).
+- Le voile de `.hero--image::before` est passé du lavis **crème** (F15.1) à
+  un voile **navy** semi-transparent, resserré sur la moitié gauche
+  (`rgba(3, 25, 63, …)`) — la photo se voit donc bien plus qu'avant, y
+  compris sous le texte.
+- ⚠️ **Conséquence directe** : tout `.hero-text` (titre, texte, chiffres de
+  confiance) est repassé en **blanc**, et l'eyebrow (« Immobilier · Tourisme
+  · Mobilité · Construction ») en **or** — un lavis clair sur photo n'aurait
+  gardé aucun contraste avec le texte encre d'origine. Deux essais de couleur
+  rejetés en direct par l'utilisateur avant d'arriver à l'or : d'abord un
+  halo blanc en `text-shadow` (refusé, « écrit les petits textes en noir »),
+  puis le bleu de marque sur l'eyebrow (refusé, manque de contraste sur navy).
+- Coins arrondis essayés sur `.hero` (pour épouser ceux de `.topbar`, posés
+  en F11.1) **puis retirés des deux** à la demande de l'utilisateur — les
+  deux éléments sont revenus à des angles droits.
+- 🔴 **Aucun test n'a été ajouté pour ce héros retravaillé** : c'est un essai
+  visuel à valider avec le client avant d'être considéré comme terminé.
+  `home-page.scss` reste sous le seuil bloquant (~14,8 ko / 16 ko), mais
+  au-dessus du seuil d'avertissement (12 ko) — dette déjà connue, pas résolue
+  ici.
+
 ### Commandes utiles
 
 ```bash
