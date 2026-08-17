@@ -5,6 +5,8 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GeoController;
 use App\Http\Controllers\HeroController;
+use App\Http\Controllers\HomeHeroController;
+use App\Http\Controllers\NewsController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PaymentController;
@@ -49,6 +51,14 @@ Route::get('pages/{page}', [PageController::class, 'show']);
 // Image de fond et textes des « héros », pilotés au back-office. Appelé une
 // seule fois par le frontend, qui sert ensuite toutes ses pages avec.
 Route::get('heroes', [HeroController::class, 'index']);
+
+// --- Actualités Kaikun (F15) ---------------------------------------------------
+// Section actualités/vidéo de l'accueil, pilotée au back-office.
+Route::get('news', [NewsController::class, 'index']);
+
+// --- Héros de l'accueil (F15.1) ------------------------------------------------
+// Diaporama de photos, ou une courte vidéo à la place — pilotés au back-office.
+Route::get('home-hero', [HomeHeroController::class, 'index']);
 
 // --- Contact public (F2.8.1) -------------------------------------------------
 // Coordonnées du siège (lecture, pour affichage + carte) et dépôt de message

@@ -470,6 +470,22 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/contact-info` | public | `ContactController@info` |
 | POST | `/contact` | public (throttle 10/min) | `ContactController@store` |
 | GET | `/heroes` | public | `HeroController@index` |
+| GET | `/news` | public | `NewsController@index` |
+| GET | `/home-hero` | public | `HomeHeroController@index` |
+
+> **Héros de l'accueil (F15.1).** `GET /home-hero` renvoie `{ images: [...],
+> video: { file, url } | null }`. Distinct des bandeaux F12 : c'est le seul
+> endroit du site où plusieurs photos peuvent être chargées (diaporama) ou
+> une vidéo à la place — la vidéo, côté frontend, **remplace entièrement** le
+> diaporama quand elle existe. La vidéo est un singleton stocké via
+> `Settings` (`home.hero_video_path`/`home.hero_video_url`), pas dans sa
+> propre table.
+
+> **Actualités Kaikun (F15).** `GET /news` renvoie les articles **publiés**
+> (`articles`), triés par `position` puis date décroissante. `video_file`
+> (fichier déposé) l'emporte sur `video_url` (embed) quand les deux existent.
+> Une liste vide est normale — c'est ce qui fait basculer l'accueil sur la
+> grille des univers.
 
 > **Bandeaux d'en-tête (F12).** `GET /heroes` renvoie une **map** clé → bandeau
 > (`{ image, eyebrow, title, lead }`), **héritage d'image déjà résolu côté
@@ -602,6 +618,14 @@ existants. Voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README
 | GET | `/admin/heroes` | auth + `can:gerer:parametres` | `AdminHeroController@index` |
 | POST | `/admin/heroes/{key}` | auth + `can:gerer:parametres` | `AdminHeroController@update` |
 | DELETE | `/admin/heroes/{key}` | auth + `can:gerer:parametres` | `AdminHeroController@destroy` |
+| GET | `/admin/news` | auth + `can:gerer:parametres` | `AdminNewsController@index` |
+| POST | `/admin/news` | auth + `can:gerer:parametres` | `AdminNewsController@store` |
+| POST | `/admin/news/{news}` | auth + `can:gerer:parametres` | `AdminNewsController@update` |
+| DELETE | `/admin/news/{news}` | auth + `can:gerer:parametres` | `AdminNewsController@destroy` |
+| GET | `/admin/home-hero` | auth + `can:gerer:parametres` | `AdminHomeHeroController@index` |
+| POST | `/admin/home-hero/slides` | auth + `can:gerer:parametres` | `AdminHomeHeroController@storeSlide` |
+| DELETE | `/admin/home-hero/slides/{slide}` | auth + `can:gerer:parametres` | `AdminHomeHeroController@destroySlide` |
+| POST | `/admin/home-hero/video` | auth + `can:gerer:parametres` | `AdminHomeHeroController@updateVideo` |
 | GET | `/admin/mandates` | auth + `can:consulter:dashboard-admin` | `AdminDossierController@mandates` |
 | GET | `/admin/mobility-services` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@mobilityServices` |
 | GET | `/admin/mobility-services/{service}` | auth + `can:consulter:dashboard-admin` | `AdminCatalogController@mobilityService` |

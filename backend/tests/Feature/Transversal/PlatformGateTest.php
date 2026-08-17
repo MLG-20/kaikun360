@@ -69,6 +69,8 @@ class PlatformGateTest extends TestCase
         $this->getJson('/api/v1/faqs')->assertOk();
         $this->getJson('/api/v1/contact-info')->assertOk();
         $this->getJson('/api/v1/platform-status')->assertOk();
+        // F15 — l'équipe doit pouvoir communiquer (actualités) avant l'ouverture.
+        $this->getJson('/api/v1/news')->assertOk();
         $this->postJson('/api/v1/waitlist', [
             'name' => 'Awa Diop', 'phone' => '+221771234567',
             'category' => 'client', 'details' => ['univers' => 'immobilier'],

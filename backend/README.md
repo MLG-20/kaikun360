@@ -8,7 +8,7 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **278 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **289 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
 - **65 tables**, référentiel géographique du Sénégal inclus
 - **1095 tests** automatisés (3876 assertions), tous verts ✅
@@ -531,7 +531,7 @@ backend/
 │   └── emails/          # Gabarit unique des e-mails (HTML + texte brut)
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 278 endpoints
+├── API.md               # Référence des 289 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -966,7 +966,7 @@ adresse.
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 278 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 289 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |
@@ -1103,6 +1103,31 @@ Le code est **abondamment commenté en français**.
   du test réchauffe désormais le cache des réglages, le second non. Corrigé en
   préchauffant ce cache dans le `setUp()` du test concerné, pas dans le
   middleware.
+- ✅ **Actualités Kaikun & héros illustré de l'accueil (F15/F15.1, hors CDC)** :
+  Nouveau module `news_articles` : `NewsController@index` (public, `GET
+  /news`, articles publiés triés par `position`) et `AdminNewsController`
+  (`GET|POST /admin/news`, `POST|DELETE /admin/news/{id}`, `gerer:parametres`).
+  ⚠️ **Image de couverture obligatoire**, vidéo facultative sous **deux formes
+  exclusives** — un fichier déposé (`video_path`, disque public, **aucun
+  transcodage**, déjà compressé côté équipe) ou une URL d'embed
+  (`video_url`) — le fichier l'emporte quand les deux sont saisis
+  (`NewsArticleResource` public ne renvoie jamais les deux). **8 tests**
+  (`NewsArticleTest`).
+  **F15.1 — héros de l'accueil, mécanisme DÉDIÉ (distinct du catalogue F12,
+  qui reste à une image par page).** Demande initiale (une clé `home` dans
+  `HeroCatalog`) élargie en cours de session : l'utilisateur voulait pouvoir
+  charger **plusieurs** photos ou une vidéo, changement de nature qui a fait
+  revenir sur la clé `home` et construire `home_hero_slides` (une photo par
+  ligne, ordre d'arrivée) + `HomeHeroController`/`AdminHomeHeroController`
+  (`GET|POST /admin/home-hero/slides`, `DELETE .../slides/{id}`, `POST
+  .../video`). ⚠️ **La vidéo est un SINGLETON stocké via `Settings`**
+  (`home.hero_video_path`/`home.hero_video_url`), pas dans sa propre table —
+  même raisonnement que `platform.gate_enabled`. Le diaporama défile côté
+  frontend (7 s), une vidéo le remplace entièrement quand elle existe. **6
+  tests** (`HomeHeroTest`). Les deux modules ajoutés à la liste blanche du
+  gate d'ouverture (F14) : l'équipe doit pouvoir communiquer avant le
+  lancement. 9 nouveaux endpoints au total, 2 nouvelles tables
+  (`news_articles`, `home_hero_slides`).
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.

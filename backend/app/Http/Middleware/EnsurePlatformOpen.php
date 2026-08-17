@@ -45,6 +45,10 @@ class EnsurePlatformOpen
         'faqs',
         'pages/*',
         'heroes',
+        'home-hero',
+        // Actualités Kaikun (F15) : contenu vitrine, au même titre que les
+        // bandeaux — l'équipe doit pouvoir communiquer avant l'ouverture.
+        'news',
         'platform-status',
         'version',
         'whatsapp/link',

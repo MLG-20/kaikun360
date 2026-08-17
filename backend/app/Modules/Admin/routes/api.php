@@ -8,6 +8,8 @@ use App\Modules\Admin\Http\Controllers\AdminDocumentController;
 use App\Modules\Admin\Http\Controllers\AdminDossierController;
 use App\Modules\Admin\Http\Controllers\AdminGeoController;
 use App\Modules\Admin\Http\Controllers\AdminHeroController;
+use App\Modules\Admin\Http\Controllers\AdminHomeHeroController;
+use App\Modules\Admin\Http\Controllers\AdminNewsController;
 use App\Modules\Admin\Http\Controllers\AdminPartnerPayoutController;
 use App\Modules\Admin\Http\Controllers\AdminPaymentController;
 use App\Modules\Admin\Http\Controllers\AdminPropertyController;
@@ -173,6 +175,31 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         ->middleware('can:gerer:parametres');
     Route::delete('/heroes/{key}', [AdminHeroController::class, 'destroy'])
         ->where('key', '[a-z0-9\-\.]+')
+        ->middleware('can:gerer:parametres');
+
+    // F15 — Actualités Kaikun (accueil). Même permission que les bandeaux et
+    // les pages : du contenu de vitrine, pas un dossier client.
+    Route::get('/news', [AdminNewsController::class, 'index'])
+        ->middleware('can:gerer:parametres');
+    Route::post('/news', [AdminNewsController::class, 'store'])
+        ->middleware('can:gerer:parametres');
+    Route::post('/news/{news}', [AdminNewsController::class, 'update'])
+        ->whereNumber('news')
+        ->middleware('can:gerer:parametres');
+    Route::delete('/news/{news}', [AdminNewsController::class, 'destroy'])
+        ->whereNumber('news')
+        ->middleware('can:gerer:parametres');
+
+    // F15.1 — Héros de l'accueil : diaporama de photos, ou une vidéo à la
+    // place. Distinct de /admin/heroes (F12, une image par page).
+    Route::get('/home-hero', [AdminHomeHeroController::class, 'index'])
+        ->middleware('can:gerer:parametres');
+    Route::post('/home-hero/slides', [AdminHomeHeroController::class, 'storeSlide'])
+        ->middleware('can:gerer:parametres');
+    Route::delete('/home-hero/slides/{slide}', [AdminHomeHeroController::class, 'destroySlide'])
+        ->whereNumber('slide')
+        ->middleware('can:gerer:parametres');
+    Route::post('/home-hero/video', [AdminHomeHeroController::class, 'updateVideo'])
         ->middleware('can:gerer:parametres');
 
     // B13.4 — Nomenclatures de référence en lecture seule (catégories, régions).
