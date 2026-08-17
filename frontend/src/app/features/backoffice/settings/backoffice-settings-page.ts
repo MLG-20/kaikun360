@@ -11,6 +11,8 @@ import {
   GeoRegion,
   HeroBannerAdmin,
   HeroSnapshot,
+  HomeHeroSnapshot,
+  NewsArticleAdmin,
   NotificationEventOption,
   PlatformSetting,
   ReferenceCatalog,
@@ -20,7 +22,40 @@ import { HeroService } from '../../../core/api/hero.service';
 import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor/rich-text-editor';
 
 /** Onglet actif de l'écran Paramètres. */
-type SettingsTab = 'settings' | 'notifications' | 'content' | 'reference' | 'heroes';
+type SettingsTab = 'settings' | 'notifications' | 'content' | 'reference' | 'heroes' | 'news';
+
+/**
+ * Saisie en cours pour un article d'actualité (F15), avant enregistrement.
+ *
+ * Les fichiers ne peuvent pas passer par `[(ngModel)]` : ils vivent donc à
+ * part, posés par les gestionnaires `(change)` des champs `<input type=file>`.
+ */
+interface NewsDraft {
+  title: string;
+  excerpt: string;
+  body: string;
+  video_url: string;
+  is_published: boolean;
+  position: number;
+  /** Nouvelle image choisie (`null` = on garde l'image déjà enregistrée). */
+  image: File | null;
+  /** Nouvelle vidéo choisie (`null` = on garde l'état déjà enregistré). */
+  video: File | null;
+  /** Retire la vidéo déposée sans en choisir une autre. */
+  removeVideo: boolean;
+}
+
+const EMPTY_NEWS_DRAFT: NewsDraft = {
+  title: '',
+  excerpt: '',
+  body: '',
+  video_url: '',
+  is_published: false,
+  position: 0,
+  image: null,
+  video: null,
+  removeVideo: false,
+};
 
 /**
  * Ce qui est en cours de saisie pour un bandeau, avant enregistrement.
@@ -339,6 +374,34 @@ export class BackofficeSettingsPageComponent {
     return seen;
   });
 
+  // --- Héros de l'accueil (F15.1), dans l'onglet Bandeaux ---------------------
+  //
+  // Distinct des bandeaux F12 (une image par page) : c'est le seul endroit du
+  // site où l'équipe peut charger plusieurs photos (diaporama) ou une courte
+  // vidéo à la place.
+
+  protected readonly homeHeroLoading = signal(false);
+  protected readonly homeHeroLoaded = signal(false);
+  protected readonly homeHeroError = signal(false);
+  protected readonly homeHeroActionError = signal<string | null>(null);
+  protected readonly homeHero = signal<HomeHeroSnapshot>({ slides: [], video_file: null, video_url: null });
+  protected readonly homeHeroSlideUploading = signal(false);
+  protected readonly homeHeroVideoSaving = signal(false);
+  protected homeHeroVideoUrlDraft = '';
+
+  // --- Onglet Actualités Kaikun (F15) -----------------------------------------
+
+  protected readonly newsLoading = signal(false);
+  protected readonly newsLoaded = signal(false);
+  protected readonly newsError = signal(false);
+  protected readonly newsActionError = signal<string | null>(null);
+
+  protected readonly newsArticles = signal<NewsArticleAdmin[]>([]);
+  /** Article en cours d'édition (`null` = aucun, `'new'` = création). */
+  protected readonly editingNews = signal<NewsArticleAdmin | 'new' | null>(null);
+  protected newsForm: NewsDraft = { ...EMPTY_NEWS_DRAFT };
+  protected readonly newsSaving = signal(false);
+
   constructor() {
     this.loadSettings();
   }
@@ -349,7 +412,11 @@ export class BackofficeSettingsPageComponent {
     this.tab.set(tab);
 
     if (tab === 'content' && !this.pagesLoaded()) this.loadPages();
-    if (tab === 'heroes' && !this.heroesLoaded()) this.loadHeroes();
+    if (tab === 'heroes') {
+      if (!this.heroesLoaded()) this.loadHeroes();
+      if (!this.homeHeroLoaded()) this.loadHomeHero();
+    }
+    if (tab === 'news' && !this.newsLoaded()) this.loadNews();
     if (tab === 'reference') {
       if (!this.geoLoaded()) this.loadGeography();
       if (!this.reference()) this.loadReference();
@@ -596,6 +663,87 @@ export class BackofficeSettingsPageComponent {
       };
     }
     this.heroDrafts.set(drafts);
+  }
+
+  // ===========================================================================
+  // Héros de l'accueil (F15.1)
+  // ===========================================================================
+
+  protected loadHomeHero(): void {
+    this.homeHeroLoading.set(true);
+    this.homeHeroError.set(false);
+    this.admin.homeHero().subscribe({
+      next: (snapshot) => {
+        this.homeHero.set(snapshot);
+        this.homeHeroVideoUrlDraft = snapshot.video_url ?? '';
+        this.homeHeroLoaded.set(true);
+        this.homeHeroLoading.set(false);
+      },
+      error: () => {
+        this.homeHeroError.set(true);
+        this.homeHeroLoading.set(false);
+      },
+    });
+  }
+
+  protected onHomeHeroSlideFile(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    (event.target as HTMLInputElement).value = '';
+    if (!file) return;
+
+    this.homeHeroActionError.set(null);
+    this.homeHeroSlideUploading.set(true);
+    this.admin.addHomeHeroSlide(file).subscribe({
+      next: (snapshot) => {
+        this.homeHero.set(snapshot);
+        this.homeHeroSlideUploading.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.homeHeroSlideUploading.set(false);
+        this.homeHeroActionError.set(this.messageFor(error));
+      },
+    });
+  }
+
+  protected removeHomeHeroSlide(id: number): void {
+    this.homeHeroActionError.set(null);
+    this.admin.removeHomeHeroSlide(id).subscribe({
+      next: (snapshot) => this.homeHero.set(snapshot),
+      error: (error: HttpErrorResponse) => this.homeHeroActionError.set(this.messageFor(error)),
+    });
+  }
+
+  protected onHomeHeroVideoFile(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    (event.target as HTMLInputElement).value = '';
+    if (!file) return;
+
+    this.saveHomeHeroVideo({ video: file });
+  }
+
+  protected saveHomeHeroVideoUrl(): void {
+    this.saveHomeHeroVideo({ videoUrl: this.homeHeroVideoUrlDraft.trim() });
+  }
+
+  protected removeHomeHeroVideo(): void {
+    this.homeHeroVideoUrlDraft = '';
+    this.saveHomeHeroVideo({ removeVideo: true });
+  }
+
+  private saveHomeHeroVideo(changes: { video?: File; videoUrl?: string; removeVideo?: boolean }): void {
+    this.homeHeroActionError.set(null);
+    this.homeHeroVideoSaving.set(true);
+    this.admin.updateHomeHeroVideo(changes).subscribe({
+      next: (snapshot) => {
+        this.homeHero.set(snapshot);
+        this.homeHeroVideoUrlDraft = snapshot.video_url ?? '';
+        this.homeHeroVideoSaving.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.homeHeroVideoSaving.set(false);
+        this.homeHeroActionError.set(this.messageFor(error));
+      },
+    });
   }
 
   // ===========================================================================
@@ -1247,6 +1395,141 @@ export class BackofficeSettingsPageComponent {
 
   // ===========================================================================
   // Présentation
+  // ===========================================================================
+  // Onglet Actualités Kaikun (F15)
+  //
+  // Cette section occupe, sur l'accueil, le même emplacement que la grille des
+  // univers : dès qu'un article est PUBLIÉ ici, il la remplace côté visiteur
+  // (bascule automatique, voir home-page.ts). Dépublier un article (sans le
+  // supprimer) suffit donc à rendre la grille des univers, le temps de
+  // préparer le prochain contenu.
+  // ===========================================================================
+
+  protected loadNews(): void {
+    this.newsLoading.set(true);
+    this.newsError.set(false);
+    this.admin.news().subscribe({
+      next: (articles) => {
+        this.newsArticles.set(articles);
+        this.newsLoaded.set(true);
+        this.newsLoading.set(false);
+      },
+      error: () => {
+        this.newsError.set(true);
+        this.newsLoading.set(false);
+      },
+    });
+  }
+
+  protected newNews(): void {
+    this.newsActionError.set(null);
+    this.newsForm = { ...EMPTY_NEWS_DRAFT };
+    this.editingNews.set('new');
+  }
+
+  protected editNews(article: NewsArticleAdmin): void {
+    this.newsActionError.set(null);
+    this.newsForm = {
+      title: article.title,
+      excerpt: article.excerpt ?? '',
+      body: article.body ?? '',
+      video_url: article.video_url ?? '',
+      is_published: article.is_published,
+      position: article.position,
+      image: null,
+      video: null,
+      removeVideo: false,
+    };
+    this.editingNews.set(article);
+  }
+
+  protected cancelNews(): void {
+    this.editingNews.set(null);
+    this.newsActionError.set(null);
+  }
+
+  protected onNewsImage(event: Event): void {
+    this.newsForm.image = (event.target as HTMLInputElement).files?.[0] ?? null;
+  }
+
+  protected onNewsVideo(event: Event): void {
+    this.newsForm.video = (event.target as HTMLInputElement).files?.[0] ?? null;
+    // Choisir un fichier annule un retrait demandé juste avant.
+    if (this.newsForm.video) this.newsForm.removeVideo = false;
+  }
+
+  /** Nom du fichier vidéo choisi mais pas encore enregistré, ou `null`. */
+  protected newsVideoPending(): string | null {
+    return this.newsForm.video?.name ?? null;
+  }
+
+  /** L'article en cours d'édition porte déjà une vidéo DÉPOSÉE (pas un embed). */
+  protected readonly editingNewsHasVideoFile = computed(() => {
+    const editing = this.editingNews();
+    return editing !== null && editing !== 'new' && !!editing.video_file;
+  });
+
+  protected saveNews(): void {
+    const editing = this.editingNews();
+    if (!editing) return;
+
+    if (editing === 'new' && !this.newsForm.image) {
+      this.newsActionError.set('Une image de couverture est obligatoire.');
+      return;
+    }
+
+    this.newsActionError.set(null);
+    this.newsSaving.set(true);
+
+    const form = this.newsForm;
+    const request$ =
+      editing === 'new'
+        ? this.admin.createNews({
+            title: form.title.trim(),
+            excerpt: form.excerpt.trim() || undefined,
+            body: form.body || undefined,
+            image: form.image as File,
+            video: form.video ?? undefined,
+            videoUrl: form.video ? undefined : form.video_url.trim() || undefined,
+            isPublished: form.is_published,
+            position: form.position,
+          })
+        : this.admin.updateNews(editing.id, {
+            title: form.title.trim(),
+            excerpt: form.excerpt.trim() || undefined,
+            body: form.body || undefined,
+            image: form.image ?? undefined,
+            video: form.video ?? undefined,
+            removeVideo: form.removeVideo,
+            // On n'écrase l'URL que si aucun fichier n'a été déposé —
+            // le fichier l'emporte déjà côté serveur, envoyer les deux
+            // prêterait à confusion sur ce qui sera réellement affiché.
+            videoUrl: form.video ? undefined : form.video_url.trim(),
+            isPublished: form.is_published,
+            position: form.position,
+          });
+
+    request$.subscribe({
+      next: () => {
+        this.newsSaving.set(false);
+        this.editingNews.set(null);
+        this.loadNews();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.newsSaving.set(false);
+        this.newsActionError.set(this.messageFor(error));
+      },
+    });
+  }
+
+  protected deleteNews(article: NewsArticleAdmin): void {
+    this.newsActionError.set(null);
+    this.admin.deleteNews(article.id).subscribe({
+      next: () => this.newsArticles.update((list) => list.filter((item) => item.id !== article.id)),
+      error: (error: HttpErrorResponse) => this.newsActionError.set(this.messageFor(error)),
+    });
+  }
+
   // ===========================================================================
 
   protected shortDate(iso: string | null): string {

@@ -51,6 +51,15 @@
     type="button"
     class="st-tab"
     role="tab"
+    [class.is-active]="tab() === 'news'"
+    [attr.aria-selected]="tab() === 'news'"
+    (click)="switchTab('news')">
+    Actualités
+  </button>
+  <button
+    type="button"
+    class="st-tab"
+    role="tab"
     [class.is-active]="tab() === 'reference'"
     [attr.aria-selected]="tab() === 'reference'"
     (click)="switchTab('reference')">
@@ -484,8 +493,129 @@
   }
 }
 
-<!-- ===================== ONGLET BANDEAUX (F12) ===================== -->
+<!-- ===================== ONGLET BANDEAUX (F12 + F15.1) ===================== -->
 @if (tab() === 'heroes') {
+  <!-- Héros de l'accueil (F15.1) : distinct des bandeaux ci-dessous — le seul
+       endroit du site à porter plusieurs photos (diaporama) ou une vidéo. -->
+  <section class="st-card">
+    <h2 class="st-card-title">Héros de l’accueil — diaporama ou vidéo</h2>
+    <p class="st-card-sub">
+      Chargez plusieurs photos : elles défilent automatiquement en fond du
+      héros de l’accueil, une toutes les 7 secondes. Si vous déposez une
+      vidéo (déjà compressée de votre côté — 80 Mo max) ou un lien
+      YouTube/Vimeo, elle <strong>remplace entièrement</strong> le diaporama.
+    </p>
+
+    @if (homeHeroActionError()) {
+      <p class="st-state st-state--error" role="alert">{{ homeHeroActionError() }}</p>
+    }
+
+    @if (homeHeroLoading()) {
+      <p class="st-state" role="status">Chargement…</p>
+    } @else if (homeHeroError()) {
+      <p class="st-state st-state--error" role="alert">Impossible de charger le héros de l’accueil.</p>
+    } @else {
+      <div class="st-heroes">
+        <article class="st-hero">
+          <div class="st-hero-preview">
+            @if (homeHero().slides.length) {
+              <img class="st-hero-img" [src]="homeHero().slides[0].image" alt="Aperçu du diaporama" />
+            } @else {
+              <span class="st-hero-empty">Aucune photo</span>
+            }
+          </div>
+          <div class="st-hero-body">
+            <h3 class="st-hero-title">Photos du diaporama ({{ homeHero().slides.length }})</h3>
+
+            <div class="st-btns" style="flex-wrap:wrap;gap:8px">
+              @for (slide of homeHero().slides; track slide.id) {
+                <span style="position:relative;display:inline-block">
+                  <img [src]="slide.image" alt="" style="width:72px;height:44px;object-fit:cover;border-radius:6px" />
+                  <button
+                    type="button"
+                    class="k-btn k-btn--sm k-btn--danger"
+                    style="position:absolute;top:-8px;right:-8px;padding:2px 6px"
+                    title="Retirer cette photo"
+                    (click)="removeHomeHeroSlide(slide.id)">
+                    ×
+                  </button>
+                </span>
+              }
+            </div>
+
+            <div class="st-hero-file">
+              <label class="st-hero-choose k-btn k-btn--ghost">
+                {{ homeHeroSlideUploading() ? 'Envoi…' : 'Ajouter une photo' }}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  [disabled]="homeHeroSlideUploading()"
+                  (change)="onHomeHeroSlideFile($event)" />
+              </label>
+            </div>
+          </div>
+        </article>
+
+        <article class="st-hero">
+          <div class="st-hero-preview">
+            @if (homeHero().video_file || homeHero().video_url) {
+              <span class="st-hero-badge">vidéo active</span>
+            } @else {
+              <span class="st-hero-empty">Aucune vidéo</span>
+            }
+          </div>
+          <div class="st-hero-body">
+            <h3 class="st-hero-title">Vidéo de fond (remplace le diaporama)</h3>
+
+            <div class="st-hero-file">
+              <label class="st-hero-choose k-btn k-btn--ghost">
+                {{ homeHeroVideoSaving() ? 'Envoi…' : 'Déposer une vidéo' }}
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  [disabled]="homeHeroVideoSaving()"
+                  (change)="onHomeHeroVideoFile($event)" />
+              </label>
+
+              @if (homeHero().video_file || homeHero().video_url) {
+                <button
+                  type="button"
+                  class="k-btn k-btn--ghost st-hero-remove"
+                  [disabled]="homeHeroVideoSaving()"
+                  (click)="removeHomeHeroVideo()">
+                  Retirer la vidéo
+                </button>
+              }
+            </div>
+
+            <div class="st-grid">
+              <label class="st-field">
+                <span class="st-label">…ou lien vidéo (YouTube, Vimeo)</span>
+                <input
+                  class="k-input"
+                  type="url"
+                  name="homeHeroVideoUrl"
+                  [(ngModel)]="homeHeroVideoUrlDraft"
+                  placeholder="https://www.youtube.com/watch?v=…"
+                  [disabled]="!!homeHero().video_file" />
+                <span class="st-hint">Ignoré tant qu’un fichier vidéo est déposé ci-dessus.</span>
+              </label>
+              <div class="st-actions st-actions--start">
+                <button
+                  type="button"
+                  class="k-btn k-btn--primary"
+                  [disabled]="homeHeroVideoSaving() || !!homeHero().video_file"
+                  (click)="saveHomeHeroVideoUrl()">
+                  Enregistrer le lien
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    }
+  </section>
+
   @if (heroesLoading()) {
     <p class="st-state" role="status">Chargement des bandeaux…</p>
   } @else if (heroesError()) {
@@ -656,6 +786,167 @@
         </div>
       </section>
     }
+  }
+}
+
+<!-- ===================== ONGLET ACTUALITÉS (F15) ===================== -->
+@if (tab() === 'news') {
+  <section class="st-card">
+    <h2 class="st-card-title">Comment ça marche</h2>
+    <p class="st-card-sub">
+      Cette section occupe, sur l’accueil, l’emplacement de la grille des
+      univers. <strong>Dès qu’un article est publié ici, il la remplace</strong> —
+      sans article publié, la grille reprend automatiquement sa place. Pour
+      revenir à la grille sans perdre un article, il suffit de le
+      <em>dépublier</em> (pas besoin de le supprimer).
+    </p>
+    <p class="st-card-sub">
+      <strong>L’image de couverture est obligatoire.</strong> La vidéo est
+      facultative et a deux formes : un fichier que vous déposez (déjà
+      compressé de votre côté — rien n’est retraité ici, 80 Mo maximum) ou un
+      lien d’intégration YouTube/Vimeo. Si les deux sont saisis, le fichier
+      déposé est celui qui s’affiche.
+    </p>
+  </section>
+
+  @if (newsActionError()) {
+    <p class="st-state st-state--error" role="alert">{{ newsActionError() }}</p>
+  }
+
+  @if (editingNews()) {
+    <section class="st-card">
+      <h2 class="st-card-title">{{ editingNews() === 'new' ? 'Nouvel article' : 'Modifier l’article' }}</h2>
+
+      <label class="st-field st-field--full">
+        <span class="st-label">Titre</span>
+        <input class="k-input" type="text" name="newsTitle" [(ngModel)]="newsForm.title" />
+      </label>
+
+      <label class="st-field st-field--full">
+        <span class="st-label">Résumé</span>
+        <input class="k-input" type="text" name="newsExcerpt" [(ngModel)]="newsForm.excerpt" maxlength="300" />
+        <span class="st-hint">Affiché sous le titre dans la carte, sur l’accueil.</span>
+      </label>
+
+      <div class="st-field st-field--full">
+        <span class="st-label">Texte complet (facultatif)</span>
+        <app-rich-text-editor
+          name="newsBody"
+          ariaLabel="Texte de l'article"
+          placeholder="Détail de l'actualité, si besoin d'aller plus loin que le résumé."
+          [rows]="8"
+          [(ngModel)]="newsForm.body" />
+      </div>
+
+      <div class="st-grid">
+        <label class="st-field">
+          <span class="st-label">Image de couverture{{ editingNews() === 'new' ? ' (obligatoire)' : '' }}</span>
+          <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onNewsImage($event)" />
+          @if (editingNews() !== 'new' && !newsForm.image) {
+            <span class="st-hint">Laissez vide pour garder l’image actuelle.</span>
+          }
+        </label>
+
+        <label class="st-field">
+          <span class="st-label">Position</span>
+          <input class="k-input" type="number" min="0" name="newsPosition" [(ngModel)]="newsForm.position" />
+          <span class="st-hint">Les positions basses passent en premier.</span>
+        </label>
+      </div>
+
+      <div class="st-grid">
+        <label class="st-field">
+          <span class="st-label">Vidéo déposée</span>
+          <input type="file" accept="video/mp4,video/webm,video/quicktime" (change)="onNewsVideo($event)" />
+          @if (newsVideoPending(); as name) {
+            <span class="st-hint">{{ name }} — à enregistrer</span>
+          }
+          @if (editingNewsHasVideoFile() && !newsForm.video) {
+            <label class="st-switch">
+              <input type="checkbox" name="newsRemoveVideo" [(ngModel)]="newsForm.removeVideo" />
+              <span class="st-switch-text">
+                <strong>Retirer la vidéo déposée</strong>
+              </span>
+            </label>
+          }
+        </label>
+
+        <label class="st-field">
+          <span class="st-label">…ou lien vidéo (YouTube, Vimeo)</span>
+          <input
+            class="k-input"
+            type="url"
+            name="newsVideoUrl"
+            [(ngModel)]="newsForm.video_url"
+            placeholder="https://www.youtube.com/watch?v=…"
+            [disabled]="!!newsForm.video" />
+          <span class="st-hint">Ignoré si une vidéo est déposée ci-dessus.</span>
+        </label>
+      </div>
+
+      <label class="st-switch">
+        <input type="checkbox" name="newsPublished" [(ngModel)]="newsForm.is_published" />
+        <span class="st-switch-text">
+          <strong>Publié</strong>
+          <em>Un article masqué n’apparaît pas sur l’accueil.</em>
+        </span>
+      </label>
+
+      <div class="st-actions">
+        <button type="button" class="k-btn k-btn--ghost" (click)="cancelNews()">Annuler</button>
+        <button type="button" class="k-btn k-btn--primary" [disabled]="newsSaving()" (click)="saveNews()">
+          {{ newsSaving() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
+    </section>
+  } @else {
+    <div class="st-actions st-actions--start">
+      <button type="button" class="k-btn k-btn--primary" (click)="newNews()">Nouvel article</button>
+    </div>
+  }
+
+  @if (newsLoading()) {
+    <p class="st-state" role="status">Chargement des actualités…</p>
+  } @else if (newsError()) {
+    <p class="st-state st-state--error" role="alert">Impossible de charger les actualités.</p>
+  } @else {
+    <div class="st-table-wrap">
+      <table class="st-table">
+        <thead>
+          <tr>
+            <th aria-label="Image"></th>
+            <th>Titre</th>
+            <th>Statut</th>
+            <th>Modifié le</th>
+            <th aria-label="Actions"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (article of newsArticles(); track article.id) {
+            <tr>
+              <td><img [src]="article.image" [alt]="article.title" class="st-hero-img" style="width:72px;height:44px;object-fit:cover;border-radius:6px" /></td>
+              <td><span class="st-strong">{{ article.title }}</span></td>
+              <td>
+                <span class="st-badge" [class.is-ok]="article.is_published" [class.is-off]="!article.is_published">
+                  {{ article.is_published ? 'Publié' : 'Masqué' }}
+                </span>
+              </td>
+              <td><span class="st-muted">{{ shortDate(article.updated_at) }}</span></td>
+              <td class="st-actions-cell">
+                <div class="st-btns">
+                  <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="editNews(article)">Modifier</button>
+                  <button type="button" class="k-btn k-btn--sm k-btn--danger" (click)="deleteNews(article)">Supprimer</button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="st-empty">Aucun article pour l’instant — la grille des univers reste affichée sur l’accueil.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 }
 

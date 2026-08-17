@@ -1776,6 +1776,33 @@ export interface HeroSnapshot {
   groups: Record<string, string>;
 }
 
+/** Une photo du diaporama du héros de l'accueil, vue du back-office (F15.1). */
+export interface HomeHeroSlideAdmin {
+  id: number;
+  image: string;
+}
+
+/** État complet du héros de l'accueil (F15.1). */
+export interface HomeHeroSnapshot {
+  slides: HomeHeroSlideAdmin[];
+  video_file: string | null;
+  video_url: string | null;
+}
+
+/** Un article d'actualité, vu du back-office (F15). */
+export interface NewsArticleAdmin {
+  id: number;
+  title: string;
+  excerpt: string | null;
+  body: string | null;
+  image: string;
+  video_file: string | null;
+  video_url: string | null;
+  is_published: boolean;
+  position: number;
+  updated_at: string | null;
+}
+
 /** Une entrée de FAQ (miroir de `FaqResource`). */
 export interface FaqEntry {
   id: number;
@@ -3379,6 +3406,126 @@ export class AdminService {
     return this.http
       .delete<ApiEnvelope<HeroSnapshot>>(`${this.api}/admin/heroes/${key}`)
       .pipe(map((response) => response.data));
+  }
+
+  // --- Héros de l'accueil (F15.1) ----------------------------------------------
+  // Distinct des bandeaux F12 : c'est le seul endroit du site où l'équipe peut
+  // charger plusieurs photos (diaporama) ou une courte vidéo à la place.
+
+  /** État actuel (diaporama + vidéo). GET /admin/home-hero */
+  homeHero(): Observable<HomeHeroSnapshot> {
+    return this.http
+      .get<ApiEnvelope<HomeHeroSnapshot>>(`${this.api}/admin/home-hero`)
+      .pipe(map((response) => response.data));
+  }
+
+  /** Ajoute une photo au diaporama (à la fin). POST /admin/home-hero/slides */
+  addHomeHeroSlide(image: File): Observable<HomeHeroSnapshot> {
+    const form = new FormData();
+    form.append('image', image);
+
+    return this.http
+      .post<ApiEnvelope<HomeHeroSnapshot>>(`${this.api}/admin/home-hero/slides`, form)
+      .pipe(map((response) => response.data));
+  }
+
+  /** Retire une photo du diaporama. DELETE /admin/home-hero/slides/{id} */
+  removeHomeHeroSlide(id: number): Observable<HomeHeroSnapshot> {
+    return this.http
+      .delete<ApiEnvelope<HomeHeroSnapshot>>(`${this.api}/admin/home-hero/slides/${id}`)
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Dépose ou retire la vidéo de fond. POST /admin/home-hero/video
+   *
+   * ⚠️ POST et non PATCH — même piège multipart que `updateHero`.
+   */
+  updateHomeHeroVideo(changes: { video?: File; videoUrl?: string; removeVideo?: boolean }): Observable<HomeHeroSnapshot> {
+    const form = new FormData();
+    if (changes.video) form.append('video', changes.video);
+    if (changes.videoUrl !== undefined) form.append('video_url', changes.videoUrl);
+    if (changes.removeVideo) form.append('remove_video', '1');
+
+    return this.http
+      .post<ApiEnvelope<HomeHeroSnapshot>>(`${this.api}/admin/home-hero/video`, form)
+      .pipe(map((response) => response.data));
+  }
+
+  // --- Actualités Kaikun (F15) -------------------------------------------------
+
+  /** Tous les articles, publiés ou non. GET /admin/news */
+  news(): Observable<NewsArticleAdmin[]> {
+    return this.http
+      .get<ApiEnvelope<NewsArticleAdmin[]>>(`${this.api}/admin/news`)
+      .pipe(map((response) => response.data));
+  }
+
+  /** Crée un article. POST /admin/news (multipart : image obligatoire). */
+  createNews(changes: {
+    title: string;
+    excerpt?: string;
+    body?: string;
+    image: File;
+    video?: File;
+    videoUrl?: string;
+    isPublished?: boolean;
+    position?: number;
+  }): Observable<NewsArticleAdmin> {
+    const form = new FormData();
+    form.append('title', changes.title);
+    if (changes.excerpt !== undefined) form.append('excerpt', changes.excerpt);
+    if (changes.body !== undefined) form.append('body', changes.body);
+    form.append('image', changes.image);
+    if (changes.video) form.append('video', changes.video);
+    else if (changes.videoUrl) form.append('video_url', changes.videoUrl);
+    if (changes.isPublished !== undefined) form.append('is_published', changes.isPublished ? '1' : '0');
+    if (changes.position !== undefined) form.append('position', String(changes.position));
+
+    return this.http
+      .post<ApiEnvelope<{ article: NewsArticleAdmin }>>(`${this.api}/admin/news`, form)
+      .pipe(map((response) => response.data.article));
+  }
+
+  /**
+   * Met à jour un article. POST /admin/news/{id}
+   *
+   * ⚠️ POST et non PATCH — même piège multipart que `updateHero`. Seuls les
+   * champs présents dans `changes` sont transmis.
+   */
+  updateNews(
+    id: number,
+    changes: {
+      title?: string;
+      excerpt?: string;
+      body?: string;
+      image?: File;
+      video?: File;
+      removeVideo?: boolean;
+      videoUrl?: string;
+      isPublished?: boolean;
+      position?: number;
+    },
+  ): Observable<NewsArticleAdmin> {
+    const form = new FormData();
+    if (changes.title !== undefined) form.append('title', changes.title);
+    if (changes.excerpt !== undefined) form.append('excerpt', changes.excerpt);
+    if (changes.body !== undefined) form.append('body', changes.body);
+    if (changes.image) form.append('image', changes.image);
+    if (changes.video) form.append('video', changes.video);
+    if (changes.removeVideo) form.append('remove_video', '1');
+    if (changes.videoUrl !== undefined) form.append('video_url', changes.videoUrl);
+    if (changes.isPublished !== undefined) form.append('is_published', changes.isPublished ? '1' : '0');
+    if (changes.position !== undefined) form.append('position', String(changes.position));
+
+    return this.http
+      .post<ApiEnvelope<{ article: NewsArticleAdmin }>>(`${this.api}/admin/news/${id}`, form)
+      .pipe(map((response) => response.data.article));
+  }
+
+  /** Supprime un article. DELETE /admin/news/{id} */
+  deleteNews(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/admin/news/${id}`);
   }
 
   /** Nomenclatures de référence (catégories, régions), lecture seule. GET /admin/reference */
