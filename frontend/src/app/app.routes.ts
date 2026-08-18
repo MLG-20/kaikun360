@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { platformGateGuard } from './core/guards/platform-gate.guard';
+import { waitlistPageGuard } from './core/guards/waitlist-page.guard';
 import { MainLayoutComponent } from './layouts/main-layout/main-layout';
 
 /**
@@ -434,6 +435,10 @@ export const routes: Routes = [
           import('./features/content/waitlist-page/waitlist-page').then(
             (m) => m.WaitlistPageComponent,
           ),
+        // Miroir de `platformGateGuard` (voir `waitlist-page.guard.ts`) : la
+        // page redirige elle-même vers l'accueil si l'admin n'a pas activé la
+        // fermeture d'accès — pas de page d'attente affichable "dans le vide".
+        canActivate: [waitlistPageGuard],
         title: "Liste d'attente — Kaikun 360",
         data: {
           // Elle-même : sinon on redirigerait /liste-attente vers /liste-attente.
