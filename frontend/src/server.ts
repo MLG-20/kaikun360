@@ -62,7 +62,11 @@ app.use((_req, res, next) => {
       "script-src 'self' https://accounts.google.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob:",
+      // `apiOrigin` : même raison que `connect-src` ci-dessous — les photos
+      // servies par l'API (`/storage/...`) ne passent par `'self'` qu'en
+      // production (origine unique derrière nginx). En local, front et API
+      // vivent sur deux ports différents.
+      `img-src 'self' data: blob: ${apiOrigin}`,
       `connect-src 'self' https://accounts.google.com ${apiOrigin}`,
       // YouTube/Vimeo : embeds vidéo des Actualités (F15) et du héros de
       // l'accueil (F15.1), pilotés au back-office (`gerer:parametres`) — même
