@@ -38,6 +38,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 RUN mkdir -p /etc/my.cnf.d \
     && printf '[client]\nssl=0\n' > /etc/my.cnf.d/no-ssl.cnf
 
+# Uploads/mémoire — voir le fichier lui-même pour le pourquoi.
+COPY docker/backend/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini
+
 WORKDIR /var/www/html
 
 # Dépendances installées avant le reste du code : une modification du code
