@@ -1,5 +1,12 @@
 import { Directive, ElementRef, afterNextRender, inject, input } from '@angular/core';
 
+// Horodatage du chargement du module (une fois, au démarrage de l'app côté
+// navigateur) — sert à distinguer le tout premier affichage de la page d'une
+// recréation plus tardive du même élément (ex. la bande « Sélection du
+// moment » qui recrée sa grille à chaque changement d'onglet pour REJOUER
+// le fondu, voir `home-page.html`). Voir commentaire dans le constructeur.
+const demarrageApplication = typeof performance !== 'undefined' ? performance.now() : 0;
+
 /**
  * Révèle un élément (ou les enfants d'une grille) **au défilement** : l'élément
  * démarre légèrement décalé et transparent, puis glisse/apparaît dès qu'il entre
@@ -39,7 +46,29 @@ export class RevealDirective {
       const el = this.host.nativeElement;
       const isTitle = this.appReveal() === 'title';
       const baseClass = this.appReveal() === 'group' ? 'reveal-group' : isTitle ? 'reveal-title' : 'reveal';
+
+      // Déjà dans le champ visible, ET dans les tout premiers instants de vie
+      // de l'app (typiquement tout ce qui tient au-dessus de la ligne de
+      // flottaison au chargement) : le rendu initial l'a déjà peint pleinement
+      // visible, le masquer maintenant pour le ré-afficher une fraction de
+      // seconde plus tard créerait un clignotement perçu comme « la page se
+      // charge deux fois ». On saute alors directement à l'état final.
+      //
+      // ⚠️ La fenêtre temporelle est ESSENTIELLE : sans elle, une recréation
+      // plus tardive du même élément pendant qu'il est déjà à l'écran (ex. la
+      // bande « Sélection du moment » qui recrée sa grille à chaque clic sur
+      // un onglet, précisément pour REJOUER le fondu, voir `home-page.html`)
+      // sauterait aussi l'animation — la transition entre onglets devenait
+      // brutale (bug constaté juste après l'introduction de ce raccourci).
+      const rect = el.getBoundingClientRect();
+      const dansLeChamp = rect.top < window.innerHeight * 0.94 && rect.bottom > 0;
+      const toutDebutDeVie = typeof performance !== 'undefined' && performance.now() - demarrageApplication < 1500;
+      const dejaVisible = dansLeChamp && toutDebutDeVie;
+
       el.classList.add(baseClass);
+      if (dejaVisible) {
+        el.classList.add('is-in');
+      }
 
       // ⚠️ Le `clip-path` du balayage doit porter sur un span INTERNE, jamais
       // sur l'élément observé lui-même : Chrome considère qu'un élément
@@ -57,9 +86,10 @@ export class RevealDirective {
         el.appendChild(inner);
       }
 
-      // Animations réduites ou API absente (très vieux navigateurs) : on affiche.
+      // Animations réduites, API absente (très vieux navigateurs), ou déjà
+      // révélé ci-dessus : rien de plus à observer.
       const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-      if (reduce || typeof IntersectionObserver === 'undefined') {
+      if (reduce || dejaVisible || typeof IntersectionObserver === 'undefined') {
         el.classList.add('is-in');
         return;
       }
