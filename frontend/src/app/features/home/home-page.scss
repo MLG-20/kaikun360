@@ -99,7 +99,54 @@
   .hero--image {
     transition: none;
   }
+
+  .featured-tab {
+    transition: background 0.22s ease, color 0.22s ease;
+  }
+
+  .featured-tab:hover {
+    transform: none;
+  }
+
+  .featured-skeleton {
+    animation: none;
+  }
+
+  .hero-text > *,
+  .hero-visual {
+    animation: none;
+  }
+
+  .univers-card,
+  .univers-shine::before,
+  .univers-icon,
+  .protocol-card,
+  .protocol-icon,
+  .services-card,
+  .services-icon {
+    transition: none;
+  }
+
+  .univers-card:hover,
+  .protocol-card:hover,
+  .services-card:hover {
+    transform: none;
+  }
+
+  .univers-card:hover .univers-shine::before {
+    transform: translateX(-120%); // reflet neutralisé.
+  }
+
+  // Les pastilles ne basculent plus non plus : seule leur couleur répond au
+  // survol. Les trois grilles obéissent à la même règle, sans exception.
+  .univers-card:hover .univers-icon,
+  .protocol-card:hover .protocol-icon,
+  .services-card:hover .services-icon {
+    transform: none;
+  }
 }
+
+
 
 .hero-grid {
   display: grid;
@@ -388,7 +435,13 @@
   .news-body {
     padding: 24px 20px 28px;
   }
+
+  .featured-grid {
+    min-height: 0;
+  }
 }
+
+
 
 // --- Section 3 : Protocole de confiance (navy) -----------------------------
 .protocol {
@@ -415,7 +468,27 @@
     padding: 52px 20px;
     border-radius: var(--k-radius);
   }
+
+  .stats {
+    margin-inline: 12px;
+    padding: 40px 20px;
+    border-radius: var(--k-radius);
+  }
+
+  .univers-grid,
+  .protocol-grid,
+  .featured-grid,
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-head-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
+
+
 
 .protocol-head {
   text-align: center;
@@ -573,21 +646,9 @@
   align-content: start;
 }
 
-@media (max-width: 900px) {
-  .featured-grid {
-    min-height: 0;
-  }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .featured-tab {
-    transition: background 0.22s ease, color 0.22s ease;
-  }
 
-  .featured-tab:hover {
-    transform: none;
-  }
-}
+
 
 // Bande d'en-tête de la vitrine (F16.1) : photo de l'univers affiché, quand
 // l'équipe en a chargé une. Le voile et la couche de fond viennent de la
@@ -649,11 +710,7 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .featured-skeleton {
-    animation: none;
-  }
-}
+
 
 // --- Section 5 : Diaspora --------------------------------------------------
 .diaspora {
@@ -973,13 +1030,7 @@
   border-radius: var(--k-radius-lg);
 }
 
-@media (max-width: 620px) {
-  .stats {
-    margin-inline: 12px;
-    padding: 40px 20px;
-    border-radius: var(--k-radius);
-  }
-}
+
 
 .stats-grid {
   display: grid;
@@ -1116,19 +1167,7 @@
   }
 }
 
-@media (max-width: 620px) {
-  .univers-grid,
-  .protocol-grid,
-  .featured-grid,
-  .services-grid {
-    grid-template-columns: 1fr;
-  }
 
-  .section-head-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
 
 // =============================================================================
 // RÉACTIVITÉ & MOUVEMENT — entrée du hero, survols enrichis des cartes.
@@ -1340,37 +1379,4 @@
 }
 
 // --- ♿ Réduction des animations : on fige tout ----------------------------
-@media (prefers-reduced-motion: reduce) {
-  .hero-text > *,
-  .hero-visual {
-    animation: none;
-  }
 
-  .univers-card,
-  .univers-shine::before,
-  .univers-icon,
-  .protocol-card,
-  .protocol-icon,
-  .services-card,
-  .services-icon {
-    transition: none;
-  }
-
-  .univers-card:hover,
-  .protocol-card:hover,
-  .services-card:hover {
-    transform: none;
-  }
-
-  .univers-card:hover .univers-shine::before {
-    transform: translateX(-120%); // reflet neutralisé.
-  }
-
-  // Les pastilles ne basculent plus non plus : seule leur couleur répond au
-  // survol. Les trois grilles obéissent à la même règle, sans exception.
-  .univers-card:hover .univers-icon,
-  .protocol-card:hover .protocol-icon,
-  .services-card:hover .services-icon {
-    transform: none;
-  }
-}
