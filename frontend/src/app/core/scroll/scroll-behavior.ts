@@ -1,7 +1,9 @@
 import { ViewportScroller, isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID, inject } from '@angular/core';
-import { NavigationStart, Router, Scroll } from '@angular/router';
+import { NavigationCancel, NavigationError, NavigationStart, Router, Scroll } from '@angular/router';
 import { filter } from 'rxjs/operators';
+
+import { RouteTransitionService } from './route-transition.service';
 
 /**
  * Ce qu'il faut faire du défilement à l'arrivée sur une URL.
@@ -38,6 +40,7 @@ export function activerPolitiqueDeDefilement(): void {
 
   const router = inject(Router);
   const scroller = inject(ViewportScroller);
+  const transition = inject(RouteTransitionService);
 
   /** Chemin de la page courante, paramètres d'URL exclus. */
   let cheminPrecedent = chemin(router.url);
@@ -65,10 +68,18 @@ export function activerPolitiqueDeDefilement(): void {
   // ⚠️ Et **seulement quand le chemin change** : c'est la même règle qu'en bas,
   // pour la même raison — un filtre de catalogue est une navigation, et personne
   // ne veut être renvoyé en haut à chaque saisie.
+  //
+  // ⚠️ **Voile de transition** (retour utilisateur du 2026-08-18) : cette
+  // remontée instantanée reste VISIBLE le temps que la page d'arrivée charge —
+  // on clique sur une carte au fond de l'accueil et on voit l'écran sauter
+  // jusqu'au héros avant de partir vers la page demandée. `transition.voile`
+  // masque exactement cette fenêtre ; il retombe une fois le `Scroll` final
+  // appliqué ci-dessous, sur la page d'arrivée cette fois.
   router.events
     .pipe(filter((e): e is NavigationStart => e instanceof NavigationStart))
     .subscribe((evenement) => {
       if (chemin(evenement.url) !== chemin(router.url)) {
+        transition.voile.set(true);
         remonterSansAnimation();
       }
     });
@@ -100,7 +111,24 @@ export function activerPolitiqueDeDefilement(): void {
         break;
       // 'rien' : filtre, tri ou pagination — le regard du visiteur ne bouge pas.
     }
+
+    // Le voile ne couvre que le cas qu'il a lui-même ouvert (`haut`, à
+    // NavigationStart) : le lever inconditionnellement ici serait inoffensif
+    // pour 'position'/'ancre'/'rien' (jamais levé pour eux) mais autant rester
+    // explicite. Un frame d'attente laisse le navigateur peindre la page
+    // d'arrivée à la bonne position AVANT de découvrir le voile — sinon on
+    // verrait un sursaut résiduel d'un frame au moment même du dévoilement.
+    if (transition.voile()) {
+      requestAnimationFrame(() => transition.voile.set(false));
+    }
   });
+
+  // Filet de sécurité : une navigation annulée (garde qui refuse) ou en échec
+  // n'émet jamais de `Scroll` — sans ce filet, le voile resterait affiché
+  // indéfiniment, l'application entière paraissant figée.
+  router.events
+    .pipe(filter((e) => e instanceof NavigationCancel || e instanceof NavigationError))
+    .subscribe(() => transition.voile.set(false));
 }
 
 /**

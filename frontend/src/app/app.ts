@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
+import { RouteTransitionService } from './core/scroll/route-transition.service';
 import { PwaBannerComponent } from './shared/components/pwa-banner/pwa-banner';
 
 /**
@@ -23,4 +24,6 @@ import { PwaBannerComponent } from './shared/components/pwa-banner/pwa-banner';
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App {}
+export class App {
+  protected readonly voile = inject(RouteTransitionService).voile;
+}

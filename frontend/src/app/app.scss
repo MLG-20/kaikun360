@@ -2,3 +2,26 @@
   display: block;
   min-height: 100vh;
 }
+
+// Voile de transition entre deux pages (voir `app.html`). `pointer-events:none`
+// même visible : il ne doit jamais intercepter un clic, il ne fait que cacher
+// visuellement la remontée en haut de la page de départ.
+.route-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--k-cream);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.route-veil--visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-veil {
+    transition: none;
+  }
+}
