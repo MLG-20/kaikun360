@@ -204,10 +204,6 @@
       <div class="bo-topbar__title">Back-office</div>
 
       <div class="bo-topbar__right">
-        <!-- L'assistant du back-office : en LECTURE SEULE (cf. la mention du
-             tiroir), il renseigne sur la file et les dossiers, il ne valide rien. -->
-        <app-assistant-launcher />
-
         <span class="bo-secure" title="Session sécurisée">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
           Session sécurisée
@@ -242,5 +238,11 @@
   F8.1 : la bulle est en `position: fixed`, donc rattachée à la fenêtre et non à
   cette boîte, mais l'y placer la mettrait dans un conteneur qui masque ses
   débordements. Le panneau déployé, plus haut qu'elle, y serait rogné.
+
+  Le DÉCLENCHEUR est monté ici pour la même raison, via `app-floating-dock`
+  (Nancy + bulle WhatsApp empilée dessous) — c'est maintenant une pile
+  flottante en coin bas-droite, plus une entrée dans la barre du haut (retour
+  à l'ancien parti pris, F10.6).
 -->
+<app-floating-dock />
 <app-assistant-panel variante="back-office" />

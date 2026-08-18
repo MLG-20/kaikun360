@@ -218,6 +218,7 @@ demande ») qui n'existait nulle part. Ce composant est ce bouton.
 | `PasswordRevealDirective` | `appPasswordReveal` | Ajoute un petit **bouton « œil »** à un champ mot de passe pour **afficher/masquer** la saisie. |
 | `RevealDirective` | `appReveal` / `appReveal="group"` | **Révèle un élément (ou les enfants d'une grille, en cascade) au défilement** — fondu + léger glissé. `IntersectionObserver`, posé dans `afterNextRender` (SSR : contenu visible sans JS), `prefers-reduced-motion` respecté. Styles globaux dans `styles/_reveal.scss`. |
 | `CountUpDirective` | `[appCountUp]="valeur"` | **Anime un nombre de 0 à sa valeur finale** quand il entre à l'écran (bande de statistiques). Conserve l'habillage (« 100 % »). L'interpolation `{{ valeur }}` sert de repli SSR / sans-JS. |
+| `ParallaxDirective` | `appParallax` (sur `.k-photo-layer`) | **Léger déplacement vertical d'une couche de fond photo** au défilement (F16.1). Jamais `background-attachment: fixed` (bugué sur iOS Safari) : translate un élément normal, borné à quelques pourcents, actif seulement pendant que la section est visible (`IntersectionObserver`). Posée dans `afterNextRender` (SSR safe), coupée sous `prefers-reduced-motion`. |
 
 **À quoi ça sert, en clair :** quand on tape un mot de passe, on ne voit que des
 points ; l'œil permet de **vérifier ce qu'on a saisi** (utile pour éviter les

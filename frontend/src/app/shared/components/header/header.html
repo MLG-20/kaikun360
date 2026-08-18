@@ -63,10 +63,8 @@
 
     <!-- Actions -->
     <div class="actions">
-      <!-- L'assistant est une entrée du produit, pas un gadget flottant : il se
-           tient ici, à côté de « Mon espace ». Le bouton n'ouvre rien lui-même,
-           il bascule l'état que le tiroir observe. -->
-      <app-assistant-launcher />
+      <!-- L'assistant a une bulle flottante dédiée (coin bas-droite, montée par
+           le layout) — plus d'entrée ici depuis le retour à ce parti pris. -->
 
       @if (isAuthenticated()) {
         <!-- ⚠️ « Mon espace » et « Déconnexion » tenaient côte à côte dans la

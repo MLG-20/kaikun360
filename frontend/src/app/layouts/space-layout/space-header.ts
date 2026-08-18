@@ -15,7 +15,6 @@ import { filter } from 'rxjs/operators';
 
 import { AuthService } from '../../core/auth/auth.service';
 import { UnreadStore } from '../../core/state/unread-store';
-import { AssistantLauncherComponent } from '../../shared/components/assistant/assistant-launcher';
 import { SPACE_CONFIG } from './space.config';
 
 /**
@@ -38,7 +37,7 @@ import { SPACE_CONFIG } from './space.config';
  */
 @Component({
   selector: 'app-space-header',
-  imports: [RouterLink, AssistantLauncherComponent],
+  imports: [RouterLink],
   templateUrl: './space-header.html',
   styleUrl: './space-header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,0 +1,56 @@
+// Bande défilante des univers (F16.2). Composant à part, budget CSS propre —
+// voir l'en-tête de universe-strip.ts.
+:host {
+  display: block;
+  overflow: hidden;
+  background: linear-gradient(100deg, var(--k-navy), var(--k-brand));
+  border-block: 1px solid rgba(211, 174, 82, 0.35);
+  padding: 14px 0;
+}
+
+// La piste porte DEUX fois la liste (voir le gabarit) : translater de -50%
+// pile ramène la seconde moitié à la position de départ de la première —
+// aucune coupure visible dans la boucle.
+.ustrip-track {
+  display: flex;
+  width: max-content;
+  animation: ustrip-scroll 32s linear infinite;
+}
+
+.ustrip-item {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 26px;
+  white-space: nowrap;
+  color: #fff;
+  font-family: var(--k-font-mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.ustrip-item::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--k-gold);
+}
+
+@keyframes ustrip-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ustrip-track {
+    animation: none;
+  }
+}

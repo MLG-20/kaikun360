@@ -855,9 +855,11 @@ filtres. Et changer la moindre photo d'accueil exigeait un redéploiement.
 ### Le catalogue de clés
 
 `HeroCatalog::BANNERS` déclare les bandeaux pilotables : `defaut`, les 10
-univers, `contact`, `faqs`, `recherche` et ses 5 déclinaisons par univers
-(`recherche.immobilier`…). Chaque entrée porte un **libellé**, un **groupe**
-d'affichage, une **note** et un **parent**.
+univers, `home-diaspora` et `home-cta` (groupe `accueil`, F16.1 — deux
+sections de l'accueil qui ne sont pas des bandeaux d'en-tête de page, mais
+suivent exactement le même mécanisme), `contact`, `faqs`, `recherche` et ses 5
+déclinaisons par univers (`recherche.immobilier`…). Chaque entrée porte un
+**libellé**, un **groupe** d'affichage, une **note** et un **parent**.
 
 ⚠️ **Ajouter une entrée ici suffit** : la clé devient pilotable au back-office et
 lisible par le frontend, sans migration ni retouche d'écran.

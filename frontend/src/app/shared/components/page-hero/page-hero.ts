@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 
 import { HeroService } from '../../../core/api/hero.service';
+import { RevealDirective } from '../../directives/reveal.directive';
 
 /**
  * Bandeau d'en-tête d'une page publique (F12).
@@ -22,10 +23,15 @@ import { HeroService } from '../../../core/api/hero.service';
  * Le contenu supplémentaire de chaque page (liste de points forts, renvoi vers
  * un univers voisin, bouton d'action) est **projeté** : le composant ne connaît
  * que l'ossature, pas ce que chaque univers a de particulier à dire.
+ *
+ * Le titre porte `appReveal="title"` (balayage gauche→droite, cf. l'accueil) —
+ * un seul endroit à modifier pour les 18 bandeaux F12 (les 5 pages d'univers
+ * du catalogue, `/recherche`, contact, FAQ…), cohérent avec les titres de
+ * l'accueil sans dupliquer la directive partout.
  */
 @Component({
   selector: 'app-page-hero',
-  imports: [],
+  imports: [RevealDirective],
   templateUrl: './page-hero.html',
   styleUrl: './page-hero.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,29 +1,9 @@
-<button
-  type="button"
-  class="scroll-top"
-  [class.is-visible]="visible()"
-  (click)="toTop()"
-  aria-label="Revenir en haut de la page"
-  title="Revenir en haut"
->
-  <!-- Anneau de progression de lecture (tourné pour démarrer en haut). -->
-  <svg class="scroll-top-ring" viewBox="0 0 48 48" aria-hidden="true">
-    <circle class="ring-track" cx="24" cy="24" r="22" />
-    <circle
-      class="ring-progress"
-      cx="24"
-      cy="24"
-      r="22"
-      [attr.stroke-dasharray]="circumference"
-      [attr.stroke-dashoffset]="dashOffset()"
-    />
-  </svg>
-
-  <!-- Chevron vers le haut. -->
+<button type="button" class="scroll-top" (click)="toTop()" aria-label="Revenir en haut de la page">
   <span class="scroll-top-ic" aria-hidden="true">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
          stroke-linecap="round" stroke-linejoin="round">
       <path d="M18 15l-6-6-6 6" />
     </svg>
   </span>
+  Revenir en haut
 </button>

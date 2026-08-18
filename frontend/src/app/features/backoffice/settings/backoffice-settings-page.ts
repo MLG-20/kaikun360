@@ -16,6 +16,7 @@ import {
   NotificationEventOption,
   PlatformSetting,
   ReferenceCatalog,
+  UniverseOption,
 } from '../../../core/api/admin.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { HeroService } from '../../../core/api/hero.service';
@@ -271,6 +272,16 @@ export class BackofficeSettingsPageComponent {
   protected readonly staffEvents = computed(() =>
     this.notificationEvents().filter((event) => event.audience === 'Équipe Kaikun'),
   );
+
+  // --- Bande défilante des univers de l'accueil (F16.2) -----------------------
+
+  /** Les dix univers pilotables (libellé venu du serveur, voir `HeroCatalog`). */
+  protected readonly universeCatalog = signal<UniverseOption[]>([]);
+  /** Clés actuellement MASQUÉES — coché dans l'écran = absent de cette liste. */
+  protected readonly universeHidden = signal<string[]>([]);
+  protected readonly universeStripSaving = signal(false);
+  protected readonly universeStripMessage = signal<string | null>(null);
+  protected readonly universeStripError = signal<string | null>(null);
 
   // --- Onglet Contenu ---------------------------------------------------------
 
@@ -758,6 +769,7 @@ export class BackofficeSettingsPageComponent {
       next: (snapshot) => {
         this.rawSettings.set(snapshot.settings);
         this.notificationEvents.set(snapshot.notification_events);
+        this.universeCatalog.set(snapshot.universe_catalog);
 
         // Les réglages simples alimentent le brouillon ; le barème et les
         // interrupteurs de notification ont leur propre rendu.
@@ -775,6 +787,9 @@ export class BackofficeSettingsPageComponent {
           if (setting.type === 'json') {
             if (setting.key === 'build.pricing') {
               this.pricingFields.set(this.flattenPricing(setting.value));
+            }
+            if (setting.key === 'home.universe_strip_hidden') {
+              this.universeHidden.set((setting.value as string[] | null) ?? []);
             }
             continue;
           }
@@ -958,6 +973,35 @@ export class BackofficeSettingsPageComponent {
           this.notificationsError.set(this.messageFor(error));
         },
       });
+  }
+
+  /** Coche = visible dans la bande, décoche = masqué — inverse de `universeHidden`. */
+  protected isUniverseVisible(key: string): boolean {
+    return !this.universeHidden().includes(key);
+  }
+
+  protected toggleUniverse(key: string, visible: boolean): void {
+    this.universeHidden.update((hidden) =>
+      visible ? hidden.filter((k) => k !== key) : [...hidden, key],
+    );
+  }
+
+  protected saveUniverseStrip(): void {
+    this.universeStripSaving.set(true);
+    this.universeStripError.set(null);
+    this.universeStripMessage.set(null);
+
+    this.admin.updateSettings({ 'home.universe_strip_hidden': this.universeHidden() }).subscribe({
+      next: (snapshot) => {
+        this.rawSettings.set(snapshot.settings);
+        this.universeStripSaving.set(false);
+        this.universeStripMessage.set('Bande des univers mise à jour.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.universeStripSaving.set(false);
+        this.universeStripError.set(this.messageFor(error));
+      },
+    });
   }
 
   // ===========================================================================

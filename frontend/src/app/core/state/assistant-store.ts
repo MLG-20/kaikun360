@@ -61,7 +61,7 @@ export interface AssistantMessage {
  * la marque (elle reprend `RuleBasedBrain::greeting`), la conversation se
  * poursuit en français.
  */
-const ACCUEIL = "Dalal ak diam 👋 Je suis l'assistant Kaikun 360. "
+const ACCUEIL = "Dalal ak diam 👋 Je suis Nancy, l'assistant Kaikun 360. "
   + 'Dites-moi ce que vous cherchez — un bien, un hébergement, un circuit, un véhicule — '
   + 'ou posez-moi une question sur le fonctionnement de la plateforme.';
 

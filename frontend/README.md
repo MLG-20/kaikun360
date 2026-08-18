@@ -2065,6 +2065,111 @@ Plusieurs allers-retours en direct sur `home-page.ts/html/scss` :
   au-dessus du seuil d'avertissement (12 ko) — dette déjà connue, pas résolue
   ici.
 
+### Fonds photo des sections d'accueil et parallaxe légère (F16.1, hors CDC)
+
+Suite du F16 : le client veut « des images de fond sans encombrer la page
+d'accueil ». Périmètre limité à **deux sections** (`diaspora`, `cta-final`),
+tranché avec l'utilisateur pour ne pas noyer la lecture — la vitrine tournante
+et la bascule Actualités/Univers portent déjà de vraies photos.
+
+**Aucun mécanisme dédié** : réutilise le catalogue de bandeaux F12
+(`HeroService.banner(clé)`), deux clés de plus côté serveur
+(`home-diaspora`, `home-cta`), pilotées depuis l'onglet **Bandeaux** déjà
+existant du back-office. La **bande d'en-tête de la vitrine tournante**
+(`.featured-band`) reprend en fond le bandeau F12 **de l'univers affiché**
+(`immobilier`, `nuitees`…) — l'équipe n'a rien de plus à charger, la photo est
+déjà celle de la page `/immobilier`, `/nuitees`… Sans image saisie sur une
+clé, la section garde strictement son apparence d'avant cette tranche (même
+garantie qu'en F12).
+
+- **Styles partagés, pas recopiés** : `.k-photo-section` (voile), `.k-photo-layer`
+  (couche qui porte l'image) et `.k-photo-section-inner` (contenu au-dessus)
+  vivent dans `styles/_universe.scss`, à côté du voile de `.uni-hero--image`
+  qu'ils reprennent. Ne pas les redéfinir localement dans un composant : le
+  budget de build de `home-page.scss` est déjà serré (~15,7 ko / 16 ko après
+  cette tranche — dette F13.5 aggravée, pas résolue).
+- **`.diaspora--photo`** : le panneau décoratif (`diaspora-visual`) passe du
+  dégradé de marque à un verre dépoli (`backdrop-filter: blur`) posé sur la
+  photo — deux aplats de marque côte à côte auraient éteint l'image.
+  **`.cta-final-inner`** : la structure a été scindée en une coquille (fond) et
+  `.cta-final-row` (contenu), pour que la carte de conversion puisse porter la
+  photo sans toucher à sa mise en page interne.
+- **`ParallaxDirective`** (`shared/directives/parallax.directive.ts`) —
+  translate `.k-photo-layer`, jamais `background-attachment: fixed` (connu
+  pour se désactiver silencieusement sur iOS Safari). `IntersectionObserver` :
+  l'écouteur de défilement n'existe que pendant que la section est visible,
+  rien ne tourne en arrière-plan sur une page qui en compte neuf. Posée dans
+  `afterNextRender` comme `RevealDirective` (SSR safe), coupée sous
+  `prefers-reduced-motion`.
+- **4 vitest neufs** (`home-page.spec.ts`) : aucune des trois sections ne
+  porte de fond tant que rien n'est saisi au back-office (garde-fou hérité de
+  F12) ; chacune des trois affiche la bonne photo une fois le bandeau saisi.
+- 🔴 **Vérification navigateur restant à faire.**
+
+### Carrousel Actualités, correctifs vidéo, bande des univers (F16.2, hors CDC)
+
+La grille Actualités (une carte par article) devient un **carrousel une-carte-
+à-la-fois** : `newsIndex`/`actualiteCourante` (computed) au lieu d'un `@for`
+sur tous les articles, minuteur dédié `newsMinuteur` à 10 s (pas les 7 s du
+reste du site — une vidéo n'a pas le temps de démarrer en 7 s). **Règle
+retravaillée deux fois** avant d'être la bonne, tranchée par `AskUserQuestion` :
+le défilement auto reste un aperçu, vidéo comprise, mais un clic sur une
+pastille (`newsChoisieManuellement`) **fige** le carrousel sur ce choix — la
+vidéo se regarde alors en entier jusqu'au prochain clic.
+
+Trois bugs vidéo réels, trouvés en les vivant (pas en test) :
+
+1. `[src]="videoEmbed(a.videoUrl)"` appelé dans le gabarit recrée un
+   `SafeResourceUrl` à chaque cycle de détection Angular ; les minuteurs du
+   héros/de la vitrine redéclenchent la détection → l'iframe YouTube se
+   recharge en boucle, la vidéo ne va jamais à son terme. Corrigé en
+   précalculant le `SafeResourceUrl` une seule fois (à la réception des
+   données ou via `computed()`) — **ne jamais appeler
+   `bypassSecurityTrustResourceUrl` depuis une liaison de gabarit répétée**.
+2. La CSP du rendu serveur (`server.ts`, `frame-src`) n'autorisait que Google
+   Maps — YouTube/Vimeo bloqués sans aucune erreur visible.
+3. Le champ back-office affichait `https://www.youtube.com/watch?v=…` comme
+   exemple, un format qui refuse de s'encadrer (X-Frame-Options) — nouveau
+   `VideoEmbedUrl::normalize()` côté backend.
+
+**Bande défilante des univers** (`shared/components/universe-strip/`), sous le
+héros — juste les noms, en boucle CSS pure (`translateX(-50%)`, piste dupliquée
+deux fois), coupée sous `prefers-reduced-motion`, `aria-hidden` (décoratif,
+l'info existe déjà dans la grille Univers accessible). Distincte de la
+bascule Actualités/Univers (F15) et de la grille « Nos univers » (section 2) —
+trois choses différentes malgré des noms proches.
+
+### Balayage des titres, bulles flottantes Nancy/WhatsApp, retouches responsive
+
+**Balayage des titres au défilement** (`RevealDirective`, variante `'title'`) :
+un `<span>` interne, créé par la directive, porte le `clip-path` du balayage —
+jamais l'élément observé lui-même. ⚠️ **Piège trouvé en le vivant** : Chrome
+traite un élément `clip-path: inset(0 100% 0 0)` (surface visible nulle) comme
+n'intersectant JAMAIS le viewport, donc l'`IntersectionObserver` posé
+directement dessus reste bloqué à `isIntersecting: false` pour toujours — le
+titre restait invisible en permanence. Trois variantes CSS (gauche→droite,
+droite→gauche, centre→extérieur), posées en classe statique à côté de
+`appReveal="title"`, en rotation sur les titres de l'accueil ; le composant
+partagé `app-page-hero` porte aussi la directive, ce qui couvre d'un coup les
+18 bandeaux F12 (dont les 5 pages d'univers du catalogue).
+
+**Bulles flottantes repensées** : l'assistant (rebaptisé **Nancy**) quitte les
+en-têtes pour redevenir une bulle flottante coin bas-droite — repliée en
+simple rond au repos, dépliée en pilule (nom + fond dégradé) au survol/focus
+via une largeur `width` explicite plutôt que `max-width` (qui anime mal sur un
+contenu de taille automatique). Nouveau `app-whatsapp-fab`, empilé juste en
+dessous, et `app-floating-dock` qui les regroupe dans un unique conteneur
+`position: fixed` — plus simple et plus robuste que deux positionnements fixes
+indépendants à synchroniser, et gère gratuitement l'absence de WhatsApp
+(Nancy reprend seule la place du bas). Le bouton « revenir en haut »
+(`app-scroll-top`) quitte la racine applicative pour devenir un lien statique
+dans `app-footer` — visible seulement sur les pages qui ont un pied de page.
+
+Deux bugs responsive corrigés au passage sur `home-page.scss` : la règle de
+960px ciblait `.cta-final-inner` au lieu de `.cta-final-row` (la classe qui
+porte réellement `display:flex`), et la carte statistiques débordait du
+viewport faute d'un `max-width` aligné sur les autres cartes de la page.
+
 ### Commandes utiles
 
 ```bash

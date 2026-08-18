@@ -1,72 +1,149 @@
-// Déclencheur de l'assistant dans les en-têtes (F10.5).
+// Déclencheur de l'assistant : bulle flottante, coin bas-droite (F10.6).
+// Positionnement fixe géré par le PARENT (`app-floating-dock`) — ce composant
+// ne dessine que sa propre pastille, pas sa place à l'écran. Voir ce parent
+// pour l'empilement avec `app-whatsapp-fab`.
 //
-// Les trois en-têtes qui l'accueillent — public, espaces connectés, back-office —
-// sont sur fond blanc : un seul habillage suffit, inutile de le paramétrer.
+// Repliée en simple rond par défaut, le NOM se déplie au survol/focus — un
+// visiteur qui explore la souris tombe dessus et comprend ce que c'est, sans
+// que la pilule occupe en permanence toute cette largeur dans le coin.
 
 :host {
-  display: inline-flex;
+  display: contents;
 }
 
 .ia-lanceur {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.42rem 0.8rem;
-  border: 1px solid var(--k-line-strong);
+  height: 52px;
+  padding: 0 6px;
+  border: none;
   border-radius: var(--k-radius-pill);
-  background: var(--k-white);
-  color: var(--k-ink);
-  font: inherit;
-  font-size: 0.86rem;
-  font-weight: 600;
-  line-height: 1.2;
   cursor: pointer;
-  white-space: nowrap;
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease;
+  overflow: hidden;
 
-  svg {
-    width: 18px;
-    height: 18px;
-    flex: none;
+  background: var(--k-brand);
+  color: #fff;
+  box-shadow:
+    0 6px 20px rgba(3, 25, 63, 0.24),
+    0 2px 6px rgba(3, 25, 63, 0.16);
+  transition:
+    padding 0.4s cubic-bezier(0.22, 0.7, 0.24, 1),
+    background 0.18s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &:hover,
+  &:focus-visible {
+    padding: 0 6px 0 18px;
+    background: linear-gradient(135deg, var(--k-brand), var(--k-brand-600));
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(3, 72, 251, 0.34);
   }
 
-  &:hover {
-    border-color: var(--k-brand);
-    background: var(--k-brand-050);
-    color: var(--k-brand-600);
+  &:active {
+    transform: translateY(-1px) scale(0.97);
   }
 
   &:focus-visible {
     outline: 2px solid var(--k-brand);
-    outline-offset: 2px;
+    outline-offset: 3px;
   }
 
-  // Tiroir ouvert : le bouton reste allumé. Il ne se transforme PAS en croix —
-  // la fermeture est dans le tiroir, et un bouton qui change de sens sous le
-  // curseur se reclique par erreur.
+  // Tiroir ouvert : le bouton reste allumé (or de marque). Il ne se
+  // transforme PAS en croix — la fermeture est dans le tiroir, et un bouton
+  // qui change de sens sous le curseur se reclique par erreur.
   &.is-ouvert {
-    border-color: var(--k-brand);
-    background: var(--k-brand);
-    color: var(--k-white);
+    background: var(--k-gold-2);
+    color: var(--k-navy);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    transition: none;
+    transition: padding 0.2s ease, background 0.18s ease;
+
+    &:hover,
+    &:active {
+      transform: none;
+    }
   }
 }
 
-// Sous 900 px, la place du header est disputée : le bouton se réduit à sa
-// pastille ronde.
-@media (max-width: 900px) {
-  .ia-lanceur {
-    padding: 0.42rem;
-    border-radius: 50%;
+.ia-lanceur__nom {
+  // Largeur EXPLICITE (pas `max-width`) : sur un contenu de taille
+  // automatique, `max-width` anime mal — le texte apparaît d'un coup au lieu
+  // de glisser, faute d'un point de départ et d'arrivée vraiment mesurés.
+  // 132px est calé sur la largeur réelle de « Assistant Nancy » à cette
+  // graisse/taille (112px coupait le « y » final — vérifié à l'écran).
+  width: 0;
+  opacity: 0;
+  margin-right: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--k-font-display);
+  font-size: 14.5px;
+  font-weight: 700;
+  transition:
+    width 0.4s cubic-bezier(0.22, 0.7, 0.24, 1),
+    opacity 0.3s ease,
+    margin-right 0.4s cubic-bezier(0.22, 0.7, 0.24, 1);
+}
+
+// Déplié : au survol de la souris, OU au focus clavier (accessibilité — un
+// visiteur au clavier doit lui aussi voir ce qu'il s'apprête à ouvrir).
+.ia-lanceur:hover .ia-lanceur__nom,
+.ia-lanceur:focus-visible .ia-lanceur__nom {
+  width: 132px;
+  opacity: 1;
+  margin-right: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ia-lanceur__nom {
+    transition: opacity 0.2s ease;
+  }
+}
+
+// Petit disque translucide qui isole l'icône — lisible sur fond bleu comme
+// sur fond or, sans dupliquer les couleurs de marque.
+.ia-lanceur__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.ia-lanceur.is-ouvert .ia-lanceur__avatar {
+  background: rgba(3, 25, 63, 0.14);
+}
+
+// Sous 420px, la pilule reste un rond même au survol/focus : le déploiement
+// prendrait trop de place face à la bulle WhatsApp empilée juste en dessous,
+// et le survol n'existe de toute façon pas au doigt sur mobile.
+@media (max-width: 420px) {
+  .ia-lanceur,
+  .ia-lanceur:hover,
+  .ia-lanceur:focus-visible {
+    padding: 0;
+    width: 52px;
+    justify-content: center;
   }
 
-  .ia-lanceur__mot {
-    display: none;
+  .ia-lanceur__nom,
+  .ia-lanceur:hover .ia-lanceur__nom,
+  .ia-lanceur:focus-visible .ia-lanceur__nom {
+    width: 0;
+    opacity: 0;
+    margin-right: 0;
+  }
+
+  .ia-lanceur__avatar {
+    background: transparent;
   }
 }

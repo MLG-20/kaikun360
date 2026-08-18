@@ -3,10 +3,19 @@ import { provideRouter } from '@angular/router';
 import { Observable, Subject, of } from 'rxjs';
 
 import { CatalogService } from '../../core/api/catalog.service';
+import { HeroBanner, HeroService } from '../../core/api/hero.service';
 import { HomeHero, HomeHeroService } from '../../core/api/home-hero.service';
 import { NewsArticle, NewsService } from '../../core/api/news.service';
 import { FavoriteStore } from '../../core/state/favorite-store';
 import { HomePageComponent } from './home-page';
+
+/**
+ * Faux service de bandeaux (F12/F16.1) : on décide clé par clé ce que le
+ * back-office a saisi, sans passer par une requête HTTP réelle.
+ */
+function fakeHeroService(banners: Record<string, HeroBanner> = {}) {
+  return { banner: (key: string): HeroBanner | null => banners[key] ?? null };
+}
 
 /**
  * Tests de la vitrine tournante de l'accueil (F13.5).
@@ -51,6 +60,7 @@ describe('HomePageComponent — vitrine tournante', () => {
     immobilierEnAttente?: Subject<unknown>;
     actualites?: NewsArticle[];
     heroMedia?: HomeHero;
+    banners?: Record<string, HeroBanner>;
   } = {}) {
     appels = { properties: 0, stays: 0, vehicles: 0, experiences: 0, mobility: 0 };
 
@@ -83,6 +93,7 @@ describe('HomePageComponent — vitrine tournante', () => {
           useValue: { get: () => of(options.heroMedia ?? { images: [], video: null }) },
         },
         { provide: NewsService, useValue: { list: () => of(options.actualites ?? []) } },
+        { provide: HeroService, useValue: fakeHeroService(options.banners) },
       ],
     });
 
@@ -168,6 +179,20 @@ describe('HomePageComponent — vitrine tournante', () => {
     fixture.destroy();
   });
 
+  it('la bande de la vitrine reprend le bandeau F12 de l’univers affiché (F16.1)', () => {
+    const fixture = monter({
+      banners: { immobilier: { image: 'https://cdn.test/immo.jpg', eyebrow: null, title: null, lead: null } },
+    });
+    const hote = fixture.nativeElement as HTMLElement;
+    const bande = hote.querySelector('.featured-band') as HTMLElement;
+
+    // L'accueil démarre sur l'univers Immobilier, qui a une annonce et un bandeau.
+    expect(bande.classList.contains('featured-band--photo')).toBe(true);
+    expect(bande.querySelector('.k-photo-layer')?.getAttribute('style')).toContain('immo.jpg');
+
+    fixture.destroy();
+  });
+
   it('reprend le tour quand la souris quitte la vitrine', () => {
     vi.useFakeTimers();
 
@@ -222,7 +247,9 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
     return of({ data } as never);
   }
 
-  function monter(options: { actualites?: NewsArticle[]; heroMedia?: HomeHero } = {}) {
+  function monter(
+    options: { actualites?: NewsArticle[]; heroMedia?: HomeHero; banners?: Record<string, HeroBanner> } = {},
+  ) {
     const catalogue = {
       properties: () => page([]),
       stays: () => page([]),
@@ -245,6 +272,7 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
           useValue: { get: () => of(options.heroMedia ?? { images: [], video: null }) },
         },
         { provide: NewsService, useValue: { list: () => of(options.actualites ?? []) } },
+        { provide: HeroService, useValue: fakeHeroService(options.banners) },
       ],
     });
 
@@ -321,5 +349,153 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
     expect(video?.getAttribute('src')).toBe('https://cdn.test/clip.mp4');
 
     fixture.destroy();
+  });
+
+  /**
+   * Fonds photo de sections (F16.1). Ce qui compte n'est pas « l'image
+   * s'affiche » (visible à l'œil) mais que l'ABSENCE de bandeau saisi laisse
+   * chaque section strictement identique à avant cette tranche — c'est la
+   * garantie, héritée de `HeroCatalog`, qu'une plateforme où personne n'a
+   * rien chargé au back-office ne change pas d'apparence.
+   */
+  it('ne pose aucun fond photo tant que rien n’a été saisi au back-office', () => {
+    const fixture = monter({});
+    const hote = fixture.nativeElement as HTMLElement;
+
+    expect(hote.querySelector('.diaspora')?.classList.contains('diaspora--photo')).toBe(false);
+    expect(hote.querySelector('.cta-final-inner')?.classList.contains('k-photo-section')).toBe(false);
+    expect(hote.querySelector('.featured-band')?.classList.contains('featured-band--photo')).toBe(false);
+    expect(hote.querySelectorAll('.k-photo-layer').length).toBe(0);
+
+    fixture.destroy();
+  });
+
+  it('habille la section Diaspora avec le bandeau `home-diaspora`', () => {
+    const fixture = monter({
+      banners: { 'home-diaspora': { image: 'https://cdn.test/diaspora.jpg', eyebrow: null, title: null, lead: null } },
+    });
+    const hote = fixture.nativeElement as HTMLElement;
+    const section = hote.querySelector('.diaspora') as HTMLElement;
+
+    expect(section.classList.contains('diaspora--photo')).toBe(true);
+    expect(section.querySelector('.k-photo-layer')?.getAttribute('style')).toContain('diaspora.jpg');
+
+    fixture.destroy();
+  });
+
+  it('habille l’appel final avec le bandeau `home-cta`', () => {
+    const fixture = monter({
+      banners: { 'home-cta': { image: 'https://cdn.test/cta.jpg', eyebrow: null, title: null, lead: null } },
+    });
+    const hote = fixture.nativeElement as HTMLElement;
+    const carte = hote.querySelector('.cta-final-inner') as HTMLElement;
+
+    expect(carte.classList.contains('k-photo-section')).toBe(true);
+    expect(carte.querySelector('.k-photo-layer')?.getAttribute('style')).toContain('cta.jpg');
+
+    fixture.destroy();
+  });
+
+  /**
+   * Carrousel des actualités (F16.2) : demande explicite de l'utilisateur
+   * après avoir vu la grille jugée trop encombrante à terme — une carte à la
+   * fois, qui cède la place à la suivante et boucle. Même patron de minuteur
+   * que la vitrine (garde-fou de pause), déjà couvert côté vitrine ; ici on
+   * ne protège que ce qui est propre aux actualités : une seule carte à la
+   * fois, et la boucle après le dernier article.
+   */
+  it('n’affiche qu’une seule carte à la fois même avec plusieurs actualités publiées', () => {
+    const second: NewsArticle = { ...article, id: 2, title: 'Un second article' };
+    const fixture = monter({ actualites: [article, second] });
+    const hote = fixture.nativeElement as HTMLElement;
+
+    expect(hote.querySelectorAll('.news-card').length).toBe(1);
+    expect(hote.textContent).toContain('Un article');
+    expect(hote.textContent).not.toContain('Un second article');
+
+    fixture.destroy();
+  });
+
+  it('passe à l’actualité suivante puis boucle sur la première', () => {
+    vi.useFakeTimers();
+
+    try {
+      const second: NewsArticle = { ...article, id: 2, title: 'Un second article' };
+      const fixture = monter({ actualites: [article, second] });
+      const hote = fixture.nativeElement as HTMLElement;
+
+      expect(hote.textContent).toContain('Un article');
+
+      // 10 s : cadence propre aux actualités (NEWS_ROTATION_MS), plus lente
+      // que le reste du site (7 s) pour laisser une vidéo démarrer avant
+      // d'être coupée par l'aperçu automatique.
+      vi.advanceTimersByTime(10000);
+      fixture.detectChanges();
+      expect(hote.textContent).toContain('Un second article');
+
+      vi.advanceTimersByTime(10000);
+      fixture.detectChanges();
+      expect(hote.textContent).toContain('Un article');
+      expect(hote.textContent).not.toContain('Un second article');
+
+      fixture.destroy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('bascule automatiquement même sur une actualité vidéo tant que rien n’a été choisi à la main', () => {
+    vi.useFakeTimers();
+
+    try {
+      const video: NewsArticle = { ...article, videoUrl: 'https://www.youtube.com/embed/abc' };
+      const second: NewsArticle = { ...article, id: 2, title: 'Un second article' };
+      const fixture = monter({ actualites: [video, second] });
+      const hote = fixture.nativeElement as HTMLElement;
+
+      // L'aperçu automatique reste un aperçu, vidéo comprise — seul un clic
+      // sur une pastille (voir le test suivant) le fige pour de bon.
+      vi.advanceTimersByTime(10000);
+      fixture.detectChanges();
+      expect(hote.textContent).toContain('Un second article');
+
+      fixture.destroy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('un clic sur une pastille bascule immédiatement et FIGE l’aperçu automatique dessus', () => {
+    vi.useFakeTimers();
+
+    try {
+      const second: NewsArticle = { ...article, id: 2, title: 'Un second article' };
+      const fixture = monter({ actualites: [article, second] });
+      const hote = fixture.nativeElement as HTMLElement;
+
+      // `.featured-tab` est aussi le nom des pastilles d'univers de la vitrine
+      // (réutilisées telles quelles ici, sans CSS neuf) : on cible celles des
+      // actualités par leur groupe ARIA dédié.
+      const pastilles = Array.from(
+        hote.querySelectorAll<HTMLButtonElement>('[aria-label="Actualités"] .featured-tab'),
+      );
+      expect(pastilles.length).toBe(2);
+
+      pastilles[1].click();
+      fixture.detectChanges();
+
+      expect(hote.textContent).toContain('Un second article');
+      expect(pastilles[1].classList.contains('featured-tab--active')).toBe(true);
+
+      // Le choix reste figé : le minuteur ne doit plus jamais faire bouger la
+      // carte tant qu'aucune AUTRE pastille n'a été cliquée.
+      vi.advanceTimersByTime(30000);
+      fixture.detectChanges();
+      expect(hote.textContent).toContain('Un second article');
+
+      fixture.destroy();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

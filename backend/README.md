@@ -1066,6 +1066,25 @@ Le code est **abondamment commenté en français**.
   aucune règle de parenté à dupliquer. ⚠️ **Une chaîne vide retire la surcharge**
   et rend à la page son texte d'origine : il n'existe aucun état dans lequel le
   back-office laisse une page sans titre.
+  ⚠️ **F16.1 — deux clés de plus, aucune route neuve** : `home-diaspora` et
+  `home-cta` (groupe `accueil`) habillent deux sections de l'accueil autrement
+  plates. Confirme le commentaire du catalogue (« ajouter une entrée ici
+  SUFFIT ») : le back-office et `GET /heroes` les servent sans un seul autre
+  changement. La vitrine tournante de l'accueil réutilise en plus les clés
+  d'univers déjà là (`immobilier`, `nuitees`…) pour illustrer sa bande
+  d'en-tête — aucune photo dédiée à saisir, l'équipe l'a déjà déposée pour la
+  page de l'univers.
+- ✅ **F16.2 — Bande défilante des univers, correctifs vidéo, assistant renommé Nancy.**
+  `GET /universe-strip` (public) renvoie les libellés des univers non masqués
+  (`home.universe_strip_hidden`, réglage `json`), résolus depuis le groupe
+  `univers` de `HeroCatalog` — quatrième réutilisation de ce catalogue.
+  Écriture via le mécanisme générique déjà là (`PATCH /admin/settings`), pas de
+  contrôleur dédié. Nouveau `App\Support\Media\VideoEmbedUrl::normalize()` :
+  convertit un lien `/watch?v=` ou `youtu.be/` en lien embarquable, branché
+  dans `AdminNewsController` et `AdminHomeHeroController` (même champ, même
+  piège aux deux endroits). Le prompt système de l'assistant (`ClaudePrompt`)
+  et son message d'accueil se présentent maintenant comme **Nancy**, à la
+  demande du client. 18 tests neufs (`UniverseStripTest` + réglages).
 - ✅ **Liste d'attente avant ouverture (F14, hors CDC)** : `POST /waitlist`
   (public, throttle 10/min), 5 catégories (`proprietaire`, `prestataire`,
   `client`, `team_building`, `diaspora`), champs propres à chacune dans

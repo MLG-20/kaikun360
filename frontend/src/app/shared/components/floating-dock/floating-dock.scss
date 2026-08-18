@@ -1,0 +1,17 @@
+:host {
+  // Le composant lui-même n'occupe aucune place dans le flux : la pile est
+  // en position fixe. On neutralise tout impact sur la mise en page.
+  display: contents;
+}
+
+.floating-dock {
+  position: fixed;
+  right: clamp(16px, 3vw, 28px);
+  bottom: clamp(16px, 3vw, 28px);
+  z-index: 901;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}

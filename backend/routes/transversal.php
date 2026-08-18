@@ -6,9 +6,9 @@ use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GeoController;
 use App\Http\Controllers\HeroController;
 use App\Http\Controllers\HomeHeroController;
-use App\Http\Controllers\NewsController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NewsController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\PlatformStatusController;
@@ -16,6 +16,7 @@ use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TrashController;
+use App\Http\Controllers\UniverseStripController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\WhatsAppLinkController;
 use App\Modules\Admin\Http\Controllers\FaqController;
@@ -59,6 +60,11 @@ Route::get('news', [NewsController::class, 'index']);
 // --- Héros de l'accueil (F15.1) ------------------------------------------------
 // Diaporama de photos, ou une courte vidéo à la place — pilotés au back-office.
 Route::get('home-hero', [HomeHeroController::class, 'index']);
+
+// --- Bande défilante des univers (F16.2) ---------------------------------------
+// Juste les noms, sous le héros de l'accueil. Réutilise le catalogue d'univers
+// de HeroCatalog ; l'équipe ne fait qu'en masquer certains au back-office.
+Route::get('universe-strip', [UniverseStripController::class, 'index']);
 
 // --- Contact public (F2.8.1) -------------------------------------------------
 // Coordonnées du siège (lecture, pour affichage + carte) et dépôt de message

@@ -64,7 +64,10 @@ app.use((_req, res, next) => {
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob:",
       `connect-src 'self' https://accounts.google.com ${apiOrigin}`,
-      "frame-src https://maps.google.com https://www.google.com",
+      // YouTube/Vimeo : embeds vidéo des Actualités (F15) et du héros de
+      // l'accueil (F15.1), pilotés au back-office (`gerer:parametres`) — même
+      // niveau de confiance que la carte Google Maps déjà présente ici.
+      "frame-src https://maps.google.com https://www.google.com https://www.youtube.com https://player.vimeo.com",
       "frame-ancestors 'self'",
       "object-src 'none'",
       "base-uri 'self'",

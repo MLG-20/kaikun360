@@ -14,6 +14,7 @@ import { RouterLink } from '@angular/router';
 import { Observable, catchError, map, of } from 'rxjs';
 
 import { CatalogService } from '../../core/api/catalog.service';
+import { HeroService } from '../../core/api/hero.service';
 import { HomeHero, HomeHeroService } from '../../core/api/home-hero.service';
 import { NewsArticle, NewsService } from '../../core/api/news.service';
 import { schemaOrganisation, schemaSite } from '../../core/seo/json-ld';
@@ -27,6 +28,8 @@ import {
 } from '../../shared/components/catalog/catalog.config';
 import { ListingCardComponent } from '../../shared/components/listing-card/listing-card';
 import { CountUpDirective } from '../../shared/directives/count-up.directive';
+import { UniverseStripComponent } from '../../shared/components/universe-strip/universe-strip';
+import { ParallaxDirective } from '../../shared/directives/parallax.directive';
 import { RevealDirective } from '../../shared/directives/reveal.directive';
 
 /**
@@ -55,6 +58,57 @@ interface UniverseTile {
   fragment?: string;
 }
 
+/**
+ * Article d'actualité, avec son URL d'embed vidéo déjà sécurisée.
+ *
+ * ⚠️ **Précalculée une seule fois, ici, jamais dans le gabarit.**
+ * `DomSanitizer.bypassSecurityTrustResourceUrl` crée un nouvel objet à chaque
+ * appel ; appelée depuis `[src]="videoEmbed(a.videoUrl)"` dans le template,
+ * elle en fabrique un NEUF à chaque cycle de détection — et Angular compare
+ * les `SafeResourceUrl` par référence. Les minuteurs du héros et de la
+ * vitrine (7 s chacun) redéclenchent la détection, l'iframe recevait donc une
+ * « nouvelle » source toutes les quelques secondes : le navigateur la
+ * rechargeait, et la vidéo YouTube repartait de zéro sans jamais aller à son
+ * terme. Une valeur stable, posée une fois à la réception des articles, fait
+ * disparaître le problème.
+ */
+interface NewsArticleView extends NewsArticle {
+  videoEmbedUrl: SafeResourceUrl | null;
+}
+
+/**
+ * Ajoute lecture automatique, boucle et son coupé à une URL d'embed déjà
+ * assainie (YouTube ou Vimeo).
+ *
+ * Sans ça, avec plusieurs actualités vidéo dans le flux, chacune resterait
+ * figée sur son image de prévisualisation tant que le visiteur ne clique pas
+ * dessus — ce qui n'attire jamais l'œil. Le son reste coupé par défaut : les
+ * politiques des navigateurs bloquent de toute façon toute lecture
+ * automatique non coupée.
+ */
+function withAutoplayLoop(embedUrl: string): string {
+  const [base, query] = embedUrl.split('?');
+  const params = new URLSearchParams(query ?? '');
+
+  const youtube = base.match(/^https:\/\/www\.youtube\.com\/embed\/([\w-]+)/);
+  if (youtube) {
+    params.set('autoplay', '1');
+    params.set('mute', '1');
+    params.set('loop', '1');
+    params.set('playlist', youtube[1]);
+    return `${base}?${params.toString()}`;
+  }
+
+  if (base.startsWith('https://player.vimeo.com/video/')) {
+    params.set('autoplay', '1');
+    params.set('muted', '1');
+    params.set('loop', '1');
+    return `${base}?${params.toString()}`;
+  }
+
+  return embedUrl;
+}
+
 /** Garantie du protocole de confiance (section navy anti-arnaque). */
 interface Guarantee {
   icon: string;
@@ -79,6 +133,14 @@ interface ServiceItem {
  * autre chose à voir et la rotation ne sert à rien.
  */
 const ROTATION_MS = 7000;
+
+/**
+ * Cadence du carrousel des actualités (F16.2) : un peu plus lente que le
+ * reste du site (7 s) pour laisser à une vidéo le temps de démarrer avant
+ * d'être coupée. Reste un aperçu, pas une lecture complète — c'est le clic
+ * sur une pastille qui donne le contrôle total (voir `newsChoisieManuellement`).
+ */
+const NEWS_ROTATION_MS = 10000;
 
 /**
  * Durée au-delà de laquelle une pause au survol est tenue pour perdue (une
@@ -106,7 +168,7 @@ const PAUSE_MAX_MS = 60000;
  */
 @Component({
   selector: 'app-home-page',
-  imports: [ListingCardComponent, RouterLink, RevealDirective, CountUpDirective],
+  imports: [ListingCardComponent, RouterLink, RevealDirective, CountUpDirective, ParallaxDirective, UniverseStripComponent],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -116,6 +178,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
   private readonly seo = inject(SeoService);
   private readonly homeHero = inject(HomeHeroService);
   private readonly news = inject(NewsService);
+  private readonly heroBanners = inject(HeroService);
   private readonly sanitizer = inject(DomSanitizer);
   /** État partagé des favoris (cœurs sur les biens en vedette). */
   protected readonly favorites = inject(FavoriteStore);
@@ -129,6 +192,22 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
   /** Une vidéo, quand elle existe, REMPLACE entièrement le diaporama. */
   protected readonly heroHasVideo = computed(() => !!this.heroMedia().video);
+
+  /**
+   * URL d'embed assainie de la vidéo du héros, si elle est fournie par un
+   * lien (pas un fichier déposé) — un `computed()`, donc mémoïsée : elle ne
+   * se recalcule QUE si `heroMedia` change réellement, jamais à chaque cycle
+   * de détection. Même piège corrigé que `NewsArticleView` : appeler
+   * `bypassSecurityTrustResourceUrl` depuis le gabarit fabrique un nouvel
+   * objet à chaque rendu, ce que les minuteurs du héros et de la vitrine
+   * (7 s chacun) redéclenchaient sans cesse — l'iframe se rechargeait et la
+   * vidéo ne finissait jamais.
+   */
+  protected readonly heroVideoEmbedUrl = computed(() => {
+    const url = this.heroMedia().video?.url;
+
+    return url ? this.sanitizer.bypassSecurityTrustResourceUrl(withAutoplayLoop(url)) : null;
+  });
 
   /** Index de la photo actuellement affichée dans le diaporama. */
   protected readonly heroSlideIndex = signal(0);
@@ -145,6 +224,21 @@ export class HomePageComponent implements OnInit, OnDestroy {
   private heroMinuteur: ReturnType<typeof setInterval> | null = null;
 
   /**
+   * Fonds photo de sections de l'accueil (F16.1) : réutilise le mécanisme des
+   * bandeaux F12 (`HeroCatalog`) plutôt qu'un système dédié — deux clés de
+   * plus (`home-diaspora`, `home-cta`), aucune nouvelle route, aucun nouvel
+   * écran back-office (l'onglet Bandeaux existant les liste déjà).
+   */
+  protected readonly diasporaBackground = computed(() => this.photoUrl('home-diaspora'));
+  protected readonly ctaBackground = computed(() => this.photoUrl('home-cta'));
+
+  private photoUrl(key: string): string | null {
+    const url = this.heroBanners.banner(key)?.image ?? null;
+
+    return url ? `url("${encodeURI(url)}")` : null;
+  }
+
+  /**
    * Articles publiés de la section « Actualités Kaikun ».
    *
    * ⚠️ **C'est ce signal qui décide de la Section 2 de l'accueil** : un
@@ -155,8 +249,38 @@ export class HomePageComponent implements OnInit, OnDestroy {
    * n'est qu'un repli le temps qu'il n'y en ait aucune. La navigation vers les
    * univers reste de toute façon accessible par le méga-menu de l'en-tête.
    */
-  protected readonly actualites = signal<NewsArticle[]>([]);
+  protected readonly actualites = signal<NewsArticleView[]>([]);
   protected readonly aDesActualites = computed(() => this.actualites().length > 0);
+
+  /**
+   * Carrousel des actualités (F16.2) : une carte à la fois, plutôt qu'une
+   * grille qui s'allongerait à chaque article publié — demande explicite de
+   * l'utilisateur après avoir vu la disposition en grille jugée encombrante à
+   * terme. Même mécanique de tour de rôle que la vitrine du catalogue
+   * (`demarrerLeTour`) : minuteur avec garde-fou de pause, pas un simple
+   * `clearInterval` au survol — c'est ce dernier patron qui avait figé la
+   * vitrine (voir `suspendre`/`reprendre` plus bas dans ce fichier).
+   */
+  protected readonly newsIndex = signal(0);
+  protected readonly actualiteCourante = computed(() => {
+    const liste = this.actualites();
+
+    return liste.length ? liste[this.newsIndex() % liste.length] : null;
+  });
+
+  /**
+   * ⚠️ **Un clic sur une pastille fige le carrousel pour de bon.**
+   * Décision explicite de l'utilisateur : le défilement automatique (10 s)
+   * reste un aperçu — dès qu'un visiteur choisit une actualité lui-même,
+   * plus rien ne doit l'interrompre, vidéo comprise, jusqu'à ce qu'il clique
+   * une AUTRE pastille. Remis à `false` par `chargerActualites` à chaque
+   * nouveau chargement (nouvelle visite = nouvel aperçu automatique).
+   */
+  protected readonly newsChoisieManuellement = signal(false);
+
+  private newsMinuteur: ReturnType<typeof setInterval> | null = null;
+  private newsSurvolee = false;
+  private newsPauseDepuis: number | null = null;
 
   private readonly estNavigateur = isPlatformBrowser(inject(PLATFORM_ID));
 
@@ -179,6 +303,14 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
   /** Univers actuellement exposé. */
   protected readonly universCourant = signal<Universe>('immobilier');
+
+  /**
+   * Fond de la bande d'en-tête de la vitrine (F16.1) : reprend le bandeau F12
+   * déjà chargé pour la page de l'univers affiché (`immobilier`, `nuitees`…) —
+   * aucune photo dédiée à saisir en plus, l'équipe l'a déjà déposée pour la
+   * page /immobilier, /nuitees, etc.
+   */
+  protected readonly universBackground = computed(() => this.photoUrl(this.universCourant()));
 
   /**
    * Titre de section propre à chaque univers.
@@ -434,12 +566,68 @@ export class HomePageComponent implements OnInit, OnDestroy {
    * Charge les actualités publiées. Une panne réseau n'affiche pas d'erreur —
    * comme les bandeaux (F12), c'est de la décoration : la page retombe alors
    * sur la grille des univers, son état sans surcharge.
+   *
+   * L'URL d'embed vidéo est assainie ICI (voir `NewsArticleView`), pas dans
+   * le gabarit. Même modèle de confiance que la carte de la page Contact
+   * (`bypassSecurityTrustResourceUrl`) : la valeur vient d'un agent titulaire
+   * de `gerer:parametres`, pas d'un visiteur.
    */
   private chargerActualites(): void {
     this.news
       .list()
-      .pipe(catchError(() => of([] as NewsArticle[])))
-      .subscribe((articles) => this.actualites.set(articles));
+      .pipe(
+        map((articles) =>
+          articles.map((a) => ({
+            ...a,
+            videoEmbedUrl: a.videoUrl
+              ? this.sanitizer.bypassSecurityTrustResourceUrl(withAutoplayLoop(a.videoUrl))
+              : null,
+          })),
+        ),
+        catchError(() => of([] as NewsArticleView[])),
+      )
+      .subscribe((articles) => {
+        this.actualites.set(articles);
+        this.newsChoisieManuellement.set(false);
+        this.demarrerLeCarrouselActualites();
+      });
+  }
+
+  /**
+   * Lance l'aperçu automatique des actualités. Voir `demarrerLeTour` (vitrine)
+   * pour le détail du garde-fou de pause — même patron, appliqué ici à un
+   * minuteur distinct pour ne pas coupler les deux carrousels.
+   */
+  private demarrerLeCarrouselActualites(): void {
+    if (!this.estNavigateur || this.newsMinuteur) return;
+    if (this.actualites().length < 2) return;
+
+    this.newsMinuteur = setInterval(() => {
+      const pausePerdue =
+        this.newsSurvolee && Date.now() - (this.newsPauseDepuis ?? 0) > PAUSE_MAX_MS;
+
+      if ((this.newsSurvolee && !pausePerdue) || document.hidden || this.newsChoisieManuellement()) return;
+
+      this.newsIndex.update((i) => i + 1);
+    }, NEWS_ROTATION_MS);
+  }
+
+  /** Bascule vers l'actualité choisie et fige l'aperçu automatique dessus. */
+  protected choisirActualite(i: number): void {
+    this.newsIndex.set(i);
+    this.newsChoisieManuellement.set(true);
+  }
+
+  /** Suspend le carrousel des actualités : la souris est sur la carte. */
+  protected suspendreNews(): void {
+    this.newsSurvolee = true;
+    this.newsPauseDepuis = Date.now();
+  }
+
+  /** Reprend le carrousel des actualités quand la souris quitte la carte. */
+  protected reprendreNews(): void {
+    this.newsSurvolee = false;
+    this.newsPauseDepuis = null;
   }
 
   /**
@@ -469,18 +657,6 @@ export class HomePageComponent implements OnInit, OnDestroy {
     this.heroMinuteur = setInterval(() => {
       this.heroSlideIndex.update((i) => i + 1);
     }, ROTATION_MS);
-  }
-
-  /**
-   * URL d'embed assainie pour l'iframe vidéo d'un article.
-   *
-   * ⚠️ Même modèle de confiance que la carte de la page Contact
-   * (`bypassSecurityTrustResourceUrl`) : la valeur ne vient pas d'un visiteur
-   * mais d'un agent titulaire de `gerer:parametres`, le même niveau de
-   * confiance que le corps HTML des pages de contenu (déjà rendu brut).
-   */
-  protected videoEmbed(url: string): SafeResourceUrl {
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
   /**
@@ -663,6 +839,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.arreterLeTour();
     if (this.heroMinuteur) clearInterval(this.heroMinuteur);
+    if (this.newsMinuteur) clearInterval(this.newsMinuteur);
   }
 
   private arreterLeTour(): void {

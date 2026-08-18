@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 
 import { ContactService } from '../../../core/api/contact.service';
+import { ScrollTopComponent } from '../scroll-top/scroll-top';
 
 /** Un lien de pied de page (libellé + route interne). */
 interface FooterLink {
@@ -26,10 +27,15 @@ interface SocialLink {
  * est absent de la réponse, donc absent du pied de page : pas de lien mort.
  * Si l'appel échoue, la rangée disparaît simplement — le pied de page reste
  * fonctionnel.
+ *
+ * Monte aussi le lien **« revenir en haut »** (`app-scroll-top`) — déplacé ici
+ * depuis la racine (`app.html`), où c'était un bouton flottant global : il
+ * n'apparaît donc plus que sur les pages qui ont un pied de page (le site
+ * public), et la bulle assistant occupe seule le coin flottant partout.
  */
 @Component({
   selector: 'app-footer',
-  imports: [RouterLink],
+  imports: [RouterLink, ScrollTopComponent],
   templateUrl: './footer.html',
   styleUrl: './footer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

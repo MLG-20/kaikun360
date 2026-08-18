@@ -47,14 +47,57 @@
   }
 }
 
+// Titre de section : balayage (rideau) révélant le texte. `clip-path` cache
+// d'abord tout sauf un bord, puis découvre le texte en glissant — un seul
+// type de propriété animée (`clip-path`), pas de reflow. Volontairement
+// LENT (2s) : un balayage rapide sur un titre passe inaperçu au défilement
+// normal, contrairement au `.reveal` (fondu) qui reste bien perçu même vite.
+//
+// ⚠️ Le `clip-path` est posé sur `.reveal-title-inner` (span ajouté par la
+// directive), JAMAIS sur `.reveal-title` (l'élément observé) : voir le
+// commentaire de `reveal.directive.ts` — un élément `clip-path`-caché à 100%
+// ne déclenche jamais `isIntersecting`.
+//
+// Trois variantes, à poser en classe statique dans le gabarit À CÔTÉ de
+// `appReveal="title"` (`reveal-title--rtl`, `reveal-title--center`) — la
+// directive ne les connaît pas, c'est du pur CSS. Par défaut (aucune classe
+// ajoutée) : gauche → droite. De la variété d'une section à l'autre, pour
+// que l'effet reste remarqué au lieu de devenir un tic répétitif.
+.reveal-title-inner {
+  display: block;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 2s cubic-bezier(0.16, 0.86, 0.3, 1);
+  will-change: clip-path;
+}
+
+.reveal-title.is-in .reveal-title-inner {
+  clip-path: inset(0 0 0 0);
+  will-change: auto;
+}
+
+// Droite → gauche.
+.reveal-title--rtl .reveal-title-inner {
+  clip-path: inset(0 0 0 100%);
+}
+
+// Centre → extérieur (rideau qui s'ouvre des deux côtés à la fois).
+.reveal-title--center .reveal-title-inner {
+  clip-path: inset(0 50% 0 50%);
+}
+
 // ♿ Réduction des animations : tout est visible d'emblée, sans transition.
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .reveal.is-in,
   .reveal-group > *,
-  .reveal-group.is-in > * {
+  .reveal-group.is-in > *,
+  .reveal-title-inner,
+  .reveal-title.is-in .reveal-title-inner,
+  .reveal-title--rtl .reveal-title-inner,
+  .reveal-title--center .reveal-title-inner {
     opacity: 1;
     transform: none;
+    clip-path: none;
     transition: none;
   }
 }

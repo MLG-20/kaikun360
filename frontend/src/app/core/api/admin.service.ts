@@ -1737,10 +1737,17 @@ export interface NotificationEventOption {
   enabled: boolean;
 }
 
-/** Réponse de `GET /admin/settings` : réglages + catalogue des événements. */
+/** Un univers pilotable dans la bande défilante de l'accueil (F16.2). */
+export interface UniverseOption {
+  key: string;
+  label: string;
+}
+
+/** Réponse de `GET /admin/settings` : réglages + catalogues associés. */
 export interface SettingsSnapshot {
   settings: PlatformSetting[];
   notification_events: NotificationEventOption[];
+  universe_catalog: UniverseOption[];
 }
 
 /**

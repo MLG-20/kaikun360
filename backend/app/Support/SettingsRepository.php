@@ -39,6 +39,13 @@ class SettingsRepository
         // voir App\Http\Middleware\EnsurePlatformOpen. Défaut `false` : aucun
         // impact tant que l'équipe ne l'a pas explicitement activé.
         'platform.gate_enabled' => ['value' => false, 'type' => 'boolean', 'group' => 'general'],
+        // Bande défilante des univers, juste sous le héros de l'accueil
+        // (F16.2). Liste des CLÉS MASQUÉES — vide par défaut, donc les dix
+        // univers de `HeroCatalog::BANNERS` (groupe `univers`) s'affichent
+        // tous tant que l'équipe n'en a retiré aucun. Un « masqué » plutôt
+        // qu'un « affiché » : ajouter un futur univers au catalogue le rend
+        // visible ici sans réglage à toucher.
+        'home.universe_strip_hidden' => ['value' => [], 'type' => 'json', 'group' => 'accueil'],
         'support.email' => ['value' => 'support@kaikun360.sn', 'type' => 'string', 'group' => 'general'],
         'support.phone' => ['value' => '+221 33 000 00 00', 'type' => 'string', 'group' => 'general'],
 

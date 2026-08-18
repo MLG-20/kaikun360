@@ -142,6 +142,13 @@
   color: #aebbd4;
 }
 
+.bottom-legal {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 @media (max-width: 860px) {
   .grid {
     grid-template-columns: 1fr 1fr;

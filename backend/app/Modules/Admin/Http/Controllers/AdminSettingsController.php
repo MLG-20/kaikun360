@@ -5,6 +5,7 @@ namespace App\Modules\Admin\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Admin\Http\Requests\UpdateSettingsRequest;
 use App\Support\ApiResponse;
+use App\Support\Heroes\HeroCatalog;
 use App\Support\Notifications\NotificationEvent;
 use App\Support\SettingsRepository;
 use Illuminate\Http\JsonResponse;
@@ -30,6 +31,7 @@ class AdminSettingsController extends Controller
             // visé, état actif). Il vit dans le code, pas en base : l'envoyer
             // avec les réglages évite au back-office de dupliquer ces libellés.
             'notification_events' => NotificationEvent::catalog(),
+            'universe_catalog' => self::universeCatalog(),
         ]);
     }
 
@@ -95,6 +97,23 @@ class AdminSettingsController extends Controller
             }
         }
 
+        // Même garde-fou que `notifications.events` juste au-dessus : une clé
+        // d'univers mal orthographiée serait ignorée en silence par
+        // `UniverseStripController` (elle ne masquerait simplement rien), ce
+        // qui ferait croire à l'équipe qu'un univers est retiré alors qu'il
+        // continue de défiler.
+        if (array_key_exists('home.universe_strip_hidden', $input)) {
+            $connus = array_keys(array_filter(HeroCatalog::BANNERS, fn (array $meta) => $meta['group'] === 'univers'));
+
+            foreach ($input['home.universe_strip_hidden'] as $cle) {
+                if (! in_array($cle, $connus, true)) {
+                    throw ValidationException::withMessages([
+                        'settings.home.universe_strip_hidden' => ["Univers inconnu : {$cle}."],
+                    ]);
+                }
+            }
+        }
+
         foreach ($input as $key => $value) {
             $settings->set($key, $value, $request->user());
         }
@@ -102,6 +121,23 @@ class AdminSettingsController extends Controller
         return ApiResponse::success([
             'settings' => $settings->all(),
             'notification_events' => NotificationEvent::catalog(),
+            'universe_catalog' => self::universeCatalog(),
         ]);
+    }
+
+    /**
+     * Univers pilotables dans `home.universe_strip_hidden` (F16.2). Même
+     * raisonnement que `notification_events` : envoyé avec les réglages pour
+     * que le back-office n'ait pas à recopier ces libellés une troisième fois.
+     *
+     * @return list<array{key: string, label: string}>
+     */
+    private static function universeCatalog(): array
+    {
+        return collect(HeroCatalog::BANNERS)
+            ->filter(fn (array $meta) => $meta['group'] === 'univers')
+            ->map(fn (array $meta, string $key) => ['key' => $key, 'label' => $meta['label']])
+            ->values()
+            ->all();
     }
 }

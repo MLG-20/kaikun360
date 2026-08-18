@@ -8,6 +8,7 @@ use App\Modules\Admin\Http\Requests\StoreHomeHeroSlideRequest;
 use App\Modules\Admin\Http\Requests\UpdateHomeHeroVideoRequest;
 use App\Services\ImageProcessor;
 use App\Support\ApiResponse;
+use App\Support\Media\VideoEmbedUrl;
 use App\Support\Settings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
@@ -95,7 +96,7 @@ class AdminHomeHeroController extends Controller
             Settings::set('home.hero_video_url', null, $request->user());
         } elseif ($request->has('video_url')) {
             Settings::set('home.hero_video_path', null, $request->user());
-            Settings::set('home.hero_video_url', $request->input('video_url') ?: null, $request->user());
+            Settings::set('home.hero_video_url', VideoEmbedUrl::normalize($request->input('video_url')), $request->user());
         }
 
         activity()->causedBy($request->user())->log('Mise à jour de la vidéo du héros de l’accueil');

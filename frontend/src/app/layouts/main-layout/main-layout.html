@@ -6,9 +6,10 @@
 
 <app-footer />
 
-<!-- Assistant Kaikun : le TIROIR, qui glisse depuis le bord droit. Son bouton
-     d'ouverture n'est pas ici — il est dans l'en-tête (`app-assistant-launcher`),
-     les deux se parlant par le `AssistantStore`. Monté dans les layouts et non
-     dans la racine, pour qu'il n'apparaisse pas dans le parcours
+<!-- Pile flottante (Nancy + WhatsApp, `app-floating-dock`) + TIROIR de
+     l'assistant qui glisse depuis le bord droit (`app-assistant-panel`), les
+     deux derniers se parlant par le `AssistantStore`. Montés dans les layouts
+     et non dans la racine, pour qu'ils n'apparaissent pas dans le parcours
      d'authentification : on n'interrompt pas une saisie de mot de passe. -->
+<app-floating-dock />
 <app-assistant-panel />

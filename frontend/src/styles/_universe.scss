@@ -118,6 +118,61 @@
   line-height: 1.6;
 }
 
+// --- Fond photo générique, hors bandeau d'en-tête (F16.1) -------------------
+//
+// Même mécanique que `.uni-hero--image` ci-dessus (photo + voile posé LÀ OÙ IL
+// Y A DU TEXTE, jamais un aplat uniforme) mais réutilisable sur n'importe
+// quelle section : les sections de l'accueil pilotées au back-office
+// (`home-diaspora`, `home-cta`) et la bande d'en-tête de la vitrine tournante,
+// qui reprend l'image déjà chargée pour l'univers affiché. Factorisé ici pour
+// ne payer ce voile qu'une fois en CSS — l'accueil est déjà proche de son
+// budget de build.
+//
+// Structure attendue :
+//   <div class="k-photo-section">
+//     <div class="k-photo-layer" appParallax [style.background-image]="url"></div>
+//     <div class="k-photo-section-inner">…contenu…</div>
+//   </div>
+.k-photo-section {
+  position: relative;
+  overflow: hidden;
+  // Ombre portée du texte sur une photo : une seule définition, réutilisée par
+  // chaque section plutôt que recopiée (budget de build serré sur l'accueil).
+  --k-photo-shadow: 0 1px 12px rgba(3, 12, 33, 0.55);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+      160deg,
+      rgba(6, 18, 40, 0.82) 0%,
+      rgba(6, 18, 40, 0.52) 55%,
+      rgba(6, 18, 40, 0.8) 100%
+    );
+    pointer-events: none;
+  }
+}
+
+// Couche qui porte l'image et reçoit le déplacement de `ParallaxDirective`,
+// un peu plus grande que la section pour ne jamais découvrir un bord pendant
+// le mouvement.
+.k-photo-layer {
+  position: absolute;
+  inset: -10% 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+
+.k-photo-section-inner {
+  position: relative;
+  z-index: 2;
+}
+
 .uni-hero-points {
   list-style: none;
   display: grid;

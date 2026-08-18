@@ -63,7 +63,7 @@ class SupportEscalationTool implements AssistantTool
         // Le message d'origine devient le CORPS du futur fil : l'agent doit
         // lire ce que la personne a réellement écrit, pas un sujet tronqué.
         // `body` est obligatoire côté StartSupportConversationRequest.
-        $body = $raw !== '' ? $raw : 'Demande transmise depuis l\'assistant Kaikun.';
+        $body = $raw !== '' ? $raw : 'Demande transmise depuis Nancy, l\'assistant Kaikun.';
 
         if ($context->isAuthenticated()) {
             return ToolResult::empty(

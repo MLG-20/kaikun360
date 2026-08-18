@@ -472,6 +472,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/heroes` | public | `HeroController@index` |
 | GET | `/news` | public | `NewsController@index` |
 | GET | `/home-hero` | public | `HomeHeroController@index` |
+| GET | `/universe-strip` | public | `UniverseStripController@index` |
 
 > **Héros de l'accueil (F15.1).** `GET /home-hero` renvoie `{ images: [...],
 > video: { file, url } | null }`. Distinct des bandeaux F12 : c'est le seul
@@ -480,6 +481,11 @@ TypeScript miroir côté frontend Angular (phase F0).
 > diaporama quand elle existe. La vidéo est un singleton stocké via
 > `Settings` (`home.hero_video_path`/`home.hero_video_url`), pas dans sa
 > propre table.
+
+> **Bande défilante des univers (F16.2).** `GET /universe-strip` renvoie
+> `{ names: [...] }`, les libellés des univers non masqués
+> (`home.universe_strip_hidden`), résolus à partir du groupe `univers` de
+> `App\Support\Heroes\HeroCatalog` — pas une liste séparée à tenir à jour.
 
 > **Actualités Kaikun (F15).** `GET /news` renvoie les articles **publiés**
 > (`articles`), triés par `position` puis date décroissante. `video_file`

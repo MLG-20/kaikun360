@@ -14,7 +14,6 @@ import { filter } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { spaceHomeFor } from '../../../core/auth/space-home';
-import { AssistantLauncherComponent } from '../assistant/assistant-launcher';
 
 /** Clé d'icône SVG (rendue via un @switch dans le template). */
 type MegaIcon =
@@ -64,7 +63,7 @@ interface NavGroup {
  */
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, NgTemplateOutlet, AssistantLauncherComponent],
+  imports: [RouterLink, NgTemplateOutlet],
   templateUrl: './header.html',
   styleUrl: './header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

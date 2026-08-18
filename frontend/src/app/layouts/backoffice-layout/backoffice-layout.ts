@@ -4,8 +4,8 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { filter } from 'rxjs/operators';
 
 import { AuthService } from '../../core/auth/auth.service';
-import { AssistantLauncherComponent } from '../../shared/components/assistant/assistant-launcher';
 import { AssistantPanelComponent } from '../../shared/components/assistant/assistant-panel';
+import { FloatingDockComponent } from '../../shared/components/floating-dock/floating-dock';
 import { UnreadStore } from '../../core/state/unread-store';
 import { permissionsFor } from '../../features/backoffice/backoffice-permissions';
 
@@ -78,7 +78,7 @@ interface BoNavItem {
     RouterLink,
     RouterLinkActive,
     AssistantPanelComponent,
-    AssistantLauncherComponent,
+    FloatingDockComponent,
   ],
   templateUrl: './backoffice-layout.html',
   styleUrl: './backoffice-layout.scss',

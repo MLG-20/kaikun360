@@ -49,6 +49,7 @@ class EnsurePlatformOpen
         // Actualités Kaikun (F15) : contenu vitrine, au même titre que les
         // bandeaux — l'équipe doit pouvoir communiquer avant l'ouverture.
         'news',
+        'universe-strip',
         'platform-status',
         'version',
         'whatsapp/link',

@@ -188,6 +188,48 @@
         {{ settingsSaving() ? 'Enregistrement…' : 'Enregistrer les réglages' }}
       </button>
     </div>
+
+    <!-- Bande défilante des univers (F16.2) : juste sous le héros de
+         l'accueil, sans rapport avec les bandeaux F12 ni la grille Univers
+         (section 2) — décoché ici = retiré de la bande, rien d'autre. -->
+    <section class="st-card">
+      <h2 class="st-card-title">Bande des univers (accueil)</h2>
+      <p class="st-card-sub">
+        Les noms qui défilent juste sous le héros de l’accueil. Décochez un
+        univers pour le retirer de la bande — la grille « Nos univers » plus
+        bas sur la page n’est pas concernée.
+      </p>
+
+      @for (universe of universeCatalog(); track universe.key) {
+        <label class="st-switch">
+          <input
+            type="checkbox"
+            [name]="universe.key"
+            [ngModel]="isUniverseVisible(universe.key)"
+            (ngModelChange)="toggleUniverse(universe.key, $event)" />
+          <span class="st-switch-text">
+            <strong>{{ universe.label }}</strong>
+          </span>
+        </label>
+      }
+
+      @if (universeStripError()) {
+        <p class="st-state st-state--error" role="alert">{{ universeStripError() }}</p>
+      }
+      @if (universeStripMessage()) {
+        <p class="st-state" role="status">{{ universeStripMessage() }}</p>
+      }
+    </section>
+
+    <div class="st-actions">
+      <button
+        type="button"
+        class="k-btn k-btn--primary"
+        [disabled]="universeStripSaving()"
+        (click)="saveUniverseStrip()">
+        {{ universeStripSaving() ? 'Enregistrement…' : 'Enregistrer la bande des univers' }}
+      </button>
+    </div>
   }
 }
 

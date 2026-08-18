@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { AssistantPanelComponent } from '../../shared/components/assistant/assistant-panel';
+import { FloatingDockComponent } from '../../shared/components/floating-dock/floating-dock';
 import { FooterComponent } from '../../shared/components/footer/footer';
 import { HeaderComponent } from '../../shared/components/header/header';
 
@@ -17,7 +18,7 @@ import { HeaderComponent } from '../../shared/components/header/header';
  */
 @Component({
   selector: 'app-main-layout',
-  imports: [RouterOutlet, HeaderComponent, FooterComponent, AssistantPanelComponent],
+  imports: [RouterOutlet, HeaderComponent, FooterComponent, FloatingDockComponent, AssistantPanelComponent],
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

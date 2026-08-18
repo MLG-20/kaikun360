@@ -7,6 +7,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { UnreadStore } from '../../core/state/unread-store';
 import { AccountIconComponent } from '../../features/account/account-icon';
 import { AssistantPanelComponent } from '../../shared/components/assistant/assistant-panel';
+import { FloatingDockComponent } from '../../shared/components/floating-dock/floating-dock';
 import { SPACE_CONFIG, SpaceNavItem } from './space.config';
 import { SpaceHeaderComponent } from './space-header';
 
@@ -48,6 +49,7 @@ const RAIL_REPLIE_KEY = 'k360.espace.rail-replie';
     RouterLinkActive,
     SpaceHeaderComponent,
     AccountIconComponent,
+    FloatingDockComponent,
     AssistantPanelComponent,
   ],
   templateUrl: './space-layout.html',

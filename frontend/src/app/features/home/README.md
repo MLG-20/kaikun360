@@ -34,11 +34,13 @@ d'accueil déroule donc une histoire, section après section :
 4. **La vitrine** — quelques **biens réels** tirés du catalogue (données vivantes
    récupérées depuis le serveur), avec un bouton « voir tout le catalogue ». Si le
    serveur ne répond pas, la section se replie proprement sans casser le reste de
-   la page.
+   la page. Sa bande d'en-tête reprend, en fond, la **photo de l'univers affiché**
+   quand l'équipe en a chargé une au back-office (F16.1).
 
 5. **Diaspora** — un bandeau dédié aux Sénégalais de l'étranger : les bénéfices
    concrets (référent unique, reporting photo/vidéo daté, paiements locaux) et une
-   « carte de suivi » illustrée.
+   « carte de suivi » illustrée. Peut recevoir une **photo de fond** pilotable au
+   back-office (F16.1) ; sans elle, garde son dégradé de marque d'origine.
 
 6. **Aller plus loin** — d'autres services (team building, gestion locative,
    livraison/conciergerie, colonies).
@@ -49,7 +51,8 @@ d'accueil déroule donc une histoire, section après section :
 8. **Les chiffres** — un bandeau de statistiques qui installe la crédibilité.
 
 9. **L'appel final** — « prêt à démarrer ? » avec les boutons créer un compte /
-   explorer le catalogue.
+   explorer le catalogue. Peut recevoir une **photo de fond** pilotable au
+   back-office (F16.1), à la place du dégradé de marque.
 
 ---
 
@@ -95,6 +98,24 @@ d'accueil déroule donc une histoire, section après section :
   `diasporaPoints`, `simulatorSteps`, `stats`, `trust` sont des données de
   **présentation** (pas d'appel réseau) ; seules les cartes de la vitrine sont
   dynamiques.
+
+- **Fonds photo de sections (F16.1)** : `diaspora`, `cta-final` et la bande
+  d'en-tête de la vitrine peuvent porter une photo de fond, pilotée au
+  back-office **sans système dédié** — réutilisation du mécanisme des bandeaux
+  F12 (`HeroCatalog` côté serveur, `HeroService.banner(clé)` côté client), avec
+  deux clés de plus (`home-diaspora`, `home-cta`) et, pour la vitrine, les clés
+  d'univers déjà existantes (`immobilier`, `nuitees`…) — l'équipe n'a donc
+  **rien de plus à charger** pour illustrer la vitrine, la photo est celle déjà
+  déposée pour la page de l'univers. Sans image saisie, chaque section garde
+  strictement son apparence d'origine (dégradé de marque). Styles partagés :
+  `.k-photo-section` / `.k-photo-layer` / `.k-photo-section-inner` dans
+  [`../../../styles/_universe.scss`](../../../styles/_universe.scss) — factorisés
+  là plutôt que recopiés trois fois, le budget de build de `home-page.scss`
+  étant déjà serré. Un léger effet de parallaxe (`ParallaxDirective`,
+  [`../../shared/directives/parallax.directive.ts`](../../shared/directives/parallax.directive.ts))
+  déplace la couche photo au défilement — jamais `background-attachment: fixed`
+  (bugué sur iOS Safari), coupé sous `prefers-reduced-motion` et actif
+  seulement pendant que la section est visible (`IntersectionObserver`).
 
 ### Ce qui reste à brancher (phases suivantes)
 

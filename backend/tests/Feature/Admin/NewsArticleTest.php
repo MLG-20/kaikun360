@@ -84,8 +84,11 @@ class NewsArticleTest extends TestCase
             'is_published' => true,
         ]);
 
+        // Le lien « watch », copié tel quel depuis la barre d'adresse, est
+        // normalisé en lien d'intégration (VideoEmbedUrl) — une page /watch
+        // refuse d'être encadrée, seule /embed/ l'accepte.
         $response->assertCreated()
-            ->assertJsonFragment(['video_url' => 'https://www.youtube.com/watch?v=abc123', 'video_file' => null]);
+            ->assertJsonFragment(['video_url' => 'https://www.youtube.com/embed/abc123', 'video_file' => null]);
 
         $article = NewsArticle::firstOrFail();
         Storage::disk('public')->assertExists($article->image_path);

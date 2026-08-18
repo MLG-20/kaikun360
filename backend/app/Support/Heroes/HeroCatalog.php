@@ -125,6 +125,25 @@ class HeroCatalog
             'hint' => 'Page /pro — la place de marché des prestataires certifiés.',
         ],
 
+        // --- Sections de la page d'accueil (F16.1) --------------------------
+        // Deux sections d'accueil autrement plates (aucune photo réelle avant
+        // cette tranche) : Diaspora et l'appel final. Chaque clé est un fond de
+        // section, pas un bandeau de page — mais le mécanisme (image seule,
+        // hors héritage puisqu'aucune ne partage de parent commun utile) est
+        // identique, d'où sa réutilisation plutôt qu'un système dédié de plus.
+        'home-diaspora' => [
+            'label' => 'Accueil — section Diaspora',
+            'group' => 'accueil',
+            'parent' => self::ROOT,
+            'hint' => 'Fond de la section « Kaikun Diaspora » sur la page d’accueil.',
+        ],
+        'home-cta' => [
+            'label' => 'Accueil — appel final',
+            'group' => 'accueil',
+            'parent' => self::ROOT,
+            'hint' => 'Fond de la section de conversion, en bas de la page d’accueil.',
+        ],
+
         // --- Les pages de service -------------------------------------------
         'contact' => [
             'label' => 'Contact',
@@ -189,6 +208,7 @@ class HeroCatalog
     public const GROUPS = [
         'general' => 'Général',
         'univers' => 'Les univers',
+        'accueil' => 'Page d’accueil',
         'service' => 'Pages de service',
         'recherche' => 'Page de résultats',
     ];

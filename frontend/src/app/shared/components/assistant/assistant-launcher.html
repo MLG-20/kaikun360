@@ -1,5 +1,5 @@
 <!--
-  Déclencheur de l'assistant, posé dans les en-têtes (F10.5).
+  Déclencheur de l'assistant : bulle flottante, coin bas-droite (F10.6).
 
   ⚠️ Masqué quand le serveur a répondu 503 (`ASSISTANT_ENABLED=false` ou
   incident) : un bouton qui ne sait que s'excuser vaut moins que pas de bouton.
@@ -11,18 +11,19 @@
     [class.is-ouvert]="ouvert()"
     [attr.aria-expanded]="ouvert()"
     aria-controls="assistant-panneau"
-    [attr.aria-label]="ouvert() ? 'Fermer l\'assistant Kaikun' : 'Ouvrir l\'assistant Kaikun'"
+    [attr.aria-label]="ouvert() ? 'Fermer Nancy' : 'Ouvrir Nancy, l\'assistant Kaikun'"
     (click)="basculer()"
   >
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M20 12.2c0 3.7-3.6 6.7-8 6.7-.9 0-1.8-.13-2.6-.37L4.5 20l1.2-3.1C4.6 15.7 4 14 4 12.2 4 8.5 7.6 5.5 12 5.5s8 3 8 6.7z"
-        stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-      <path d="M9 11.5h6M9 14h3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-    </svg>
-
-    <!-- Le mot disparaît sur les écrans étroits, où la place du header est
-         disputée ; l'`aria-label` du bouton, lui, ne bouge pas. -->
-    <span class="ia-lanceur__mot">Assistant</span>
+    <!-- Le nom se déplie au survol/focus (voir le SCSS) — replié en simple
+         rond au repos, pour ne pas occuper toute cette largeur en permanence. -->
+    <span class="ia-lanceur__nom">Assistant Nancy</span>
+    <span class="ia-lanceur__avatar" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path
+          d="M20 12.2c0 3.7-3.6 6.7-8 6.7-.9 0-1.8-.13-2.6-.37L4.5 20l1.2-3.1C4.6 15.7 4 14 4 12.2 4 8.5 7.6 5.5 12 5.5s8 3 8 6.7z"
+          stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+        <path d="M9 11.5h6M9 14h3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+      </svg>
+    </span>
   </button>
 }

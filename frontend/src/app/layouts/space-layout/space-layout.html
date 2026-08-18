@@ -128,5 +128,10 @@
      il suit l'utilisateur dans TOUT son espace connecté, mais reste absent du
      back-office (ses outils de gouvernance n'arrivent qu'en F10.3) et des pages
      d'authentification. La conversation, elle, vit dans `AssistantStore` : elle
-     survit au passage du site public à l'espace, qui détruit ce composant. -->
+     survit au passage du site public à l'espace, qui détruit ce composant.
+
+     Le déclencheur était dans `app-space-header` — revenu bulle flottante
+     coin bas-droite (F10.6), monté ici via `app-floating-dock` (avec la
+     bulle WhatsApp, empilée dessous) à côté du tiroir. -->
+<app-floating-dock />
 <app-assistant-panel />

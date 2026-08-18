@@ -9,6 +9,7 @@ use App\Modules\Admin\Http\Requests\UpdateNewsArticleRequest;
 use App\Modules\Admin\Http\Resources\NewsArticleResource;
 use App\Services\ImageProcessor;
 use App\Support\ApiResponse;
+use App\Support\Media\VideoEmbedUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
@@ -52,7 +53,7 @@ class AdminNewsController extends Controller
         if ($request->hasFile('video')) {
             $data['video_path'] = $request->file('video')->store('news', 'public');
         } else {
-            $data['video_url'] = $request->input('video_url') ?: null;
+            $data['video_url'] = VideoEmbedUrl::normalize($request->input('video_url'));
         }
 
         $article = NewsArticle::create($data + [
@@ -108,7 +109,7 @@ class AdminNewsController extends Controller
         }
 
         if ($request->has('video_url')) {
-            $news->video_url = $request->input('video_url') ?: null;
+            $news->video_url = VideoEmbedUrl::normalize($request->input('video_url'));
         }
 
         if ($request->has('is_published')) {

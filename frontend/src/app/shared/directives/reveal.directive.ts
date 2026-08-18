@@ -9,6 +9,9 @@ import { Directive, ElementRef, afterNextRender, inject, input } from '@angular/
  *   - `<section appReveal>` → l'élément lui-même apparaît.
  *   - `<div class="grid" appReveal="group">` → ses enfants directs apparaissent
  *     **en cascade** (délais échelonnés définis en CSS, cf. `styles/_reveal.scss`).
+ *   - `<h2 appReveal="title">` → un **balayage** (clip-path) révèle le titre de
+ *     gauche à droite, comme un rideau qu'on ouvre — réservé aux titres de
+ *     section, en plus (pas à la place) du `appReveal` du bloc qui les entoure.
  *
  * ⚠️ **SSR / hydratation** : l'état masqué initial et l'`IntersectionObserver`
  * sont posés dans **`afterNextRender`** — uniquement dans le navigateur, après
@@ -25,14 +28,34 @@ import { Directive, ElementRef, afterNextRender, inject, input } from '@angular/
 export class RevealDirective {
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
 
-  /** `''` = l'élément apparaît ; `'group'` = ses enfants apparaissent en cascade. */
-  readonly appReveal = input<'' | 'group'>('');
+  /**
+   * `''` = l'élément apparaît ; `'group'` = ses enfants apparaissent en
+   * cascade ; `'title'` = balayage (clip-path) de gauche à droite.
+   */
+  readonly appReveal = input<'' | 'group' | 'title'>('');
 
   constructor() {
     afterNextRender(() => {
       const el = this.host.nativeElement;
-      const baseClass = this.appReveal() === 'group' ? 'reveal-group' : 'reveal';
+      const isTitle = this.appReveal() === 'title';
+      const baseClass = this.appReveal() === 'group' ? 'reveal-group' : isTitle ? 'reveal-title' : 'reveal';
       el.classList.add(baseClass);
+
+      // ⚠️ Le `clip-path` du balayage doit porter sur un span INTERNE, jamais
+      // sur l'élément observé lui-même : Chrome considère qu'un élément
+      // `clip-path: inset(0 100% 0 0)` (surface visible nulle) n'intersecte
+      // JAMAIS le viewport — `isIntersecting` reste bloqué à `false` pour
+      // toujours, et le titre restait invisible en permanence (bug constaté
+      // au premier essai). L'IntersectionObserver observe donc `el` (jamais
+      // découpé), tandis que le style de balayage s'applique à cet enfant.
+      if (isTitle) {
+        const inner = document.createElement('span');
+        inner.className = 'reveal-title-inner';
+        while (el.firstChild) {
+          inner.appendChild(el.firstChild);
+        }
+        el.appendChild(inner);
+      }
 
       // Animations réduites ou API absente (très vieux navigateurs) : on affiche.
       const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;

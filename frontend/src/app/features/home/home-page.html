@@ -17,8 +17,8 @@
     <div class="hero-media" aria-hidden="true">
       @if (heroMedia().video?.file; as file) {
         <video class="hero-media-el" [src]="file" autoplay muted loop playsinline></video>
-      } @else if (heroMedia().video?.url; as url) {
-        <iframe class="hero-media-el" [src]="videoEmbed(url)" allow="autoplay; encrypted-media" loading="lazy"></iframe>
+      } @else if (heroVideoEmbedUrl(); as embed) {
+        <iframe class="hero-media-el" [src]="embed" allow="autoplay; encrypted-media" loading="lazy"></iframe>
       }
     </div>
   }
@@ -26,7 +26,7 @@
     <!-- Colonne texte : accroche, bandeau de confiance, moteur de recherche. -->
     <div class="hero-text">
       <span class="k-eyebrow">Immobilier · Tourisme · Mobilité · Construction</span>
-      <h1>
+      <h1 appReveal="title">
         Tout votre projet sénégalais,
         <span class="hl">vérifié et suivi</span>, d'un seul endroit.
       </h1>
@@ -58,6 +58,10 @@
   </div>
 </section>
 
+<!-- Bande défilante des univers (F16.2) : juste des noms, sans rapport avec
+     la bascule Actualités/Univers ci-dessous — voir universe-strip.ts. -->
+<app-universe-strip />
+
 <!-- =========================================================================
      Section 2 — Actualités Kaikun (F15), ou à défaut la grille des Univers.
 
@@ -72,35 +76,79 @@
   <section class="news k-wrap" aria-labelledby="news-title">
     <header class="section-head" appReveal>
       <span class="k-eyebrow">Actualités Kaikun</span>
-      <h2 id="news-title">Ce qui se passe en ce moment chez Kaikun 360</h2>
+      <h2 id="news-title" appReveal="title" class="reveal-title--rtl">Ce qui se passe en ce moment chez Kaikun 360</h2>
     </header>
 
-    <div class="news-grid" appReveal="group">
-      @for (a of actualites(); track a.id) {
-        <article class="news-card k-card">
-          <div class="news-media">
-            @if (a.videoFile) {
-              <video class="news-video" [src]="a.videoFile" controls preload="metadata"></video>
-            } @else if (a.videoUrl) {
-              <iframe
-                class="news-video"
-                [src]="videoEmbed(a.videoUrl)"
-                title="Vidéo — {{ a.title }}"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen
-                loading="lazy">
-              </iframe>
-            } @else {
-              <img class="news-image" [src]="a.image" [alt]="a.title" loading="lazy" />
-            }
-          </div>
-          <h3 class="news-card-title">{{ a.title }}</h3>
-          @if (a.excerpt) {
-            <p class="news-card-desc k-muted">{{ a.excerpt }}</p>
-          }
-        </article>
+    <!-- Carrousel (F16.2) : une carte à la fois, qui cède la place à la
+         suivante toutes les 7 s et boucle — pas une grille qui s'allongerait
+         à chaque article publié. La boucle `@for` ne porte QUE sur l'article
+         courant ; c'est cette recréation qui rejoue le fondu d'apparition
+         (`appReveal="group"`) d'un article à l'autre, même patron que la
+         vitrine du catalogue plus bas dans la page. -->
+    <div class="news-grid" appReveal="group" (mouseenter)="suspendreNews()" (mouseleave)="reprendreNews()">
+      @for (a of [actualiteCourante()]; track a?.id) {
+        @if (a) {
+          <article class="news-card k-card">
+            <div class="news-media">
+              @if (a.videoFile) {
+                <video
+                  class="news-video"
+                  [src]="a.videoFile"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                  controls
+                  preload="metadata"></video>
+              } @else if (a.videoUrl) {
+                <iframe
+                  class="news-video"
+                  [src]="a.videoEmbedUrl"
+                  title="Vidéo — {{ a.title }}"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  allowfullscreen
+                  loading="lazy">
+                </iframe>
+              } @else {
+                <img class="news-image" [src]="a.image" [alt]="a.title" loading="lazy" />
+              }
+            </div>
+            <div class="news-body">
+              <span class="k-eyebrow news-eyebrow">Actualité Kaikun</span>
+              <h3 class="news-card-title">{{ a.title }}</h3>
+              @if (a.excerpt) {
+                <p class="news-card-desc k-muted">{{ a.excerpt }}</p>
+              }
+            </div>
+          </article>
+        }
       }
     </div>
+
+    <!-- Choisir une pastille FIGE l'aperçu automatique dessus pour de bon
+         (voir `newsChoisieManuellement`) : le défilement à 10 s reste un
+         aperçu, ce clic donne le contrôle total — une vidéo choisie peut
+         alors être regardée en entier sans être coupée. -->
+    @if (actualites().length > 1) {
+      <div
+        class="featured-tabs"
+        role="group"
+        aria-label="Actualités"
+        (mouseenter)="suspendreNews()"
+        (mouseleave)="reprendreNews()">
+        @for (a of actualites(); track a.id; let i = $index) {
+          <button
+            type="button"
+            class="featured-tab"
+            [class.featured-tab--active]="i === newsIndex() % actualites().length"
+            [attr.aria-pressed]="i === newsIndex() % actualites().length"
+            [attr.aria-label]="'Actualité : ' + a.title"
+            (click)="choisirActualite(i)">
+            {{ i + 1 }}
+          </button>
+        }
+      </div>
+    }
   </section>
 } @else {
 <!-- =========================================================================
@@ -110,7 +158,7 @@
 <section class="univers k-wrap" aria-labelledby="univers-title">
   <header class="section-head" appReveal>
     <span class="k-eyebrow">Nos univers</span>
-    <h2 id="univers-title">Un seul compte, tous vos besoins au Sénégal</h2>
+    <h2 id="univers-title" appReveal="title" class="reveal-title--center">Un seul compte, tous vos besoins au Sénégal</h2>
     <p class="k-muted section-lead">
       De la recherche d'un bien à la construction, du séjour au déplacement :
       chaque service est pensé pour être simple, vérifié et suivi.
@@ -185,7 +233,7 @@
   <div class="k-wrap">
     <header class="protocol-head" appReveal>
       <span class="k-eyebrow protocol-eyebrow">Protocole de confiance</span>
-      <h2 id="protocol-title">
+      <h2 id="protocol-title" appReveal="title">
         La confiance n’est pas une promesse.<br />
         <span class="protocol-hl">C’est un protocole.</span>
       </h2>
@@ -237,39 +285,49 @@
   aria-labelledby="featured-title"
   (focusin)="focusEntrant($event)"
   (focusout)="focusSortant()">
-  <header class="section-head-row" appReveal>
-    <div>
-      <span class="k-eyebrow">Sélection du moment</span>
-      <h2 id="featured-title">{{ universTitres[universCourant()] }}</h2>
-    </div>
-    <a
-      class="k-btn k-btn--ghost"
-      [routerLink]="['/recherche']"
-      [queryParams]="{ univers: universCourant() }">
-      Voir tout le catalogue
-    </a>
-  </header>
-
-  <!-- Pastilles : elles disent ce qui défile, et permettent d'aller droit à un
-       univers sans attendre son tour. `aria-live` est volontairement ABSENT —
-       une annonce toutes les sept secondes rendrait la page inutilisable au
-       lecteur d'écran ; les pastilles restent des boutons qu'on actionne. -->
-  <div
-    class="featured-tabs"
-    role="group"
-    aria-label="Univers en vitrine"
-    (mouseenter)="suspendre()"
-    (mouseleave)="reprendre()">
-    @for (u of universKeys; track u) {
-      <button
-        type="button"
-        class="featured-tab"
-        [class.featured-tab--active]="universCourant() === u"
-        [attr.aria-pressed]="universCourant() === u"
-        (click)="choisirUnivers(u)">
-        {{ libelle(u) }}
-      </button>
+  <!-- Bande d'en-tête (F16.1) : reprend le bandeau F12 de l'univers affiché en
+       fond, quand l'équipe en a chargé un. Sans image, `featured-band--photo`
+       n'est pas posée et la bande reste identique à avant cette tranche. -->
+  <div class="featured-band" [class.k-photo-section]="universBackground()" [class.featured-band--photo]="universBackground()">
+    @if (universBackground(); as fond) {
+      <div class="k-photo-layer" appParallax [style.background-image]="fond" aria-hidden="true"></div>
     }
+    <div class="featured-band-inner k-photo-section-inner">
+      <header class="section-head-row" appReveal>
+        <div>
+          <span class="k-eyebrow">Sélection du moment</span>
+          <h2 id="featured-title" appReveal="title" class="reveal-title--rtl">{{ universTitres[universCourant()] }}</h2>
+        </div>
+        <a
+          class="k-btn k-btn--ghost"
+          [routerLink]="['/recherche']"
+          [queryParams]="{ univers: universCourant() }">
+          Voir tout le catalogue
+        </a>
+      </header>
+
+      <!-- Pastilles : elles disent ce qui défile, et permettent d'aller droit à un
+           univers sans attendre son tour. `aria-live` est volontairement ABSENT —
+           une annonce toutes les sept secondes rendrait la page inutilisable au
+           lecteur d'écran ; les pastilles restent des boutons qu'on actionne. -->
+      <div
+        class="featured-tabs"
+        role="group"
+        aria-label="Univers en vitrine"
+        (mouseenter)="suspendre()"
+        (mouseleave)="reprendre()">
+        @for (u of universKeys; track u) {
+          <button
+            type="button"
+            class="featured-tab"
+            [class.featured-tab--active]="universCourant() === u"
+            [attr.aria-pressed]="universCourant() === u"
+            (click)="choisirUnivers(u)">
+            {{ libelle(u) }}
+          </button>
+        }
+      </div>
+    </div>
   </div>
 
   @switch (featuredState()) {
@@ -329,11 +387,22 @@
      Section 5 — Diaspora : bandeau dédié aux Sénégalais de l'étranger.
      Traduit le protocole de confiance en bénéfices concrets.
      ========================================================================= -->
-<section id="diaspora" class="diaspora" aria-labelledby="diaspora-title">
-  <div class="k-wrap diaspora-grid" appReveal="group">
+<section
+  id="diaspora"
+  class="diaspora"
+  [class.k-photo-section]="diasporaBackground()"
+  [class.diaspora--photo]="diasporaBackground()"
+  aria-labelledby="diaspora-title">
+  <!-- Fond photo (F16.1) : bandeau `home-diaspora` du back-office. Sans photo
+       chargée, `diaspora--photo` n'est pas posée et la section garde
+       exactement son dégradé de marque d'origine. -->
+  @if (diasporaBackground(); as fond) {
+    <div class="k-photo-layer" appParallax [style.background-image]="fond" aria-hidden="true"></div>
+  }
+  <div class="k-wrap diaspora-grid k-photo-section-inner" appReveal="group">
     <div class="diaspora-text">
       <span class="k-eyebrow">Kaikun Diaspora</span>
-      <h2 id="diaspora-title">Pilotez votre projet au pays, depuis l’étranger</h2>
+      <h2 id="diaspora-title" appReveal="title" class="reveal-title--center">Pilotez votre projet au pays, depuis l’étranger</h2>
       <p class="k-muted diaspora-lead">
         Investir ou construire à distance sans mauvaise surprise : Kaikun 360 vous
         donne un interlocuteur unique et des preuves à chaque étape.
@@ -355,7 +424,9 @@
       </div>
     </div>
 
-    <!-- Panneau visuel décoratif (dégradé de marque, sans dépendance réseau). -->
+    <!-- Panneau visuel : dégradé de marque par défaut, verre dépoli sur la
+         photo quand `diaspora--photo` est posée (voir .scss) — deux aplats de
+         marque côte à côte auraient éteint la photo. -->
     <div class="diaspora-visual" aria-hidden="true">
       <div class="diaspora-badge">
         <span class="diaspora-badge-dot"></span>
@@ -379,7 +450,7 @@
 <section id="services" class="services k-wrap" aria-labelledby="services-title">
   <header class="section-head" appReveal>
     <span class="k-eyebrow">Aller plus loin</span>
-    <h2 id="services-title">D’autres services pensés pour vous simplifier la vie</h2>
+    <h2 id="services-title" appReveal="title">D’autres services pensés pour vous simplifier la vie</h2>
   </header>
 
   <div class="services-grid" appReveal="group">
@@ -417,7 +488,7 @@
   <div class="k-wrap simulator-card" appReveal>
     <div class="simulator-text">
       <span class="k-eyebrow">Kaikun Chantier</span>
-      <h2 id="simulator-title">Estimez votre construction en 30 secondes</h2>
+      <h2 id="simulator-title" appReveal="title" class="reveal-title--rtl">Estimez votre construction en 30 secondes</h2>
       <p class="simulator-lead">
         Une idée de projet ? Obtenez une première fourchette de budget en trois
         étapes, puis lancez-vous avec un suivi de chantier filmé et daté.
@@ -457,16 +528,23 @@
      Section 9 — Appel final : invitation à créer un compte / explorer.
      ========================================================================= -->
 <section class="cta-final" aria-labelledby="cta-title">
-  <div class="k-wrap cta-final-inner" appReveal>
-    <div>
-      <h2 id="cta-title">Prêt à démarrer votre projet au Sénégal&nbsp;?</h2>
-      <p class="cta-final-lead">
-        Créez votre compte gratuitement et gardez le contrôle, où que vous soyez.
-      </p>
-    </div>
-    <div class="cta-final-actions">
-      <a class="k-btn k-btn--primary" [routerLink]="['/auth/inscription']">Créer mon compte</a>
-      <a class="k-btn k-btn--ghost cta-final-ghost" [routerLink]="['/recherche']">Explorer le catalogue</a>
+  <!-- Fond photo (F16.1) : bandeau `home-cta` du back-office, à la place du
+       dégradé de marque quand l'équipe en a chargé un. -->
+  <div class="k-wrap cta-final-inner" [class.k-photo-section]="ctaBackground()">
+    @if (ctaBackground(); as fond) {
+      <div class="k-photo-layer" appParallax [style.background-image]="fond" aria-hidden="true"></div>
+    }
+    <div class="cta-final-row k-photo-section-inner" appReveal>
+      <div>
+        <h2 id="cta-title" appReveal="title" class="reveal-title--center">Prêt à démarrer votre projet au Sénégal&nbsp;?</h2>
+        <p class="cta-final-lead">
+          Créez votre compte gratuitement et gardez le contrôle, où que vous soyez.
+        </p>
+      </div>
+      <div class="cta-final-actions">
+        <a class="k-btn k-btn--primary" [routerLink]="['/auth/inscription']">Créer mon compte</a>
+        <a class="k-btn k-btn--ghost cta-final-ghost" [routerLink]="['/recherche']">Explorer le catalogue</a>
+      </div>
     </div>
   </div>
 </section>

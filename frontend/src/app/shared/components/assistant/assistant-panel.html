@@ -6,10 +6,11 @@
   bouton du tout.
 -->
 @if (!indisponible()) {
-  <!-- ⚠️ Plus aucun lanceur ici : il vit dans les en-têtes
-       (`app-assistant-launcher`). Ce composant n'est plus que le TIROIR — ce qui
-       lui permet de ne rien rendre du tout tant qu'il est fermé, et donc de
-       rendre la même chose au serveur et au navigateur : l'hydratation tient. -->
+  <!-- ⚠️ Plus aucun lanceur ici : c'est la bulle flottante
+       (`app-assistant-launcher`), montée à côté de ce composant dans chaque
+       layout. Ce composant n'est plus que le TIROIR — ce qui lui permet de ne
+       rien rendre du tout tant qu'il est fermé, et donc de rendre la même
+       chose au serveur et au navigateur : l'hydratation tient. -->
   @if (ouvert()) {
     <!-- ============================ Voile de fond ========================== -->
     <!-- Il assombrit la page, et surtout : cliquer à côté referme. C'est le geste
@@ -36,7 +37,7 @@
       class="ia-tiroir"
       role="dialog"
       aria-modal="true"
-      aria-label="Assistant Kaikun 360"
+      aria-label="Nancy, l'assistant Kaikun 360"
       animate.enter="is-entree"
       animate.leave="is-sortie"
       (keydown.escape)="echap()"
@@ -44,10 +45,10 @@
       <header class="ia-tete">
         <img class="ia-tete__marque" src="/brand/logo-mark.png" alt="" width="34" height="34" />
         <span class="ia-tete__titre">
-          <b>Assistant Kaikun</b>
+          <b>Nancy</b>
           <small>{{ sousTitre() }}</small>
         </span>
-        <button type="button" class="ia-tete__fermer" aria-label="Fermer l'assistant" (click)="fermer()">
+        <button type="button" class="ia-tete__fermer" aria-label="Fermer Nancy" (click)="fermer()">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
           </svg>
