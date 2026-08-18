@@ -118,12 +118,35 @@ app.get('/sitemap.xml', async (_req, res) => {
 
 /**
  * Serve static files from /browser
+ *
+ * ⚠️ `maxAge: '1y'` convient aux bundles JS/CSS d'Angular (nom de fichier
+ * empreint d'un hash : un changement de contenu produit une URL différente,
+ * l'ancienne version en cache n'est jamais revue). Mais les fichiers copiés
+ * tels quels depuis `public/` (favicon, icônes PWA, manifeste) GARDENT le même
+ * nom d'un déploiement à l'autre — un an de cache dessus revient à figer le
+ * logo pour un an à chaque changement, chez le visiteur ET chez Cloudflare
+ * (`cf-cache-status: HIT` constaté une fois le vrai logo posé, favicon resté
+ * bloqué sur l'ancien plusieurs jours). Ces fichiers-là gardent une durée
+ * courte.
  */
+const FICHIERS_IDENTITE_COURTE = new Set([
+  '/favicon.ico',
+  '/manifest.webmanifest',
+  '/robots.txt',
+  '/og-image.png',
+]);
+
 app.use(
   express.static(browserDistFolder, {
     maxAge: '1y',
     index: false,
     redirect: false,
+    setHeaders: (res, chemin) => {
+      const relatif = chemin.slice(browserDistFolder.length);
+      if (FICHIERS_IDENTITE_COURTE.has(relatif) || relatif.startsWith('/icons/') || relatif.startsWith('/brand/')) {
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+      }
+    },
   }),
 );
 
