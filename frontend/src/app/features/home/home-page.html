@@ -114,6 +114,30 @@
               }
             </div>
             <div class="news-body">
+              <!-- Choisir une pastille bascule sur l'actualité voulue, sans
+                   figer le défilement automatique pour autant (2026-08-18) —
+                   il reprend après NEWS_ROTATION_MS quoi qu'il arrive. Dans
+                   la carte, alignées à droite en haut du texte. -->
+              @if (actualites().length > 1) {
+                <div
+                  class="featured-tabs news-tabs"
+                  role="group"
+                  aria-label="Actualités"
+                  (mouseenter)="suspendreNews()"
+                  (mouseleave)="reprendreNews()">
+                  @for (a2 of actualites(); track a2.id; let i = $index) {
+                    <button
+                      type="button"
+                      class="featured-tab"
+                      [class.featured-tab--active]="i === newsIndex() % actualites().length"
+                      [attr.aria-pressed]="i === newsIndex() % actualites().length"
+                      [attr.aria-label]="'Actualité : ' + a2.title"
+                      (click)="choisirActualite(i)">
+                      {{ i + 1 }}
+                    </button>
+                  }
+                </div>
+              }
               <span class="k-eyebrow news-eyebrow">Actualité Kaikun</span>
               <h3 class="news-card-title">{{ a.title }}</h3>
               @if (a.excerpt) {
@@ -124,31 +148,6 @@
         }
       }
     </div>
-
-    <!-- Choisir une pastille FIGE l'aperçu automatique dessus pour de bon
-         (voir `newsChoisieManuellement`) : le défilement à 10 s reste un
-         aperçu, ce clic donne le contrôle total — une vidéo choisie peut
-         alors être regardée en entier sans être coupée. -->
-    @if (actualites().length > 1) {
-      <div
-        class="featured-tabs"
-        role="group"
-        aria-label="Actualités"
-        (mouseenter)="suspendreNews()"
-        (mouseleave)="reprendreNews()">
-        @for (a of actualites(); track a.id; let i = $index) {
-          <button
-            type="button"
-            class="featured-tab"
-            [class.featured-tab--active]="i === newsIndex() % actualites().length"
-            [attr.aria-pressed]="i === newsIndex() % actualites().length"
-            [attr.aria-label]="'Actualité : ' + a.title"
-            (click)="choisirActualite(i)">
-            {{ i + 1 }}
-          </button>
-        }
-      </div>
-    }
   </section>
 } @else {
 <!-- =========================================================================

@@ -135,12 +135,13 @@ interface ServiceItem {
 const ROTATION_MS = 7000;
 
 /**
- * Cadence du carrousel des actualités (F16.2) : un peu plus lente que le
+ * Cadence du carrousel des actualités (F16.2) : nettement plus lente que le
  * reste du site (7 s) pour laisser à une vidéo le temps de démarrer avant
- * d'être coupée. Reste un aperçu, pas une lecture complète — c'est le clic
- * sur une pastille qui donne le contrôle total (voir `newsChoisieManuellement`).
+ * d'être coupée. ⚠️ Reste un simple minuteur, sans exception pour une vidéo
+ * choisie via une pastille (décision explicite de l'utilisateur, 2026-08-18) :
+ * au bout de ce délai, ça bascule même si la vidéo en cours est plus longue.
  */
-const NEWS_ROTATION_MS = 10000;
+const NEWS_ROTATION_MS = 90000;
 
 /**
  * Durée au-delà de laquelle une pause au survol est tenue pour perdue (une
@@ -267,16 +268,6 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
     return liste.length ? liste[this.newsIndex() % liste.length] : null;
   });
-
-  /**
-   * ⚠️ **Un clic sur une pastille fige le carrousel pour de bon.**
-   * Décision explicite de l'utilisateur : le défilement automatique (10 s)
-   * reste un aperçu — dès qu'un visiteur choisit une actualité lui-même,
-   * plus rien ne doit l'interrompre, vidéo comprise, jusqu'à ce qu'il clique
-   * une AUTRE pastille. Remis à `false` par `chargerActualites` à chaque
-   * nouveau chargement (nouvelle visite = nouvel aperçu automatique).
-   */
-  protected readonly newsChoisieManuellement = signal(false);
 
   private newsMinuteur: ReturnType<typeof setInterval> | null = null;
   private newsSurvolee = false;
@@ -588,7 +579,6 @@ export class HomePageComponent implements OnInit, OnDestroy {
       )
       .subscribe((articles) => {
         this.actualites.set(articles);
-        this.newsChoisieManuellement.set(false);
         this.demarrerLeCarrouselActualites();
       });
   }
@@ -606,16 +596,20 @@ export class HomePageComponent implements OnInit, OnDestroy {
       const pausePerdue =
         this.newsSurvolee && Date.now() - (this.newsPauseDepuis ?? 0) > PAUSE_MAX_MS;
 
-      if ((this.newsSurvolee && !pausePerdue) || document.hidden || this.newsChoisieManuellement()) return;
+      if ((this.newsSurvolee && !pausePerdue) || document.hidden) return;
 
       this.newsIndex.update((i) => i + 1);
     }, NEWS_ROTATION_MS);
   }
 
-  /** Bascule vers l'actualité choisie et fige l'aperçu automatique dessus. */
+  /**
+   * Bascule vers l'actualité choisie. Le défilement automatique n'est PAS
+   * figé pour autant (décision explicite de l'utilisateur, 2026-08-18) : il
+   * reprend après NEWS_ROTATION_MS comme d'habitude, quitte à couper une
+   * vidéo plus longue que ce délai.
+   */
   protected choisirActualite(i: number): void {
     this.newsIndex.set(i);
-    this.newsChoisieManuellement.set(true);
   }
 
   /** Suspend le carrousel des actualités : la souris est sur la carte. */
