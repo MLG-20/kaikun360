@@ -37,7 +37,7 @@ export class ContactPageComponent {
   private readonly sanitizer = inject(DomSanitizer);
 
   /** Repli si les réglages ne sont pas encore chargés (ou en échec). */
-  private readonly fallbackEmail = 'support@kaikun360.sn';
+  private readonly fallbackEmail = 'contact@kaikun360.com';
 
   /**
    * Coordonnées publiques du siège (adresse + carte), issues du back-office

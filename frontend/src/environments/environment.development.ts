@@ -17,7 +17,7 @@ export const environment = {
   // application séparée qui tourne dans le navigateur : elle ne lit aucun `.env`
   // de Laravel. Il faut donc le renseigner ICI aussi, sinon le bouton reste
   // masqué alors que tout le reste est configuré.
-  googleClientId: '924259118421-e0lbqlhfevp2ip0o23ib8d7hheatnons.apps.googleusercontent.com',
+  googleClientId: '561673900142-utmqbrbkvl4d05v3hoo6l5hbsbg4f2m4.apps.googleusercontent.com',
   /**
    * Adresse publique du site en développement (F9.1) — voir le commentaire
    * détaillé dans `environment.ts`. En local, c'est le serveur Angular.

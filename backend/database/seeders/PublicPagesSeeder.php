@@ -123,7 +123,7 @@ HTML,
 <h2>Éditeur du site</h2>
 <p>Le présent site est édité par Kaikun 360, plateforme de mise en relation de
 services immobiliers, touristiques et de construction au Sénégal.</p>
-<p>Contact : <a href="mailto:support@kaikun360.sn">support@kaikun360.sn</a></p>
+<p>Contact : <a href="mailto:contact@kaikun360.com">contact@kaikun360.com</a></p>
 
 <h2>Hébergement</h2>
 <p>Le site est hébergé sur une infrastructure sécurisée. Les coordonnées de
@@ -198,7 +198,7 @@ au respect de nos obligations légales.</p>
 
 <h2>Vos droits</h2>
 <p>Vous pouvez accéder à vos données, les corriger ou en demander la suppression
-en écrivant à <a href="mailto:support@kaikun360.sn">support@kaikun360.sn</a>.</p>
+en écrivant à <a href="mailto:contact@kaikun360.com">contact@kaikun360.com</a>.</p>
 HTML,
             ],
 
@@ -285,7 +285,7 @@ transport de personnes — et à honorer toute réservation confirmée.</p>
 <h2>9. Réclamations</h2>
 <p>Toute réclamation se dépose depuis votre espace, par la messagerie rattachée
 au dossier concerné, ou par écrit à
-<a href="mailto:support@kaikun360.sn">support@kaikun360.sn</a>. Un dossier ouvert
+<a href="mailto:contact@kaikun360.com">contact@kaikun360.com</a>. Un dossier ouvert
 reçoit une référence de suivi. Nous nous efforçons d'apporter une première
 réponse sous <strong>72 heures ouvrées</strong>.</p>
 
@@ -354,7 +354,7 @@ efface les préférences conservées le temps de la visite.</p>
 
 <h2>Questions</h2>
 <p>Pour toute question sur cette politique, écrivez à
-<a href="mailto:support@kaikun360.sn">support@kaikun360.sn</a>.</p>
+<a href="mailto:contact@kaikun360.com">contact@kaikun360.com</a>.</p>
 
 <p class="page-note"><em>Version de travail. Ce document est en cours de
 validation par un conseil juridique sénégalais ; sa version définitive
@@ -477,7 +477,7 @@ caution est conservée à titre d'indemnité.</p>
 <p>Un séjour ne s'annule pas depuis votre espace : chaque logement ayant ses
 propres contraintes d'exploitation, l'annulation passe par notre équipe, qui
 arbitre avec l'hôte et vous confirme par écrit la suite donnée. Écrivez à
-<a href="mailto:support@kaikun360.sn">support@kaikun360.sn</a> ou depuis la
+<a href="mailto:contact@kaikun360.com">contact@kaikun360.com</a> ou depuis la
 messagerie rattachée à votre réservation.</p>
 
 <h2>Prestations sur mesure</h2>
@@ -516,7 +516,7 @@ une solution de remplacement lorsque c'est possible.</p>
 
 <h2>Un désaccord ?</h2>
 <p>Écrivez-nous depuis la messagerie de votre dossier ou à
-<a href="mailto:support@kaikun360.sn">support@kaikun360.sn</a>. Chaque
+<a href="mailto:contact@kaikun360.com">contact@kaikun360.com</a>. Chaque
 réclamation reçoit une référence de suivi et une première réponse sous 72 heures
 ouvrées.</p>
 

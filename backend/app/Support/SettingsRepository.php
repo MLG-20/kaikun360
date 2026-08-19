@@ -46,7 +46,7 @@ class SettingsRepository
         // qu'un « affiché » : ajouter un futur univers au catalogue le rend
         // visible ici sans réglage à toucher.
         'home.universe_strip_hidden' => ['value' => [], 'type' => 'json', 'group' => 'accueil'],
-        'support.email' => ['value' => 'support@kaikun360.sn', 'type' => 'string', 'group' => 'general'],
+        'support.email' => ['value' => 'contact@kaikun360.com', 'type' => 'string', 'group' => 'general'],
         'support.phone' => ['value' => '+221 33 000 00 00', 'type' => 'string', 'group' => 'general'],
 
         // Coordonnées du siège (affichées + carte sur la page Contact publique).
