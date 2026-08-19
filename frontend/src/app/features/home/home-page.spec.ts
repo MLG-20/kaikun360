@@ -426,14 +426,14 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
 
       expect(hote.textContent).toContain('Un article');
 
-      // 10 s : cadence propre aux actualités (NEWS_ROTATION_MS), plus lente
-      // que le reste du site (7 s) pour laisser une vidéo démarrer avant
-      // d'être coupée par l'aperçu automatique.
-      vi.advanceTimersByTime(10000);
+      // 90 s : cadence propre aux actualités (NEWS_ROTATION_MS), nettement
+      // plus lente que le reste du site (7 s) pour laisser une vidéo
+      // démarrer avant d'être coupée par l'aperçu automatique.
+      vi.advanceTimersByTime(90000);
       fixture.detectChanges();
       expect(hote.textContent).toContain('Un second article');
 
-      vi.advanceTimersByTime(10000);
+      vi.advanceTimersByTime(90000);
       fixture.detectChanges();
       expect(hote.textContent).toContain('Un article');
       expect(hote.textContent).not.toContain('Un second article');
@@ -453,9 +453,9 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
       const fixture = monter({ actualites: [video, second] });
       const hote = fixture.nativeElement as HTMLElement;
 
-      // L'aperçu automatique reste un aperçu, vidéo comprise — seul un clic
-      // sur une pastille (voir le test suivant) le fige pour de bon.
-      vi.advanceTimersByTime(10000);
+      // L'aperçu automatique bascule quoi qu'il arrive, vidéo comprise —
+      // un clic sur une pastille (voir le test suivant) ne le fige plus.
+      vi.advanceTimersByTime(90000);
       fixture.detectChanges();
       expect(hote.textContent).toContain('Un second article');
 
@@ -465,7 +465,7 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
     }
   });
 
-  it('un clic sur une pastille bascule immédiatement et FIGE l’aperçu automatique dessus', () => {
+  it('un clic sur une pastille bascule immédiatement, sans figer le défilement automatique', () => {
     vi.useFakeTimers();
 
     try {
@@ -484,14 +484,21 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
       pastilles[1].click();
       fixture.detectChanges();
 
+      // Le clic change l'actualité affichée, ce qui recrée le bloc DOM
+      // (`@for` suivi par l'id de l'article courant) : on ré-interroge les
+      // pastilles au lieu de réutiliser la référence capturée avant le clic.
+      const pastillesApres = Array.from(
+        hote.querySelectorAll<HTMLButtonElement>('[aria-label="Actualités"] .featured-tab'),
+      );
       expect(hote.textContent).toContain('Un second article');
-      expect(pastilles[1].classList.contains('featured-tab--active')).toBe(true);
+      expect(pastillesApres[1].classList.contains('featured-tab--active')).toBe(true);
 
-      // Le choix reste figé : le minuteur ne doit plus jamais faire bouger la
-      // carte tant qu'aucune AUTRE pastille n'a été cliquée.
-      vi.advanceTimersByTime(30000);
+      // Le choix ne fige rien : le minuteur reprend après NEWS_ROTATION_MS
+      // comme d'habitude, et boucle sur la première actualité.
+      vi.advanceTimersByTime(90000);
       fixture.detectChanges();
-      expect(hote.textContent).toContain('Un second article');
+      expect(hote.textContent).toContain('Un article');
+      expect(hote.textContent).not.toContain('Un second article');
 
       fixture.destroy();
     } finally {
