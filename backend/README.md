@@ -1085,6 +1085,11 @@ Le code est **abondamment commenté en français**.
   piège aux deux endroits). Le prompt système de l'assistant (`ClaudePrompt`)
   et son message d'accueil se présentent maintenant comme **Nancy**, à la
   demande du client. 18 tests neufs (`UniverseStripTest` + réglages).
+- ✅ **F16.3 — Détail public d'une actualité.** `GET /news/{id}` (public) rend
+  la ressource complète (corps inclus) d'un article **publié** — 404 sinon,
+  même garde que `NewsController::index()`. La liste (`GET /news`) ne servait
+  que titre et résumé au carrousel de l'accueil : rien n'exposait le corps
+  complet avant cet ajout. 3 tests neufs (`NewsTest`).
 - ✅ **Liste d'attente avant ouverture (F14, hors CDC)** : `POST /waitlist`
   (public, throttle 10/min), 5 catégories (`proprietaire`, `prestataire`,
   `client`, `team_building`, `diaspora`), champs propres à chacune dans

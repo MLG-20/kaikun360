@@ -397,6 +397,22 @@ export const routes: Routes = [
         title: 'Votre devis — Kaikun 360',
       },
       {
+        // Détail d'une actualité Kaikun (F16.3) : la carte de l'accueil ne
+        // montre que titre et résumé, le corps complet vit ici.
+        path: 'actualites/:id',
+        loadComponent: () =>
+          import('./features/content/news-detail-page/news-detail-page').then(
+            (m) => m.NewsDetailPageComponent,
+          ),
+        title: 'Actualité — Kaikun 360',
+        data: {
+          seo: {
+            description: 'Actualité Kaikun 360 : nouveautés, destinations et vidéos.',
+            type: 'article',
+          },
+        },
+      },
+      {
         // Foire aux questions (F2.8) : contenu éditorial servi par GET /faqs.
         path: 'faqs',
         loadComponent: () =>

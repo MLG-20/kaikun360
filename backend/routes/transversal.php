@@ -56,6 +56,9 @@ Route::get('heroes', [HeroController::class, 'index']);
 // --- Actualités Kaikun (F15) ---------------------------------------------------
 // Section actualités/vidéo de l'accueil, pilotée au back-office.
 Route::get('news', [NewsController::class, 'index']);
+// Détail d'un article, pour la page dédiée (`/actualites/:id`) : le carrousel
+// de l'accueil ne montre que le titre et le résumé.
+Route::get('news/{newsArticle}', [NewsController::class, 'show'])->whereNumber('newsArticle');
 
 // --- Héros de l'accueil (F15.1) ------------------------------------------------
 // Diaporama de photos, ou une courte vidéo à la place — pilotés au back-office.

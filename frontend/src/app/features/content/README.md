@@ -18,6 +18,7 @@ Toutes ces pages sont routées sous le layout principal (en-tête + pied).
 | `/faqs` | `FaqPageComponent` (`faq/`) | `GET /faqs` via `ContentService.faqs()` |
 | `/pages/:slug` | `ContentPageComponent` (`content-page/`) | `GET /pages/{slug}` via `ContentService.page()` |
 | `/contact` | `ContactPageComponent` (`contact/`) | `POST /contact` + `GET /contact-info` + `GET /whatsapp/link` |
+| `/actualites/:id` | `NewsDetailPageComponent` (`news-detail-page/`) | `GET /news/{id}` via `NewsService.get()` |
 
 ### FAQ (`/faqs`)
 
@@ -39,6 +40,30 @@ l'onglet est mis à jour avec le titre de la page. Slug absent / page non publi�
 
 > ⚠️ Le backend enveloppe la ressource sous `data.page` (et non directement dans
 > `data`) : `ContentService.page()` l'aplatit pour renvoyer la `ContentPage`.
+
+### Détail d'une actualité (`/actualites/:id`) — F16.3
+
+La carte de l'accueil (`home-page`) n'affiche que titre et résumé : cette page
+sert le **corps complet** de l'article, sur le même modèle que
+`ContentPageComponent` (adressée par identifiant plutôt que par slug — les
+actualités n'en portent pas). `[innerHTML]` pour le corps riche, même prose
+(`.news-prose`, sous `:host ::ng-deep`) que `.content-prose`.
+
+> ⚠️ **Piège d'hydratation sur la vidéo, distinct de celui du carrousel
+> d'accueil.** Poser `videoEmbedUrl` (le `SafeResourceUrl` de l'iframe YouTube/
+> Vimeo) dès la résolution de l'article — y compris au RENDU SERVEUR — crée
+> deux instances différentes de l'objet assaini (une par le serveur, une par le
+> client à l'hydratation) pour la **même** URL. Angular voit une valeur
+> « changée » et réaffecte l'attribut `src` de l'iframe déjà présente dans le
+> HTML serveur : le navigateur traite ça comme une navigation, annule la
+> requête vidéo en cours et la relance — juste après l'hydratation. Un
+> visiteur qui clique « lecture » dans cette fenêtre (courant sur mobile, où la
+> vignette est visible avant la fin du démarrage du JS) voit l'iframe repartir
+> de zéro : son clic semble sans effet. Correctif : `videoEmbedUrl` n'est posé
+> qu'**une fois côté navigateur** (`isPlatformBrowser`) — aucune iframe vidéo
+> n'existe donc dans le HTML serveur, la vignette s'affiche d'abord, l'iframe
+> est créée une seule fois sans jamais entrer en conflit avec une version
+> serveur.
 
 ### Contact (`/contact`)
 

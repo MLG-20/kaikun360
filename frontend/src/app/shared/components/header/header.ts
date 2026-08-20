@@ -129,16 +129,6 @@ export class HeaderComponent {
   /** État du menu mobile. */
   protected readonly menuOpen = signal(false);
 
-  /**
-   * État du menu de compte (« Mon espace » / « Déconnexion »), sur grand écran.
-   *
-   * Au clic et non au survol, contrairement aux méga-menus des univers : on
-   * survole une navigation pour explorer, on ouvre un menu de compte pour agir.
-   * Un menu qui contient « Déconnexion » ne doit jamais se déplier tout seul
-   * parce que la souris passait par là.
-   */
-  protected readonly compteOuvert = signal(false);
-
   constructor() {
     // Toute navigation referme les menus (méga-menu desktop + panneau mobile).
     inject(Router)
@@ -149,7 +139,6 @@ export class HeaderComponent {
       .subscribe(() => {
         this.openGroup.set(null);
         this.menuOpen.set(false);
-        this.compteOuvert.set(false);
       });
   }
 
@@ -180,29 +169,9 @@ export class HeaderComponent {
     this.menuOpen.update((open) => !open);
   }
 
-  /** Bascule le menu de compte (grand écran). */
-  protected toggleCompte(): void {
-    this.compteOuvert.update((ouvert) => !ouvert);
-  }
-
-  /**
-   * Referme le menu de compte quand le focus en sort réellement.
-   *
-   * Même précaution que `onGroupBlur` : `relatedTarget` porte l'élément qui
-   * REÇOIT le focus — s'il est encore dans le menu (on tabule de « Aller à mon
-   * espace » vers « Déconnexion »), on ne referme pas sous les doigts.
-   */
-  protected onCompteBlur(event: FocusEvent): void {
-    const conteneur = event.currentTarget as HTMLElement;
-    if (!conteneur.contains(event.relatedTarget as Node)) {
-      this.compteOuvert.set(false);
-    }
-  }
-
   /** Déconnexion depuis l'en-tête : vide la session puis renvoie à l'accueil. */
   protected logout(): void {
     this.menuOpen.set(false);
-    this.compteOuvert.set(false);
     this.auth.logout().subscribe({
       next: () => this.router.navigate(['/']),
       error: () => this.router.navigate(['/']),
@@ -214,10 +183,9 @@ export class HeaderComponent {
   protected onEscape(): void {
     this.openGroup.set(null);
     this.menuOpen.set(false);
-    this.compteOuvert.set(false);
   }
 
-  /** Un clic en dehors de l'en-tête referme les menus déroulants ouverts. */
+  /** Un clic en dehors de l'en-tête referme les méga-menus ouverts. */
   @HostListener('document:click', ['$event'])
   protected onDocumentClick(event: MouseEvent): void {
     if (this.host.nativeElement.contains(event.target)) {
@@ -225,6 +193,5 @@ export class HeaderComponent {
     }
 
     this.openGroup.set(null);
-    this.compteOuvert.set(false);
   }
 }

@@ -26,4 +26,20 @@ class NewsController extends Controller
             'articles' => NewsArticleResource::collection(NewsArticle::published()->ordered()->get()),
         ]);
     }
+
+    /**
+     * GET /api/v1/news/{newsArticle} (public) — détail d'un article publié.
+     *
+     * Le binding de route résout n'importe quel id existant, publié ou non :
+     * on refuse ici explicitement un article non publié (404), comme
+     * `PageController::show` le fait déjà pour les pages de contenu.
+     */
+    public function show(NewsArticle $newsArticle): JsonResponse
+    {
+        abort_unless($newsArticle->is_published, 404);
+
+        return ApiResponse::success([
+            'article' => new NewsArticleResource($newsArticle),
+        ]);
+    }
 }

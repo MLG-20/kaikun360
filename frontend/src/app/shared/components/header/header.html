@@ -67,41 +67,24 @@
            le layout) — plus d'entrée ici depuis le retour à ce parti pris. -->
 
       @if (isAuthenticated()) {
-        <!-- ⚠️ « Mon espace » et « Déconnexion » tenaient côte à côte dans la
-             barre. À deux boutons pleins, ils poussaient la navigation qui se
-             cassait en deux lignes (« Séjours & / Tourisme »). Ils sont
-             maintenant repliés dans un seul menu : la barre respire, et la
-             déconnexion cesse d'être à un clic de distraction du reste. -->
-        <div class="compte" (focusout)="onCompteBlur($event)">
-          <button
-            class="k-btn k-btn--ghost nav-cta compte-btn"
-            type="button"
-            aria-haspopup="menu"
-            [attr.aria-expanded]="compteOuvert()"
-            (click)="toggleCompte()"
-          >
-            Mon espace
-            <span class="caret" [class.is-ouvert]="compteOuvert()" aria-hidden="true">⌄</span>
-          </button>
-
-          @if (compteOuvert()) {
-            <div class="compte-menu" role="menu">
-              <a class="compte-item" [routerLink]="spaceHome()" role="menuitem">
-                Aller à mon espace
-              </a>
-              <!-- La déconnexion est séparée du reste par un filet : c'est le seul
-                   geste du menu dont on ne revient pas d'un clic. -->
-              <button
-                class="compte-item compte-item--sortie"
-                type="button"
-                role="menuitem"
-                (click)="logout()"
-              >
-                Déconnexion
-              </button>
-            </div>
-          }
-        </div>
+        <!-- Deux boutons côte à côte : le repli en menu déroulant datait de
+             l'époque où la bulle assistant vivait aussi dans cette barre
+             (F10.5). Elle en est repartie (bulle flottante dédiée) et la barre
+             a de nouveau la place pour les deux gestes séparés. -->
+        <a class="k-btn k-btn--ghost nav-cta" [routerLink]="spaceHome()">
+          <svg class="nav-cta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="8" r="3.4" />
+            <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+          </svg>
+          Mon espace
+        </a>
+        <button class="nav-logout" type="button" (click)="logout()">
+          <svg class="nav-logout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 4H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8" />
+            <path d="M10 12h11M17.5 8.5 21 12l-3.5 3.5" />
+          </svg>
+          Déconnexion
+        </button>
       } @else {
         <a class="k-btn k-btn--primary nav-cta" routerLink="/auth/connexion">Connexion</a>
       }

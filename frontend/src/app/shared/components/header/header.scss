@@ -80,7 +80,7 @@
 .nav-link {
   font-size: 14.5px;
   font-weight: 500;
-  padding: 9px 13px;
+  padding: 9px 10px;
   border-radius: 9px;
   transition: background 0.15s, color 0.15s;
   display: inline-flex;
@@ -203,105 +203,49 @@
   flex: 0 0 auto;
 }
 
-// Menu de compte : « Mon espace » replié, la déconnexion à l'intérieur.
-.compte {
-  position: relative;
+// Icône de « Mon espace » : même gabarit que les icônes du méga-menu.
+.nav-cta-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 1px;
+  vertical-align: -3px;
 }
 
-.compte-btn {
+// Bouton « Déconnexion » (desktop) affiché à côté de « Mon espace ». Une
+// pastille discrète et non un lien nu : un geste qui vide la session mérite
+// un vrai bouton, pas un mot qui traîne dans la barre.
+//
+// ⚠️ Gabarit délibérément COMPACT (padding réduit, pas de `gap` k-btn) : la
+// version pleine largeur poussait de nouveau la navigation à se casser en
+// deux lignes (« Séjours & / Tourisme ») — exactement le défaut qui avait
+// justifié le repli en menu déroulant en F10.5, avant que ce dernier ne soit
+// annulé (2026-08-20). Un bouton plus étroit règle les deux à la fois.
+.nav-logout {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-
-  .caret {
-    font-size: 0.8em;
-    line-height: 1;
-    transition: transform 0.16s ease;
-  }
-
-  .caret.is-ouvert {
-    transform: rotate(180deg);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .caret {
-      transition: none;
-    }
-  }
-}
-
-// Ancré à DROITE (`right: 0`) et non à gauche comme les méga-menus : c'est le
-// dernier bloc de la barre, un menu aligné à gauche déborderait de la fenêtre.
-.compte-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 40;
-  min-width: 210px;
-  padding: 6px;
-  background: var(--k-white);
-  border: 1px solid var(--k-line);
-  border-radius: 14px;
-  box-shadow: var(--k-shadow-lg);
-  animation: mega-in 0.16s ease;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}
-
-.compte-item {
-  display: block;
-  width: 100%;
-  padding: 9px 12px;
-  border: 0;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--k-ink);
-  font: inherit;
-  font-size: 0.92rem;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-
-  &:hover {
-    background: var(--k-brand-050);
-    color: var(--k-brand-600);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--k-brand);
-    outline-offset: -2px;
-  }
-
-  // Le seul geste du menu dont on ne revient pas d'un clic : un filet l'isole
-  // des autres, pour qu'on ne le prenne pas en glissant.
-  &--sortie {
-    margin-top: 4px;
-    border-top: 1px solid var(--k-line);
-    border-radius: 0 0 9px 9px;
-    color: var(--k-muted);
-
-    &:hover {
-      background: color-mix(in srgb, var(--k-danger) 8%, var(--k-white));
-      color: var(--k-danger);
-    }
-  }
-}
-
-// Bouton texte « Déconnexion » (desktop) affiché à côté de « Mon espace ».
-.nav-logout {
-  border: 0;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: var(--k-radius-pill);
   background: transparent;
   color: var(--k-muted);
   font: inherit;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 14.5px;
+  white-space: nowrap;
   cursor: pointer;
-  padding: 6px 4px;
+  padding: 9px 13px;
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
 
   &:hover {
-    color: var(--k-ink);
+    border-color: var(--k-line-strong);
+    color: var(--k-danger);
+    background: color-mix(in srgb, var(--k-danger) 6%, transparent);
   }
+}
+
+.nav-logout-icon {
+  width: 16px;
+  height: 16px;
 }
 
 // Bouton menu (mobile uniquement)
@@ -435,10 +379,9 @@
 
   .nav,
   .nav-cta,
-  .nav-logout,
-  // Le menu de compte suit ses deux boutons d'origine : sous 960 px, « Mon
-  // espace » et « Déconnexion » vivent dans le panneau mobile, plus bas.
-  .compte {
+  // Sous 960 px, « Mon espace » et « Déconnexion » vivent dans le panneau
+  // mobile, plus bas.
+  .nav-logout {
     display: none;
   }
 

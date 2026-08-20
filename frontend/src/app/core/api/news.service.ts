@@ -47,16 +47,31 @@ export class NewsService {
   list(): Observable<NewsArticle[]> {
     return this.http.get<{ data: { articles: NewsArticleApi[] } }>(`${this.api}/news`).pipe(
       map((res) =>
-        (res.data.articles ?? []).map((a) => ({
-          id: a.id,
-          title: a.title,
-          excerpt: a.excerpt,
-          body: a.body,
-          image: a.image,
-          videoFile: a.video_file,
-          videoUrl: a.video_url,
-        })),
+        (res.data.articles ?? []).map((a) => this.depuisApi(a)),
       ),
     );
+  }
+
+  /**
+   * GET /news/{id} — détail d'un article publié, pour la page dédiée. Renvoie
+   * 404 si l'article n'existe pas ou n'est pas publié (à traiter côté
+   * appelant comme un état « introuvable »).
+   */
+  get(id: number): Observable<NewsArticle> {
+    return this.http
+      .get<{ data: { article: NewsArticleApi } }>(`${this.api}/news/${id}`)
+      .pipe(map((res) => this.depuisApi(res.data.article)));
+  }
+
+  private depuisApi(a: NewsArticleApi): NewsArticle {
+    return {
+      id: a.id,
+      title: a.title,
+      excerpt: a.excerpt,
+      body: a.body,
+      image: a.image,
+      videoFile: a.video_file,
+      videoUrl: a.video_url,
+    };
   }
 }

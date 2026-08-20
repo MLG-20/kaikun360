@@ -1,0 +1,56 @@
+@switch (state()) {
+  @case ('loading') {
+    <section class="k-wrap news-state">
+      <p>Chargement…</p>
+    </section>
+  }
+  @case ('failed') {
+    <section class="k-wrap news-state">
+      <h1>Une erreur est survenue</h1>
+      <p>Impossible d'afficher cette actualité pour le moment. Merci de réessayer plus tard.</p>
+      <a class="k-btn k-btn--primary" routerLink="/">Retour à l'accueil</a>
+    </section>
+  }
+  @case ('notfound') {
+    <section class="k-wrap news-state">
+      <h1>Actualité introuvable</h1>
+      <p>Cette actualité n'existe pas ou n'est plus disponible.</p>
+      <a class="k-btn k-btn--primary" routerLink="/">Retour à l'accueil</a>
+    </section>
+  }
+  @case ('ready') {
+    <article class="k-wrap news-article">
+      <a class="news-back" routerLink="/">&larr; Retour à l'accueil</a>
+      <span class="k-eyebrow news-eyebrow">Actualité Kaikun</span>
+      <h1 class="news-title">{{ article()!.title }}</h1>
+
+      <div class="news-media">
+        @if (article()!.videoFile) {
+          <video
+            class="news-video"
+            [src]="article()!.videoFile"
+            controls
+            preload="metadata"></video>
+        } @else if (videoEmbedUrl()) {
+          <iframe
+            class="news-video"
+            [src]="videoEmbedUrl()"
+            title="Vidéo — {{ article()!.title }}"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allowfullscreen
+            loading="lazy">
+          </iframe>
+        } @else {
+          <img class="news-image" [src]="article()!.image" [alt]="article()!.title" loading="lazy" />
+        }
+      </div>
+
+      @if (article()!.excerpt) {
+        <p class="news-excerpt">{{ article()!.excerpt }}</p>
+      }
+
+      <!-- Corps HTML issu de l'éditeur riche du back-office : Angular assainit le balisage. -->
+      <div class="news-prose" [innerHTML]="article()!.body"></div>
+    </article>
+  }
+}

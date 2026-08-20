@@ -143,6 +143,12 @@
               @if (a.excerpt) {
                 <p class="news-card-desc k-muted">{{ a.excerpt }}</p>
               }
+              @if (a.body) {
+                <a class="k-btn k-btn--primary news-card-cta" [routerLink]="['/actualites', a.id]">
+                  Lire l'article complet
+                  <span class="news-card-cta-arrow" aria-hidden="true">→</span>
+                </a>
+              }
             </div>
           </article>
         }

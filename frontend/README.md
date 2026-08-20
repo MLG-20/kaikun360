@@ -2170,6 +2170,43 @@ Deux bugs responsive corrigés au passage sur `home-page.scss` : la règle de
 porte réellement `display:flex`), et la carte statistiques débordait du
 viewport faute d'un `max-width` aligné sur les autres cartes de la page.
 
+### Page de détail d'une actualité, boutons de compte restaurés, vidéo à l'hydratation (F16.3, hors CDC)
+
+**Nouvelle route `/actualites/:id`** (`NewsDetailPageComponent`,
+`features/content/news-detail-page/`) : la carte de l'accueil n'affichait que
+titre et résumé, jamais le corps complet de l'article. Même patron que
+`ContentPageComponent` (adressée par identifiant, `[innerHTML]` pour le corps
+riche) — voir [`features/content/README.md`](src/app/features/content/README.md).
+
+**`HeaderComponent` — retour à deux boutons côte à côte.** Le repli de
+« Mon espace »/« Déconnexion » en menu déroulant (F10.5) réglait un manque de
+place causé par le bouton Assistant, alors posé dans la même barre. Ce dernier
+est parti depuis vers sa bulle flottante (section précédente) : la barre a de
+nouveau la place, et le menu déroulant a été annulé. ⚠️ **Restaurer les deux
+boutons a fait réapparaître le défaut d'origine** (« Séjours & Tourisme » et
+« Kaikun Pro » cassés en deux lignes) — pas à cause des boutons de compte
+eux-mêmes, mais parce que le padding horizontal des items de méga-menu
+(`13px` de chaque côté) ne laissait alors que quelques pixels de trop.
+Resserré à `10px` : mesuré avec un Chrome headless piloté (connexion réelle,
+`getBoundingClientRect()` sur `.nav`) plutôt qu'estimé — la marge disponible
+avant redescente à une ligne est passée de -25px à confortable.
+
+**Piège d'hydratation sur la vidéo de la nouvelle page, distinct de celui de
+F16.2.** Poser `videoEmbedUrl` dès la résolution de l'article — y compris au
+rendu SERVEUR — crée deux instances `SafeResourceUrl` différentes (une par le
+serveur, une par le client à l'hydratation) pour la **même** URL ; Angular
+réaffecte alors le `src` de l'iframe déjà présente dans le HTML serveur, ce
+que le navigateur traite comme une navigation : la requête vidéo en cours est
+annulée puis relancée juste après l'hydratation (`net::ERR_ABORTED` observé,
+suivi d'une nouvelle requête réussie). Un clic « lecture » dans cette fenêtre
+— courante sur mobile, où la vignette est visible avant la fin du démarrage du
+JS — tombe donc sur une iframe qui repart de zéro : la lecture semblait sans
+effet. Corrigé en ne posant `videoEmbedUrl` qu'**une fois côté navigateur**
+(`isPlatformBrowser`) : aucune iframe vidéo n'existe dans le HTML serveur, la
+vignette s'affiche d'abord, l'iframe est créée une seule fois. Vérifié par
+navigateur headless : plus de requête annulée, et un clic simulé confirme la
+lecture effective (`video.paused === false`, `currentTime` qui avance).
+
 ### Commandes utiles
 
 ```bash
