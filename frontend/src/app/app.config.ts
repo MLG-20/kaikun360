@@ -12,6 +12,7 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { TitleStrategy, provideRouter, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
+import { activerLaMesureDAudience } from './core/analytics/analytics.service';
 import { activerPolitiqueDeDefilement } from './core/scroll/scroll-behavior';
 import { SeoTitleStrategy } from './core/seo/seo-title-strategy';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
@@ -38,6 +39,11 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'disabled', anchorScrolling: 'disabled' }),
     ),
     provideEnvironmentInitializer(activerPolitiqueDeDefilement),
+    // --- Mesure d'audience (F16) --------------------------------------------
+    // Amorce `AnalyticsService` : rien ne se charge tant que le bandeau
+    // cookies n'a pas recueilli d'accord (`CookieConsentService`), voir
+    // `core/analytics/analytics.service.ts`.
+    provideEnvironmentInitializer(activerLaMesureDAudience),
     // --- Référencement (F9.1) ----------------------------------------------
     //
     // On REMPLACE la stratégie de titre intégrée du routeur au lieu d'ajouter

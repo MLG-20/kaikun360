@@ -256,6 +256,9 @@ export const environment = {
   googleClientId: '$identifiant_google',
   // Adresse publique de CETTE démonstration (balises canonical / partages).
   siteUrl: '$url_publique',
+  // Mesure d'audience désactivée en démo : l'adresse ngrok change à chaque
+  // lancement, la propriété Google Analytics ne doit voir que la production.
+  gaMeasurementId: '',
 };
 EOF
 ok "Environnement de démonstration écrit."

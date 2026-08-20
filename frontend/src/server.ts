@@ -44,6 +44,10 @@ const apiOrigin = (process.env['API_ORIGIN'] ?? 'http://localhost:8000').replace
  *   - `fonts.googleapis.com` / `fonts.gstatic.com` : typographie du design
  *     system (F0.3) ;
  *   - `maps.google.com` : carte intégrée de la page Contact ;
+ *   - `googletagmanager.com` / `google-analytics.com` : mesure d'audience
+ *     (F16, `AnalyticsService`) — `gtag.js` n'est chargé qu'après consentement
+ *     du visiteur (`CookieConsentService`), mais la CSP doit l'autoriser dès
+ *     l'en-tête, avant qu'un consentement n'existe ;
  *   - `apiOrigin` : notre propre API — `'self'` seul ne la couvre QUE quand
  *     `environment.apiUrl` est relatif (le cas en production). En local, le
  *     navigateur appelle `http://localhost:8000` directement.
@@ -59,7 +63,7 @@ app.use((_req, res, next) => {
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' https://accounts.google.com",
+      "script-src 'self' https://accounts.google.com https://www.googletagmanager.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       // `apiOrigin` : même raison que `connect-src` ci-dessous — les photos
@@ -67,7 +71,11 @@ app.use((_req, res, next) => {
       // production (origine unique derrière nginx). En local, front et API
       // vivent sur deux ports différents.
       `img-src 'self' data: blob: ${apiOrigin}`,
-      `connect-src 'self' https://accounts.google.com ${apiOrigin}`,
+      // `*.google-analytics.com` : GA4 répartit ses appels sur des hôtes
+      // régionaux (`region1.google-analytics.com`…), non énumérables à
+      // l'avance — d'où le sous-domaine générique, seule origine élargie de
+      // cette liste et volontairement limitée à ce seul usage.
+      `connect-src 'self' https://accounts.google.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com ${apiOrigin}`,
       // YouTube/Vimeo : embeds vidéo des Actualités (F15) et du héros de
       // l'accueil (F15.1), pilotés au back-office (`gerer:parametres`) — même
       // niveau de confiance que la carte Google Maps déjà présente ici.

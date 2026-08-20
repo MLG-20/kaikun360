@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { RouteTransitionService } from './core/scroll/route-transition.service';
+import { CookieConsentBannerComponent } from './shared/components/cookie-consent-banner/cookie-consent-banner';
 import { PwaBannerComponent } from './shared/components/pwa-banner/pwa-banner';
 
 /**
@@ -17,10 +18,14 @@ import { PwaBannerComponent } from './shared/components/pwa-banner/pwa-banner';
  * page (le site public), voir `footer.ts`. La bulle assistant flottante
  * (`app-assistant-launcher`) est montée par chaque layout à côté de son
  * `app-assistant-panel`, voir ce composant.
+ *
+ * Même logique pour le **bandeau de consentement cookies**
+ * (`app-cookie-consent-banner`, F16) : la mesure d'audience concerne le site
+ * entier, pas un layout particulier.
  */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, PwaBannerComponent],
+  imports: [RouterOutlet, PwaBannerComponent, CookieConsentBannerComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

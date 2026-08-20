@@ -18,6 +18,21 @@ export const environment = {
   // masqué alors que tout le reste est configuré.
   googleClientId: '561673900142-utmqbrbkvl4d05v3hoo6l5hbsbg4f2m4.apps.googleusercontent.com',
   /**
+   * Identifiant de mesure Google Analytics 4 (F16, 2026-08-20).
+   *
+   * ⚠️ Comme `googleClientId`, ce n'est PAS un secret : un ID de mesure GA4
+   * part dans la page, visible de tous — la protection tient à la
+   * propriété Google Analytics elle-même, pas à cacher cet identifiant.
+   *
+   * ⚠️ Vide dans `environment.development.ts` et `environment.demo.ts` :
+   * la mesure d'audience n'est active QU'EN PRODUCTION (décision du
+   * 2026-08-20) — le développement local et les démonstrations ngrok ne
+   * doivent pas polluer les statistiques réelles. `AnalyticsService`
+   * (`core/analytics/`) ne charge `gtag.js` que si cette valeur est non
+   * vide ET que le visiteur a consenti via le bandeau cookies.
+   */
+  gaMeasurementId: 'G-Q9545ZH72P',
+  /**
    * Adresse PUBLIQUE du site, sans barre oblique finale (F9.1).
    *
    * ⚠️ Ce n'est pas un doublon de `apiUrl` : `apiUrl` désigne l'API Laravel,

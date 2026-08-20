@@ -18,6 +18,9 @@ export const environment = {
   // de Laravel. Il faut donc le renseigner ICI aussi, sinon le bouton reste
   // masqué alors que tout le reste est configuré.
   googleClientId: '561673900142-utmqbrbkvl4d05v3hoo6l5hbsbg4f2m4.apps.googleusercontent.com',
+  // Mesure d'audience désactivée en local (voir `environment.ts`) : le
+  // développement ne doit pas polluer les statistiques réelles.
+  gaMeasurementId: '',
   /**
    * Adresse publique du site en développement (F9.1) — voir le commentaire
    * détaillé dans `environment.ts`. En local, c'est le serveur Angular.

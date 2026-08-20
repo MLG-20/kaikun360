@@ -185,6 +185,9 @@ nous les utilisons.</p>
   <li>Données de projet : demandes, réservations, échanges avec les prestataires.</li>
   <li>Données techniques : informations de connexion nécessaires au bon
   fonctionnement du service.</li>
+  <li>Données de mesure d'audience (Google Analytics), uniquement si vous y
+  avez consenti — voir la
+  <a href="/pages/politique-cookies">politique de cookies</a>.</li>
 </ul>
 
 <h2>Utilisation des données</h2>
@@ -319,8 +322,8 @@ navigateur, qui remplit le même office. Nous employons ici le mot « cookie » 
 sens large, pour ces deux techniques.</p>
 
 <h2>Ce que nous déposons</h2>
-<p>Kaikun 360 s'en tient aux éléments <strong>strictement nécessaires</strong> au
-fonctionnement du service :</p>
+<p>Sans votre accord, Kaikun 360 ne dépose que les éléments
+<strong>strictement nécessaires</strong> au fonctionnement du service :</p>
 <ul>
   <li><strong>Session et authentification</strong> — vous garder connecté d'une
   page à l'autre et sécuriser les formulaires. Sans eux, il faudrait se
@@ -336,13 +339,20 @@ fonctionnement du service :</p>
   sa propre politique.</li>
 </ul>
 
+<h2>Mesure d'audience</h2>
+<p>Kaikun 360 utilise <strong>Google Analytics</strong> pour comprendre la
+fréquentation du site : pages consultées, provenance des visites, appareil
+utilisé. Ces cookies (<code>_ga</code>, <code>_ga_*</code>) ne sont déposés
+qu'<strong>après votre accord</strong>, recueilli par le bandeau affiché à
+votre arrivée sur le site — refuser n'empêche ni la navigation, ni la
+réservation, ni aucune fonction du service.</p>
+<p>Vous pouvez revenir sur votre choix à tout moment en effaçant les cookies du
+site dans votre navigateur : le bandeau reparaîtra à la visite suivante.</p>
+
 <h2>Ce que nous ne faisons pas</h2>
-<p>À ce jour, Kaikun 360 <strong>ne dépose aucun cookie publicitaire</strong>, ne
-revend aucune donnée de navigation et n'utilise pas de traceur permettant de
-vous suivre sur d'autres sites.</p>
-<p>Si une mesure d'audience ou un outil publicitaire venait à être ajouté, il ne
-serait activé qu'<strong>après votre consentement</strong>, recueilli par un
-bandeau dédié, et cette page serait mise à jour au préalable.</p>
+<p>Kaikun 360 <strong>ne dépose aucun cookie publicitaire</strong>, ne revend
+aucune donnée de navigation et n'utilise pas de traceur permettant de vous
+suivre sur d'autres sites.</p>
 
 <h2>Vos moyens d'action</h2>
 <p>Tous les navigateurs permettent d'afficher, de bloquer ou de supprimer les
