@@ -432,14 +432,6 @@
   margin-top: 6px;
 }
 
-.news-card-cta-arrow {
-  transition: transform 0.16s ease;
-}
-
-.news-card-cta:hover .news-card-cta-arrow {
-  transform: translateX(3px);
-}
-
 @media (max-width: 900px) {
   .news-card {
     grid-template-columns: 1fr;

@@ -471,6 +471,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/contact` | public (throttle 10/min) | `ContactController@store` |
 | GET | `/heroes` | public | `HeroController@index` |
 | GET | `/news` | public | `NewsController@index` |
+| GET | `/news/{newsArticle}` | public | `NewsController@show` |
 | GET | `/home-hero` | public | `HomeHeroController@index` |
 | GET | `/universe-strip` | public | `UniverseStripController@index` |
 
@@ -491,7 +492,9 @@ TypeScript miroir côté frontend Angular (phase F0).
 > (`articles`), triés par `position` puis date décroissante. `video_file`
 > (fichier déposé) l'emporte sur `video_url` (embed) quand les deux existent.
 > Une liste vide est normale — c'est ce qui fait basculer l'accueil sur la
-> grille des univers.
+> grille des univers. **`GET /news/{id}` (F16.3)** renvoie le détail complet
+> (`article`, corps inclus) d'un article publié, pour la page dédiée
+> `/actualites/:id` — 404 si non publié ou absent.
 
 > **Bandeaux d'en-tête (F12).** `GET /heroes` renvoie une **map** clé → bandeau
 > (`{ image, eyebrow, title, lead }`), **héritage d'image déjà résolu côté
