@@ -58,4 +58,33 @@ class UniverseStripTest extends TestCase
             'settings' => ['home.universe_strip_hidden' => ['immobiliers']],
         ])->assertStatus(422);
     }
+
+    // ── F17 : items texte libre ────────────────────────────────────────────
+
+    public function test_un_item_actif_defile_a_la_suite_des_univers(): void
+    {
+        app(SettingsRepository::class)->set('home.universe_strip_custom_items', [
+            ['text' => 'Promo du mois', 'active' => true],
+            ['text' => 'Brouillon non publié', 'active' => false],
+        ]);
+
+        $noms = $this->getJson('/api/v1/universe-strip')->json('data.names');
+
+        $this->assertCount(11, $noms);
+        $this->assertContains('Promo du mois', $noms);
+        $this->assertNotContains('Brouillon non publié', $noms);
+        // À la suite, pas mélangé : les univers d'abord.
+        $this->assertSame('Promo du mois', $noms[10]);
+    }
+
+    public function test_un_item_mal_forme_est_refuse(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(UserRole::ADMIN->value);
+        Sanctum::actingAs($admin);
+
+        $this->patchJson('/api/v1/admin/settings', [
+            'settings' => ['home.universe_strip_custom_items' => [['text' => '', 'active' => true]]],
+        ])->assertStatus(422);
+    }
 }

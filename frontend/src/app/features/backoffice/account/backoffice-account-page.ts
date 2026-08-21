@@ -1,9 +1,11 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { AccountService } from '../../../core/api/account.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { AuthService } from '../../../core/auth/auth.service';
+import { User } from '../../../models/user.model';
 
 /**
  * **Mon compte** — identifiants de la personne connectée au back-office (F8.22).
@@ -25,6 +27,16 @@ import { AuthService } from '../../../core/auth/auth.service';
  * ⚠️ **Le mot de passe actuel est exigé des deux côtés**, et l'écran dit
  * pourquoi : ce n'est pas une formalité, c'est ce qui empêche un poste laissé
  * déverrouillé de devenir une prise de contrôle définitive.
+ *
+ * **Nom affiché et photo** (F17, 2026-08-20) : la plateforme appartient au
+ * client, pas à l'équipe — chaque compte back-office (pas seulement le
+ * super_admin, cf. l'absence de garde de permission sur cette route) doit
+ * pouvoir corriger son propre nom et déposer sa photo, sans repasser par le
+ * code. `PATCH /users/me` et `POST/DELETE /users/me/avatar` existent déjà et
+ * sont utilisés par la page « Mon profil » du site public
+ * (`features/account/profile/profile-page.ts`) : ce bloc en reprend le même
+ * patron (upload immédiat au choix de fichier, pas de bouton « envoyer »
+ * séparé) plutôt que d'en inventer un second.
  */
 @Component({
   selector: 'app-backoffice-account-page',
@@ -38,8 +50,12 @@ export class BackofficeAccountPageComponent {
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
 
-  /** La personne connectée, telle que la session la connaît. */
-  protected readonly user = this.auth.user;
+  /**
+   * La personne connectée. Chargée via `account.me()` (et non le seul
+   * `auth.user()` issu de la connexion) car le profil — donc `avatar_url` —
+   * n'est pas forcément inclus dans la session initiale.
+   */
+  protected readonly user = signal<User | null>(this.auth.user());
 
   /** Rôle affiché en clair, pour que l'écran nomme ce qu'on protège. */
   protected readonly roleLabel = computed(() => {
@@ -60,6 +76,27 @@ export class BackofficeAccountPageComponent {
    * donc toujours — et sur un compte à privilèges, connecter le back-office par
    * Google n'est de toute façon pas le chemin nominal (2FA e-mail obligatoire).
    */
+
+  // --- Identité (nom + photo) -------------------------------------------------
+
+  protected readonly identityForm = this.fb.nonNullable.group({
+    name: ['', [Validators.required, Validators.maxLength(255)]],
+  });
+
+  protected readonly identityBusy = signal(false);
+  protected readonly identityError = signal<string | null>(null);
+  protected readonly identityDone = signal(false);
+
+  /** `photo` (personne) ou `logo` (entreprise) — sans objet ici, l'équipe
+   * back-office n'a jamais de profil « entreprise », mais on reprend le même
+   * accesseur que `profile-page.ts` pour rester au même défaut prudent. */
+  protected readonly avatarKind = computed(() => this.user()?.profile?.avatar_kind ?? 'photo');
+  protected readonly avatarUrl = computed(() => this.user()?.profile?.avatar_url ?? null);
+  protected readonly avatarInitial = computed(
+    () => this.user()?.name?.trim()?.charAt(0)?.toUpperCase() ?? '?',
+  );
+  protected readonly avatarUploading = signal(false);
+  protected readonly avatarError = signal<string | null>(null);
 
   // --- Adresse de connexion --------------------------------------------------
 
@@ -88,6 +125,115 @@ export class BackofficeAccountPageComponent {
     // Le formulaire part de l'adresse actuelle : on corrige une adresse, on ne
     // la ressaisit pas de mémoire.
     this.emailForm.controls.email.setValue(this.user()?.email ?? '');
+    this.identityForm.controls.name.setValue(this.user()?.name ?? '');
+
+    // `auth.user()` (session de connexion) peut ne pas porter `profile` —
+    // sans lui, `avatarUrl()` resterait toujours vide. `account.me()`
+    // recharge la personne connectée avec son profil complet.
+    this.account.me().subscribe({
+      next: (user) => {
+        this.user.set(user);
+        this.identityForm.controls.name.setValue(user.name ?? '', { emitEvent: false });
+        this.auth.setCurrentUser(user);
+      },
+      error: () => {
+        // Silencieux : l'écran reste utilisable avec ce que la session
+        // connaissait déjà (identité en tête, formulaires d'identifiants).
+      },
+    });
+  }
+
+  /** Change le nom affiché. */
+  protected submitIdentity(): void {
+    if (this.identityBusy() || this.identityForm.invalid) {
+      this.identityForm.markAllAsTouched();
+
+      return;
+    }
+
+    this.identityBusy.set(true);
+    this.identityError.set(null);
+    this.identityDone.set(false);
+
+    this.account.updateProfile({ name: this.identityForm.getRawValue().name }).subscribe({
+      next: (resultat) => {
+        this.identityBusy.set(false);
+        this.identityDone.set(true);
+        this.applyUser(resultat.user);
+      },
+      error: (err: { error?: ValidationErrorBody }) => {
+        this.identityBusy.set(false);
+        this.identityError.set(premierMessage(err) ?? 'La modification n’a pas abouti.');
+      },
+    });
+  }
+
+  /**
+   * Dépôt immédiat dès qu'une image est choisie — même patron que
+   * `profile-page.ts` : pas de type à préciser, pas de bouton « Envoyer »
+   * séparé.
+   */
+  protected onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+
+    if (!file || this.avatarUploading()) {
+      return;
+    }
+
+    this.avatarUploading.set(true);
+    this.avatarError.set(null);
+
+    this.account.uploadAvatar(file).subscribe({
+      next: (user) => {
+        this.avatarUploading.set(false);
+        this.applyUser(user);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.avatarUploading.set(false);
+        const body = error.error as ValidationErrorBody | null;
+        this.avatarError.set(
+          body?.errors?.['avatar']?.[0] ??
+            body?.message ??
+            'L’image n’a pas pu être envoyée. Merci de réessayer.',
+        );
+      },
+    });
+  }
+
+  /** Retire la photo (avec confirmation : l'action est immédiate et visible). */
+  protected removeAvatar(): void {
+    if (this.avatarUploading()) {
+      return;
+    }
+    if (typeof window !== 'undefined' && !window.confirm('Retirer votre photo de profil ?')) {
+      return;
+    }
+
+    this.avatarUploading.set(true);
+    this.avatarError.set(null);
+
+    this.account.deleteAvatar().subscribe({
+      next: (user) => {
+        this.avatarUploading.set(false);
+        this.applyUser(user);
+      },
+      error: () => {
+        this.avatarUploading.set(false);
+        this.avatarError.set('Le retrait a échoué. Merci de réessayer.');
+      },
+    });
+  }
+
+  /**
+   * Range l'utilisateur renvoyé par l'API dans les DEUX états qui l'affichent
+   * — l'écran lui-même et `AuthService` (l'en-tête du back-office affiche
+   * aussi le nom/l'avatar de la personne connectée).
+   */
+  private applyUser(user: User): void {
+    this.user.set(user);
+    this.auth.setCurrentUser(user);
   }
 
   /** Change l'adresse de connexion. */
@@ -124,7 +270,7 @@ export class BackofficeAccountPageComponent {
           this.emailForm.controls.current_password.reset('');
           // La session locale doit refléter la nouvelle adresse, sinon l'en-tête
           // affiche encore l'ancienne jusqu'au prochain rechargement.
-          this.auth.setCurrentUser(resultat.user);
+          this.applyUser(resultat.user);
           this.emailDone.set(
             resultat.emailVerificationRequired
               ? 'Adresse mise à jour. Un code de vérification vient d’être envoyé à la nouvelle adresse.'

@@ -39,7 +39,7 @@ class AdminNewsController extends Controller
      */
     public function store(StoreNewsArticleRequest $request, ImageProcessor $images): JsonResponse
     {
-        $data = $request->safe()->only(['title', 'excerpt', 'body']);
+        $data = $request->safe()->only(['title', 'excerpt', 'body', 'link_url', 'link_label']);
 
         $stored = $images->storeCompressed(
             $request->file('image'),
@@ -78,7 +78,7 @@ class AdminNewsController extends Controller
     {
         $data = $request->safe()->except(['image', 'video', 'video_url', 'remove_video']);
 
-        foreach (['title', 'excerpt', 'body'] as $field) {
+        foreach (['title', 'excerpt', 'body', 'link_url', 'link_label'] as $field) {
             if (array_key_exists($field, $data)) {
                 $news->{$field} = $data[$field];
             }

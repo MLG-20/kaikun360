@@ -495,6 +495,12 @@ TypeScript miroir côté frontend Angular (phase F0).
 > grille des univers. **`GET /news/{id}` (F16.3)** renvoie le détail complet
 > (`article`, corps inclus) d'un article publié, pour la page dédiée
 > `/actualites/:id` — 404 si non publié ou absent.
+>
+> **`link_url`/`link_label` (F17).** Une « carte » n'a pas besoin d'être un
+> article rédigé : `body` peut rester vide, et le bouton public pointe alors
+> vers `link_url` (`link_label` en texte du bouton, repli sur un libellé par
+> défaut) plutôt que vers `/actualites/{id}`. Même ligne, même écran
+> d'édition que les vrais articles — pas une seconde ressource.
 
 > **Bandeaux d'en-tête (F12).** `GET /heroes` renvoie une **map** clé → bandeau
 > (`{ image, eyebrow, title, lead }`), **héritage d'image déjà résolu côté

@@ -356,89 +356,71 @@
   transform: translateX(0);
 }
 
-// --- Section 2 (variante) : Actualités Kaikun (F15) -------------------------
+// --- Section 2 (variante) : vidéos + cartes « À découvrir » (F17.3) --------
 // Occupe le même emplacement que la grille des univers ci-dessus — voir la
-// bascule automatique dans home-page.ts (`aDesActualites`).
-// Une carte par article, média PLEINE HAUTEUR à gauche / texte à droite —
-// pas une grille de vignettes : avec un seul article publié (cas normal en
-// tout début de vie de la section), trois colonnes égales laissaient deux
-// tiers de la largeur vides à côté d'une vignette minuscule.
-.news-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.news-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  align-items: stretch;
-  padding: 0;
-  overflow: hidden;
-}
-
-// Centre le lecteur verticalement quand la colonne texte l'oblige à dépasser
-// un ratio 16/9 — une vidéo qu'on recadre en `cover` perd des bords, ce
-// qu'une photo tolère mais pas un lecteur vidéo.
-// Plus large que le conteneur standard (1180px) sans aller jusqu'au
-// débordement du Protocole de confiance — demande explicite de l'utilisateur,
-// entre les deux plutôt que pleine largeur.
+// bascule automatique dans home-page.ts (`aDesActualites`). Un seul grand
+// cadre, deux zones dedans (carrousel vidéo à gauche, cartes image à droite)
+// — demande explicite du client, 2026-08-21. Sans pastille : survoler une
+// carte à droite affiche sa vidéo (`onSurvolCarte`), le choix manuel se fait
+// donc sur les cartes elles-mêmes. Le style des cartes vit dans
+// `news-card-mini-list.scss` (budget CSS propre).
 .news.k-wrap {
   max-width: 1400px;
 }
 
-.news-media {
-  min-height: 360px;
-  background: var(--k-sand);
-  display: flex;
-  align-items: center;
-}
-
-.news-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.news-video {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border: 0;
-  display: block;
-}
-
-.news-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  justify-content: center;
+.news-card {
   padding: 32px;
 }
 
-.news-card-title {
-  font-family: var(--k-font-display);
-  font-size: clamp(1.15rem, 2vw, 1.55rem);
-  line-height: 1.25;
+.news-card--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 32px;
+  // `stretch` (pas `start`) : la hauteur de la vidéo doit suivre celle de la
+  // colonne des cartes, pas son propre ratio 16/9 — demande explicite du
+  // client, la vidéo dépassait trop les petites cartes en hauteur. La
+  // colonne des cartes garde son ratio 4/3 naturel et fixe donc la hauteur
+  // de la ligne ; `.news-video-wrap` s'étire dessus (voir plus bas).
+  align-items: stretch;
 }
 
-.news-card-desc {
-  font-size: 1rem;
-  line-height: 1.6;
+.news-videos {
+  display: flex;
 }
 
-.news-card-cta {
-  align-self: flex-start;
-  margin-top: 6px;
+.news-video-wrap {
+  position: relative;
+  width: 100%;
+  flex: 1;
+}
+
+.news-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+  border-radius: var(--k-radius);
+  display: block;
 }
 
 @media (max-width: 900px) {
-  .news-card {
+  .news-card--split {
     grid-template-columns: 1fr;
+    align-items: initial;
   }
 
-  .news-body {
-    padding: 24px 20px 28px;
+  // Sous 900px les deux colonnes s'empilent : plus de hauteur de ligne à
+  // suivre, la vidéo retrouve son propre ratio 16/9.
+  .news-video-wrap {
+    aspect-ratio: 16 / 9;
+  }
+
+  .news-video {
+    position: static;
+    height: auto;
+    aspect-ratio: 16 / 9;
   }
 
   .featured-grid {
@@ -593,14 +575,6 @@
   flex-wrap: wrap;
   gap: 8px;
   margin: 0 0 20px;
-}
-
-// Actualités (F15) : pastilles DANS la carte, en haut du texte, alignées à
-// droite — plus posées comme un numéro de page (« 1/3 ») que comme une
-// barre de filtres en dessous.
-.news-tabs {
-  justify-content: flex-end;
-  margin: 0 0 14px;
 }
 
 .featured-tab {

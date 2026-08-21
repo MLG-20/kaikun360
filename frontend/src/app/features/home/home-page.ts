@@ -31,6 +31,7 @@ import { CountUpDirective } from '../../shared/directives/count-up.directive';
 import { UniverseStripComponent } from '../../shared/components/universe-strip/universe-strip';
 import { ParallaxDirective } from '../../shared/directives/parallax.directive';
 import { RevealDirective } from '../../shared/directives/reveal.directive';
+import { NewsCardMiniListComponent } from './news-card-mini-list/news-card-mini-list';
 
 /**
  * Tuile d'univers de la grille des services.
@@ -135,20 +136,20 @@ interface ServiceItem {
 const ROTATION_MS = 7000;
 
 /**
- * Cadence du carrousel des actualités (F16.2) : nettement plus lente que le
- * reste du site (7 s) pour laisser à une vidéo le temps de démarrer avant
- * d'être coupée. ⚠️ Reste un simple minuteur, sans exception pour une vidéo
- * choisie via une pastille (décision explicite de l'utilisateur, 2026-08-18) :
- * au bout de ce délai, ça bascule même si la vidéo en cours est plus longue.
- */
-const NEWS_ROTATION_MS = 90000;
-
-/**
  * Durée au-delà de laquelle une pause au survol est tenue pour perdue (une
  * minute). Personne ne laisse sa souris immobile sur une carte aussi longtemps
  * en la lisant ; en revanche un `mouseleave` manqué, lui, dure toujours.
  */
 const PAUSE_MAX_MS = 60000;
+
+/**
+ * Cadence du carrousel des vidéos (F17.2) : nettement plus lente que le reste
+ * du site (7 s) pour laisser à une vidéo le temps de démarrer avant d'être
+ * coupée. ⚠️ Reste un simple minuteur, sans exception pour une vidéo choisie
+ * via une pastille : au bout de ce délai, ça bascule même si la vidéo en
+ * cours est plus longue — même choix que l'ancien carrousel d'articles.
+ */
+const VIDEO_ROTATION_MS = 90000;
 
 /**
  * Page d'accueil publique (F2.2).
@@ -169,7 +170,15 @@ const PAUSE_MAX_MS = 60000;
  */
 @Component({
   selector: 'app-home-page',
-  imports: [ListingCardComponent, RouterLink, RevealDirective, CountUpDirective, ParallaxDirective, UniverseStripComponent],
+  imports: [
+    ListingCardComponent,
+    RouterLink,
+    RevealDirective,
+    CountUpDirective,
+    ParallaxDirective,
+    UniverseStripComponent,
+    NewsCardMiniListComponent,
+  ],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -240,38 +249,92 @@ export class HomePageComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Articles publiés de la section « Actualités Kaikun ».
+   * Lignes « Actualités » publiées, telles que reçues de l'API.
    *
-   * ⚠️ **C'est ce signal qui décide de la Section 2 de l'accueil** : un
-   * article publié → la section Actualités s'affiche à la place de la grille
-   * des univers ; aucun → la grille reprend sa place. Bascule automatique,
-   * sans geste de l'équipe — demande explicite de l'utilisateur (2026-08-16) :
-   * l'actualité est « obligatoire » quand elle existe, la grille des univers
-   * n'est qu'un repli le temps qu'il n'y en ait aucune. La navigation vers les
-   * univers reste de toute façon accessible par le méga-menu de l'en-tête.
+   * ⚠️ **C'est `cartesLibres`, pas ce signal, qui décide de la Section 2 de
+   * l'accueil** (voir `aDesActualites` ci-dessous).
    */
   protected readonly actualites = signal<NewsArticleView[]>([]);
-  protected readonly aDesActualites = computed(() => this.actualites().length > 0);
 
   /**
-   * Carrousel des actualités (F16.2) : une carte à la fois, plutôt qu'une
-   * grille qui s'allongerait à chaque article publié — demande explicite de
-   * l'utilisateur après avoir vu la disposition en grille jugée encombrante à
-   * terme. Même mécanique de tour de rôle que la vitrine du catalogue
-   * (`demarrerLeTour`) : minuteur avec garde-fou de pause, pas un simple
-   * `clearInterval` au survol — c'est ce dernier patron qui avait figé la
-   * vitrine (voir `suspendre`/`reprendre` plus bas dans ce fichier).
+   * Petites cartes IMAGE (titre + lien) de la section « Actualités ».
+   *
+   * ⚠️ **Seule une ligne SANS texte rédigé mais AVEC un lien devient une
+   * carte** (F17, 2026-08-21) — une ligne avec un corps de texte (vrai
+   * article) n'est plus affichée sur l'accueil du tout depuis la demande du
+   * client de 2026-08-21 : « enlevons Actualité Kaikun, laissons les petites
+   * cartes seulement ». L'ancien carrousel d'articles (rotation, pastilles,
+   * page `/actualites/:id`) a été retiré de cette page pour cette raison.
+   *
+   * ⚠️ **Toujours une image, jamais de vidéo** (F17.1, 2026-08-21) : la vidéo
+   * d'une ligne, si elle en a une, n'est plus montrée ICI mais dans
+   * `videosActualites` — une carte ne PERD pas son statut de carte pour
+   * autant si elle porte aussi une vidéo, les deux listes sont indépendantes.
+   *
+   * ⚠️ **Plafonnée à 4** — ce sont des repères fixes que le client choisit de
+   * montrer « en ce moment », pas un contenu qui défile.
    */
-  protected readonly newsIndex = signal(0);
-  protected readonly actualiteCourante = computed(() => {
-    const liste = this.actualites();
+  protected readonly cartesLibres = computed(() =>
+    this.actualites()
+      .filter((a) => !a.body && !!a.linkUrl)
+      .slice(0, 4),
+  );
 
-    return liste.length ? liste[this.newsIndex() % liste.length] : null;
+  /**
+   * Vidéos de la section « Actualités » (F17.1, 2026-08-21) : la colonne de
+   * GAUCHE du grand bloc, les cartes image (`cartesLibres`) occupant la
+   * colonne de DROITE — demande explicite du client, après avoir vu la
+   * vidéo écraser une carte trop petite pour l'accueillir.
+   *
+   * ⚠️ Toute ligne portant un fichier vidéo déposé OU un lien d'embed
+   * alimente cette colonne, QU'ELLE SOIT AUSSI une carte (avec un lien) ou
+   * non — une même ligne peut apparaître ici ET à droite.
+   */
+  protected readonly videosActualites = computed(() =>
+    this.actualites().filter((a) => !!a.videoFile || !!a.videoUrl),
+  );
+
+  /**
+   * Carrousel des vidéos (F17.2, 2026-08-21) : une vidéo à la fois, qui cède
+   * la place à la suivante et boucle — demande explicite du client, pour que
+   * les vidéos ne s'empilent pas les unes sous les autres comme les cartes
+   * image le font. Même mécanique de tour de rôle que la vitrine du
+   * catalogue (`demarrerLeTour`) : minuteur avec garde-fou de pause, pas un
+   * simple `clearInterval` au survol (voir `suspendre`/`reprendre` plus bas).
+   *
+   * ⚠️ **Sans pastille** (F17.3, 2026-08-21) : le choix manuel ne se fait
+   * plus en cliquant un numéro, mais en survolant la CARTE que la vidéo
+   * représente — voir `carteSurvoleeId` et `onSurvolCarte` plus bas. Une
+   * ligne peut être à la fois une vidéo (id) et une carte (même id) ; c'est
+   * ce id partagé qui fait le lien entre les deux colonnes.
+   */
+  protected readonly videoIndex = signal(0);
+  protected readonly carteSurvoleeId = signal<number | null>(null);
+  protected readonly videoCourante = computed(() => {
+    const liste = this.videosActualites();
+    const survolee = this.carteSurvoleeId();
+    const correspondante = survolee !== null ? liste.find((v) => v.id === survolee) : undefined;
+
+    if (correspondante) return correspondante;
+
+    return liste.length ? liste[this.videoIndex() % liste.length] : null;
   });
 
-  private newsMinuteur: ReturnType<typeof setInterval> | null = null;
-  private newsSurvolee = false;
-  private newsPauseDepuis: number | null = null;
+  private videoMinuteur: ReturnType<typeof setInterval> | null = null;
+  private videoSurvolee = false;
+  private videoPauseDepuis: number | null = null;
+
+  /**
+   * ⚠️ **C'est ce signal qui décide de la Section 2 de l'accueil** : au moins
+   * une carte OU une vidéo → la section Actualités s'affiche à la place de la
+   * grille des univers ; aucune des deux → la grille reprend sa place.
+   * Bascule automatique, sans geste de l'équipe — demande explicite de
+   * l'utilisateur (2026-08-16). La navigation vers les univers reste de
+   * toute façon accessible par le méga-menu de l'en-tête.
+   */
+  protected readonly aDesActualites = computed(
+    () => this.cartesLibres().length > 0 || this.videosActualites().length > 0,
+  );
 
   private readonly estNavigateur = isPlatformBrowser(inject(PLATFORM_ID));
 
@@ -579,49 +642,57 @@ export class HomePageComponent implements OnInit, OnDestroy {
       )
       .subscribe((articles) => {
         this.actualites.set(articles);
-        this.demarrerLeCarrouselActualites();
+        this.demarrerLeCarrouselVideos();
       });
   }
 
   /**
-   * Lance l'aperçu automatique des actualités. Voir `demarrerLeTour` (vitrine)
-   * pour le détail du garde-fou de pause — même patron, appliqué ici à un
-   * minuteur distinct pour ne pas coupler les deux carrousels.
+   * Lance l'aperçu automatique des vidéos (F17.2). Voir `demarrerLeTour`
+   * (vitrine) pour le détail du garde-fou de pause — même patron, appliqué
+   * ici à un minuteur distinct pour ne pas coupler les deux carrousels.
    */
-  private demarrerLeCarrouselActualites(): void {
-    if (!this.estNavigateur || this.newsMinuteur) return;
-    if (this.actualites().length < 2) return;
+  private demarrerLeCarrouselVideos(): void {
+    if (!this.estNavigateur || this.videoMinuteur) return;
+    if (this.videosActualites().length < 2) return;
 
-    this.newsMinuteur = setInterval(() => {
+    this.videoMinuteur = setInterval(() => {
       const pausePerdue =
-        this.newsSurvolee && Date.now() - (this.newsPauseDepuis ?? 0) > PAUSE_MAX_MS;
+        this.videoSurvolee && Date.now() - (this.videoPauseDepuis ?? 0) > PAUSE_MAX_MS;
 
-      if ((this.newsSurvolee && !pausePerdue) || document.hidden) return;
+      if ((this.videoSurvolee && !pausePerdue) || document.hidden) return;
 
-      this.newsIndex.update((i) => i + 1);
-    }, NEWS_ROTATION_MS);
+      this.videoIndex.update((i) => i + 1);
+    }, VIDEO_ROTATION_MS);
+  }
+
+  /** Suspend le carrousel des vidéos : la souris est dessus. */
+  protected suspendreVideo(): void {
+    this.videoSurvolee = true;
+    this.videoPauseDepuis = Date.now();
+  }
+
+  /** Reprend le carrousel des vidéos quand la souris s'en va. */
+  protected reprendreVideo(): void {
+    this.videoSurvolee = false;
+    this.videoPauseDepuis = null;
   }
 
   /**
-   * Bascule vers l'actualité choisie. Le défilement automatique n'est PAS
-   * figé pour autant (décision explicite de l'utilisateur, 2026-08-18) : il
-   * reprend après NEWS_ROTATION_MS comme d'habitude, quitte à couper une
-   * vidéo plus longue que ce délai.
+   * Survol d'une carte (F17.3, 2026-08-21) : remplace le clic sur une
+   * pastille — survoler une carte affiche SA vidéo si elle en a une (même
+   * id), et suspend le défilement automatique le temps du survol, comme s'il
+   * s'agissait d'un survol direct de la vidéo. `id` vaut `null` en sortie de
+   * survol (`mouseleave`) : le défilement automatique reprend alors sa
+   * course normale, `videoCourante` retombant sur `videoIndex`.
    */
-  protected choisirActualite(i: number): void {
-    this.newsIndex.set(i);
-  }
+  protected onSurvolCarte(id: number | null): void {
+    this.carteSurvoleeId.set(id);
 
-  /** Suspend le carrousel des actualités : la souris est sur la carte. */
-  protected suspendreNews(): void {
-    this.newsSurvolee = true;
-    this.newsPauseDepuis = Date.now();
-  }
-
-  /** Reprend le carrousel des actualités quand la souris quitte la carte. */
-  protected reprendreNews(): void {
-    this.newsSurvolee = false;
-    this.newsPauseDepuis = null;
+    if (id !== null) {
+      this.suspendreVideo();
+    } else {
+      this.reprendreVideo();
+    }
   }
 
   /**
@@ -833,7 +904,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.arreterLeTour();
     if (this.heroMinuteur) clearInterval(this.heroMinuteur);
-    if (this.newsMinuteur) clearInterval(this.newsMinuteur);
+    if (this.videoMinuteur) clearInterval(this.videoMinuteur);
   }
 
   private arreterLeTour(): void {

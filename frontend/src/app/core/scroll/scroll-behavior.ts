@@ -45,6 +45,22 @@ export function activerPolitiqueDeDefilement(): void {
   /** Chemin de la page courante, paramètres d'URL exclus. */
   let cheminPrecedent = chemin(router.url);
 
+  /**
+   * ⚠️ **Le tout premier `NavigationStart` ne doit JAMAIS voiler la page**
+   * (bug trouvé le 2026-08-21, à l'origine d'un écran bloqué entièrement
+   * vide). `router.url` vaut encore `'/'` au moment de ce premier événement,
+   * quelle que soit l'URL réellement chargée (chargement direct d'une page,
+   * ou lien classique `<a href>` plutôt qu'un `routerLink`) — la comparaison
+   * plus bas les trouve donc TOUJOURS différentes et voile la page dès le
+   * démarrage. Le voile ne se lève ensuite que sur l'événement `Scroll`
+   * suivant, qui peut manquer ou arriver hors délai pendant l'hydratation :
+   * la page reste alors couverte indéfiniment par un rectangle uni, sans
+   * la moindre erreur visible. Seule une VRAIE navigation ultérieure — un
+   * clic interne, une fois l'application démarrée — doit déclencher le
+   * voile ; jamais le chargement initial.
+   */
+  let premiereNavigation = true;
+
   // ==========================================================================
   // Remonter AU DÉPART d'un vrai changement de page
   //
@@ -78,6 +94,11 @@ export function activerPolitiqueDeDefilement(): void {
   router.events
     .pipe(filter((e): e is NavigationStart => e instanceof NavigationStart))
     .subscribe((evenement) => {
+      if (premiereNavigation) {
+        premiereNavigation = false;
+        return;
+      }
+
       if (chemin(evenement.url) !== chemin(router.url)) {
         transition.voile.set(true);
         remonterSansAnimation();

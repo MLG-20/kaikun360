@@ -1,5 +1,6 @@
-// Bande défilante des univers (F16.2). Composant à part, budget CSS propre —
-// voir l'en-tête de universe-strip.ts.
+// Bande des univers (F16.2, refaite en F17.3 : un message fixe à la fois,
+// plus un marquee continu). Composant à part, budget CSS propre — voir
+// l'en-tête de universe-strip.ts.
 :host {
   display: block;
   overflow: hidden;
@@ -8,17 +9,14 @@
   padding: 14px 0;
 }
 
-// La piste porte DEUX fois la liste (voir le gabarit) : translater de -50%
-// pile ramène la seconde moitié à la position de départ de la première —
-// aucune coupure visible dans la boucle.
-.ustrip-track {
+.ustrip {
   display: flex;
-  width: max-content;
-  animation: ustrip-scroll 32s linear infinite;
+  justify-content: center;
 }
 
+// Rejoue à chaque nouveau message (voir le gabarit) : glisse depuis la
+// DROITE puis s'arrête — demande explicite du client, 2026-08-21.
 .ustrip-item {
-  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -30,27 +28,22 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-weight: 700;
+  animation: ustrip-enter 500ms ease-out both;
 }
 
-.ustrip-item::after {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--k-gold);
-}
-
-@keyframes ustrip-scroll {
+@keyframes ustrip-enter {
   from {
-    transform: translateX(0);
+    transform: translateX(80px);
+    opacity: 0;
   }
   to {
-    transform: translateX(-50%);
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ustrip-track {
+  .ustrip-item {
     animation: none;
   }
 }

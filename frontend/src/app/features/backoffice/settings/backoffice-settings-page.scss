@@ -215,6 +215,49 @@
   }
 }
 
+// --- Items texte libre de la bande des univers (F17) ---
+.st-strip-custom {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--k-line);
+}
+
+.st-strip-custom-title {
+  margin: 0 0 4px;
+  font-size: 0.94rem;
+  color: var(--k-ink);
+}
+
+.st-strip-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--k-line);
+
+  &:first-of-type {
+    border-top: 0;
+  }
+
+  .k-input {
+    flex: 1 1 260px;
+    min-width: 0;
+  }
+}
+
+.st-strip-item-toggle {
+  padding: 0;
+  border-top: 0;
+  flex: 0 0 auto;
+}
+
+.st-strip-item-actions {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
 .st-note {
   margin: 14px 0 0;
   padding: 11px 14px;

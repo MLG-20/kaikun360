@@ -2207,6 +2207,72 @@ vignette s'affiche d'abord, l'iframe est créée une seule fois. Vérifié par
 navigateur headless : plus de requête annulée, et un clic simulé confirme la
 lecture effective (`video.paused === false`, `currentTime` qui avance).
 
+### Le client garde la main sur son profil, sa bande d'accueil et ses actualités (F17, hors CDC)
+
+Trois demandes du client formulées d'un même geste (« la plateforme ne nous
+appartient pas ») : profil back-office, bande d'accueil, section Actualités.
+
+**Profil back-office** — écran « Mon compte » (`features/backoffice/account/`) :
+formulaire nom + upload photo immédiat, sur le même patron que la page « Mon
+profil » du site public (aucune route API neuve, `PATCH /users/me` et
+`POST/DELETE /users/me/avatar` existaient déjà).
+
+**Bande d'accueil — refaite après trois retours du client, plus une simple
+correction de vitesse.** Le premier réflexe a été de garder le marquee continu
+de F16.2 et de corriger sa vitesse — d'abord par nombre d'items, puis par
+nombre de caractères, puis par largeur RÉELLEMENT rendue de la piste
+(`scrollWidth`, mesurée via un `viewChild` + `effect()`, chaque approche étant
+un correctif de la précédente). Aucune ne suffisait : le défaut signalé
+n'était pas la vitesse, mais le PRINCIPE d'un marquee — plusieurs messages
+visibles à la fois, tronqués aux deux bords, donnent l'impression que « le
+texte ne finit jamais de défiler ». `UniverseStripComponent`
+(`shared/components/universe-strip/`) est donc reparti sur un tout autre
+patron : un seul message à la fois, immobile, durée d'affichage proportionnelle
+à sa longueur (`setTimeout` reprogrammé à chaque message plutôt qu'un
+`setInterval` fixe — sa durée change à chaque tour) ; l'entrée d'un nouveau
+message rejoue une animation CSS (glissement depuis la droite) via le même
+patron de recréation `@for` que le carrousel vidéo ci-dessous. Chaque message
+publié provient de `GET /universe-strip` : noms d'univers non masqués +
+annonces libres saisies au back-office (`home.universe_strip_custom_items`).
+
+**Section Actualités — cartes libres et vidéos, après plusieurs refontes de
+mise en page.** `NewsArticle` a deux emplois dans `HomePageComponent`
+(`features/home/home-page.ts`) : une ligne avec `body` reste un article ; une
+ligne SANS `body` mais avec `link_url` devient une petite carte image
+(`cartesLibres`, composant `NewsCardMiniListComponent`, plafonnée à 4 —
+`!body && linkUrl` est le critère, PAS `!body` seul, une ligne existante peut
+légitimement n'avoir ni l'un ni l'autre). Après plusieurs itérations avec le
+client (cartes mêlées au carrousel d'article ; puis carrousel et cartes
+regroupés dans un même cadre ; puis une vidéo affichée en grand sur une carte
+bien trop petite pour l'accueillir), **le carrousel d'article rédigé a été
+retiré de l'accueil** — tout le code de rotation/pastilles associé
+(`articlesCarrousel`, `newsIndex`, `choisirActualite`…) a été supprimé plutôt
+que laissé mort. Ce qui reste, dans un seul cadre (`.news-card.k-card`) : une
+colonne vidéo à gauche (`videosActualites`, toute ligne portant un fichier ou
+un lien vidéo — une même ligne peut être à la fois une vidéo ET une carte,
+les deux listes sont indépendantes) et une colonne de cartes image à droite.
+La vidéo affichée suit la carte SURVOLÉE (`onSurvolCarte`, id partagé entre
+les deux colonnes) plutôt que des pastilles — décision explicite du client
+après avoir jugé les pastilles redondantes avec les cartes déjà visibles à
+côté. Une carte reste toujours une image, jamais une vidéo à sa place.
+
+**Correctif : un voile de transition pouvait bloquer une page entière,
+invisible.** Trouvé en vérifiant un des liens de carte ci-dessus.
+`RouteTransitionService.voile` (F8.20) masque le saut de défilement pendant un
+vrai changement de page, et se lève sur l'événement `Scroll` du routeur qui
+suit. Le bug : il se déclenchait AUSSI sur le tout premier chargement d'une
+URL (page ouverte directement, ou lien classique `<a href>` plutôt qu'un
+`routerLink`, comme celui des cartes ci-dessus) — `router.url` vaut encore
+`'/'` au moment de ce tout premier `NavigationStart`, donc systématiquement
+« différent » de l'URL réellement demandée. Le `Scroll` correspondant qui
+devait lever le voile n'arrive pas de façon fiable pendant l'hydratation : la
+page restait couverte indéfiniment par un simple rectangle de la couleur de
+fond, sans la moindre erreur en console. Diagnostiqué par inspection directe
+du DOM via un Chrome headless piloté par script (le HTML rendu contenait bien
+le vrai contenu — titre, image, texte — juste invisible sous le voile).
+Corrigé en ignorant le tout premier événement de navigation dans
+`activerPolitiqueDeDefilement()` (`core/scroll/scroll-behavior.ts`).
+
 ### Commandes utiles
 
 ```bash

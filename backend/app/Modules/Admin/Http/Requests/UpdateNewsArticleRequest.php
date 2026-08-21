@@ -30,6 +30,9 @@ class UpdateNewsArticleRequest extends FormRequest
             // s'il en porte une, sinon reste sans vidéo.
             'remove_video' => ['sometimes', 'boolean'],
             'video_url' => ['sometimes', 'nullable', 'url', 'max:500'],
+            // F17 — voir StoreNewsArticleRequest.
+            'link_url' => ['sometimes', 'nullable', 'url', 'max:500'],
+            'link_label' => ['sometimes', 'nullable', 'string', 'max:100'],
             'is_published' => ['sometimes', 'boolean'],
             'position' => ['sometimes', 'integer', 'min:0'],
         ];

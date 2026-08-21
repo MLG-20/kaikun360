@@ -122,6 +122,30 @@ class NewsArticleTest extends TestCase
         $this->assertNull($public[0]['video_url']);
     }
 
+    // ── F17 : carte sans article rédigé (image + titre + lien) ────────────
+
+    public function test_creer_une_carte_sans_corps_avec_un_lien(): void
+    {
+        Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
+
+        $response = $this->post('/api/v1/admin/news', [
+            'title' => 'Découvrez nos biens vérifiés',
+            'image' => $this->image(),
+            'link_url' => 'https://kaikun360.com/immobilier',
+            'link_label' => 'Voir les biens',
+            'is_published' => true,
+        ]);
+
+        $response->assertCreated()->assertJsonFragment([
+            'link_url' => 'https://kaikun360.com/immobilier',
+            'link_label' => 'Voir les biens',
+            'body' => null,
+        ]);
+
+        $public = $this->getJson('/api/v1/news')->json('data.articles');
+        $this->assertSame('https://kaikun360.com/immobilier', $public[0]['link_url']);
+    }
+
     public function test_depublier_un_article_ne_le_supprime_pas(): void
     {
         $article = NewsArticle::factory()->create(['is_published' => true]);

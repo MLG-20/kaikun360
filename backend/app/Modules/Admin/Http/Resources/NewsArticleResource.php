@@ -29,6 +29,8 @@ class NewsArticleResource extends JsonResource
             'image' => $this->imageUrl(),
             'video_file' => $this->videoFileUrl(),
             'video_url' => $this->video_url,
+            'link_url' => $this->link_url,
+            'link_label' => $this->link_label,
             'is_published' => $this->is_published,
             'position' => $this->position,
             'updated_at' => $this->updated_at,

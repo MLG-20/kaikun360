@@ -1805,6 +1805,9 @@ export interface NewsArticleAdmin {
   image: string;
   video_file: string | null;
   video_url: string | null;
+  /** F17 — destination du bouton quand cette ligne est une carte sans article rédigé. */
+  link_url: string | null;
+  link_label: string | null;
   is_published: boolean;
   position: number;
   updated_at: string | null;
@@ -3476,6 +3479,9 @@ export class AdminService {
     image: File;
     video?: File;
     videoUrl?: string;
+    /** F17 — pour une carte sans article rédigé : destination du bouton. */
+    linkUrl?: string;
+    linkLabel?: string;
     isPublished?: boolean;
     position?: number;
   }): Observable<NewsArticleAdmin> {
@@ -3486,6 +3492,8 @@ export class AdminService {
     form.append('image', changes.image);
     if (changes.video) form.append('video', changes.video);
     else if (changes.videoUrl) form.append('video_url', changes.videoUrl);
+    if (changes.linkUrl !== undefined) form.append('link_url', changes.linkUrl);
+    if (changes.linkLabel !== undefined) form.append('link_label', changes.linkLabel);
     if (changes.isPublished !== undefined) form.append('is_published', changes.isPublished ? '1' : '0');
     if (changes.position !== undefined) form.append('position', String(changes.position));
 
@@ -3510,6 +3518,8 @@ export class AdminService {
       video?: File;
       removeVideo?: boolean;
       videoUrl?: string;
+      linkUrl?: string;
+      linkLabel?: string;
       isPublished?: boolean;
       position?: number;
     },
@@ -3522,6 +3532,8 @@ export class AdminService {
     if (changes.video) form.append('video', changes.video);
     if (changes.removeVideo) form.append('remove_video', '1');
     if (changes.videoUrl !== undefined) form.append('video_url', changes.videoUrl);
+    if (changes.linkUrl !== undefined) form.append('link_url', changes.linkUrl);
+    if (changes.linkLabel !== undefined) form.append('link_label', changes.linkLabel);
     if (changes.isPublished !== undefined) form.append('is_published', changes.isPublished ? '1' : '0');
     if (changes.position !== undefined) form.append('position', String(changes.position));
 

@@ -1,15 +1,13 @@
 <!-- Décorative : les noms sont déjà accessibles, avec leurs liens, dans la
-     grille « Nos univers » plus bas — doubler la liste ici pour le défilement
-     en continu la rendrait confuse à un lecteur d'écran. -->
-@if (names().length) {
+     grille « Nos univers » plus bas. -->
+@if (messageCourant(); as texte) {
   <div class="ustrip" aria-hidden="true">
-    <div class="ustrip-track">
-      @for (n of names(); track $index) {
-        <span class="ustrip-item">{{ n }}</span>
-      }
-      @for (n of names(); track $index) {
-        <span class="ustrip-item">{{ n }}</span>
-      }
-    </div>
+    <!-- La boucle `@for` ne porte QUE sur le message courant : c'est cette
+         recréation du nœud DOM, à chaque changement de `texte`, qui rejoue
+         l'animation d'entrée (`ustrip-enter`) — même patron que le carrousel
+         vidéo de l'accueil (`appReveal="group"`). -->
+    @for (t of [texte]; track t) {
+      <span class="ustrip-item">{{ t }}</span>
+    }
   </div>
 }

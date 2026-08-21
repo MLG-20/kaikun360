@@ -233,14 +233,16 @@ describe('HomePageComponent — vitrine tournante', () => {
  * publié), pas un réglage qu'on aurait pu oublier de synchroniser.
  */
 describe('HomePageComponent — actualités & héros (F15)', () => {
-  const article: NewsArticle = {
+  const carte: NewsArticle = {
     id: 1,
-    title: 'Un article',
+    title: 'Une carte',
     excerpt: 'Résumé',
     body: null,
     image: 'https://cdn.test/news.jpg',
     videoFile: null,
     videoUrl: null,
+    linkUrl: 'https://kaikun360.com/immobilier',
+    linkLabel: 'Voir les biens',
   };
 
   function page(data: unknown[]) {
@@ -286,23 +288,23 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
     TestBed.resetTestingModule();
   });
 
-  it('affiche la grille des univers quand aucune actualité n’est publiée', () => {
+  it('affiche la grille des univers quand aucune carte n’est publiée', () => {
     const fixture = monter({ actualites: [] });
     const hote = fixture.nativeElement as HTMLElement;
 
     expect(hote.querySelector('.univers-grid')).toBeTruthy();
-    expect(hote.querySelector('.news-grid')).toBeFalsy();
+    expect(hote.querySelector('app-news-card-mini-list')).toBeFalsy();
 
     fixture.destroy();
   });
 
-  it('remplace la grille des univers par les actualités dès qu’il y en a une', () => {
-    const fixture = monter({ actualites: [article] });
+  it('remplace la grille des univers par les cartes dès qu’il y en a une', () => {
+    const fixture = monter({ actualites: [carte] });
     const hote = fixture.nativeElement as HTMLElement;
 
-    expect(hote.querySelector('.news-grid')).toBeTruthy();
+    expect(hote.querySelector('app-news-card-mini-list')).toBeTruthy();
     expect(hote.querySelector('.univers-grid')).toBeFalsy();
-    expect(hote.textContent).toContain('Un article');
+    expect(hote.textContent).toContain('Une carte');
 
     fixture.destroy();
   });
@@ -396,47 +398,137 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
     fixture.destroy();
   });
 
-  /**
-   * Carrousel des actualités (F16.2) : demande explicite de l'utilisateur
-   * après avoir vu la grille jugée trop encombrante à terme — une carte à la
-   * fois, qui cède la place à la suivante et boucle. Même patron de minuteur
-   * que la vitrine (garde-fou de pause), déjà couvert côté vitrine ; ici on
-   * ne protège que ce qui est propre aux actualités : une seule carte à la
-   * fois, et la boucle après le dernier article.
-   */
-  it('n’affiche qu’une seule carte à la fois même avec plusieurs actualités publiées', () => {
-    const second: NewsArticle = { ...article, id: 2, title: 'Un second article' };
-    const fixture = monter({ actualites: [article, second] });
+  // ── F17 : cartes libres (image/vidéo + lien, sans texte) ──
+
+  it('une ligne avec un corps de texte rédigé n’est plus affichée sur l’accueil (retrait du carrousel, 2026-08-21)', () => {
+    // Demande explicite du client : « enlevons Actualité Kaikun, laissons les
+    // petites cartes seulement ». Une ligne avec `body` n'a plus de carrousel
+    // pour l'accueillir sur cette page, et n'est pas non plus une carte
+    // (le critère carte exige l'ABSENCE de `body`) — elle disparaît donc de
+    // l'accueil, la grille des univers reprend sa place.
+    const redige: NewsArticle = { ...carte, id: 2, body: '<p>Texte complet</p>', linkUrl: null };
+    const fixture = monter({ actualites: [redige] });
     const hote = fixture.nativeElement as HTMLElement;
 
-    expect(hote.querySelectorAll('.news-card').length).toBe(1);
-    expect(hote.textContent).toContain('Un article');
-    expect(hote.textContent).not.toContain('Un second article');
+    expect(hote.querySelector('.univers-grid')).toBeTruthy();
+    expect(hote.querySelector('app-news-card-mini-list')).toBeFalsy();
 
     fixture.destroy();
   });
 
-  it('passe à l’actualité suivante puis boucle sur la première', () => {
+  it('une ligne sans texte ni lien ne devient pas une carte (régression du filtre)', () => {
+    const sansLien: NewsArticle = { ...carte, linkUrl: null };
+    const fixture = monter({ actualites: [sansLien] });
+    const hote = fixture.nativeElement as HTMLElement;
+
+    expect(hote.querySelector('.univers-grid')).toBeTruthy();
+    expect(hote.querySelector('app-news-card-mini-list')).toBeFalsy();
+
+    fixture.destroy();
+  });
+
+  it('une ligne sans texte MAIS avec un lien devient une carte', () => {
+    const fixture = monter({ actualites: [carte] });
+    const hote = fixture.nativeElement as HTMLElement;
+
+    expect(hote.querySelector('.univers-grid')).toBeFalsy();
+    expect(hote.querySelector('app-news-card-mini-list')).toBeTruthy();
+    expect(hote.textContent).toContain('Une carte');
+
+    fixture.destroy();
+  });
+
+  it('plafonne les cartes libres à 4', () => {
+    const cartes: NewsArticle[] = Array.from({ length: 6 }, (_, i) => ({
+      ...carte,
+      id: 10 + i,
+      title: `Carte ${i + 1}`,
+      linkUrl: `https://kaikun360.com/carte-${i}`,
+    }));
+    const fixture = monter({ actualites: cartes });
+    const hote = fixture.nativeElement as HTMLElement;
+
+    const rendues = hote.querySelectorAll('app-news-card-mini-list a');
+    expect(rendues.length).toBe(4);
+
+    fixture.destroy();
+  });
+
+  // ── F17.1 : colonne vidéo, séparée des cartes image (2026-08-21) ──
+
+  it('une ligne avec vidéo mais sans lien affiche la vidéo seule, sans grille des univers', () => {
+    const video: NewsArticle = { ...carte, id: 6, linkUrl: null, videoUrl: 'https://www.youtube.com/embed/abc' };
+    const fixture = monter({ actualites: [video] });
+    const hote = fixture.nativeElement as HTMLElement;
+
+    expect(hote.querySelector('.univers-grid')).toBeFalsy();
+    expect(hote.querySelector('.news-videos')).toBeTruthy();
+    expect(hote.querySelector('app-news-card-mini-list')).toBeFalsy();
+
+    fixture.destroy();
+  });
+
+  it('une carte reste une image même quand elle porte aussi une vidéo', () => {
+    // La vidéo d'une ligne alimente la colonne de gauche EN PLUS de la carte
+    // à droite si la ligne a aussi un lien — mais la carte, elle, n'affiche
+    // jamais la vidéo à la place de son image (décision du client, F17.1).
+    const carteAvecVideo: NewsArticle = { ...carte, videoUrl: 'https://www.youtube.com/embed/abc' };
+    const fixture = monter({ actualites: [carteAvecVideo] });
+    const hote = fixture.nativeElement as HTMLElement;
+
+    expect(hote.querySelector('.news-videos')).toBeTruthy();
+    expect(hote.querySelector('app-news-card-mini-list img')).toBeTruthy();
+    expect(hote.querySelector('app-news-card-mini-list iframe')).toBeFalsy();
+    expect(hote.querySelector('app-news-card-mini-list video')).toBeFalsy();
+
+    fixture.destroy();
+  });
+
+  it('vidéo + carte s’affichent côte à côte dans le même cadre', () => {
+    const video: NewsArticle = { ...carte, id: 7, linkUrl: null, videoUrl: 'https://www.youtube.com/embed/abc' };
+    const fixture = monter({ actualites: [video, carte] });
+    const hote = fixture.nativeElement as HTMLElement;
+
+    expect(hote.querySelector('.news-card--split')).toBeTruthy();
+    expect(hote.querySelector('.news-card--split .news-videos')).toBeTruthy();
+    expect(hote.querySelector('.news-card--split app-news-card-mini-list')).toBeTruthy();
+
+    fixture.destroy();
+  });
+
+  // ── F17.2 : carrousel vidéo (les vidéos tournent, pas les cartes) ──
+
+  it('n’affiche qu’une seule vidéo à la fois même avec plusieurs vidéos publiées', () => {
+    const video1: NewsArticle = { ...carte, id: 8, linkUrl: null, title: 'Vidéo un', videoUrl: 'https://www.youtube.com/embed/un' };
+    const video2: NewsArticle = { ...carte, id: 9, linkUrl: null, title: 'Vidéo deux', videoUrl: 'https://www.youtube.com/embed/deux' };
+    const fixture = monter({ actualites: [video1, video2] });
+    const hote = fixture.nativeElement as HTMLElement;
+
+    expect(hote.querySelectorAll('.news-video-wrap').length).toBe(1);
+
+    fixture.destroy();
+  });
+
+  it('passe à la vidéo suivante puis boucle sur la première', () => {
     vi.useFakeTimers();
 
     try {
-      const second: NewsArticle = { ...article, id: 2, title: 'Un second article' };
-      const fixture = monter({ actualites: [article, second] });
+      const video1: NewsArticle = { ...carte, id: 8, linkUrl: null, videoUrl: 'https://www.youtube.com/embed/un' };
+      const video2: NewsArticle = { ...carte, id: 9, linkUrl: null, videoUrl: 'https://www.youtube.com/embed/deux' };
+      const fixture = monter({ actualites: [video1, video2] });
       const hote = fixture.nativeElement as HTMLElement;
 
-      expect(hote.textContent).toContain('Un article');
+      const iframeSrc = () => (hote.querySelector('.news-video') as HTMLIFrameElement)?.getAttribute('src');
+      expect(iframeSrc()).toContain('/embed/un');
 
-      // 90 s : cadence propre aux actualités (NEWS_ROTATION_MS), nettement
-      // plus lente que le reste du site (7 s) pour laisser une vidéo
-      // démarrer avant d'être coupée par l'aperçu automatique.
+      // 90 s : cadence propre aux vidéos (VIDEO_ROTATION_MS).
       vi.advanceTimersByTime(90000);
       fixture.detectChanges();
-      expect(hote.textContent).toContain('Un second article');
+      expect(iframeSrc()).toContain('/embed/deux');
 
       vi.advanceTimersByTime(90000);
       fixture.detectChanges();
-      expect(hote.textContent).toContain('Un article');
-      expect(hote.textContent).not.toContain('Un second article');
+      expect(iframeSrc()).toContain('/embed/un');
 
       fixture.destroy();
     } finally {
@@ -444,65 +536,28 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
     }
   });
 
-  it('bascule automatiquement même sur une actualité vidéo tant que rien n’a été choisi à la main', () => {
-    vi.useFakeTimers();
+  it('aucune pastille : la vidéo se choisit en survolant sa carte', () => {
+    const video: NewsArticle = { ...carte, id: 8, linkUrl: null, videoUrl: 'https://www.youtube.com/embed/un' };
+    // Même id que `carte` (1) : cette ligne est à la fois une vidéo ET une
+    // carte, c'est ce id partagé qui fait le lien entre les deux colonnes.
+    const carteAvecVideo: NewsArticle = { ...carte, videoUrl: 'https://www.youtube.com/embed/deux' };
+    const fixture = monter({ actualites: [video, carteAvecVideo] });
+    const hote = fixture.nativeElement as HTMLElement;
 
-    try {
-      const video: NewsArticle = { ...article, videoUrl: 'https://www.youtube.com/embed/abc' };
-      const second: NewsArticle = { ...article, id: 2, title: 'Un second article' };
-      const fixture = monter({ actualites: [video, second] });
-      const hote = fixture.nativeElement as HTMLElement;
+    expect(hote.querySelector('[aria-label="Vidéos"]')).toBeFalsy();
 
-      // L'aperçu automatique bascule quoi qu'il arrive, vidéo comprise —
-      // un clic sur une pastille (voir le test suivant) ne le fige plus.
-      vi.advanceTimersByTime(90000);
-      fixture.detectChanges();
-      expect(hote.textContent).toContain('Un second article');
+    const iframe = () => hote.querySelector('.news-video') as HTMLIFrameElement;
+    expect(iframe().getAttribute('src')).toContain('/embed/un');
 
-      fixture.destroy();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
+    const lienCarte = hote.querySelector('app-news-card-mini-list a') as HTMLAnchorElement;
+    lienCarte.dispatchEvent(new MouseEvent('mouseenter'));
+    fixture.detectChanges();
+    expect(iframe().getAttribute('src')).toContain('/embed/deux');
 
-  it('un clic sur une pastille bascule immédiatement, sans figer le défilement automatique', () => {
-    vi.useFakeTimers();
+    lienCarte.dispatchEvent(new MouseEvent('mouseleave'));
+    fixture.detectChanges();
+    expect(iframe().getAttribute('src')).toContain('/embed/un');
 
-    try {
-      const second: NewsArticle = { ...article, id: 2, title: 'Un second article' };
-      const fixture = monter({ actualites: [article, second] });
-      const hote = fixture.nativeElement as HTMLElement;
-
-      // `.featured-tab` est aussi le nom des pastilles d'univers de la vitrine
-      // (réutilisées telles quelles ici, sans CSS neuf) : on cible celles des
-      // actualités par leur groupe ARIA dédié.
-      const pastilles = Array.from(
-        hote.querySelectorAll<HTMLButtonElement>('[aria-label="Actualités"] .featured-tab'),
-      );
-      expect(pastilles.length).toBe(2);
-
-      pastilles[1].click();
-      fixture.detectChanges();
-
-      // Le clic change l'actualité affichée, ce qui recrée le bloc DOM
-      // (`@for` suivi par l'id de l'article courant) : on ré-interroge les
-      // pastilles au lieu de réutiliser la référence capturée avant le clic.
-      const pastillesApres = Array.from(
-        hote.querySelectorAll<HTMLButtonElement>('[aria-label="Actualités"] .featured-tab'),
-      );
-      expect(hote.textContent).toContain('Un second article');
-      expect(pastillesApres[1].classList.contains('featured-tab--active')).toBe(true);
-
-      // Le choix ne fige rien : le minuteur reprend après NEWS_ROTATION_MS
-      // comme d'habitude, et boucle sur la première actualité.
-      vi.advanceTimersByTime(90000);
-      fixture.detectChanges();
-      expect(hote.textContent).toContain('Un article');
-      expect(hote.textContent).not.toContain('Un second article');
-
-      fixture.destroy();
-    } finally {
-      vi.useRealTimers();
-    }
+    fixture.destroy();
   });
 });

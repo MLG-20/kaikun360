@@ -63,95 +63,75 @@
 <app-universe-strip />
 
 <!-- =========================================================================
-     Section 2 — Actualités Kaikun (F15), ou à défaut la grille des Univers.
+     Section 2 — Vidéos + cartes « À découvrir » (F17.1, 2026-08-21), ou à
+     défaut la grille des Univers.
 
      ⚠️ Bascule AUTOMATIQUE selon le contenu, pas un réglage manuel : dès
-     qu'un article est publié au back-office, il remplace la grille à cet
-     emplacement ; sans aucun article publié, la grille reprend sa place. La
-     navigation vers les univers reste de toute façon accessible via le
-     méga-menu de l'en-tête — ce n'est donc pas une perte de navigation,
-     seulement un choix de ce qui occupe CETTE position de la page.
+     qu'une vidéo OU une carte est publiée au back-office (écran
+     « Actualités »), elle remplace la grille à cet emplacement ; sans
+     aucune des deux, la grille reprend sa place. La navigation vers les
+     univers reste de toute façon accessible via le méga-menu de l'en-tête —
+     ce n'est donc pas une perte de navigation, seulement un choix de ce qui
+     occupe CETTE position.
+
+     ⚠️ Un seul grand cadre, deux zones dedans (demande explicite du client,
+     2026-08-21) : les vidéos à GAUCHE (`videosActualites`), les petites
+     cartes image à DROITE (`cartesLibres`) — jamais une vidéo À LA PLACE
+     d'une image de carte, les deux natures de contenu restent séparées.
+     Chaque zone ne s'affiche que si elle a du contenu ; avec une seule des
+     deux, le cadre garde son unique zone en pleine largeur.
      ========================================================================= -->
 @if (aDesActualites()) {
   <section class="news k-wrap" aria-labelledby="news-title">
     <header class="section-head" appReveal>
-      <span class="k-eyebrow">Actualités Kaikun</span>
+      <span class="k-eyebrow">À découvrir</span>
       <h2 id="news-title" appReveal="title" class="reveal-title--rtl">Ce qui se passe en ce moment chez Kaikun 360</h2>
     </header>
 
-    <!-- Carrousel (F16.2) : une carte à la fois, qui cède la place à la
-         suivante toutes les 7 s et boucle — pas une grille qui s'allongerait
-         à chaque article publié. La boucle `@for` ne porte QUE sur l'article
-         courant ; c'est cette recréation qui rejoue le fondu d'apparition
-         (`appReveal="group"`) d'un article à l'autre, même patron que la
-         vitrine du catalogue plus bas dans la page. -->
-    <div class="news-grid" appReveal="group" (mouseenter)="suspendreNews()" (mouseleave)="reprendreNews()">
-      @for (a of [actualiteCourante()]; track a?.id) {
-        @if (a) {
-          <article class="news-card k-card">
-            <div class="news-media">
-              @if (a.videoFile) {
-                <video
-                  class="news-video"
-                  [src]="a.videoFile"
-                  autoplay
-                  muted
-                  loop
-                  playsinline
-                  controls
-                  preload="metadata"></video>
-              } @else if (a.videoUrl) {
-                <iframe
-                  class="news-video"
-                  [src]="a.videoEmbedUrl"
-                  title="Vidéo — {{ a.title }}"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                  allowfullscreen
-                  loading="lazy">
-                </iframe>
-              } @else {
-                <img class="news-image" [src]="a.image" [alt]="a.title" loading="lazy" />
-              }
-            </div>
-            <div class="news-body">
-              <!-- Choisir une pastille bascule sur l'actualité voulue, sans
-                   figer le défilement automatique pour autant (2026-08-18) —
-                   il reprend après NEWS_ROTATION_MS quoi qu'il arrive. Dans
-                   la carte, alignées à droite en haut du texte. -->
-              @if (actualites().length > 1) {
-                <div
-                  class="featured-tabs news-tabs"
-                  role="group"
-                  aria-label="Actualités"
-                  (mouseenter)="suspendreNews()"
-                  (mouseleave)="reprendreNews()">
-                  @for (a2 of actualites(); track a2.id; let i = $index) {
-                    <button
-                      type="button"
-                      class="featured-tab"
-                      [class.featured-tab--active]="i === newsIndex() % actualites().length"
-                      [attr.aria-pressed]="i === newsIndex() % actualites().length"
-                      [attr.aria-label]="'Actualité : ' + a2.title"
-                      (click)="choisirActualite(i)">
-                      {{ i + 1 }}
-                    </button>
-                  }
-                </div>
-              }
-              <span class="k-eyebrow news-eyebrow">Actualité Kaikun</span>
-              <h3 class="news-card-title">{{ a.title }}</h3>
-              @if (a.excerpt) {
-                <p class="news-card-desc k-muted">{{ a.excerpt }}</p>
-              }
-              @if (a.body) {
-                <a class="k-btn k-btn--primary news-card-cta" [routerLink]="['/actualites', a.id]">
-                  Lire l'article complet
-                  <span class="news-card-cta-arrow" aria-hidden="true">→</span>
-                </a>
-              }
-            </div>
-          </article>
-        }
+    <div class="news-card k-card" [class.news-card--split]="videosActualites().length > 0 && cartesLibres().length > 0">
+      @if (videosActualites().length > 0) {
+        <!-- Carrousel vidéo (F17.2/F17.3) : une vidéo à la fois, qui cède la
+             place à la suivante toutes les 90 s et boucle — voir
+             `videoCourante` dans home-page.ts. La boucle `@for` ne porte QUE
+             sur la vidéo courante ; c'est cette recréation qui rejoue le
+             fondu d'apparition (`appReveal="group"`) d'une vidéo à l'autre.
+
+             ⚠️ Pas de pastilles (F17.3, 2026-08-21) : survoler une carte à
+             droite (via `(survol)`, plus bas) affiche SA vidéo si elle en a
+             une — voir `onSurvolCarte` dans home-page.ts. -->
+        <div class="news-videos" appReveal="group" (mouseenter)="suspendreVideo()" (mouseleave)="reprendreVideo()">
+          @for (v of [videoCourante()]; track v?.id) {
+            @if (v) {
+              <div class="news-video-wrap">
+                @if (v.videoFile) {
+                  <video
+                    class="news-video"
+                    [src]="v.videoFile"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    controls
+                    preload="metadata"></video>
+                } @else if (v.videoUrl) {
+                  <iframe
+                    class="news-video"
+                    [src]="v.videoEmbedUrl"
+                    title="Vidéo — {{ v.title }}"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    allowfullscreen
+                    loading="lazy">
+                  </iframe>
+                }
+              </div>
+            }
+          }
+        </div>
+      }
+      @if (cartesLibres().length > 0) {
+        <div class="news-cards">
+          <app-news-card-mini-list [cards]="cartesLibres()" (survol)="onSurvolCarte($event)" />
+        </div>
       }
     </div>
   </section>

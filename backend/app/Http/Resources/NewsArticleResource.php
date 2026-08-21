@@ -27,6 +27,10 @@ class NewsArticleResource extends JsonResource
             // existent — voir NewsArticle.
             'video_file' => $this->videoFileUrl(),
             'video_url' => $this->video_path ? null : $this->video_url,
+            // F17 — une carte sans article rédigé : le bouton public pointe
+            // ici plutôt que vers `/actualites/{id}` (voir NewsArticle).
+            'link_url' => $this->link_url,
+            'link_label' => $this->link_label,
             'published_at' => $this->updated_at,
         ];
     }

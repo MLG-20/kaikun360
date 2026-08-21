@@ -1,0 +1,9 @@
+@for (c of cards(); track c.id) {
+  <a class="ncm-card" [href]="c.linkUrl" (mouseenter)="survol.emit(c.id)" (mouseleave)="survol.emit(null)">
+    <img class="ncm-media" [src]="c.image" [alt]="c.title" loading="lazy" />
+    <span class="ncm-text">
+      <span class="ncm-title">{{ c.title }}</span>
+      <span class="ncm-cta">{{ c.linkLabel || 'Découvrir' }} →</span>
+    </span>
+  </a>
+}

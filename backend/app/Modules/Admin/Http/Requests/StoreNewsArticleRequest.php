@@ -32,6 +32,11 @@ class StoreNewsArticleRequest extends FormRequest
             // la marge pour un clip court déjà compressé.
             'video' => ['nullable', 'file', 'mimes:mp4,webm,mov,quicktime', 'max:81920'],
             'video_url' => ['nullable', 'url', 'max:500'],
+            // F17 — une « carte » sans article rédigé : le bouton public
+            // pointe ici plutôt que vers la page de l'article (voir
+            // NewsArticle, HomePageComponent côté frontend).
+            'link_url' => ['nullable', 'url', 'max:500'],
+            'link_label' => ['nullable', 'string', 'max:100'],
             'is_published' => ['boolean'],
             'position' => ['nullable', 'integer', 'min:0'],
         ];

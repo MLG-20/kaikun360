@@ -46,6 +46,13 @@ class SettingsRepository
         // qu'un « affiché » : ajouter un futur univers au catalogue le rend
         // visible ici sans réglage à toucher.
         'home.universe_strip_hidden' => ['value' => [], 'type' => 'json', 'group' => 'accueil'],
+        // Items TEXTE LIBRE ajoutés à la même bande (F17, 2026-08-20) — la
+        // plateforme appartenant au client, il doit pouvoir y glisser une
+        // annonce ou une actualité du moment sans passer par du code.
+        // `[{text: string, active: bool}]`, dans l'ordre où l'équipe les a
+        // saisis. Validés par `AdminSettingsController::update()`, lus par
+        // `UniverseStripController::index()`.
+        'home.universe_strip_custom_items' => ['value' => [], 'type' => 'json', 'group' => 'accueil'],
         'support.email' => ['value' => 'contact@kaikun360.com', 'type' => 'string', 'group' => 'general'],
         'support.phone' => ['value' => '+221 33 000 00 00', 'type' => 'string', 'group' => 'general'],
 

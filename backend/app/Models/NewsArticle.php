@@ -16,6 +16,15 @@ use Illuminate\Support\Facades\Storage;
  * l'affichage — un fichier déposé (déjà compressé côté équipe, aucun
  * transcodage ici) ou une URL d'embed — le fichier l'emporte si les deux sont
  * saisis.
+ *
+ * ⚠️ **`link_url`/`link_label` (F17, 2026-08-21)** : la plateforme
+ * n'appartient pas à l'équipe — le client doit pouvoir présenter une carte
+ * dans cette même section SANS rédiger un article (`body` reste vide) : une
+ * image, un titre, et un lien de son choix (vers `/immobilier`, une offre du
+ * moment, n'importe quoi). Pas un second système de contenu à côté des
+ * actualités : la MÊME ligne, le MÊME écran d'édition, le MÊME rendu public —
+ * seul le bouton change de destination. Voir `HomePageComponent` (frontend)
+ * pour le repli : sans `link_url`, le bouton pointe vers l'article lui-même.
  */
 class NewsArticle extends Model
 {
@@ -31,6 +40,8 @@ class NewsArticle extends Model
         'image_path',
         'video_path',
         'video_url',
+        'link_url',
+        'link_label',
         'is_published',
         'position',
         'updated_by',

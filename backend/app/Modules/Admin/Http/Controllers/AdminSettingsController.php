@@ -114,6 +114,27 @@ class AdminSettingsController extends Controller
             }
         }
 
+        // Items texte libre de la bande défilante (F17) — même bande que
+        // `home.universe_strip_hidden` juste au-dessus, contenu contraint pour
+        // la même raison : une ligne mal formée serait ignorée en silence par
+        // `UniverseStripController`, laissant croire à l'équipe qu'une annonce
+        // défile alors que rien n'apparaît.
+        if (array_key_exists('home.universe_strip_custom_items', $input)) {
+            foreach ($input['home.universe_strip_custom_items'] as $item) {
+                if (
+                    ! is_array($item)
+                    || ! isset($item['text']) || ! is_string($item['text']) || trim($item['text']) === ''
+                    || ! isset($item['active']) || ! is_bool($item['active'])
+                ) {
+                    throw ValidationException::withMessages([
+                        'settings.home.universe_strip_custom_items' => [
+                            'Chaque item attend un texte non vide et un état actif/inactif.',
+                        ],
+                    ]);
+                }
+            }
+        }
+
         foreach ($input as $key => $value) {
             $settings->set($key, $value, $request->user());
         }

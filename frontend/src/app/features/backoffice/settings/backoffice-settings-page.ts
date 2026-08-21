@@ -36,6 +36,13 @@ interface NewsDraft {
   excerpt: string;
   body: string;
   video_url: string;
+  /**
+   * Destination du bouton (F17) — pour présenter une CARTE sans rédiger
+   * d'article : image + titre suffisent, `body` reste vide, ce lien remplace
+   * la page `/actualites/:id` comme cible du bouton public.
+   */
+  link_url: string;
+  link_label: string;
   is_published: boolean;
   position: number;
   /** Nouvelle image choisie (`null` = on garde l'image déjà enregistrée). */
@@ -51,6 +58,8 @@ const EMPTY_NEWS_DRAFT: NewsDraft = {
   excerpt: '',
   body: '',
   video_url: '',
+  link_url: '',
+  link_label: '',
   is_published: false,
   position: 0,
   image: null,
@@ -88,6 +97,12 @@ const HERO_MIN_HEIGHT = 500;
 
 /** Sous-onglet du contenu éditorial. */
 type ContentTab = 'pages' | 'faqs';
+
+/** Un item texte libre de la bande défilante (F17) — voir `customStripItems`. */
+interface CustomStripItem {
+  text: string;
+  active: boolean;
+}
 
 /** Un réglage simple (texte / nombre) rendu comme un champ de formulaire. */
 interface SettingField {
@@ -279,6 +294,12 @@ export class BackofficeSettingsPageComponent {
   protected readonly universeCatalog = signal<UniverseOption[]>([]);
   /** Clés actuellement MASQUÉES — coché dans l'écran = absent de cette liste. */
   protected readonly universeHidden = signal<string[]>([]);
+  /**
+   * Items texte libre de la même bande (F17) — annonces/actualités du moment,
+   * saisies par l'équipe plutôt que tirées du catalogue d'univers. `active`
+   * permet de préparer un item sans le publier tout de suite.
+   */
+  protected readonly customStripItems = signal<CustomStripItem[]>([]);
   protected readonly universeStripSaving = signal(false);
   protected readonly universeStripMessage = signal<string | null>(null);
   protected readonly universeStripError = signal<string | null>(null);
@@ -791,6 +812,9 @@ export class BackofficeSettingsPageComponent {
             if (setting.key === 'home.universe_strip_hidden') {
               this.universeHidden.set((setting.value as string[] | null) ?? []);
             }
+            if (setting.key === 'home.universe_strip_custom_items') {
+              this.customStripItems.set((setting.value as CustomStripItem[] | null) ?? []);
+            }
             continue;
           }
           draft[setting.key] = String(setting.value ?? '');
@@ -986,22 +1010,65 @@ export class BackofficeSettingsPageComponent {
     );
   }
 
+  /** Ajoute une ligne vide, prête à saisir — active par défaut. */
+  protected addCustomStripItem(): void {
+    this.customStripItems.update((items) => [...items, { text: '', active: true }]);
+  }
+
+  protected removeCustomStripItem(index: number): void {
+    this.customStripItems.update((items) => items.filter((_, i) => i !== index));
+  }
+
+  protected setCustomStripItemText(index: number, text: string): void {
+    this.customStripItems.update((items) =>
+      items.map((item, i) => (i === index ? { ...item, text } : item)),
+    );
+  }
+
+  protected toggleCustomStripItem(index: number, active: boolean): void {
+    this.customStripItems.update((items) =>
+      items.map((item, i) => (i === index ? { ...item, active } : item)),
+    );
+  }
+
+  /** Boutons haut/bas : pas de librairie de glisser-déposer dans ce projet. */
+  protected moveCustomStripItem(index: number, direction: -1 | 1): void {
+    this.customStripItems.update((items) => {
+      const target = index + direction;
+      if (target < 0 || target >= items.length) {
+        return items;
+      }
+      const copie = [...items];
+      [copie[index], copie[target]] = [copie[target], copie[index]];
+      return copie;
+    });
+  }
+
   protected saveUniverseStrip(): void {
     this.universeStripSaving.set(true);
     this.universeStripError.set(null);
     this.universeStripMessage.set(null);
 
-    this.admin.updateSettings({ 'home.universe_strip_hidden': this.universeHidden() }).subscribe({
-      next: (snapshot) => {
-        this.rawSettings.set(snapshot.settings);
-        this.universeStripSaving.set(false);
-        this.universeStripMessage.set('Bande des univers mise à jour.');
-      },
-      error: (error: HttpErrorResponse) => {
-        this.universeStripSaving.set(false);
-        this.universeStripError.set(this.messageFor(error));
-      },
-    });
+    // Une ligne vide n'a pas de sens à envoyer (elle serait de toute façon
+    // rejetée par le serveur) : elle ne représente qu'une saisie en cours.
+    const items = this.customStripItems().filter((item) => item.text.trim() !== '');
+
+    this.admin
+      .updateSettings({
+        'home.universe_strip_hidden': this.universeHidden(),
+        'home.universe_strip_custom_items': items,
+      })
+      .subscribe({
+        next: (snapshot) => {
+          this.rawSettings.set(snapshot.settings);
+          this.universeStripSaving.set(false);
+          this.universeStripMessage.set('Bande des univers mise à jour.');
+        },
+        error: (error: HttpErrorResponse) => {
+          this.universeStripSaving.set(false);
+          this.universeStripError.set(this.messageFor(error));
+        },
+      });
   }
 
   // ===========================================================================
@@ -1478,6 +1545,8 @@ export class BackofficeSettingsPageComponent {
       excerpt: article.excerpt ?? '',
       body: article.body ?? '',
       video_url: article.video_url ?? '',
+      link_url: article.link_url ?? '',
+      link_label: article.link_label ?? '',
       is_published: article.is_published,
       position: article.position,
       image: null,
@@ -1535,6 +1604,8 @@ export class BackofficeSettingsPageComponent {
             image: form.image as File,
             video: form.video ?? undefined,
             videoUrl: form.video ? undefined : form.video_url.trim() || undefined,
+            linkUrl: form.link_url.trim() || undefined,
+            linkLabel: form.link_label.trim() || undefined,
             isPublished: form.is_published,
             position: form.position,
           })
@@ -1549,6 +1620,8 @@ export class BackofficeSettingsPageComponent {
             // le fichier l'emporte déjà côté serveur, envoyer les deux
             // prêterait à confusion sur ce qui sera réellement affiché.
             videoUrl: form.video ? undefined : form.video_url.trim(),
+            linkUrl: form.link_url.trim(),
+            linkLabel: form.link_label.trim(),
             isPublished: form.is_published,
             position: form.position,
           });

@@ -8,7 +8,14 @@
 
 @if (user(); as u) {
   <section class="ba-card ba-identity">
-    <div>
+    <div class="ba-identity-avatar" [class.ba-identity-avatar--logo]="avatarKind() === 'logo'">
+      @if (avatarUrl(); as url) {
+        <img [src]="url" [alt]="'Photo de ' + u.name" />
+      } @else {
+        <span class="ba-identity-avatar-initial" aria-hidden="true">{{ avatarInitial() }}</span>
+      }
+    </div>
+    <div class="ba-identity-text">
       <p class="ba-label">Connecté en tant que</p>
       <p class="ba-name">{{ u.name }}</p>
       <p class="ba-email">{{ u.email }}</p>
@@ -17,6 +24,67 @@
   </section>
 
   <div class="ba-grid">
+    <!-- ================= Nom et photo ================= -->
+    <section class="ba-card">
+      <h2 class="ba-card-title">Nom et photo</h2>
+      <p class="ba-card-hint">
+        Le nom et la photo affichés dans le back-office — auprès de vos
+        collègues, dans le journal d'activité, et de vous-même en haut de
+        chaque écran.
+      </p>
+
+      <form [formGroup]="identityForm" (ngSubmit)="submitIdentity()">
+        <div class="ba-field">
+          <label for="ba-name">Nom complet</label>
+          <input id="ba-name" type="text" class="k-input" formControlName="name" autocomplete="name" />
+          @if (identityForm.controls.name.touched && identityForm.controls.name.invalid) {
+            <p class="ba-error">Le nom est obligatoire.</p>
+          }
+        </div>
+
+        @if (identityError(); as err) {
+          <p class="ba-error" role="alert">{{ err }}</p>
+        }
+        @if (identityDone()) {
+          <p class="ba-ok" role="status">Nom mis à jour.</p>
+        }
+
+        <button type="submit" class="k-btn k-btn--primary" [disabled]="identityBusy()">
+          {{ identityBusy() ? 'Enregistrement…' : 'Changer mon nom' }}
+        </button>
+      </form>
+
+      <div class="ba-field ba-avatar-field">
+        <label>Photo de profil</label>
+
+        @if (avatarError(); as msg) {
+          <p class="ba-error" role="alert">{{ msg }}</p>
+        }
+
+        <div class="ba-avatar-actions">
+          <label class="k-btn k-btn--ghost ba-avatar-pick" [class.is-busy]="avatarUploading()">
+            {{ avatarUploading() ? 'Envoi…' : avatarUrl() ? 'Changer l’image' : 'Choisir une image' }}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              (change)="onAvatarSelected($event)"
+              [disabled]="avatarUploading()" />
+          </label>
+
+          @if (avatarUrl()) {
+            <button
+              type="button"
+              class="k-btn k-btn--ghost"
+              (click)="removeAvatar()"
+              [disabled]="avatarUploading()">
+              Retirer
+            </button>
+          }
+        </div>
+        <p class="ba-note">JPG, PNG ou WEBP · 2 Mo maximum · 100 × 100 pixels minimum.</p>
+      </div>
+    </section>
+
     <!-- ================= Adresse de connexion ================= -->
     <section class="ba-card">
       <h2 class="ba-card-title">Adresse de connexion</h2>

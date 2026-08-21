@@ -1090,6 +1090,21 @@ Le code est **abondamment commenté en français**.
   même garde que `NewsController::index()`. La liste (`GET /news`) ne servait
   que titre et résumé au carrousel de l'accueil : rien n'exposait le corps
   complet avant cet ajout. 3 tests neufs (`NewsTest`).
+- ✅ **F17 — Annonces libres de la bande d'accueil, cartes Actualités sans texte rédigé.**
+  `home.universe_strip_custom_items` (réglage `json`, `[{text, active}]`) est
+  ajouté à la suite des noms d'univers par `UniverseStripController::index()`
+  — la réponse publique reste `{ names: string[] }`, le frontend ne distingue
+  pas un nom d'univers d'une annonce. Validé par `AdminSettingsController`
+  (texte non vide, `active` booléen) avant écriture, même mécanisme générique
+  que le reste des réglages. `NewsArticle` gagne `link_url`/`link_label`
+  (migration `2026_08_21_090000_add_link_to_news_articles_table`) : une ligne
+  SANS `body` mais AVEC `link_url` devient une carte cliquable côté public
+  plutôt qu'un article — même modèle, même écran d'édition, seul le bouton
+  change de destination. `PATCH /users/me` et `POST/DELETE /users/me/avatar`
+  (déjà en place pour le profil public) sont réutilisés tels quels par l'écran
+  « Mon compte » du back-office, aucune route neuve. Tests neufs :
+  `UniverseStripTest` (réglage des items), `NewsArticleTest` (filtre
+  carte/article côté admin).
 - ✅ **Liste d'attente avant ouverture (F14, hors CDC)** : `POST /waitlist`
   (public, throttle 10/min), 5 catégories (`proprietaire`, `prestataire`,
   `client`, `team_building`, `diaspora`), champs propres à chacune dans

@@ -1,0 +1,61 @@
+// Cartes compactes de la section « Actualités Kaikun » (F17). Composant à
+// part, budget CSS propre — voir l'en-tête de news-card-mini-list.ts.
+//
+// `minmax(150px, 200px)` plutôt que `1fr` : ce composant sert aussi bien dans
+// une colonne étroite (à côté d'un article) qu'en pleine largeur (aucun
+// article, juste les cartes) — sans plafond, 3-4 cartes étalées sur 1400px
+// deviendraient énormes.
+:host {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 200px));
+  justify-content: start;
+  gap: 12px;
+}
+
+.ncm-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  background: var(--k-card);
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--k-brand);
+    box-shadow: var(--k-shadow);
+  }
+}
+
+.ncm-media {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+.ncm-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+}
+
+.ncm-title {
+  font-weight: 700;
+  color: var(--k-ink);
+  font-size: 0.88rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ncm-cta {
+  font-size: 0.78rem;
+  color: var(--k-brand);
+  font-weight: 600;
+}

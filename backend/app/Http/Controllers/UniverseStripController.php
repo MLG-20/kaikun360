@@ -15,6 +15,14 @@ use Illuminate\Http\JsonResponse;
  * `univers`) comme unique source des libellés — pas une quatrième recopie de
  * cette liste. L'équipe ne fait que MASQUER ceux qu'elle ne veut pas voir
  * défiler (`home.universe_strip_hidden`) ; elle n'en invente pas de nouveaux.
+ *
+ * ⚠️ **F17 (2026-08-20)** : la plateforme appartenant au client, il doit
+ * pouvoir y glisser un texte libre (annonce, actualité du moment) sans
+ * attendre un déploiement. `home.universe_strip_custom_items` (ceux marqués
+ * `active`) est ajouté À LA SUITE des noms d'univers, dans l'ordre où
+ * l'équipe les a saisis. La réponse publique reste `{ names: string[] }` —
+ * le frontend (`universe-strip.service.ts`) ne distingue pas un nom d'univers
+ * d'une annonce, ce ne sont que des libellés qui défilent.
  */
 class UniverseStripController extends Controller
 {
@@ -31,6 +39,11 @@ class UniverseStripController extends Controller
             ->map(fn (array $meta) => $meta['label'])
             ->values();
 
-        return ApiResponse::success(['names' => $noms]);
+        $items = (array) Settings::get('home.universe_strip_custom_items', []);
+        $custom = collect($items)
+            ->filter(fn (array $item) => $item['active'] ?? false)
+            ->map(fn (array $item) => $item['text']);
+
+        return ApiResponse::success(['names' => $noms->concat($custom)->values()]);
     }
 }

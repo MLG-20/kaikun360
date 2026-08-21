@@ -19,6 +19,13 @@ export interface NewsArticle {
   image: string;
   videoFile: string | null;
   videoUrl: string | null;
+  /**
+   * Destination du bouton (F17), quand cette ligne est une CARTE plutôt qu'un
+   * article rédigé — `body` reste alors `null`. `linkLabel` est le texte du
+   * bouton ; `null` retombe sur un libellé par défaut côté template.
+   */
+  linkUrl: string | null;
+  linkLabel: string | null;
 }
 
 interface NewsArticleApi {
@@ -29,6 +36,8 @@ interface NewsArticleApi {
   image: string;
   video_file: string | null;
   video_url: string | null;
+  link_url: string | null;
+  link_label: string | null;
 }
 
 /**
@@ -72,6 +81,8 @@ export class NewsService {
       image: a.image,
       videoFile: a.video_file,
       videoUrl: a.video_url,
+      linkUrl: a.link_url,
+      linkLabel: a.link_label,
     };
   }
 }

@@ -213,6 +213,64 @@
         </label>
       }
 
+      <!-- Items texte libre (F17) : annonces/actualités du moment, en plus
+           des univers fixes ci-dessus. -->
+      <div class="st-strip-custom">
+        <h3 class="st-strip-custom-title">Annonces et actualités du moment</h3>
+        <p class="st-card-sub">
+          Un texte libre, ajouté à la suite dans la bande — désactivez-le
+          plutôt que de le supprimer pour le remettre plus tard.
+        </p>
+
+        @for (item of customStripItems(); track $index) {
+          <div class="st-strip-item">
+            <input
+              type="text"
+              class="k-input"
+              placeholder="Ex. Nouvelle offre construction ce mois-ci"
+              [ngModel]="item.text"
+              (ngModelChange)="setCustomStripItemText($index, $event)" />
+
+            <label class="st-switch st-strip-item-toggle">
+              <input
+                type="checkbox"
+                [ngModel]="item.active"
+                (ngModelChange)="toggleCustomStripItem($index, $event)" />
+              <span class="st-switch-text">Actif</span>
+            </label>
+
+            <div class="st-strip-item-actions">
+              <button
+                type="button"
+                class="k-btn k-btn--ghost k-btn--sm"
+                [disabled]="$index === 0"
+                (click)="moveCustomStripItem($index, -1)"
+                aria-label="Monter">
+                ↑
+              </button>
+              <button
+                type="button"
+                class="k-btn k-btn--ghost k-btn--sm"
+                [disabled]="$index === customStripItems().length - 1"
+                (click)="moveCustomStripItem($index, 1)"
+                aria-label="Descendre">
+                ↓
+              </button>
+              <button
+                type="button"
+                class="k-btn k-btn--ghost k-btn--sm"
+                (click)="removeCustomStripItem($index)">
+                Retirer
+              </button>
+            </div>
+          </div>
+        }
+
+        <button type="button" class="k-btn k-btn--ghost" (click)="addCustomStripItem()">
+          + Ajouter un texte
+        </button>
+      </div>
+
       @if (universeStripError()) {
         <p class="st-state st-state--error" role="alert">{{ universeStripError() }}</p>
       }
@@ -923,6 +981,36 @@
             placeholder="https://www.youtube.com/watch?v=…"
             [disabled]="!!newsForm.video" />
           <span class="st-hint">Ignoré si une vidéo est déposée ci-dessus.</span>
+        </label>
+      </div>
+
+      <!-- F17 : présenter une CARTE sans rédiger d'article — laissez le texte
+           complet vide et renseignez seulement un lien ci-dessous. Le bouton
+           public pointe alors ici plutôt que vers la page de l'article. -->
+      <div class="st-grid">
+        <label class="st-field">
+          <span class="st-label">Lien du bouton (facultatif)</span>
+          <input
+            class="k-input"
+            type="url"
+            name="newsLinkUrl"
+            [(ngModel)]="newsForm.link_url"
+            placeholder="https://kaikun360.com/immobilier" />
+          <span class="st-hint">
+            Sans texte complet ci-dessus, c'est ce lien qui fait de cet
+            article une simple carte de mise en avant.
+          </span>
+        </label>
+
+        <label class="st-field">
+          <span class="st-label">Texte du bouton</span>
+          <input
+            class="k-input"
+            type="text"
+            name="newsLinkLabel"
+            [(ngModel)]="newsForm.link_label"
+            maxlength="100"
+            placeholder="Découvrir" />
         </label>
       </div>
 
