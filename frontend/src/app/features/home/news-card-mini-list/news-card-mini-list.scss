@@ -12,6 +12,19 @@
   gap: 12px;
 }
 
+// ⚠️ Sous 480px, `minmax(150px, 200px)` ne laisse plus de place qu'à UNE
+// colonne (150px + le padding du cadre parent dépasse la largeur d'un
+// téléphone) : les cartes s'empilaient alors une par une, avec du vide à
+// côté de chacune au lieu d'utiliser la largeur disponible. Deux colonnes
+// fixes en `fr` occupent toute la largeur, quelle que soit la taille de
+// l'écran.
+@media (max-width: 480px) {
+  :host {
+    grid-template-columns: repeat(2, 1fr);
+    justify-content: stretch;
+  }
+}
+
 .ncm-card {
   display: flex;
   flex-direction: column;

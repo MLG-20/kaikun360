@@ -426,6 +426,13 @@
   .featured-grid {
     min-height: 0;
   }
+
+  // 32px de chaque côté (`.news-card`) ne laisse presque plus de largeur
+  // utile sur un téléphone — c'est ce qui écrasait la grille des cartes à
+  // une seule colonne malgré le correctif de `news-card-mini-list.scss`.
+  .news-card {
+    padding: 20px;
+  }
 }
 
 

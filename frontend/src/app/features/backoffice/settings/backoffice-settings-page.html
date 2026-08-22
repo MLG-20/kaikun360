@@ -922,22 +922,6 @@
         <input class="k-input" type="text" name="newsTitle" [(ngModel)]="newsForm.title" />
       </label>
 
-      <label class="st-field st-field--full">
-        <span class="st-label">Résumé</span>
-        <input class="k-input" type="text" name="newsExcerpt" [(ngModel)]="newsForm.excerpt" maxlength="300" />
-        <span class="st-hint">Affiché sous le titre dans la carte, sur l’accueil.</span>
-      </label>
-
-      <div class="st-field st-field--full">
-        <span class="st-label">Texte complet (facultatif)</span>
-        <app-rich-text-editor
-          name="newsBody"
-          ariaLabel="Texte de l'article"
-          placeholder="Détail de l'actualité, si besoin d'aller plus loin que le résumé."
-          [rows]="8"
-          [(ngModel)]="newsForm.body" />
-      </div>
-
       <div class="st-grid">
         <label class="st-field">
           <span class="st-label">Image de couverture{{ editingNews() === 'new' ? ' (obligatoire)' : '' }}</span>

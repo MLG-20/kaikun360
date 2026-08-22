@@ -12,6 +12,7 @@
 .ustrip {
   display: flex;
   justify-content: center;
+  padding: 0 16px;
 }
 
 // Rejoue à chaque nouveau message (voir le gabarit) : glisse depuis la
@@ -19,6 +20,7 @@
 .ustrip-item {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   padding: 0 26px;
   white-space: nowrap;
@@ -29,6 +31,20 @@
   text-transform: uppercase;
   font-weight: 700;
   animation: ustrip-enter 500ms ease-out both;
+}
+
+// ⚠️ Un message long (annonce libre) déborde d'un écran de téléphone : sans
+// ce repli, `white-space: nowrap` + `overflow: hidden` sur `:host` le
+// tronquait SILENCIEUSEMENT (aucune erreur, juste une moitié de phrase
+// invisible). Sous 700px, le message peut revenir à la ligne — la hauteur de
+// la bande grandit avec le texte au lieu de le couper.
+@media (max-width: 700px) {
+  .ustrip-item {
+    padding: 0 12px;
+    white-space: normal;
+    text-align: center;
+    font-size: 12px;
+  }
 }
 
 @keyframes ustrip-enter {
