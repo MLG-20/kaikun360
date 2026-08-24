@@ -31,6 +31,14 @@ type FormState = 'loading' | 'form' | 'not-found' | 'error';
  *
  * En édition, le véhicule est rechargé via `OfferService.findMyVehicle` (le
  * détail public ne renvoie que les véhicules publiés).
+ *
+ * ⚠️ **Le champ « Caution » a été retiré du formulaire (2026-08-23)**, à la
+ * demande du porteur du produit — un prestataire ne fixe plus de caution au
+ * dépôt/à l'édition d'un véhicule. `caution_xof` reste dans le modèle et le
+ * payload API (`NewVehiclePayload.caution_xof?`) : on ne l'envoie simplement
+ * plus jamais depuis cet écran, ce qui laisse une caution déjà enregistrée
+ * intacte en édition (`cleanVehicle` n'ajoute la clé au corps de la requête
+ * que si elle est non nulle).
  */
 @Component({
   selector: 'app-provider-vehicle-form-page',
@@ -72,7 +80,6 @@ export class ProviderVehicleFormPageComponent {
     capacity: [1, [Validators.required, Validators.min(1)]],
     price_per_day_xof: [0, [Validators.required, Validators.min(0)]],
     has_driver: [false],
-    caution_xof: [null as number | null, [Validators.min(0)]],
     description: [''],
     // Conformité motorisé.
     insurance_ref: [''],
@@ -122,7 +129,6 @@ export class ProviderVehicleFormPageComponent {
       capacity: v.capacity,
       price_per_day_xof: v.price_per_day_xof,
       has_driver: v.has_driver,
-      caution_xof: v.caution_xof,
       description: v.description ?? '',
     });
     this.typeValue.set((v.type as VehicleTypeValue) ?? '');
@@ -144,7 +150,6 @@ export class ProviderVehicleFormPageComponent {
       capacity: raw.capacity,
       price_per_day_xof: raw.price_per_day_xof,
       has_driver: raw.has_driver,
-      caution_xof: raw.caution_xof,
       description: raw.description || null,
       insurance_ref: raw.insurance_ref || null,
       driver_identity: raw.driver_identity || null,
