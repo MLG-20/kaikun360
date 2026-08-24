@@ -27,7 +27,8 @@ interface OwnerStat {
  * Contrairement à l'accueil client (purement dérivé de la session, sans réseau),
  * cet écran interroge `GET /manage/dashboard` (service `ManageService`) pour
  * afficher les **agrégats réels** du propriétaire connecté : mandats actifs,
- * loyers encaissés / impayés, dépenses, reversements, incidents ouverts —
+ * loyers encaissés / impayés, dépenses, commission Kaikun, reversements,
+ * incidents ouverts —
  * scopés côté backend aux seuls biens du propriétaire. Les KPI riches sont
  * assumés ici (espace pro), à la différence de l'accueil client.
  *
@@ -76,6 +77,7 @@ export class OwnerOverviewPageComponent {
         tone: d.loyers_impayes_xof > 0 ? 'warn' : 'neutral',
       },
       { label: 'Dépenses', value: this.fcfa(d.depenses_xof), tone: 'neutral' },
+      { label: 'Commission Kaikun', value: this.fcfa(d.commission_xof), tone: 'neutral' },
       { label: 'Reversements', value: this.fcfa(d.reversements_xof), tone: 'neutral' },
       {
         label: 'Incidents ouverts',

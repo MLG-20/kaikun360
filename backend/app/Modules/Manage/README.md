@@ -107,6 +107,16 @@ Relation `ManagementMandate::rents()` (hasMany).
   dépenses, reversements effectués, incidents ouverts.
 - `MandateResource` expose ces sommes sous `summary`.
 
+> **Transparence — KPI Commission (2026-08-24).** `GET /manage/dashboard`
+> ajoute `commission_xof` : la commission Kaikun cumulée sur les loyers **payés**
+> du propriétaire, tous mandats confondus. Calculée mandat par mandat
+> (`ManageController::commissionTotal()`) car `commission_rate` est propre à
+> **chaque** mandat — un taux unique appliqué au total serait faux dès qu'un
+> propriétaire a deux mandats à des taux différents (couvert par un test dédié).
+> Même arrondi que le rapport mensuel (`ManagementReportService::forMandate()`),
+> agrégé sur toute la période plutôt qu'un seul mois. Affiché sur
+> `/espace-proprietaire` entre « Dépenses » et « Reversements ».
+
 > **F4.4 — lignes détaillées sur la fiche.** Pour l'espace propriétaire, la fiche
 > `GET /manage/mandates/{mandate}` **eager-load** en plus les `rents`, `payouts`
 > et `incidents` (les **12 plus récents** de chaque) ; `MandateResource` les

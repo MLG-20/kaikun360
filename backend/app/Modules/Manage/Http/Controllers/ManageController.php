@@ -89,11 +89,32 @@ class ManageController extends Controller
             'loyers_impayes_xof' => (int) Rent::whereIn('mandate_id', $mandateIds)
                 ->whereIn('status', [RentStatus::IMPAYE->value, RentStatus::EN_RETARD->value])->sum('amount_xof'),
             'depenses_xof' => (int) Expense::whereIn('property_id', $propertyIds)->sum('amount_xof'),
+            'commission_xof' => $this->commissionTotal($ownerId),
             'reversements_xof' => (int) OwnerPayout::whereIn('mandate_id', $mandateIds)
                 ->where('status', OwnerPayoutStatus::EFFECTUE->value)->sum('amount_xof'),
             'incidents_ouverts' => Incident::whereIn('property_id', $propertyIds)
                 ->where('status', IncidentStatus::OUVERT->value)->count(),
         ]);
+    }
+
+    /**
+     * Commission Kaikun cumulée, tous mandats confondus, sur les loyers PAYÉS
+     * du propriétaire. Transparence (demande client) : le taux est propre à
+     * CHAQUE mandat (`commission_rate`), donc calculé mandat par mandat — pas
+     * un taux unique appliqué au total, qui serait faux dès qu'un propriétaire
+     * a deux mandats à des taux différents. Même arrondi que le rapport mensuel
+     * (`ManagementReportService::forMandate()`), agrégé sur toute la période.
+     */
+    private function commissionTotal(int $ownerId): int
+    {
+        return (int) Rent::query()
+            ->join('management_mandates', 'management_mandates.id', '=', 'rents.mandate_id')
+            ->where('management_mandates.owner_id', $ownerId)
+            ->where('rents.status', RentStatus::PAYE->value)
+            ->selectRaw('management_mandates.id as mandate_id, management_mandates.commission_rate as rate, SUM(rents.amount_xof) as rents_paid')
+            ->groupBy('management_mandates.id', 'management_mandates.commission_rate')
+            ->get()
+            ->sum(fn ($row) => round($row->rents_paid * (float) $row->rate / 100));
     }
 
     /**

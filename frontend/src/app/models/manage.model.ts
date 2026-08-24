@@ -17,6 +17,8 @@ export interface OwnerDashboard {
   loyers_impayes_xof: number;
   /** Total des dépenses engagées sur les biens gérés (maintenance, réparations…). */
   depenses_xof: number;
+  /** Commission Kaikun cumulée sur les loyers payés (transparence). */
+  commission_xof: number;
   /** Total des reversements déjà effectués au propriétaire. */
   reversements_xof: number;
   /** Nombre d'incidents encore ouverts sur les biens gérés. */

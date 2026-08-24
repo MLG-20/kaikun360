@@ -45,7 +45,7 @@ class ManageDashboardTest extends TestCase
     public function test_le_tableau_de_bord_agrege_les_donnees_du_proprietaire(): void
     {
         $owner = User::factory()->create();
-        $mandate = ManagementMandate::factory()->create(['owner_id' => $owner->id]);
+        $mandate = ManagementMandate::factory()->create(['owner_id' => $owner->id, 'commission_rate' => 10]);
 
         Rent::factory()->paid()->create(['mandate_id' => $mandate->id, 'amount_xof' => 100_000]);
         Rent::factory()->create(['mandate_id' => $mandate->id, 'amount_xof' => 50_000, 'status' => 'impaye']);
@@ -64,8 +64,29 @@ class ManageDashboardTest extends TestCase
             ->assertJsonPath('data.loyers_payes_xof', 100_000)
             ->assertJsonPath('data.loyers_impayes_xof', 50_000)
             ->assertJsonPath('data.depenses_xof', 30_000)
+            // 10 % des 100 000 F de loyers PAYÉS (les impayés n'entrent pas
+            // dans l'assiette de commission — rien n'a encore été encaissé).
+            ->assertJsonPath('data.commission_xof', 10_000)
             ->assertJsonPath('data.reversements_xof', 70_000)
             ->assertJsonPath('data.incidents_ouverts', 1);
+    }
+
+    public function test_la_commission_s_additionne_sur_plusieurs_mandats_a_taux_differents(): void
+    {
+        $owner = User::factory()->create();
+        $mandateA = ManagementMandate::factory()->create(['owner_id' => $owner->id, 'commission_rate' => 10]);
+        $mandateB = ManagementMandate::factory()->create(['owner_id' => $owner->id, 'commission_rate' => 8]);
+
+        Rent::factory()->paid()->create(['mandate_id' => $mandateA->id, 'amount_xof' => 100_000]);
+        Rent::factory()->paid()->create(['mandate_id' => $mandateB->id, 'amount_xof' => 200_000]);
+
+        Sanctum::actingAs($owner);
+
+        // 10 % de 100 000 + 8 % de 200 000 = 10 000 + 16 000 : un taux unique
+        // appliqué au total (300 000 × 9 %) aurait donné 27 000, un résultat FAUX.
+        $this->getJson('/api/v1/manage/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.commission_xof', 26_000);
     }
 
     public function test_les_agregats_apparaissent_dans_la_liste_mine(): void
