@@ -99,6 +99,15 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/properties/{property}/documents/{document}/download` | URL signée | `PropertyManagementController@downloadDocument` |
 | PATCH | `/properties/{property}/reject` | auth + `can:valider:bien` | `PropertyValidationController@reject` |
 
+> **F5.8 — caution pour une location au mois.** `POST`/`PATCH /properties`
+> acceptent `caution_xof` (montant MENSUEL, FCFA) et `caution_months` (nombre de
+> mois), deux champs **indépendants** librement déclarés par le propriétaire —
+> pas un multiple imposé du loyer (`price_xof`). Le TOTAL
+> (`caution_xof × caution_months`) est calculé côté serveur et exposé sous
+> `caution_total_xof` (`PropertyResource`), jamais stocké. `price_xof` reste
+> `nullable` côté serveur (un bien loué seulement à la nuitée n'en a pas), mais
+> devient obligatoire côté frontend dès que le mode de location inclut le mois.
+
 ### Stay — nuitées
 
 | Méthode | URI | Accès | Contrôleur |
@@ -221,6 +230,8 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/providers` | auth + vérifié | `ProviderRegistrationController@store` |
 | GET | `/providers/mine` | auth | `ProviderRegistrationController@mine` |
 | PUT | `/providers/mine` | auth | `ProviderProfileController@update` |
+| GET | `/providers/categories` | auth | `ProviderProfileController@categories` — catégories assignables (F5) |
+| POST | `/providers/categories` | auth | `ProviderProfileController@storeCategory` — propose une catégorie (F5) |
 | POST | `/providers/certifications` | auth | `ProviderProfileController@storeCertification` |
 | GET | `/providers/certifications/{certification}/download` | URL signée | `ProviderProfileController@downloadCertification` |
 | DELETE | `/providers/certifications/{certification}` | auth | `ProviderProfileController@destroyCertification` |
@@ -235,6 +246,15 @@ TypeScript miroir côté frontend Angular (phase F0).
 | PATCH | `/providers/{provider}/validate` | auth + `can:valider:prestataire` | `ProviderValidationController@validate` |
 | PATCH | `/providers/{provider}/warn` | auth + `can:valider:prestataire` | `ProviderValidationController@warn` |
 
+> **F5 — nomenclature de catégories EXTENSIBLE.** `category` référence
+> désormais `provider_categories.key` (table), plus un enum fermé. Une
+> catégorie proposée (`POST /providers/categories`) entre `en_attente` :
+> utilisable **immédiatement** par son auteur, invisible pour les autres
+> prestataires tant qu'un admin ne l'a pas validée depuis la file générique
+> sous le type **`provider_category`** (`GET /admin/queue?type=provider_category`,
+> `PATCH /admin/validate/provider_category/{id}`), permission dédiée
+> `valider:categorie-prestataire`.
+
 ### Pro — missions
 
 | Méthode | URI | Accès | Contrôleur |
@@ -247,7 +267,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
-| GET | `/manage/dashboard` | auth | `ManageController@dashboard` |
+| GET | `/manage/dashboard` | auth | `ManageController@dashboard` — dont `commission_xof` (KPI transparence, F5.9) |
 | PATCH | `/manage/incidents/{incident}/resolve` | auth + `can:gerer:gestion-locative` | `MandateManagementController@resolveIncident` |
 | POST | `/manage/mandates` | auth + `can:gerer:gestion-locative` | `MandateManagementController@storeMandate` |
 | GET | `/manage/mandates/mine` | auth | `ManageController@mine` |
@@ -562,6 +582,7 @@ existants. Voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README
 | GET | `/regions` | public | `GeoController@regions` |
 | GET | `/departments` | public | `GeoController@departments` |
 | GET | `/communes` | public | `GeoController@communes` |
+| POST | `/communes` | auth | `GeoController@storeCommune` — propose une commune manquante (F5.7), **sans modération** |
 
 ### Paiement
 

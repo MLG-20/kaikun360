@@ -2273,6 +2273,57 @@ le vrai contenu — titre, image, texte — juste invisible sous le voile).
 Corrigé en ignorant le tout premier événement de navigation dans
 `activerPolitiqueDeDefilement()` (`core/scroll/scroll-behavior.ts`).
 
+### Catégories de service prestataire extensibles (F5.6)
+
+`ProviderCategory` (`core/api/provider.service.ts`) n'est plus une union de
+littéraux fixe mais une simple `string` — la clé assignable référence
+désormais `ProviderCategoryOption[]` chargé depuis `GET /providers/categories`
+(les catégories `valide`, plus la mienne éventuellement `en_attente`).
+
+- **« Mes services » (`features/pro/services`)** : le select se charge
+  dynamiquement, l'option « Autre » a disparu au profit d'une option
+  « Proposer une nouvelle catégorie… » qui ouvre un champ de saisie libre.
+  `submitNewCategory()` appelle `POST /providers/categories`, sélectionne
+  aussitôt la catégorie retournée (utilisable pour la fiche même si elle
+  affiche « en attente de validation ») et l'ajoute à la liste locale sans
+  recharger.
+- **Inscription prestataire (`features/pro/provider-registration`)** : même
+  source (`provider.categories()`), filtrée aux `valide` seulement — pas
+  d'option « proposer », un compte sans profil marketplace ne peut pas encore
+  en être l'auteur.
+- **Back-office** : `ValidationType` gagne un 6e type `provider_category` ;
+  l'écran Validation (F7.2.a) l'affiche comme un onglet de plus, sans code
+  spécifique — la file générique existante suffit.
+
+### Formulaire de bien : commune manquante et caution (F5.7 / F5.8)
+
+`owner-property-form-page` (`features/owner/properties`) :
+
+- **Commune manquante (F5.7)** : sous le select Commune, un lien « Ma commune
+  n'est pas dans la liste ? Ajoutez-la. » (dès qu'un département est choisi)
+  ouvre un champ de saisie libre. `submitNewCommune()` appelle
+  `GeoService.createCommune()` (`POST /communes`, sans modération), ajoute la
+  commune retournée à `communes()` et la sélectionne aussitôt.
+- **Caution (F5.8)** : deux champs indépendants, `caution_xof` (mensuel) et
+  `caution_months`, visibles uniquement quand le mode inclut le loyer mensuel.
+  `cautionTotalLabel()` affiche le total (`montant × mois`) en direct pendant
+  la saisie — aperçu seulement, le total réel vient du serveur
+  (`Property.caution_total_xof`). `applyMode()` bascule aussi le validateur
+  `required` du loyer mensuel (obligatoire dès que le mode l'inclut).
+- **Caution nuitées retirée** du groupe `stay` de ce même formulaire (décision
+  produit F5.8, seule la gestion locative garde une caution) — et son
+  affichage supprimé des fiches détail nuitée (`features/stay/stay-detail`) et
+  véhicule (`features/mobility/vehicle-detail`) : trois blocs par fiche
+  (caractéristiques, encart tarif, devis de réservation).
+
+### Commission propriétaire (F5.9)
+
+`owner-overview-page` (`features/owner/overview`) ajoute la tuile
+« Commission Kaikun » entre Dépenses et Reversements, à partir du nouveau
+champ `commission_xof` de `GET /manage/dashboard` (`OwnerDashboard`,
+`models/manage.model.ts`) — aucune logique de calcul côté frontend, la valeur
+est déjà agrégée par le serveur.
+
 ### Commandes utiles
 
 ```bash

@@ -886,6 +886,51 @@ tranche couvre les deux premiers.
 
 ---
 
+### F5.6 — Catégories de service prestataire extensibles
+
+Retouche demandée sur l'écran « Mes services » (2026-08-23) : un prestataire
+dont l'activité ne correspondait à aucune des 7 catégories fixes n'avait que
+« Autre » comme échappatoire, sans rien renseigner d'exploitable pour le
+catalogue. La nomenclature devient **extensible**, en restant modérée.
+
+- [x] **`ProviderCategory` : d'un enum PHP fermé à une table `provider_categories`.** Un prestataire qui ne se reconnaît dans aucune catégorie du sélecteur peut désormais en **proposer une** (`POST /providers/categories`) : elle entre `en_attente`, **utilisable immédiatement par son auteur**, mais invisible pour les autres prestataires tant qu'un admin ne l'a pas validée. Les 7 valeurs historiques sont insérées `valide` **par la migration elle-même** (pas un seeder à lancer en prod) ; `autre` reste en base mais disparaît du sélecteur, remplacée par « Proposer une nouvelle catégorie… ». Déduplication par slug : proposer un libellé déjà existant renvoie la ligne existante plutôt que d'en créer une seconde — c'est précisément ce qui permet à la proposition d'un prestataire de profiter au suivant.
+- [x] **Modération réutilisée, pas réinventée.** La validation rejoint la file générique du back-office (`ValidatorRegistry`, F7.2.a) sous un 6e type `provider_category` (permission dédiée `valider:categorie-prestataire`) : aucun nouvel écran, aucune nouvelle route admin — l'onglet « Catégories prestataires » de l'écran Validation existant suffit.
+- [x] **À l'inscription, pas de proposition.** Le formulaire d'inscription prestataire (`RegisterProviderRequest`) ne propose que les catégories déjà `valide` : un compte qui n'a pas encore de profil marketplace ne peut pas encore en être l'auteur.
+
+---
+
+### F5.7 — Proposer une commune manquante (formulaire de bien)
+
+Le référentiel `communes` vient d'un JSON ANSD volontairement incomplet (seuls
+Dakar et Guédiawaye sont détaillés, les 44 autres départements n'ont que leur
+chef-lieu). Sur le formulaire de bien, le select Commune était donc souvent
+vide, sans aucun moyen pour le propriétaire de signaler la sienne (2026-08-24).
+
+- [x] **`POST /communes`, sans modération.** Tout utilisateur connecté peut proposer une commune absente du select (`GeoController::storeCommune`, réutilise `StoreCommuneRequest` du module Admin telle quelle). Elle rejoint directement le référentiel partagé — visible aussitôt pour tout autre propriétaire du même département. C'est une donnée géographique factuelle, pas un contenu public à valider avant diffusion ; une commune mal orthographiée reste corrigeable depuis l'écran Référentiels du back-office (CRUD déjà en place).
+- [x] **Un lien discret sous le select**, actionnable dès qu'un département est choisi (« Ma commune n'est pas dans la liste ? Ajoutez-la. ») — scope volontairement limité au formulaire de bien, les autres formulaires portant un select Commune ne changent pas pour l'instant.
+
+### F5.8 — Caution pour une location au mois, et retrait de la caution nuitées/véhicules
+
+Le propriétaire n'avait aucun moyen de demander une caution pour une location
+classique au mois — seules les nuitées et les locations de véhicule en
+avaient une (2026-08-24). Plusieurs allers-retours avec l'utilisateur ont
+resserré la conception : pas de calcul imposé, pas de suivi de statut sans
+notion de bail pour le porter, et une décision produit plus large au passage.
+
+- [x] **`properties.caution_xof` (montant mensuel) et `properties.caution_months` (nombre de mois), deux champs indépendants** librement déclarés par le propriétaire — pas un multiple imposé du loyer, à sa discrétion (1, 2, 3 mois…). Le **total** (`caution_xof × caution_months`) est calculé côté serveur (`Property::caution_total_xof`, accesseur) et affiché en direct pendant la saisie côté frontend — jamais stocké, pour ne jamais désynchroniser le total des deux valeurs sources.
+- [x] **Le loyer mensuel devient obligatoire** dès que le mode de location choisi l'inclut (mensuelle/mixte) — ne l'était pas jusque-là.
+- [x] **Décision produit : seule la gestion locative a une caution, désormais.** La caution nuitées (`stays.caution_xof`) et véhicules (`vehicles.caution_xof`) est retirée des formulaires prestataire et de tous les affichages publics (fiche détail, encart tarif, devis de réservation), et les valeurs déjà en base sont remises à 0 (migrations dédiées) — sans toucher `bookings.caution_xof`/`caution_status`, le sort d'une caution déjà collectée sur une réservation en cours restant à trancher côté back-office.
+
+### F5.9 — KPI Commission sur le tableau de bord propriétaire
+
+Demande de transparence du client (2026-08-24) : le propriétaire voyait ses
+loyers, dépenses et reversements, mais jamais la commission que Kaikun
+prélève dessus.
+
+- [x] **`GET /manage/dashboard` expose `commission_xof`**, calculée **mandat par mandat** (chaque mandat a son propre taux) puis sommée — un taux unique appliqué au total aurait été faux dès qu'un propriétaire a deux mandats à des taux différents (couvert par un test dédié). Affichée sur `/espace-proprietaire` entre « Dépenses » et « Reversements ».
+
+---
+
 ## Critères d'acceptation transverses
 
 - [ ] Un visiteur comprend Kaikun 360 en moins de 5 secondes sur la page d'accueil et voit les CTA clients/offreurs.

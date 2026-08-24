@@ -1167,6 +1167,39 @@ Le code est **abondamment commenté en français**.
   gate d'ouverture (F14) : l'équipe doit pouvoir communiquer avant le
   lancement. 9 nouveaux endpoints au total, 2 nouvelles tables
   (`news_articles`, `home_hero_slides`).
+- ✅ **Catégories de service prestataire extensibles (F5.6).** `ProviderCategory`
+  passe d'un enum PHP fermé à une table `provider_categories` (`key`, `label`,
+  `status`, `created_by_provider_id`) — un prestataire qui ne se reconnaît dans
+  aucune catégorie du sélecteur peut désormais en **proposer une**
+  (`POST /providers/categories`), utilisable **immédiatement** par son auteur
+  mais invisible pour les autres tant qu'un admin ne l'a pas validée. Les 7
+  valeurs historiques sont insérées `valide` **par la migration elle-même**
+  (pas un seeder), donc présentes dès `php artisan migrate` en prod ; `autre`
+  reste en base mais disparaît du sélecteur. La modération rejoint la file
+  générique existante (`ValidatorRegistry`) sous un 6e type
+  `provider_category`, permission dédiée `valider:categorie-prestataire` —
+  aucune route admin neuve. `Provider::categoryRef()` (`belongsTo`, nommée
+  ainsi pour ne pas masquer la colonne brute `category`) expose le libellé.
+  5 tests neufs (`ProviderCategoryTest`).
+- ✅ **Proposer une commune manquante (F5.7).** `POST /communes` (auth,
+  `GeoController@storeCommune`, réutilise `StoreCommuneRequest` du module
+  Admin) — **sans modération** : la commune rejoint directement le référentiel
+  partagé, à la discrétion du propriétaire depuis le formulaire de bien
+  (le JSON ANSD qui amorce `communes.json` reste très incomplet hors
+  Dakar/Guédiawaye).
+- ✅ **Caution pour une location au mois, et retrait de la caution
+  nuitées/véhicules (F5.8).** `properties.caution_xof` (mensuel) et
+  `properties.caution_months`, deux champs indépendants déclarés par le
+  propriétaire ; le total (`caution_xof × caution_months`) est un accesseur
+  calculé (`Property::caution_total_xof`), jamais stocké. Décision produit :
+  seule la gestion locative garde une caution — `stays.caution_xof` et
+  `vehicles.caution_xof` sont remises à 0 (migrations dédiées) et retirées des
+  formulaires/affichages, sans toucher `bookings.caution_xof`/`caution_status`
+  (réservations déjà en cours).
+- ✅ **KPI Commission sur le tableau de bord propriétaire (F5.9).**
+  `GET /manage/dashboard` expose `commission_xof`, calculée **mandat par
+  mandat** (taux propre à chaque mandat) puis sommée — jamais un taux unique
+  appliqué au total.
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.
