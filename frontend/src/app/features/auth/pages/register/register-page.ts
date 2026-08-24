@@ -9,7 +9,13 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
@@ -29,7 +35,7 @@ interface ProfileOption {
 /**
  * Page d'inscription + onboarding (F1.2).
  *
- * Un écran : choix du profil (4 casquettes métier, une par espace) puis
+ * Un écran : choix du profil (5 casquettes métier, une par espace) puis
  * coordonnées et mot de passe. En cas de succès, `AuthService.register` ouvre la session (jeton en
  * mémoire). Le backend renvoie **422** avec des erreurs par champ (e-mail ou
  * téléphone déjà utilisés…) : elles sont affichées sous les champs concernés.
@@ -65,17 +71,44 @@ export class RegisterPageComponent implements AfterViewInit {
   private readonly googleBtn = viewChild<ElementRef<HTMLElement>>('googleBtn');
 
   /**
-   * Les 4 profils correspondant aux espaces (valeurs = enum ProfileType backend).
+   * Les 5 profils correspondant aux espaces (valeurs = enum ProfileType backend).
    *
-   * NB : « Diaspora » n'est PAS proposé ici — ce n'est pas un espace mais une
-   * fonctionnalité de l'espace client (un membre de la diaspora s'inscrit comme
-   * « Client » et retrouve ses projets pilotés à distance dans son espace).
+   * ⚠️ Depuis la séparation de l'espace diaspora (F18, 2026-08-22), « Diaspora »
+   * est un espace à PART ENTIÈRE (comme les 4 autres), et non plus une simple
+   * fonctionnalité de l'espace client : ce profil reçoit désormais son propre
+   * rôle Spatie (`UserRole::DIASPORA`) côté serveur.
    */
   protected readonly profiles: ProfileOption[] = [
-    { value: 'client', icon: '🔎', label: 'Client', description: 'Rechercher, réserver, demander un service' },
-    { value: 'proprietaire', icon: '🏠', label: 'Propriétaire', description: 'Déposer et gérer vos biens' },
-    { value: 'prestataire', icon: '🧰', label: 'Prestataire', description: 'Proposer véhicule, circuit, BTP, guide…' },
-    { value: 'entreprise', icon: '🏢', label: 'Entreprise', description: 'Demandes groupées, team building, devis' },
+    {
+      value: 'client',
+      icon: '🔎',
+      label: 'Client',
+      description: 'Rechercher, réserver, demander un service',
+    },
+    {
+      value: 'proprietaire',
+      icon: '🏠',
+      label: 'Propriétaire',
+      description: 'Déposer et gérer vos biens',
+    },
+    {
+      value: 'prestataire',
+      icon: '🧰',
+      label: 'Prestataire',
+      description: 'Proposer véhicule, circuit, BTP, guide…',
+    },
+    {
+      value: 'entreprise',
+      icon: '🏢',
+      label: 'Entreprise',
+      description: 'Demandes groupées, team building, devis',
+    },
+    {
+      value: 'diaspora',
+      icon: '🌍',
+      label: 'Diaspora',
+      description: 'Piloter un projet au pays depuis l’étranger',
+    },
   ];
 
   protected readonly submitting = signal(false);
@@ -104,7 +137,8 @@ export class RegisterPageComponent implements AfterViewInit {
 
   /** Le champ est-il invalide et touché (validation locale) ? */
   protected invalid(
-    field: 'profile_type' | 'name' | 'email' | 'phone' | 'city' | 'password' | 'password_confirmation',
+    field:
+      'profile_type' | 'name' | 'email' | 'phone' | 'city' | 'password' | 'password_confirmation',
   ): boolean {
     const control = this.form.controls[field];
     return control.invalid && control.touched;

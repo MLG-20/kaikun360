@@ -26,28 +26,31 @@ unique** qui coordonne tout sur place, décline les bénéfices, puis propose un
 - Le bandeau « protocole de confiance » sur fond navy a des styles **propres**
   (`diaspora-trust-*` dans `diaspora-page.scss`) ; le reste réutilise `.uni-hero`
   et les sections `.conv-*`. Un lien `.conv-account-link` sous le formulaire
-  renvoie vers l'espace client (`/mon-espace/diaspora`) pour lancer un dossier
+  renvoie vers l'espace diaspora (`/espace-diaspora`) pour lancer un dossier
   structuré une fois connecté.
 
 ---
 
-## 3. Projets diaspora connectés (F3.8)
+## 3. Espace diaspora connecté (F3.8, indépendant depuis F18)
 
-Écrans montés **dans l'espace client** (`/mon-espace/diaspora`, routes déclarées
-dans [`account.routes.ts`](../account/account.routes.ts)), qui comblent
-l'exigence CDC §15 (« un dossier diaspora peut être **créé, suivi et enrichi de
-rapports** ») restée sans interface — le backend l'exposait déjà.
+⚠️ **Espace autonome depuis le 2026-08-22** (F18) — auparavant nichés dans
+l'espace client (`/mon-espace/diaspora`), ces écrans vivent désormais sous
+`/espace-diaspora`, gardés par leur **propre rôle** Spatie `diaspora`
+(`UserRole::DIASPORA`), au même titre que propriétaire/prestataire/entreprise.
+Un compte diaspora n'a plus accès à `/mon-espace` (séparation complète — voir
+`diaspora.routes.ts` + `diaspora-space.ts`). Ils comblent l'exigence CDC §15
+(« un dossier diaspora peut être **créé, suivi et enrichi de rapports** »).
 
-- **`diaspora-projects/diaspora-projects-page`** (`diaspora`) — liste **Mes
-  projets diaspora** (`GET /diaspora-projects/mine`) : type, pays de résidence,
-  budget, **nombre de rapports** et **statut** (pastille `.dp-badge`). Bouton de
-  lancement + accès au détail.
-- **`diaspora-projects/diaspora-project-form-page`** (`diaspora/nouveau`) —
-  lancement d'un projet (`POST /diaspora-projects`) : type (achat / construction
-  / gestion locative), pays de résidence, budget et priorité. Miroir de
+- **`diaspora-projects/diaspora-projects-page`** (`''`, accueil de l'espace) —
+  liste **Mes projets diaspora** (`GET /diaspora-projects/mine`) : type, pays de
+  résidence, budget, **nombre de rapports** et **statut** (pastille
+  `.dp-badge`). Bouton de lancement + accès au détail.
+- **`diaspora-projects/diaspora-project-form-page`** (`nouveau`) — lancement
+  d'un projet (`POST /diaspora-projects`) : type (achat / construction /
+  gestion locative), pays de résidence, budget et priorité. Miroir de
   `StoreDiasporaProjectRequest` ; à la création on ouvre directement le détail.
-- **`diaspora-projects/diaspora-project-detail-page`** (`diaspora/:id`) — détail
-  du projet **+ chronologie des rapports** (`GET /diaspora-projects/{id}` et
+- **`diaspora-projects/diaspora-project-detail-page`** (`:id`) — détail du
+  projet **+ chronologie des rapports** (`GET /diaspora-projects/{id}` et
   `/reports`, chargés en parallèle). Chaque rapport affiche type, date,
   commentaire, **galerie photos** et **lien vidéo**. Lecture seule : les rapports
   sont déposés par l'**agent affecté** (back-office). Le backend renvoie 404 si le
@@ -61,13 +64,14 @@ rapports** ») restée sans interface — le backend l'exposait déjà.
 
 ## F3.9 — « Mes chantiers & devis » (réponse du client à un devis de chantier)
 
-La rubrique accueille aussi le bloc **`shared/components/construction-quotes/`**
-(`app-construction-quotes`), monté en bas de la page « Mes projets diaspora ».
-
-**Pourquoi ici.** Placement décidé avec le porteur du produit : c'est la rubrique
-où vit le client qui fait construire à distance. Elle est ouverte à **tous** les
-clients (aucun filtrage diaspora dans `ACCOUNT_NAV`), donc un client résident y
-accède aussi — personne ne se retrouve sans moyen de répondre à son devis.
+⚠️ **Ce bloc a QUITTÉ cet écran lors de la séparation F18** (2026-08-22). Il
+vit désormais sur l'accueil de l'espace **CLIENT**
+(`features/account/overview/account-overview-page`), pas ici : le composant
+**`shared/components/construction-quotes/`** (`app-construction-quotes`)
+s'adresse à **tous** les clients (rattachement par client, pas par projet
+diaspora), diaspora ou non — l'y laisser aurait privé tout client résident de
+son seul moyen de répondre à un devis de chantier, puisque l'espace diaspora
+lui est désormais fermé.
 
 **⚠️ Rattachement par CLIENT, pas par projet.** `diaspora_projects` n'a **aucune
 clé étrangère** vers `construction_requests` : ce sont deux dossiers parallèles

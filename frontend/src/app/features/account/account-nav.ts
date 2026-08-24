@@ -31,7 +31,7 @@ export type AccountIcon =
   | 'building' // biens immobiliers (espace propriétaire, F4)
   | 'wallet' // reversements / finances (espace propriétaire, F4)
   | 'car' // offres réservables — véhicules & circuits (espace prestataire, F5.6)
-  | 'globe' // projets diaspora — pilotés à distance (espace client, F3.8)
+  | 'globe' // projets diaspora — pilotés à distance (espace diaspora, F18)
   | 'document' // documents / rapports (espaces pro)
   | 'trash'; // corbeille des annonces rangées (F11.4, espaces propriétaire & prestataire)
 
@@ -82,13 +82,6 @@ export const ACCOUNT_NAV: readonly AccountNavItem[] = [
     path: 'reservations',
     icon: 'calendar',
     ready: true, // F3.4 ✅
-  },
-  {
-    label: 'Projets diaspora',
-    description: 'Vos projets pilotés à distance et leurs rapports de suivi.',
-    path: 'diaspora',
-    icon: 'globe',
-    ready: true, // F3.8 ✅
   },
   {
     label: 'Favoris',

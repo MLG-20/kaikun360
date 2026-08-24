@@ -3,37 +3,30 @@ import { RouterLink } from '@angular/router';
 
 import { DiasporaService } from '../../../core/api/diaspora.service';
 import { DiasporaProject } from '../../../models/diaspora.model';
-import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
-import { ConstructionQuotesComponent } from '../../../shared/components/construction-quotes/construction-quotes';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 
 /** État de chargement de l'écran. */
 type LoadState = 'loading' | 'ready' | 'error';
 
 /**
- * Écran « Mes projets diaspora » de l'espace client (F3.8), monté sous
- * `/mon-espace/diaspora`.
+ * Écran « Mes projets diaspora » (F3.8), page d'ACCUEIL du désormais
+ * indépendant espace diaspora (F18, `/espace-diaspora`).
  *
  * Liste les dossiers pilotés à distance du client (`GET /diaspora-projects/mine`)
  * avec leur **statut**, leur priorité et le **nombre de rapports** reçus, et
- * donne accès à la création (`diaspora/nouveau`) et au détail (`diaspora/:id`).
- * Comble l'exigence CDC §15 (dossier diaspora « créé, suivi et enrichi de
- * rapports »), restée sans interface côté client.
+ * donne accès à la création (`nouveau`) et au détail (`:id`). Comble l'exigence
+ * CDC §15 (dossier diaspora « créé, suivi et enrichi de rapports »).
  *
- * **F3.9** — L'écran accueille aussi le bloc « Mes chantiers & devis »
- * (`app-construction-quotes`), où le client accepte ou refuse un devis de
- * construction. Placement décidé avec le porteur du produit : c'est ici que vit
- * le client qui fait construire à distance. ⚠️ Le rattachement se fait par
- * CLIENT, pas par projet — `diaspora_projects` n'a aucune clé vers
- * `construction_requests` — donc un client ayant deux chantiers voit ses deux
- * devis dans la même section, chacun identifié par son chantier. La rubrique
- * étant ouverte à TOUS les clients (et pas aux seuls membres de la diaspora),
- * un client résident y accède aussi : personne ne se retrouve sans moyen de
- * répondre à son devis.
+ * ⚠️ **Le bloc « Mes chantiers & devis » (F3.9) a QUITTÉ cet écran** lors de la
+ * séparation de l'espace diaspora (2026-08-22) : il s'adresse à TOUS les
+ * clients (rattachement par client, pas par projet diaspora), il vit
+ * désormais sur l'accueil de l'espace CLIENT (`account-overview-page`), pas
+ * ici — sans quoi un client résident aurait perdu son seul moyen de répondre
+ * à un devis de chantier.
  */
 @Component({
   selector: 'app-diaspora-projects-page',
-  imports: [RouterLink, BackLinkComponent, ConstructionQuotesComponent],
+  imports: [RouterLink],
   templateUrl: './diaspora-projects-page.html',
   styleUrl: './diaspora-projects-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

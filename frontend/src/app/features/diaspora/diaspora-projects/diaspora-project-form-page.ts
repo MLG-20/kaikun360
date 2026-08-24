@@ -15,7 +15,7 @@ import { BackLinkComponent } from '../../../shared/components/back-link/back-lin
 
 /**
  * Formulaire de lancement d'un **projet diaspora** (F3.8), monté sous
- * `/mon-espace/diaspora/nouveau`.
+ * `/espace-diaspora/nouveau`.
  *
  * Miroir de `StoreDiasporaProjectRequest` : type de projet et pays de résidence
  * requis ; budget, description et priorité facultatifs. À la création, le projet
@@ -71,7 +71,7 @@ export class DiasporaProjectFormPageComponent {
       next: (env) => {
         this.submitting.set(false);
         // On ouvre directement le détail du projet créé.
-        this.router.navigate(['/mon-espace/diaspora', env.data.project.id]);
+        this.router.navigate(['/espace-diaspora', env.data.project.id]);
       },
       error: (err: { error?: ValidationErrorBody }) => {
         this.submitting.set(false);

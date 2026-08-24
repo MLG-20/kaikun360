@@ -140,10 +140,17 @@ class ClaudePrompt
                 collaborateurs, logement de personnel). Ses réservations et ses demandes sont
                 celles de la société, pas d'un particulier.
                 TXT,
+            UserRole::DIASPORA => <<<'TXT'
+                INTERLOCUTEUR
+                Un client de la diaspora, résidant à l'étranger. Il pilote son ou ses projets
+                (achat, construction, suivi de chantier) à distance : parle-lui de SES projets
+                diaspora, jamais de réservations ou de demandes génériques, qui relèvent d'un
+                autre espace auquel il n'a pas accès.
+                TXT,
             default => <<<'TXT'
                 INTERLOCUTEUR
-                Un client connecté. Tu peux consulter ses réservations, ses demandes et ses
-                projets diaspora — les siens uniquement, jamais ceux d'un autre compte.
+                Un client connecté. Tu peux consulter ses réservations et ses demandes — les
+                siennes uniquement, jamais celles d'un autre compte.
                 TXT,
         };
     }

@@ -82,35 +82,6 @@ export const ACCOUNT_ROUTES: Routes = [
         title: 'Donner mon avis — Kaikun 360',
       },
       {
-        // F3.8 — Projets diaspora : liste des dossiers pilotés à distance
-        // (GET /diaspora-projects/mine).
-        path: 'diaspora',
-        loadComponent: () =>
-          import('../diaspora/diaspora-projects/diaspora-projects-page').then(
-            (m) => m.DiasporaProjectsPageComponent,
-          ),
-        title: 'Mes projets diaspora — Kaikun 360',
-      },
-      {
-        // F3.8 — Lancement d'un projet diaspora (POST /diaspora-projects).
-        path: 'diaspora/nouveau',
-        loadComponent: () =>
-          import('../diaspora/diaspora-projects/diaspora-project-form-page').then(
-            (m) => m.DiasporaProjectFormPageComponent,
-          ),
-        title: 'Lancer un projet diaspora — Kaikun 360',
-      },
-      {
-        // F3.8 — Détail d'un projet + rapports de suivi
-        // (GET /diaspora-projects/{id} + /reports).
-        path: 'diaspora/:id',
-        loadComponent: () =>
-          import('../diaspora/diaspora-projects/diaspora-project-detail-page').then(
-            (m) => m.DiasporaProjectDetailPageComponent,
-          ),
-        title: 'Projet diaspora — Kaikun 360',
-      },
-      {
         // F3.5 — Favoris : biens sauvegardés (GET /favorites, retrait).
         path: 'favoris',
         loadComponent: () =>
@@ -146,15 +117,13 @@ export const ACCOUNT_ROUTES: Routes = [
         // possède aucune annonce — donc aucun compte à rebours : rien n'y est
         // jamais supprimé, et l'écran le dit lui-même.
         path: 'corbeille',
-        loadComponent: () =>
-          import('../trash/trash-page').then((m) => m.TrashPageComponent),
+        loadComponent: () => import('../trash/trash-page').then((m) => m.TrashPageComponent),
         title: 'Corbeille — Kaikun 360',
       },
       {
         // F3.2 — Profil : identité, pièces justificatives, suppression du compte.
         path: 'profil',
-        loadComponent: () =>
-          import('./profile/profile-page').then((m) => m.ProfilePageComponent),
+        loadComponent: () => import('./profile/profile-page').then((m) => m.ProfilePageComponent),
         title: 'Mon profil — Kaikun 360',
       },
       {

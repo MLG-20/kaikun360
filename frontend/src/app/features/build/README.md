@@ -89,8 +89,11 @@ après étude du projet.
   définie** nulle part — un sélecteur absent ne lève rien, l'explication sous le
   champ s'affichait en corps de page ; elle est maintenant dans `_base.scss`, aux
   côtés de `.k-error`. Le succès nomme le dossier (`CST-…`) et **dit où le
-  suivre** (`/mon-espace/diaspora`, « Mes chantiers & devis ») : un chantier a une
-  vie, contrairement à une demande de rappel.
+  suivre** (`/mon-espace`, « Mes chantiers & devis ») : un chantier a une
+  vie, contrairement à une demande de rappel. ⚠️ Depuis la séparation de
+  l'espace diaspora (F18, 2026-08-22), ce bloc vit sur l'accueil de l'espace
+  CLIENT (il s'adresse à tout client, pas aux seuls comptes diaspora) — plus
+  sous `/mon-espace/diaspora`, qui a quitté l'espace client.
   ⚠️ Côté serveur, le dépôt **ne prévenait personne** — `ConstructionRequestCreated`
   + `NotifyAdminsOfConstructionRequest` ont été ajoutés en même temps (le manque
   était masqué par la demande générique, alertée depuis B11.2).

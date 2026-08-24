@@ -22,7 +22,7 @@ import { MainLayoutComponent } from './layouts/main-layout/main-layout';
  * photo de couverture) via `SeoService.apply()`.
  *
  * ⚠️ **Une route SANS `data.seo` est mise hors index** (`noindex, follow`) par
- * `SeoTitleStrategy`. C'est délibéré : les quatre espaces connectés et le
+ * `SeoTitleStrategy`. C'est délibéré : les cinq espaces connectés et le
  * back-office n'ont rien à faire dans un moteur, et cette règle les protège par
  * défaut plutôt que par vigilance. Conséquence : **oublier `seo` sur une page
  * publique la rend invisible à Google**. C'est le sens de l'erreur qu'on
@@ -57,6 +57,16 @@ export const routes: Routes = [
     path: 'espace-entreprise',
     loadChildren: () =>
       import('./features/enterprise/enterprise.routes').then((m) => m.ENTERPRISE_ROUTES),
+  },
+  {
+    // Espace diaspora authentifié (F18, 2026-08-22) : même shell app-shell
+    // générique, protégé par `roleGuard` (rôle `diaspora`). Séparé de l'espace
+    // client, où il vivait depuis F3.8 (`/mon-espace/diaspora`). Déclaré
+    // avant `''`. ⚠️ Ne pas confondre avec `/diaspora`, la page marketing
+    // publique, déclarée plus bas.
+    path: 'espace-diaspora',
+    loadChildren: () =>
+      import('./features/diaspora/diaspora.routes').then((m) => m.DIASPORA_ROUTES),
   },
   {
     // Back-office (F7) : poste de commandement de l'équipe. Shell DÉDIÉ et
@@ -151,7 +161,7 @@ export const routes: Routes = [
         data: {
           seo: {
             description:
-              'Comparez côte à côte jusqu\'à quatre biens immobiliers : prix, localisation, type et niveau de vérification, sur un seul écran.',
+              "Comparez côte à côte jusqu'à quatre biens immobiliers : prix, localisation, type et niveau de vérification, sur un seul écran.",
             // Le contenu dépend entièrement d'une sélection stockée dans le
             // navigateur : pour un robot, la page est toujours vide.
             index: false,
@@ -168,7 +178,7 @@ export const routes: Routes = [
         data: {
           seo: {
             description:
-              'Détail d\'un bien immobilier vérifié par Kaikun 360 : prix, localisation, caractéristiques et demande de visite en ligne.',
+              "Détail d'un bien immobilier vérifié par Kaikun 360 : prix, localisation, caractéristiques et demande de visite en ligne.",
             type: 'product',
           },
         },
@@ -177,9 +187,7 @@ export const routes: Routes = [
         // Univers Nuitées (F2.3) : page vitrine + fiche détaillée d'une nuitée.
         path: 'nuitees',
         loadComponent: () =>
-          import('./features/stay/stay-list/stay-list-page').then(
-            (m) => m.StayListPageComponent,
-          ),
+          import('./features/stay/stay-list/stay-list-page').then((m) => m.StayListPageComponent),
         title: 'Nuitées & séjours — Kaikun 360',
         data: {
           seo: {
@@ -198,7 +206,7 @@ export const routes: Routes = [
         data: {
           seo: {
             description:
-              'Logement meublé à la nuitée au Sénégal : tarif, équipements, conditions d\'arrivée et réservation immédiate sur Kaikun 360.',
+              "Logement meublé à la nuitée au Sénégal : tarif, équipements, conditions d'arrivée et réservation immédiate sur Kaikun 360.",
             type: 'product',
           },
         },
@@ -228,7 +236,7 @@ export const routes: Routes = [
         data: {
           seo: {
             description:
-              'Programme, durée, inclusions et tarif d\'une expérience touristique au Sénégal, réservable en ligne sur Kaikun 360.',
+              "Programme, durée, inclusions et tarif d'une expérience touristique au Sénégal, réservable en ligne sur Kaikun 360.",
             type: 'product',
           },
         },
@@ -258,7 +266,7 @@ export const routes: Routes = [
         data: {
           seo: {
             description:
-              'Fiche d\'un véhicule de location au Sénégal : tarif journalier, capacité, conformité du dossier et réservation en ligne.',
+              "Fiche d'un véhicule de location au Sénégal : tarif journalier, capacité, conformité du dossier et réservation en ligne.",
             type: 'product',
           },
         },
@@ -274,7 +282,7 @@ export const routes: Routes = [
         data: {
           seo: {
             description:
-              'Navettes, transferts aéroport et départs programmés entre les villes du Sénégal : places réservables à l\'unité, horaires publiés.',
+              "Navettes, transferts aéroport et départs programmés entre les villes du Sénégal : places réservables à l'unité, horaires publiés.",
           },
         },
       },
@@ -307,7 +315,7 @@ export const routes: Routes = [
         data: {
           seo: {
             description:
-              'Construisez au Sénégal depuis l\'étranger : simulateur de budget gratuit, devis par lot, suivi de chantier photo et jalons de paiement.',
+              "Construisez au Sénégal depuis l'étranger : simulateur de budget gratuit, devis par lot, suivi de chantier photo et jalons de paiement.",
           },
         },
       },
@@ -315,9 +323,7 @@ export const routes: Routes = [
         // Univers Gestion locative (F2.5) : page de conversion.
         path: 'gestion-locative',
         loadComponent: () =>
-          import('./features/manage/manage-page/manage-page').then(
-            (m) => m.ManagePageComponent,
-          ),
+          import('./features/manage/manage-page/manage-page').then((m) => m.ManagePageComponent),
         title: 'Gestion locative — Kaikun 360',
         data: {
           seo: {
@@ -337,7 +343,7 @@ export const routes: Routes = [
         data: {
           seo: {
             description:
-              'Sénégalais de l\'étranger : achetez, construisez et gérez à distance avec un protocole de confiance — agent dédié, preuves photo, paiements jalonnés.',
+              "Sénégalais de l'étranger : achetez, construisez et gérez à distance avec un protocole de confiance — agent dédié, preuves photo, paiements jalonnés.",
           },
         },
       },
@@ -352,7 +358,7 @@ export const routes: Routes = [
         data: {
           seo: {
             description:
-              'Séminaires et team building d\'entreprise au Sénégal : lieu, hébergement, transport et activités organisés de bout en bout, sur devis.',
+              "Séminaires et team building d'entreprise au Sénégal : lieu, hébergement, transport et activités organisés de bout en bout, sur devis.",
           },
         },
       },
@@ -438,7 +444,7 @@ export const routes: Routes = [
           gateExempt: true,
           seo: {
             description:
-              'Contactez l\'équipe Kaikun 360 à Dakar : téléphone, e-mail et WhatsApp. Une réponse sous 24 h ouvrées pour tout projet au Sénégal.',
+              "Contactez l'équipe Kaikun 360 à Dakar : téléphone, e-mail et WhatsApp. Une réponse sous 24 h ouvrées pour tout projet au Sénégal.",
           },
         },
       },
@@ -517,7 +523,7 @@ export const routes: Routes = [
           gateExempt: true,
           seo: {
             description:
-              'Page d\'information Kaikun 360 : conditions, politiques et mentions encadrant l\'usage de la plateforme.',
+              "Page d'information Kaikun 360 : conditions, politiques et mentions encadrant l'usage de la plateforme.",
             type: 'article',
           },
         },
@@ -537,7 +543,7 @@ export const routes: Routes = [
         data: {
           kind: 'serveur',
           seo: {
-            description: 'Une difficulté technique empêche l\'affichage de cette page.',
+            description: "Une difficulté technique empêche l'affichage de cette page.",
             // Une page d'erreur indexée abîme la réputation du domaine entier.
             index: false,
           },
@@ -558,7 +564,7 @@ export const routes: Routes = [
         data: {
           kind: 'introuvable',
           seo: {
-            description: 'Cette page n\'existe pas ou n\'est plus en ligne.',
+            description: "Cette page n'existe pas ou n'est plus en ligne.",
             index: false,
           },
         },

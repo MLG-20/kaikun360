@@ -28,5 +28,8 @@ export function spaceHomeFor(user: User | null): string {
   if (user?.roles?.includes('entreprise')) {
     return '/espace-entreprise';
   }
+  if (user?.roles?.includes('diaspora')) {
+    return '/espace-diaspora';
+  }
   return '/mon-espace';
 }

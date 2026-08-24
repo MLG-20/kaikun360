@@ -1,6 +1,6 @@
 <section class="account-head">
-  <app-back-link class="account-back" fallback="/mon-espace/diaspora" />
-  <p class="account-eyebrow">Espace client · Projet diaspora</p>
+  <app-back-link class="account-back" fallback="/espace-diaspora" />
+  <p class="account-eyebrow">Espace diaspora · Projet</p>
 </section>
 
 @switch (state()) {
@@ -10,13 +10,13 @@
   @case ('not-found') {
     <div class="dd-empty">
       <p>Ce projet est introuvable ou ne fait pas partie de vos dossiers.</p>
-      <a class="k-btn k-btn--ghost" routerLink="/mon-espace/diaspora">Retour à mes projets</a>
+      <a class="k-btn k-btn--ghost" routerLink="/espace-diaspora">Retour à mes projets</a>
     </div>
   }
   @case ('error') {
     <div class="dd-empty">
       <p>Impossible de charger ce projet pour le moment.</p>
-      <a class="k-btn k-btn--ghost" routerLink="/mon-espace/diaspora">Retour à mes projets</a>
+      <a class="k-btn k-btn--ghost" routerLink="/espace-diaspora">Retour à mes projets</a>
     </div>
   }
   @default {

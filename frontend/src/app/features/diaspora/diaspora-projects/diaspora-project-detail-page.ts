@@ -11,7 +11,7 @@ import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 type LoadState = 'loading' | 'ready' | 'not-found' | 'error';
 
 /**
- * Détail d'un **projet diaspora** (F3.8), monté sous `/mon-espace/diaspora/:id`.
+ * Détail d'un **projet diaspora** (F3.8), monté sous `/espace-diaspora/:id`.
  *
  * Charge en parallèle le projet (`GET /diaspora-projects/{id}`) et ses
  * **rapports de suivi** (`GET /diaspora-projects/{id}/reports`), affichés en

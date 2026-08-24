@@ -17,12 +17,10 @@ use App\Modules\Diaspora\Models\DiasporaProject;
  * Une réponse immédiate sur l'état du dossier et le nombre de comptes rendus
  * déposés évite une nuit d'attente.
  *
- * ⚠️ **« Diaspora » n'est PAS un rôle de sécurité** — c'est un `ProfileType`.
- * Au sens des rôles, ces comptes sont des **clients**, et c'est bien ce que
- * `DiasporaProject::$client_id` reflète. L'outil est donc ouvert au rôle
- * `client` et se tait de lui-même quand la personne n'a aucun projet : inventer
- * un rôle « diaspora » ici aurait créé une seconde hiérarchie d'autorisations à
- * côté de celle qui existe.
+ * ⚠️ **Depuis la séparation de l'espace diaspora (2026-08-22), « diaspora »
+ * EST un rôle de sécurité à part entière** (`UserRole::DIASPORA`), distinct du
+ * rôle `client`. L'outil est donc ouvert au rôle `diaspora` et se tait de
+ * lui-même quand la personne n'a aucun projet.
  *
  * ⚠️ Scope de `DiasporaProjectController::mine`, recopié :
  * `where('client_id', …)`. La `DiasporaProjectPolicy` gouverne le détail d'un
@@ -49,12 +47,14 @@ class MyDiasporaProjectsTool extends PersonalRecordsTool
      */
     protected function roles(): array
     {
-        return [UserRole::CLIENT];
+        return [UserRole::DIASPORA];
     }
 
     public function run(array $input, AssistantContext $context): ToolResult
     {
-        $url = $this->spaceUrl($context, 'diaspora');
+        // La liste des projets est désormais la page d'ACCUEIL de l'espace
+        // diaspora (`/espace-diaspora`), plus une sous-rubrique de l'espace client.
+        $url = $this->spaceUrl($context);
 
         $projects = DiasporaProject::query()
             ->where('client_id', $context->user->id)

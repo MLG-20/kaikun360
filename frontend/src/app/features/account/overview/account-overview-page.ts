@@ -36,6 +36,10 @@ const WELCOME_KEY = 'kaikun.account.welcomeDismissed';
  *   - les **tuiles** vers les sections de l'espace (source : `ACCOUNT_NAV`).
  *
  * Aucun appel réseau : tout est dérivé de `AuthService.user()` déjà en mémoire.
+ * ⚠️ Le bloc « Mes chantiers & devis » (F3.9) est PASSÉ ICI un temps
+ * (2026-08-22), le temps de la séparation de l'espace diaspora — il vit
+ * maintenant sur `requests-page` (2026-08-23) : un chantier est une demande
+ * de service, sa place est avec les autres.
  */
 @Component({
   selector: 'app-account-overview-page',

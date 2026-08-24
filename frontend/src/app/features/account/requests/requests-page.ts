@@ -7,12 +7,19 @@ import { PageMeta } from '../../../core/api/pagination.model';
 import { ServiceRequest } from '../../../models/service-request.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { ConstructionQuotesComponent } from '../../../shared/components/construction-quotes/construction-quotes';
 import { HideButtonComponent } from '../../../shared/components/hide-button/hide-button';
 import { REQUEST_STEPS, RequestStep, stepState } from './request-timeline';
 
 @Component({
   selector: 'app-requests-page',
-  imports: [DatePipe, RouterLink, BackLinkComponent, HideButtonComponent],
+  imports: [
+    DatePipe,
+    RouterLink,
+    BackLinkComponent,
+    HideButtonComponent,
+    ConstructionQuotesComponent,
+  ],
   templateUrl: './requests-page.html',
   styleUrl: './requests-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,6 +34,13 @@ import { REQUEST_STEPS, RequestStep, stepState } from './request-timeline';
  * machine à états backend (étapes franchies / étape courante / à venir). Le
  * dépôt de demande se fait depuis les pages publiques (fiches de biens/services,
  * F2.3/F2.7) — cet écran ne fait que suivre l'avancement.
+ *
+ * ⚠️ **Accueille aussi le bloc « Mes chantiers & devis » (F3.9)** —
+ * `app-construction-quotes`, où le client répond à un devis de construction.
+ * Il a fait escale sur l'ancienne page diaspora, puis sur l'accueil de
+ * l'espace client ; **rangé ici pour de bon** (2026-08-23) : un chantier EST
+ * une demande de service, sa place naturelle est avec les autres, pas sur le
+ * tableau de bord.
  */
 export class RequestsPageComponent {
   private readonly requests = inject(RequestService);

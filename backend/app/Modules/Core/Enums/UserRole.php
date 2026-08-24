@@ -3,7 +3,7 @@
 namespace App\Modules\Core\Enums;
 
 /**
- * Les 8 rôles de sécurité Kaikun, gérés par Spatie Permission.
+ * Les 9 rôles de sécurité Kaikun, gérés par Spatie Permission.
  *
  * C'est la SOURCE DE VÉRITÉ des droits d'accès (à ne pas confondre avec
  * ProfileType, la "casquette métier"). Un utilisateur peut techniquement
@@ -11,7 +11,7 @@ namespace App\Modules\Core\Enums;
  * selon son type de profil (voir defaultForProfileType()).
  *
  * Hiérarchie indicative (du moins au plus privilégié) :
- *   visiteur < client/proprietaire/prestataire/entreprise < agent_kaikun < admin < super_admin
+ *   visiteur < client/proprietaire/prestataire/entreprise/diaspora < agent_kaikun < admin < super_admin
  */
 enum UserRole: string
 {
@@ -20,6 +20,7 @@ enum UserRole: string
     case PROPRIETAIRE = 'proprietaire';
     case PRESTATAIRE = 'prestataire';
     case ENTREPRISE = 'entreprise';
+    case DIASPORA = 'diaspora';           // client résidant à l'étranger, espace connecté à part
     case AGENT_KAIKUN = 'agent_kaikun';  // agent opérationnel (validation, suivi)
     case ADMIN = 'admin';
     case SUPER_ADMIN = 'super_admin';    // accès total (bypass via Gate::before)
@@ -35,6 +36,7 @@ enum UserRole: string
             self::PROPRIETAIRE => 'Propriétaire',
             self::PRESTATAIRE => 'Prestataire',
             self::ENTREPRISE => 'Entreprise',
+            self::DIASPORA => 'Diaspora',
             self::AGENT_KAIKUN => 'Agent Kaikun',
             self::ADMIN => 'Admin',
             self::SUPER_ADMIN => 'Super Admin',
@@ -44,16 +46,19 @@ enum UserRole: string
     /**
      * Rôle attribué par défaut à l'inscription selon le type de profil choisi.
      *
-     * Le profil "diaspora" est un client résidant à l'étranger : il reçoit donc
-     * le rôle CLIENT (ses projets diaspora sont une fonctionnalité, pas un rôle).
+     * Depuis la séparation de l'espace diaspora (2026-08-22), le profil
+     * "diaspora" reçoit son PROPRE rôle, au même titre que les autres
+     * profils métier — il a son espace connecté indépendant et n'a plus
+     * accès à l'espace client.
      */
     public static function defaultForProfileType(ProfileType $type): self
     {
         return match ($type) {
-            ProfileType::CLIENT, ProfileType::DIASPORA => self::CLIENT,
+            ProfileType::CLIENT => self::CLIENT,
             ProfileType::PROPRIETAIRE => self::PROPRIETAIRE,
             ProfileType::PRESTATAIRE => self::PRESTATAIRE,
             ProfileType::ENTREPRISE => self::ENTREPRISE,
+            ProfileType::DIASPORA => self::DIASPORA,
         };
     }
 

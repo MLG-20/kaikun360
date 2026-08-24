@@ -79,7 +79,7 @@ class BrandedMailTest extends TestCase
 
     /**
      * Chaque profil a son propre espace connecté : un lien codé en dur
-     * enverrait trois destinataires sur quatre vers une page inexistante.
+     * enverrait quatre destinataires sur cinq vers une page inexistante.
      */
     public function test_le_lien_de_preferences_suit_le_profil_du_destinataire(): void
     {
@@ -87,7 +87,8 @@ class BrandedMailTest extends TestCase
         // de tableau en PHP, d'où cette liste plutôt qu'une table associative.
         $cases = [
             [ProfileType::CLIENT, '/mon-espace/notifications'],
-            [ProfileType::DIASPORA, '/mon-espace/notifications'],
+            // Depuis la séparation de l'espace diaspora (F18, 2026-08-22).
+            [ProfileType::DIASPORA, '/espace-diaspora/notifications'],
             [ProfileType::PROPRIETAIRE, '/espace-proprietaire/notifications'],
             [ProfileType::PRESTATAIRE, '/espace-prestataire/notifications'],
             [ProfileType::ENTREPRISE, '/espace-entreprise/notifications'],

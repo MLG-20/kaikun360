@@ -9,9 +9,9 @@ use App\Modules\Core\Enums\UserRole;
  * Résout le bon lien d'espace privé selon le PROFIL du destinataire (et, à
  * défaut, selon son RÔLE).
  *
- * POURQUOI ? Le frontend Angular n'a pas un espace connecté, mais QUATRE, à des
- * adresses différentes : `/mon-espace` (client et diaspora),
- * `/espace-proprietaire`, `/espace-prestataire`, `/espace-entreprise`.
+ * POURQUOI ? Le frontend Angular n'a pas un espace connecté, mais CINQ, à des
+ * adresses différentes : `/mon-espace` (client), `/espace-proprietaire`,
+ * `/espace-prestataire`, `/espace-entreprise`, `/espace-diaspora`.
  *
  * Une notification comme « une pièce manque à votre dossier » peut viser
  * n'importe lequel de ces profils. Coder « /mon-espace/documents » en dur y
@@ -40,6 +40,7 @@ class SpaceLink
             ProfileType::PROPRIETAIRE => '/espace-proprietaire',
             ProfileType::PRESTATAIRE => '/espace-prestataire',
             ProfileType::ENTREPRISE => '/espace-entreprise',
+            ProfileType::DIASPORA => '/espace-diaspora',
             // Profil absent (compte importé, jeu d'essai, création hors du
             // parcours d'inscription) : le RÔLE dit la même chose et il est,
             // lui, indispensable — c'est sur lui que les espaces sont
@@ -67,6 +68,7 @@ class SpaceLink
             $notifiable->hasRole(UserRole::ENTREPRISE->value) => '/espace-entreprise',
             $notifiable->hasRole(UserRole::PRESTATAIRE->value) => '/espace-prestataire',
             $notifiable->hasRole(UserRole::PROPRIETAIRE->value) => '/espace-proprietaire',
+            $notifiable->hasRole(UserRole::DIASPORA->value) => '/espace-diaspora',
             default => '/mon-espace',
         };
     }
@@ -101,8 +103,10 @@ class SpaceLink
     /**
      * Page listant les demandes du destinataire.
      *
-     * Client, diaspora et entreprise suivent leurs demandes ; propriétaire et
-     * prestataire n'ont pas cet écran et sont dirigés vers leur tableau de bord.
+     * Client et entreprise suivent leurs demandes sur un écran dédié ;
+     * propriétaire, prestataire et diaspora n'ont pas cet écran (le suivi
+     * diaspora se fait projet par projet, pas via une liste de demandes) et
+     * sont dirigés vers leur tableau de bord.
      */
     public static function requests(object $notifiable): string
     {
@@ -112,7 +116,7 @@ class SpaceLink
         $base = self::base($notifiable);
 
         return match ($base) {
-            '/espace-proprietaire', '/espace-prestataire' => $base,
+            '/espace-proprietaire', '/espace-prestataire', '/espace-diaspora' => $base,
             default => $base.'/demandes',
         };
     }

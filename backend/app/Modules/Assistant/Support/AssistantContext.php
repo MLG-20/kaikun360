@@ -61,6 +61,7 @@ final class AssistantContext
             UserRole::ENTREPRISE,
             UserRole::PRESTATAIRE,
             UserRole::PROPRIETAIRE,
+            UserRole::DIASPORA,
             UserRole::CLIENT,
         ];
 

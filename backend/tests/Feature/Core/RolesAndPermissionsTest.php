@@ -12,7 +12,7 @@ use Tests\TestCase;
 /**
  * Tests des rôles & permissions (phase B1.2).
  *
- * Valident : la création des 8 rôles, la matrice de permissions (agent vs admin),
+ * Valident : la création des 9 rôles, la matrice de permissions (agent vs admin),
  * le bypass total du super_admin (Gate::before) et le mapping
  * "type de profil → rôle par défaut".
  */
@@ -27,9 +27,9 @@ class RolesAndPermissionsTest extends TestCase
         $this->seed(RolesAndPermissionsSeeder::class);
     }
 
-    public function test_les_huit_roles_sont_crees(): void
+    public function test_les_neuf_roles_sont_crees(): void
     {
-        $this->assertCount(8, UserRole::cases());
+        $this->assertCount(9, UserRole::cases());
 
         foreach (UserRole::values() as $role) {
             $this->assertDatabaseHas('roles', ['name' => $role]);
@@ -75,8 +75,8 @@ class RolesAndPermissionsTest extends TestCase
     public function test_mapping_type_profil_vers_role_par_defaut(): void
     {
         $this->assertSame(UserRole::CLIENT, UserRole::defaultForProfileType(ProfileType::CLIENT));
-        // Le profil diaspora reçoit le rôle client.
-        $this->assertSame(UserRole::CLIENT, UserRole::defaultForProfileType(ProfileType::DIASPORA));
+        // Depuis la séparation de l'espace diaspora, le profil diaspora reçoit son PROPRE rôle.
+        $this->assertSame(UserRole::DIASPORA, UserRole::defaultForProfileType(ProfileType::DIASPORA));
         $this->assertSame(UserRole::PROPRIETAIRE, UserRole::defaultForProfileType(ProfileType::PROPRIETAIRE));
         $this->assertSame(UserRole::PRESTATAIRE, UserRole::defaultForProfileType(ProfileType::PRESTATAIRE));
         $this->assertSame(UserRole::ENTREPRISE, UserRole::defaultForProfileType(ProfileType::ENTREPRISE));

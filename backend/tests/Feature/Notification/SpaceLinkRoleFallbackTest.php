@@ -43,7 +43,8 @@ class SpaceLinkRoleFallbackTest extends TestCase
             [UserRole::ENTREPRISE, '/espace-entreprise/notifications'],
             [UserRole::PRESTATAIRE, '/espace-prestataire/notifications'],
             [UserRole::PROPRIETAIRE, '/espace-proprietaire/notifications'],
-            // Aucun des trois : le dernier repli reste l'espace client, la seule
+            [UserRole::DIASPORA, '/espace-diaspora/notifications'],
+            // Aucun des quatre : le dernier repli reste l'espace client, la seule
             // adresse qui existe pour tout le monde.
             [UserRole::CLIENT, '/mon-espace/notifications'],
         ];
@@ -58,8 +59,7 @@ class SpaceLinkRoleFallbackTest extends TestCase
     }
 
     /**
-     * Le profil reste PRIORITAIRE : c'est lui qui porte le sens métier (un
-     * compte diaspora a le rôle `client` mais son propre type de profil).
+     * Le profil reste PRIORITAIRE : c'est lui qui porte le sens métier.
      */
     public function test_le_profil_prime_sur_le_role(): void
     {
@@ -83,5 +83,18 @@ class SpaceLinkRoleFallbackTest extends TestCase
         $user->assignRole(UserRole::ENTREPRISE->value);
 
         $this->assertSame('/espace-entreprise/demandes', SpaceLink::requests($user->fresh()));
+    }
+
+    /**
+     * L'espace diaspora n'a pas d'écran « demandes » (le suivi se fait projet
+     * par projet) : le lien doit rester sur la racine de l'espace, pas
+     * `/espace-diaspora/demandes`, qui n'existe pas.
+     */
+    public function test_le_lien_vers_les_demandes_reste_sur_la_racine_pour_la_diaspora(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole(UserRole::DIASPORA->value);
+
+        $this->assertSame('/espace-diaspora', SpaceLink::requests($user->fresh()));
     }
 }

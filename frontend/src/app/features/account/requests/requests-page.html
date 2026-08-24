@@ -8,6 +8,17 @@
   </p>
 </section>
 
+<!--
+  F3.9, reprise après la séparation de l'espace diaspora (2026-08-22) —
+  Chantiers & devis du client.
+
+  Hors du bloc `@if`/`@else` ci-dessous : ce bloc a son PROPRE chargement et
+  son propre état d'erreur, sur une donnée différente (`ConstructionQuote`,
+  pas `ServiceRequest`). Un incident sur les demandes ne doit pas emporter les
+  devis avec lui. Le bloc se masque tout seul quand il n'y a aucun chantier.
+-->
+<app-construction-quotes />
+
 @if (loading()) {
   <p class="pf-state" role="status">Chargement de vos demandes…</p>
 } @else if (loadError()) {

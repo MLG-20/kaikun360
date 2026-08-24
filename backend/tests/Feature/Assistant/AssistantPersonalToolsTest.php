@@ -186,12 +186,15 @@ class AssistantPersonalToolsTest extends TestCase
     }
 
     /**
-     * Un client ne voit que ses projets diaspora.
+     * Un compte diaspora ne voit que ses projets diaspora.
+     *
+     * ⚠️ Depuis la séparation de l'espace diaspora (2026-08-22), « diaspora »
+     * est son PROPRE rôle de sécurité — plus le rôle `client`.
      */
-    public function test_un_client_ne_voit_que_ses_projets_diaspora(): void
+    public function test_un_diaspora_ne_voit_que_ses_projets_diaspora(): void
     {
-        $moi = $this->compte(UserRole::CLIENT);
-        $autre = $this->compte(UserRole::CLIENT);
+        $moi = $this->compte(UserRole::DIASPORA);
+        $autre = $this->compte(UserRole::DIASPORA);
 
         DiasporaProject::factory()->create([
             'client_id' => $moi->id,
@@ -207,6 +210,19 @@ class AssistantPersonalToolsTest extends TestCase
         $this->assertSame('mes_projets_diaspora', $reply['tool']);
         $this->assertCount(1, $reply['items']);
         $this->assertSame('DIA-A-MOI', $reply['items'][0]['reference']);
+    }
+
+    /**
+     * Un client (sans le rôle diaspora) n'a pas l'outil « projets diaspora ».
+     */
+    public function test_un_client_n_a_pas_l_outil_projets_diaspora(): void
+    {
+        $client = $this->compte(UserRole::CLIENT);
+        DiasporaProject::factory()->create(['client_id' => $client->id]);
+
+        $reply = $this->demander($client, 'où en est mon projet diaspora ?');
+
+        $this->assertNotSame('mes_projets_diaspora', $reply['tool']);
     }
 
     /**

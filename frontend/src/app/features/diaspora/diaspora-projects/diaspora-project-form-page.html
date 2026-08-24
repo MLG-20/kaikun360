@@ -1,6 +1,6 @@
 <section class="account-head">
-  <app-back-link class="account-back" fallback="/mon-espace/diaspora" />
-  <p class="account-eyebrow">Espace client</p>
+  <app-back-link class="account-back" fallback="/espace-diaspora" />
+  <p class="account-eyebrow">Espace diaspora</p>
   <h1 class="account-title">Lancer un projet diaspora</h1>
   <p class="account-lead">
     Décrivez votre projet piloté à distance. Un interlocuteur Kaikun le prend en
@@ -60,6 +60,6 @@
     <button type="submit" class="k-btn k-btn--primary" [disabled]="submitting()">
       {{ submitting() ? 'Enregistrement…' : 'Lancer le projet' }}
     </button>
-    <a class="k-btn k-btn--ghost" routerLink="/mon-espace/diaspora">Annuler</a>
+    <a class="k-btn k-btn--ghost" routerLink="/espace-diaspora">Annuler</a>
   </div>
 </form>
