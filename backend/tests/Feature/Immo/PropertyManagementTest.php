@@ -174,6 +174,46 @@ class PropertyManagementTest extends TestCase
             ->assertJsonPath('data.property.title', 'Nouveau titre');
     }
 
+    public function test_le_proprietaire_declare_une_caution_dont_le_total_est_calcule(): void
+    {
+        $owner = $this->proprietaire();
+        Sanctum::actingAs($owner);
+
+        // Montant MENSUEL déclaré × nombre de mois → total calculé (50 000 × 2).
+        $this->postJson('/api/v1/properties', $this->donnees([
+            'caution_xof' => 50_000,
+            'caution_months' => 2,
+        ]))
+            ->assertCreated()
+            ->assertJsonPath('data.property.caution_xof', 50_000)
+            ->assertJsonPath('data.property.caution_months', 2)
+            ->assertJsonPath('data.property.caution_total_xof', 100_000);
+
+        $this->assertDatabaseHas('properties', ['caution_xof' => 50_000, 'caution_months' => 2]);
+    }
+
+    public function test_la_caution_est_plafonnee_a_douze_mois(): void
+    {
+        $owner = $this->proprietaire();
+        Sanctum::actingAs($owner);
+
+        $this->postJson('/api/v1/properties', $this->donnees(['caution_months' => 13]))
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('caution_months');
+    }
+
+    public function test_la_caution_se_modifie_independamment_du_loyer(): void
+    {
+        $owner = $this->proprietaire();
+        $property = Property::factory()->create(['owner_id' => $owner->id, 'caution_xof' => null]);
+
+        Sanctum::actingAs($owner);
+
+        $this->patchJson("/api/v1/properties/{$property->id}", ['caution_xof' => 150_000_000])
+            ->assertOk()
+            ->assertJsonPath('data.property.caution_xof', 150_000_000);
+    }
+
     public function test_un_proprietaire_ne_peut_pas_modifier_le_bien_d_un_autre(): void
     {
         $owner = $this->proprietaire();

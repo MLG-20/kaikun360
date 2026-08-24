@@ -133,6 +133,12 @@
               <dd>{{ price }}</dd>
             </div>
           }
+          @if (cautionLabel(); as caution) {
+            <div class="opd-fact">
+              <dt>Caution demandée</dt>
+              <dd>{{ caution }}</dd>
+            </div>
+          }
           @if (verified()) {
             <div class="opd-fact">
               <dt>Vérification</dt>

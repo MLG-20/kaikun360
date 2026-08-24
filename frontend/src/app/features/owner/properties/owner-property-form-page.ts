@@ -6,6 +6,7 @@ import { Observable, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/auth/auth.service';
+import { formatFcfa } from '../../../shared/format/fcfa';
 import { Commune, Department, GeoService, Region } from '../../../core/api/geo.service';
 import {
   CreatePropertyPayload,
@@ -54,7 +55,9 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
  *     gate le formulaire en amont ;
  *   - **mode de location** mensuelle / nuitées / mixte, qui affiche le loyer
  *     mensuel et/ou le bloc nuitées et pilote les appels d'enregistrement ;
- *   - **localisation en cascade** région → département → commune (référentiel) ;
+ *   - **localisation en cascade** région → département → commune (référentiel,
+ *     extensible depuis F5.7 : « Ma commune n'est pas dans la liste ? » propose
+ *     une commune manquante sans modération, réutilisable aussitôt) ;
  *   - à l'enregistrement : POST/PATCH du bien, puis, selon le mode, PUT (config
  *     nuitées) ou DELETE (retrait du mode nuitées) ; on redirige ensuite vers la
  *     fiche du bien.
@@ -79,6 +82,20 @@ export class OwnerPropertyFormPageComponent {
    * parent ne peut donc pas les lui pousser, il les lui **expose**.
    */
   readonly existingPhotos = signal<PropertyPhoto[]>([]);
+
+  /**
+   * Total de la caution en direct (F5.8) : montant MENSUEL saisi × nombre de
+   * mois. Aperçu seulement — le total réel est recalculé côté serveur
+   * (`Property::caution_total_xof`).
+   */
+  protected cautionTotalLabel(): string | null {
+    const monthly = this.form.controls.caution_xof.value;
+    const months = this.form.controls.caution_months.value;
+    if (!monthly || !months) {
+      return null;
+    }
+    return formatFcfa(monthly * months);
+  }
 
   /** Types de biens proposés (miroir de l'enum `PropertyType`). */
   readonly types: TypeOption[] = [
@@ -115,6 +132,12 @@ export class OwnerPropertyFormPageComponent {
   /** Vrai si le chargement du référentiel a échoué (bloque la saisie géo). */
   readonly geoError = signal(false);
 
+  /** Champ « proposer une commune » (F5.7), ouvert depuis le template. */
+  readonly proposingCommune = signal(false);
+  readonly newCommuneName = signal('');
+  readonly proposingCommuneSaving = signal(false);
+  readonly proposeCommuneError = signal<string | null>(null);
+
   // --- État de chargement (édition) -----------------------------------------
   readonly loadState = signal<LoadState>('ready');
 
@@ -122,7 +145,16 @@ export class OwnerPropertyFormPageComponent {
     type: ['' as PropertyType | '', [Validators.required]],
     title: ['', [Validators.required, Validators.maxLength(255)]],
     description: [''],
+    // Requis uniquement quand le mode inclut la location au mois (cf.
+    // applyMode(), qui (dés)active ce validateur en même temps que le bloc
+    // nuitées) — un bien loué seulement à la nuitée n'a pas de loyer mensuel.
     price_xof: [null as number | null, [Validators.min(0)]],
+    // Caution pour une location au mois (F5.8) : DEUX champs indépendants,
+    // tous deux facultatifs — montant ET nombre de mois indicatif, distincts
+    // de la caution nuitées portée par le groupe `stay` plus bas. Le second
+    // n'est jamais calculé à partir du premier.
+    caution_xof: [null as number | null, [Validators.min(0)]],
+    caution_months: [null as number | null, [Validators.min(1), Validators.max(12)]],
     region_id: [null as number | null, [Validators.required]],
     department_id: [null as number | null, [Validators.required]],
     commune_id: [null as number | null],
@@ -131,7 +163,9 @@ export class OwnerPropertyFormPageComponent {
     // Bloc « nuitées » — activé/désactivé selon le mode (cf. applyMode()).
     stay: this.fb.nonNullable.group({
       price_per_night_xof: [null as number | null, [Validators.required, Validators.min(0)]],
-      caution_xof: [null as number | null, [Validators.min(0)]],
+      // Pas de caution nuitées ici (F5.8) : la caution du bien (ci-dessus,
+      // hors du groupe `stay`) couvre le besoin, montrer les deux aurait
+      // affiché deux champs « caution » à la fois en mode mixte.
       capacity: [null as number | null, [Validators.min(1)]],
       min_nights: [null as number | null, [Validators.min(1)]],
       max_nights: [null as number | null, [Validators.min(1)]],
@@ -207,6 +241,7 @@ export class OwnerPropertyFormPageComponent {
       .subscribe((departmentId) => {
         this.communes.set([]);
         this.form.controls.commune_id.setValue(null);
+        this.proposingCommune.set(false);
         if (departmentId) {
           this.geo.communes(departmentId).subscribe({
             next: (env) => this.communes.set(env.data),
@@ -216,7 +251,45 @@ export class OwnerPropertyFormPageComponent {
       });
   }
 
-  /** Bascule le mode de location (radios) et (dés)active le bloc nuitées. */
+  /** Ouvre/ferme le champ de saisie libre « ma commune n'est pas listée ». */
+  toggleProposeCommune(): void {
+    this.proposeCommuneError.set(null);
+    this.newCommuneName.set('');
+    this.proposingCommune.update((v) => !v);
+  }
+
+  /** Propose la commune saisie (F5.7), sans modération, puis la sélectionne. */
+  submitNewCommune(): void {
+    const departmentId = this.form.controls.department_id.value;
+    const name = this.newCommuneName().trim();
+    if (!departmentId || !name || this.proposingCommuneSaving()) {
+      return;
+    }
+    this.proposingCommuneSaving.set(true);
+    this.proposeCommuneError.set(null);
+
+    this.geo.createCommune(departmentId, name).subscribe({
+      next: (res) => {
+        const commune = res.data;
+        this.communes.update((list) => [...list, commune]);
+        this.form.controls.commune_id.setValue(commune.id);
+        this.proposingCommune.set(false);
+        this.newCommuneName.set('');
+        this.proposingCommuneSaving.set(false);
+      },
+      error: (err: { error?: ValidationErrorBody }) => {
+        this.proposingCommuneSaving.set(false);
+        const firstError = err?.error?.errors ? Object.values(err.error.errors)[0]?.[0] : null;
+        this.proposeCommuneError.set(firstError ?? "Cette commune n'a pas pu être ajoutée.");
+      },
+    });
+  }
+
+  /**
+   * Bascule le mode de location (radios), (dés)active le bloc nuitées, et
+   * rend le loyer mensuel OBLIGATOIRE quand le mode l'inclut (un bien loué
+   * seulement à la nuitée n'a pas de loyer mensuel à exiger).
+   */
   applyMode(mode: RentalMode): void {
     this.mode.set(mode);
     const stay = this.form.controls.stay;
@@ -225,6 +298,14 @@ export class OwnerPropertyFormPageComponent {
     } else {
       stay.disable();
     }
+
+    const price = this.form.controls.price_xof;
+    if (mode === 'mensuelle' || mode === 'mixte') {
+      price.setValidators([Validators.required, Validators.min(0)]);
+    } else {
+      price.clearValidators();
+    }
+    price.updateValueAndValidity();
   }
 
   /** Vrai si le mode courant inclut la location au mois (loyer affiché). */
@@ -244,6 +325,8 @@ export class OwnerPropertyFormPageComponent {
       title: p.title,
       description: p.description ?? '',
       price_xof: p.price_xof,
+      caution_xof: p.caution_xof,
+      caution_months: p.caution_months,
       tourist_zone: p.location.tourist_zone ?? '',
       address: p.location.address ?? '',
     });
@@ -265,7 +348,6 @@ export class OwnerPropertyFormPageComponent {
     if (p.stay) {
       this.form.controls.stay.patchValue({
         price_per_night_xof: p.stay.price_per_night_xof,
-        caution_xof: p.stay.caution_xof,
         capacity: p.stay.capacity,
         min_nights: p.stay.min_nights,
         max_nights: p.stay.max_nights,
@@ -317,6 +399,8 @@ export class OwnerPropertyFormPageComponent {
       commune_id: raw.commune_id,
       description: raw.description || null,
       price_xof: this.showsMonthly() ? raw.price_xof : null,
+      caution_xof: this.showsMonthly() ? raw.caution_xof : null,
+      caution_months: this.showsMonthly() ? raw.caution_months : null,
       tourist_zone: raw.tourist_zone || null,
       address: raw.address || null,
     };
@@ -327,7 +411,6 @@ export class OwnerPropertyFormPageComponent {
     const s = this.form.controls.stay.getRawValue();
     return {
       price_per_night_xof: s.price_per_night_xof as number,
-      caution_xof: s.caution_xof,
       capacity: s.capacity,
       min_nights: s.min_nights,
       max_nights: s.max_nights,

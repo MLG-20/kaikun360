@@ -34,6 +34,13 @@ class StorePropertyRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price_xof' => ['nullable', 'integer', 'min:0'],
+            // Caution pour une location au mois (F5.8) : le propriétaire déclare
+            // un montant MENSUEL (`caution_xof`) et un nombre de mois
+            // (`caution_months`) ; le TOTAL se calcule automatiquement
+            // (`Property::caution_total_xof`). Sans lien avec la caution des
+            // nuitées (`stays.caution_xof`).
+            'caution_xof' => ['nullable', 'integer', 'min:0'],
+            'caution_months' => ['nullable', 'integer', 'min:1', 'max:12'],
 
             // Région obligatoire (référentiel).
             'region_id' => ['required', 'integer', 'exists:regions,id'],

@@ -234,6 +234,47 @@
   text-align: center;
 }
 
+// Précision sous un champ (ex. « 1, 2 ou 3 mois de loyer »).
+.opf-field-hint {
+  margin: 0.3rem 0 0;
+  font-size: 0.8rem;
+  color: var(--k-muted);
+}
+
+// Lien « Ma commune n'est pas dans la liste ? Ajoutez-la. » (F5.7).
+.opf-link-btn {
+  margin-top: 0.35rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--k-brand);
+  font: inherit;
+  font-size: 0.82rem;
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover { color: var(--k-brand-600, var(--k-brand)); }
+}
+
+.opf-propose-commune {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+
+  input {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--k-line);
+    border-radius: var(--k-radius);
+    background: var(--k-bg);
+    color: var(--k-ink);
+    font: inherit;
+  }
+}
+
 @media (max-width: 620px) {
   .opf-grid,
   .opf-grid--3,

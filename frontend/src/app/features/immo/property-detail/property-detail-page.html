@@ -60,6 +60,9 @@
             @if (priceLabel(); as price) {
               <div><dt>Prix</dt><dd>{{ price }}</dd></div>
             }
+            @if (cautionLabel(); as caution) {
+              <div><dt>Caution demandée</dt><dd>{{ caution }}</dd></div>
+            }
             @if (locationLabel(); as loc) {
               <div><dt>Localisation</dt><dd>{{ loc }}</dd></div>
             }

@@ -55,6 +55,8 @@ class Property extends Model
         'title',
         'description',
         'price_xof',
+        'caution_xof',
+        'caution_months',
         'region_id',
         'department_id',
         'commune_id',
@@ -78,11 +80,27 @@ class Property extends Model
             'type' => PropertyType::class,
             'status' => PropertyStatus::class,
             'price_xof' => 'integer',
+            'caution_xof' => 'integer',
+            'caution_months' => 'integer',
             'latitude' => 'decimal:6',
             'longitude' => 'decimal:6',
             'approved_at' => 'datetime',
             'published_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Montant TOTAL de la caution (F5.8), calculé automatiquement à partir de
+     * `caution_xof` (le montant MENSUEL déclaré par le propriétaire) et de
+     * `caution_months` — n'existe que si les deux sont renseignés.
+     */
+    public function getCautionTotalXofAttribute(): ?int
+    {
+        if ($this->caution_xof === null || $this->caution_months === null) {
+            return null;
+        }
+
+        return $this->caution_xof * $this->caution_months;
     }
 
     /**

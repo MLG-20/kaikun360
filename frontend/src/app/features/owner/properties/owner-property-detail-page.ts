@@ -51,6 +51,19 @@ export class OwnerPropertyDetailPageComponent {
   /** Prix formaté en FCFA (ou null si non renseigné). */
   protected readonly priceLabel = computed(() => formatFcfa(this.property()?.price_xof));
 
+  /**
+   * Caution formatée (F5.8) : total calculé par le backend (mensuel × mois),
+   * avec le détail entre parenthèses si les deux composantes sont connues.
+   */
+  protected readonly cautionLabel = computed(() => {
+    const p = this.property();
+    const total = formatFcfa(p?.caution_total_xof);
+    if (total && p?.caution_months) {
+      return `${total} (${formatFcfa(p.caution_xof)}/mois × ${p.caution_months} mois)`;
+    }
+    return total ?? formatFcfa(p?.caution_xof);
+  });
+
   /** Config nuitées du bien (présente si le bien est loué en courte durée). */
   protected readonly stay = computed(() => this.property()?.stay ?? null);
 

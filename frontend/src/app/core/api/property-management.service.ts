@@ -42,6 +42,12 @@ export interface CreatePropertyPayload {
   department_id: number;
   description?: string | null;
   price_xof?: number | null;
+  /** Caution demandée pour une location au mois (F5.8) — montant MENSUEL,
+   *  indépendant du loyer — distincte de la caution nuitées. Le total se
+   *  calcule côté backend (`caution_xof × caution_months`). */
+  caution_xof?: number | null;
+  /** Nombre de mois de caution demandés. */
+  caution_months?: number | null;
   commune_id?: number | null;
   tourist_zone?: string | null;
   address?: string | null;

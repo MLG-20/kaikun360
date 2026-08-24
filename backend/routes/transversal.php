@@ -95,6 +95,8 @@ Route::post('waitlist', [WaitlistController::class, 'store'])->middleware('throt
 Route::get('regions', [GeoController::class, 'regions']);
 Route::get('departments', [GeoController::class, 'departments']);
 Route::get('communes', [GeoController::class, 'communes']);
+// F5.7 — proposer une commune manquante (aucune modération, cf. GeoController).
+Route::post('communes', [GeoController::class, 'storeCommune'])->middleware('auth:sanctum');
 
 // --- Demandes génériques (B11.2) ---------------------------------------------
 Route::middleware('auth:sanctum')->group(function () {

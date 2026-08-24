@@ -27,6 +27,14 @@ class PropertyResource extends JsonResource
             'type' => $this->type?->value,
             'type_label' => $this->type?->label(),
             'price_xof' => $this->price_xof,
+            // Caution demandée pour une location au mois (F5.8) : le propriétaire
+            // déclare un montant MENSUEL (`caution_xof`) et un nombre de mois
+            // (`caution_months`) ; le TOTAL (`caution_total_xof`, accesseur) est
+            // calculé automatiquement — à ne pas confondre avec `stay.caution_xof`
+            // (nuitées).
+            'caution_xof' => $this->caution_xof,
+            'caution_months' => $this->caution_months,
+            'caution_total_xof' => $this->caution_total_xof,
             'status' => $this->status?->value,
             'verification_level' => $this->verification_level,
             'location' => [

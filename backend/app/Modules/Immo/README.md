@@ -51,6 +51,17 @@ réutilisable par les autres modules (Stay, Mobility…). Modèles dans `app/Mod
 > Guédiawaye détaillées, chefs-lieux des 46 départements = 68 communes). Il doit
 > être **complété avec la liste officielle ANSD** (~557 communes). L'import se fait
 > sans toucher au code : on enrichit le JSON puis `php artisan db:seed --class=CommunesSeeder`.
+>
+> **F5.7 — en attendant, la liste s'enrichit d'elle-même.** Le formulaire de bien
+> (`owner-property-form-page`) laisse le propriétaire **proposer** une commune
+> absente du select (`POST /api/v1/communes`, `GeoController::storeCommune`,
+> tout utilisateur `auth:sanctum`) : réutilise `StoreCommuneRequest`
+> (module Admin) telle quelle, **aucune modération** — la commune rejoint
+> directement le référentiel partagé, visible aussitôt pour tout autre
+> propriétaire du même département. C'est une donnée géographique factuelle, pas
+> un contenu public à valider avant diffusion ; une commune mal orthographiée
+> reste corrigeable depuis l'écran Référentiels du back-office (`AdminGeoController`,
+> CRUD déjà en place).
 
 Hiérarchie : `Region 1—N Department 1—N Commune`. Un bien pointe vers les trois
 niveaux (`region_id`, `department_id`, `commune_id`).
@@ -148,6 +159,38 @@ Tous validés (`exists` pour les FK, `Rule::in` pour type/sort). Exemple :
 - Form Requests : `StorePropertyRequest`, `UpdatePropertyRequest`, `StorePropertyDocumentRequest`.
 - Resources : `PropertyResource`, `PropertyDocumentResource`.
 - Contrôleur : `PropertyManagementController`.
+
+### Caution pour une location au mois (F5.8)
+
+`properties.caution_xof` (montant MENSUEL, FCFA) et `properties.caution_months`
+(nombre de mois) sont **deux champs indépendants, librement déclarés** par le
+propriétaire — pas un multiple imposé du loyer (`price_xof`), à sa discrétion
+(1, 2, 3 mois…). Le TOTAL (`caution_xof × caution_months`) est calculé par
+l'accesseur `Property::getCautionTotalXofAttribute()` (pas de colonne dédiée,
+pour ne jamais désynchroniser le total des deux valeurs sources) et exposé par
+`PropertyResource` sous `caution_total_xof`.
+
+`price_xof` (le loyer) devient **obligatoire côté frontend** dès que le mode de
+location inclut le mois (`OwnerPropertyFormPageComponent::applyMode()` bascule
+le validateur `required` en même temps qu'il (dés)active le bloc nuitées) —
+inchangé côté backend (`nullable`, un bien loué seulement à la nuitée n'a pas de
+loyer mensuel).
+
+⚠️ **Aucun suivi de statut** (retenue/restituée/perdue) contrairement à la
+caution des nuitées (`stays.caution_xof`, module Stay) : il n'existe aujourd'hui
+aucune notion de bail/locataire à laquelle rattacher un tel suivi pour une
+location au mois — voir aussi la décision produit de retirer la caution des
+nuitées et des véhicules ci-dessous.
+
+**La caution est désormais réservée à la gestion locative.** Décision produit
+(2026-08-24) : `stays.caution_xof` (module Stay) et `vehicles.caution_xof`
+(module Mobility) sont vidées (migrations
+`clear_caution_xof_on_stays_table` / `clear_caution_xof_on_vehicles_table`,
+sans toucher `bookings.caution_xof`/`caution_status` — le sort d'une caution déjà
+collectée sur une réservation en cours reste à trancher côté back-office) et
+leurs factories ne génèrent plus de valeur aléatoire. Les trois affichages
+publics correspondants (fiche nuitée, fiche véhicule — caractéristiques, encart
+tarif, devis de réservation) ont été retirés.
 
 ---
 

@@ -12,6 +12,14 @@ export interface Property {
   type: string | null;
   type_label: string | null;
   price_xof: number | null;
+  /** Caution demandée pour une location au mois (F5.8) — montant MENSUEL
+   *  déclaré par le propriétaire, indépendant du loyer. Distincte de
+   *  `stay.caution_xof` (nuitées). */
+  caution_xof: number | null;
+  /** Nombre de mois de caution demandés. */
+  caution_months: number | null;
+  /** Montant TOTAL de la caution, calculé par le backend (`caution_xof × caution_months`). */
+  caution_total_xof: number | null;
   status: string | null;
   verification_level: string | null;
   location: PropertyLocation;

@@ -29,6 +29,16 @@ Permet de proposer un **bien** (module Immo) en location **à la nuitée**.
 > polymorphe, anti double-réservation) arrivent en **phase B3.3**.
 > La caution est stockée ici ; sa **retenue/restitution** (remboursement PayTech)
 > relève des phases B11/B14.
+>
+> ⚠️ **Décision produit (2026-08-24, F5.8)** : la caution reste réservée à la
+> gestion locative (`properties.caution_xof`, module Immo). `caution_xof` est
+> désormais **toujours 0** ici — aucun formulaire ne permet plus de le fixer
+> (`UpsertStayRequest` accepte toujours le champ, mais rien ne l'envoie
+> côté propriétaire), et les valeurs déjà enregistrées ont été remises à 0
+> (migration `clear_caution_xof_on_stays_table`). La mécanique de
+> retenue/restitution ci-dessous reste fonctionnelle en soi (pour une
+> réservation déjà en cours dont la caution avait été collectée avant cette
+> décision) ; les trois affichages publics ont été retirés du frontend.
 
 ---
 

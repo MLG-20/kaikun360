@@ -83,10 +83,49 @@
 
       @if (showsMonthly()) {
         <div class="k-field">
-          <label class="k-label" for="opf-price">
-            Loyer mensuel (FCFA) <span class="k-optional">(facultatif)</span>
+          <label class="k-label" for="opf-price">Loyer mensuel (FCFA)</label>
+          <input
+            id="opf-price"
+            class="k-input"
+            type="number"
+            min="0"
+            formControlName="price_xof"
+            [class.k-input--error]="form.controls.price_xof.touched && form.controls.price_xof.invalid"
+          />
+          @if (form.controls.price_xof.touched && form.controls.price_xof.invalid) {
+            <p class="k-error">Le loyer mensuel est obligatoire.</p>
+          }
+        </div>
+
+        <div class="k-field">
+          <label class="k-label" for="opf-caution-mensuelle">
+            Caution mensuelle (FCFA) <span class="k-optional">(facultatif)</span>
           </label>
-          <input id="opf-price" class="k-input" type="number" min="0" formControlName="price_xof" />
+          <input
+            id="opf-caution-mensuelle"
+            class="k-input"
+            type="number"
+            min="0"
+            formControlName="caution_xof"
+          />
+          <p class="opf-field-hint">Montant libre, à votre discrétion.</p>
+        </div>
+
+        <div class="k-field">
+          <label class="k-label" for="opf-caution-mois">
+            Caution — nombre de mois <span class="k-optional">(facultatif)</span>
+          </label>
+          <input
+            id="opf-caution-mois"
+            class="k-input"
+            type="number"
+            min="1"
+            max="12"
+            formControlName="caution_months"
+          />
+          @if (cautionTotalLabel(); as total) {
+            <p class="opf-field-hint">Soit {{ total }} au total.</p>
+          }
         </div>
       }
     </div>
@@ -177,6 +216,38 @@
               <option [ngValue]="c.id">{{ c.name }}</option>
             }
           </select>
+
+          @if (form.controls.department_id.value) {
+            @if (!proposingCommune()) {
+              <button type="button" class="opf-link-btn" (click)="toggleProposeCommune()">
+                Ma commune n'est pas dans la liste ? Ajoutez-la.
+              </button>
+            } @else {
+              <div class="opf-propose-commune">
+                <input
+                  type="text"
+                  maxlength="120"
+                  placeholder="Nom de la commune"
+                  [value]="newCommuneName()"
+                  (input)="newCommuneName.set($any($event.target).value)"
+                />
+                <button
+                  type="button"
+                  class="k-btn k-btn--ghost"
+                  [disabled]="proposingCommuneSaving() || !newCommuneName().trim()"
+                  (click)="submitNewCommune()"
+                >
+                  {{ proposingCommuneSaving() ? 'Envoi…' : 'Ajouter' }}
+                </button>
+                <button type="button" class="opf-link-btn" (click)="toggleProposeCommune()">
+                  Annuler
+                </button>
+                @if (proposeCommuneError()) {
+                  <p class="k-error">{{ proposeCommuneError() }}</p>
+                }
+              </div>
+            }
+          }
         </div>
       </div>
 
@@ -225,13 +296,6 @@
             ) {
               <p class="k-error">Le prix par nuit est obligatoire.</p>
             }
-          </div>
-
-          <div class="k-field">
-            <label class="k-label" for="opf-caution">
-              Caution (FCFA) <span class="k-optional">(facultatif)</span>
-            </label>
-            <input id="opf-caution" class="k-input" type="number" min="0" formControlName="caution_xof" />
           </div>
 
           <div class="k-field">

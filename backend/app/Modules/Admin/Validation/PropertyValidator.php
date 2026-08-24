@@ -80,6 +80,9 @@ class PropertyValidator implements ResourceValidator
             'fields' => [
                 'Type' => $model->type?->label() ?? $model->type,
                 'Prix' => $model->price_xof,
+                'Caution mensuelle' => $model->caution_xof,
+                'Caution (mois)' => $model->caution_months,
+                'Caution totale' => $model->caution_total_xof,
                 'Description' => $model->description,
                 'Région' => $model->region?->name,
                 'Département' => $model->department?->name,

@@ -43,6 +43,9 @@ class UpdatePropertyRequest extends FormRequest
             'title' => ['sometimes', 'required', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
             'price_xof' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            // Caution pour une location au mois (F5.8) — cf. StorePropertyRequest.
+            'caution_xof' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'caution_months' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:12'],
 
             'region_id' => ['sometimes', 'required', 'integer', 'exists:regions,id'],
             'department_id' => [

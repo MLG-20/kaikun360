@@ -33,6 +33,10 @@ export interface Commune {
  * régions, puis — au choix d'une région — ses départements, puis — au choix
  * d'un département — ses communes. Miroir des endpoints publics `GeoController`
  * (F2.7.0) : les listes enfants exigent l'identifiant du parent.
+ *
+ * Depuis F5.7, `createCommune()` permet de PROPOSER une commune absente du
+ * référentiel (JSON ANSD volontairement incomplet) — sans modération, elle
+ * rejoint directement la liste partagée.
  */
 @Injectable({ providedIn: 'root' })
 export class GeoService {
@@ -55,6 +59,18 @@ export class GeoService {
   communes(departmentId: number): Observable<ApiEnvelope<Commune[]>> {
     return this.http.get<ApiEnvelope<Commune[]>>(`${this.api}/communes`, {
       params: { department_id: departmentId },
+    });
+  }
+
+  /**
+   * POST /communes — propose une commune absente du référentiel. Aucune
+   * modération : la réponse est directement utilisable (sélectionnable) sans
+   * attendre de validation back-office.
+   */
+  createCommune(departmentId: number, name: string): Observable<ApiEnvelope<Commune>> {
+    return this.http.post<ApiEnvelope<Commune>>(`${this.api}/communes`, {
+      department_id: departmentId,
+      name,
     });
   }
 }

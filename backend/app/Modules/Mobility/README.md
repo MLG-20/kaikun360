@@ -19,7 +19,7 @@ Publiés par des prestataires, validés par un agent, réservables via `Booking`
 | `capacity` | nombre de places |
 | `price_per_day_xof` | tarif journalier |
 | `has_driver` | chauffeur inclus |
-| `caution_xof` | caution exigée |
+| `caution_xof` | caution exigée — ⚠️ **toujours 0 depuis le 2026-08-24 (F5.8)**, la caution reste réservée à la gestion locative (`properties.caution_xof`, module Immo) ; le champ de saisie a été retiré du formulaire prestataire le 2026-08-23 et les valeurs déjà enregistrées remises à 0 (`clear_caution_xof_on_vehicles_table`) |
 | `insurance_ref` / `driver_identity` | conformité **motorisé** (assurance, identité chauffeur) |
 | `life_jackets_count` / `weather_compliant` / `provider_compliant` | conformité **pirogue** (gilets, météo, prestataire) |
 | `status` | modération — enum `VehicleStatus` (défaut `en_attente_validation`) |

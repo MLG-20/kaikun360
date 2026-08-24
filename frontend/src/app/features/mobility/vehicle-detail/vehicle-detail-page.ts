@@ -34,7 +34,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
  *
  * Charge le véhicule via `CatalogService.vehicle(id)` (un véhicule non publié
  * renvoie 404 → « introuvable ») et ses avis publiés (résilients à l'échec).
- * Présente caractéristiques (type, capacité, chauffeur, caution), la note
+ * Présente caractéristiques (type, capacité, chauffeur), la note
  * moyenne, puis le formulaire de **location ferme**
  * (`POST /vehicles/{id}/bookings`, F8.10).
  *
@@ -144,7 +144,6 @@ export class VehicleDetailPageComponent {
   });
 
   readonly priceLabel = computed(() => formatFcfa(this.vehicle()?.price_per_day_xof));
-  readonly cautionLabel = computed(() => formatFcfa(this.vehicle()?.caution_xof));
 
   /**
    * Affine les balises de référencement avec le véhicule chargé (F9.1).

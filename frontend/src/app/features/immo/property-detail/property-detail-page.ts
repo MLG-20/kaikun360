@@ -161,6 +161,19 @@ export class PropertyDetailPageComponent {
   readonly priceLabel = computed(() => formatFcfa(this.property()?.price_xof));
 
   /**
+   * Caution formatée (F5.8) : total calculé par le backend (mensuel × mois),
+   * avec le détail entre parenthèses si les deux composantes sont connues.
+   */
+  readonly cautionLabel = computed(() => {
+    const p = this.property();
+    const total = formatFcfa(p?.caution_total_xof);
+    if (total && p?.caution_months) {
+      return `${total} (${formatFcfa(p.caution_xof)}/mois × ${p.caution_months} mois)`;
+    }
+    return total ?? formatFcfa(p?.caution_xof);
+  });
+
+  /**
    * URLs des photos du bien pour la galerie, **couverture en tête** (l'API les
    * renvoie déjà triées). Les entrées sans URL exploitable sont écartées pour ne
    * jamais produire d'image cassée ; une liste vide masque la galerie.
