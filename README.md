@@ -174,6 +174,7 @@ présentation à distance sont dans [`scripts/README.md`](scripts/README.md).
   - [Phase F15 — Actualités Kaikun et photo de héros de l'accueil](#phase-f15--actualités-kaikun-et-photo-de-héros-de-laccueil)
   - [Phase F16 — Vrai logo du client, et essai visuel du héros d'accueil](#phase-f16--vrai-logo-du-client-et-essai-visuel-du-héros-daccueil)
   - [Phase F17 — Le client garde la main sur son profil, sa bande d'accueil et ses actualités](#phase-f17--le-client-garde-la-main-sur-son-profil-sa-bande-daccueil-et-ses-actualités)
+  - [Phase F18 — L'espace diaspora devient un espace connecté à part entière](#phase-f18--lespace-diaspora-devient-un-espace-connecté-à-part-entière)
   - [Phase F8 — État global, design system et finitions](#phase-f8--état-global-design-system-et-finitions)
   - [Phase F9 — SEO, performance et accessibilité](#phase-f9--seo-performance-et-accessibilité)
 - [Critères d'acceptation transverses](#critères-dacceptation-transverses)
@@ -184,8 +185,8 @@ présentation à distance sont dans [`scripts/README.md`](scripts/README.md).
 ## Rappel du périmètre fonctionnel
 
 9 univers à couvrir : **Immo, Stay, Manage, Build, Explore, Mobility, Diaspora, Team Building, Pro**.
-5 espaces utilisateurs à séparer strictement : **Client, Propriétaire, Prestataire, Entreprise/Diaspora, Back-office Kaikun**.
-8 rôles : **Visiteur, Client, Propriétaire, Prestataire, Entreprise, Agent Kaikun, Admin, Super Admin**.
+5 espaces utilisateurs à séparer strictement selon le CDC : **Client, Propriétaire, Prestataire, Entreprise/Diaspora, Back-office Kaikun**. ⚠️ **Écart assumé (F18, 2026-08-22)** : Diaspora a été séparée de Client en son propre espace autonome (`/espace-diaspora`), à la demande du client — la plateforme compte donc désormais **6 espaces utilisateurs**.
+9 rôles : **Visiteur, Client, Propriétaire, Prestataire, Entreprise, Diaspora, Agent Kaikun, Admin, Super Admin**.
 
 ---
 
@@ -845,6 +846,43 @@ profil, sur la bande défilante d'accueil, et sur la section Actualités.
 - [x] **Bande d'accueil : annonces texte libre, puis refonte complète après trois retours du client.** D'abord un réglage `home.universe_strip_custom_items` (`[{text, active}]`) ajouté à la suite des noms d'univers dans la bande défilante de F16.2 (ajout/retrait/réordonnancement au back-office, onglet Réglages). Mais le défilement continu — plusieurs messages visibles à la fois, tronqués aux deux bords — a été jugé confus (« le texte ne finit jamais de défiler ») après plusieurs essais de réglage de la vitesse (par nombre d'items, puis par nombre de caractères, puis par largeur réellement rendue de la piste — chacun un correctif du précédent, aucun suffisant tant que le principe même du marquee restait en cause). **Refaite en composant à un seul message à la fois** (`UniverseStripComponent`) : chaque message glisse depuis la DROITE, reste immobile le temps d'être lu (durée proportionnelle à sa longueur), disparaît, le suivant entre à son tour — même patron que les pastilles de la vitrine du catalogue, plus un marquee.
 - [x] **Section Actualités : cartes libres et vidéos, après plusieurs refontes de la mise en page.** `NewsArticle` a deux emplois désormais : une ligne avec `body` rédigé reste un article ; une ligne SANS `body` mais avec `link_url` devient une petite carte image cliquable (même écran back-office « Actualités », le client n'écrit rien — juste image, titre, destination). Après plusieurs itérations avec le client (cartes mêlées au carrousel, puis carrousel et cartes dans un seul cadre, puis vidéo affichée en trop grand sur une carte trop petite), **le carrousel d'article rédigé a été retiré de l'accueil** : la section n'affiche plus, dans un même cadre, qu'une colonne vidéo à gauche (`videosActualites`, toute ligne portant un fichier ou un lien vidéo, plafonnée à un tour par vidéo sans pastille — survoler la carte correspondante à droite bascule sur SA vidéo) et une colonne de cartes image à droite (`cartesLibres`, plafonnée à 4). Une carte reste toujours une image, jamais une vidéo à sa place.
 - [x] **Correctif : un voile de transition pouvait bloquer une page entière, invisible.** Trouvé en vérifiant un des liens de carte ci-dessus : `RouteTransitionService.voile` (F8.20, masque le saut de défilement pendant un vrai changement de page) se déclenchait aussi sur le tout premier chargement d'une URL (page ouverte directement, ou lien classique `<a href>` plutôt qu'un `routerLink`) — `router.url` valait encore `/` au moment de la comparaison, donc toujours « différent » de l'URL demandée. Le voile ne se levait ensuite que sur un événement qui n'arrive pas de façon fiable pendant l'hydratation : la page restait couverte indéfiniment par un rectangle uni de la couleur de fond, sans la moindre erreur dans la console. Diagnostiqué par inspection directe du DOM (Chrome piloté par script — le HTML rendu contenait le vrai contenu, juste invisible sous le voile). Corrigé en ignorant le tout premier événement de navigation.
+
+### Phase F18 — L'espace diaspora devient un espace connecté à part entière ⚠️ **ÉCART ASSUMÉ AU CDC**
+
+Demande directe du client (2026-08-22) : « diaspora » vivait comme une simple
+rubrique nichée dans l'espace client (`/mon-espace/diaspora`) depuis F3.8 ; il
+voulait un espace **indépendant**, comme propriétaire/prestataire/entreprise.
+
+- [x] **Nouveau rôle de sécurité `diaspora`, à part entière.** Avant cette
+  phase, `UserRole::defaultForProfileType()` attribuait le rôle `client` à
+  tout profil « diaspora » — « une fonctionnalité, pas un rôle », disait le
+  commentaire d'origine. Il porte désormais son **propre** rôle Spatie
+  (9 rôles au total), et l'espace client lui devient **fermé** (séparation
+  complète, décidée avec l'utilisateur — pas de cumul des deux rôles). Une
+  commande `diaspora:migrer-role` (`--dry-run`) bascule les comptes déjà
+  inscrits sous l'ancien régime ; aucun compte diaspora n'existait encore en
+  base au moment de la bascule.
+- [x] **`/espace-diaspora`, sur le patron exact de l'espace propriétaire.**
+  Même shell générique (`SpaceLayoutComponent` + `SPACE_CONFIG`), même garde
+  `roleGuard`. Les trois écrans existants (liste, dépôt, détail d'un projet)
+  ont migré tels quels depuis `features/account/`, la liste devenant la page
+  d'accueil de l'espace. `SpaceLink` (liens des e-mails transactionnels) et
+  l'assistant IA (rôle, trousse à outils, ton de la conversation) ont été mis
+  à jour pour connaître ce cinquième espace.
+- [x] **Un vrai risque de régression trouvé en creusant, pas seulement déplacé.**
+  Le bloc « Mes chantiers & devis » (F3.9, réponse à un devis de construction)
+  vivait accroché à l'ancienne page diaspora, mais s'adresse à **tout client**
+  (rattachement par client, pas par projet diaspora) : le déplacer avec la
+  page aurait privé tout client résident de son seul moyen de répondre à un
+  devis. Remonté sur l'accueil de l'espace **client** avant de couper le fil.
+- [x] **Diaspora redevient un choix à l'inscription**, au même titre que les
+  quatre autres espaces (il ne l'était plus, absorbé par « Client »).
+
+⚠️ Le CDC groupait « Entreprise/Diaspora » dans un même espace (§ rappel du
+périmètre fonctionnel, en tête de ce document) — l'implémentation avait déjà
+dévié en le rattachant au Client depuis F3.8, et dévie plus loin ici en lui
+donnant un espace propre. Décision du client, documentée pour ne pas repasser
+dessus : voir aussi la mise à jour du rappel de périmètre plus haut.
 
 ### Infrastructure — Conteneurisation Docker et intégration continue ⚠️ **HORS CAHIER DES CHARGES**
 

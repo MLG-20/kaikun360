@@ -139,7 +139,7 @@ Chaque module possède son propre `README.md` documentant sa logique métier.
   **double authentification e-mail (2FA) obligatoire pour les comptes admin/
   super_admin** avec jeton back-office à expiration courte (F7.1.d),
   vérification par code, récupération de compte, profils, documents KYC sur disque
-  privé (téléchargement par URL signée), 8 rôles / permissions fines.
+  privé (téléchargement par URL signée), 9 rôles / permissions fines (dont diaspora, séparé en son propre espace depuis F18).
   **Photo de profil / logo d'entreprise (F8.0)** — `POST` / `DELETE
   /users/me/avatar`, colonne `profiles.avatar_path`. Une seule colonne pour les
   deux usages : `Profile::avatarKind()` renvoie `logo` pour un profil
@@ -559,7 +559,7 @@ Détail complet : [`app/Support/README.md`](app/Support/README.md) et
 
 ## Sécurité, rôles & RGPD
 
-- **8 rôles** (visiteur → super_admin) et **permissions fines** (Spatie),
+- **9 rôles** (visiteur → super_admin, dont diaspora depuis F18) et **permissions fines** (Spatie),
   matrice de rôles verrouillée par des tests.
 - **Garde « compte vérifié »** sur les actions sensibles (réservation, paiement,
   publication).
@@ -594,7 +594,7 @@ bleu `#0348FB`, navy `#03193F`, or `#D3AE52`, crème `#F7F4EB`).
 | Un seul gabarit | `resources/views/emails/branded.blade.php` — aucun autre HTML d'e-mail dans le projet |
 | HTML **et** texte brut | Générés des mêmes données. Le HTML seul est un signal de spam, et certains clients n'affichent que le texte |
 | Accueil personnalisé | `WelcomeNotification` — un message distinct par profil (client, diaspora, propriétaire, prestataire, entreprise), envoyé **à l'activation** du compte |
-| Liens toujours valides | `SpaceLink` résout l'espace privé du destinataire (4 espaces distincts côté Angular) |
+| Liens toujours valides | `SpaceLink` résout l'espace privé du destinataire (5 espaces distincts côté Angular, dont diaspora depuis F18) |
 | Compatibilité | Tables, styles inline, aucune image distante, bouton « à toute épreuve » Outlook, responsive + mode sombre |
 | Relecture | `http://127.0.0.1:8000/apercu-emails` — les 22 e-mails dans le navigateur, données fictives, **aucun envoi** (local uniquement) |
 | Relecture en conditions réelles | `php artisan mail:apercu <adresse>` — envoie les 22 e-mails (données fictives) dans une vraie boîte de réception |

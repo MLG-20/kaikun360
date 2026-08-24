@@ -45,7 +45,7 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   écrire à un conseiller. Il répond aussi aux questions sur le fonctionnement du
   site à partir de la **FAQ tenue par l'équipe** au back-office, et il **passe la
   main** dès qu'il ne comprend pas plutôt que d'inventer.
-  - **Où on le trouve** : sur tout le site public, dans les **quatre espaces
+  - **Où on le trouve** : sur tout le site public, dans les **cinq espaces
     connectés**, et depuis F10.3 dans le **back-office**. Volontairement **pas**
     sur les pages de connexion : on n'interrompt pas une saisie de mot de passe.
   - **La discussion suit l'utilisateur** d'une page à l'autre, y compris quand
@@ -122,7 +122,7 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   **client**, pas par projet (`diaspora_projects` n'a pas de clé vers
   `construction_requests`). 👉 Détail :
   [`src/app/features/account/README.md`](src/app/features/account/README.md).
-- 🖼️ **Identité visuelle du compte (F8.0), commune aux quatre espaces** : la page
+- 🖼️ **Identité visuelle du compte (F8.0), commune aux cinq espaces** : la page
   **« Mon profil »** étant montée dans chacun d'eux, un seul bloc suffit — le
   client, le propriétaire et le prestataire y déposent leur **photo**,
   l'entreprise son **LOGO**. L'interface ne le devine pas depuis le rôle : le
@@ -1157,14 +1157,15 @@ la session.
 Les e-mails transactionnels (bienvenue, confirmation de réservation, pièce
 manquante…) contiennent des **liens qui pointent directement dans ce site**. Ils
 sont construits côté backend par `app/Support/Mail/SpaceLink.php`, qui connaît
-les **quatre espaces connectés** :
+les **cinq espaces connectés** :
 
 | Profil | Espace |
 | --- | --- |
-| Client, Diaspora | `/mon-espace` |
+| Client | `/mon-espace` |
 | Propriétaire | `/espace-proprietaire` |
 | Prestataire | `/espace-prestataire` |
 | Entreprise | `/espace-entreprise` |
+| Diaspora | `/espace-diaspora` |
 
 Sont également visés : `/back-office…` (alertes internes),
 `/pages/politique-confidentialite` et `/pages/mentions-legales` (pied de page).
@@ -1365,7 +1366,7 @@ les constructeurs schema.org, et la stratégie de titre du routeur.
    (`Product` + `Offer`, `BreadcrumbList`).
 
 > ⚠️ **Une route SANS `data.seo` est mise hors index** (`noindex, follow`).
-> C'est délibéré, et **à ne pas inverser** : les quatre espaces connectés et le
+> C'est délibéré, et **à ne pas inverser** : les cinq espaces connectés et le
 > back-office représentent bien plus de routes que les pages publiques. Avec la
 > règle contraire, le prochain écran privé ajouté partirait dans l'index de
 > Google par simple oubli. Ici, l'oubli fait perdre du référencement à une page
@@ -1559,7 +1560,7 @@ Trois cadres entourent la totalité des écrans, et ils sont **indépendants** :
 | Cadre | Fichier | Forme |
 | --- | --- | --- |
 | Poste de commandement | `layouts/backoffice-layout/` | deux **cartes** (rail + contenu) sur fond graphite |
-| Les 4 espaces connectés | `layouts/space-layout/` | rail fixe **décollé** + barre supérieure en carte |
+| Les 5 espaces connectés | `layouts/space-layout/` | rail fixe **décollé** + barre supérieure en carte |
 | Site public | `shared/components/header/` | bandeau **collé** en haut, coins **bas** arrondis |
 
 **Le pli.** Une poignée ronde sur le bord droit du rail le fait passer de 260px
@@ -1951,7 +1952,7 @@ back-office, `platformGateGuard` redirige vers `/liste-attente` quiconque n'a
 pas d'accès anticipé — appliqué en `canActivateChild` sur les pages publiques
 (`app.routes.ts`, exceptions via `data: { gateExempt: true }` sur liste
 d'attente/contact/FAQ/pages légales) et en `canActivate` **avant** `roleGuard`
-sur les 4 espaces connectés. ⚠️ **Pas de mise en cache** (à la différence de
+sur les 5 espaces connectés. ⚠️ **Pas de mise en cache** (à la différence de
 `HeroService`) : la réponse dépend de la session courante, elle doit être
 relue à chaque navigation. ⚠️ **Échec réseau = bloqué**, pas ouvert : mieux
 vaut un excès de prudence qu'une plateforme fermée exposée sur un doute.

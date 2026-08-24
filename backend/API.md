@@ -566,7 +566,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | --- | --- | --- | --- |
 | POST | `/assistant/messages` | public, auth **facultative** (throttle 12/min) | `AssistantController@message` |
 
-Endpoint **unique** pour toute la plateforme et les 8 rôles : ce n'est pas la route qui
+Endpoint **unique** pour toute la plateforme et les 9 rôles : ce n'est pas la route qui
 varie selon l'appelant, c'est la **trousse à outils** que le `ToolRegistry` lui compose.
 Sans état — l'historique voyage avec la requête (`history`, 10 tours max ; `message`,
 500 caractères max). Réponse : `{ data: { reply: { text, items, actions, tool } } }`.
