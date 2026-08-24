@@ -40,7 +40,7 @@ class NewConstructionRequestNotification extends Notification implements ShouldQ
         return BrandedMail::make()
             ->subject('Nouvelle demande de chantier')
             ->preheader("Demande {$this->request->reference} — {$this->request->surface_m2} m² à {$this->request->city}.")
-            ->eyebrow('Kaikun Build')
+            ->eyebrow('Kaikun Construct')
             ->heading('Un chantier attend un chiffrage.')
             ->intro('Une demande de construction vient d\'arriver, déjà cadrée par le simulateur : objectif, surface, finition et localisation sont renseignés. L\'estimation ci-dessous est celle qu\'a vue le client — le devis ferme reste à établir.')
             ->facts([

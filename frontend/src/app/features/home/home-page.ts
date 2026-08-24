@@ -483,7 +483,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
       commands: ['/transport'],
     },
     {
-      name: 'Kaikun Chantier',
+      name: 'Kaikun Construct',
       tag: 'Construction',
       desc: 'Construire à distance, avec un suivi filmé et daté.',
       icon: 'build',

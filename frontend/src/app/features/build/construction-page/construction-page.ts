@@ -43,7 +43,7 @@ type SimState =
 /**
  * Page univers Construction (F2.5, enrichie) — route `/construction`.
  *
- * Page de conversion « Kaikun Build ». Le **simulateur** collecte les paramètres
+ * Page de conversion « Kaikun Construct ». Le **simulateur** collecte les paramètres
  * du projet (objectif, surface, niveaux, finition, zone, foncier) et interroge
  * l'endpoint PUBLIC `POST /construction-requests/simulate` : tout le chiffrage
  * (travaux, frais annexes, foncier, délai, jalons, rentabilité) vient du backend,

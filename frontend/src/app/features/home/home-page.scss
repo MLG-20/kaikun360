@@ -1008,7 +1008,7 @@
 .stats {
   // Marge horizontale responsive : au moins 24px, mais jamais moins que ce
   // qu'il faut pour plafonner la carte à `--k-maxw` — exactement la largeur
-  // de `.simulator-card` (Kaikun Chantier) juste au-dessus, pour que les deux
+  // de `.simulator-card` (Kaikun Construct) juste au-dessus, pour que les deux
   // cartes s'alignent sur grand écran au lieu que celle-ci déborde.
   margin: 56px max(24px, calc((100% - var(--k-maxw)) / 2)) 0;
   padding: 48px 24px;
