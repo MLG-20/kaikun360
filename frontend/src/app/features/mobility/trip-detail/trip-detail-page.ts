@@ -23,6 +23,7 @@ import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { MobilityService } from '../../../models/mobility-service.model';
 import { DetailLayoutComponent } from '../../../shared/components/detail-layout/detail-layout';
 import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
+import { GoogleMapEmbedComponent } from '../../../shared/components/google-map-embed/google-map-embed';
 
 /** État de chargement de la fiche. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
@@ -48,7 +49,13 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
  */
 @Component({
   selector: 'app-trip-detail-page',
-  imports: [ReactiveFormsModule, RouterLink, DetailLayoutComponent, WhatsAppButtonComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    DetailLayoutComponent,
+    WhatsAppButtonComponent,
+    GoogleMapEmbedComponent,
+  ],
   templateUrl: './trip-detail-page.html',
   styleUrl: './trip-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -126,6 +133,9 @@ export class TripDetailPageComponent {
   });
 
   readonly priceLabel = computed(() => formatFcfa(this.trip()?.price_xof));
+
+  /** Lien Google Maps du point de départ, collé par le prestataire (F5.10). */
+  readonly mapLink = computed(() => this.trip()?.maps_link ?? null);
 
   /**
    * Affine les balises de référencement avec le départ chargé (F9.1).

@@ -15,6 +15,8 @@ export interface MobilityService {
   capacity: number;
   price_xof: number;
   description: string | null;
+  /** Lien Google Maps du point de départ, collé par le prestataire (F5.10). */
+  maps_link: string | null;
   status: string | null;
   status_label: string | null;
   /**

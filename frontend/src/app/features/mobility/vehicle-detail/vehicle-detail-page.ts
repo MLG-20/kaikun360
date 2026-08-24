@@ -25,6 +25,7 @@ import { Vehicle } from '../../../models/vehicle.model';
 import { ReviewsComponent } from '../../../shared/components/reviews/reviews';
 import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
 import { DetailLayoutComponent } from '../../../shared/components/detail-layout/detail-layout';
+import { GoogleMapEmbedComponent } from '../../../shared/components/google-map-embed/google-map-embed';
 
 /** État de chargement de la fiche. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
@@ -52,6 +53,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
     ReviewsComponent,
     WhatsAppButtonComponent,
     DetailLayoutComponent,
+    GoogleMapEmbedComponent,
   ],
   templateUrl: './vehicle-detail-page.html',
   styleUrl: './vehicle-detail-page.scss',
@@ -144,6 +146,9 @@ export class VehicleDetailPageComponent {
   });
 
   readonly priceLabel = computed(() => formatFcfa(this.vehicle()?.price_per_day_xof));
+
+  /** Lien Google Maps collé par le prestataire (F5.10), ou `null`. */
+  readonly mapLink = computed(() => this.vehicle()?.maps_link ?? null);
 
   /**
    * Affine les balises de référencement avec le véhicule chargé (F9.1).

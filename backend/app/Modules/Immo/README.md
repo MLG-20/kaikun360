@@ -192,6 +192,18 @@ leurs factories ne génèrent plus de valeur aléatoire. Les trois affichages
 publics correspondants (fiche nuitée, fiche véhicule — caractéristiques, encart
 tarif, devis de réservation) ont été retirés.
 
+### Localisation Google Maps (F5.10)
+
+`properties.maps_link` (nullable) porte le lien `src` d'une carte Google Maps
+**intégrée** — le mode de partage GRATUIT de Google Maps (« Partager » →
+« Intégrer une carte »), pas l'API Maps Embed payante : la plateforme
+appartenant à un client, aucune clé API facturable n'est disponible pour ce
+projet. Validé par `App\Rules\GoogleMapsLink` (transversale, `app/Rules/`,
+réutilisée par Mobility et Explore) : le lien doit pointer vers un domaine
+Google Maps connu avant d'être enregistré. Affiché sur la fiche du bien (et
+sur celle de sa nuitée, qui hérite de sa localisation) via le composant
+partagé `app-google-map-embed` (`bypassSecurityTrustResourceUrl`).
+
 ---
 
 ## Événements & validation (phase B2.4)

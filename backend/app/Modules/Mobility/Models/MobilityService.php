@@ -50,6 +50,7 @@ class MobilityService extends Model
         'capacity',
         'price_xof',
         'description',
+        'maps_link',
         'status',
         'published_at',
         'approved_by',

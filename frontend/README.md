@@ -2325,6 +2325,22 @@ champ `commission_xof` de `GET /manage/dashboard` (`OwnerDashboard`,
 `models/manage.model.ts`) — aucune logique de calcul côté frontend, la valeur
 est déjà agrégée par le serveur.
 
+### Localisation Google Maps sur les fiches détaillées (F5.10)
+
+Un champ `maps_link` dans les 4 formulaires de dépôt (bien, véhicule, départ,
+circuit) : le propriétaire/prestataire colle le code obtenu via Google Maps
+« Partager » → « Intégrer une carte » (mode gratuit, aucune clé API — voir
+`backend/app/Modules/Immo/README.md`). `extractGoogleMapsEmbedUrl()`
+(`shared/format/google-maps.ts`) accepte indifféremment le code `<iframe>`
+complet ou seulement le lien `src` qu'il contient, avant envoi au serveur.
+
+Affiché sur les 5 fiches détaillées concernées (bien, nuitée, véhicule,
+trajet, circuit) par un unique composant partagé,
+`app-google-map-embed` (`shared/components/google-map-embed`) : sanitize la
+valeur (`bypassSecurityTrustResourceUrl`, déjà validée côté serveur — même
+principe de confiance que la carte Google Maps de la page Contact) et se
+masque de lui-même si aucun lien n'est renseigné.
+
 ### Commandes utiles
 
 ```bash

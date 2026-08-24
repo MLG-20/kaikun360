@@ -18,6 +18,7 @@ import {
 } from '../../../core/api/offer.service';
 import { Experience } from '../../../models/experience.model';
 import { PropertyPhoto } from '../../../models/property.model';
+import { extractGoogleMapsEmbedUrl } from '../../../shared/format/google-maps';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
 import { PhotoManagerComponent } from '../../../shared/components/photo-manager/photo-manager';
@@ -78,6 +79,7 @@ export class ProviderExperienceFormPageComponent {
     duration_days: [1, [Validators.required, Validators.min(1)]],
     price_xof: [0, [Validators.required, Validators.min(0)]],
     capacity: [1, [Validators.required, Validators.min(1)]],
+    maps_link: [''],
     // Une case par inclusion, ajoutée dynamiquement ci-dessous.
     inclusions: this.fb.nonNullable.group(
       Object.fromEntries(EXPERIENCE_INCLUSIONS.map((i) => [i.key, this.fb.nonNullable.control(false)])),
@@ -118,6 +120,7 @@ export class ProviderExperienceFormPageComponent {
       duration_days: x.duration_days ?? 1,
       price_xof: x.price_xof,
       capacity: x.capacity,
+      maps_link: x.maps_link ?? '',
     });
 
     // Les inclusions arrivent en `{ cle: booléen }` ; les cases absentes de la
@@ -146,6 +149,7 @@ export class ProviderExperienceFormPageComponent {
       price_xof: raw.price_xof,
       capacity: raw.capacity,
       inclusions: raw.inclusions as Record<string, boolean>,
+      maps_link: raw.maps_link ? extractGoogleMapsEmbedUrl(raw.maps_link) : null,
     };
 
     this.submitting.set(true);

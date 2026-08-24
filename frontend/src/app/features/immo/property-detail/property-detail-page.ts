@@ -15,6 +15,7 @@ import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { Property } from '../../../models/property.model';
 import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
 import { DetailLayoutComponent } from '../../../shared/components/detail-layout/detail-layout';
+import { GoogleMapEmbedComponent } from '../../../shared/components/google-map-embed/google-map-embed';
 
 /** État de chargement de la fiche. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
@@ -31,7 +32,13 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
  */
 @Component({
   selector: 'app-property-detail-page',
-  imports: [ReactiveFormsModule, RouterLink, WhatsAppButtonComponent, DetailLayoutComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    WhatsAppButtonComponent,
+    DetailLayoutComponent,
+    GoogleMapEmbedComponent,
+  ],
   templateUrl: './property-detail-page.html',
   styleUrl: './property-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -194,17 +201,8 @@ export class PropertyDetailPageComponent {
     return [loc.commune, loc.department, loc.region].filter(Boolean).join(' · ') || null;
   });
 
-  /**
-   * Lien vers une carte externe si les coordonnées sont connues (OpenStreetMap).
-   * Les coordonnées sont sérialisées en chaîne par Laravel (cast decimal).
-   */
-  readonly mapLink = computed(() => {
-    const loc = this.property()?.location;
-    if (!loc?.latitude || !loc?.longitude) {
-      return null;
-    }
-    return `https://www.openstreetmap.org/?mlat=${loc.latitude}&mlon=${loc.longitude}#map=16/${loc.latitude}/${loc.longitude}`;
-  });
+  /** Carte Google Maps intégrée par le propriétaire (F5.10), ou `null`. */
+  readonly mapLink = computed(() => this.property()?.location?.maps_link ?? null);
 
   /** Pré-remplit le message de visite avec le titre du bien. */
   private prefillMessage(property: Property): void {

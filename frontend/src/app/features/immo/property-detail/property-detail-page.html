@@ -74,11 +74,7 @@
             }
           </dl>
 
-          @if (mapLink(); as map) {
-            <a class="uni-detail-maplink" [href]="map" target="_blank" rel="noopener">
-              Voir sur la carte ↗
-            </a>
-          }
+          <app-google-map-embed [url]="mapLink()" />
         </section>
 
         <!-- Colonne latérale : prix + demande de visite + WhatsApp. -->

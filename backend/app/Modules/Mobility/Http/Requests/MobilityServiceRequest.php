@@ -4,6 +4,7 @@ namespace App\Modules\Mobility\Http\Requests;
 
 use App\Modules\Mobility\Enums\MobilityServiceType;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Rules\GoogleMapsLink;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -40,6 +41,8 @@ abstract class MobilityServiceRequest extends FormRequest
             'capacity' => [$presence, 'integer', 'min:1', 'max:200'],
             'price_xof' => [$presence, 'integer', 'min:0'],
             'description' => ['nullable', 'string', 'max:5000'],
+            // Lien Google Maps du point de départ, collé par le prestataire (F5.10).
+            'maps_link' => ['nullable', 'string', 'max:2048', 'url', new GoogleMapsLink()],
 
             // Véhicule opérant le départ : facultatif, mais s'il est fourni il
             // doit exister. Son APPARTENANCE est vérifiée séparément, dans

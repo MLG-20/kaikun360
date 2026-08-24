@@ -18,6 +18,7 @@ import { Stay, BookedRange } from '../../../models/stay.model';
 import { ReviewsComponent } from '../../../shared/components/reviews/reviews';
 import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
 import { DetailLayoutComponent } from '../../../shared/components/detail-layout/detail-layout';
+import { GoogleMapEmbedComponent } from '../../../shared/components/google-map-embed/google-map-embed';
 
 /** État de chargement de la fiche. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
@@ -51,6 +52,7 @@ interface CalendarCell {
     ReviewsComponent,
     WhatsAppButtonComponent,
     DetailLayoutComponent,
+    GoogleMapEmbedComponent,
   ],
   templateUrl: './stay-detail-page.html',
   styleUrl: './stay-detail-page.scss',
@@ -158,6 +160,9 @@ export class StayDetailPageComponent {
     }
     return [loc.commune, loc.department, loc.region].filter(Boolean).join(' · ') || null;
   });
+
+  /** Lien Google Maps du bien (F5.10) — une nuitée hérite de la localisation de son bien. */
+  readonly mapLink = computed(() => this.property()?.location?.maps_link ?? null);
 
   /**
    * Affine les balises de référencement avec la nuitée chargée (F9.1).

@@ -4,6 +4,7 @@ namespace App\Modules\Mobility\Http\Requests;
 
 use App\Modules\Mobility\Enums\VehicleType;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Rules\GoogleMapsLink;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -35,6 +36,8 @@ class StoreVehicleRequest extends FormRequest
             'has_driver' => ['boolean'],
             'caution_xof' => ['nullable', 'integer', 'min:0'],
             'description' => ['nullable', 'string'],
+            // Lien Google Maps collé par le prestataire (F5.10).
+            'maps_link' => ['nullable', 'string', 'max:2048', 'url', new GoogleMapsLink()],
 
             // Conformité motorisé.
             'insurance_ref' => ['nullable', 'string', 'max:255'],

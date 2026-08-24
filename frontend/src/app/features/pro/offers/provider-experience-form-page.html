@@ -75,6 +75,17 @@
               placeholder="Déroulé, points d'intérêt, niveau, matériel fourni…"></textarea>
   </div>
 
+  <div class="xf-field">
+    <label for="xf-maps-link">Lien Google Maps <span class="xf-opt">(facultatif)</span></label>
+    <input id="xf-maps-link" type="text" formControlName="maps_link"
+           placeholder="Code d'intégration Google Maps ou lien https://www.google.com/maps/embed?…" />
+    <p class="xf-hint">
+      Sur Google Maps, recherchez le point de rendez-vous, cliquez sur
+      « Partager » puis « Intégrer une carte », et collez ici le code obtenu
+      (ou seulement le lien qu'il contient).
+    </p>
+  </div>
+
   <fieldset class="xf-inclusions" formGroupName="inclusions">
     <legend>Inclusions</legend>
     <p class="xf-hint">Cochez ce qui est compris dans le prix.</p>

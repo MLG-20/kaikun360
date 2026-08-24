@@ -52,6 +52,8 @@ class PropertyResource extends JsonResource
                 'address' => $this->address,
                 'latitude' => $this->latitude,
                 'longitude' => $this->longitude,
+                // Lien Google Maps collé par le propriétaire (F5.10).
+                'maps_link' => $this->maps_link,
             ],
             'owner' => [
                 'id' => $this->owner_id,

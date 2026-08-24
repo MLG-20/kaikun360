@@ -79,6 +79,17 @@
                   placeholder="État, options, conditions d'utilisation…"></textarea>
       </div>
 
+      <div class="vf-field">
+        <label for="vf-maps-link">Lien Google Maps <span class="vf-opt">(facultatif)</span></label>
+        <input id="vf-maps-link" type="text" formControlName="maps_link"
+               placeholder="Code d'intégration Google Maps ou lien https://www.google.com/maps/embed?…" />
+        <p class="vf-hint">
+          Sur Google Maps, recherchez le lieu où se trouve le véhicule, cliquez
+          sur « Partager » puis « Intégrer une carte », et collez ici le code
+          obtenu (ou seulement le lien qu'il contient).
+        </p>
+      </div>
+
       <!-- Conformité conditionnelle selon la famille du type (CDC §12) -->
       @if (family() === 'motorise') {
         <fieldset class="vf-compliance">

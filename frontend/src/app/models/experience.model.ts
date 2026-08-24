@@ -19,6 +19,8 @@ export interface Experience {
    * renvoie `[]` (tableau vide) lorsqu'aucune inclusion n'est renseignée.
    */
   inclusions: Record<string, boolean> | never[];
+  /** Lien Google Maps collé par le prestataire (F5.10), ou `null`. */
+  maps_link: string | null;
   status: string | null;
   status_label: string | null;
   published_at: string | null;

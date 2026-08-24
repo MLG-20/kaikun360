@@ -2,6 +2,7 @@
 
 namespace App\Modules\Mobility\Http\Requests;
 
+use App\Rules\GoogleMapsLink;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -31,6 +32,7 @@ class UpdateVehicleRequest extends FormRequest
             'has_driver' => ['sometimes', 'boolean'],
             'caution_xof' => ['sometimes', 'integer', 'min:0'],
             'description' => ['sometimes', 'nullable', 'string'],
+            'maps_link' => ['sometimes', 'nullable', 'string', 'max:2048', 'url', new GoogleMapsLink()],
             'insurance_ref' => ['sometimes', 'nullable', 'string', 'max:255'],
             'driver_identity' => ['sometimes', 'nullable', 'string', 'max:255'],
             'life_jackets_count' => ['sometimes', 'nullable', 'integer', 'min:0'],

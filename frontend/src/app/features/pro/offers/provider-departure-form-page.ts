@@ -11,6 +11,7 @@ import {
 } from '../../../core/api/offer.service';
 import { MobilityService } from '../../../models/mobility-service.model';
 import { Vehicle } from '../../../models/vehicle.model';
+import { extractGoogleMapsEmbedUrl } from '../../../shared/format/google-maps';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
 
 /** État d'affichage (création prête d'emblée ; correction attend le chargement). */
@@ -80,6 +81,7 @@ export class ProviderDepartureFormPageComponent {
     price_xof: [0, [Validators.required, Validators.min(0)]],
     vehicle_id: [null as number | null],
     description: [''],
+    maps_link: [''],
   });
 
   /** Vrai en mode correction (pour les libellés). */
@@ -148,6 +150,7 @@ export class ProviderDepartureFormPageComponent {
       price_xof: d.price_xof,
       vehicle_id: d.vehicle_id ?? null,
       description: d.description ?? '',
+      maps_link: d.maps_link ?? '',
     });
   }
 
@@ -168,6 +171,7 @@ export class ProviderDepartureFormPageComponent {
       price_xof: raw.price_xof,
       vehicle_id: raw.vehicle_id == null ? null : Number(raw.vehicle_id),
       description: raw.description || null,
+      maps_link: raw.maps_link ? extractGoogleMapsEmbedUrl(raw.maps_link) : null,
     };
 
     this.submitting.set(true);

@@ -51,6 +51,7 @@ class TourismExperience extends Model
         'price_xof',
         'capacity',
         'inclusions',
+        'maps_link',
         'status',
         'published_at',
         'approved_by',

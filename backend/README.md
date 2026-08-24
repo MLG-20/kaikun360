@@ -1200,6 +1200,12 @@ Le code est **abondamment commenté en français**.
   `GET /manage/dashboard` expose `commission_xof`, calculée **mandat par
   mandat** (taux propre à chaque mandat) puis sommée — jamais un taux unique
   appliqué au total.
+- ✅ **Localisation Google Maps sur les fiches détaillées (F5.10).**
+  `maps_link` (nullable) sur `properties`, `vehicles`, `mobility_services` et
+  `tourism_experiences` : le lien `src` d'une carte Google Maps **intégrée**
+  (mode de partage gratuit « Intégrer une carte » — aucune clé API
+  facturable disponible, la plateforme appartenant à un client), validé par
+  `App\Rules\GoogleMapsLink` (transversale) avant enregistrement.
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
   sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
   worker de queue supervisé.

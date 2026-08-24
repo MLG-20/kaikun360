@@ -185,6 +185,17 @@ celui-ci : `GET /admin/vehicles` (flotte + conformité + prestataire) et
   `VehicleResource` (catalogue public) : ce sont des données de contrôle,
   servies uniquement par `AdminVehicleResource` derrière les gardes admin.
 
+### Localisation Google Maps (F5.10)
+
+`vehicles.maps_link` et `mobility_services.maps_link` (nullables) portent
+chacun le lien `src` d'une carte Google Maps **intégrée** (mode de partage
+gratuit « Intégrer une carte », pas l'API Maps Embed payante — voir
+`Immo/README.md`). Un véhicule situe où il se trouve (agence, point de
+retrait…), un départ situe son point d'embarquement — deux localisations
+indépendantes, un même prestataire peut les renseigner différemment. Validé
+par `App\Rules\GoogleMapsLink` (transversale) et affiché via le composant
+partagé `app-google-map-embed` sur les fiches véhicule et trajet.
+
 ---
 
 ## Réservation : commission & caution (phase B7.4)

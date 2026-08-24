@@ -82,6 +82,8 @@ export interface NewVehiclePayload {
   has_driver: boolean;
   caution_xof?: number | null;
   description?: string | null;
+  /** Lien Google Maps collé par le prestataire (F5.10). */
+  maps_link?: string | null;
   // Conformité motorisé.
   insurance_ref?: string | null;
   driver_identity?: string | null;
@@ -142,6 +144,8 @@ export interface NewMobilityServicePayload {
   capacity: number;
   price_xof: number;
   description?: string | null;
+  /** Lien Google Maps du point de départ, collé par le prestataire (F5.10). */
+  maps_link?: string | null;
   /**
    * Véhicule opérant le départ. Facultatif, mais **le serveur exige qu'il soit
    * le vôtre** et que la capacité vendue n'excède pas la sienne.
@@ -176,6 +180,8 @@ export interface NewExperiencePayload {
   capacity: number;
   /** Inclusions structurées : `{ restauration: true, guide: false, … }`. */
   inclusions?: Record<string, boolean>;
+  /** Lien Google Maps collé par le prestataire (F5.10). */
+  maps_link?: string | null;
 }
 
 /**
@@ -393,6 +399,7 @@ export class OfferService {
     if (p.model && p.model.trim() !== '') body['model'] = p.model.trim();
     if (p.description && p.description.trim() !== '') body['description'] = p.description.trim();
     if (p.caution_xof != null) body['caution_xof'] = p.caution_xof;
+    if (p.maps_link && p.maps_link.trim() !== '') body['maps_link'] = p.maps_link.trim();
 
     if (vehicleFamily(p.type) === 'pirogue') {
       if (p.life_jackets_count != null) body['life_jackets_count'] = p.life_jackets_count;
@@ -427,6 +434,7 @@ export class OfferService {
       vehicle_id: p.vehicle_id ?? null,
     };
     if (p.description && p.description.trim() !== '') body['description'] = p.description.trim();
+    if (p.maps_link && p.maps_link.trim() !== '') body['maps_link'] = p.maps_link.trim();
     return body;
   }
 
@@ -441,6 +449,7 @@ export class OfferService {
     };
     if (p.description && p.description.trim() !== '') body['description'] = p.description.trim();
     if (p.inclusions && Object.keys(p.inclusions).length) body['inclusions'] = p.inclusions;
+    if (p.maps_link && p.maps_link.trim() !== '') body['maps_link'] = p.maps_link.trim();
     return body;
   }
 }

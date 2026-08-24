@@ -64,6 +64,7 @@ class Property extends Model
         'address',
         'latitude',
         'longitude',
+        'maps_link',
         'status',
         'verification_level',
         'approved_by',

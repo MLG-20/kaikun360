@@ -265,6 +265,25 @@
           <input id="opf-zone" class="k-input" type="text" formControlName="tourist_zone" />
         </div>
       </div>
+
+      <div class="k-field">
+        <label class="k-label" for="opf-maps-link">
+          Lien Google Maps <span class="k-optional">(facultatif)</span>
+        </label>
+        <input
+          id="opf-maps-link"
+          class="k-input"
+          type="text"
+          formControlName="maps_link"
+          placeholder="Code d'intégration Google Maps ou lien https://www.google.com/maps/embed?…"
+        />
+        <p class="k-hint">
+          Sur Google Maps, recherchez le bien, cliquez sur « Partager » puis
+          « Intégrer une carte », et collez ici le code obtenu (ou seulement le
+          lien qu'il contient). Le client verra alors une vraie carte sur la
+          fiche du bien.
+        </p>
+      </div>
     </fieldset>
 
     <!-- ===================== Config nuitées ===================== -->

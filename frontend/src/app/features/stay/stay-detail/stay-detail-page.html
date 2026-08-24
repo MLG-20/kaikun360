@@ -51,6 +51,8 @@
           </section>
         }
 
+        <app-google-map-embed [url]="mapLink()" />
+
           <!-- Équipements. -->
           @if (s.amenities?.length) {
             <section class="uni-detail-block">

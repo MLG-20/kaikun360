@@ -3,6 +3,7 @@
 namespace App\Modules\Explore\Http\Requests;
 
 use App\Modules\Explore\Models\TourismExperience;
+use App\Rules\GoogleMapsLink;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -31,6 +32,8 @@ class StoreExperienceRequest extends FormRequest
             'capacity' => ['required', 'integer', 'min:1'],
             // Inclusions structurées (ex. {"restauration": true, "guide": true}).
             'inclusions' => ['nullable', 'array'],
+            // Lien Google Maps collé par le prestataire (F5.10).
+            'maps_link' => ['nullable', 'string', 'max:2048', 'url', new GoogleMapsLink()],
         ];
     }
 }

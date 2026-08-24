@@ -2,6 +2,7 @@
 
 namespace App\Modules\Explore\Http\Requests;
 
+use App\Rules\GoogleMapsLink;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -34,6 +35,7 @@ class UpdateExperienceRequest extends FormRequest
             'price_xof' => ['sometimes', 'integer', 'min:0'],
             'capacity' => ['sometimes', 'integer', 'min:1'],
             'inclusions' => ['sometimes', 'nullable', 'array'],
+            'maps_link' => ['sometimes', 'nullable', 'string', 'max:2048', 'url', new GoogleMapsLink()],
         ];
     }
 }

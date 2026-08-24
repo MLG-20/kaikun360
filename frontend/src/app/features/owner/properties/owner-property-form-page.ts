@@ -17,6 +17,7 @@ import {
 } from '../../../core/api/property-management.service';
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { Property, PropertyPhoto } from '../../../models/property.model';
+import { extractGoogleMapsEmbedUrl } from '../../../shared/format/google-maps';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
 import { PhotoManagerComponent } from '../../../shared/components/photo-manager/photo-manager';
 
@@ -160,6 +161,7 @@ export class OwnerPropertyFormPageComponent {
     commune_id: [null as number | null],
     tourist_zone: [''],
     address: [''],
+    maps_link: [''],
     // Bloc « nuitées » — activé/désactivé selon le mode (cf. applyMode()).
     stay: this.fb.nonNullable.group({
       price_per_night_xof: [null as number | null, [Validators.required, Validators.min(0)]],
@@ -329,6 +331,7 @@ export class OwnerPropertyFormPageComponent {
       caution_months: p.caution_months,
       tourist_zone: p.location.tourist_zone ?? '',
       address: p.location.address ?? '',
+      maps_link: p.location.maps_link ?? '',
     });
 
     // Photos déjà en ligne (l'API les renvoie principale d'abord).
@@ -403,6 +406,7 @@ export class OwnerPropertyFormPageComponent {
       caution_months: this.showsMonthly() ? raw.caution_months : null,
       tourist_zone: raw.tourist_zone || null,
       address: raw.address || null,
+      maps_link: raw.maps_link ? extractGoogleMapsEmbedUrl(raw.maps_link) : null,
     };
   }
 

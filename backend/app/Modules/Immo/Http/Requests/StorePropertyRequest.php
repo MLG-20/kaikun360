@@ -4,6 +4,7 @@ namespace App\Modules\Immo\Http\Requests;
 
 use App\Modules\Immo\Enums\PropertyType;
 use App\Modules\Immo\Models\Property;
+use App\Rules\GoogleMapsLink;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -59,6 +60,8 @@ class StorePropertyRequest extends FormRequest
             'address' => ['nullable', 'string', 'max:500'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            // Lien Google Maps collé par le propriétaire (F5.10).
+            'maps_link' => ['nullable', 'string', 'max:2048', 'url', new GoogleMapsLink()],
         ];
     }
 

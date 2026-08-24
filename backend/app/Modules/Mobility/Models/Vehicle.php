@@ -56,6 +56,7 @@ class Vehicle extends Model
         'description',
         'insurance_ref',
         'driver_identity',
+        'maps_link',
         'life_jackets_count',
         'weather_compliant',
         'provider_compliant',

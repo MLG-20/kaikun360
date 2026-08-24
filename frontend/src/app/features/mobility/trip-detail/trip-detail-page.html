@@ -59,6 +59,8 @@
             <div><dt>Capacité totale</dt><dd>{{ t.capacity }} place(s)</dd></div>
             <div><dt>Prix par place</dt><dd>{{ priceLabel() }}</dd></div>
           </dl>
+
+          <app-google-map-embed [url]="mapLink()" />
         </section>
 
         <!-- Colonne latérale : prix + réservation des places. -->

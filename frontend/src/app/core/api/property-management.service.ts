@@ -53,6 +53,8 @@ export interface CreatePropertyPayload {
   address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  /** Lien Google Maps collé par le propriétaire (F5.10). */
+  maps_link?: string | null;
 }
 
 /**

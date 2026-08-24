@@ -30,6 +30,8 @@ class ExperienceResource extends JsonResource
             'price_xof' => $this->price_xof,
             'capacity' => $this->capacity,
             'inclusions' => $this->inclusions ?? [],
+            // Lien Google Maps collé par le prestataire (F5.10).
+            'maps_link' => $this->maps_link,
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             'published_at' => $this->published_at?->toIso8601String(),

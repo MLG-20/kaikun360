@@ -1,0 +1,13 @@
+@if (safeUrl(); as url) {
+  <iframe
+    class="gme-frame"
+    [src]="url"
+    width="100%"
+    height="320"
+    style="border:0"
+    allowfullscreen="true"
+    loading="lazy"
+    referrerpolicy="strict-origin-when-cross-origin"
+    title="Localisation sur Google Maps"
+  ></iframe>
+}

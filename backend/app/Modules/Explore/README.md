@@ -97,6 +97,14 @@ circuit) via le modèle transversal `Booking`.
 > 🔗 Le **remboursement effectif via PayTech** est déclenché en **B14** (ici on
 > calcule seulement l'éligibilité et le montant).
 
+### Localisation Google Maps (F5.10)
+
+`tourism_experiences.maps_link` (nullable) porte le lien `src` d'une carte
+Google Maps **intégrée** (mode de partage gratuit « Intégrer une carte », pas
+l'API Maps Embed payante — voir `Immo/README.md`). Validé par
+`App\Rules\GoogleMapsLink` (transversale), affiché via le composant partagé
+`app-google-map-embed` sur la fiche du circuit.
+
 ---
 
 ## Supervision back-office (F7.2.k)

@@ -32,6 +32,8 @@ class MobilityServiceResource extends JsonResource
             'capacity' => $this->capacity,
             'price_xof' => $this->price_xof,
             'description' => $this->description,
+            // Lien Google Maps du point de départ, collé par le prestataire (F5.10).
+            'maps_link' => $this->maps_link,
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             // F8.23 — le véhicule affecté, en clair. ⚠️ Sans lui, le formulaire

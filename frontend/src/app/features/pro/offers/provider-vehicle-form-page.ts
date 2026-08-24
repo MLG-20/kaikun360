@@ -14,6 +14,7 @@ import {
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { PropertyPhoto } from '../../../models/property.model';
 import { Vehicle } from '../../../models/vehicle.model';
+import { extractGoogleMapsEmbedUrl } from '../../../shared/format/google-maps';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
 import { PhotoManagerComponent } from '../../../shared/components/photo-manager/photo-manager';
 
@@ -81,6 +82,7 @@ export class ProviderVehicleFormPageComponent {
     price_per_day_xof: [0, [Validators.required, Validators.min(0)]],
     has_driver: [false],
     description: [''],
+    maps_link: [''],
     // Conformité motorisé.
     insurance_ref: [''],
     driver_identity: [''],
@@ -130,6 +132,7 @@ export class ProviderVehicleFormPageComponent {
       price_per_day_xof: v.price_per_day_xof,
       has_driver: v.has_driver,
       description: v.description ?? '',
+      maps_link: v.maps_link ?? '',
     });
     this.typeValue.set((v.type as VehicleTypeValue) ?? '');
     this.existingPhotos.set(v.photos ?? []);
@@ -151,6 +154,7 @@ export class ProviderVehicleFormPageComponent {
       price_per_day_xof: raw.price_per_day_xof,
       has_driver: raw.has_driver,
       description: raw.description || null,
+      maps_link: raw.maps_link ? extractGoogleMapsEmbedUrl(raw.maps_link) : null,
       insurance_ref: raw.insurance_ref || null,
       driver_identity: raw.driver_identity || null,
       life_jackets_count: raw.life_jackets_count,

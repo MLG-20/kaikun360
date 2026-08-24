@@ -104,6 +104,8 @@ export interface PropertyLocation {
   address: string | null;
   latitude: string | null;
   longitude: string | null;
+  /** Lien Google Maps collé par le propriétaire (F5.10), ou `null`. */
+  maps_link: string | null;
 }
 
 export interface PropertyOwner {

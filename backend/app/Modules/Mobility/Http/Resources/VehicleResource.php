@@ -31,6 +31,8 @@ class VehicleResource extends JsonResource
             'has_driver' => $this->has_driver,
             'caution_xof' => $this->caution_xof,
             'description' => $this->description,
+            // Lien Google Maps collé par le prestataire (F5.10).
+            'maps_link' => $this->maps_link,
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             'published_at' => $this->published_at?->toIso8601String(),

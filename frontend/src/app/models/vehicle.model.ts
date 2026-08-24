@@ -15,6 +15,8 @@ export interface Vehicle {
   has_driver: boolean;
   caution_xof: number | null;
   description: string | null;
+  /** Lien Google Maps collé par le prestataire (F5.10), ou `null`. */
+  maps_link: string | null;
   status: string | null;
   status_label: string | null;
   published_at: string | null;

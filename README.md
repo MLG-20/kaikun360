@@ -967,6 +967,19 @@ prélève dessus.
 
 - [x] **`GET /manage/dashboard` expose `commission_xof`**, calculée **mandat par mandat** (chaque mandat a son propre taux) puis sommée — un taux unique appliqué au total aurait été faux dès qu'un propriétaire a deux mandats à des taux différents (couvert par un test dédié). Affichée sur `/espace-proprietaire` entre « Dépenses » et « Reversements ».
 
+### F5.10 — Localisation Google Maps sur les fiches détaillées
+
+Demande client (2026-08-24) : un client consultant une annonce (bien,
+véhicule, départ, circuit) ne pouvait pas savoir où elle se situait. Une carte
+interactive complète (sélecteur au dépôt + clé API Google Maps) était la
+solution naturelle, mais **la plateforme appartient à un client** : aucune
+clé API facturable n'est disponible pour ce projet. Solution retenue : le
+mode de partage **gratuit** de Google Maps (« Intégrer une carte »), qui ne
+nécessite ni clé ni facturation.
+
+- [x] **`maps_link` sur `properties`, `vehicles`, `mobility_services` et `tourism_experiences`.** Le propriétaire/prestataire recherche son lieu sur Google Maps, clique « Partager » → « Intégrer une carte », et colle le code obtenu (ou seulement le lien `src` qu'il contient — les deux formes sont acceptées, `extractGoogleMapsEmbedUrl` extrait le second du premier) dans son formulaire de dépôt. `App\Rules\GoogleMapsLink` (règle transversale, réutilisée par les 4 modules) vérifie que le lien pointe vers un domaine Google Maps connu avant tout enregistrement — un lien quelconque ne peut pas être intégré en iframe sur une fiche cliente.
+- [x] **Un seul composant d'affichage, `app-google-map-embed`**, posé sur les 5 fiches détaillées concernées (bien, nuitée — hérite de la localisation de son bien, véhicule, trajet, circuit) : rend l'iframe (`bypassSecurityTrustResourceUrl`, la valeur ayant déjà été validée côté serveur) et se masque de lui-même si aucun lien n'est renseigné. Même principe de confiance que la carte du siège sur la page Contact, posée bien avant.
+
 ---
 
 ## Critères d'acceptation transverses

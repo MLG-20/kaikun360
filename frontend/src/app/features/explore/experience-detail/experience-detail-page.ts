@@ -25,6 +25,7 @@ import { Experience, ExperienceAvailability } from '../../../models/experience.m
 import { ReviewsComponent } from '../../../shared/components/reviews/reviews';
 import { WhatsAppButtonComponent } from '../../../shared/components/whatsapp-button/whatsapp-button';
 import { DetailLayoutComponent } from '../../../shared/components/detail-layout/detail-layout';
+import { GoogleMapEmbedComponent } from '../../../shared/components/google-map-embed/google-map-embed';
 
 /** État de chargement de la fiche. */
 type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
@@ -51,6 +52,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
     ReviewsComponent,
     WhatsAppButtonComponent,
     DetailLayoutComponent,
+    GoogleMapEmbedComponent,
   ],
   templateUrl: './experience-detail-page.html',
   styleUrl: './experience-detail-page.scss',
@@ -140,6 +142,9 @@ export class ExperienceDetailPageComponent {
 
   // --- Dérivés d'affichage --------------------------------------------------
   readonly priceLabel = computed(() => formatFcfa(this.experience()?.price_xof));
+
+  /** Lien Google Maps collé par le prestataire (F5.10), ou `null`. */
+  readonly mapLink = computed(() => this.experience()?.maps_link ?? null);
 
   /**
    * Affine les balises de référencement avec l'expérience chargée (F9.1).

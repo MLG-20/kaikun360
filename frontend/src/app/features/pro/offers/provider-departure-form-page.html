@@ -142,6 +142,19 @@
                   placeholder="Points de ramassage, bagages autorisés, durée estimée…"></textarea>
       </div>
 
+      <div class="vf-field">
+        <label for="df-maps-link">
+          Lien Google Maps du point de départ <span class="vf-opt">(facultatif)</span>
+        </label>
+        <input id="df-maps-link" type="text" formControlName="maps_link"
+               placeholder="Code d'intégration Google Maps ou lien https://www.google.com/maps/embed?…" />
+        <p class="vf-hint">
+          Sur Google Maps, recherchez le point de départ, cliquez sur
+          « Partager » puis « Intégrer une carte », et collez ici le code
+          obtenu (ou seulement le lien qu'il contient).
+        </p>
+      </div>
+
       @if (formError()) {
         <p class="vf-msg vf-msg--error" role="alert">{{ formError() }}</p>
       }
