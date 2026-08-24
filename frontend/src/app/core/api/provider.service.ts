@@ -19,17 +19,25 @@ import { ApiEnvelope } from './api-response.model';
 import { Paginated } from './pagination.model';
 
 /**
- * Catégorie de prestataire — miroir de l'enum `ProviderCategory` backend
- * (colonne `providers.category`). Sert à alimenter le sélecteur du formulaire.
+ * Clé d'une catégorie de service prestataire (colonne `providers.category`,
+ * qui référence `provider_categories.key`). Depuis F5, la nomenclature n'est
+ * plus un enum fermé : un prestataire peut en proposer une nouvelle (cf.
+ * `ProviderService.categories()` / `proposeCategory()`).
  */
-export type ProviderCategory =
-  | 'restauration'
-  | 'animation'
-  | 'guide'
-  | 'transport'
-  | 'evenementiel'
-  | 'artisanat'
-  | 'autre';
+export type ProviderCategory = string;
+
+/**
+ * Une catégorie assignable — miroir de `ProviderCategoryResource` backend.
+ * `status === 'en_attente'` ne peut désigner QUE la catégorie que le
+ * prestataire connecté vient lui-même de proposer (les autres n'apparaissent
+ * pas dans `GET /providers/categories` tant qu'un admin ne les a pas validées).
+ */
+export interface ProviderCategoryOption {
+  key: string;
+  label: string;
+  status: 'valide' | 'en_attente';
+  status_label: string;
+}
 
 /**
  * Une certification DÉCLARÉE (nom + organisme facultatif), sans pièce jointe.
@@ -106,6 +114,27 @@ export class ProviderService {
   /** GET /providers/mine — mon profil prestataire (404 si aucun). */
   mine(): Observable<ApiEnvelope<{ provider: Provider }>> {
     return this.http.get<ApiEnvelope<{ provider: Provider }>>(`${this.api}/providers/mine`);
+  }
+
+  /**
+   * GET /providers/categories — catégories assignables : celles VALIDE
+   * (partagées) plus la mienne éventuellement EN_ATTENTE (proposée par moi,
+   * utilisable en attendant la revue back-office).
+   */
+  categories(): Observable<ApiEnvelope<ProviderCategoryOption[]>> {
+    return this.http.get<ApiEnvelope<ProviderCategoryOption[]>>(`${this.api}/providers/categories`);
+  }
+
+  /**
+   * POST /providers/categories — propose une nouvelle catégorie. Si le libellé
+   * correspond à une catégorie déjà existante (quel que soit son statut), le
+   * backend renvoie celle-ci telle quelle plutôt que d'en créer une seconde.
+   */
+  proposeCategory(label: string): Observable<ApiEnvelope<{ category: ProviderCategoryOption }>> {
+    return this.http.post<ApiEnvelope<{ category: ProviderCategoryOption }>>(
+      `${this.api}/providers/categories`,
+      { label },
+    );
   }
 
   /**

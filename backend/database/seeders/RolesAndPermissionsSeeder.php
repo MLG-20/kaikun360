@@ -32,6 +32,10 @@ class RolesAndPermissionsSeeder extends Seeder
             'valider:vehicule',
             'valider:experience',
             'valider:prestataire',
+            // Catégories de service proposées par un prestataire (F5) : entrent
+            // dans la même file de validation générique que les 4 permissions
+            // ci-dessus.
+            'valider:categorie-prestataire',
             // Gestion locative (module Manage) : création/suivi des mandats,
             // loyers, incidents, dépenses et reversements par les agents.
             'gerer:gestion-locative',
@@ -76,6 +80,7 @@ class RolesAndPermissionsSeeder extends Seeder
             UserRole::PROPRIETAIRE->value => [],
             UserRole::PRESTATAIRE->value => [],
             UserRole::ENTREPRISE->value => [],
+            UserRole::DIASPORA->value => [],
 
             // L'agent (sous-admin) ne reçoit par défaut QUE l'accès au back-office.
             // Depuis F7.1.b (« grant pur par personne »), chaque dossier qu'il a le

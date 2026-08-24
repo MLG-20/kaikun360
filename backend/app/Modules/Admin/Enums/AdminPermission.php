@@ -33,6 +33,7 @@ enum AdminPermission: string
     case VALIDER_VEHICULE = 'valider:vehicule';
     case VALIDER_EXPERIENCE = 'valider:experience';
     case VALIDER_PRESTATAIRE = 'valider:prestataire';
+    case VALIDER_CATEGORIE_PRESTATAIRE = 'valider:categorie-prestataire';
 
     // Exploitation quotidienne des dossiers (opérationnel).
     case GERER_GESTION_LOCATIVE = 'gerer:gestion-locative';
@@ -66,6 +67,7 @@ enum AdminPermission: string
             self::VALIDER_VEHICULE => 'Valider les véhicules',
             self::VALIDER_EXPERIENCE => 'Valider les circuits & expériences',
             self::VALIDER_PRESTATAIRE => 'Valider les prestataires',
+            self::VALIDER_CATEGORIE_PRESTATAIRE => 'Valider les catégories de service proposées',
             self::GERER_GESTION_LOCATIVE => 'Gérer la gestion locative',
             self::GERER_CHANTIERS => 'Suivre les chantiers',
             self::GERER_NUITEES => 'Exploiter les nuitées',
@@ -88,7 +90,8 @@ enum AdminPermission: string
             self::VALIDER_BIEN,
             self::VALIDER_VEHICULE,
             self::VALIDER_EXPERIENCE,
-            self::VALIDER_PRESTATAIRE => 'Validation',
+            self::VALIDER_PRESTATAIRE,
+            self::VALIDER_CATEGORIE_PRESTATAIRE => 'Validation',
             self::GERER_GESTION_LOCATIVE,
             self::GERER_CHANTIERS,
             self::GERER_NUITEES,

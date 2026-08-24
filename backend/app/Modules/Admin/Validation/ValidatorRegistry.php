@@ -29,6 +29,9 @@ class ValidatorRegistry
         MobilityServiceValidator::class,
         ExperienceValidator::class,
         ProviderValidator::class,
+        // F5 — les catégories de service proposées par un prestataire entrent
+        // dans la même file : approuver les rend assignables par tous.
+        ProviderCategoryValidator::class,
     ];
 
     public function __construct(private readonly Container $container) {}

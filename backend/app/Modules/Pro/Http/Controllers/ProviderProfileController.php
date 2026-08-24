@@ -3,13 +3,18 @@
 namespace App\Modules\Pro\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Pro\Enums\ProviderCategoryStatus;
 use App\Modules\Pro\Http\Requests\StoreCertificationRequest;
+use App\Modules\Pro\Http\Requests\StoreProviderCategoryRequest;
 use App\Modules\Pro\Http\Requests\UpdateProviderProfileRequest;
+use App\Modules\Pro\Http\Resources\ProviderCategoryResource;
 use App\Modules\Pro\Http\Resources\ProviderCertificationResource;
 use App\Modules\Pro\Http\Resources\ProviderResource;
 use App\Modules\Pro\Models\Provider;
+use App\Modules\Pro\Models\ProviderCategory;
 use App\Modules\Pro\Models\ProviderCertification;
 use App\Support\ApiResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -53,6 +58,57 @@ class ProviderProfileController extends Controller
         return ApiResponse::success([
             'provider' => ProviderResource::make($provider->load('certifications')),
         ]);
+    }
+
+    /**
+     * Catégories assignables. GET /api/v1/providers/categories
+     *
+     * Les catégories VALIDE (partagées par tous), plus celle(s) EN_ATTENTE
+     * proposée(s) par le prestataire connecté lui-même — utilisable en attendant
+     * la revue back-office, mais invisible pour les autres tant qu'elle n'est
+     * pas validée (cf. `AssignableProviderCategory`).
+     */
+    public function categories(Request $request): AnonymousResourceCollection
+    {
+        $provider = Provider::where('user_id', $request->user()->id)->first();
+
+        $categories = ProviderCategory::query()
+            ->where('status', ProviderCategoryStatus::VALIDE)
+            ->when($provider, fn ($query) => $query->orWhere(
+                fn ($q) => $q->where('status', ProviderCategoryStatus::EN_ATTENTE)
+                    ->where('created_by_provider_id', $provider->id),
+            ))
+            ->orderBy('label')
+            ->get();
+
+        return ProviderCategoryResource::collection($categories);
+    }
+
+    /**
+     * Propose une nouvelle catégorie. POST /api/v1/providers/categories
+     *
+     * Déduplique par clé (slug du libellé) : une catégorie déjà existante,
+     * quel que soit son statut, est retournée telle quelle plutôt que dupliquée
+     * — c'est précisément ce qui permet à la proposition d'un prestataire de
+     * profiter au suivant. Sinon, crée une ligne EN_ATTENTE rattachée au
+     * prestataire connecté.
+     */
+    public function storeCategory(StoreProviderCategoryRequest $request): JsonResponse
+    {
+        $provider = $this->providerFor($request);
+        $label = trim($request->string('label')->toString());
+        $key = ProviderCategory::slugify($label);
+
+        $category = ProviderCategory::firstOrCreate(
+            ['key' => $key],
+            [
+                'label' => $label,
+                'status' => ProviderCategoryStatus::EN_ATTENTE,
+                'created_by_provider_id' => $provider->id,
+            ],
+        );
+
+        return ApiResponse::created(['category' => ProviderCategoryResource::make($category)]);
     }
 
     /**

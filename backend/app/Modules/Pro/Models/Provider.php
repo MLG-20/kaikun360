@@ -3,7 +3,6 @@
 namespace App\Modules\Pro\Models;
 
 use App\Models\User;
-use App\Modules\Pro\Enums\ProviderCategory;
 use App\Modules\Pro\Enums\ProviderStatus;
 use Database\Factories\ProviderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -44,7 +43,6 @@ class Provider extends Model
     protected function casts(): array
     {
         return [
-            'category' => ProviderCategory::class,
             'status' => ProviderStatus::class,
             'validated_at' => 'datetime',
             'warnings_count' => 'integer',
@@ -56,6 +54,19 @@ class Provider extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * La catégorie de service (nomenclature extensible, cf. `ProviderCategory`).
+     *
+     * ⚠️ Nommée `categoryRef` et non `category` : la colonne `category` porte
+     * déjà la clé brute (fillable, castée en string), utilisée telle quelle par
+     * les Form Requests et les filtres. Un même nom aurait fait de l'un des deux
+     * un accesseur fantôme.
+     */
+    public function categoryRef(): BelongsTo
+    {
+        return $this->belongsTo(ProviderCategory::class, 'category', 'key');
     }
 
     /**

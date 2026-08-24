@@ -117,7 +117,8 @@ prestataire, via `AdminExperienceResource`) et `GET /admin/tourism/destinations`
 - **Guides et restaurants ne sont pas modélisés ici** : le cahier des charges
   les cite (§6) mais le module ne les connaît que comme **inclusions** d'un
   circuit (`inclusions.guide`, `inclusions.restauration`). Les partenaires réels
-  vivent dans le module **Pro** (`ProviderCategory::GUIDE` / `RESTAURATION`), et
+  vivent dans le module **Pro** (catégories `guide` / `restauration`, table
+  `provider_categories` depuis F5), et
   **aucun lien guide ↔ circuit n'existe** — écart au cahier des charges signalé
   à l'écran, à combler par un modèle d'affectation si le besoin se confirme.
 

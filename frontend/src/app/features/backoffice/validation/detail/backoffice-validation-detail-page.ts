@@ -19,6 +19,7 @@ const TYPE_LABELS: Record<ValidationType, string> = {
   mobility_service: 'Départ programmé',
   experience: 'Expérience touristique',
   provider: 'Prestataire',
+  provider_category: 'Catégorie prestataire',
 };
 
 /**

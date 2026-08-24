@@ -88,6 +88,25 @@
   color: var(--k-muted);
 }
 
+// Champ de saisie libre ouvert par « Proposer une nouvelle catégorie… ».
+.svc-propose-category {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+
+  input {
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--k-line);
+    border-radius: var(--k-radius);
+    background: var(--k-bg);
+    color: var(--k-ink);
+    font: inherit;
+  }
+
+  button { align-self: flex-start; }
+}
+
 // --- Messages (succès / erreur) -------------------------------------------
 .svc-msg {
   grid-column: 1 / -1;

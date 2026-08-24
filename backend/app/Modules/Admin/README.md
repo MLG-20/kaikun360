@@ -175,6 +175,7 @@ qui **réutilise** les événements et services de son module :
 | `mobility_service` | **Départ programmé** (Mobility, F8.23) | `valider:vehicule` | conformité du **véhicule opérant** (blocage 422) + refus des départs **passés** |
 | `experience` | Circuit (Explore)    | `valider:experience`  | publication + traçabilité |
 | `provider`   | Prestataire (Pro)    | `valider:prestataire` | `ProviderValidationService` (synchro profil) |
+| `provider_category` | **Catégorie de service proposée** (Pro, F5) | `valider:categorie-prestataire` | passage `en_attente` → `valide`, la rend assignable par tous |
 
 **`GET /api/v1/admin/queue`** (`can:consulter:dashboard-admin`) :
 - sans paramètre → vue d'ensemble `{ queue: { <type>: { count, items[] } }, total_pending }`
@@ -185,7 +186,8 @@ Entrée de file normalisée : `{ type, id, reference, label, owner_id, owner, su
 Le champ **`owner`** (F7.2.a) porte l'identité + le contact du **déposant**
 (`{ id, name, email, phone }`, ou `null` si le compte a disparu) — biens : le
 propriétaire ; véhicules/expériences : le prestataire ; prestataires : le
-titulaire du compte. Produit par le helper `Validation\OwnerEntry`, avec
+titulaire du compte ; catégories proposées : le prestataire auteur de la
+proposition. Produit par le helper `Validation\OwnerEntry`, avec
 **eager-loading** de la relation dans `pendingQuery()` (anti N+1). L'écran de
 validation du back-office (F7.2.a) affiche ce déposant pour trancher.
 
@@ -505,7 +507,8 @@ groupes ». Ces éléments ne vivent pas au même endroit dans le modèle :
 - `GET /admin/providers?category=guide,restauration` — les **guides** et
   **restaurants**. ⚠️ Ce ne sont **pas** des entités du module Explore : la
   plateforme ne les connaît que comme **catégories de prestataires**
-  (`ProviderCategory`) et comme drapeaux d'inclusion d'un circuit. Le filtre
+  (table `provider_categories`, extensible depuis F5) et comme drapeaux
+  d'inclusion d'un circuit. Le filtre
   `category` accepte plusieurs valeurs séparées par une virgule ; une valeur
   inconnue est ignorée, mais un filtre dont **aucune** valeur n'est valide
   renvoie une liste vide (jamais le catalogue entier).
@@ -686,14 +689,19 @@ valeur non booléenne ou un réglage `json` reçu sous forme de chaîne.
 > par le helper : un réglage capable de condamner l'accès au back-office et
 > l'inscription n'a pas sa place dans une interface d'administration.
 
-### Catégories — écart CDC assumé
+### Catégories — écart CDC assumé (partiel)
 
-`GET /admin/reference` reste en **lecture seule**. Les catégories sont des enums
-PHP (`ProviderCategory`, `PropertyType`, `ServiceType`, `VehicleType`) qui
-portent la logique métier : règles de validation, calcul de commission, filtres
-de recherche. Les rendre éditables demanderait de sortir cette logique du code —
+`GET /admin/reference` reste en **lecture seule**. La plupart des catégories
+sont des enums PHP (`PropertyType`, `ServiceType`, `VehicleType`) qui portent
+la logique métier : règles de validation, calcul de commission, filtres de
+recherche. Les rendre éditables demanderait de sortir cette logique du code —
 chantier transversal hors du périmètre de cet écran, signalé à l'utilisateur
 dans l'interface plutôt que masqué.
+
+Les catégories de **prestataire** font exception depuis **F5** : table
+`provider_categories`, extensible par les prestataires eux-mêmes (proposition
++ validation back-office via la file générique, type `provider_category`) — cf.
+module Pro, section « Table `provider_categories` ».
 
 ## F8.2 — Les fiches de dossier
 

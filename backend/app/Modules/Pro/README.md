@@ -16,7 +16,7 @@ services publics (Explore B6, Mobility B7).
 |---|---|
 | `user_id` (unique) | utilisateur prestataire |
 | `business_name` | raison sociale |
-| `category` | enum `ProviderCategory` |
+| `category` | clé référençant `provider_categories.key` (F5 — extensible) |
 | `bio` | présentation |
 | `status` | enum `ProviderStatus` (`en_attente`/`valide`/`refuse`/`suspendu`) |
 | `validated_at` / `validated_by` | traçabilité de validation |
@@ -52,8 +52,40 @@ métadonnées du fichier, alignées sur `user_documents` : `disk`, `original_nam
 ### Enums
 
 - `ProviderStatus` : `en_attente` → `valide` (+ `refuse`, `suspendu`).
-- `ProviderCategory` : restauration, animation, guide, transport, événementiel,
-  artisanat, autre.
+- `ProviderCategoryStatus` : `en_attente` → `valide` (+ `refuse`), pour la
+  nomenclature extensible ci-dessous.
+
+### Table `provider_categories` — nomenclature EXTENSIBLE (F5)
+
+`key` (slug, unique), `label`, `status` (`ProviderCategoryStatus`),
+`created_by_provider_id` (nullable). Remplace l'ancien enum fermé
+`ProviderCategory` : un prestataire qui ne se reconnaît dans aucune catégorie du
+sélecteur peut en **proposer une**, réutilisable par les autres une fois
+validée.
+
+- Les 7 valeurs historiques (restauration, animation, guide, transport,
+  événementiel, artisanat, autre) sont insérées `valide` **par la migration
+  elle-même** (pas un seeder) : la donnée de référence existe dès
+  `php artisan migrate`, y compris en prod. `autre` reste en base (les profils
+  existants la portent encore) mais a disparu du sélecteur, remplacée par
+  « Proposer une nouvelle catégorie… ».
+- `POST /providers/categories` (`label`) — déduplique par clé (slug) : un
+  libellé qui correspond à une catégorie déjà existante, quel que soit son
+  statut, la retourne telle quelle plutôt que d'en créer une seconde. Sinon,
+  crée une ligne `en_attente` rattachée au prestataire connecté.
+- `GET /providers/categories` — les catégories `valide` (partagées) + la
+  mienne éventuellement `en_attente` (proposée par moi).
+- Assignation validée par `AssignableProviderCategory` (`app/Modules/Pro/Rules`) :
+  une catégorie `en_attente` n'est assignable que par son auteur — utilisable
+  **immédiatement**, invisible pour les autres tant qu'un admin ne l'a pas
+  validée (`ProviderCategoryValidator`, file de modération générique du module
+  Admin, permission `valider:categorie-prestataire`).
+- `Provider::categoryRef()` (`belongsTo`, clé `category` → `key`) expose le
+  libellé/statut ; nommée `categoryRef` et non `category` pour ne pas masquer
+  la colonne brute, utilisée telle quelle par les Form Requests et les filtres.
+- À l'inscription (`RegisterProviderRequest`), seules les catégories `valide`
+  sont proposables — pas d'option « proposer », un compte sans profil ne peut
+  pas encore en être l'auteur (cf. `AssignableProviderCategory`).
 
 ---
 
@@ -64,6 +96,8 @@ métadonnées du fichier, alignées sur `user_documents` : `disk`, `original_nam
 | POST | `/api/v1/providers` | auth — inscription (rôle+profil prestataire, statut `en_attente`) |
 | GET | `/api/v1/providers/mine` | auth — mon profil prestataire |
 | PUT | `/api/v1/providers/mine` | prestataire — édite son descriptif de service (« Mes services ») |
+| GET | `/api/v1/providers/categories` | prestataire — catégories assignables (F5) |
+| POST | `/api/v1/providers/categories` | prestataire — propose une nouvelle catégorie (F5) |
 | POST | `/api/v1/providers/certifications` | prestataire — ajoute une certification (toujours non vérifiée) |
 | DELETE | `/api/v1/providers/certifications/{id}` | prestataire — supprime une de ses certifications |
 | GET | `/api/v1/providers/availability` | prestataire — planning hebdo + indispos à venir (F5.4) |
@@ -140,10 +174,14 @@ Routes déclarées dans le groupe `providers` : segments **non numériques**
 
 Tests : `tests/Feature/Pro/ProviderProfileTest.php` (7 cas — mise à jour, statut
 inchangé, catégorie invalide 422, ajout non vérifié, suppression, suppression
-d'autrui 404, compte sans profil 404) et
+d'autrui 404, compte sans profil 404),
 `tests/Feature/Pro/ProviderCertificationFileTest.php` (8 cas — dépôt du fichier,
 pièce facultative, format refusé, téléchargement signé, URL non signée 403, URL
-expirée 403, suppression du fichier, nom visible au back-office).
+expirée 403, suppression du fichier, nom visible au back-office) et
+`tests/Feature/Pro/ProviderCategoryTest.php` (5 cas — liste des catégories
+valide, proposition utilisable aussitôt par son auteur, catégorie en attente
+d'un tiers refusée, déduplication par libellé, cycle complet d'approbation
+back-office qui rend la catégorie assignable par tous).
 
 ### Policy
 

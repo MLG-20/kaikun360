@@ -20,8 +20,8 @@ class ProviderResource extends JsonResource
         return [
             'id' => $this->id,
             'business_name' => $this->business_name,
-            'category' => $this->category?->value,
-            'category_label' => $this->category?->label(),
+            'category' => $this->category,
+            'category_label' => $this->categoryRef?->label ?? $this->category,
             'bio' => $this->bio,
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),

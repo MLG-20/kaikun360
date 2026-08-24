@@ -55,6 +55,9 @@ export class BackofficeValidationPageComponent {
     { key: 'mobility_service', label: 'Départs', singular: 'départ' },
     { key: 'experience', label: 'Expériences', singular: 'expérience' },
     { key: 'provider', label: 'Prestataires', singular: 'prestataire' },
+    // F5 — les catégories de service proposées par un prestataire : approuver
+    // les rend assignables par tous les autres.
+    { key: 'provider_category', label: 'Catégories prestataires', singular: 'catégorie' },
   ];
 
   /** Vue d'ensemble (compteurs par type) — null tant que non chargée. */

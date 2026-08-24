@@ -39,12 +39,38 @@
 
     <div class="svc-field">
       <label for="svc-category">Catégorie</label>
-      <select id="svc-category" formControlName="category" (change)="onProfileEdited()">
+      <select id="svc-category" formControlName="category" (change)="onCategorySelected()">
         <option value="" disabled>Choisissez une catégorie…</option>
-        @for (option of categories; track option.value) {
-          <option [value]="option.value">{{ option.label }}</option>
+        @for (option of categories(); track option.key) {
+          <option [value]="option.key">
+            {{ option.label }}{{ option.status === 'en_attente' ? ' (en attente de validation)' : '' }}
+          </option>
         }
+        <option [value]="proposeOptionValue">Proposer une nouvelle catégorie…</option>
       </select>
+
+      @if (proposingCategory()) {
+        <div class="svc-propose-category">
+          <input
+            type="text"
+            maxlength="100"
+            placeholder="Nom de votre catégorie"
+            [value]="newCategoryLabel()"
+            (input)="newCategoryLabel.set($any($event.target).value)"
+          />
+          <button
+            type="button"
+            class="k-btn k-btn--ghost"
+            [disabled]="proposingSaving() || !newCategoryLabel().trim()"
+            (click)="submitNewCategory()"
+          >
+            {{ proposingSaving() ? 'Envoi…' : 'Proposer' }}
+          </button>
+          @if (proposeError()) {
+            <p class="svc-msg svc-msg--error" role="alert">{{ proposeError() }}</p>
+          }
+        </div>
+      }
     </div>
 
     <div class="svc-field svc-field--full">

@@ -4,8 +4,8 @@ namespace App\Modules\Admin\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Review;
-use App\Modules\Pro\Enums\ProviderCategory;
 use App\Modules\Pro\Enums\ProviderStatus;
+use App\Modules\Pro\Models\ProviderCategory;
 use App\Modules\Pro\Http\Resources\ProviderResource;
 use App\Modules\Pro\Models\Provider;
 use App\Modules\Pro\Models\ProviderMission;
@@ -52,9 +52,11 @@ class AdminProviderController extends Controller
 
         // Découpe et filtre la liste de catégories : une valeur inconnue est
         // ignorée plutôt que de faire échouer l'écran sur un libellé obsolète.
+        $knownKeys = ProviderCategory::query()->pluck('key')->all();
+
         $categories = collect(explode(',', (string) $request->string('category')))
             ->map(fn (string $c) => trim($c))
-            ->filter(fn (string $c) => in_array($c, ProviderCategory::values(), true))
+            ->filter(fn (string $c) => in_array($c, $knownKeys, true))
             ->values()
             ->all();
 

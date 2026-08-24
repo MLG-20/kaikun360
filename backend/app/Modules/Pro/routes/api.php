@@ -27,6 +27,13 @@ Route::middleware('auth:sanctum')->prefix('providers')->group(function () {
     // le prestataire. Segments non numériques (`mine`, `certifications`) → aucune
     // collision avec `/{provider}/...` (whereNumber).
     Route::put('/mine', [ProviderProfileController::class, 'update']);
+
+    // Catégories de service (F5 — "proposer une catégorie") : liste assignable
+    // + proposition d'une nouvelle, dédupliquée par clé. Non numériques, aucune
+    // collision avec `/{provider}/...` (whereNumber).
+    Route::get('/categories', [ProviderProfileController::class, 'categories']);
+    Route::post('/categories', [ProviderProfileController::class, 'storeCategory']);
+
     Route::post('/certifications', [ProviderProfileController::class, 'storeCertification']);
     Route::delete('/certifications/{certification}', [ProviderProfileController::class, 'destroyCertification'])
         ->whereNumber('certification');

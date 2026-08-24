@@ -3,15 +3,16 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-import { ProviderCategory, ProviderService } from '../../../core/api/provider.service';
+import {
+  ProviderCategory,
+  ProviderCategoryOption,
+  ProviderService,
+} from '../../../core/api/provider.service';
 import { Provider, ProviderCertification } from '../../../models/provider.model';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
 
-/** Option du sélecteur de catégorie (valeur = enum backend). */
-interface CategoryOption {
-  value: ProviderCategory;
-  label: string;
-}
+/** Valeur spéciale du select qui ouvre le champ « proposer une catégorie ». */
+const PROPOSE_OPTION = '__propose__';
 
 /**
  * Écran « Mes services » de l'espace prestataire (F5), monté sous
@@ -37,16 +38,17 @@ export class ProviderServicesPageComponent {
   private readonly providers = inject(ProviderService);
   private readonly fb = inject(FormBuilder);
 
-  /** Catégories proposées (miroir de l'enum `ProviderCategory`). */
-  protected readonly categories: CategoryOption[] = [
-    { value: 'restauration', label: 'Restauration' },
-    { value: 'animation', label: 'Animation' },
-    { value: 'guide', label: 'Guide touristique' },
-    { value: 'transport', label: 'Transport' },
-    { value: 'evenementiel', label: 'Événementiel' },
-    { value: 'artisanat', label: 'Artisanat' },
-    { value: 'autre', label: 'Autre' },
-  ];
+  /** Valeur spéciale qui ouvre le champ « proposer une catégorie » (template). */
+  protected readonly proposeOptionValue = PROPOSE_OPTION;
+
+  /** Catégories assignables, chargées depuis `GET /providers/categories`. */
+  protected readonly categories = signal<ProviderCategoryOption[]>([]);
+
+  /** Champ de saisie libre affiché quand « Proposer une catégorie… » est choisi. */
+  protected readonly proposingCategory = signal(false);
+  protected readonly newCategoryLabel = signal('');
+  protected readonly proposingSaving = signal(false);
+  protected readonly proposeError = signal<string | null>(null);
 
   // — État global —
   protected readonly loading = signal(true);
@@ -92,6 +94,7 @@ export class ProviderServicesPageComponent {
 
   constructor() {
     this.load();
+    this.loadCategories();
   }
 
   protected load(): void {
@@ -111,6 +114,58 @@ export class ProviderServicesPageComponent {
           this.loadError.set(true);
         }
         this.loading.set(false);
+      },
+    });
+  }
+
+  /** Charge les catégories assignables (les VALIDE + la mienne EN_ATTENTE). */
+  private loadCategories(): void {
+    this.providers.categories().subscribe({
+      // `autre` reste en base pour les profils existants qui la portent déjà,
+      // mais a disparu du sélecteur — remplacée par « Proposer une catégorie ».
+      next: (res) => this.categories.set(res.data.filter((c) => c.key !== 'autre')),
+      // Silencieux : le select reste vide, l'utilisateur peut réessayer via
+      // « Enregistrer » qui rechargera implicitement au prochain `load()`.
+      error: () => this.categories.set([]),
+    });
+  }
+
+  /**
+   * Réagit au choix du select : ouvre le champ de saisie libre si l'option
+   * « Proposer une catégorie… » est choisie, sinon le referme.
+   */
+  protected onCategorySelected(): void {
+    const value = this.form.controls.category.value;
+    this.proposingCategory.set(value === PROPOSE_OPTION);
+    if (value !== PROPOSE_OPTION) {
+      this.onProfileEdited();
+    }
+  }
+
+  /** Propose la nouvelle catégorie saisie, puis la sélectionne. */
+  protected submitNewCategory(): void {
+    const label = this.newCategoryLabel().trim();
+    if (!label || this.proposingSaving()) {
+      return;
+    }
+    this.proposingSaving.set(true);
+    this.proposeError.set(null);
+
+    this.providers.proposeCategory(label).subscribe({
+      next: (res) => {
+        const category = res.data.category;
+        this.categories.update((list) =>
+          list.some((c) => c.key === category.key) ? list : [...list, category],
+        );
+        this.form.controls.category.setValue(category.key);
+        this.proposingCategory.set(false);
+        this.newCategoryLabel.set('');
+        this.proposingSaving.set(false);
+        this.onProfileEdited();
+      },
+      error: () => {
+        this.proposingSaving.set(false);
+        this.proposeError.set("Cette catégorie n'a pas pu être proposée.");
       },
     });
   }

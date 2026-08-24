@@ -49,7 +49,13 @@ export const BO_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
 
   // File d'approbation : la décision exige une permission fine par type. Sans
   // aucune des quatre, l'écran ne serait qu'une liste de boutons en 403.
-  validation: ['valider:bien', 'valider:vehicule', 'valider:experience', 'valider:prestataire'],
+  validation: [
+    'valider:bien',
+    'valider:vehicule',
+    'valider:experience',
+    'valider:prestataire',
+    'valider:categorie-prestataire',
+  ],
 
   // Supervision en lecture seule (cf. en-tête) : ouvertes à toute l'équipe.
   catalogues: [],

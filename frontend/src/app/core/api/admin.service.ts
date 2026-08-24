@@ -183,7 +183,8 @@ export type ValidationType =
   | 'vehicle'
   | 'mobility_service'
   | 'experience'
-  | 'provider';
+  | 'provider'
+  | 'provider_category';
 
 /**
  * Une entrée normalisée de la file de validation (miroir de

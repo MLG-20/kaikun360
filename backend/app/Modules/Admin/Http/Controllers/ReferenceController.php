@@ -7,17 +7,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Region;
 use App\Modules\Immo\Enums\PropertyType;
 use App\Modules\Mobility\Enums\VehicleType;
-use App\Modules\Pro\Enums\ProviderCategory;
+use App\Modules\Pro\Models\ProviderCategory;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 /**
  * Données de référence en LECTURE SEULE pour le back-office (B13.4).
  *
- * Expose les nomenclatures qui restent définies en dur côté domaine (catégories
- * = enums PHP) ainsi que le référentiel géographique (régions du Sénégal), pour
- * alimenter les listes déroulantes des écrans d'administration. Les rendre
- * pleinement éditables serait un chantier transversal distinct.
+ * Expose les nomenclatures qui restent définies en dur côté domaine (enums PHP),
+ * ainsi que le référentiel géographique (régions du Sénégal), pour alimenter les
+ * listes déroulantes des écrans d'administration. Les catégories de prestataire
+ * font exception depuis F5 : table `provider_categories`, extensible par les
+ * prestataires (cf. `ProviderCategoryValidator`) — seules les VALIDE sont
+ * exposées ici.
  */
 class ReferenceController extends Controller
 {
@@ -28,7 +30,10 @@ class ReferenceController extends Controller
     {
         return ApiResponse::success([
             'categories' => [
-                'provider' => $this->fromEnum(ProviderCategory::cases()),
+                'provider' => ProviderCategory::query()->approved()->orderBy('label')
+                    ->get(['key', 'label'])
+                    ->map(fn (ProviderCategory $c) => ['value' => $c->key, 'label' => $c->label])
+                    ->all(),
                 'property_type' => $this->fromEnum(PropertyType::cases()),
                 'service_type' => $this->fromEnum(ServiceType::cases()),
                 'vehicle_type' => $this->fromEnum(VehicleType::cases()),

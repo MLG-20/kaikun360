@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import {
   ProviderCategory,
+  ProviderCategoryOption,
   ProviderService,
   RegisterProviderPayload,
 } from '../../../core/api/provider.service';
@@ -13,12 +14,6 @@ import { Provider } from '../../../models/provider.model';
 
 /** Étape d'affichage de la page. */
 type PageState = 'loading' | 'form' | 'registered' | 'failed';
-
-/** Option du sélecteur de catégorie (valeur = enum backend). */
-interface CategoryOption {
-  value: ProviderCategory;
-  label: string;
-}
 
 /**
  * Inscription prestataire dédiée (F2.7) — route `/pro/inscription`.
@@ -47,16 +42,12 @@ export class ProviderRegistrationPageComponent {
   private readonly auth = inject(AuthService);
   private readonly fb = inject(FormBuilder);
 
-  /** Catégories proposées (miroir de l'enum `ProviderCategory`). */
-  readonly categories: CategoryOption[] = [
-    { value: 'restauration', label: 'Restauration' },
-    { value: 'animation', label: 'Animation' },
-    { value: 'guide', label: 'Guide touristique' },
-    { value: 'transport', label: 'Transport' },
-    { value: 'evenementiel', label: 'Événementiel' },
-    { value: 'artisanat', label: 'Artisanat' },
-    { value: 'autre', label: 'Autre' },
-  ];
+  /**
+   * Catégories assignables (`GET /providers/categories`, filtrées VALIDE : à
+   * l'inscription, pas d'option « proposer une catégorie » — un compte qui
+   * n'a pas encore de profil ne peut pas encore en être l'auteur).
+   */
+  readonly categories = signal<ProviderCategoryOption[]>([]);
 
   readonly state = signal<PageState>('loading');
 
@@ -90,11 +81,21 @@ export class ProviderRegistrationPageComponent {
 
   constructor() {
     // Si l'utilisateur est connecté, on vérifie s'il a déjà un profil prestataire.
-    // Un anonyme n'appelle rien (la vue l'invite à se connecter).
+    // Un anonyme n'appelle rien (la vue l'invite à se connecter) : `/providers/categories`
+    // exige une session, comme le reste du groupe de routes `providers`.
     if (!this.isAuthenticated()) {
       this.state.set('form');
       return;
     }
+
+    this.providers.categories().subscribe({
+      // `autre` reste en base pour compatibilité mais a disparu du sélecteur.
+      next: (res) =>
+        this.categories.set(
+          res.data.filter((c) => c.status === 'valide' && c.key !== 'autre'),
+        ),
+      error: () => this.categories.set([]),
+    });
     this.providers.mine().subscribe({
       next: (env) => {
         this.provider.set(env.data.provider);

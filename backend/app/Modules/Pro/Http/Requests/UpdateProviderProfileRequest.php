@@ -2,9 +2,8 @@
 
 namespace App\Modules\Pro\Http\Requests;
 
-use App\Modules\Pro\Enums\ProviderCategory;
+use App\Modules\Pro\Rules\AssignableProviderCategory;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 /**
  * Validation de l'édition du profil prestataire (PUT /api/v1/providers/mine).
@@ -28,7 +27,7 @@ class UpdateProviderProfileRequest extends FormRequest
     {
         return [
             'business_name' => ['required', 'string', 'max:255'],
-            'category' => ['required', Rule::in(ProviderCategory::values())],
+            'category' => ['required', 'string', new AssignableProviderCategory($this->user())],
             'bio' => ['nullable', 'string'],
         ];
     }

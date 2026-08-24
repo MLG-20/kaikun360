@@ -3,9 +3,9 @@
 namespace Database\Factories;
 
 use App\Models\User;
-use App\Modules\Pro\Enums\ProviderCategory;
 use App\Modules\Pro\Enums\ProviderStatus;
 use App\Modules\Pro\Models\Provider;
+use App\Modules\Pro\Models\ProviderCategory as ProviderCategoryModel;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -25,7 +25,9 @@ class ProviderFactory extends Factory
         return [
             'user_id' => User::factory(),
             'business_name' => fake()->company(),
-            'category' => fake()->randomElement(ProviderCategory::values()),
+            'category' => fake()->randomElement(
+                ProviderCategoryModel::query()->approved()->pluck('key')->all(),
+            ),
             'bio' => fake()->sentence(12),
             'status' => ProviderStatus::EN_ATTENTE->value,
         ];

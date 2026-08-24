@@ -40,7 +40,6 @@ use App\Modules\Mobility\Enums\VehicleType;
 use App\Modules\Mobility\Models\MobilityService;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Modules\Pro\Enums\MissionStatus;
-use App\Modules\Pro\Enums\ProviderCategory;
 use App\Modules\Pro\Enums\ProviderStatus;
 use App\Modules\Pro\Models\Provider;
 use App\Modules\Stay\Models\Stay;
@@ -490,7 +489,7 @@ class DemoSeeder extends Seeder
 
     private function seedTourismSupervision(User $provider): void
     {
-        if (Provider::query()->where('category', ProviderCategory::GUIDE->value)->exists()) {
+        if (Provider::query()->where('category', 'guide')->exists()) {
             return;
         }
 
@@ -502,7 +501,7 @@ class DemoSeeder extends Seeder
             [
                 'email' => 'demo.guide.saloum@kaikun360.test',
                 'name' => 'Guides du Saloum',
-                'category' => ProviderCategory::GUIDE,
+                'category' => 'guide',
                 'bio' => 'Guides francophones et anglophones, spécialistes du delta du Saloum.',
                 'status' => ProviderStatus::VALIDE,
                 'rating_avg' => 4.8,
@@ -511,7 +510,7 @@ class DemoSeeder extends Seeder
             [
                 'email' => 'demo.guide.goree@kaikun360.test',
                 'name' => 'Gorée Découverte',
-                'category' => ProviderCategory::GUIDE,
+                'category' => 'guide',
                 'bio' => 'Visites guidées historiques de l\'île de Gorée.',
                 'status' => ProviderStatus::EN_ATTENTE,
                 'rating_avg' => null,
@@ -520,7 +519,7 @@ class DemoSeeder extends Seeder
             [
                 'email' => 'demo.restaurant.fatou@kaikun360.test',
                 'name' => 'Chez Fatou — Cuisine sénégalaise',
-                'category' => ProviderCategory::RESTAURATION,
+                'category' => 'restauration',
                 'bio' => 'Restauration de groupe, spécialités thiéboudienne et yassa.',
                 'status' => ProviderStatus::VALIDE,
                 'rating_avg' => 4.2,
@@ -534,7 +533,7 @@ class DemoSeeder extends Seeder
             Provider::create([
                 'user_id' => $account->id,
                 'business_name' => $partner['name'],
-                'category' => $partner['category']->value,
+                'category' => $partner['category'],
                 'bio' => $partner['bio'],
                 'status' => $partner['status']->value,
                 'validated_at' => $partner['status'] === ProviderStatus::VALIDE
@@ -798,7 +797,7 @@ class DemoSeeder extends Seeder
             $marketplace = Provider::create([
                 'user_id' => $provider->id,
                 'business_name' => 'Teranga Événements & Transport',
-                'category' => ProviderCategory::EVENEMENTIEL->value,
+                'category' => 'evenementiel',
                 'bio' => 'Organisation d\'événements, animation et transport touristique '
                     .'dans la région de Dakar et du Saloum. Équipe certifiée et véhicules '
                     .'contrôlés.',

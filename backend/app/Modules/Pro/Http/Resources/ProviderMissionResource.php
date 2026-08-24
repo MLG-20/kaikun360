@@ -41,7 +41,7 @@ class ProviderMissionResource extends JsonResource
             'provider' => $this->whenLoaded('provider', fn () => [
                 'id' => $this->provider->id,
                 'business_name' => $this->provider->business_name,
-                'category_label' => $this->provider->category?->label(),
+                'category_label' => $this->provider->categoryRef?->label ?? $this->provider->category,
                 'status' => $this->provider->status?->value,
             ]),
         ];
