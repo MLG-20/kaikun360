@@ -1,0 +1,61 @@
+<section class="account-head">
+  <p class="account-eyebrow">Mes reversements</p>
+  <h1 class="account-title">Ce que Kaikun vous doit</h1>
+  <p class="account-lead">
+    Le détail de vos services rendus en attente de versement, et l'historique
+    de ce qui vous a déjà été payé. Les virements sont préparés et exécutés
+    par l'équipe Kaikun ; cet écran est une consultation, pas une action.
+  </p>
+</section>
+
+@if (loading()) {
+  <p class="pf-state" role="status">Chargement de vos reversements…</p>
+} @else if (loadError()) {
+  <div class="pp-error">
+    <p>Impossible de charger vos reversements pour le moment.</p>
+    <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+  </div>
+} @else {
+  <h2 class="pp-block-title">En attente</h2>
+  @if (dues().length) {
+    <ul class="pp-list">
+      @for (due of dues(); track due.id) {
+        <li class="pp-line">
+          <div class="pp-line-main">
+            <span class="pp-line-title">{{ due.source.label || due.reference }}</span>
+            @if (due.eligible_at) {
+              <span class="pp-line-sub">Exigible le {{ due.eligible_at | date: 'longDate' : '' : 'fr' }}</span>
+            }
+          </div>
+          <span class="pp-line-amount">{{ fcfa(due.net_xof) }}</span>
+          <span class="bk-status" [attr.data-tone]="dueTone(due.status)">{{ due.status_label }}</span>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="pf-state">Rien en attente pour le moment.</p>
+  }
+
+  <h2 class="pp-block-title">Historique des versements</h2>
+  @if (history().length) {
+    <ul class="pp-list">
+      @for (payout of history(); track payout.id) {
+        <li class="pp-line">
+          <div class="pp-line-main">
+            <span class="pp-line-title">{{ payout.reference }}</span>
+            @if (payout.paid_at) {
+              <span class="pp-line-sub">Le {{ payout.paid_at | date: 'longDate' : '' : 'fr' }}</span>
+            }
+          </div>
+          <span class="pp-line-amount">{{ fcfa(payout.amount_xof) }}</span>
+          <span class="bk-status" [attr.data-tone]="payoutTone(payout.status)">{{ payout.status_label }}</span>
+          @if (payout.proof_url) {
+            <a [href]="payout.proof_url" class="pp-proof">Justificatif</a>
+          }
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="pf-state">Aucun versement reçu pour le moment.</p>
+  }
+}

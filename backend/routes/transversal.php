@@ -9,6 +9,7 @@ use App\Http\Controllers\HomeHeroController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\PartnerPayoutSelfController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\PlatformStatusController;
@@ -229,4 +230,21 @@ Route::middleware('auth:sanctum')->group(function () {
     // répercute la note sur le prestataire concerné.
     Route::patch('reviews/{review}/moderate', [ReviewController::class, 'moderate'])
         ->whereNumber('review');
+
+    // --- Mes reversements (self-service partenaire, après F8.16.a) -----------
+    // Le registre `partner_dues`/`partner_payouts` existait depuis F8.16.a mais
+    // était réservé au back-office (`gerer:paiements`) : un propriétaire ou un
+    // prestataire n'avait aucun moyen de voir ce que Kaikun lui doit. Lecture
+    // seule, scopée par `beneficiary_id` côté contrôleur — aucune action.
+    Route::get('reversements/mine', [PartnerPayoutSelfController::class, 'dues']);
+    Route::get('reversements/mine/payouts', [PartnerPayoutSelfController::class, 'payouts']);
 });
+
+// Téléchargement du justificatif d'un DE MES versements, par URL signée
+// uniquement (hors `auth:sanctum` : le frontend pose `proof_url` en `[href]`
+// brut, une navigation qui ne porte pas le jeton — même montage que
+// `admin.partner-payouts.proof` et `manage.payouts.proof`).
+Route::get('payouts/{payout}/proof/mine', [PartnerPayoutSelfController::class, 'proof'])
+    ->name('payouts.proof.mine')
+    ->whereNumber('payout')
+    ->middleware('signed');

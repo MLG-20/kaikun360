@@ -51,6 +51,13 @@ export const OWNER_NAV: readonly SpaceNavItem[] = [
     ready: true, // F4.5 ✅ (documents par bien : dépôt / téléchargement / suppression)
   },
   {
+    label: 'Mes reversements',
+    description: 'Ce que Kaikun vous doit, et l’historique de ce qui vous a déjà été versé.',
+    path: 'reversements',
+    icon: 'receipt',
+    ready: true, // self-service après F8.16.a ✅
+  },
+  {
     // F11.4 — Placée EN DERNIER, et volontairement : une corbeille n'est pas
     // un lieu de travail quotidien, c'est un filet de sécurité. La hisser dans
     // le menu la mettrait au même rang que les rubriques métier.

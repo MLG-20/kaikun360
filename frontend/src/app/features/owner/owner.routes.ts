@@ -103,6 +103,19 @@ export const OWNER_ROUTES: Routes = [
         title: 'Documents du bien — Kaikun 360',
       },
       {
+        // « Mes reversements » (self-service, après F8.16.a) : ce que Kaikun
+        // doit ou a déjà versé au propriétaire (GET /reversements/mine[/payouts]).
+        // Composant TRANSVERSE, partagé avec l'espace prestataire (les deux
+        // seuls bénéficiaires possibles du registre) — même logique que la
+        // messagerie ou la corbeille ci-dessous.
+        path: 'reversements',
+        loadComponent: () =>
+          import('../../shared/components/partner-payouts/partner-payouts').then(
+            (m) => m.PartnerPayoutsComponent,
+          ),
+        title: 'Mes reversements — Kaikun 360',
+      },
+      {
         // ⚠️ **F8.12.c — sans ces deux routes, la messagerie ment.** Depuis que
         // l'agent peut faire entrer un propriétaire ou un prestataire dans un
         // fil, le tiers reçoit une notification… et n'avait AUCUN écran pour

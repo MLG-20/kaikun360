@@ -85,6 +85,10 @@ import { AccountIcon } from './account-nav';
           <path d="M14 3v5h5" />
           <path d="M9 13h6M9 17h6" />
         }
+        @case ('receipt') {
+          <path d="M6 3h12v18l-2.5-1.5L13 21l-2.5-1.5L8 21l-2-1.5z" />
+          <path d="M9 8h6M9 12h6" />
+        }
       }
     </svg>
   `,

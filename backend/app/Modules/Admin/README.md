@@ -845,6 +845,18 @@ l'argent, exactement la nature d'acte que garde déjà cette permission de
 deux permissions qu'on aurait de toute façon accordées ensemble — et fabriqué un
 agent capable de virer sans pouvoir rembourser.
 
+### F8.16.b — Le partenaire voit enfin sa propre dette (self-service)
+
+Ce registre est resté **exclusivement back-office** jusqu'à F8.16.b : un
+propriétaire ou un prestataire n'avait aucun moyen de voir ce que Kaikun lui
+doit. `App\Http\Controllers\PartnerPayoutSelfController` (transversal, hors
+module Admin — le bénéficiaire est un `User` générique) ouvre la même donnée
+scopée à `beneficiary_id = auth()->id()`, en lecture seule :
+`GET /reversements/mine[/payouts]`, justificatif par URL signée
+(`GET /payouts/{payout}/proof/mine`). Deux Resources dédiées
+(`PartnerDueSelfResource`, `PartnerPayoutSelfResource`) n'exposent jamais
+`commission_xof` ni l'identité des agents. Détail complet dans
+`backend/API.md` § « Mes reversements (self-service, transversal) ».
 
 ---
 

@@ -103,3 +103,42 @@ export interface PayoutTotals {
   pending_xof: number;
   beneficiaries_count: number;
 }
+
+/**
+ * « Mes reversements » — miroirs de `PartnerDueSelfResource` /
+ * `PartnerPayoutSelfResource`, la vue self-service du même registre.
+ *
+ * ⚠️ Sans `beneficiary` (c'est moi) ni `commission_xof` (ce que Kaikun
+ * retient — pas mon affaire) : ce ne sont pas les mêmes champs que
+ * `PartnerDue`/`PartnerPayout`, qui restent réservés au back-office.
+ */
+export interface PartnerDueSelf {
+  id: number;
+  reference: string;
+  source: {
+    type: string;
+    label: string | null;
+  };
+  gross_xof: number;
+  net_xof: number;
+  status: 'en_attente' | 'exigible' | 'payee' | 'annulee';
+  status_label: string;
+  eligible_at: string | null;
+  created_at: string | null;
+}
+
+/** Un versement déjà reçu (ou en cours), vu du partenaire lui-même. */
+export interface PartnerPayoutSelf {
+  id: number;
+  reference: string;
+  amount_xof: number;
+  status: 'en_attente' | 'paye' | 'echoue';
+  status_label: string;
+  method: string | null;
+  paid_at: string | null;
+  /** Même règle que `PartnerPayout.proof_url` : `[href]` brut, jamais HttpClient. */
+  has_proof: boolean;
+  proof_original_name: string | null;
+  proof_url: string | null;
+  created_at: string | null;
+}

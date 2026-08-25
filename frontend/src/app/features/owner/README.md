@@ -29,8 +29,9 @@ Il n'atterrit donc plus systématiquement dans l'espace client.
 Chaque rubrique du rail porte un drapeau `ready` : les rubriques non encore
 construites sont affichées « Bientôt » (aucun lien mort), et passeront à
 `ready: true` avec leur sous-phase. **Toutes en place** : Tableau de bord (F4.1),
-Mes biens (F4.2), dépôt/édition d'un bien (F4.3), Gestion locative (F4.4) et
-Documents (F4.5) — l'espace propriétaire est complet.
+Mes biens (F4.2), dépôt/édition d'un bien (F4.3), Gestion locative (F4.4),
+Documents (F4.5) et Mes reversements (self-service, après F8.16.a) —
+l'espace propriétaire est complet.
 
 ## Écrans
 
@@ -147,3 +148,26 @@ les liens restent alors dans l'espace courant, personne n'est éjecté vers
 
 ⚠️ Le propriétaire **n'ouvre pas** de conversation de son côté : il répond dans un
 fil où le support l'a fait entrer. Le fil naît toujours chez Kaikun.
+
+## Mes reversements (self-service, après F8.16.a)
+
+`reversements/` monte `app-partner-payouts`
+([`../../shared/components/partner-payouts/`](../../shared/components/partner-payouts)) —
+un composant **transverse et partagé** avec l'espace prestataire (les deux
+seuls bénéficiaires possibles du registre `partner_dues`/`partner_payouts`),
+pas un écran propre à l'espace propriétaire.
+
+Le registre existait depuis F8.16.a mais était **exclusivement back-office**
+(`gerer:paiements`) : un propriétaire ne pouvait rien voir de ce que Kaikun
+lui doit. `GET /reversements/mine` (dû, par défaut ce qui reste vivant) et
+`GET /reversements/mine/payouts` (historique, avec justificatif téléchargeable
+par URL signée) ouvrent la même donnée, scopée à l'utilisateur connecté, en
+**lecture seule** — préparer un lot ou constater un virement restent des
+gestes d'agent.
+
+⚠️ **À ne pas confondre avec « Gestion locative »** (F4.4) : celle-ci reverse
+une **période** de mandat (`owner_payouts`), « Mes reversements » couvre les
+services rendus **hors gestion locative** (nuitées, véhicules, circuits,
+missions) via le registre transversal F8.16.a. Un propriétaire qui loue aussi
+une nuitée voit donc ses deux types de reversement dans deux rubriques
+différentes — c'est le modèle de données qui l'impose, pas un choix d'écran.

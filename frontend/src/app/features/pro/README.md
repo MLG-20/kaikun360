@@ -41,11 +41,11 @@ générique** `layouts/space-layout/` paramétré par une `SpaceConfig` — mêm
 mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
 
 - **`provider-space.ts`** — `PROVIDER_SPACE` (`SpaceConfig`) + `PROVIDER_NAV` :
-  les **7 rubriques** de l'espace (Tableau de bord, Mes services, **Mes offres**,
-  Disponibilités, Missions reçues, Avis reçus, Revenus & commissions), chacune
-  avec un drapeau `ready`. Depuis F5.6, **toutes** les rubriques sont construites
-  et cliquables (le drapeau `ready` reste le mécanisme d'ajout progressif « sans
-  lien mort »).
+  les **8 rubriques** de l'espace (Tableau de bord, Mes services, **Mes offres**,
+  Disponibilités, Missions reçues, Avis reçus, Revenus & commissions, **Mes
+  reversements**), chacune avec un drapeau `ready`. Depuis F5.6, **toutes** les
+  rubriques sont construites et cliquables (le drapeau `ready` reste le
+  mécanisme d'ajout progressif « sans lien mort »).
 - **`provider.routes.ts`** — `PROVIDER_ROUTES` : `SpaceLayoutComponent` +
   `providers: [{ provide: SPACE_CONFIG, useValue: PROVIDER_SPACE }]`, protégé par
   `roleGuard` (`data: { roles: ['prestataire'] }`). Profil et notifications sont
@@ -203,3 +203,18 @@ les liens restent alors dans l'espace courant, personne n'est éjecté vers
 
 ⚠️ Le prestataire **n'ouvre pas** de conversation de son côté : il répond dans un
 fil où le support l'a fait entrer. Le fil naît toujours chez Kaikun.
+
+## Mes reversements (self-service, après F8.16.a)
+
+`reversements/` monte `app-partner-payouts`
+([`../../shared/components/partner-payouts/`](../../shared/components/partner-payouts)) —
+composant **transverse et partagé** avec l'espace propriétaire, pas un écran
+propre à l'espace prestataire.
+
+⚠️ **À ne pas confondre avec « Revenus & commissions » (F5.3)** : celui-ci
+donne le **chiffre d'affaires** des missions (réalisé / à venir), calculé côté
+serveur mission par mission — « Mes reversements » donne l'état des
+**virements** eux-mêmes (dû, historique, justificatif), depuis le registre
+transversal `partner_dues`/`partner_payouts` (F8.16.a), jusqu'ici réservé au
+back-office. `GET /reversements/mine` et `GET /reversements/mine/payouts`,
+scopés au prestataire connecté, en **lecture seule**.

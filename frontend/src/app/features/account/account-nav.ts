@@ -33,7 +33,8 @@ export type AccountIcon =
   | 'car' // offres réservables — véhicules & circuits (espace prestataire, F5.6)
   | 'globe' // projets diaspora — pilotés à distance (espace diaspora, F18)
   | 'document' // documents / rapports (espaces pro)
-  | 'trash'; // corbeille des annonces rangées (F11.4, espaces propriétaire & prestataire)
+  | 'trash' // corbeille des annonces rangées (F11.4, espaces propriétaire & prestataire)
+  | 'receipt'; // mes reversements — distincte de 'wallet' (déjà pris par la rubrique voisine)
 
 /** Une entrée de navigation de l'espace client. */
 export interface AccountNavItem {

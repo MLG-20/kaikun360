@@ -1,0 +1,78 @@
+// « Mes reversements » (self-service). Les briques partagées (.account-*,
+// .pf-state, .k-btn, .bk-status) sont globales ; ici, seule la liste (préfixe
+// .pp-), sur le même patron que .mgd-line de la gestion locative propriétaire.
+
+.pp-error {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--k-danger) 35%, var(--k-line));
+  background: color-mix(in srgb, var(--k-danger) 8%, var(--k-card));
+  border-radius: var(--k-radius);
+
+  p {
+    margin: 0;
+    color: var(--k-ink);
+  }
+}
+
+.pp-block-title {
+  font-family: var(--k-font-display);
+  font-size: 1.1rem;
+  margin: 1.75rem 0 0.75rem;
+
+  &:first-of-type {
+    margin-top: 0;
+  }
+}
+
+.pp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.pp-line {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--k-line);
+
+  &:first-child {
+    border-top: none;
+  }
+}
+
+.pp-line-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pp-line-title {
+  font-weight: 600;
+}
+
+.pp-line-sub {
+  font-size: 0.85rem;
+  color: var(--k-muted);
+}
+
+.pp-line-amount {
+  font-family: var(--k-font-display);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pp-proof {
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  color: var(--k-brand-600);
+}
