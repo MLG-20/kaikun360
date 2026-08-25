@@ -612,6 +612,29 @@ existants. Voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README
 > chiffrée dans le devis** (`margin_xof`), et non le taux commun de
 > `CommissionCalculator` : le total signé par le client la contient déjà.
 
+### Mes reversements (self-service, transversal)
+
+| Méthode | URI | Accès | Contrôleur |
+| --- | --- | --- | --- |
+| GET | `/reversements/mine` | auth | `PartnerPayoutSelfController@dues` |
+| GET | `/reversements/mine/payouts` | auth | `PartnerPayoutSelfController@payouts` |
+| GET | `/payouts/{payout}/proof/mine` | **URL signée** (10 min) | `PartnerPayoutSelfController@proof` |
+
+> Le registre `partner_dues`/`partner_payouts` (F8.16.a) était **exclusivement
+> back-office** : un propriétaire ou un prestataire n'avait aucun moyen de voir
+> ce que Kaikun lui doit. Ces routes ouvrent la MÊME donnée au bénéficiaire
+> connecté (`beneficiary_id = auth()->id()`), en LECTURE SEULE — aucune action
+> (préparer un lot, constater un virement restent des gestes d'agent, réservés
+> à `/admin/partner-payouts`). `commission_xof` n'est jamais exposé ici : c'est
+> ce que Kaikun retient, pas l'affaire du partenaire.
+>
+> ⚠️ **La route de justificatif suit le même montage que son pendant admin**
+> (`admin/partner-payouts/{payout}/proof`) et `manage/payouts/{payout}/proof` :
+> **signature seule**, hors `auth:sanctum`. Le frontend pose `proof_url` en
+> `[href]` brut — une simple navigation de navigateur, qui ne porte pas le
+> jeton Sanctum — donc vérifier l'utilisateur connecté à cet endroit serait
+> toujours refusé, y compris pour le bon partenaire.
+
 ### Notifications
 
 | Méthode | URI | Accès | Contrôleur |

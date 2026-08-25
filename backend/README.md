@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **289 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **296 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
 - **65 tables**, référentiel géographique du Sénégal inclus
-- **1095 tests** automatisés (3876 assertions), tous verts ✅
+- **1145 tests** automatisés (4048 assertions), tous verts ✅
 
 ---
 
@@ -531,7 +531,7 @@ backend/
 │   └── emails/          # Gabarit unique des e-mails (HTML + texte brut)
 ├── routes/              # api.php (glob des modules) + transversal.php
 ├── tests/               # Feature/<Module> (PHPUnit)
-├── API.md               # Référence des 289 endpoints
+├── API.md               # Référence des 296 endpoints
 ├── PERFORMANCE.md       # Durcissement & performance
 └── CONFIDENTIALITE.md   # RGPD & rétention des données
 ```
@@ -966,7 +966,7 @@ adresse.
 
 | Document | Contenu |
 | --- | --- |
-| [`API.md`](API.md) | Référence des 289 endpoints (accès, contrôleurs) |
+| [`API.md`](API.md) | Référence des 296 endpoints (accès, contrôleurs) |
 | [`PERFORMANCE.md`](PERFORMANCE.md) | Index, cache, N+1, tests de charge |
 | [`CONFIDENTIALITE.md`](CONFIDENTIALITE.md) | RGPD, rétention par type de donnée |
 | [`app/Support/README.md`](app/Support/README.md) | Contrat d'API (enveloppe, erreurs, cache) |

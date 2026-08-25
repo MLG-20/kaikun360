@@ -158,7 +158,11 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   reverser**). Enfin les **Documents** (F4.5) : par bien, le propriétaire liste,
   **dépose** (titre foncier / bail / plan, PDF ou image ≤ 5 Mo), **télécharge**
   (lien signé temporaire) et **supprime** les pièces justificatives — la liste
-  des biens affiche le nombre de documents de chacun. 👉 Détail :
+  des biens affiche le nombre de documents de chacun. Enfin **« Mes
+  reversements »** (self-service après F8.16.a, `GET /reversements/mine[/payouts]`) :
+  ce que Kaikun doit encore au propriétaire et l'historique de ce qui lui a
+  déjà été versé (avec justificatif téléchargeable), en lecture seule —
+  préparer un lot ou constater un virement restent des gestes d'agent. 👉 Détail :
   [`src/app/features/owner/README.md`](src/app/features/owner/README.md).
 - 🎉 **L'espace prestataire (F5, terminé)** : sous `/espace-prestataire`,
   réservé au rôle « prestataire ». Il réutilise **le même shell partagé** que les
@@ -200,7 +204,11 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   et **circuits touristiques** — chacune avec son **statut de validation** ; les
   champs de sécurité s'adaptent au type (assurance/chauffeur pour un motorisé,
   gilets/conformité météo pour une pirogue). C'est le geste central attendu par
-  le cahier des charges (§5.2 / §15), désormais couvert. 👉 Détail :
+  le cahier des charges (§5.2 / §15), désormais couvert. Enfin **« Mes
+  reversements »** (self-service après F8.16.a, `GET /reversements/mine[/payouts]`) :
+  même écran que côté propriétaire (composant partagé), distinct de « Revenus
+  & commissions » qui parle du chiffre d'affaires des missions et non de
+  l'état des virements. 👉 Détail :
   [`src/app/features/pro/README.md`](src/app/features/pro/README.md).
 - 🎉 **L'espace entreprise (F6, terminé)** : sous `/espace-entreprise`, réservé au
   rôle « entreprise » (entreprises, ONG, écoles, institutions). Il réutilise **le

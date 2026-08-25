@@ -980,6 +980,30 @@ nécessite ni clé ni facturation.
 - [x] **`maps_link` sur `properties`, `vehicles`, `mobility_services` et `tourism_experiences`.** Le propriétaire/prestataire recherche son lieu sur Google Maps, clique « Partager » → « Intégrer une carte », et colle le code obtenu (ou seulement le lien `src` qu'il contient — les deux formes sont acceptées, `extractGoogleMapsEmbedUrl` extrait le second du premier) dans son formulaire de dépôt. `App\Rules\GoogleMapsLink` (règle transversale, réutilisée par les 4 modules) vérifie que le lien pointe vers un domaine Google Maps connu avant tout enregistrement — un lien quelconque ne peut pas être intégré en iframe sur une fiche cliente.
 - [x] **Un seul composant d'affichage, `app-google-map-embed`**, posé sur les 5 fiches détaillées concernées (bien, nuitée — hérite de la localisation de son bien, véhicule, trajet, circuit) : rend l'iframe (`bypassSecurityTrustResourceUrl`, la valeur ayant déjà été validée côté serveur) et se masque de lui-même si aucun lien n'est renseigné. Même principe de confiance que la carte du siège sur la page Contact, posée bien avant.
 
+### F8.16.b — « Mes reversements » : le registre partenaire ouvert en self-service
+
+Le registre `partner_dues`/`partner_payouts` (F8.16.a) était **exclusivement
+back-office** : un propriétaire ou un prestataire n'avait aucun moyen de voir
+ce que Kaikun lui doit, ni ce qui lui a déjà été versé. C'était le dernier
+point réellement manquant sur le sujet des reversements — `owner_payouts`
+avait déjà son justificatif obligatoire depuis F8.16.a.
+
+- [x] **`PartnerPayoutSelfController`** (`GET /reversements/mine`, `GET /reversements/mine/payouts`), scopé par `beneficiary_id = auth()->id()`, en LECTURE SEULE — préparer un lot ou constater un virement restent des gestes d'agent. Deux Resources dédiées (`PartnerDueSelfResource`, `PartnerPayoutSelfResource`) qui **n'exposent jamais `commission_xof`** : c'est ce que Kaikun retient, pas l'affaire du partenaire.
+- [x] **Justificatif par URL signée, sur une route distincte du back-office** (`GET /payouts/{payout}/proof/mine`, nom `payouts.proof.mine`). ⚠️ **Signature seule, comme ses deux pendants** (`admin.partner-payouts.proof`, `manage.payouts.proof`) : le frontend pose `proof_url` en `[href]` brut, une navigation de navigateur qui ne porte pas le jeton Sanctum — vérifier l'utilisateur connecté à cet endroit serait donc toujours refusé, y compris pour le bon partenaire.
+- [x] **Composant partagé `shared/components/partner-payouts/`**, monté dans les DEUX espaces (propriétaire et prestataire — les seuls bénéficiaires possibles), sur le modèle de `contact-support/` plutôt que dupliqué. Nouvelle rubrique dédiée « Mes reversements » dans les deux rails, avec une icône propre (`receipt`) distincte de `wallet` (déjà pris par « Gestion locative »/« Revenus & commissions », rubriques voisines qui parlent d'autre chose : le chiffre d'affaires des mandats/missions, pas l'état des virements).
+- **6 tests backend neufs** (`PartnerPayoutSelfTest`, écrits comme un parcours : accès refusé sans authentification, cloisonnement strict par bénéficiaire, écran ouvert par défaut sur ce qui reste dû, historique avec justificatif téléchargeable) + **4 vitest neufs** sur le composant partagé.
+
+### F8.12.d — Le widget « Écrire au support » posé sur la fiche d'un bien
+
+Vérification du code réel avant de reprendre la messagerie (F8.12→F8.12.c) :
+le geste d'ouvrir un fil et l'ajout d'un tiers par l'agent fonctionnaient déjà
+partout — ce n'était donc plus le trou. Le vrai écart : le widget
+`<app-contact-support>`, qui ouvre un fil **contextualisé** à un dossier
+précis, n'était monté que sur 3 pages de l'espace client (Mes messages, une
+demande, une réservation) — jamais côté propriétaire, entreprise ou diaspora.
+
+- [x] **Posé sur la fiche d'un bien** (`owner-property-detail-page`, `contextType="bien"`). ⚠️ **Portée volontairement minimale** : `ConversationContext` (backend) ne route aujourd'hui que 8 types de dossier (`demande`, `devis`, `reservation`, `bien`, `nuitee`, `vehicule`, `circuit`, `trajet`) — la fiche d'un bien y entre directement, **aucun changement serveur**. Le mandat de gestion locative, la demande d'entreprise et le projet diaspora n'ont, eux, aucun type de contexte dédié : les y ajouter demanderait d'étendre le routage serveur, laissé de côté à la demande de l'utilisateur (scope minimal choisi explicitement).
+
 ---
 
 ## Critères d'acceptation transverses
