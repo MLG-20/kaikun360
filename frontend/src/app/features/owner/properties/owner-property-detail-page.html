@@ -234,6 +234,19 @@
           }
         </dl>
       </section>
+
+      <!--
+        Écrire au support à propos de CE bien (question sur la validation, une
+        photo à corriger, une visite à organiser…). Le dossier est joint au fil.
+      -->
+      <section class="opd-block">
+        <app-contact-support
+          contextType="bien"
+          [contextId]="p.id"
+          label="Écrire au support sur ce bien"
+          hint="Un agent Kaikun vous répond dans votre messagerie. La référence du bien est jointe automatiquement."
+        />
+      </section>
     }
   }
 }

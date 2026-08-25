@@ -20,6 +20,7 @@ Disallow: /mon-espace
 Disallow: /espace-proprietaire
 Disallow: /espace-prestataire
 Disallow: /espace-entreprise
+Disallow: /espace-diaspora
 Disallow: /back-office
 Disallow: /auth
 

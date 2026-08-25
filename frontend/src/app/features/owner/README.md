@@ -54,7 +54,12 @@ l'espace propriétaire est complet.
   détaille le statut avec une explication, la description, les caractéristiques,
   la localisation et les dates, ainsi que le **mode de location** et — le cas
   échéant — le bloc **Nuitées (courte durée)**. Un bouton « Modifier le bien »
-  mène au formulaire d'édition (F4.3). Helpers de présentation partagés dans
+  mène au formulaire d'édition (F4.3), et un bloc `<app-contact-support
+  contextType="bien">` permet d'écrire au support à propos de CE bien
+  précisément (le geste existait déjà pour une demande ou une réservation
+  côté client depuis F8.12 ; il manquait ici — le contexte « bien » est un des
+  8 types déjà reconnus par `ConversationContext`, aucun changement serveur).
+  Helpers de présentation partagés dans
   [`properties/property-status.ts`](properties/property-status.ts).
 - **Déposer / modifier un bien** (F4.3) —
   [`properties/owner-property-form-page.ts`](properties/owner-property-form-page.ts),

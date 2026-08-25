@@ -9,6 +9,7 @@ import { PropertyManagementService } from '../../../core/api/property-management
 import { Property } from '../../../models/property.model';
 import { formatFcfa } from '../../../shared/components/catalog/catalog.config';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
+import { ContactSupportComponent } from '../../../shared/components/contact-support/contact-support';
 import { propertyLocality, propertyStatus, propertyVerified } from './property-status';
 
 /** État de chargement de l'écran. */
@@ -16,7 +17,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
 
 @Component({
   selector: 'app-owner-property-detail-page',
-  imports: [DatePipe, SlicePipe, RouterLink, BackLinkComponent],
+  imports: [DatePipe, SlicePipe, RouterLink, BackLinkComponent, ContactSupportComponent],
   templateUrl: './owner-property-detail-page.html',
   styleUrl: './owner-property-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
