@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\NewsArticleResource;
 use App\Models\NewsArticle;
 use App\Support\ApiResponse;
+use App\Support\Settings;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -24,6 +25,10 @@ class NewsController extends Controller
     {
         return ApiResponse::success([
             'articles' => NewsArticleResource::collection(NewsArticle::published()->ordered()->get()),
+            // Nombre de « petites cartes » à afficher dans la section « À
+            // découvrir » de l'accueil — pilotable au back-office (F17,
+            // demande client 2026-08-28), plus figé à 4 dans le frontend.
+            'discoverCardsCount' => Settings::get('home.discover_cards_count', 4),
         ]);
     }
 

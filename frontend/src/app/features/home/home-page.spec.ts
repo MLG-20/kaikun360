@@ -92,7 +92,10 @@ describe('HomePageComponent — vitrine tournante', () => {
           provide: HomeHeroService,
           useValue: { get: () => of(options.heroMedia ?? { images: [], video: null }) },
         },
-        { provide: NewsService, useValue: { list: () => of(options.actualites ?? []) } },
+        {
+          provide: NewsService,
+          useValue: { list: () => of({ articles: options.actualites ?? [], discoverCardsCount: 4 }) },
+        },
         { provide: HeroService, useValue: fakeHeroService(options.banners) },
       ],
     });
@@ -273,7 +276,10 @@ describe('HomePageComponent — actualités & héros (F15)', () => {
           provide: HomeHeroService,
           useValue: { get: () => of(options.heroMedia ?? { images: [], video: null }) },
         },
-        { provide: NewsService, useValue: { list: () => of(options.actualites ?? []) } },
+        {
+          provide: NewsService,
+          useValue: { list: () => of({ articles: options.actualites ?? [], discoverCardsCount: 4 }) },
+        },
         { provide: HeroService, useValue: fakeHeroService(options.banners) },
       ],
     });

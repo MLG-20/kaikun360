@@ -257,6 +257,12 @@ export class HomePageComponent implements OnInit, OnDestroy {
   protected readonly actualites = signal<NewsArticleView[]>([]);
 
   /**
+   * Nombre de cartes à garder dans `cartesLibres`, réglable au back-office
+   * (`home.discover_cards_count`, défaut 4) — voir `cartesLibres` plus bas.
+   */
+  private readonly discoverCardsCount = signal(4);
+
+  /**
    * Petites cartes IMAGE (titre + lien) de la section « Actualités ».
    *
    * ⚠️ **Seule une ligne SANS texte rédigé mais AVEC un lien devient une
@@ -271,13 +277,15 @@ export class HomePageComponent implements OnInit, OnDestroy {
    * `videosActualites` — une carte ne PERD pas son statut de carte pour
    * autant si elle porte aussi une vidéo, les deux listes sont indépendantes.
    *
-   * ⚠️ **Plafonnée à 4** — ce sont des repères fixes que le client choisit de
-   * montrer « en ce moment », pas un contenu qui défile.
+   * ⚠️ **Plafonnée** au réglage `home.discover_cards_count` (défaut 4,
+   * modifiable au back-office sans redéploiement, F17 — demande client
+   * 2026-08-28) — ce sont des repères fixes que le client choisit de montrer
+   * « en ce moment », pas un contenu qui défile.
    */
   protected readonly cartesLibres = computed(() =>
     this.actualites()
       .filter((a) => !a.body && !!a.linkUrl)
-      .slice(0, 4),
+      .slice(0, this.discoverCardsCount()),
   );
 
   /**
@@ -630,18 +638,20 @@ export class HomePageComponent implements OnInit, OnDestroy {
     this.news
       .list()
       .pipe(
-        map((articles) =>
-          articles.map((a) => ({
+        map(({ articles, discoverCardsCount }) => ({
+          discoverCardsCount,
+          articles: articles.map((a) => ({
             ...a,
             videoEmbedUrl: a.videoUrl
               ? this.sanitizer.bypassSecurityTrustResourceUrl(withAutoplayLoop(a.videoUrl))
               : null,
           })),
-        ),
-        catchError(() => of([] as NewsArticleView[])),
+        })),
+        catchError(() => of({ articles: [] as NewsArticleView[], discoverCardsCount: 4 })),
       )
-      .subscribe((articles) => {
+      .subscribe(({ articles, discoverCardsCount }) => {
         this.actualites.set(articles);
+        this.discoverCardsCount.set(discoverCardsCount);
         this.demarrerLeCarrouselVideos();
       });
   }

@@ -53,12 +53,21 @@ export class NewsService {
   private readonly http = inject(HttpClient);
   private readonly api = environment.apiUrl;
 
-  list(): Observable<NewsArticle[]> {
-    return this.http.get<{ data: { articles: NewsArticleApi[] } }>(`${this.api}/news`).pipe(
-      map((res) =>
-        (res.data.articles ?? []).map((a) => this.depuisApi(a)),
-      ),
-    );
+  /**
+   * `discoverCardsCount` : nombre de « petites cartes » à afficher dans la
+   * section « À découvrir » de l'accueil (F17, demande client 2026-08-28),
+   * pilotable au back-office (réglage `home.discover_cards_count`) — n'est
+   * plus figé à 4 dans le composant.
+   */
+  list(): Observable<{ articles: NewsArticle[]; discoverCardsCount: number }> {
+    return this.http
+      .get<{ data: { articles: NewsArticleApi[]; discoverCardsCount: number } }>(`${this.api}/news`)
+      .pipe(
+        map((res) => ({
+          articles: (res.data.articles ?? []).map((a) => this.depuisApi(a)),
+          discoverCardsCount: res.data.discoverCardsCount ?? 4,
+        })),
+      );
   }
 
   /**

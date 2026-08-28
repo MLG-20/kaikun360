@@ -1,34 +1,29 @@
 // Cartes compactes de la section « Actualités Kaikun » (F17). Composant à
 // part, budget CSS propre — voir l'en-tête de news-card-mini-list.ts.
 //
-// `minmax(150px, 200px)` plutôt que `1fr` : ce composant sert aussi bien dans
-// une colonne étroite (à côté d'un article) qu'en pleine largeur (aucun
-// article, juste les cartes) — sans plafond, 3-4 cartes étalées sur 1400px
-// deviendraient énormes.
+// ⚠️ Les PISTES de la grille remplissent toujours 100% de la largeur
+// disponible (`minmax(150px, 1fr)`, sans `justify-content`) — sinon tout
+// espace non consommé se retrouve en un seul bloc d'un côté (repéré sur
+// l'accueil, 2026-08-28 : 6 cartes plafonnées en largeur laissaient un grand
+// vide à droite, alors que la vidéo voisine occupe 100% de SA colonne). Le
+// plafond visuel de la carte (« sans lui, 3-4 cartes étalées sur 1400px
+// deviendraient énormes ») est posé sur `.ncm-card` elle-même (`max-width` +
+// `margin-inline: auto`) : chaque carte se centre dans sa propre piste, donc
+// tout reste éventuel se répartit en petites marges symétriques AUTOUR de
+// CHAQUE carte plutôt qu'en un bloc unique à une extrémité de la rangée.
 :host {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 200px));
-  justify-content: start;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
-}
-
-// ⚠️ Sous 480px, `minmax(150px, 200px)` ne laisse plus de place qu'à UNE
-// colonne (150px + le padding du cadre parent dépasse la largeur d'un
-// téléphone) : les cartes s'empilaient alors une par une, avec du vide à
-// côté de chacune au lieu d'utiliser la largeur disponible. Deux colonnes
-// fixes en `fr` occupent toute la largeur, quelle que soit la taille de
-// l'écran.
-@media (max-width: 480px) {
-  :host {
-    grid-template-columns: repeat(2, 1fr);
-    justify-content: stretch;
-  }
 }
 
 .ncm-card {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  width: 100%;
+  max-width: 240px;
+  margin-inline: auto;
   border: 1px solid var(--k-line);
   border-radius: var(--k-radius);
   background: var(--k-card);

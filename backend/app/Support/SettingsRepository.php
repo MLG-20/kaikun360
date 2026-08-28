@@ -53,6 +53,11 @@ class SettingsRepository
         // saisis. Validés par `AdminSettingsController::update()`, lus par
         // `UniverseStripController::index()`.
         'home.universe_strip_custom_items' => ['value' => [], 'type' => 'json', 'group' => 'accueil'],
+        // Nombre de cartes affichées dans la section « À découvrir » de
+        // l'accueil (F17). Était figé à 4 dans le code frontend ; le client a
+        // demandé à en fixer lui-même le nombre. Lu par NewsController::index()
+        // et transmis au frontend (home-page.ts), qui applique la coupe.
+        'home.discover_cards_count' => ['value' => 4, 'type' => 'integer', 'group' => 'accueil'],
         'support.email' => ['value' => 'contact@kaikun360.com', 'type' => 'string', 'group' => 'general'],
         'support.phone' => ['value' => '+221 33 000 00 00', 'type' => 'string', 'group' => 'general'],
 

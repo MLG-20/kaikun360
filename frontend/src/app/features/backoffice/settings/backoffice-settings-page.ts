@@ -234,12 +234,17 @@ export class BackofficeSettingsPageComponent {
     'social.tiktok': { label: 'TikTok', hint: 'URL complète du compte. Vide = non affiché.' },
     'social.linkedin': { label: 'LinkedIn', hint: 'URL complète de la page. Vide = non affiché.' },
     'social.youtube': { label: 'YouTube', hint: 'URL complète de la chaîne. Vide = non affichée.' },
+    'home.discover_cards_count': {
+      label: 'Cartes de la section « À découvrir »',
+      hint: 'Nombre de petites cartes affichées à droite, sur l’accueil (défaut 4).',
+    },
   };
 
   /** Libellés des groupes de réglages. */
   private readonly groupLabels: Record<string, string> = {
     general: 'Général & contact',
     commissions: 'Commissions & marges',
+    accueil: 'Accueil',
   };
 
   /** Libellés des segments du barème de construction. */

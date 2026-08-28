@@ -4,9 +4,42 @@
 }
 
 .footer {
+  position: relative;
+  overflow: hidden;
   background: var(--k-navy);
   color: #dfe6f2;
   padding: 54px 0 26px;
+}
+
+// Tache de fond « Kaikun360 » — décorative, purement visuelle (aria-hidden côté
+// gabarit). En dégradé de la même palette que le reste du pied de page, très
+// discrète pour ne jamais gêner la lecture du contenu au-dessus.
+.watermark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  width: max-content;
+  max-width: none;
+  font-family: var(--k-font-display);
+  font-weight: 800;
+  font-size: clamp(90px, 18vw, 320px);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.015));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.footer > .k-wrap,
+.footer > nav {
+  position: relative;
+  z-index: 1;
 }
 
 .grid {
