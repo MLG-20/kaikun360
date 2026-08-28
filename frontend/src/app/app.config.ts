@@ -13,6 +13,7 @@ import { TitleStrategy, provideRouter, withInMemoryScrolling } from '@angular/ro
 
 import { routes } from './app.routes';
 import { activerLaMesureDAudience } from './core/analytics/analytics.service';
+import { activerLeSuiviDesErreurs } from './core/monitoring/sentry.init';
 import { activerPolitiqueDeDefilement } from './core/scroll/scroll-behavior';
 import { SeoTitleStrategy } from './core/seo/seo-title-strategy';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
@@ -39,6 +40,9 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({ scrollPositionRestoration: 'disabled', anchorScrolling: 'disabled' }),
     ),
     provideEnvironmentInitializer(activerPolitiqueDeDefilement),
+    // --- Suivi des erreurs (monitoring, 2026-08-28) -------------------------
+    // Amorce le SDK Sentry navigateur, voir `core/monitoring/sentry.init.ts`.
+    provideEnvironmentInitializer(activerLeSuiviDesErreurs),
     // --- Mesure d'audience (F16) --------------------------------------------
     // Amorce `AnalyticsService` : rien ne se charge tant que le bandeau
     // cookies n'a pas recueilli d'accord (`CookieConsentService`), voir

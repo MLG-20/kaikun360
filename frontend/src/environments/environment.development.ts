@@ -21,6 +21,8 @@ export const environment = {
   // Mesure d'audience désactivée en local (voir `environment.ts`) : le
   // développement ne doit pas polluer les statistiques réelles.
   gaMeasurementId: '',
+  // Sentry désactivé en local, même raison : voir `environment.ts`.
+  sentryDsn: '',
   /**
    * Adresse publique du site en développement (F9.1) — voir le commentaire
    * détaillé dans `environment.ts`. En local, c'est le serveur Angular.

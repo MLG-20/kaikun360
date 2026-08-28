@@ -8,6 +8,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Sentry\Laravel\Integration as SentryIntegration;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -42,6 +43,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Envoie chaque exception non gérée à Sentry (silencieux si SENTRY_LARAVEL_DSN
+        // est vide — voir config/sentry.php). Doit être appelé en premier : les
+        // handlers ->render() ci-dessous transforment déjà l'exception en réponse
+        // JSON, ce qui empêcherait Sentry de la voir s'il passait après.
+        SentryIntegration::handles($exceptions);
+
         // Toute erreur survenant sur l'API (/api/*) est renvoyée en JSON.
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),

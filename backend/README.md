@@ -889,6 +889,8 @@ Clés principales (voir `.env.example` pour la liste exhaustive) :
 | `ASSISTANT_CLAUDE_MAX_TOKENS` | Plafond de tokens **produits** par réponse (défaut 700). L'invite impose 2 à 4 phrases. |
 | `ASSISTANT_CLAUDE_MAX_TOOL_ROUNDS` | Tours d'appels d'outils par message (défaut 3). Au-delà, les outils sont **retirés** au modèle, qui doit conclure : c'est ce qui borne la facture d'un échange même si le modèle boucle. |
 | `ASSISTANT_CLAUDE_TIMEOUT` / `ASSISTANT_CLAUDE_MAX_RETRIES` | Délai d'attente (20 s) et reprises (1). Courts volontairement : le repli déterministe répond tout de suite. |
+| `SENTRY_LARAVEL_DSN` | Monitoring des erreurs (Sentry). Vide = SDK inactif (`php artisan about` l'indique : `Enabled .. MISSING DSN`), aucun comportement dégradé. |
+| `SENTRY_ENVIRONMENT` | Étiquette affichée dans Sentry pour distinguer `production` des tests manuels. |
 
 > **Aucun secret n'est versionné** : `.env` est ignoré par git ; seuls les
 > `.env.example` (valeurs factices) sont suivis.
@@ -1206,9 +1208,16 @@ Le code est **abondamment commenté en français**.
   (mode de partage gratuit « Intégrer une carte » — aucune clé API
   facturable disponible, la plateforme appartenant à un client), validé par
   `App\Rules\GoogleMapsLink` (transversale) avant enregistrement.
+- ✅ **Monitoring des erreurs (Sentry, hors cahier des charges).**
+  `sentry/sentry-laravel`, branché dans `bootstrap/app.php` via
+  `SentryIntegration::handles($exceptions)` — **avant** les handlers
+  `render()` du contrat d'erreur API, sinon l'exception est déjà transformée
+  en réponse JSON quand Sentry la voit. Inactif si `SENTRY_LARAVEL_DSN` est
+  vide (voir tableau `.env` ci-dessus). Complète **UptimeRobot** (sonde de
+  disponibilité externe, sans code) — voir le README racine, section
+  « Monitoring ».
 - ⏳ **Actions client / déploiement** (hors code) : compte marchand PayTech +
-  sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n,
-  worker de queue supervisé.
+  sandbox, souscription de la SMS API Orange + essai sandbox, URL/secret n8n.
 - 🔜 **Frontend Angular** (chantier séparé).
 
 ---

@@ -33,6 +33,19 @@ export const environment = {
    */
   gaMeasurementId: 'G-Q9545ZH72P',
   /**
+   * DSN du projet Sentry "Angular" (monitoring des erreurs, 2026-08-28).
+   *
+   * ⚠️ Comme `gaMeasurementId`, ce n'est PAS un secret : un DSN Sentry ne fait
+   * qu'indiquer OÙ envoyer les événements, il ne donne aucun accès en lecture
+   * au projet. Vide dans `environment.development.ts` et `environment.demo.ts`
+   * (mêmes raisons que GA4 : ne pas polluer le projet de production).
+   *
+   * À REMPLIR après création du projet "Angular" sur sentry.io — voir
+   * `core/monitoring/sentry.init.ts`, qui ne s'active que si cette valeur
+   * est non vide.
+   */
+  sentryDsn: 'https://3c8473016eaf7d480c3c83214e64e7e6@o4511990876733440.ingest.de.sentry.io/4511990954721360',
+  /**
    * Adresse PUBLIQUE du site, sans barre oblique finale (F9.1).
    *
    * ⚠️ Ce n'est pas un doublon de `apiUrl` : `apiUrl` désigne l'API Laravel,

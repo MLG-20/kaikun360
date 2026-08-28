@@ -2349,6 +2349,27 @@ valeur (`bypassSecurityTrustResourceUrl`, déjà validée côté serveur — mê
 principe de confiance que la carte Google Maps de la page Contact) et se
 masque de lui-même si aucun lien n'est renseigné.
 
+### Monitoring des erreurs — Sentry (2026-08-28, hors CDC)
+
+`@sentry/angular`, initialisé dans `core/monitoring/sentry.init.ts` et amorcé
+par `provideEnvironmentInitializer` dans `app.config.ts`, sur le modèle
+d'`AnalyticsService`/GA4 (F16) :
+
+- **Jamais au rendu serveur** (`isPlatformBrowser`) — les erreurs PHP côté
+  serveur sont déjà couvertes indépendamment par `sentry/sentry-laravel` sur
+  le backend (voir `backend/README.md`).
+- **Le DSN est figé au build**, dans `environment.ts` (champ `sentryDsn`) —
+  comme `gaMeasurementId` : ce n'est pas un secret (il indique seulement où
+  envoyer les événements, aucun accès en lecture), mais **vide en
+  développement et en démo** (`environment.development.ts` /
+  `environment.demo.ts`) pour ne pas polluer le projet de production avec des
+  erreurs locales.
+- **Pas de traçage de performance** (`tracesSampleRate: 0`) : on démarre par
+  la seule capture d'erreurs, la plus utile et la moins coûteuse en quota du
+  plan gratuit Sentry.
+- Complète **UptimeRobot** (sonde de disponibilité externe, sans code) — voir
+  le README racine, section « Monitoring ».
+
 ### Commandes utiles
 
 ```bash

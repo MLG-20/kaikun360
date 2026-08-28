@@ -21,6 +21,7 @@
     "@angular/router": "^22.0.0",
     "@angular/service-worker": "22.0.6",
     "@angular/ssr": "^22.0.6",
+    "@sentry/angular": "^10.72.0",
     "express": "^5.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"

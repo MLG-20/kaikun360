@@ -126,6 +126,12 @@ présentation à distance sont dans [`scripts/README.md`](scripts/README.md).
   s'active qu'avec une clé d'API, donc **aucun frais tant que le client ne l'a
   pas décidé**. ⚠️ Cet assistant **ne figure pas au cahier des charges** : c'est
   un bonus.
+- ✅ **La plateforme est surveillée en production** (2026-08-28, hors cahier des
+  charges) : **UptimeRobot** vérifie toutes les 5 minutes que le site répond
+  et alerte par e-mail en cas de panne, et **Sentry** capture automatiquement
+  les erreurs backend (Laravel) et frontend (Angular) avec leur contexte —
+  avant, une erreur en production n'était visible que dans les journaux du
+  serveur, si quelqu'un pensait à aller les consulter.
 - ⏳ **Hors code** (à faire par le client / en parallèle) : nom de domaine,
   hébergement, compte marchand pour les paiements, validation juridique. Détaillé
   en fin de document.
@@ -921,6 +927,49 @@ tranche couvre les deux premiers.
 - [x] **Publié sur le VPS Contabo réel (2026-08-15), pas seulement en local.** Monorepo cloné via une **Deploy Key GitHub dédiée en lecture seule** (jamais les identifiants personnels), `docker compose up --build` sur les sept services. Vérifié de bout en bout sur l'IP publique du serveur : inscription complète (écriture MySQL, jeton émis), page d'accueil rendue en SSR, CSS chargé normalement. ⚠️ **Sixième piège trouvé, propre à toute adresse publique non-`localhost`** : le serveur SSR Angular embarque une protection anti-SSRF qui **rejette en 400 tout en-tête `Host` non explicitement autorisé** — invisible en local (toujours `localhost`), bloquant sur IP ou domaine réel. Corrigé par la variable `NG_ALLOWED_HOSTS` (voir `.env.docker.example` et `docker/README.md`), **à tenir à jour à chaque changement d'adresse publique** (IP de test → sous-domaine → `kaikun360.com` au jour de la bascule).
 - [x] **Septième piège, trouvé en cherchant un code de vérification introuvable.** `MAIL_MAILER=log` (dépannage sans SMTP réel, choisi pour le premier test VPS) écrit avec `Logger::debug(...)` — silencieusement filtré dès que `LOG_LEVEL` dépasse `debug` (le réglage de test VPS est `info`). Reproduit puis corrigé **en local d'abord** (consigne explicite), jamais directement sur le VPS : canal de log dédié à niveau `debug` figé (`config/logging.php → mail_debug`), indépendant du réglage global, branché via `MAIL_LOG_CHANNEL`.
 - [x] **CD — redéploiement automatique sur le VPS à chaque push sur `main`.** Troisième et dernier étage du chantier de déploiement (CI → Docker → CD). Nouveau job `deploy` (`.github/workflows/ci.yml`), déclenché **seulement** après que `backend` et `frontend` soient verts, et **seulement** sur un vrai push vers `main` (jamais une pull request, pour qu'un dépôt tiers ne puisse jamais atteindre le VPS). Se connecte en SSH avec une **clé dédiée au CD** (distincte de la Deploy Key de lecture seule utilisée pour le clone initial — celle-là exécute des commandes, elle a donc une portée plus large), stockée en secret GitHub Actions, jamais dans le dépôt. Exécute `git pull --ff-only` (échoue net plutôt que d'écraser silencieusement un état modifié à la main sur le serveur) puis `docker compose up -d --build`.
+
+---
+
+### Monitoring — Sentry et UptimeRobot ⚠️ **HORS CAHIER DES CHARGES**
+
+Après la publication sur le VPS (chantier ci-dessus), plus aucun outil ne
+prévenait d'une panne ou d'une erreur en production — il fallait aller lire
+les journaux du serveur pour le savoir. Deux services externes gratuits
+comblent ce trou (2026-08-28), sans dépendre l'un de l'autre :
+
+- [x] **UptimeRobot — disponibilité externe.** Sonde HTTPS sur
+  `https://kaikun360.com` toutes les 5 minutes, **depuis l'extérieur du VPS**
+  (donc indépendante d'une panne Docker/nginx/DNS locale) — alerte par e-mail
+  dès que le site ne répond plus. Aucune modification de code, configuré
+  entièrement sur uptimerobot.com.
+- [x] **Sentry — erreurs applicatives**, un projet par plateforme (organisation
+  `kaikun360.sentry.io`) :
+  - **Backend** — `sentry/sentry-laravel`, branché dans `bootstrap/app.php`
+    (`SentryIntegration::handles($exceptions)`, appelé **avant** les
+    handlers `render()` du contrat d'erreur API — sinon l'exception est déjà
+    transformée en réponse JSON quand Sentry la voit). Inactif tant que
+    `SENTRY_LARAVEL_DSN` (`.env.docker`) est vide — vérifié via
+    `php artisan about` et `php artisan sentry:test`.
+  - **Frontend** — `@sentry/angular`, initialisé dans
+    `core/monitoring/sentry.init.ts` et amorcé par
+    `provideEnvironmentInitializer` dans `app.config.ts`, **jamais au rendu
+    serveur** (`isPlatformBrowser`, sur le modèle d'`AnalyticsService`/GA4).
+    Le DSN est figé au build dans `environment.ts` (comme
+    `gaMeasurementId` : pas un secret, mais **vide en développement et en
+    démo** — voir `environment.development.ts`/`environment.demo.ts` — pour
+    ne pas polluer le projet de production avec des erreurs locales).
+- [x] **Aucune capture de trace/performance pour l'instant** (`tracesSampleRate: 0`
+  côté frontend, seule « Surveillance des erreurs » cochée côté Sentry) : on
+  démarre par la seule capture d'erreurs, la plus utile et la moins coûteuse
+  en quota du plan gratuit.
+- ⚠️ **Un vrai `supervisord` a été écarté** : les workers Laravel
+  (`scheduler`, `queue-worker`) tournent déjà chacun dans leur propre
+  conteneur avec `restart: unless-stopped` — c'est Docker qui joue ce rôle,
+  un superviseur de processus dédié serait redondant tant qu'un seul process
+  tourne par conteneur.
+- ⚠️ **`.env.docker` du VPS non synchronisé par le CD** (piège déjà connu,
+  voir le chantier Infrastructure ci-dessus) : `SENTRY_LARAVEL_DSN` doit être
+  ajouté à la main sur le serveur, le CD ne le fait pas.
 
 ---
 
