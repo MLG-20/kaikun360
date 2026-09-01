@@ -1012,17 +1012,28 @@
            public pointe alors ici plutôt que vers la page de l'article. -->
       <div class="st-grid">
         <label class="st-field">
-          <span class="st-label">Lien du bouton (facultatif)</span>
+          <span class="st-label">
+            Lien du bouton
+            {{ newsLinkRequired() ? '(obligatoire)' : '(facultatif)' }}
+          </span>
           <input
             class="k-input"
             type="url"
             name="newsLinkUrl"
             [(ngModel)]="newsForm.link_url"
             placeholder="https://kaikun360.com/immobilier" />
-          <span class="st-hint">
-            Sans texte complet ci-dessus, c'est ce lien qui fait de cet
-            article une simple carte de mise en avant.
-          </span>
+          @if (newsLinkRequired()) {
+            <span class="st-hint">
+              <strong>Obligatoire tant qu'aucun texte n'est rédigé
+              ci-dessus</strong> : sans texte ET sans lien, cette ligne ne
+              s'affichera nulle part sur l'accueil, même publiée.
+            </span>
+          } @else {
+            <span class="st-hint">
+              Facultatif ici : un texte complet est rédigé ci-dessus, cette
+              ligne est un article, pas une carte.
+            </span>
+          }
         </label>
 
         <label class="st-field">

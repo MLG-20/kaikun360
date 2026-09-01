@@ -21,6 +21,7 @@ import {
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { HeroService } from '../../../core/api/hero.service';
 import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor/rich-text-editor';
+import { sanitizeRichText } from '../../../shared/components/rich-text-editor/rich-text.sanitizer';
 
 /** Onglet actif de l'écran Paramètres. */
 type SettingsTab = 'settings' | 'notifications' | 'content' | 'reference' | 'heroes' | 'news';
@@ -1586,12 +1587,29 @@ export class BackofficeSettingsPageComponent {
     return editing !== null && editing !== 'new' && !!editing.video_file;
   });
 
+  /**
+   * Sans texte rédigé, une ligne ne devient une carte publique QUE si elle a
+   * un lien (voir `cartesLibres` sur l'accueil) — sans les deux, elle est
+   * publiée mais n'apparaît nulle part. Sert à afficher le lien comme
+   * obligatoire dans ce cas et à bloquer l'enregistrement en conséquence.
+   */
+  protected newsLinkRequired(): boolean {
+    return sanitizeRichText(this.newsForm.body ?? '').trim() === '';
+  }
+
   protected saveNews(): void {
     const editing = this.editingNews();
     if (!editing) return;
 
     if (editing === 'new' && !this.newsForm.image) {
       this.newsActionError.set('Une image de couverture est obligatoire.');
+      return;
+    }
+
+    if (this.newsLinkRequired() && !this.newsForm.link_url.trim()) {
+      this.newsActionError.set(
+        'Sans texte rédigé, le lien du bouton est obligatoire — sinon cette ligne ne s’affichera nulle part sur l’accueil.',
+      );
       return;
     }
 
