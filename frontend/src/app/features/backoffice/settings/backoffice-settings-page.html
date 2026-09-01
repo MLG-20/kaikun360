@@ -83,7 +83,7 @@
       <p class="st-state st-state--ok" role="status">{{ settingsMessage() }}</p>
     }
 
-    @for (group of ['commissions', 'general', 'accueil']; track group) {
+    @for (group of ['commissions', 'general']; track group) {
       <section class="st-card">
         <h2 class="st-card-title">{{ groupLabel(group) }}</h2>
         <div class="st-grid">
@@ -907,6 +907,45 @@
       lien d’intégration YouTube/Vimeo. Si les deux sont saisis, le fichier
       déposé est celui qui s’affiche.
     </p>
+  </section>
+
+  <!-- Déplacé depuis l'onglet Réglages > Accueil (2026-09-01) : ce réglage
+       plafonne combien de cartes ci-dessous s'affichent sur l'accueil, donc
+       il vit à côté de la liste plutôt que dans un onglet séparé où on
+       l'oublie. Toujours le même réglage `home.discover_cards_count`, même
+       bouton d'enregistrement générique que l'onglet Réglages. -->
+  <section class="st-card">
+    <h2 class="st-card-title">Nombre de cartes affichées sur l’accueil</h2>
+    <p class="st-card-sub">
+      Plafonne combien de cartes publiées ci-dessous apparaissent dans la
+      section « À découvrir » de l’accueil — publier plus d’articles que ce
+      nombre n’en affiche pas davantage tant que le réglage n’est pas monté.
+    </p>
+    <div class="st-grid">
+      <label class="st-field">
+        <span class="st-label">Cartes de la section « À découvrir »</span>
+        <input
+          class="k-input"
+          type="number"
+          min="0"
+          step="1"
+          name="discoverCardsCount"
+          [ngModel]="draftValue('home.discover_cards_count')"
+          (ngModelChange)="setDraftValue('home.discover_cards_count', $event)" />
+        <span class="st-hint">Nombre de petites cartes affichées à droite, sur l’accueil (défaut 4).</span>
+      </label>
+    </div>
+    @if (settingsActionError()) {
+      <p class="st-state st-state--error" role="alert">{{ settingsActionError() }}</p>
+    }
+    @if (settingsMessage()) {
+      <p class="st-state st-state--ok" role="status">{{ settingsMessage() }}</p>
+    }
+    <div class="st-actions">
+      <button type="button" class="k-btn k-btn--primary" [disabled]="settingsSaving()" (click)="saveSettings()">
+        {{ settingsSaving() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
   </section>
 
   @if (newsActionError()) {

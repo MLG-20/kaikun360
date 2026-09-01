@@ -244,7 +244,6 @@ export class BackofficeSettingsPageComponent {
   private readonly groupLabels: Record<string, string> = {
     general: 'Général & contact',
     commissions: 'Commissions & marges',
-    accueil: 'Accueil',
   };
 
   /** Libellés des segments du barème de construction. */
