@@ -23,8 +23,10 @@ class NewsArticleResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'slug' => $this->slug,
             'title' => $this->title,
             'excerpt' => $this->excerpt,
+            'category' => $this->category,
             'body' => $this->body,
             'image' => $this->imageUrl(),
             'video_file' => $this->videoFileUrl(),

@@ -20,8 +20,8 @@
   }
   @case ('ready') {
     <article class="k-wrap news-article">
-      <a class="news-back" routerLink="/">&larr; Retour à l'accueil</a>
-      <span class="k-eyebrow news-eyebrow">Actualité Kaikun</span>
+      <a class="news-back" routerLink="/actualites">&larr; Toutes les actualités</a>
+      <span class="k-eyebrow news-eyebrow">{{ article()!.category || 'Actualité Kaikun' }}</span>
       <h1 class="news-title">{{ article()!.title }}</h1>
 
       <div class="news-media">

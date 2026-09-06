@@ -238,8 +238,10 @@ describe('HomePageComponent — vitrine tournante', () => {
 describe('HomePageComponent — actualités & héros (F15)', () => {
   const carte: NewsArticle = {
     id: 1,
+    slug: 'une-carte',
     title: 'Une carte',
     excerpt: 'Résumé',
+    category: null,
     body: null,
     image: 'https://cdn.test/news.jpg',
     videoFile: null,

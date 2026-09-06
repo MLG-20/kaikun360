@@ -12,7 +12,6 @@ import {
   HeroBannerAdmin,
   HeroSnapshot,
   HomeHeroSnapshot,
-  NewsArticleAdmin,
   NotificationEventOption,
   PlatformSetting,
   ReferenceCatalog,
@@ -21,52 +20,9 @@ import {
 import { ValidationErrorBody } from '../../../core/api/api-response.model';
 import { HeroService } from '../../../core/api/hero.service';
 import { RichTextEditorComponent } from '../../../shared/components/rich-text-editor/rich-text-editor';
-import { sanitizeRichText } from '../../../shared/components/rich-text-editor/rich-text.sanitizer';
 
 /** Onglet actif de l'écran Paramètres. */
-type SettingsTab = 'settings' | 'notifications' | 'content' | 'reference' | 'heroes' | 'news';
-
-/**
- * Saisie en cours pour un article d'actualité (F15), avant enregistrement.
- *
- * Les fichiers ne peuvent pas passer par `[(ngModel)]` : ils vivent donc à
- * part, posés par les gestionnaires `(change)` des champs `<input type=file>`.
- */
-interface NewsDraft {
-  title: string;
-  excerpt: string;
-  body: string;
-  video_url: string;
-  /**
-   * Destination du bouton (F17) — pour présenter une CARTE sans rédiger
-   * d'article : image + titre suffisent, `body` reste vide, ce lien remplace
-   * la page `/actualites/:id` comme cible du bouton public.
-   */
-  link_url: string;
-  link_label: string;
-  is_published: boolean;
-  position: number;
-  /** Nouvelle image choisie (`null` = on garde l'image déjà enregistrée). */
-  image: File | null;
-  /** Nouvelle vidéo choisie (`null` = on garde l'état déjà enregistré). */
-  video: File | null;
-  /** Retire la vidéo déposée sans en choisir une autre. */
-  removeVideo: boolean;
-}
-
-const EMPTY_NEWS_DRAFT: NewsDraft = {
-  title: '',
-  excerpt: '',
-  body: '',
-  video_url: '',
-  link_url: '',
-  link_label: '',
-  is_published: false,
-  position: 0,
-  image: null,
-  video: null,
-  removeVideo: false,
-};
+type SettingsTab = 'settings' | 'notifications' | 'content' | 'reference' | 'heroes';
 
 /**
  * Ce qui est en cours de saisie pour un bandeau, avant enregistrement.
@@ -426,19 +382,6 @@ export class BackofficeSettingsPageComponent {
   protected readonly homeHeroVideoSaving = signal(false);
   protected homeHeroVideoUrlDraft = '';
 
-  // --- Onglet Actualités Kaikun (F15) -----------------------------------------
-
-  protected readonly newsLoading = signal(false);
-  protected readonly newsLoaded = signal(false);
-  protected readonly newsError = signal(false);
-  protected readonly newsActionError = signal<string | null>(null);
-
-  protected readonly newsArticles = signal<NewsArticleAdmin[]>([]);
-  /** Article en cours d'édition (`null` = aucun, `'new'` = création). */
-  protected readonly editingNews = signal<NewsArticleAdmin | 'new' | null>(null);
-  protected newsForm: NewsDraft = { ...EMPTY_NEWS_DRAFT };
-  protected readonly newsSaving = signal(false);
-
   constructor() {
     this.loadSettings();
   }
@@ -453,7 +396,6 @@ export class BackofficeSettingsPageComponent {
       if (!this.heroesLoaded()) this.loadHeroes();
       if (!this.homeHeroLoaded()) this.loadHomeHero();
     }
-    if (tab === 'news' && !this.newsLoaded()) this.loadNews();
     if (tab === 'reference') {
       if (!this.geoLoaded()) this.loadGeography();
       if (!this.reference()) this.loadReference();
@@ -1511,164 +1453,6 @@ export class BackofficeSettingsPageComponent {
 
   // ===========================================================================
   // Présentation
-  // ===========================================================================
-  // Onglet Actualités Kaikun (F15)
-  //
-  // Cette section occupe, sur l'accueil, le même emplacement que la grille des
-  // univers : dès qu'un article est PUBLIÉ ici, il la remplace côté visiteur
-  // (bascule automatique, voir home-page.ts). Dépublier un article (sans le
-  // supprimer) suffit donc à rendre la grille des univers, le temps de
-  // préparer le prochain contenu.
-  // ===========================================================================
-
-  protected loadNews(): void {
-    this.newsLoading.set(true);
-    this.newsError.set(false);
-    this.admin.news().subscribe({
-      next: (articles) => {
-        this.newsArticles.set(articles);
-        this.newsLoaded.set(true);
-        this.newsLoading.set(false);
-      },
-      error: () => {
-        this.newsError.set(true);
-        this.newsLoading.set(false);
-      },
-    });
-  }
-
-  protected newNews(): void {
-    this.newsActionError.set(null);
-    this.newsForm = { ...EMPTY_NEWS_DRAFT };
-    this.editingNews.set('new');
-  }
-
-  protected editNews(article: NewsArticleAdmin): void {
-    this.newsActionError.set(null);
-    this.newsForm = {
-      title: article.title,
-      excerpt: article.excerpt ?? '',
-      body: article.body ?? '',
-      video_url: article.video_url ?? '',
-      link_url: article.link_url ?? '',
-      link_label: article.link_label ?? '',
-      is_published: article.is_published,
-      position: article.position,
-      image: null,
-      video: null,
-      removeVideo: false,
-    };
-    this.editingNews.set(article);
-  }
-
-  protected cancelNews(): void {
-    this.editingNews.set(null);
-    this.newsActionError.set(null);
-  }
-
-  protected onNewsImage(event: Event): void {
-    this.newsForm.image = (event.target as HTMLInputElement).files?.[0] ?? null;
-  }
-
-  protected onNewsVideo(event: Event): void {
-    this.newsForm.video = (event.target as HTMLInputElement).files?.[0] ?? null;
-    // Choisir un fichier annule un retrait demandé juste avant.
-    if (this.newsForm.video) this.newsForm.removeVideo = false;
-  }
-
-  /** Nom du fichier vidéo choisi mais pas encore enregistré, ou `null`. */
-  protected newsVideoPending(): string | null {
-    return this.newsForm.video?.name ?? null;
-  }
-
-  /** L'article en cours d'édition porte déjà une vidéo DÉPOSÉE (pas un embed). */
-  protected readonly editingNewsHasVideoFile = computed(() => {
-    const editing = this.editingNews();
-    return editing !== null && editing !== 'new' && !!editing.video_file;
-  });
-
-  /**
-   * Sans texte rédigé, une ligne ne devient une carte publique QUE si elle a
-   * un lien (voir `cartesLibres` sur l'accueil) — sans les deux, elle est
-   * publiée mais n'apparaît nulle part. Sert à afficher le lien comme
-   * obligatoire dans ce cas et à bloquer l'enregistrement en conséquence.
-   */
-  protected newsLinkRequired(): boolean {
-    return sanitizeRichText(this.newsForm.body ?? '').trim() === '';
-  }
-
-  protected saveNews(): void {
-    const editing = this.editingNews();
-    if (!editing) return;
-
-    if (editing === 'new' && !this.newsForm.image) {
-      this.newsActionError.set('Une image de couverture est obligatoire.');
-      return;
-    }
-
-    if (this.newsLinkRequired() && !this.newsForm.link_url.trim()) {
-      this.newsActionError.set(
-        'Sans texte rédigé, le lien du bouton est obligatoire — sinon cette ligne ne s’affichera nulle part sur l’accueil.',
-      );
-      return;
-    }
-
-    this.newsActionError.set(null);
-    this.newsSaving.set(true);
-
-    const form = this.newsForm;
-    const request$ =
-      editing === 'new'
-        ? this.admin.createNews({
-            title: form.title.trim(),
-            excerpt: form.excerpt.trim() || undefined,
-            body: form.body || undefined,
-            image: form.image as File,
-            video: form.video ?? undefined,
-            videoUrl: form.video ? undefined : form.video_url.trim() || undefined,
-            linkUrl: form.link_url.trim() || undefined,
-            linkLabel: form.link_label.trim() || undefined,
-            isPublished: form.is_published,
-            position: form.position,
-          })
-        : this.admin.updateNews(editing.id, {
-            title: form.title.trim(),
-            excerpt: form.excerpt.trim() || undefined,
-            body: form.body || undefined,
-            image: form.image ?? undefined,
-            video: form.video ?? undefined,
-            removeVideo: form.removeVideo,
-            // On n'écrase l'URL que si aucun fichier n'a été déposé —
-            // le fichier l'emporte déjà côté serveur, envoyer les deux
-            // prêterait à confusion sur ce qui sera réellement affiché.
-            videoUrl: form.video ? undefined : form.video_url.trim(),
-            linkUrl: form.link_url.trim(),
-            linkLabel: form.link_label.trim(),
-            isPublished: form.is_published,
-            position: form.position,
-          });
-
-    request$.subscribe({
-      next: () => {
-        this.newsSaving.set(false);
-        this.editingNews.set(null);
-        this.loadNews();
-      },
-      error: (error: HttpErrorResponse) => {
-        this.newsSaving.set(false);
-        this.newsActionError.set(this.messageFor(error));
-      },
-    });
-  }
-
-  protected deleteNews(article: NewsArticleAdmin): void {
-    this.newsActionError.set(null);
-    this.admin.deleteNews(article.id).subscribe({
-      next: () => this.newsArticles.update((list) => list.filter((item) => item.id !== article.id)),
-      error: (error: HttpErrorResponse) => this.newsActionError.set(this.messageFor(error)),
-    });
-  }
-
   // ===========================================================================
 
   protected shortDate(iso: string | null): string {

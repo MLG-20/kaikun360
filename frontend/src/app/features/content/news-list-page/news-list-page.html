@@ -1,0 +1,84 @@
+@switch (state()) {
+  @case ('loading') {
+    <section class="k-wrap news-state">
+      <p>Chargement…</p>
+    </section>
+  }
+  @case ('failed') {
+    <section class="k-wrap news-state">
+      <h1>Une erreur est survenue</h1>
+      <p>Impossible d'afficher les actualités pour le moment. Merci de réessayer plus tard.</p>
+      <a class="k-btn k-btn--primary" routerLink="/">Retour à l'accueil</a>
+    </section>
+  }
+  @case ('ready') {
+    <section class="k-wrap news-list">
+      <header class="section-head news-list__head">
+        <span class="k-eyebrow">Actualités Kaikun</span>
+        <h1 class="news-list__title">Toute l'actualité, au même endroit</h1>
+        <p class="news-list__subtitle">
+          Les dernières nouvelles de Kaikun 360 : vie de la plateforme, partenariats et actualités du secteur.
+        </p>
+      </header>
+
+      @if (articlesFiltres().length === 0) {
+        <p class="news-list__empty">Aucune actualité pour le moment.</p>
+      } @else {
+        @if (categories().length > 0) {
+          <nav class="news-list__filters" aria-label="Filtrer par catégorie">
+            <button
+              type="button"
+              class="chip"
+              [class.chip--active]="categorieActive() === null"
+              (click)="choisirCategorie(null)">
+              Toutes
+            </button>
+            @for (categorie of categories(); track categorie) {
+              <button
+                type="button"
+                class="chip"
+                [class.chip--active]="categorieActive() === categorie"
+                (click)="choisirCategorie(categorie)">
+                {{ categorie }}
+              </button>
+            }
+          </nav>
+        }
+
+        @if (articleVedette(); as vedette) {
+          <a class="news-hero k-card" [routerLink]="lienArticle(vedette)">
+            <img class="news-hero__image" [src]="vedette.image" [alt]="vedette.title" loading="lazy" />
+            <div class="news-hero__text">
+              @if (vedette.category) {
+                <span class="news-badge">{{ vedette.category }}</span>
+              }
+              <h2 class="news-hero__title">{{ vedette.title }}</h2>
+              @if (vedette.excerpt) {
+                <p class="news-hero__excerpt">{{ vedette.excerpt }}</p>
+              }
+            </div>
+          </a>
+        }
+
+        @if (autresArticles().length > 0) {
+          <div class="news-grid">
+            @for (article of autresArticles(); track article.id) {
+              <a class="news-grid-card k-card" [routerLink]="lienArticle(article)">
+                <img class="news-grid-card__image" [src]="article.image" [alt]="article.title" loading="lazy" />
+                <div class="news-grid-card__text">
+                  @if (article.category) {
+                    <span class="news-badge">{{ article.category }}</span>
+                  }
+                  <h3 class="news-grid-card__title">{{ article.title }}</h3>
+                  @if (article.excerpt) {
+                    <p class="news-grid-card__excerpt">{{ article.excerpt }}</p>
+                  }
+                </div>
+              </a>
+            }
+          </div>
+        }
+      }
+    </section>
+  }
+}

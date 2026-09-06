@@ -40,7 +40,8 @@ type BoIcon =
   | 'clock'
   | 'sliders'
   | 'inbox'
-  | 'chat';
+  | 'chat'
+  | 'megaphone';
 
 /** Une rubrique de navigation du poste de commandement. */
 interface BoNavItem {
@@ -203,6 +204,14 @@ export class BackofficeLayoutComponent {
     { label: 'Avis & qualité', path: 'qualite', icon: 'star', ready: true },
     // CDC §6 — module 14 « Paramètres ».
     { label: 'Paramètres', path: 'parametres', icon: 'sliders', ready: true },
+
+    // Hors §6 — contenu de vitrine (2026-09-06), pas un module du cahier des
+    // charges : extrait de Paramètres pour sa propre entrée de menu, à la
+    // demande du client (une actu future, gérée facilement par l'équipe,
+    // sans attendre le prochain déploiement). Rangée juste après Paramètres,
+    // dont elle partage la permission — même famille de contenu, pas de
+    // numéro de module à suivre.
+    { label: 'Actualités', path: 'actualites', icon: 'megaphone', ready: true },
 
     // CDC §7 — poste de commandement de l'équipe (F7.1), hors des 14 modules.
     { label: 'Équipe', path: 'equipe', icon: 'users', ready: true },

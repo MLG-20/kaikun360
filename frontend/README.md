@@ -2370,6 +2370,51 @@ d'`AnalyticsService`/GA4 (F16) :
 - Complète **UptimeRobot** (sonde de disponibilité externe, sans code) — voir
   le README racine, section « Monitoring ».
 
+### Une vraie page « Actualités », distincte de l'aperçu de l'accueil (F19, hors CDC)
+
+Demande du client (2026-09-06) : une page dédiée où l'équipe publie ses
+communications (texte, photo, vidéo, lien), au-delà du seul aperçu de
+l'accueil (vidéo + 4 cartes maximum, F17).
+
+- **Le critère qui sépare les deux affichages ne change pas** : une ligne
+  `NewsArticle` SANS `body` mais avec `link_url` reste une carte de
+  navigation pour la section « À découvrir » de l'accueil (`cartesLibres`,
+  `home-page.ts`, inchangé depuis F17) ; une ligne AVEC `body` est un vrai
+  article, réservé à la nouvelle page. Pas de champ de destination ajouté —
+  il redirait deux fois la même information.
+- **Nouvelle page liste `/actualites`** (`NewsListPageComponent`,
+  `features/content/news-list-page/`) : filtre d'abord les articles reçus de
+  `NewsService.list()` à ceux qui ont un `body` (exclut les cartes de
+  navigation type « Immobilier vérifié »), puis calcule les catégories
+  distinctes utilisées pour des chips de filtre — entièrement côté client,
+  volume d'articles faible, pas d'aller-retour serveur à chaque clic. Premier
+  article (déjà trié par `position` côté back) mis en avant en « vedette »,
+  le reste en grille. Lien « Voir toutes les actualités » ajouté sur
+  l'aperçu de l'accueil.
+- **Détail par slug ou par id** : `NewsDetailPageComponent` transmet la
+  valeur brute du paramètre de route à `NewsService.get(idOrSlug)` — le
+  backend résout les deux (voir `backend/README.md`, F19). Le lien « Retour »
+  pointe désormais vers `/actualites` plutôt que l'accueil.
+- **Écran back-office dédié**, extrait de l'onglet « Actualités » de
+  `BackofficeSettingsPageComponent` (`features/backoffice/news/`, code
+  déplacé et non dupliqué) — sa propre entrée de menu dans le rail
+  (`backoffice-layout.ts`), rangée par affinité juste après Paramètres, dont
+  elle partage la permission `gerer:parametres` (hors §6 du CDC, pas de
+  numéro de module à suivre). **Deux sous-onglets**, un par destination :
+  - *À découvrir* — le formulaire carte (image, lien, vidéo) tel qu'il
+    existait, plus le réglage `home.discover_cards_count` (nombre de cartes
+    affichées sur l'accueil), remonté ici depuis l'ancien onglet Réglages.
+  - *Page Actualités* — catégorie (champ texte libre avec `<datalist>` des
+    catégories déjà utilisées), résumé, corps rédigé via l'éditeur riche
+    maison (`app-rich-text-editor`), lien externe facultatif, et le lien
+    public généré (`/actualites/{slug}`) affiché en lecture seule.
+  La liste et le formulaire du sous-onglet actif ne montrent que les lignes
+  qui lui appartiennent (même critère `body` que côté public).
+- **Vérifié par aperçu visuel headless** (TestBed → capture Chrome sans
+  navigateur, recette de F13.1) et par navigation réelle sur les serveurs de
+  développement : page liste avec plusieurs catégories, page de détail par
+  slug et par ancien id, écran back-office avec ses deux sous-onglets.
+
 ### Commandes utiles
 
 ```bash

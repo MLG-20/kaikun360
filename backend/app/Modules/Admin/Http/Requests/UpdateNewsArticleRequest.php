@@ -23,6 +23,7 @@ class UpdateNewsArticleRequest extends FormRequest
         return [
             'title' => ['sometimes', 'string', 'max:180'],
             'excerpt' => ['sometimes', 'nullable', 'string', 'max:300'],
+            'category' => ['sometimes', 'nullable', 'string', 'max:60'],
             'body' => ['sometimes', 'nullable', 'string'],
             'image' => ['sometimes', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
             'video' => ['sometimes', 'file', 'mimes:mp4,webm,mov,quicktime', 'max:81920'],

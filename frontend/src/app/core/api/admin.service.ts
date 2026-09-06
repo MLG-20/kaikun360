@@ -1800,8 +1800,12 @@ export interface HomeHeroSnapshot {
 /** Un article d'actualité, vu du back-office (F15). */
 export interface NewsArticleAdmin {
   id: number;
+  /** URL lisible (2026-09-06), générée automatiquement à partir du titre. */
+  slug: string | null;
   title: string;
   excerpt: string | null;
+  /** Thème libre saisi par l'équipe (« Vie de la plateforme », « Partenaires »…). */
+  category: string | null;
   body: string | null;
   image: string;
   video_file: string | null;
@@ -3476,6 +3480,7 @@ export class AdminService {
   createNews(changes: {
     title: string;
     excerpt?: string;
+    category?: string;
     body?: string;
     image: File;
     video?: File;
@@ -3489,6 +3494,7 @@ export class AdminService {
     const form = new FormData();
     form.append('title', changes.title);
     if (changes.excerpt !== undefined) form.append('excerpt', changes.excerpt);
+    if (changes.category !== undefined) form.append('category', changes.category);
     if (changes.body !== undefined) form.append('body', changes.body);
     form.append('image', changes.image);
     if (changes.video) form.append('video', changes.video);
@@ -3514,6 +3520,7 @@ export class AdminService {
     changes: {
       title?: string;
       excerpt?: string;
+      category?: string;
       body?: string;
       image?: File;
       video?: File;
@@ -3528,6 +3535,7 @@ export class AdminService {
     const form = new FormData();
     if (changes.title !== undefined) form.append('title', changes.title);
     if (changes.excerpt !== undefined) form.append('excerpt', changes.excerpt);
+    if (changes.category !== undefined) form.append('category', changes.category);
     if (changes.body !== undefined) form.append('body', changes.body);
     if (changes.image) form.append('image', changes.image);
     if (changes.video) form.append('video', changes.video);

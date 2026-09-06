@@ -13,8 +13,16 @@ import { environment } from '../../../environments/environment';
  */
 export interface NewsArticle {
   id: number;
+  /** URL lisible (2026-09-06), ex. `mon-titre` pour `/actualites/mon-titre`. */
+  slug: string | null;
   title: string;
   excerpt: string | null;
+  /**
+   * Thème libre saisi par l'équipe (« Vie de la plateforme », « Partenaires »…) —
+   * pas de table de référence, la page liste calcule elle-même les catégories
+   * distinctes utilisées pour ses filtres.
+   */
+  category: string | null;
   body: string | null;
   image: string;
   videoFile: string | null;
@@ -30,8 +38,10 @@ export interface NewsArticle {
 
 interface NewsArticleApi {
   id: number;
+  slug: string | null;
   title: string;
   excerpt: string | null;
+  category: string | null;
   body: string | null;
   image: string;
   video_file: string | null;
@@ -71,21 +81,25 @@ export class NewsService {
   }
 
   /**
-   * GET /news/{id} — détail d'un article publié, pour la page dédiée. Renvoie
-   * 404 si l'article n'existe pas ou n'est pas publié (à traiter côté
+   * GET /news/{idOrSlug} — détail d'un article publié, pour la page dédiée.
+   * Accepte un id numérique (anciens liens) ou un slug (nouvelles URLs
+   * lisibles) — le backend résout les deux (`NewsArticle::resolveRouteBinding`).
+   * Renvoie 404 si l'article n'existe pas ou n'est pas publié (à traiter côté
    * appelant comme un état « introuvable »).
    */
-  get(id: number): Observable<NewsArticle> {
+  get(idOrSlug: number | string): Observable<NewsArticle> {
     return this.http
-      .get<{ data: { article: NewsArticleApi } }>(`${this.api}/news/${id}`)
+      .get<{ data: { article: NewsArticleApi } }>(`${this.api}/news/${idOrSlug}`)
       .pipe(map((res) => this.depuisApi(res.data.article)));
   }
 
   private depuisApi(a: NewsArticleApi): NewsArticle {
     return {
       id: a.id,
+      slug: a.slug,
       title: a.title,
       excerpt: a.excerpt,
+      category: a.category,
       body: a.body,
       image: a.image,
       videoFile: a.video_file,

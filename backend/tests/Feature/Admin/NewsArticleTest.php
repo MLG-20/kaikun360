@@ -172,6 +172,58 @@ class NewsArticleTest extends TestCase
         Storage::disk('public')->assertExists($article->fresh()->image_path);
     }
 
+    // ── 2026-09-06 : catégorie et slug ─────────────────────────────────────
+
+    public function test_le_slug_est_genere_automatiquement_a_la_creation(): void
+    {
+        Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
+
+        $response = $this->post('/api/v1/admin/news', [
+            'title' => 'Kaikun 360 ouvre un nouveau bureau à Dakar',
+            'category' => 'Vie de la plateforme',
+            'image' => $this->image(),
+        ]);
+
+        $response->assertCreated()->assertJsonFragment([
+            'slug' => 'kaikun-360-ouvre-un-nouveau-bureau-a-dakar',
+            'category' => 'Vie de la plateforme',
+        ]);
+    }
+
+    public function test_un_titre_en_collision_obtient_un_slug_suffixe(): void
+    {
+        Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
+        NewsArticle::factory()->create(['title' => 'Actualité Kaikun', 'slug' => 'actualite-kaikun']);
+
+        $response = $this->post('/api/v1/admin/news', [
+            'title' => 'Actualité Kaikun',
+            'image' => $this->image(),
+        ]);
+
+        $response->assertCreated()->assertJsonFragment(['slug' => 'actualite-kaikun-2']);
+    }
+
+    public function test_le_slug_ne_change_pas_si_le_titre_ne_change_pas(): void
+    {
+        $article = NewsArticle::factory()->create(['title' => 'Titre stable']);
+        $slugInitial = $article->slug;
+        Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
+
+        $this->post("/api/v1/admin/news/{$article->id}", ['excerpt' => 'Nouveau résumé'])
+            ->assertOk()
+            ->assertJsonFragment(['slug' => $slugInitial]);
+    }
+
+    public function test_le_slug_est_regenere_si_le_titre_change(): void
+    {
+        $article = NewsArticle::factory()->create(['title' => 'Ancien titre']);
+        Sanctum::actingAs($this->withRole(UserRole::ADMIN->value));
+
+        $this->post("/api/v1/admin/news/{$article->id}", ['title' => 'Nouveau titre'])
+            ->assertOk()
+            ->assertJsonFragment(['slug' => 'nouveau-titre']);
+    }
+
     public function test_supprimer_un_article_efface_ses_fichiers(): void
     {
         $article = NewsArticle::factory()->create([

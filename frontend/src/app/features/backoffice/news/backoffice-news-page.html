@@ -1,0 +1,340 @@
+<header class="st-head">
+  <div>
+    <h1 class="st-title">Actualités</h1>
+    <p class="st-sub">
+      Pilotez ce qui apparaît dans la section « À découvrir » de l’accueil et
+      les articles de la page publique « Actualités ».
+    </p>
+  </div>
+</header>
+
+<!-- Sous-onglets : la même table sert deux destinations distinctes, déjà
+     séparées côté public (voir backoffice-news-page.ts). -->
+<div class="st-subtabs" role="tablist">
+  <button
+    type="button"
+    class="st-subtab"
+    role="tab"
+    [class.is-active]="tab() === 'decouvrir'"
+    [attr.aria-selected]="tab() === 'decouvrir'"
+    (click)="switchTab('decouvrir')">
+    À découvrir (accueil)
+  </button>
+  <button
+    type="button"
+    class="st-subtab"
+    role="tab"
+    [class.is-active]="tab() === 'actualites'"
+    [attr.aria-selected]="tab() === 'actualites'"
+    (click)="switchTab('actualites')">
+    Page Actualités
+  </button>
+</div>
+
+@if (tab() === 'decouvrir') {
+  <section class="st-card">
+    <h2 class="st-card-title">Comment ça marche</h2>
+    <p class="st-card-sub">
+      Cette section occupe, sur l’accueil, l’emplacement de la grille des
+      univers. <strong>Dès qu’une carte est publiée ici, elle la remplace</strong> —
+      sans carte publiée, la grille reprend automatiquement sa place. Pour
+      revenir à la grille sans perdre une carte, il suffit de la
+      <em>dépublier</em> (pas besoin de la supprimer).
+    </p>
+    <p class="st-card-sub">
+      Une carte, c’est une <strong>image et un lien</strong>, sans texte
+      rédigé — elle renvoie vers une autre page du site (immobilier,
+      tourisme…) plutôt que vers un article. Pour un vrai article avec du
+      texte, utilisez l’onglet « Page Actualités ».
+    </p>
+    <p class="st-card-sub">
+      La <strong>vidéo</strong> est facultative et a deux formes : un fichier
+      que vous déposez (déjà compressé de votre côté — rien n’est retraité
+      ici, 80 Mo maximum) ou un lien d’intégration YouTube/Vimeo. Si les deux
+      sont saisis, le fichier déposé est celui qui s’affiche.
+    </p>
+  </section>
+
+  <section class="st-card">
+    <h2 class="st-card-title">Nombre de cartes affichées sur l’accueil</h2>
+    <p class="st-card-sub">
+      Plafonne combien de cartes publiées ci-dessous apparaissent dans la
+      section « À découvrir » — publier plus de cartes que ce nombre n’en
+      affiche pas davantage tant que le réglage n’est pas monté.
+    </p>
+    @if (discoverCardsCountLoading()) {
+      <p class="st-state" role="status">Chargement…</p>
+    } @else {
+      <div class="st-grid">
+        <label class="st-field">
+          <span class="st-label">Cartes affichées</span>
+          <input
+            class="k-input"
+            type="number"
+            min="0"
+            step="1"
+            name="discoverCardsCount"
+            [(ngModel)]="discoverCardsCountDraft" />
+        </label>
+      </div>
+      @if (discoverCardsCountError()) {
+        <p class="st-state st-state--error" role="alert">{{ discoverCardsCountError() }}</p>
+      }
+      @if (discoverCardsCountMessage()) {
+        <p class="st-state st-state--ok" role="status">{{ discoverCardsCountMessage() }}</p>
+      }
+      <div class="st-actions">
+        <button
+          type="button"
+          class="k-btn k-btn--primary"
+          [disabled]="discoverCardsCountSaving()"
+          (click)="saveDiscoverCardsCount()">
+          {{ discoverCardsCountSaving() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </div>
+    }
+  </section>
+} @else {
+  <section class="st-card">
+    <h2 class="st-card-title">Comment ça marche</h2>
+    <p class="st-card-sub">
+      Ces articles alimentent la page publique <code class="st-code">/actualites</code>,
+      distincte de l’accueil : titre, catégorie, texte rédigé, image, vidéo,
+      lien — tout ce qu’il faut pour une vraie actualité (nouveauté du
+      moment, vie de la plateforme, partenariat…).
+    </p>
+    <p class="st-card-sub">
+      La <strong>catégorie</strong> est un texte libre : elle sert de filtre
+      sur la page publique. Le <strong>lien de l’article</strong>
+      (<code class="st-code">/actualites/…</code>) est généré automatiquement
+      à partir du titre.
+    </p>
+  </section>
+}
+
+@if (newsActionError()) {
+  <p class="st-state st-state--error" role="alert">{{ newsActionError() }}</p>
+}
+
+@if (editingNews()) {
+  <section class="st-card">
+    <h2 class="st-card-title">
+      {{ editingNews() === 'new' ? 'Nouvel élément' : 'Modifier' }}
+      {{ tab() === 'decouvrir' ? '— carte À découvrir' : '— article Actualités' }}
+    </h2>
+
+    <label class="st-field st-field--full">
+      <span class="st-label">Titre</span>
+      <input class="k-input" type="text" name="newsTitle" [(ngModel)]="newsForm.title" />
+    </label>
+
+    @if (tab() === 'actualites') {
+      <div class="st-grid">
+        <label class="st-field">
+          <span class="st-label">Catégorie</span>
+          <input
+            class="k-input"
+            type="text"
+            name="newsCategory"
+            list="news-categories"
+            [(ngModel)]="newsForm.category"
+            placeholder="Vie de la plateforme" />
+          <datalist id="news-categories">
+            @for (categorie of categoriesConnues(); track categorie) {
+              <option [value]="categorie"></option>
+            }
+          </datalist>
+          <span class="st-hint">Sert de filtre sur la page publique des actualités.</span>
+        </label>
+
+        @if (editingExistingArticle(); as article) {
+          <label class="st-field">
+            <span class="st-label">Lien de l’article</span>
+            <span class="st-code">/actualites/{{ article.slug || article.id }}</span>
+            <span class="st-hint">Généré automatiquement à partir du titre, non modifiable.</span>
+          </label>
+        }
+      </div>
+    }
+
+    <div class="st-grid">
+      <label class="st-field">
+        <span class="st-label">Image de couverture{{ editingNews() === 'new' ? ' (obligatoire)' : '' }}</span>
+        <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onNewsImage($event)" />
+        @if (editingNews() !== 'new' && !newsForm.image) {
+          <span class="st-hint">Laissez vide pour garder l’image actuelle.</span>
+        }
+      </label>
+
+      <label class="st-field">
+        <span class="st-label">Position</span>
+        <input class="k-input" type="number" min="0" name="newsPosition" [(ngModel)]="newsForm.position" />
+        <span class="st-hint">Les positions basses passent en premier.</span>
+      </label>
+    </div>
+
+    <div class="st-grid">
+      <label class="st-field">
+        <span class="st-label">Vidéo déposée</span>
+        <input type="file" accept="video/mp4,video/webm,video/quicktime" (change)="onNewsVideo($event)" />
+        @if (newsVideoPending(); as name) {
+          <span class="st-hint">{{ name }} — à enregistrer</span>
+        }
+        @if (editingNewsHasVideoFile() && !newsForm.video) {
+          <label class="st-switch">
+            <input type="checkbox" name="newsRemoveVideo" [(ngModel)]="newsForm.removeVideo" />
+            <span class="st-switch-text">
+              <strong>Retirer la vidéo déposée</strong>
+            </span>
+          </label>
+        }
+      </label>
+
+      <label class="st-field">
+        <span class="st-label">…ou lien vidéo (YouTube, Vimeo)</span>
+        <input
+          class="k-input"
+          type="url"
+          name="newsVideoUrl"
+          [(ngModel)]="newsForm.video_url"
+          placeholder="https://www.youtube.com/watch?v=…"
+          [disabled]="!!newsForm.video" />
+        <span class="st-hint">Ignoré si une vidéo est déposée ci-dessus.</span>
+      </label>
+    </div>
+
+    @if (tab() === 'actualites') {
+      <label class="st-field st-field--full">
+        <span class="st-label">Résumé (affiché sur la carte de la page Actualités)</span>
+        <textarea
+          class="k-input st-textarea"
+          rows="2"
+          maxlength="300"
+          name="newsExcerpt"
+          [(ngModel)]="newsForm.excerpt"></textarea>
+      </label>
+
+      <div class="st-field st-field--full">
+        <span class="st-label">Contenu de l’article</span>
+        <app-rich-text-editor
+          name="newsBody"
+          ariaLabel="Contenu de l’article"
+          placeholder="Rédigez le texte de l’article. Utilisez « T1 » pour les titres de section."
+          [rows]="10"
+          [(ngModel)]="newsForm.body" />
+        <span class="st-hint">
+          Sans texte ici, cet élément basculerait dans « À découvrir » plutôt
+          que sur la page Actualités.
+        </span>
+      </div>
+    }
+
+    <div class="st-grid">
+      <label class="st-field">
+        <span class="st-label">
+          Lien
+          {{ tab() === 'decouvrir' ? '(obligatoire)' : '(facultatif)' }}
+        </span>
+        <input
+          class="k-input"
+          type="url"
+          name="newsLinkUrl"
+          [(ngModel)]="newsForm.link_url"
+          placeholder="https://kaikun360.com/immobilier" />
+        @if (tab() === 'decouvrir') {
+          <span class="st-hint">
+            Une carte n’a pas de page à elle : sans lien, elle ne mènerait nulle part.
+          </span>
+        } @else {
+          <span class="st-hint">Lien externe facultatif, en plus de la page de l’article.</span>
+        }
+      </label>
+
+      <label class="st-field">
+        <span class="st-label">Texte du lien</span>
+        <input
+          class="k-input"
+          type="text"
+          name="newsLinkLabel"
+          [(ngModel)]="newsForm.link_label"
+          maxlength="100"
+          placeholder="Découvrir" />
+      </label>
+    </div>
+
+    <label class="st-switch">
+      <input type="checkbox" name="newsPublished" [(ngModel)]="newsForm.is_published" />
+      <span class="st-switch-text">
+        <strong>Publié</strong>
+        <em>Un élément masqué n’apparaît pas côté public.</em>
+      </span>
+    </label>
+
+    <div class="st-actions">
+      <button type="button" class="k-btn k-btn--ghost" (click)="cancelNews()">Annuler</button>
+      <button type="button" class="k-btn k-btn--primary" [disabled]="newsSaving()" (click)="saveNews()">
+        {{ newsSaving() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  </section>
+} @else {
+  <div class="st-actions st-actions--start">
+    <button type="button" class="k-btn k-btn--primary" (click)="newNews()">
+      {{ tab() === 'decouvrir' ? 'Nouvelle carte' : 'Nouvel article' }}
+    </button>
+  </div>
+}
+
+@if (newsLoading()) {
+  <p class="st-state" role="status">Chargement…</p>
+} @else if (newsError()) {
+  <p class="st-state st-state--error" role="alert">Impossible de charger les actualités.</p>
+} @else {
+  <div class="st-table-wrap">
+    <table class="st-table">
+      <thead>
+        <tr>
+          <th aria-label="Image"></th>
+          <th>Titre</th>
+          @if (tab() === 'actualites') {
+            <th>Catégorie</th>
+          }
+          <th>Statut</th>
+          <th>Modifié le</th>
+          <th aria-label="Actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (article of articlesDuSousOnglet(); track article.id) {
+          <tr>
+            <td><img [src]="article.image" [alt]="article.title" class="st-hero-img" style="width:72px;height:44px;object-fit:cover;border-radius:6px" /></td>
+            <td><span class="st-strong">{{ article.title }}</span></td>
+            @if (tab() === 'actualites') {
+              <td><span class="st-muted">{{ article.category || '—' }}</span></td>
+            }
+            <td>
+              <span class="st-badge" [class.is-ok]="article.is_published" [class.is-off]="!article.is_published">
+                {{ article.is_published ? 'Publié' : 'Masqué' }}
+              </span>
+            </td>
+            <td><span class="st-muted">{{ shortDate(article.updated_at) }}</span></td>
+            <td class="st-actions-cell">
+              <div class="st-btns">
+                <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="editNews(article)">Modifier</button>
+                <button type="button" class="k-btn k-btn--sm k-btn--danger" (click)="deleteNews(article)">Supprimer</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="tab() === 'actualites' ? 6 : 5" class="st-empty">
+              {{ tab() === 'decouvrir'
+                ? 'Aucune carte pour l’instant — la grille des univers reste affichée sur l’accueil.'
+                : 'Aucun article pour l’instant.' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

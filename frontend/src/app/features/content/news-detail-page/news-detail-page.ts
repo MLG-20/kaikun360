@@ -74,18 +74,19 @@ export class NewsDetailPageComponent {
   private readonly loader = toSignal(
     this.route.paramMap.pipe(
       map((params) => params.get('id')),
-      switchMap((id) => {
+      switchMap((idOrSlug) => {
         this.state.set('loading');
         this.article.set(null);
         this.videoEmbedUrl.set(null);
 
-        const numericId = Number(id);
-        if (!id || !Number.isInteger(numericId)) {
+        if (!idOrSlug) {
           this.state.set('notfound');
           return of(null);
         }
 
-        return this.news.get(numericId).pipe(
+        // Id numérique (anciens liens) ou slug (nouvelles URLs lisibles) —
+        // le backend résout les deux, on transmet la valeur brute telle quelle.
+        return this.news.get(idOrSlug).pipe(
           tap((article) => {
             this.article.set(article);
             if (article.videoUrl && this.estNavigateur) {
@@ -96,7 +97,7 @@ export class NewsDetailPageComponent {
               title: article.title,
               description: article.excerpt ?? this.resumer(article.body ?? ''),
               type: 'article',
-              canonicalPath: `/actualites/${article.id}`,
+              canonicalPath: `/actualites/${article.slug ?? article.id}`,
               image: article.image,
             });
           }),

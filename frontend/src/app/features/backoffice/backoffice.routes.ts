@@ -480,6 +480,16 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Paramètres & contenu — Back-office Kaikun 360',
       },
       {
+        // Actualités (2026-09-06) : extrait de Paramètres pour sa propre
+        // entrée de menu — hors §6, même permission (contenu de vitrine).
+        path: 'actualites',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('actualites') },
+        loadComponent: () =>
+          import('./news/backoffice-news-page').then((m) => m.BackofficeNewsPageComponent),
+        title: 'Actualités — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         canActivate: [permissionGuard],

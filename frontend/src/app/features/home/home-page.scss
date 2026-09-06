@@ -435,6 +435,20 @@
   }
 }
 
+// Lien vers la page liste dédiée (2026-09-06) — l'accueil ne montre qu'un
+// aperçu (vidéo + 4 cartes maximum), ce lien mène à l'ensemble des articles.
+.news-see-all {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--k-brand);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 
 
 // --- Section 3 : Protocole de confiance (navy) -----------------------------

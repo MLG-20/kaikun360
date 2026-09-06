@@ -181,6 +181,7 @@ présentation à distance sont dans [`scripts/README.md`](scripts/README.md).
   - [Phase F16 — Vrai logo du client, et essai visuel du héros d'accueil](#phase-f16--vrai-logo-du-client-et-essai-visuel-du-héros-daccueil)
   - [Phase F17 — Le client garde la main sur son profil, sa bande d'accueil et ses actualités](#phase-f17--le-client-garde-la-main-sur-son-profil-sa-bande-daccueil-et-ses-actualités)
   - [Phase F18 — L'espace diaspora devient un espace connecté à part entière](#phase-f18--lespace-diaspora-devient-un-espace-connecté-à-part-entière)
+  - [Phase F19 — Une vraie page « Actualités », distincte de l'aperçu de l'accueil](#phase-f19--une-vraie-page-actualités-distincte-de-laperçu-de-laccueil)
   - [Phase F8 — État global, design system et finitions](#phase-f8--état-global-design-system-et-finitions)
   - [Phase F9 — SEO, performance et accessibilité](#phase-f9--seo-performance-et-accessibilité)
 - [Critères d'acceptation transverses](#critères-dacceptation-transverses)
@@ -889,6 +890,58 @@ périmètre fonctionnel, en tête de ce document) — l'implémentation avait d�
 dévié en le rattachant au Client depuis F3.8, et dévie plus loin ici en lui
 donnant un espace propre. Décision du client, documentée pour ne pas repasser
 dessus : voir aussi la mise à jour du rappel de périmètre plus haut.
+
+### Phase F19 — Une vraie page « Actualités », distincte de l'aperçu de l'accueil ⚠️ **HORS CAHIER DES CHARGES**
+
+Demande du client (2026-09-06) : mettre en avant une actualité ponctuelle
+(les JOJ 2026, que le Sénégal organise) et, plus largement, disposer d'une
+page dédiée où l'équipe ajoute librement ses futures communications — texte,
+photo, vidéo, lien — au lieu du seul aperçu (vidéo + 4 cartes maximum) de
+l'accueil.
+
+- [x] **`category` et `slug` sur `NewsArticle`.** `category` reste un texte
+  libre saisi par l'équipe (pas de table de référence à part : la page
+  publique calcule elle-même les catégories distinctes utilisées, en filtre).
+  `slug` est généré automatiquement à partir du titre (collisions résolues
+  par suffixe numérique), régénéré seulement si le titre change — jamais sur
+  la sauvegarde d'un autre champ, pour ne pas faire bouger silencieusement
+  une URL déjà partagée ou indexée (Google Search Console). L'ancien lien
+  numérique (`/actualites/{id}`) reste servi à l'identique
+  (`resolveRouteBinding` accepte id ou slug), sans redirection ni code
+  dupliqué. ⚠️ **Piège rencontré** : la migration de back-fill des slugs
+  existants utilisait `update()`, mass-assigné — silencieusement ignoré
+  puisque `slug` est volontairement absent de `$fillable` (généré côté
+  serveur uniquement). Corrigé en `forceFill()->saveQuietly()`.
+- [x] **Deux destinations, un seul critère qui les sépare : la présence d'un
+  corps rédigé.** Reprise du principe déjà posé en F17 (une ligne SANS `body`
+  mais avec un lien est une carte de navigation ; une ligne AVEC `body` est
+  un article) plutôt qu'un champ de destination redondant. La section « À
+  découvrir » de l'accueil ne voit toujours que les cartes et les vidéos
+  (inchangé, F17) ; la nouvelle page publique `/actualites` (`NewsListPageComponent`)
+  n'affiche que les vrais articles — une carte de navigation (« Immobilier
+  vérifié » → `/immobilier`) n'a rien à faire au milieu d'une liste
+  d'actualités.
+- [x] **Écran back-office dédié, extrait de l'onglet noyé dans Paramètres.**
+  Nouvelle entrée de menu « Actualités » (hors §6 du CDC, rangée par affinité
+  juste après Paramètres dont elle partage la permission `gerer:parametres`)
+  — demande explicite : que l'équipe la manipule facilement. **Deux
+  sous-onglets** à l'intérieur, un par destination : « À découvrir » (cartes
+  + réglage du nombre affiché sur l'accueil, `home.discover_cards_count`) et
+  « Page Actualités » (catégorie, résumé, corps rédigé via l'éditeur riche
+  maison, lien externe facultatif). Le code existant a été **déplacé**, pas
+  dupliqué, depuis `BackofficeSettingsPageComponent`.
+- [x] **Page liste publique `/actualites`** : article vedette en tête, grille
+  des suivants, chips de filtre par catégorie calculées côté client (volume
+  d'articles faible, pas d'aller-retour serveur à chaque clic). Lien « Voir
+  toutes les actualités » ajouté depuis l'aperçu de l'accueil.
+- [x] **Vérifié en local par aperçu visuel headless** (TestBed → capture
+  Chrome sans navigateur, même recette qu'en F13.1) et par navigation réelle
+  sur les serveurs de développement, avant remise :
+  page liste avec plusieurs catégories, page de détail via slug ET via
+  ancien id numérique, écran back-office avec ses deux sous-onglets. 18 tests
+  backend neufs (`NewsArticleTest`, `NewsTest` — génération/collision de
+  slug, résolution id/slug, non-régression de l'ancien contrat), suite
+  complète (1151 tests) verte.
 
 ### Infrastructure — Conteneurisation Docker et intégration continue ⚠️ **HORS CAHIER DES CHARGES**
 

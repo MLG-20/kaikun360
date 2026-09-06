@@ -403,6 +403,25 @@ export const routes: Routes = [
         title: 'Votre devis — Kaikun 360',
       },
       {
+        // Liste des actualités Kaikun (2026-09-06) : page dédiée, distincte
+        // de l'aperçu de l'accueil (vidéo + 4 cartes maximum) — déclarée
+        // AVANT 'actualites/:id' pour la lisibilité (aucun conflit de
+        // matching réel, 'actualites' seul ne matche jamais ce second motif).
+        path: 'actualites',
+        loadComponent: () =>
+          import('./features/content/news-list-page/news-list-page').then(
+            (m) => m.NewsListPageComponent,
+          ),
+        title: 'Actualités — Kaikun 360',
+        data: {
+          seo: {
+            description:
+              "Toute l'actualité Kaikun 360 : vie de la plateforme, partenariats et vidéos.",
+            type: 'website',
+          },
+        },
+      },
+      {
         // Détail d'une actualité Kaikun (F16.3) : la carte de l'accueil ne
         // montre que titre et résumé, le corps complet vit ici.
         path: 'actualites/:id',

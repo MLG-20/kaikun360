@@ -42,4 +42,26 @@ class NewsTest extends TestCase
     {
         $this->getJson('/api/v1/news/999999')->assertNotFound();
     }
+
+    /**
+     * 2026-09-06 — l'ancien lien numérique doit continuer de fonctionner
+     * (déjà indexé par Google Search Console) en plus du nouveau slug.
+     */
+    public function test_le_detail_est_aussi_servi_par_son_slug(): void
+    {
+        $article = NewsArticle::factory()->create([
+            'title' => 'Kaikun 360 ouvre un nouveau bureau à Dakar',
+            'is_published' => true,
+        ]);
+
+        $this->getJson("/api/v1/news/{$article->slug}")
+            ->assertOk()
+            ->assertJsonPath('data.article.id', $article->id)
+            ->assertJsonPath('data.article.slug', $article->slug);
+    }
+
+    public function test_un_slug_inexistant_repond_404(): void
+    {
+        $this->getJson('/api/v1/news/slug-inexistant')->assertNotFound();
+    }
 }

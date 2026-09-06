@@ -101,6 +101,11 @@ export const BO_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
   // modifier.
   statistiques: ['gerer:paiements'],
   parametres: ['gerer:parametres'],
+  // Actualités (2026-09-06) : même permission que Paramètres — c'est le même
+  // contenu de vitrine, extrait dans son propre écran pour lui donner une
+  // entrée de menu (le client veut le manipuler facilement, actu par actu).
+  // Hors §6 : pas de module dédié au cahier des charges.
+  actualites: ['gerer:parametres'],
 
   // Pointeuse : périmètre PERSONNEL (on pointe pour soi). Toute l'équipe y a
   // droit — la feuille d'équipe, elle, est filtrée dans l'écran.

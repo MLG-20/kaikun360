@@ -19,8 +19,10 @@ class NewsArticleResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'slug' => $this->slug,
             'title' => $this->title,
             'excerpt' => $this->excerpt,
+            'category' => $this->category,
             'body' => $this->body,
             'image' => $this->imageUrl(),
             // Le fichier déposé l'emporte sur l'URL d'embed quand les deux

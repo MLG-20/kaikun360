@@ -23,6 +23,7 @@ class StoreNewsArticleRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:180'],
             'excerpt' => ['nullable', 'string', 'max:300'],
+            'category' => ['nullable', 'string', 'max:60'],
             'body' => ['nullable', 'string'],
             // Obligatoire à la création : un article sans image ne peut pas
             // s'afficher dans la grille (voir NewsArticle).

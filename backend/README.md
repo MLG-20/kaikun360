@@ -1249,3 +1249,24 @@ Projet propriétaire — Kaikun 360. Tous droits réservés.
   six — l'écran en a fait un diagramme circulaire, qui y ajoute une part
   « Autres » calculée par différence avec le volume total de la période. Un
   camembert dont les parts ne totalisent pas le tout est un mensonge de forme.
+- ✅ **F19 — `category` et `slug` sur `NewsArticle`, page « Actualités » à part
+  entière (hors CDC).** Migration `2026_09_06_000000_add_category_and_slug_to_news_articles_table` :
+  `category` en texte libre (pas de table de référence — filtre calculé côté
+  client) ; `slug` généré automatiquement (`Str::slug`, collisions résolues
+  par suffixe numérique), régénéré **seulement si le titre change** (jamais
+  sur la sauvegarde d'un autre champ, pour ne pas casser une URL déjà
+  partagée ou indexée). `NewsArticle::resolveRouteBinding()` accepte
+  indifféremment un id numérique (anciens liens) ou un slug (nouveaux) sur la
+  même route `GET /news/{newsArticle}`, sans redirection ni code dupliqué.
+  Aucun paramètre de filtre ajouté à `GET /news` : la distinction entre une
+  carte de navigation (« À découvrir » sur l'accueil, sans `body`) et un
+  vrai article (page publique `/actualites`, avec `body`) se fait déjà par ce
+  même critère depuis F17 — inutile d'ajouter un champ de destination qui
+  redirait deux fois la même chose. ⚠️ **Piège rencontré en recette locale** :
+  le back-fill des slugs existants utilisait `update()`, qui respecte
+  `$fillable` — `slug` en étant volontairement absent (généré côté serveur
+  uniquement), la mise à jour était silencieusement ignorée pour chaque
+  article déjà en base. Corrigé en `forceFill(['slug' => $slug])
+  ->saveQuietly()`. 18 tests neufs (`NewsArticleTest`, `NewsTest` — génération
+  et collision de slug, stabilité si le titre ne change pas, résolution
+  id/slug, non-régression de l'ancien contrat numérique).
