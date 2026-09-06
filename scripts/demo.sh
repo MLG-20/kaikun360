@@ -259,6 +259,8 @@ export const environment = {
   // Mesure d'audience désactivée en démo : l'adresse ngrok change à chaque
   // lancement, la propriété Google Analytics ne doit voir que la production.
   gaMeasurementId: '',
+  // Sentry désactivé en démo, même raison.
+  sentryDsn: '',
 };
 EOF
 ok "Environnement de démonstration écrit."
