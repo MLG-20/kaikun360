@@ -18,6 +18,7 @@ use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TrashController;
 use App\Http\Controllers\UniverseStripController;
+use App\Http\Controllers\VehicleShowcaseController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\WhatsAppLinkController;
 use App\Modules\Admin\Http\Controllers\FaqController;
@@ -62,6 +63,11 @@ Route::get('news', [NewsController::class, 'index']);
 // Accepte un id numérique (anciens liens indexés) ou un slug (nouvelles URLs
 // lisibles) — voir NewsArticle::resolveRouteBinding().
 Route::get('news/{newsArticle}', [NewsController::class, 'show']);
+
+// --- Location de véhicules (accueil, 2026-09-07) --------------------------------
+// Remplace l'ancienne section « Protocole de confiance » : cartes véhicules
+// (image, texte, lien) rangées par catégorie libre, pilotées au back-office.
+Route::get('vehicle-showcase-cards', [VehicleShowcaseController::class, 'index']);
 
 // --- Héros de l'accueil (F15.1) ------------------------------------------------
 // Diaporama de photos, ou une courte vidéo à la place — pilotés au back-office.

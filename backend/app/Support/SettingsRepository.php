@@ -58,6 +58,16 @@ class SettingsRepository
         // demandé à en fixer lui-même le nombre. Lu par NewsController::index()
         // et transmis au frontend (home-page.ts), qui applique la coupe.
         'home.discover_cards_count' => ['value' => 4, 'type' => 'integer', 'group' => 'accueil'],
+
+        // Textes de l'en-tête de la section « Location de véhicules » de
+        // l'accueil (2026-09-07), qui remplace l'ancienne section « Protocole
+        // de confiance ». Le client doit pouvoir reformuler cette accroche
+        // sans redéploiement — mêmes réglages `home.*`/`accueil` que le
+        // nombre de cartes « À découvrir » juste au-dessus. Lus par
+        // VehicleShowcaseController::index() et servis avec les cartes.
+        'home.vehicle_showcase_eyebrow' => ['value' => 'Location de véhicules', 'type' => 'string', 'group' => 'accueil'],
+        'home.vehicle_showcase_title' => ['value' => "Berline, 4x4, minibus… le véhicule qu'il vous faut.", 'type' => 'string', 'group' => 'accueil'],
+        'home.vehicle_showcase_lead' => ['value' => 'Une flotte vérifiée pour tous vos déplacements au pays, du trajet en ville au transport de groupe.', 'type' => 'string', 'group' => 'accueil'],
         'support.email' => ['value' => 'contact@kaikun360.com', 'type' => 'string', 'group' => 'general'],
         'support.phone' => ['value' => '+221 33 000 00 00', 'type' => 'string', 'group' => 'general'],
 

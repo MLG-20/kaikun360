@@ -492,6 +492,7 @@ TypeScript miroir côté frontend Angular (phase F0).
 | GET | `/heroes` | public | `HeroController@index` |
 | GET | `/news` | public | `NewsController@index` |
 | GET | `/news/{newsArticle}` | public | `NewsController@show` |
+| GET | `/vehicle-showcase-cards` | public | `VehicleShowcaseController@index` |
 | GET | `/home-hero` | public | `HomeHeroController@index` |
 | GET | `/universe-strip` | public | `UniverseStripController@index` |
 
@@ -515,6 +516,14 @@ TypeScript miroir côté frontend Angular (phase F0).
 > grille des univers. **`GET /news/{id}` (F16.3)** renvoie le détail complet
 > (`article`, corps inclus) d'un article publié, pour la page dédiée
 > `/actualites/:id` — 404 si non publié ou absent.
+>
+> **Location de véhicules (F20, 2026-09-07).** `GET /vehicle-showcase-cards`
+> remplace l'ancienne section « Protocole de confiance » de l'accueil :
+> renvoie les cartes **publiées** (`cards`), triées par `position`, plus
+> l'accroche de la section (`eyebrow`/`title`/`lead`, réglages
+> `home.vehicle_showcase_*`, éditables via `PATCH /admin/settings`). Le
+> regroupement par catégorie (berline, 4x4, minibus…) se fait côté
+> frontend, pas dans la réponse.
 >
 > **`link_url`/`link_label` (F17).** Une « carte » n'a pas besoin d'être un
 > article rédigé : `body` peut rester vide, et le bouton public pointe alors
@@ -681,6 +690,10 @@ existants. Voir [`app/Modules/Assistant/README.md`](app/Modules/Assistant/README
 | POST | `/admin/news` | auth + `can:gerer:parametres` | `AdminNewsController@store` |
 | POST | `/admin/news/{news}` | auth + `can:gerer:parametres` | `AdminNewsController@update` |
 | DELETE | `/admin/news/{news}` | auth + `can:gerer:parametres` | `AdminNewsController@destroy` |
+| GET | `/admin/vehicle-showcase-cards` | auth + `can:gerer:parametres` | `AdminVehicleShowcaseController@index` |
+| POST | `/admin/vehicle-showcase-cards` | auth + `can:gerer:parametres` | `AdminVehicleShowcaseController@store` |
+| POST | `/admin/vehicle-showcase-cards/{card}` | auth + `can:gerer:parametres` | `AdminVehicleShowcaseController@update` |
+| DELETE | `/admin/vehicle-showcase-cards/{card}` | auth + `can:gerer:parametres` | `AdminVehicleShowcaseController@destroy` |
 | GET | `/admin/home-hero` | auth + `can:gerer:parametres` | `AdminHomeHeroController@index` |
 | POST | `/admin/home-hero/slides` | auth + `can:gerer:parametres` | `AdminHomeHeroController@storeSlide` |
 | DELETE | `/admin/home-hero/slides/{slide}` | auth + `can:gerer:parametres` | `AdminHomeHeroController@destroySlide` |

@@ -1,0 +1,12 @@
+@for (c of cards(); track c.id) {
+  <a class="vsc-card" [href]="c.linkUrl">
+    <img class="vsc-media" [src]="c.image" [alt]="c.title" loading="lazy" />
+    <span class="vsc-text">
+      <span class="vsc-title">{{ c.title }}</span>
+      @if (c.description) {
+        <span class="vsc-desc">{{ c.description }}</span>
+      }
+      <span class="vsc-cta">{{ c.linkLabel || 'Découvrir' }} →</span>
+    </span>
+  </a>
+}

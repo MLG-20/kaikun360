@@ -106,6 +106,10 @@ export const BO_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
   // entrée de menu (le client veut le manipuler facilement, actu par actu).
   // Hors §6 : pas de module dédié au cahier des charges.
   actualites: ['gerer:parametres'],
+  // Location de véhicules (2026-09-07) : même permission, même raison — la
+  // section « Location de véhicules » de l'accueil remplace « Protocole de
+  // confiance », c'est du contenu de vitrine, pas un dossier client.
+  'vitrine-vehicules': ['gerer:parametres'],
 
   // Pointeuse : périmètre PERSONNEL (on pointe pour soi). Toute l'équipe y a
   // droit — la feuille d'équipe, elle, est filtrée dans l'écran.

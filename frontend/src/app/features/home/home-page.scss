@@ -120,15 +120,12 @@
   .univers-card,
   .univers-shine::before,
   .univers-icon,
-  .protocol-card,
-  .protocol-icon,
   .services-card,
   .services-icon {
     transition: none;
   }
 
   .univers-card:hover,
-  .protocol-card:hover,
   .services-card:hover {
     transform: none;
   }
@@ -138,9 +135,8 @@
   }
 
   // Les pastilles ne basculent plus non plus : seule leur couleur répond au
-  // survol. Les trois grilles obéissent à la même règle, sans exception.
+  // survol. Les deux grilles obéissent à la même règle, sans exception.
   .univers-card:hover .univers-icon,
-  .protocol-card:hover .protocol-icon,
   .services-card:hover .services-icon {
     transform: none;
   }
@@ -506,68 +502,16 @@
   margin: 12px 0 16px;
 }
 
-.protocol-hl {
-  color: var(--k-gold);
-}
-
 .protocol-lead {
   font-size: 17px;
   color: rgba(255, 255, 255, 0.78);
 }
 
-.protocol-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  // Gouttières dissymétriques — même raison que la grille des univers : la
-  // pastille déborde par le HAUT seulement (voir `.univers-grid`).
-  gap: 50px 22px;
+// Grille des cartes véhicules — une seule ligne, toutes catégories
+// mélangées (même présentation que « À découvrir » juste au-dessus),
+// posée par `NewsCardMiniListComponent` (feuille de style à part).
+.protocol-cards {
   margin-top: 20px;
-}
-
-// Cartes semi-transparentes posées sur le fond navy.
-.protocol-card {
-  position: relative; // repère de positionnement de la pastille débordante
-  padding: 44px 24px 28px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: var(--k-radius-lg);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-// F11.2 — Pastille débordante, en OR sur cette section et non en bleu nuit.
-//
-// ⚠️ L'inversion est obligatoire, pas décorative : ici le fond de section est
-// navy et la carte n'est qu'un voile blanc à 4 % — une pastille bleu nuit y
-// serait invisible sur les deux. La règle de la plateforme se lit donc ainsi :
-// **la pastille s'oppose toujours à son fond**, sombre sur les sections claires,
-// dorée sur la section sombre.
-.protocol-icon {
-  position: absolute;
-  top: -22px;
-  left: 24px;
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 17px;
-  background: var(--k-gold);
-  color: var(--k-navy);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.38);
-}
-
-.protocol-icon svg {
-  width: 26px;
-  height: 26px;
-}
-
-.protocol-card-title {
-  font-size: 19px;
-  margin-bottom: 8px;
-}
-
-.protocol-card-desc {
-  font-size: 14.5px;
-  line-height: 1.55;
-  color: rgba(255, 255, 255, 0.72);
 }
 
 // --- Section 4 : Vitrine du catalogue --------------------------------------
@@ -1153,7 +1097,6 @@
   }
 
   .univers-grid,
-  .protocol-grid,
   .featured-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -1173,7 +1116,6 @@
 // (sinon le `1fr 1fr` du bloc 960px l'emporterait aussi en dessous de 620px).
 @media (max-width: 620px) {
   .univers-grid,
-  .protocol-grid,
   .featured-grid,
   .services-grid {
     grid-template-columns: 1fr;
@@ -1313,35 +1255,6 @@
   z-index: 2;
 }
 
-// --- Protocole (navy) : les cartes s'éclairent et se soulèvent -------------
-.protocol-card {
-  transition:
-    transform 0.28s cubic-bezier(0.22, 0.7, 0.24, 1),
-    border-color 0.28s ease,
-    background 0.28s ease,
-    box-shadow 0.28s ease;
-}
-
-.protocol-icon {
-  transition:
-    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
-    background 0.28s ease,
-    box-shadow 0.28s ease;
-}
-
-.protocol-card:hover {
-  transform: translateY(-6px);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(211, 174, 82, 0.5);
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.28);
-}
-
-.protocol-card:hover .protocol-icon {
-  transform: translateY(-5px) scale(1.06) rotate(-6deg);
-  background: var(--k-gold-2); // l'or s'éclaircit au lieu de changer de teinte
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
-}
-
 // --- Services : élévation + icône réactive ---------------------------------
 .services-card {
   transition:
@@ -1376,8 +1289,7 @@
 // --- Titres des cartes : mise en couleur douce au survol -------------------
 // Le titre prend la couleur d'accent de sa carte (cohérence par univers).
 .univers-name,
-.services-card-title,
-.protocol-card-title {
+.services-card-title {
   transition: color 0.28s ease;
 }
 

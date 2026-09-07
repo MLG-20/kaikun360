@@ -1270,3 +1270,18 @@ Projet propriétaire — Kaikun 360. Tous droits réservés.
   ->saveQuietly()`. 18 tests neufs (`NewsArticleTest`, `NewsTest` — génération
   et collision de slug, stabilité si le titre ne change pas, résolution
   id/slug, non-régression de l'ancien contrat numérique).
+- ✅ **F20 — `VehicleShowcaseCard` : la section « Protocole de confiance » de
+  l'accueil devient une vitrine « Location de véhicules » administrable
+  (hors CDC, 2026-09-07).** Nouvelle table `vehicle_showcase_cards`, sur le
+  patron de `NewsArticle` mais **sans slug ni page de détail** : chaque
+  carte pointe directement vers un `link_url` saisi à la main (obligatoire),
+  pas vers une route du site. `category` reste un texte libre (même
+  décision que `NewsArticle.category`) : pas de table de référence, le
+  regroupement par catégorie se fait côté frontend à partir des cartes
+  publiées. CRUD complet — `AdminVehicleShowcaseController` (`index/store
+  /update/destroy`, gardé par `can:gerer:parametres`, même permission que
+  les actualités et les bandeaux) et lecture publique
+  `VehicleShowcaseController@index` (`GET /vehicle-showcase-cards`, cartes
+  publiées uniquement, dans l'ordre de `position`). Upload d'image via
+  `ImageProcessor::storeCompressed` (mêmes constantes que les actualités),
+  suppression du fichier physique au remplacement/à la suppression.

@@ -490,6 +490,19 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Actualités — Back-office Kaikun 360',
       },
       {
+        // Location de véhicules (2026-09-07) : remplace « Protocole de
+        // confiance » sur l'accueil — hors §6, même permission que
+        // Paramètres/Actualités (contenu de vitrine).
+        path: 'vitrine-vehicules',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('vitrine-vehicules') },
+        loadComponent: () =>
+          import('./vehicle-showcase/backoffice-vehicle-showcase-page').then(
+            (m) => m.BackofficeVehicleShowcasePageComponent,
+          ),
+        title: 'Location de véhicules — Back-office Kaikun 360',
+      },
+      {
         // F7.1.f — Équipe : annuaire, enrôlement, pilotage rôle/statut.
         path: 'equipe',
         canActivate: [permissionGuard],

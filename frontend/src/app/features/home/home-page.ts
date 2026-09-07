@@ -17,6 +17,11 @@ import { CatalogService } from '../../core/api/catalog.service';
 import { HeroService } from '../../core/api/hero.service';
 import { HomeHero, HomeHeroService } from '../../core/api/home-hero.service';
 import { NewsArticle, NewsService } from '../../core/api/news.service';
+import {
+  VehicleShowcaseCard,
+  VehicleShowcaseHeading,
+  VehicleShowcaseService,
+} from '../../core/api/vehicle-showcase.service';
 import { schemaOrganisation, schemaSite } from '../../core/seo/json-ld';
 import { SeoService } from '../../core/seo/seo.service';
 import { FavoriteStore } from '../../core/state/favorite-store';
@@ -32,6 +37,7 @@ import { UniverseStripComponent } from '../../shared/components/universe-strip/u
 import { ParallaxDirective } from '../../shared/directives/parallax.directive';
 import { RevealDirective } from '../../shared/directives/reveal.directive';
 import { NewsCardMiniListComponent } from './news-card-mini-list/news-card-mini-list';
+import { VehicleShowcaseCardListComponent } from './vehicle-showcase-card-list/vehicle-showcase-card-list';
 
 /**
  * Tuile d'univers de la grille des services.
@@ -110,13 +116,6 @@ function withAutoplayLoop(embedUrl: string): string {
   return embedUrl;
 }
 
-/** Garantie du protocole de confiance (section navy anti-arnaque). */
-interface Guarantee {
-  icon: string;
-  title: string;
-  desc: string;
-}
-
 /** Petite carte de service complémentaire (section « Aller plus loin »). */
 interface ServiceItem {
   /** Ancre HTML éventuelle (ciblée par une tuile d'univers). */
@@ -178,6 +177,7 @@ const VIDEO_ROTATION_MS = 90000;
     ParallaxDirective,
     UniverseStripComponent,
     NewsCardMiniListComponent,
+    VehicleShowcaseCardListComponent,
   ],
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
@@ -188,6 +188,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
   private readonly seo = inject(SeoService);
   private readonly homeHero = inject(HomeHeroService);
   private readonly news = inject(NewsService);
+  private readonly vehicleShowcase = inject(VehicleShowcaseService);
   private readonly heroBanners = inject(HeroService);
   private readonly sanitizer = inject(DomSanitizer);
   /** État partagé des favoris (cœurs sur les biens en vedette). */
@@ -533,27 +534,27 @@ export class HomePageComponent implements OnInit, OnDestroy {
   ];
 
   /**
-   * Protocole de confiance : les 3 garanties qui structurent le positionnement
-   * anti-arnaque de Kaikun 360 (essentiel pour la diaspora, échaudée par les
-   * fausses annonces). C'est le cœur du discours de marque.
+   * Cartes de la section « Location de véhicules » de l'accueil (remplace
+   * l'ancienne section « Protocole de confiance », demande client
+   * 2026-09-07). Une seule grille, toutes catégories mélangées (berline,
+   * 4x4, minibus…) — la catégorie reste une donnée de tri au back-office,
+   * pas un découpage visuel (une première version groupée par catégorie
+   * empilait les catégories verticalement, rejetée par le client).
    */
-  protected readonly guarantees: Guarantee[] = [
-    {
-      icon: 'shield',
-      title: 'Vérification documentée',
-      desc: 'Titres de propriété, notaire et géomètre contrôlés avant toute mise en ligne.',
-    },
-    {
-      icon: 'camera',
-      title: 'Tout est filmé et daté',
-      desc: 'Visites, chantiers et livraisons archivés : vous voyez l’avancement réel, pas des promesses.',
-    },
-    {
-      icon: 'ticket',
-      title: 'Numéro de suivi unique',
-      desc: 'Chaque projet a sa référence : un reporting clair, accessible où que vous soyez.',
-    },
-  ];
+  protected readonly vehicleShowcaseCards = signal<VehicleShowcaseCard[]>([]);
+
+  /**
+   * Accroche de la section (œilleton, titre, texte d'intro), pilotable au
+   * back-office (réglages `home.vehicle_showcase_*`) — ces valeurs par
+   * défaut ne servent qu'avant le premier chargement ou en cas de panne
+   * réseau (voir `chargerVehiculesVitrine()`), le texte réellement affiché
+   * vient toujours de l'API une fois la réponse reçue.
+   */
+  protected readonly vehicleShowcaseHeading = signal<VehicleShowcaseHeading>({
+    eyebrow: 'Location de véhicules',
+    title: "Berline, 4x4, minibus… le véhicule qu'il vous faut.",
+    lead: 'Une flotte vérifiée pour tous vos déplacements au pays, du trajet en ville au transport de groupe.',
+  });
 
   /**
    * Arguments clés de l'offre diaspora, affichés en liste à côté du bandeau
@@ -620,8 +621,30 @@ export class HomePageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadFeatured();
     this.chargerActualites();
+    this.chargerVehiculesVitrine();
     this.chargerHeroMedia();
     this.referencer();
+  }
+
+  /**
+   * Charge les cartes publiées et l'accroche de la vitrine « Location de
+   * véhicules ». Une panne réseau n'affiche pas d'erreur — comme les
+   * actualités et les bandeaux, c'est de la décoration : la section reste
+   * simplement vide (l'accroche par défaut posée sur le signal ne sert
+   * qu'à ce cas, jamais affichée avec des cartes vides).
+   */
+  private chargerVehiculesVitrine(): void {
+    this.vehicleShowcase
+      .list()
+      .pipe(
+        catchError(() =>
+          of({ cards: [] as VehicleShowcaseCard[], heading: this.vehicleShowcaseHeading() }),
+        ),
+      )
+      .subscribe(({ cards, heading }) => {
+        this.vehicleShowcaseCards.set(cards);
+        this.vehicleShowcaseHeading.set(heading);
+      });
   }
 
   /**

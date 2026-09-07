@@ -182,6 +182,7 @@ présentation à distance sont dans [`scripts/README.md`](scripts/README.md).
   - [Phase F17 — Le client garde la main sur son profil, sa bande d'accueil et ses actualités](#phase-f17--le-client-garde-la-main-sur-son-profil-sa-bande-daccueil-et-ses-actualités)
   - [Phase F18 — L'espace diaspora devient un espace connecté à part entière](#phase-f18--lespace-diaspora-devient-un-espace-connecté-à-part-entière)
   - [Phase F19 — Une vraie page « Actualités », distincte de l'aperçu de l'accueil](#phase-f19--une-vraie-page-actualités-distincte-de-laperçu-de-laccueil)
+  - [Phase F20 — La section « Protocole de confiance » devient une vitrine « Location de véhicules »](#phase-f20--la-section-protocole-de-confiance-devient-une-vitrine-location-de-véhicules)
   - [Phase F8 — État global, design system et finitions](#phase-f8--état-global-design-system-et-finitions)
   - [Phase F9 — SEO, performance et accessibilité](#phase-f9--seo-performance-et-accessibilité)
 - [Critères d'acceptation transverses](#critères-dacceptation-transverses)
@@ -942,6 +943,57 @@ l'accueil.
   backend neufs (`NewsArticleTest`, `NewsTest` — génération/collision de
   slug, résolution id/slug, non-régression de l'ancien contrat), suite
   complète (1151 tests) verte.
+
+### Phase F20 — La section « Protocole de confiance » devient une vitrine « Location de véhicules » ⚠️ **HORS CAHIER DES CHARGES**
+
+Demande du client (2026-09-07) : remplacer la section « Protocole de
+confiance » de l'accueil (3 garanties statiques, codées en dur) par une
+vitrine de sa propre offre de location de véhicules, administrable au
+back-office — cartes image + texte + lien, rangées par catégorie libre
+(berline, 4x4, minibus, ou toute autre catégorie qu'il invente).
+
+- [x] **Nouvelle entité `VehicleShowcaseCard`, sur le patron de `NewsArticle`
+  mais sans slug ni page de détail** — chaque carte pointe directement vers
+  un lien saisi à la main par l'équipe (`link_url`, obligatoire), pas vers
+  une page du site. `category` reste un texte libre (comme les actualités) :
+  pas de liste fermée, le client range ses véhicules comme il l'entend.
+  CRUD complet (`AdminVehicleShowcaseController`, gardé par
+  `gerer:parametres` — même permission que les actualités et les bandeaux,
+  c'est du contenu de vitrine) et lecture publique (`VehicleShowcaseController`).
+- [x] **Une seule grille, toutes catégories mélangées — pas de regroupement
+  visuel.** Une première version groupait les cartes par catégorie (une
+  sous-section par catégorie, empilées verticalement) ; rejetée par le
+  client après avoir vu le rendu avec une seule carte par catégorie
+  (« doit être en ligne, pas en vertical »). `category` reste une donnée de
+  tri au back-office, sans effet sur l'affichage public. Cartes plus grandes
+  que celles de la section « À découvrir » (`VehicleShowcaseCardListComponent`,
+  composant à part avec sa propre feuille de style) et affichant toujours
+  leur description — contrairement aux cartes actualités, qui ne la
+  montrent jamais (choix produit distinct, documenté à part).
+- [x] **Fond « verre » sur la section navy** : cartes en voile blanc
+  translucide (comme l'ancien Protocole de confiance), texte clair, accent
+  doré au survol — pas des cartes blanches opaques qui jureraient sur le
+  fond.
+- [x] **Accroche de la section pilotable au back-office.** Œilleton, titre
+  et texte d'introduction ne sont plus codés en dur : trois réglages
+  `home.vehicle_showcase_eyebrow/title/lead` (`SettingsRepository`, même
+  mécanisme que `home.discover_cards_count`), modifiables depuis un nouveau
+  bloc de l'écran back-office « Location de véhicules ». Les valeurs par
+  défaut sont le texte d'origine — rien ne change tant que l'équipe ne les
+  a pas modifiées.
+- [x] **La section ne s'affiche que si au moins une carte est publiée** —
+  même logique de repli que les actualités et les bandeaux : aucune carte
+  encore créée n'est un état normal, pas une panne.
+- [x] **Nouvel écran back-office « Location de véhicules »**, sur le patron
+  de l'écran Actualités (titre, catégorie avec suggestions `<datalist>`,
+  image, description, lien, statut publié/masqué), avec sa propre entrée de
+  menu (icône « volant », distincte de la voiture de Mobilité pour ne pas
+  confondre les deux rubriques).
+- [x] **Vérifié de bout en bout** : build Angular sans erreur, migration
+  exécutée, CRUD testé via l'API (création de cartes dans plusieurs
+  catégories, modification de l'accroche, suppression), aperçu visuel
+  headless confirmant le rendu, et **19 tests backend neufs**
+  (`VehicleShowcaseCardTest`).
 
 ### Infrastructure — Conteneurisation Docker et intégration continue ⚠️ **HORS CAHIER DES CHARGES**
 

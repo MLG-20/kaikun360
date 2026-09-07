@@ -41,7 +41,8 @@ type BoIcon =
   | 'sliders'
   | 'inbox'
   | 'chat'
-  | 'megaphone';
+  | 'megaphone'
+  | 'steering';
 
 /** Une rubrique de navigation du poste de commandement. */
 interface BoNavItem {
@@ -212,6 +213,11 @@ export class BackofficeLayoutComponent {
     // dont elle partage la permission — même famille de contenu, pas de
     // numéro de module à suivre.
     { label: 'Actualités', path: 'actualites', icon: 'megaphone', ready: true },
+
+    // Hors §6 — contenu de vitrine (2026-09-07) : remplace « Protocole de
+    // confiance » sur l'accueil par une vitrine de location de véhicules,
+    // rangée après Actualités (même famille de contenu).
+    { label: 'Location de véhicules', path: 'vitrine-vehicules', icon: 'steering', ready: true },
 
     // CDC §7 — poste de commandement de l'équipe (F7.1), hors des 14 modules.
     { label: 'Équipe', path: 'equipe', icon: 'users', ready: true },

@@ -212,48 +212,27 @@
 }
 
 <!-- =========================================================================
-     Section 3 — Protocole de confiance (fond navy).
-     Cœur du positionnement anti-arnaque : la confiance est un protocole,
-     pas une promesse. 3 garanties concrètes.
+     Section 3 — Location de véhicules (fond navy).
+     Remplace l'ancienne section « Protocole de confiance » (demande client,
+     2026-09-07) : cartes véhicules (image, texte, lien) pilotées au
+     back-office, rangées par catégorie libre (berline, 4x4, minibus…).
+     N'apparaît que si au moins une carte est publiée.
      ========================================================================= -->
+@if (vehicleShowcaseCards().length > 0) {
 <section class="protocol" aria-labelledby="protocol-title">
   <div class="k-wrap">
     <header class="protocol-head" appReveal>
-      <span class="k-eyebrow protocol-eyebrow">Protocole de confiance</span>
-      <h2 id="protocol-title" appReveal="title">
-        La confiance n’est pas une promesse.<br />
-        <span class="protocol-hl">C’est un protocole.</span>
-      </h2>
-      <p class="protocol-lead">
-        Trop de projets échouent à distance par manque de preuves. Chez Kaikun 360,
-        chaque étape est vérifiée, filmée et traçable — pour que vous décidiez en
-        confiance, même à des milliers de kilomètres.
-      </p>
+      <span class="k-eyebrow protocol-eyebrow">{{ vehicleShowcaseHeading().eyebrow }}</span>
+      <h2 id="protocol-title" appReveal="title">{{ vehicleShowcaseHeading().title }}</h2>
+      <p class="protocol-lead">{{ vehicleShowcaseHeading().lead }}</p>
     </header>
 
-    <div class="protocol-grid" appReveal="group">
-      @for (g of guarantees; track g.title) {
-        <article class="protocol-card">
-          <span class="protocol-icon" aria-hidden="true">
-            @switch (g.icon) {
-              @case ('shield') {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
-              }
-              @case ('camera') {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3v11H4V8Z"/><circle cx="12" cy="13" r="3.2"/></svg>
-              }
-              @case ('ticket') {
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4 2 2 0 0 1 0-4Z"/><path d="M14 6v12"/></svg>
-              }
-            }
-          </span>
-          <h3 class="protocol-card-title">{{ g.title }}</h3>
-          <p class="protocol-card-desc">{{ g.desc }}</p>
-        </article>
-      }
+    <div class="protocol-cards" appReveal="group">
+      <app-vehicle-showcase-card-list [cards]="vehicleShowcaseCards()" />
     </div>
   </div>
 </section>
+}
 
 <!-- =========================================================================
      Section 4 — Vitrine du catalogue : biens vérifiés « en vedette ».

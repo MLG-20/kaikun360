@@ -1,0 +1,212 @@
+<header class="st-head">
+  <div>
+    <h1 class="st-title">Location de véhicules</h1>
+    <p class="st-sub">
+      Pilotez les cartes de la section « Location de véhicules » de
+      l’accueil, qui remplace l’ancienne section « Protocole de confiance ».
+    </p>
+  </div>
+</header>
+
+<section class="st-card">
+  <h2 class="st-card-title">Comment ça marche</h2>
+  <p class="st-card-sub">
+    Une carte, c’est une <strong>image, un texte et un lien</strong>, rangée
+    dans une <strong>catégorie</strong> de votre choix (berline, 4x4,
+    minibus, ou toute autre catégorie que vous inventez). Sur l’accueil,
+    toutes les cartes publiées s’affichent ensemble dans une seule grille,
+    dans l’ordre où vous les avez créées.
+  </p>
+</section>
+
+<section class="st-card">
+  <h2 class="st-card-title">Accroche de la section</h2>
+  <p class="st-card-sub">
+    Le petit intitulé, le titre et le texte d’introduction affichés
+    au-dessus des cartes sur l’accueil.
+  </p>
+  @if (headingLoading()) {
+    <p class="st-state" role="status">Chargement…</p>
+  } @else {
+    <label class="st-field st-field--full">
+      <span class="st-label">Intitulé</span>
+      <input class="k-input" type="text" name="headingEyebrow" [(ngModel)]="headingDraft.eyebrow" />
+    </label>
+    <label class="st-field st-field--full">
+      <span class="st-label">Titre</span>
+      <input class="k-input" type="text" name="headingTitle" [(ngModel)]="headingDraft.title" />
+    </label>
+    <label class="st-field st-field--full">
+      <span class="st-label">Texte d’introduction</span>
+      <textarea
+        class="k-input st-textarea"
+        rows="2"
+        name="headingLead"
+        [(ngModel)]="headingDraft.lead"></textarea>
+    </label>
+    @if (headingError()) {
+      <p class="st-state st-state--error" role="alert">{{ headingError() }}</p>
+    }
+    @if (headingMessage()) {
+      <p class="st-state st-state--ok" role="status">{{ headingMessage() }}</p>
+    }
+    <div class="st-actions">
+      <button
+        type="button"
+        class="k-btn k-btn--primary"
+        [disabled]="headingSaving()"
+        (click)="saveHeading()">
+        {{ headingSaving() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  }
+</section>
+
+@if (cardsActionError()) {
+  <p class="st-state st-state--error" role="alert">{{ cardsActionError() }}</p>
+}
+
+@if (editingCard()) {
+  <section class="st-card">
+    <h2 class="st-card-title">
+      {{ editingCard() === 'new' ? 'Nouvelle carte' : 'Modifier la carte' }}
+    </h2>
+
+    <label class="st-field st-field--full">
+      <span class="st-label">Titre</span>
+      <input class="k-input" type="text" name="cardTitle" [(ngModel)]="cardForm.title" />
+    </label>
+
+    <div class="st-grid">
+      <label class="st-field">
+        <span class="st-label">Catégorie</span>
+        <input
+          class="k-input"
+          type="text"
+          name="cardCategory"
+          list="vehicle-showcase-categories"
+          [(ngModel)]="cardForm.category"
+          placeholder="Berline" />
+        <datalist id="vehicle-showcase-categories">
+          @for (categorie of categoriesConnues(); track categorie) {
+            <option [value]="categorie"></option>
+          }
+        </datalist>
+        <span class="st-hint">Détermine le regroupement des cartes sur l’accueil.</span>
+      </label>
+
+      <label class="st-field">
+        <span class="st-label">Position</span>
+        <input class="k-input" type="number" min="0" name="cardPosition" [(ngModel)]="cardForm.position" />
+        <span class="st-hint">Les positions basses passent en premier.</span>
+      </label>
+    </div>
+
+    <label class="st-field st-field--full">
+      <span class="st-label">Image{{ editingCard() === 'new' ? ' (obligatoire)' : '' }}</span>
+      <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onCardImage($event)" />
+      @if (editingCard() !== 'new' && !cardForm.image) {
+        <span class="st-hint">Laissez vide pour garder l’image actuelle.</span>
+      }
+    </label>
+
+    <label class="st-field st-field--full">
+      <span class="st-label">Description</span>
+      <textarea
+        class="k-input st-textarea"
+        rows="2"
+        maxlength="300"
+        name="cardDescription"
+        [(ngModel)]="cardForm.description"></textarea>
+    </label>
+
+    <div class="st-grid">
+      <label class="st-field">
+        <span class="st-label">Lien (obligatoire)</span>
+        <input
+          class="k-input"
+          type="url"
+          name="cardLinkUrl"
+          [(ngModel)]="cardForm.link_url"
+          placeholder="https://kaikun360.com/vehicules/berline" />
+        <span class="st-hint">Destination de la carte (réservation, catalogue, contact…).</span>
+      </label>
+
+      <label class="st-field">
+        <span class="st-label">Texte du lien</span>
+        <input
+          class="k-input"
+          type="text"
+          name="cardLinkLabel"
+          [(ngModel)]="cardForm.link_label"
+          maxlength="100"
+          placeholder="Découvrir" />
+      </label>
+    </div>
+
+    <label class="st-switch">
+      <input type="checkbox" name="cardPublished" [(ngModel)]="cardForm.is_published" />
+      <span class="st-switch-text">
+        <strong>Publiée</strong>
+        <em>Une carte masquée n’apparaît pas côté public.</em>
+      </span>
+    </label>
+
+    <div class="st-actions">
+      <button type="button" class="k-btn k-btn--ghost" (click)="cancelCard()">Annuler</button>
+      <button type="button" class="k-btn k-btn--primary" [disabled]="cardSaving()" (click)="saveCard()">
+        {{ cardSaving() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  </section>
+} @else {
+  <div class="st-actions st-actions--start">
+    <button type="button" class="k-btn k-btn--primary" (click)="newCard()">Nouvelle carte</button>
+  </div>
+}
+
+@if (cardsLoading()) {
+  <p class="st-state" role="status">Chargement…</p>
+} @else if (cardsError()) {
+  <p class="st-state st-state--error" role="alert">Impossible de charger les cartes.</p>
+} @else {
+  <div class="st-table-wrap">
+    <table class="st-table">
+      <thead>
+        <tr>
+          <th aria-label="Image"></th>
+          <th>Titre</th>
+          <th>Catégorie</th>
+          <th>Statut</th>
+          <th>Modifié le</th>
+          <th aria-label="Actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (card of cards(); track card.id) {
+          <tr>
+            <td><img [src]="card.image" [alt]="card.title" class="st-hero-img" style="width:72px;height:44px;object-fit:cover;border-radius:6px" /></td>
+            <td><span class="st-strong">{{ card.title }}</span></td>
+            <td><span class="st-muted">{{ card.category || '—' }}</span></td>
+            <td>
+              <span class="st-badge" [class.is-ok]="card.is_published" [class.is-off]="!card.is_published">
+                {{ card.is_published ? 'Publiée' : 'Masquée' }}
+              </span>
+            </td>
+            <td><span class="st-muted">{{ shortDate(card.updated_at) }}</span></td>
+            <td class="st-actions-cell">
+              <div class="st-btns">
+                <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="editCard(card)">Modifier</button>
+                <button type="button" class="k-btn k-btn--sm k-btn--danger" (click)="deleteCard(card)">Supprimer</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="st-empty">Aucune carte pour l’instant.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

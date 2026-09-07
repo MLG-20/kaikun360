@@ -1818,6 +1818,21 @@ export interface NewsArticleAdmin {
   updated_at: string | null;
 }
 
+/** Une carte de la section « Location de véhicules » de l'accueil, vue du back-office. */
+export interface VehicleShowcaseCardAdmin {
+  id: number;
+  title: string;
+  description: string | null;
+  /** Thème libre saisi par l'équipe (« Berline », « 4x4 », « Minibus »…). */
+  category: string | null;
+  image: string;
+  link_url: string;
+  link_label: string | null;
+  is_published: boolean;
+  position: number;
+  updated_at: string | null;
+}
+
 /** Une entrée de FAQ (miroir de `FaqResource`). */
 export interface FaqEntry {
   id: number;
@@ -3554,6 +3569,81 @@ export class AdminService {
   /** Supprime un article. DELETE /admin/news/{id} */
   deleteNews(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/admin/news/${id}`);
+  }
+
+  // --- Location de véhicules (accueil) ------------------------------------------
+  // Remplace l'ancienne section « Protocole de confiance » (2026-09-07).
+
+  /** Toutes les cartes, publiées ou non. GET /admin/vehicle-showcase-cards */
+  vehicleShowcaseCards(): Observable<VehicleShowcaseCardAdmin[]> {
+    return this.http
+      .get<ApiEnvelope<VehicleShowcaseCardAdmin[]>>(`${this.api}/admin/vehicle-showcase-cards`)
+      .pipe(map((response) => response.data));
+  }
+
+  /** Crée une carte. POST /admin/vehicle-showcase-cards (multipart : image obligatoire). */
+  createVehicleShowcaseCard(changes: {
+    title: string;
+    description?: string;
+    category: string;
+    image: File;
+    linkUrl: string;
+    linkLabel?: string;
+    isPublished?: boolean;
+    position?: number;
+  }): Observable<VehicleShowcaseCardAdmin> {
+    const form = new FormData();
+    form.append('title', changes.title);
+    if (changes.description !== undefined) form.append('description', changes.description);
+    form.append('category', changes.category);
+    form.append('image', changes.image);
+    form.append('link_url', changes.linkUrl);
+    if (changes.linkLabel !== undefined) form.append('link_label', changes.linkLabel);
+    if (changes.isPublished !== undefined) form.append('is_published', changes.isPublished ? '1' : '0');
+    if (changes.position !== undefined) form.append('position', String(changes.position));
+
+    return this.http
+      .post<ApiEnvelope<{ card: VehicleShowcaseCardAdmin }>>(`${this.api}/admin/vehicle-showcase-cards`, form)
+      .pipe(map((response) => response.data.card));
+  }
+
+  /**
+   * Met à jour une carte. POST /admin/vehicle-showcase-cards/{id}
+   *
+   * ⚠️ POST et non PATCH — même piège multipart que `updateNews`. Seuls les
+   * champs présents dans `changes` sont transmis.
+   */
+  updateVehicleShowcaseCard(
+    id: number,
+    changes: {
+      title?: string;
+      description?: string;
+      category?: string;
+      image?: File;
+      linkUrl?: string;
+      linkLabel?: string;
+      isPublished?: boolean;
+      position?: number;
+    },
+  ): Observable<VehicleShowcaseCardAdmin> {
+    const form = new FormData();
+    if (changes.title !== undefined) form.append('title', changes.title);
+    if (changes.description !== undefined) form.append('description', changes.description);
+    if (changes.category !== undefined) form.append('category', changes.category);
+    if (changes.image) form.append('image', changes.image);
+    if (changes.linkUrl !== undefined) form.append('link_url', changes.linkUrl);
+    if (changes.linkLabel !== undefined) form.append('link_label', changes.linkLabel);
+    if (changes.isPublished !== undefined) form.append('is_published', changes.isPublished ? '1' : '0');
+    if (changes.position !== undefined) form.append('position', String(changes.position));
+
+    return this.http
+      .post<ApiEnvelope<{ card: VehicleShowcaseCardAdmin }>>(`${this.api}/admin/vehicle-showcase-cards/${id}`, form)
+      .pipe(map((response) => response.data.card));
+  }
+
+  /** Supprime une carte. DELETE /admin/vehicle-showcase-cards/{id} */
+  deleteVehicleShowcaseCard(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/admin/vehicle-showcase-cards/${id}`);
   }
 
   /** Nomenclatures de référence (catégories, régions), lecture seule. GET /admin/reference */

@@ -20,6 +20,7 @@ use App\Modules\Admin\Http\Controllers\AdminSettingsController;
 use App\Modules\Admin\Http\Controllers\AdminStatisticsController;
 use App\Modules\Admin\Http\Controllers\AdminTeamController;
 use App\Modules\Admin\Http\Controllers\AdminUserController;
+use App\Modules\Admin\Http\Controllers\AdminVehicleShowcaseController;
 use App\Modules\Admin\Http\Controllers\AdminWaitlistController;
 use App\Modules\Admin\Http\Controllers\AttendanceController;
 use App\Modules\Admin\Http\Controllers\FaqController;
@@ -188,6 +189,21 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
         ->middleware('can:gerer:parametres');
     Route::delete('/news/{news}', [AdminNewsController::class, 'destroy'])
         ->whereNumber('news')
+        ->middleware('can:gerer:parametres');
+
+    // Section « Location de véhicules » de l'accueil, en remplacement de
+    // l'ancienne « Protocole de confiance » (demande client, 2026-09-07).
+    // Même permission que les actualités et les bandeaux : du contenu de
+    // vitrine, pas un dossier client.
+    Route::get('/vehicle-showcase-cards', [AdminVehicleShowcaseController::class, 'index'])
+        ->middleware('can:gerer:parametres');
+    Route::post('/vehicle-showcase-cards', [AdminVehicleShowcaseController::class, 'store'])
+        ->middleware('can:gerer:parametres');
+    Route::post('/vehicle-showcase-cards/{card}', [AdminVehicleShowcaseController::class, 'update'])
+        ->whereNumber('card')
+        ->middleware('can:gerer:parametres');
+    Route::delete('/vehicle-showcase-cards/{card}', [AdminVehicleShowcaseController::class, 'destroy'])
+        ->whereNumber('card')
         ->middleware('can:gerer:parametres');
 
     // F15.1 — Héros de l'accueil : diaporama de photos, ou une vidéo à la

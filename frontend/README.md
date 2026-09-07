@@ -2415,6 +2415,47 @@ l'accueil (vidéo + 4 cartes maximum, F17).
   développement : page liste avec plusieurs catégories, page de détail par
   slug et par ancien id, écran back-office avec ses deux sous-onglets.
 
+### La section « Protocole de confiance » devient une vitrine « Location de véhicules » (F20, hors CDC)
+
+Demande du client (2026-09-07) : remplacer les 3 garanties statiques de
+l'accueil par sa propre offre de location de véhicules, administrable au
+back-office, rangée par catégorie libre (berline, 4x4, minibus, ou toute
+autre catégorie qu'il invente).
+
+- **Nouveau service public** `core/api/vehicle-showcase.service.ts`
+  (`VehicleShowcaseService.list()` → `GET /vehicle-showcase-cards`), sur le
+  patron de `NewsService` mais sans `body`/vidéo — chaque carte porte
+  directement `linkUrl` (obligatoire) et `linkLabel`.
+- **Regroupement par catégorie côté client, pas en base** : `HomePageComponent`
+  (`chargerVehiculesVitrine()`) range les cartes publiées par `category`
+  (clé « Autres » si absente) en conservant l'ordre d'apparition — donc le
+  `position` choisi au back-office, pas un tri alphabétique des catégories.
+  Section masquée entièrement si aucun groupe (aucune carte publiée), même
+  logique de repli que les actualités.
+- **Même carte que « À découvrir », réutilisée telle quelle** : demande du
+  client après avoir vu le premier rendu (2026-09-07) — pas un composant à
+  part, `NewsCardMiniListComponent` (image + titre + CTA) sert les deux
+  sections. `VehicleShowcaseCard` porte les mêmes champs (`id`, `title`,
+  `image`, `linkUrl`, `linkLabel`) que `NewsCardMini`, plus `category` et
+  `description` en surplus — le typage structurel de TypeScript accepte de
+  le passer tel quel à `[cards]` sans conversion. La `description` n'est
+  donc **pas affichée** sur l'accueil (ce composant ne la montre jamais),
+  seulement en back-office.
+- **Nouvel écran back-office** `features/backoffice/vehicle-showcase/`
+  (`BackofficeVehicleShowcasePageComponent`), sur le patron de l'écran
+  Actualités mais sans sous-onglets ni vidéo : titre, catégorie (champ texte
+  libre avec `<datalist>` des catégories déjà utilisées, plus « Berline »,
+  « 4x4 », « Minibus » suggérés par défaut), image, description, lien
+  (obligatoire), statut publié/masqué. Sa propre entrée de menu
+  (`backoffice-layout.ts`, permission `gerer:parametres` — même famille de
+  contenu de vitrine que Paramètres/Actualités), avec une icône « volant »
+  neuve pour ne pas la confondre avec la voiture de la rubrique Mobilité
+  (supervision des réservations, un métier différent).
+- **Vérifié** : build de production sans erreur, CRUD testé via l'API
+  (création de cartes dans deux catégories différentes, suppression), et
+  aperçu visuel headless confirmant le regroupement par catégorie sur
+  l'accueil et l'absence propre de la section sans carte publiée.
+
 ### Commandes utiles
 
 ```bash
