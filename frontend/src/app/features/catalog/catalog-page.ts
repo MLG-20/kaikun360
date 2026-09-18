@@ -14,6 +14,20 @@ interface CatalogIntro {
   lead: string;
 }
 
+/** Textes de l'état « aucun résultat » d'un univers (F21, généralisé). */
+interface CatalogEmptyState {
+  message: string;
+  ctaLabel: string;
+  ctaSubject: string;
+}
+
+/** Textes de l'état « aucun résultat » d'un univers (F21, généralisé). */
+interface CatalogEmptyState {
+  message: string;
+  ctaLabel: string;
+  ctaSubject: string;
+}
+
 /**
  * Page de résultats de recherche (F2.1) — route `/recherche`.
  *
@@ -116,4 +130,41 @@ export class CatalogPageComponent {
 
   /** Textes d'ouverture de l'univers courant. */
   readonly intro = computed<CatalogIntro>(() => this.intros[this.universe()]);
+
+  /**
+   * États « aucun résultat » par univers (F21, généralisé depuis Tourisme) :
+   * les catalogues démarrent vides le temps que l'offre se remplisse, le
+   * message générique laissait plutôt penser à une panne. Un bouton WhatsApp
+   * vers une demande sur mesure remplace le mur muet.
+   */
+  private readonly emptyStates: Record<Universe, CatalogEmptyState> = {
+    immobilier: {
+      message: 'Biens bientôt disponibles',
+      ctaLabel: 'Demander un bien sur mesure',
+      ctaSubject: 'un bien immobilier sur mesure',
+    },
+    nuitees: {
+      message: 'Séjours bientôt disponibles',
+      ctaLabel: 'Demander un séjour sur mesure',
+      ctaSubject: 'un séjour sur mesure',
+    },
+    tourisme: {
+      message: 'Circuits bientôt disponibles',
+      ctaLabel: 'Demander un circuit sur mesure',
+      ctaSubject: 'un circuit sur mesure',
+    },
+    transport: {
+      message: 'Véhicules bientôt disponibles',
+      ctaLabel: 'Demander un véhicule sur mesure',
+      ctaSubject: 'un véhicule sur mesure',
+    },
+    mobilite: {
+      message: 'Services de mobilité bientôt disponibles',
+      ctaLabel: 'Demander un trajet sur mesure',
+      ctaSubject: 'un trajet sur mesure',
+    },
+  };
+
+  /** État « aucun résultat » de l'univers courant. */
+  readonly emptyState = computed<CatalogEmptyState>(() => this.emptyStates[this.universe()]);
 }

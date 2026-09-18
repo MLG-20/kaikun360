@@ -21,5 +21,10 @@
   <app-search-engine [live]="true" />
 
   <!-- Le composant catalogue lit ses filtres/tri/page dans l'URL. -->
-  <app-catalog [universe]="universe()" />
+  <app-catalog
+    [universe]="universe()"
+    [emptyMessage]="emptyState().message"
+    [emptyCtaLabel]="emptyState().ctaLabel"
+    [emptyCtaSubject]="emptyState().ctaSubject"
+  />
 </div>
