@@ -489,29 +489,41 @@ groupes ». Ces éléments ne vivent pas au même endroit dans le modèle :
 
 - `GET /admin/experiences` — les **circuits**. Sert désormais
   `AdminExperienceResource` (sur-ensemble du format public) avec le
-  **remplissage** (`seats_taken`/`seats_left`, `withSum`) et le `provider`.
-  ⚠️ Un circuit n'a **pas de date de départ** : sa capacité est un **total par
-  circuit** (B6.3), le décompte cumule donc toutes ses réservations non
-  annulées — contrairement aux trajets de Mobilité, datés. Filtre
+  **remplissage** (`seats_taken`/`capacity_total`, `withSum`) et le `provider`.
+  ⚠️ Revu en F21 : un circuit a désormais **plusieurs dates de départ**, chacune
+  avec ses propres places (table `tourism_experience_departures`) —
+  `capacity_total`/`seats_taken` sur cette liste sont des CUMULS toutes dates
+  confondues (repère rapide) ; le détail par date vit dans la fiche
+  (`GET /admin/experiences/{id}`, champ `departures`). Filtre
   supplémentaire `destination` (exact) ; `q` porte aussi sur la `reference`.
-  Le **« programme »** est rendu par les `inclusions` (restauration, guide,
-  transport…), déjà portées par le modèle.
+  Le **« programme »** jour par jour vit dans `itinerary` ; ce qui est compris
+  dans le prix, dans `included`/`excluded` (texte libre, remplace les 4
+  `inclusions` à cocher).
 - `GET /admin/tourism/destinations` — les **destinations**. Elles ne sont pas
   une entité en base mais une **colonne** de `tourism_experiences` : on les
   restitue par agrégation (`circuits_count`, `published_count`,
   `pending_count`, `capacity_total`, `seats_taken`/`seats_left`,
   `price_min`/`price_max`). Non paginé (une dizaine de destinations distinctes).
-  Le remplissage est calculé par une **requête séparée** puis recollé en
-  mémoire : agrégé dans la même requête, la jointure sur `bookings`
-  multiplierait les lignes et fausserait `COUNT(*)` / `SUM(capacity)`.
+  Le remplissage ET la capacité cumulée sont calculés par des **requêtes
+  séparées** puis recollés en mémoire : agrégés dans la requête groupée
+  principale, une jointure sur `bookings` ou `tourism_experience_departures`
+  multiplierait les lignes et fausserait `COUNT(*)`.
 - `GET /admin/providers?category=guide,restauration` — les **guides** et
   **restaurants**. ⚠️ Ce ne sont **pas** des entités du module Explore : la
   plateforme ne les connaît que comme **catégories de prestataires**
-  (table `provider_categories`, extensible depuis F5) et comme drapeaux
-  d'inclusion d'un circuit. Le filtre
+  (table `provider_categories`, extensible depuis F5) et comme texte libre dans
+  `included`/`excluded` d'un circuit. Le filtre
   `category` accepte plusieurs valeurs séparées par une virgule ; une valeur
   inconnue est ignorée, mais un filtre dont **aucune** valeur n'est valide
   renvoie une liste vide (jamais le catalogue entier).
+- **Dépôt d'un circuit par l'équipe (F21)** — `/back-office/tourisme/circuit/
+  nouveau` réutilise le formulaire prestataire (`POST /experiences`), ouvert au
+  `super_admin` via `Gate::before` : le back-office n'était jusqu'ici que de la
+  supervision, sans aucun moyen d'amorcer le catalogue Tourisme quand aucun
+  prestataire n'a encore rien déposé. Le circuit créé porte `provider_id` =
+  l'admin lui-même, ce qui lui permet aussi de le corriger ensuite depuis
+  `/back-office/tourisme/circuit/{id}/modifier` (lien visible seulement s'il en
+  est le `provider`).
 
 > **Écart CDC assumé** : aucun rattachement d'un guide *nommé* à un circuit
 > précis n'existe en base. Le combler demanderait un modèle d'affectation
@@ -717,7 +729,7 @@ de personnes. Sept points d'accès de détail sont donc ajoutés, chacun gardé 
 | `GET /admin/stay-bookings/{booking}` | l'argent du séjour (encaissé / reste dû, règlements un par un), l'hôte, le journal où figure le motif d'une caution conservée | `gerer:nuitees` |
 | `GET /admin/vehicles/{vehicle}` | ce que le véhicule **engage** : locations et départs programmés à venir (`is_upcoming`) | `consulter:dashboard-admin` |
 | `GET /admin/mobility-services/{service}` | **qui** sont les passagers d'un départ, joignables, avec leur solde dû | `consulter:dashboard-admin` |
-| `GET /admin/experiences/{experience}` | le programme (inclusions) et les participants d'un circuit | `consulter:dashboard-admin` |
+| `GET /admin/experiences/{experience}` | le programme (itinéraire, inclus/non inclus), les dates de départ et les participants d'un circuit | `consulter:dashboard-admin` |
 | `GET /admin/providers/{provider}` | les avis **en clair**, les certifications, le motif des sanctions | `valider:prestataire` |
 | `GET /admin/payments/{payment}` | les **preuves** d'encaissement et l'échéancier complet de la réservation | `gerer:paiements` |
 | `GET /admin/reviews/{review}` | le **contexte** : les autres avis publiés de la ressource notée | `moderer:avis` |

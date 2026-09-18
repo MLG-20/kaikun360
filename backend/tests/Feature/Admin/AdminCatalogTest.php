@@ -205,13 +205,14 @@ class AdminCatalogTest extends TestCase
     }
 
     /**
-     * F7.2.k — Le remplissage d'un circuit (« capacités groupes »). Rappel
-     * métier : une expérience n'a pas de date de départ, sa capacité est un
-     * total par circuit — le décompte cumule donc toutes ses réservations.
+     * F7.2.k — Le remplissage d'un circuit (« capacités groupes »). Revu en
+     * F21 : la capacité est désormais par date de départ ; le total exposé
+     * sur la liste cumule les places de toutes les dates du circuit.
      */
     public function test_le_remplissage_d_un_circuit_ignore_les_reservations_annulees(): void
     {
-        $experience = TourismExperience::factory()->create(['capacity' => 20]);
+        $experience = TourismExperience::factory()->withDepartures(1)->create();
+        $experience->departures()->update(['seats_total' => 20]);
 
         $this->bookExperience($experience, 6, BookingStatus::CONFIRMEE);
         $this->bookExperience($experience, 4, BookingStatus::EN_ATTENTE);
@@ -221,7 +222,7 @@ class AdminCatalogTest extends TestCase
 
         $this->getJson('/api/v1/admin/experiences')
             ->assertOk()
-            ->assertJsonPath('data.0.capacity', 20)
+            ->assertJsonPath('data.0.capacity_total', 20)
             ->assertJsonPath('data.0.seats_taken', 10)
             ->assertJsonPath('data.0.seats_left', 10);
     }
@@ -232,24 +233,21 @@ class AdminCatalogTest extends TestCase
      */
     public function test_la_couverture_par_destination_est_agregee(): void
     {
-        TourismExperience::factory()->create([
+        TourismExperience::factory()->withDepartures(1)->create([
             'destination' => 'Saly',
             'status' => 'publie',
-            'capacity' => 10,
             'price_xof' => 30_000,
-        ]);
-        TourismExperience::factory()->create([
+        ])->departures()->update(['seats_total' => 10]);
+        TourismExperience::factory()->withDepartures(1)->create([
             'destination' => 'Saly',
             'status' => 'en_attente_validation',
-            'capacity' => 15,
             'price_xof' => 90_000,
-        ]);
-        TourismExperience::factory()->create([
+        ])->departures()->update(['seats_total' => 15]);
+        TourismExperience::factory()->withDepartures(1)->create([
             'destination' => 'Saint-Louis',
             'status' => 'publie',
-            'capacity' => 8,
             'price_xof' => 50_000,
-        ]);
+        ])->departures()->update(['seats_total' => 8]);
 
         Sanctum::actingAs($this->agent());
 
@@ -275,10 +273,10 @@ class AdminCatalogTest extends TestCase
      */
     public function test_la_couverture_par_destination_compte_les_places_sans_fausser_les_totaux(): void
     {
-        $experience = TourismExperience::factory()->create([
+        $experience = TourismExperience::factory()->withDepartures(1)->create([
             'destination' => 'Sine Saloum',
-            'capacity' => 12,
         ]);
+        $experience->departures()->update(['seats_total' => 12]);
         $this->bookExperience($experience, 3, BookingStatus::CONFIRMEE);
         $this->bookExperience($experience, 2, BookingStatus::CONFIRMEE);
         $this->bookExperience($experience, 5, BookingStatus::ANNULEE_CLIENT);

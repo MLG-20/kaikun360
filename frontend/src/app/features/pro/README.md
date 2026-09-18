@@ -120,21 +120,27 @@ mécanique que l'espace propriétaire (F4). Aucun composant de shell dupliqué.
     traduire en message d'erreur.
     ⚠️ `datetime-local` lu et écrit en heure **locale** (jamais `toISOString()`,
     qui décalerait un bus de 06:00 à 05:00 GMT).
-  - `ProviderExperienceFormPageComponent` (`offres/experience/nouvelle`) — dépôt
-    d'un circuit (`POST /experiences`) : titre, destination, durée, capacité,
-    prix par participant, programme et **inclusions** cochées (restauration,
-    guide, transport, hébergement → `{ cle: booléen }`). Création uniquement (le
-    backend n'expose pas d'édition d'expérience ; la modification passe par le
-    back-office).
+  - `ProviderExperienceFormPageComponent` (`offres/experience/nouvelle` et
+    `offres/experience/:id/modifier`) — dépôt et édition d'un circuit
+    (`POST`/`PATCH /experiences`) : titre, destination, durée, prix par
+    participant, **programme jour par jour** (`itinerary`, `FormArray`),
+    **dates de départ** (`departures`, `FormArray`, au moins une exigée —
+    chacune avec ses propres places), et **compris/non compris** en texte libre
+    (`included`/`excluded`, F21 — remplace les 4 inclusions à cocher).
+    ⚠️ **Ce même composant est aussi monté côté back-office**
+    (`/back-office/tourisme/circuit/nouveau`, F21) : un `returnTo` en route
+    `data` pilote où revenir après enregistrement, seule différence entre les
+    deux montages — pas de second formulaire qui pourrait diverger.
   - Feuille de style **`offers/offer-form.scss`**, partagée par les formulaires
     véhicule et départ (préfixe historique `vf-`) — **ne pas en recréer une par
     formulaire**, même précédent que `backoffice/shared/dossier.scss`.
   - Service dédié **`core/api/offer.service.ts`** (`OfferService`) : constantes
-    `VEHICLE_TYPES` / **`MOBILITY_SERVICE_TYPES`** / `EXPERIENCE_INCLUSIONS`,
-    helper `vehicleFamily`, et méthodes
-    `myVehicles` / `createVehicle` / `updateVehicle` / `findMyVehicle` /
-    `myExperiences` / `createExperience`. Le nettoyage des corps n'envoie que les
-    champs de conformité pertinents pour la famille du véhicule.
+    `VEHICLE_TYPES` / **`MOBILITY_SERVICE_TYPES`**, helper `vehicleFamily`, et
+    méthodes `myVehicles` / `createVehicle` / `updateVehicle` / `findMyVehicle` /
+    `myExperiences` / `createExperience` / `updateExperience` /
+    `findMyExperience`. Le nettoyage des corps n'envoie que les champs
+    pertinents (ex. conformité selon la famille du véhicule ; `itinerary` omis
+    s'il est vide côté circuit).
 
 - **`missions/`** — `ProviderMissionsPageComponent`, route `missions` (F5.2).
   Liste paginée des missions (`GET /provider-missions/mine`, 15/page) : chaque

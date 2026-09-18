@@ -10,9 +10,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Tests de la couche de données des expériences touristiques (phase B6.1) :
- * casts (inclusions/statut), relation prestataire, réservations polymorphes et
- * scope de publication.
+ * Tests de la couche de données des expériences touristiques (phase B6.1,
+ * revue F21) : casts (itinéraire/statut), relation prestataire, dates de
+ * départ, réservations polymorphes et scope de publication.
  */
 class TourismExperienceModelTest extends TestCase
 {
@@ -21,16 +21,26 @@ class TourismExperienceModelTest extends TestCase
     public function test_une_experience_se_cree_avec_ses_casts(): void
     {
         $experience = TourismExperience::factory()->create([
-            'inclusions' => ['restauration' => true, 'guide' => false],
-            'capacity' => 12,
+            'itinerary' => [['day' => 1, 'title' => 'Arrivée', 'description' => 'Accueil à l\'aéroport']],
+            'included' => 'Guide francophone',
+            'excluded' => 'Boissons',
         ]);
 
         $experience->refresh();
 
         $this->assertSame(ExperienceStatus::EN_ATTENTE_VALIDATION, $experience->status);
-        $this->assertIsArray($experience->inclusions);
-        $this->assertTrue($experience->inclusions['restauration']);
-        $this->assertSame(12, $experience->capacity);
+        $this->assertIsArray($experience->itinerary);
+        $this->assertSame('Arrivée', $experience->itinerary[0]['title']);
+        $this->assertSame('Guide francophone', $experience->included);
+        $this->assertSame('Boissons', $experience->excluded);
+    }
+
+    public function test_une_experience_a_des_dates_de_depart_avec_leurs_propres_places(): void
+    {
+        $experience = TourismExperience::factory()->withDepartures(3)->create();
+
+        $this->assertCount(3, $experience->departures);
+        $this->assertGreaterThan(0, $experience->departures->first()->seats_total);
     }
 
     public function test_une_experience_appartient_a_un_prestataire(): void

@@ -374,6 +374,21 @@ CREATE TABLE `hero_banners` (
   CONSTRAINT `hero_banners_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `home_hero_slides`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `home_hero_slides` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `image_path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `position` int unsigned NOT NULL DEFAULT '0',
+  `updated_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `home_hero_slides_updated_by_foreign` (`updated_by`),
+  CONSTRAINT `home_hero_slides_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `incidents`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -532,6 +547,7 @@ CREATE TABLE `mobility_services` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
+  `maps_link` varchar(2048) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `mobility_services_reference_unique` (`reference`),
   KEY `mobility_services_provider_id_foreign` (`provider_id`),
@@ -570,6 +586,32 @@ CREATE TABLE `model_has_roles` (
   PRIMARY KEY (`role_id`,`model_id`,`model_type`),
   KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`),
   CONSTRAINT `model_has_roles_role_id_foreign` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `news_articles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `news_articles` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(180) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(220) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `excerpt` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `body` text COLLATE utf8mb4_unicode_ci,
+  `image_path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `video_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `video_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `link_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `link_label` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_published` tinyint(1) NOT NULL DEFAULT '0',
+  `position` int unsigned NOT NULL DEFAULT '0',
+  `updated_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `news_articles_slug_unique` (`slug`),
+  KEY `news_articles_updated_by_foreign` (`updated_by`),
+  CONSTRAINT `news_articles_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `notifications`;
@@ -796,6 +838,8 @@ CREATE TABLE `properties` (
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
   `price_xof` bigint unsigned DEFAULT NULL,
+  `caution_xof` bigint unsigned DEFAULT NULL,
+  `caution_months` tinyint unsigned DEFAULT NULL,
   `region_id` bigint unsigned DEFAULT NULL,
   `department_id` bigint unsigned DEFAULT NULL,
   `commune_id` bigint unsigned DEFAULT NULL,
@@ -811,6 +855,7 @@ CREATE TABLE `properties` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
+  `maps_link` varchar(2048) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `properties_owner_id_foreign` (`owner_id`),
   KEY `properties_region_id_foreign` (`region_id`),
@@ -850,6 +895,24 @@ CREATE TABLE `property_documents` (
   KEY `property_documents_property_id_foreign` (`property_id`),
   KEY `property_documents_validation_status_index` (`validation_status`),
   CONSTRAINT `property_documents_property_id_foreign` FOREIGN KEY (`property_id`) REFERENCES `properties` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `provider_categories`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `provider_categories` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `label` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_attente',
+  `created_by_provider_id` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `provider_categories_key_unique` (`key`),
+  KEY `provider_categories_created_by_provider_id_foreign` (`created_by_provider_id`),
+  KEY `provider_categories_status_index` (`status`),
+  CONSTRAINT `provider_categories_created_by_provider_id_foreign` FOREIGN KEY (`created_by_provider_id`) REFERENCES `providers` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `provider_certifications`;
@@ -962,6 +1025,7 @@ CREATE TABLE `providers` (
   KEY `providers_validated_by_foreign` (`validated_by`),
   KEY `providers_category_index` (`category`),
   KEY `providers_status_index` (`status`),
+  CONSTRAINT `providers_category_foreign` FOREIGN KEY (`category`) REFERENCES `provider_categories` (`key`),
   CONSTRAINT `providers_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `providers_validated_by_foreign` FOREIGN KEY (`validated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1232,6 +1296,21 @@ CREATE TABLE `team_building_requests` (
   CONSTRAINT `team_building_requests_company_id_foreign` FOREIGN KEY (`company_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `tourism_experience_departures`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tourism_experience_departures` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `tourism_experience_id` bigint unsigned NOT NULL,
+  `start_date` date NOT NULL,
+  `seats_total` int unsigned NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `experience_departures_unique_date` (`tourism_experience_id`,`start_date`),
+  CONSTRAINT `tourism_experience_departures_tourism_experience_id_foreign` FOREIGN KEY (`tourism_experience_id`) REFERENCES `tourism_experiences` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `tourism_experiences`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1242,16 +1321,18 @@ CREATE TABLE `tourism_experiences` (
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `destination` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
+  `itinerary` json DEFAULT NULL,
   `duration_days` int unsigned NOT NULL DEFAULT '1',
   `price_xof` bigint unsigned NOT NULL,
-  `capacity` int unsigned NOT NULL DEFAULT '1',
-  `inclusions` json DEFAULT NULL,
+  `included` text COLLATE utf8mb4_unicode_ci,
+  `excluded` text COLLATE utf8mb4_unicode_ci,
   `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_attente_validation',
   `published_at` timestamp NULL DEFAULT NULL,
   `approved_by` bigint unsigned DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
+  `maps_link` varchar(2048) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `tourism_experiences_reference_unique` (`reference`),
   KEY `tourism_experiences_provider_id_foreign` (`provider_id`),
@@ -1319,6 +1400,27 @@ CREATE TABLE `users` (
   CONSTRAINT `users_region_id_foreign` FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `vehicle_showcase_cards`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `vehicle_showcase_cards` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(180) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `image_path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `link_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `link_label` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_published` tinyint(1) NOT NULL DEFAULT '0',
+  `position` int unsigned NOT NULL DEFAULT '0',
+  `updated_by` bigint unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `vehicle_showcase_cards_updated_by_foreign` (`updated_by`),
+  CONSTRAINT `vehicle_showcase_cards_updated_by_foreign` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `vehicles`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1345,6 +1447,7 @@ CREATE TABLE `vehicles` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
+  `maps_link` varchar(2048) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `vehicles_reference_unique` (`reference`),
   KEY `vehicles_provider_id_foreign` (`provider_id`),
@@ -1366,6 +1469,7 @@ CREATE TABLE `verification_codes` (
   `purpose` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `channel` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `code_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `failed_attempts` tinyint unsigned NOT NULL DEFAULT '0',
   `expires_at` timestamp NOT NULL,
   `consumed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -1374,6 +1478,30 @@ CREATE TABLE `verification_codes` (
   KEY `verification_codes_user_id_purpose_channel_index` (`user_id`,`purpose`,`channel`),
   KEY `verification_codes_purpose_index` (`purpose`),
   CONSTRAINT `verification_codes_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `waitlist_entries`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `waitlist_entries` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `city` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `category` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `details` json DEFAULT NULL,
+  `precisions` text COLLATE utf8mb4_unicode_ci,
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'nouveau',
+  `handled_by` bigint unsigned DEFAULT NULL,
+  `handled_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `waitlist_entries_handled_by_foreign` (`handled_by`),
+  KEY `waitlist_entries_category_index` (`category`),
+  KEY `waitlist_entries_status_index` (`status`),
+  CONSTRAINT `waitlist_entries_handled_by_foreign` FOREIGN KEY (`handled_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1403,54 +1531,69 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (17,'2026_06_26_164
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (18,'2026_06_26_171536_create_incidents_table',1);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (19,'2026_06_26_171540_create_expenses_table',1);
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (20,'2026_06_27_133152_create_owner_payouts_table',1);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (21,'2026_06_27_150000_create_construction_requests_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (22,'2026_06_27_150500_create_reports_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (23,'2026_06_27_151000_create_construction_milestones_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (24,'2026_06_27_152000_create_tourism_experiences_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (25,'2026_06_29_100000_create_vehicles_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (26,'2026_06_29_100500_create_mobility_services_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (27,'2026_06_29_101000_add_commission_and_caution_status_to_bookings_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (28,'2026_06_30_100000_create_diaspora_projects_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (29,'2026_06_30_110000_create_team_building_requests_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (30,'2026_06_30_110500_create_team_building_quotes_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (31,'2026_07_01_100000_create_providers_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (32,'2026_07_01_100500_create_provider_certifications_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (33,'2026_07_01_101000_create_provider_missions_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (34,'2026_07_01_120000_create_requests_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (35,'2026_07_01_130000_create_quotes_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (36,'2026_07_01_130500_add_cancelled_at_to_bookings_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (37,'2026_07_01_140000_create_media_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (38,'2026_07_01_150000_create_reviews_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (39,'2026_07_11_160000_create_settings_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (40,'2026_07_11_161000_create_faqs_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (41,'2026_07_11_162000_create_pages_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (42,'2026_07_11_170000_add_stay_operations_to_bookings_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (43,'2026_07_12_100000_create_payments_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (44,'2026_07_12_180000_add_catalog_search_indexes',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (45,'2026_07_12_190000_add_google_id_to_users_table',2);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (46,'2026_07_15_120000_create_contact_messages_table',3);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (47,'2026_07_16_120000_add_location_and_address_to_users_table',4);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (48,'2026_07_17_171057_create_notifications_table',5);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (49,'2026_07_17_100000_create_conversations_table',6);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (50,'2026_07_17_100100_create_conversation_user_table',6);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (51,'2026_07_17_100200_create_messages_table',6);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (52,'2026_07_18_100000_make_favorites_polymorphic',7);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (53,'2026_07_23_100000_create_provider_weekly_availabilities_table',8);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (54,'2026_07_23_100100_create_provider_unavailabilities_table',8);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (55,'2026_07_26_100000_create_attendances_table',9);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (56,'2026_07_28_100000_add_team_building_link_to_provider_missions_table',10);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (57,'2026_07_29_220000_create_construction_quotes_table',11);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (58,'2026_07_30_090000_add_construction_link_to_provider_missions_table',12);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (59,'2026_07_30_150000_add_kind_to_payments_table',13);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (60,'2026_07_31_100000_add_avatar_to_profiles_table',14);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (61,'2026_07_31_100500_add_file_metadata_to_provider_certifications_table',14);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (62,'2026_08_02_140000_add_agent_id_to_quotes_table',15);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (63,'2026_08_04_090000_add_support_fields_to_conversations_table',16);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (64,'2026_08_05_115000_create_partner_payouts_table',17);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (65,'2026_08_05_120000_create_partner_dues_table',17);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (66,'2026_08_05_121000_add_completed_at_to_provider_missions_table',17);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (67,'2026_08_06_100000_add_proof_metadata_to_owner_payouts_table',18);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (68,'2026_08_09_230000_add_soft_deletes_to_listing_tables',19);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (69,'2026_08_10_090000_add_hidden_at_to_client_records_tables',20);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (70,'2026_08_10_091000_add_hidden_at_to_notifications_and_conversation_user_tables',21);
-INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (71,'2026_08_10_150000_create_hero_banners_table',22);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (21,'2026_06_27_150000_create_construction_requests_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (22,'2026_06_27_150500_create_reports_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (23,'2026_06_27_151000_create_construction_milestones_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (24,'2026_06_27_152000_create_tourism_experiences_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (25,'2026_06_29_100000_create_vehicles_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (26,'2026_06_29_100500_create_mobility_services_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (27,'2026_06_29_101000_add_commission_and_caution_status_to_bookings_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (28,'2026_06_30_100000_create_diaspora_projects_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (29,'2026_06_30_110000_create_team_building_requests_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (30,'2026_06_30_110500_create_team_building_quotes_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (31,'2026_07_01_100000_create_providers_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (32,'2026_07_01_100500_create_provider_certifications_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (33,'2026_07_01_101000_create_provider_missions_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (34,'2026_07_01_120000_create_requests_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (35,'2026_07_01_130000_create_quotes_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (36,'2026_07_01_130500_add_cancelled_at_to_bookings_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (37,'2026_07_01_140000_create_media_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (38,'2026_07_01_150000_create_reviews_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (39,'2026_07_11_160000_create_settings_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (40,'2026_07_11_161000_create_faqs_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (41,'2026_07_11_162000_create_pages_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (42,'2026_07_11_170000_add_stay_operations_to_bookings_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (43,'2026_07_12_100000_create_payments_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (44,'2026_07_12_180000_add_catalog_search_indexes',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (45,'2026_07_12_190000_add_google_id_to_users_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (46,'2026_07_15_120000_create_contact_messages_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (47,'2026_07_16_120000_add_location_and_address_to_users_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (48,'2026_07_17_100000_create_conversations_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (49,'2026_07_17_100100_create_conversation_user_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (50,'2026_07_17_100200_create_messages_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (51,'2026_07_17_171057_create_notifications_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (52,'2026_07_18_100000_make_favorites_polymorphic',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (53,'2026_07_23_100000_create_provider_weekly_availabilities_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (54,'2026_07_23_100100_create_provider_unavailabilities_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (55,'2026_07_26_100000_create_attendances_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (56,'2026_07_28_100000_add_team_building_link_to_provider_missions_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (57,'2026_07_29_220000_create_construction_quotes_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (58,'2026_07_30_090000_add_construction_link_to_provider_missions_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (59,'2026_07_30_150000_add_kind_to_payments_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (60,'2026_07_31_100000_add_avatar_to_profiles_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (61,'2026_07_31_100500_add_file_metadata_to_provider_certifications_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (62,'2026_08_02_140000_add_agent_id_to_quotes_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (63,'2026_08_04_090000_add_support_fields_to_conversations_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (64,'2026_08_05_115000_create_partner_payouts_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (65,'2026_08_05_120000_create_partner_dues_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (66,'2026_08_05_121000_add_completed_at_to_provider_missions_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (67,'2026_08_06_100000_add_proof_metadata_to_owner_payouts_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (68,'2026_08_09_230000_add_soft_deletes_to_listing_tables',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (69,'2026_08_10_090000_add_hidden_at_to_client_records_tables',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (70,'2026_08_10_091000_add_hidden_at_to_notifications_and_conversation_user_tables',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (71,'2026_08_10_150000_create_hero_banners_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (72,'2026_08_12_190000_add_failed_attempts_to_verification_codes_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (73,'2026_08_14_134716_create_waitlist_entries_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (74,'2026_08_16_180000_create_news_articles_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (75,'2026_08_16_190000_create_home_hero_slides_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (76,'2026_08_21_090000_add_link_to_news_articles_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (77,'2026_08_23_090000_create_provider_categories_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (78,'2026_08_23_090100_add_category_foreign_key_to_providers_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (79,'2026_08_23_100000_add_caution_to_properties_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (80,'2026_08_24_150000_clear_caution_xof_on_stays_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (81,'2026_08_24_150100_clear_caution_xof_on_vehicles_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (82,'2026_08_24_160000_add_maps_link_to_offers_tables',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (83,'2026_09_06_000000_add_category_and_slug_to_news_articles_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (84,'2026_09_07_000000_create_vehicle_showcase_cards_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (85,'2026_09_18_090000_add_itinerary_and_terms_to_tourism_experiences_table',1);
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES (86,'2026_09_18_090100_create_tourism_experience_departures_table',1);

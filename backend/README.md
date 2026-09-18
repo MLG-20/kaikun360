@@ -10,8 +10,8 @@ API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 
 - **296 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
-- **65 tables**, référentiel géographique du Sénégal inclus
-- **1145 tests** automatisés (4048 assertions), tous verts ✅
+- **66 tables**, référentiel géographique du Sénégal inclus
+- **1168 tests** automatisés, tous verts ✅
 
 ---
 

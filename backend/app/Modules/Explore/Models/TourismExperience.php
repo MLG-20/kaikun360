@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
@@ -47,10 +48,11 @@ class TourismExperience extends Model
         'title',
         'destination',
         'description',
+        'itinerary',
         'duration_days',
         'price_xof',
-        'capacity',
-        'inclusions',
+        'included',
+        'excluded',
         'maps_link',
         'status',
         'published_at',
@@ -63,10 +65,9 @@ class TourismExperience extends Model
     protected function casts(): array
     {
         return [
+            'itinerary' => 'array',
             'duration_days' => 'integer',
             'price_xof' => 'integer',
-            'capacity' => 'integer',
-            'inclusions' => 'array',
             'status' => ExperienceStatus::class,
             'published_at' => 'datetime',
         ];
@@ -86,6 +87,14 @@ class TourismExperience extends Model
     public function bookings(): MorphMany
     {
         return $this->morphMany(Booking::class, 'bookable');
+    }
+
+    /**
+     * Les dates de départ du circuit, chacune avec ses propres places (F21).
+     */
+    public function departures(): HasMany
+    {
+        return $this->hasMany(TourismExperienceDeparture::class)->orderBy('start_date');
     }
 
     /**

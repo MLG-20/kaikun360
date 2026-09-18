@@ -23,6 +23,11 @@
       <span class="bo-badge" [class]="statusClass(d.experience.status)">
         {{ d.experience.status_label ?? '—' }}
       </span>
+      @if (canEdit()) {
+        <a class="k-btn k-btn--ghost" [routerLink]="['/back-office', 'tourisme', 'circuit', d.experience.id, 'modifier']">
+          Modifier
+        </a>
+      }
     </div>
   </header>
 
@@ -34,12 +39,11 @@
         <div><dt>Destination</dt><dd>{{ d.experience.destination }}</dd></div>
         <div><dt>Durée</dt><dd>{{ d.experience.duration_days }} jour(s)</dd></div>
         <div><dt>Prix / personne</dt><dd>{{ xof(d.experience.price_xof) }}</dd></div>
-        <div><dt>Capacité groupe</dt><dd>{{ d.experience.capacity }} place(s)</dd></div>
       </dl>
 
-      <h3 class="bo-block__title">Remplissage</h3>
+      <h3 class="bo-block__title">Remplissage cumulé</h3>
       <p class="bo-fill">
-        <strong>{{ d.experience.seats_taken }} / {{ d.experience.capacity }}</strong>
+        <strong>{{ d.experience.seats_taken }} / {{ d.experience.capacity_total }}</strong>
         @if (d.experience.seats_left === 0) {
           <span class="bo-badge is-ok">Complet</span>
         } @else {
@@ -49,15 +53,28 @@
       <span class="bo-gauge" [attr.aria-label]="fillRate() + ' % de remplissage'">
         <span class="bo-gauge__fill" [style.width.%]="fillRate()"></span>
       </span>
-      <!--
-        Rappel qui évite un contresens : un circuit n'a pas de date de départ,
-        sa capacité est un TOTAL et le remplissage cumule toutes les
-        réservations — ce n'est pas le remplissage d'une session datée.
-      -->
       <p class="bo-hint">
-        Un circuit n'a pas de date de départ : cette capacité est un total, et le
-        remplissage cumule toutes les réservations non annulées.
+        Toutes dates de départ confondues. Le détail par date est ci-dessous.
       </p>
+
+      <h3 class="bo-block__title">Dates de départ</h3>
+      @if (d.experience.departures.length) {
+        <dl class="bo-facts">
+          @for (dep of d.experience.departures; track dep.id) {
+            <div>
+              <dt>{{ shortDate(dep.start_date) }}</dt>
+              <dd>
+                {{ dep.seats_total }} place(s)
+                @if (dep.seats_left !== undefined) {
+                  <span class="bo-muted">— {{ dep.seats_left }} restante(s)</span>
+                }
+              </dd>
+            </div>
+          }
+        </dl>
+      } @else {
+        <p class="bo-muted">Aucune date de départ programmée.</p>
+      }
 
       @if (totalDue() > 0) {
         <p class="bo-hint">
@@ -81,10 +98,16 @@
           quoi la plateforme s'engage auprès des participants.
         </p>
       } @else {
-        <p class="bo-muted">
-          Programme non renseigné — le circuit ne dit pas ce qui est compris dans son
-          prix.
-        </p>
+        <p class="bo-muted">Programme jour par jour non renseigné.</p>
+      }
+
+      @if (d.experience.included) {
+        <h3 class="bo-block__title">Compris</h3>
+        <p class="bo-desc">{{ d.experience.included }}</p>
+      }
+      @if (d.experience.excluded) {
+        <h3 class="bo-block__title">Non compris</h3>
+        <p class="bo-desc">{{ d.experience.excluded }}</p>
       }
 
       <h3 class="bo-block__title">Prestataire</h3>

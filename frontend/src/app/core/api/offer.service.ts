@@ -153,33 +153,38 @@ export interface NewMobilityServicePayload {
   vehicle_id?: number | null;
 }
 
-/** Une inclusion structurée d'un circuit (clé backend + libellé affiché). */
-export interface ExperienceInclusionOption {
-  key: string;
-  label: string;
+/** Un jour du programme, tel que saisi dans le formulaire (F21). */
+export interface NewExperienceItineraryDay {
+  day: number;
+  title?: string | null;
+  description?: string | null;
 }
 
 /**
- * Inclusions proposées à la composition d'un circuit (§4.1 tourisme :
- * programme, guide, restauration…). Stockées en `{ cle: booléen }`.
+ * Une date de départ, telle que saisie dans le formulaire (F21). `id` n'est
+ * présent qu'en édition, pour une date déjà existante — son absence indique à
+ * `ExperienceDepartureSyncer` qu'il s'agit d'une nouvelle date.
  */
-export const EXPERIENCE_INCLUSIONS: readonly ExperienceInclusionOption[] = [
-  { key: 'restauration', label: 'Restauration' },
-  { key: 'guide', label: 'Guide' },
-  { key: 'transport', label: 'Transport' },
-  { key: 'hebergement', label: 'Hébergement' },
-];
+export interface NewExperienceDeparture {
+  id?: number;
+  start_date: string;
+  seats_total: number;
+}
 
 /** Corps de `POST /experiences` — miroir de `StoreExperienceRequest`. */
 export interface NewExperiencePayload {
   title: string;
   destination: string;
   description?: string | null;
+  itinerary?: NewExperienceItineraryDay[];
   duration_days: number;
   price_xof: number;
-  capacity: number;
-  /** Inclusions structurées : `{ restauration: true, guide: false, … }`. */
-  inclusions?: Record<string, boolean>;
+  /** Ce qui est compris dans le prix, en texte libre. */
+  included?: string | null;
+  /** Ce qui n'est PAS compris, en texte libre. */
+  excluded?: string | null;
+  /** Dates de départ, chacune avec ses propres places. */
+  departures: NewExperienceDeparture[];
   /** Lien Google Maps collé par le prestataire (F5.10). */
   maps_link?: string | null;
 }
@@ -438,17 +443,19 @@ export class OfferService {
     return body;
   }
 
-  /** Prépare le corps d'une expérience (omet description vide, garde les inclusions). */
+  /** Prépare le corps d'une expérience (omet description/inclus/exclus vides). */
   private cleanExperience(p: NewExperiencePayload): Record<string, unknown> {
     const body: Record<string, unknown> = {
       title: p.title.trim(),
       destination: p.destination.trim(),
       duration_days: p.duration_days,
       price_xof: p.price_xof,
-      capacity: p.capacity,
+      departures: p.departures,
     };
     if (p.description && p.description.trim() !== '') body['description'] = p.description.trim();
-    if (p.inclusions && Object.keys(p.inclusions).length) body['inclusions'] = p.inclusions;
+    if (p.itinerary && p.itinerary.length) body['itinerary'] = p.itinerary;
+    if (p.included && p.included.trim() !== '') body['included'] = p.included.trim();
+    if (p.excluded && p.excluded.trim() !== '') body['excluded'] = p.excluded.trim();
     if (p.maps_link && p.maps_link.trim() !== '') body['maps_link'] = p.maps_link.trim();
     return body;
   }

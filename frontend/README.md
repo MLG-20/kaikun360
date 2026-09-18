@@ -579,20 +579,24 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     cahier) — plus le véhicule affecté et le prestataire opérateur. Filtres :
     nature, statut, **période de départ**, recherche.
 
-  Écran en **lecture seule**, comme Catalogues (F7.2.b) et Dossiers (F7.2.e) : la
+  Écran de supervision, comme Catalogues (F7.2.b) et Dossiers (F7.2.e) : la
   décision d'approbation reste concentrée dans l'écran **Validation** (F7.2.a),
-  point unique de décision. Celui-ci sert à *repérer* les anomalies.
+  point unique de décision.
 
   **F7.2.k Tourisme** (`features/backoffice/tourism/`, route `/back-office/tourisme`) :
   couvre le module CDC §6 *Tourisme* (« circuits, destinations, programmes,
   guides, restaurants, capacités groupes »). Ces six éléments ne vivent pas au
   même endroit dans le modèle de données — d'où **trois onglets**.
-  - **Circuits** (`GET /admin/experiences`, tous statuts) : la **capacité
-    groupe** en jauge places prises / restantes, et le **programme** rendu par
-    les *inclusions* du circuit (Restauration, Guide, Transport…) en étiquettes.
-    ⚠️ Un circuit n'a **pas de date de départ** : la capacité est un total et le
-    remplissage cumule toutes ses réservations — à ne pas confondre avec le
-    remplissage d'un départ daté de l'écran Mobilité.
+  - **Circuits** (`GET /admin/experiences`, tous statuts) : le **remplissage
+    cumulé** en jauge places prises / restantes, et le **programme** jour par
+    jour. ⚠️ Revu en F21 : un circuit a désormais **plusieurs dates de
+    départ**, chacune avec ses propres places (le cumul affiché ici est un
+    repère rapide, pas le remplissage d'une date précise — le détail par date
+    vit dans la fiche du circuit). Un bouton **« Ajouter un circuit »**
+    (visible sur cet onglet) ouvre le même formulaire que celui du prestataire
+    (`/back-office/tourisme/circuit/nouveau`) : le back-office n'était que
+    supervision jusque-là, sans aucun moyen d'amorcer le catalogue quand aucun
+    prestataire n'avait encore rien déposé.
   - **Destinations** (`GET /admin/tourism/destinations`) : vue **agrégée** —
     nombre de circuits, publiés vs en attente, capacité cumulée, fourchette de
     prix. Répond à la question de couverture : quelles destinations sont
@@ -602,9 +606,10 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
   - **Guides & restaurants** (`GET /admin/providers?category=guide,restauration`)
     : ⚠️ ce ne sont **pas** des entités du catalogue touristique. La plateforme
     ne les connaît que comme **catégories de prestataires** de la marketplace Pro
-    et comme drapeaux d'inclusion d'un circuit ; **aucun guide nommé n'est
-    rattaché à un circuit précis**. L'écart est signalé dans l'écran par un
-    encart, pas masqué. Les sanctions restent dans **Avis & qualité** (F7.2.g).
+    et comme texte libre (« compris » / « non compris », F21) d'un circuit ;
+    **aucun guide nommé n'est rattaché à un circuit précis**. L'écart est
+    signalé dans l'écran par un encart, pas masqué. Les sanctions restent dans
+    **Avis & qualité** (F7.2.g).
 
   Lecture seule, comme les écrans précédents.
 
@@ -743,10 +748,9 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     les deux écrans divergent : la grille de conformité d'un véhicule
     ([`mobility/vehicle-compliance.ts`](src/app/features/backoffice/mobility/vehicle-compliance.ts),
     pirogue vs motorisé) et la lecture du programme d'un circuit
-    ([`tourism/circuit-programme.ts`](src/app/features/backoffice/tourism/circuit-programme.ts)).
-    ⚠️ Cette dernière a évité un bug réel : `inclusions` est un **objet
-    `{clé: booléen}`**, pas un tableau — une fiche qui le lisait comme un tableau
-    aurait affiché « programme non renseigné » sur tous les circuits.
+    ([`tourism/circuit-programme.ts`](src/app/features/backoffice/tourism/circuit-programme.ts),
+    revu en F21 pour lire `itinerary` — le programme jour par jour — au lieu
+    des 4 inclusions à cocher qu'il portait jusque-là).
   - **La fiche prestataire n'appartient à aucun écran** : ouverte depuis Tourisme
     (« Guides & restaurants ») *et* depuis Avis & qualité, elle vit dans
     [`providers/`](src/app/features/backoffice/providers/) sous la route de premier
@@ -873,7 +877,9 @@ puisque la majorité des Sénégalais navigueront depuis leur smartphone.
     une nuitée se réserve sur une **période** (départ exclu, c'est ce qui fait
     les nuits) ; un véhicule sur des **journées** (bornes incluses, un seul jour
     est permis) ; un circuit sur une **date de départ** seule — il n'a pas de
-    date de fin, sa durée lui appartient ; un trajet, déjà daté, ne se réserve
+    date de fin, sa durée lui appartient (depuis F21, cette date se **choisit**
+    parmi celles programmées par le circuit, plutôt que de se taper librement —
+    voir F21 plus bas) ; un trajet, déjà daté, ne se réserve
     qu'en **nombre de places**.
   - **Le devis se compose sous les yeux du client** pendant qu'il choisit, et la
     **caution est annoncée à part, en retrait** : c'est un dépôt rendu, pas un
@@ -2455,6 +2461,48 @@ autre catégorie qu'il invente).
   (création de cartes dans deux catégories différentes, suppression), et
   aperçu visuel headless confirmant le regroupement par catégorie sur
   l'accueil et l'absence propre de la section sans carte publiée.
+
+### Le back-office peut déposer un circuit (F21)
+
+Remontée du client (2026-09-18) : l'écran Tourisme du back-office n'était que
+supervision — aucun bouton « Ajouter », et le catalogue Tourisme était vide,
+sans aucun moyen de l'amorcer.
+
+- **Aucun second formulaire.** `provider-experience-form-page` (jusque-là
+  monté uniquement sous `/espace-prestataire/offres/...`) est désormais aussi
+  monté sous `/back-office/tourisme/circuit/nouveau` et `.../circuit/{id}/
+  modifier` (`backoffice.routes.ts`) : même composant, mêmes appels API. Seule
+  différence entre les deux montages : un `returnTo` en route `data` (repli
+  `/espace-prestataire/offres` si absent) pilote où revenir après
+  enregistrement — c'est ce qui évite d'avoir à dupliquer l'écran, et donc de
+  le laisser diverger avec le temps.
+- **Formulaire revu en profondeur pour ce que demande vraiment un circuit** :
+  programme jour par jour (`FormArray` `itinerary`, numéro du jour = position
+  dans la liste, pas un champ saisi), dates de départ (`FormArray`
+  `departures`, une par défaut, jamais moins d'une — un circuit sans date
+  n'est jamais réservable), et « compris »/« non compris » en texte libre
+  (`included`/`excluded`) à la place des 4 inclusions à cocher.
+- **Le lien « Modifier »** sur la fiche back-office d'un circuit
+  (`backoffice-circuit-detail-page`) n'apparaît que si l'agent connecté EST le
+  `provider` du circuit (`canEdit`, comparaison avec `AuthService.user()`) : un
+  circuit d'un vrai prestataire reste hors de portée d'ici, il se corrige
+  depuis l'espace de ce dernier — `findMyExperience` (utilisé par le
+  formulaire pour précharger l'édition) ne renvoie de toute façon que les
+  circuits du compte connecté.
+- **Catalogue Tourisme vide : message moins alarmant.** « Aucun résultat ne
+  correspond à votre recherche » se lisait comme une panne alors qu'aucune
+  recherche n'avait été faite. `app-catalog` (composant partagé à tous les
+  univers) accepte désormais `emptyMessage`/`emptyCtaLabel`/`emptyCtaSubject`,
+  la page hôte les personnalisant ou non ; Tourisme affiche « Circuits
+  bientôt disponibles » + un bouton WhatsApp « Demander un circuit sur
+  mesure » (`app-whatsapp-button`, réutilisé, pas un lien recréé à la main).
+- **Réservation publique revue en conséquence** (`experience-detail-page`) :
+  le client choisit un `departure_id` dans un `<select>` (dates désactivées
+  quand complètes) au lieu de taper une date libre — `bookingHint`/`canQuote`
+  lisent les places restantes de la date **sélectionnée**, pas un total
+  global du circuit.
+- **Vérifié** : build de production sans erreur (`ng build`), vérification de
+  types stricte (`tsc --noEmit`, app et specs) sans erreur.
 
 ### Commandes utiles
 

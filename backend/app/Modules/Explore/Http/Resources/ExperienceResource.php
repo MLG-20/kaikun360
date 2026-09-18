@@ -8,9 +8,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Représentation JSON d'une expérience touristique (module Explore).
  *
- * `seats_left` (places restantes) n'est exposé que lorsqu'il a été calculé par
- * le contrôleur et placé dans l'attribut `seats_left` du modèle.
- *
  * @mixin \App\Modules\Explore\Models\TourismExperience
  */
 class ExperienceResource extends JsonResource
@@ -26,16 +23,21 @@ class ExperienceResource extends JsonResource
             'title' => $this->title,
             'destination' => $this->destination,
             'description' => $this->description,
+            // Programme jour par jour (F21) : [{day, title, description}, ...].
+            'itinerary' => $this->itinerary ?? [],
             'duration_days' => $this->duration_days,
             'price_xof' => $this->price_xof,
-            'capacity' => $this->capacity,
-            'inclusions' => $this->inclusions ?? [],
+            'included' => $this->included,
+            'excluded' => $this->excluded,
             // Lien Google Maps collé par le prestataire (F5.10).
             'maps_link' => $this->maps_link,
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             'published_at' => $this->published_at?->toIso8601String(),
-            'seats_left' => $this->when(isset($this->seats_left), fn () => (int) $this->seats_left),
+            // Dates de départ (F21) : chacune avec ses propres places. `seats_left`
+            // par date n'apparaît que si le contrôleur l'a calculé (cf.
+            // ExperienceDepartureResource).
+            'departures' => ExperienceDepartureResource::collection($this->whenLoaded('departures')),
             // F8.18 — LES PHOTOS. Même dette que les véhicules : `HasMedia` sur
             // le modèle, clé `experience` acceptée par `POST /media/upload`, et
             // aucun chemin de retour vers les écrans. Un circuit est pourtant ce

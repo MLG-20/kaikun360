@@ -123,15 +123,20 @@
   background: rgba(3, 25, 63, 0.14);
 }
 
-// Sous 420px, la pilule reste un rond même au survol/focus : le déploiement
+// Sous 640px, la pilule reste un rond même au survol/focus : le déploiement
 // prendrait trop de place face à la bulle WhatsApp empilée juste en dessous,
 // et le survol n'existe de toute façon pas au doigt sur mobile.
-@media (max-width: 420px) {
+//
+// ⚠️ Réduit aussi la taille du rond (44px, comme la bulle WhatsApp) — remonté
+// par un client (2026-09-18) : les deux bulles à 52px mordaient sur le
+// contenu qu'elles survolent en position fixe sur petit écran.
+@media (max-width: 640px) {
   .ia-lanceur,
   .ia-lanceur:hover,
   .ia-lanceur:focus-visible {
     padding: 0;
-    width: 52px;
+    width: 44px;
+    height: 44px;
     justify-content: center;
   }
 
@@ -145,5 +150,12 @@
 
   .ia-lanceur__avatar {
     background: transparent;
+    width: 34px;
+    height: 34px;
+
+    svg {
+      width: 19px;
+      height: 19px;
+    }
   }
 }

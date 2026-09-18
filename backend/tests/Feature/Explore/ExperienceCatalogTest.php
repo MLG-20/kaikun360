@@ -72,11 +72,62 @@ class ExperienceCatalogTest extends TestCase
             'destination' => 'Lompoul',
             'duration_days' => 2,
             'price_xof' => 80_000,
-            'capacity' => 10,
-            'inclusions' => ['restauration' => true, 'guide' => true],
+            'included' => 'Restauration, guide',
+            'departures' => [
+                ['start_date' => now()->addWeek()->toDateString(), 'seats_total' => 10],
+            ],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.experience.status', 'en_attente_validation')
+            ->assertJsonCount(1, 'data.experience.departures');
+    }
+
+    /**
+     * F21 — un circuit sans aucune date de départ ne serait jamais réservable.
+     */
+    public function test_un_circuit_sans_date_de_depart_est_refuse(): void
+    {
+        Sanctum::actingAs($this->verifiedProvider());
+
+        $this->postJson('/api/v1/experiences', [
+            'title' => 'Désert de Lompoul',
+            'destination' => 'Lompoul',
+            'duration_days' => 2,
+            'price_xof' => 80_000,
+            'departures' => [],
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('departures');
+    }
+
+    /**
+     * F21 — le super_admin peut déposer un circuit comme un prestataire
+     * (`Gate::before`), pour amorcer le catalogue Tourisme quand aucun
+     * prestataire n'en a encore proposé.
+     */
+    public function test_un_super_admin_peut_publier_un_circuit(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(UserRole::SUPER_ADMIN->value);
+
+        Sanctum::actingAs($admin);
+
+        $this->postJson('/api/v1/experiences', [
+            'title' => 'Île de Gorée',
+            'destination' => 'Gorée',
+            'duration_days' => 1,
+            'price_xof' => 25_000,
+            'departures' => [
+                ['start_date' => now()->addWeek()->toDateString(), 'seats_total' => 20],
+            ],
         ])
             ->assertCreated()
             ->assertJsonPath('data.experience.status', 'en_attente_validation');
+
+        $this->assertDatabaseHas('tourism_experiences', [
+            'title' => 'Île de Gorée',
+            'provider_id' => $admin->id,
+        ]);
     }
 
     public function test_un_prestataire_non_verifie_ne_peut_pas_publier(): void
@@ -89,7 +140,7 @@ class ExperienceCatalogTest extends TestCase
 
         $this->postJson('/api/v1/experiences', [
             'title' => 'X', 'destination' => 'Y', 'duration_days' => 1,
-            'price_xof' => 1000, 'capacity' => 5,
+            'price_xof' => 1000,
         ])->assertStatus(403);
     }
 
@@ -99,7 +150,7 @@ class ExperienceCatalogTest extends TestCase
 
         $this->postJson('/api/v1/experiences', [
             'title' => 'X', 'destination' => 'Y', 'duration_days' => 1,
-            'price_xof' => 1000, 'capacity' => 5,
+            'price_xof' => 1000,
         ])->assertStatus(403);
     }
 

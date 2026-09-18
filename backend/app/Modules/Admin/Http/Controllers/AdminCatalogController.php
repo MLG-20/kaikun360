@@ -11,6 +11,8 @@ use App\Modules\Admin\Http\Resources\AdminVehicleResource;
 use App\Modules\Admin\Validation\MediaEntry;
 use App\Modules\Explore\Enums\ExperienceStatus;
 use App\Modules\Explore\Models\TourismExperience;
+use App\Modules\Explore\Models\TourismExperienceDeparture;
+use App\Modules\Explore\Services\ExperienceBookingService;
 use App\Modules\Immo\Http\Resources\PropertyResource;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Mobility\Models\MobilityService;
@@ -274,20 +276,26 @@ class AdminCatalogController extends Controller
      * prestataire les a déclarées), le **prestataire** joignable, les **photos**,
      * et la liste des **participants** — avec ce que chacun doit encore.
      *
-     * ⚠️ Une expérience n'a **pas de date de départ** (B6.3) : sa capacité est un
-     * total par circuit, et `seats_taken` cumule toutes ses réservations non
-     * annulées. La fiche affiche donc un remplissage global, pas un départ daté.
+     * ⚠️ Revu en F21 : un circuit a désormais plusieurs dates de départ, chacune
+     * avec ses propres places. `seats_taken` reste un cumul toutes dates
+     * confondues (vue d'ensemble) ; `departures` détaille le remplissage par
+     * date, calculé via `ExperienceBookingService` comme côté public.
      */
-    public function experience(TourismExperience $experience): JsonResponse
+    public function experience(TourismExperience $experience, ExperienceBookingService $capacity): JsonResponse
     {
         $cancelled = $this->cancelledBookingStatuses();
 
-        $experience->load(['provider', 'allMedia'])
+        $experience->load(['provider', 'allMedia', 'departures'])
             ->loadCount(['allMedia as media_count', 'allMedia as media_hidden_count' => fn ($q) => $q->where('status', 'masque')])
             ->loadSum(
                 ['bookings as seats_taken' => fn ($q) => $q->whereNotIn('status', $cancelled)],
                 'guests'
-            );
+            )
+            ->loadSum('departures as capacity_total', 'seats_total');
+
+        $experience->departures->each(
+            fn (TourismExperienceDeparture $d) => $d->seats_left = $capacity->seatsLeft($d)
+        );
 
         $participants = $experience->bookings()
             ->with('user:id,name,email,phone')
@@ -350,9 +358,11 @@ class AdminCatalogController extends Controller
      * `AdminExperienceResource`, sur-ensemble du format public incluant le
      * remplissage et le prestataire.
      *
-     * ⚠️ Une expérience n'a pas de date de départ : sa capacité est un **total
-     * par circuit** (B6.3). `seats_taken` cumule donc toutes ses réservations
-     * non annulées, agrégées en une requête (`withSum`) pour éviter un N+1.
+     * ⚠️ Revu en F21 : la capacité est désormais un **total par date de
+     * départ**, pas par circuit. `capacity_total` et `seats_taken` ci-dessous
+     * sont des CUMULS toutes dates confondues (repère rapide sur la liste),
+     * agrégés en une requête (`withSum`) pour éviter un N+1 ; le détail par
+     * date vit dans la fiche (`experience()`).
      *
      * Filtre supplémentaire `destination` (F7.2.k) : correspondance exacte, pour
      * croiser avec la vue par destination ci-dessous.
@@ -367,6 +377,7 @@ class AdminCatalogController extends Controller
                 ['bookings as seats_taken' => fn ($q) => $q->whereNotIn('status', $this->cancelledBookingStatuses())],
                 'guests'
             )
+            ->withSum('departures as capacity_total', 'seats_total')
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')->toString()))
             ->when($request->filled('provider_id'), fn ($q) => $q->where('provider_id', $request->integer('provider_id')))
             ->when($request->filled('destination'), fn ($q) => $q->where('destination', $request->string('destination')->toString()))
@@ -394,8 +405,13 @@ class AdminCatalogController extends Controller
      *
      * Une seule requête groupée (aucun N+1), non paginée : le nombre de
      * destinations distinctes reste de l'ordre de la dizaine. Le remplissage
-     * est calculé à part (jointure sur les réservations non annulées) puis
-     * recollé en mémoire, pour ne pas fausser les COUNT par la jointure.
+     * est calculé à part (jointures sur les dates de départ et les réservations
+     * non annulées) puis recollé en mémoire, pour ne pas fausser les COUNT par
+     * la jointure.
+     *
+     * ⚠️ Revu en F21 : `capacity_total` sommait la colonne `capacity` du
+     * circuit ; elle a disparu au profit des places PAR DATE DE DÉPART
+     * (`tourism_experience_departures.seats_total`), d'où la jointure dédiée.
      */
     public function tourismDestinations(Request $request): JsonResponse
     {
@@ -407,7 +423,6 @@ class AdminCatalogController extends Controller
             ->selectRaw('COUNT(*) as circuits_count')
             ->selectRaw('SUM(status = ?) as published_count', [$published])
             ->selectRaw('SUM(status = ?) as pending_count', [$pending])
-            ->selectRaw('SUM(capacity) as capacity_total')
             ->selectRaw('MIN(price_xof) as price_min')
             ->selectRaw('MAX(price_xof) as price_max')
             ->when($request->filled('q'), fn ($q) => $q->where('destination', 'like', '%'.$request->string('q')->toString().'%'))
@@ -415,9 +430,18 @@ class AdminCatalogController extends Controller
             ->orderByDesc('circuits_count')
             ->get();
 
+        // Places totales par destination : jointure séparée sur les dates de
+        // départ (une jointure directe dans la requête groupée ci-dessus
+        // multiplierait les lignes et fausserait COUNT(*)).
+        $capacities = TourismExperienceDeparture::query()
+            ->join('tourism_experiences', 'tourism_experiences.id', '=', 'tourism_experience_departures.tourism_experience_id')
+            ->groupBy('tourism_experiences.destination')
+            ->selectRaw('tourism_experiences.destination as destination, SUM(tourism_experience_departures.seats_total) as capacity')
+            ->pluck('capacity', 'destination');
+
         // Places occupées par destination, en une requête distincte : agrégée
         // dans la même requête, la jointure sur `bookings` multiplierait les
-        // lignes et gonflerait COUNT(*) / SUM(capacity).
+        // lignes et gonflerait COUNT(*).
         $taken = Booking::query()
             ->where('bookable_type', TourismExperience::class)
             ->whereNotIn('bookings.status', $this->cancelledBookingStatuses())
@@ -426,8 +450,8 @@ class AdminCatalogController extends Controller
             ->selectRaw('tourism_experiences.destination as destination, SUM(bookings.guests) as seats')
             ->pluck('seats', 'destination');
 
-        $destinations = $rows->map(function ($row) use ($taken) {
-            $capacity = (int) $row->capacity_total;
+        $destinations = $rows->map(function ($row) use ($capacities, $taken) {
+            $capacity = (int) ($capacities[$row->destination] ?? 0);
             $seatsTaken = (int) ($taken[$row->destination] ?? 0);
 
             return [

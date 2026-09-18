@@ -28,10 +28,14 @@ class TourismExperienceFactory extends Factory
             'title' => fake()->randomElement(['Découverte du Saloum', 'Désert de Lompoul', 'Île de Gorée', 'Safari Bandia']),
             'destination' => fake()->randomElement(['Saloum', 'Lompoul', 'Gorée', 'Bandia']),
             'description' => fake()->sentence(14),
+            'itinerary' => [
+                ['day' => 1, 'title' => 'Arrivée', 'description' => fake()->sentence(10)],
+                ['day' => 2, 'title' => 'Excursion', 'description' => fake()->sentence(10)],
+            ],
             'duration_days' => fake()->numberBetween(1, 5),
             'price_xof' => fake()->numberBetween(25_000, 250_000),
-            'capacity' => fake()->numberBetween(4, 30),
-            'inclusions' => ['restauration' => true, 'guide' => true, 'transport' => fake()->boolean()],
+            'included' => "Restauration\nGuide francophone",
+            'excluded' => "Boissons\nDépenses personnelles",
             'status' => ExperienceStatus::EN_ATTENTE_VALIDATION->value,
         ];
     }
@@ -45,5 +49,16 @@ class TourismExperienceFactory extends Factory
             'status' => ExperienceStatus::PUBLIE->value,
             'published_at' => now(),
         ]);
+    }
+
+    /**
+     * Complète l'expérience avec `$count` dates de départ (F21).
+     *
+     * À utiliser au lieu de `has()` directement : encapsule le nom de relation
+     * explicite qu'exige `TourismExperienceDepartureFactory`.
+     */
+    public function withDepartures(int $count = 2): static
+    {
+        return $this->has(TourismExperienceDepartureFactory::new()->count($count), 'departures');
     }
 }

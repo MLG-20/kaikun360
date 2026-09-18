@@ -149,7 +149,9 @@ class ProviderRegistrationTest extends TestCase
             'destination' => 'Saly',
             'duration_days' => 1,
             'price_xof' => 30_000,
-            'capacity' => 10,
+            'departures' => [
+                ['start_date' => now()->addWeek()->toDateString(), 'seats_total' => 10],
+            ],
         ];
     }
 }

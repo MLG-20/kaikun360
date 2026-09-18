@@ -115,3 +115,53 @@
   gap: 1rem;
   margin-top: 0.5rem;
 }
+
+// Lignes répétables du programme et des dates de départ (F21).
+.xf-departure-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: start;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.xf-departure-day {
+  grid-column: 1 / -1;
+  font-weight: 600;
+  color: var(--k-ink);
+  font-size: 0.9rem;
+}
+
+.xf-remove {
+  align-self: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--k-line);
+  border-radius: 50%;
+  background: var(--k-bg);
+  color: var(--k-muted);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--k-danger);
+    border-color: var(--k-danger);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.xf-add {
+  align-self: flex-start;
+  margin-top: 0.4rem;
+}

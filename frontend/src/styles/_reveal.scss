@@ -49,9 +49,14 @@
 
 // Titre de section : balayage (rideau) révélant le texte. `clip-path` cache
 // d'abord tout sauf un bord, puis découvre le texte en glissant — un seul
-// type de propriété animée (`clip-path`), pas de reflow. Volontairement
-// LENT (2s) : un balayage rapide sur un titre passe inaperçu au défilement
-// normal, contrairement au `.reveal` (fondu) qui reste bien perçu même vite.
+// type de propriété animée (`clip-path`), pas de reflow.
+//
+// ⚠️ Était à 2s : un défilement normal dépasse le titre avant la fin du
+// balayage, et un mot coupé en plein milieu (« Berline, 4x4, n… ») se lit
+// comme un bug, pas comme une animation en cours — remonté par un client
+// (2026-09-18). Ramené à 0.8s, du même ordre que `.reveal`/`.reveal-group`
+// ci-dessus : le rideau a le temps de se voir sans jamais dépasser le rythme
+// d'un défilement normal.
 //
 // ⚠️ Le `clip-path` est posé sur `.reveal-title-inner` (span ajouté par la
 // directive), JAMAIS sur `.reveal-title` (l'élément observé) : voir le
@@ -66,7 +71,7 @@
 .reveal-title-inner {
   display: block;
   clip-path: inset(0 100% 0 0);
-  transition: clip-path 2s cubic-bezier(0.16, 0.86, 0.3, 1);
+  transition: clip-path 0.8s cubic-bezier(0.16, 0.86, 0.3, 1);
   will-change: clip-path;
 }
 

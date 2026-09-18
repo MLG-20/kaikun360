@@ -8,6 +8,7 @@ use App\Modules\Explore\Http\Requests\StoreExperienceRequest;
 use App\Modules\Explore\Http\Requests\UpdateExperienceRequest;
 use App\Modules\Explore\Http\Resources\ExperienceResource;
 use App\Modules\Explore\Models\TourismExperience;
+use App\Modules\Explore\Services\ExperienceDepartureSyncer;
 use App\Support\ApiResponse;
 use App\Support\Offers\OfferRetirementService;
 use Illuminate\Http\JsonResponse;
@@ -19,9 +20,12 @@ use Illuminate\Support\Str;
 /**
  * Publication et suivi des expériences par les PRESTATAIRES (phase B6.2).
  *
- * La publication est réservée aux prestataires vérifiés (policy `create`). Toute
- * expérience créée part « en attente de validation » : elle n'apparaît au
- * catalogue qu'après approbation d'un agent.
+ * La publication est réservée aux prestataires vérifiés (policy `create`) — le
+ * `super_admin` y accède aussi via `Gate::before` (F21) : le back-office peut
+ * ainsi déposer un circuit lui-même quand aucun prestataire n'en a encore
+ * proposé, au lieu de rester en pure supervision. Toute expérience créée part
+ * « en attente de validation » : elle n'apparaît au catalogue qu'après
+ * approbation d'un agent (y compris quand c'est un admin qui l'a déposée).
  */
 class ExperienceManagementController extends Controller
 {
@@ -30,13 +34,21 @@ class ExperienceManagementController extends Controller
      */
     public function store(StoreExperienceRequest $request): JsonResponse
     {
-        $experience = TourismExperience::create($request->validated() + [
+        $data = $request->validated();
+        $departures = $data['departures'];
+        unset($data['departures']);
+
+        $experience = TourismExperience::create($data + [
             'reference' => 'EXP-'.Str::upper(Str::random(8)),
             'provider_id' => $request->user()->id,
             'status' => ExperienceStatus::EN_ATTENTE_VALIDATION->value,
         ]);
 
-        return ApiResponse::created(['experience' => ExperienceResource::make($experience)]);
+        $experience->departures()->createMany($departures);
+
+        return ApiResponse::created([
+            'experience' => ExperienceResource::make($experience->load('departures')),
+        ]);
     }
 
     /**
@@ -46,7 +58,7 @@ class ExperienceManagementController extends Controller
     {
         // F8.18 — idem véhicules : le formulaire d'édition lit cette liste.
         $experiences = TourismExperience::where('provider_id', $request->user()->id)
-            ->with('media')
+            ->with(['media', 'departures'])
             ->latest()
             ->paginate(15);
 
@@ -65,14 +77,25 @@ class ExperienceManagementController extends Controller
      * Le statut n'est pas modifiable ici : il évolue par la validation d'un
      * agent, comme pour les véhicules et les biens.
      */
-    public function update(UpdateExperienceRequest $request, TourismExperience $experience): JsonResponse
-    {
+    public function update(
+        UpdateExperienceRequest $request,
+        TourismExperience $experience,
+        ExperienceDepartureSyncer $departureSyncer,
+    ): JsonResponse {
         Gate::authorize('update', $experience);
 
-        $experience->update($request->validated());
+        $data = $request->validated();
+        $departures = $data['departures'] ?? null;
+        unset($data['departures']);
+
+        $experience->update($data);
+
+        if ($departures !== null) {
+            $departureSyncer->sync($experience, $departures);
+        }
 
         return ApiResponse::success([
-            'experience' => ExperienceResource::make($experience->fresh()->load('media')),
+            'experience' => ExperienceResource::make($experience->fresh()->load(['media', 'departures'])),
         ]);
     }
 

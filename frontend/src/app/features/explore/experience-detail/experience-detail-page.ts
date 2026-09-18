@@ -190,38 +190,11 @@ export class ExperienceDetailPageComponent {
     );
   }
 
-  /** Libellés lisibles de quelques clés d'inclusion connues. */
-  private static readonly INCLUSION_LABELS: Record<string, string> = {
-    restauration: 'Restauration',
-    guide: 'Guide',
-    transport: 'Transport',
-    hebergement: 'Hébergement',
-    assurance: 'Assurance',
-  };
-
-  /**
-   * Liste des inclusions effectivement fournies (valeur vraie), avec un libellé
-   * lisible. Les inclusions sont un objet clé→booléen ; un tableau vide (aucune
-   * inclusion) est toléré.
-   */
-  readonly inclusionList = computed<string[]>(() => {
-    const inclusions = this.experience()?.inclusions;
-    if (!inclusions || Array.isArray(inclusions)) {
-      return [];
-    }
-    return Object.entries(inclusions)
-      .filter(([, included]) => included)
-      .map(([key]) => ExperienceDetailPageComponent.INCLUSION_LABELS[key] ?? this.humanize(key));
+  /** Vrai si le circuit n'a plus aucune date de départ à venir avec des places. */
+  readonly soldOut = computed(() => {
+    const departures = this.availability()?.departures ?? [];
+    return departures.length > 0 && departures.every((d) => d.seats_left === 0);
   });
-
-  /** Transforme une clé technique en libellé lisible (repli). */
-  private humanize(key: string): string {
-    const spaced = key.replace(/[_-]+/g, ' ');
-    return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-  }
-
-  /** Vrai s'il ne reste plus aucune place (réservation complète). */
-  readonly soldOut = computed(() => this.availability()?.seats_left === 0);
 
   // --- Réservation (F8.10) ---------------------------------------------------
   //
@@ -229,12 +202,12 @@ export class ExperienceDetailPageComponent {
   // facultatif et le nombre de participants recopié dans un message. Le client
   // repartait avec une référence de suivi et rien à payer.
   //
-  // ⚠️ Un circuit n'a pas de date de FIN : sa durée lui appartient. Le client
-  // ne choisit que son jour de départ — c'est ce que le serveur attend
-  // (`start_date` seul), et proposer une date de retour serait mensonger.
+  // ⚠️ Revu en F21 : le client ne saisit plus une date libre, il choisit parmi
+  // les DATES DE DÉPART du circuit (`departure_id`) — chacune a ses propres
+  // places, le serveur les refuse indépendamment les unes des autres.
 
   readonly form = this.fb.nonNullable.group({
-    start_date: ['', [Validators.required]],
+    departure_id: [null as number | null, [Validators.required]],
     seats: [1, [Validators.required, Validators.min(1)]],
   });
 
@@ -257,20 +230,23 @@ export class ExperienceDetailPageComponent {
       const saisie = this.intents.take('experience', id);
       if (saisie) {
         this.form.patchValue({
-          start_date: String(saisie['start_date'] ?? ''),
+          departure_id: saisie['departure_id'] != null ? Number(saisie['departure_id']) : null,
           seats: Number(saisie['seats'] ?? 1),
         });
       }
     });
   }
 
-  /** Aujourd'hui (`YYYY-MM-DD`) : on ne part pas dans le passé. */
-  readonly today = new Date().toISOString().slice(0, 10);
-
   readonly total = computed(
     () => Number(this.formValue().seats ?? 0) * (this.experience()?.price_xof ?? 0),
   );
   readonly totalLabel = computed(() => formatFcfa(this.total()));
+
+  /** La date de départ choisie, pour lire ses places restantes. */
+  private readonly selectedDeparture = computed(() => {
+    const id = this.formValue().departure_id;
+    return this.availability()?.departures.find((d) => d.id === id) ?? null;
+  });
 
   /**
    * Le nombre de places restantes est déjà connu de l'écran (`availability`) :
@@ -278,18 +254,18 @@ export class ExperienceDetailPageComponent {
    */
   readonly bookingHint = computed<string | null>(() => {
     const places = Number(this.formValue().seats ?? 0);
-    const restantes = this.availability()?.seats_left;
+    const restantes = this.selectedDeparture()?.seats_left;
     if (places < 1) {
       return 'Indiquez au moins un participant.';
     }
     if (restantes !== undefined && restantes !== null && places > restantes) {
-      return `Il ne reste que ${restantes} place(s) disponible(s).`;
+      return `Il ne reste que ${restantes} place(s) disponible(s) pour cette date.`;
     }
     return null;
   });
 
   readonly canQuote = computed(
-    () => !!this.formValue().start_date && !this.bookingHint() && !this.soldOut(),
+    () => !!this.formValue().departure_id && !this.bookingHint() && !this.soldOut(),
   );
 
   /**
@@ -306,11 +282,14 @@ export class ExperienceDetailPageComponent {
     }
 
     const raw = this.form.getRawValue();
+    if (raw.departure_id == null) {
+      return;
+    }
 
     // Visiteur non connecté (F8.13) : date de départ et places sont conservées.
     if (!this.isAuthenticated()) {
       this.intents.remember('experience', String(experience.id), {
-        start_date: raw.start_date,
+        departure_id: raw.departure_id,
         seats: Number(raw.seats),
       });
       void this.router.navigate(['/auth/connexion'], { queryParams: this.loginQueryParams() });
@@ -322,7 +301,7 @@ export class ExperienceDetailPageComponent {
 
     this.bookings
       .createExperienceBooking(experience.id, {
-        start_date: raw.start_date,
+        departure_id: raw.departure_id,
         guests: Number(raw.seats),
       })
       .subscribe({

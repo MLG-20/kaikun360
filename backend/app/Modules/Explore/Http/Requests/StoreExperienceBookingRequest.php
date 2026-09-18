@@ -3,12 +3,15 @@
 namespace App\Modules\Explore\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Validation d'une réservation d'expérience (POST /api/v1/experiences/{id}/bookings).
  *
- * `guests` = nombre de participants (panier groupe). `start_date` = date de
- * départ choisie ; la date de fin est déduite de la durée du circuit.
+ * `guests` = nombre de participants (panier groupe). `departure_id` = la date
+ * de départ choisie parmi celles du circuit (F21) — remplace l'ancienne date
+ * libre : les dates de départ sont désormais fixées par le prestataire/admin,
+ * pas inventées par le client au moment de réserver.
  */
 class StoreExperienceBookingRequest extends FormRequest
 {
@@ -24,7 +27,12 @@ class StoreExperienceBookingRequest extends FormRequest
     {
         return [
             'guests' => ['required', 'integer', 'min:1'],
-            'start_date' => ['required', 'date', 'after_or_equal:today'],
+            'departure_id' => [
+                'required',
+                'integer',
+                Rule::exists('tourism_experience_departures', 'id')
+                    ->where('tourism_experience_id', $this->route('id')),
+            ],
         ];
     }
 }

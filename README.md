@@ -1158,6 +1158,51 @@ demande, une réservation) — jamais côté propriétaire, entreprise ou diaspo
 
 - [x] **Posé sur la fiche d'un bien** (`owner-property-detail-page`, `contextType="bien"`). ⚠️ **Portée volontairement minimale** : `ConversationContext` (backend) ne route aujourd'hui que 8 types de dossier (`demande`, `devis`, `reservation`, `bien`, `nuitee`, `vehicule`, `circuit`, `trajet`) — la fiche d'un bien y entre directement, **aucun changement serveur**. Le mandat de gestion locative, la demande d'entreprise et le projet diaspora n'ont, eux, aucun type de contexte dédié : les y ajouter demanderait d'étendre le routage serveur, laissé de côté à la demande de l'utilisateur (scope minimal choisi explicitement).
 
+### F21 — Le back-office peut déposer un circuit (le catalogue Tourisme était vide, sans aucun moyen de l'amorcer)
+
+Remontée du client (2026-09-18) : l'écran Tourisme du back-office n'était que
+supervision — aucun bouton « Ajouter », et **0 circuit en base**. En creusant,
+le vrai blocage n'était pas les droits (le `super_admin` passe déjà toutes les
+policies via `Gate::before`) mais le **modèle de données**, insuffisant par
+rapport à ce qu'un circuit doit porter : pas de programme jour par jour, pas
+de dates de départ, une capacité globale sans lien avec une session datée.
+
+- [x] **Dates de départ, chacune avec ses propres places** — nouvelle table
+  `tourism_experience_departures`, remplace la colonne `capacity` unique.
+  `ExperienceBookingService` calcule places prises/restantes **par date**, pas
+  par circuit : une session pleine n'empêche plus les autres de se remplir
+  (régression corrigée au passage — l'ancien décompte cumulait TOUTES les
+  réservations du circuit, quelle que soit leur date). Le client ne choisit
+  plus une date libre (`start_date` quelconque) mais un `departure_id` parmi
+  celles programmées. ⚠️ **Aucune clé étrangère depuis `bookings`** : une
+  réservation porte sa propre date, comme toute réservation du système — le
+  rapprochement se fait par égalité de date. `ExperienceDepartureSyncer`
+  interdit donc, en RÈGLE MÉTIER (pas en contrainte SQL), de retirer une date
+  qui porte déjà des réservations actives.
+- [x] **Programme jour par jour (`itinerary`, json) et « compris »/« non
+  compris » en texte libre (`included`/`excluded`)** remplacent les 4
+  inclusions à cocher (restauration/guide/transport/hébergement), trop
+  rigides pour ce qu'un circuit promet réellement. Migration sans risque : au
+  moment d'écrire ceci, aucun circuit n'existait encore en base.
+- [x] **Le super_admin dépose un circuit avec le même formulaire que le
+  prestataire** (`provider-experience-form-page`, monté aussi sous
+  `/back-office/tourisme/circuit/nouveau`, bouton « Ajouter un circuit » dans
+  l'onglet Tourisme) — pas un second formulaire qui aurait divergé avec le
+  temps. Le circuit créé porte `provider_id = l'admin lui-même` ; il peut
+  ensuite le corriger depuis `/back-office/tourisme/circuit/{id}/modifier`,
+  visible seulement s'il en est bien le `provider` (un circuit d'un vrai
+  prestataire se modifie depuis l'espace de ce dernier, pas depuis ici).
+- [x] **Catalogue Tourisme vide : message moins alarmant.** « Aucun résultat
+  ne correspond à votre recherche » se lisait comme une panne alors
+  qu'aucune recherche n'avait été faite. `app-catalog` (composant partagé à
+  tous les univers) accepte désormais un message vide et un bouton WhatsApp
+  personnalisables par la page hôte ; Tourisme affiche « Circuits bientôt
+  disponibles » + « Demander un circuit sur mesure ».
+- **Tests** : suites `Explore` et `Admin` (catalogue/tourisme) réécrites pour
+  la capacité par date, plus les tests transversaux (`OfferLifecycleJourneyTest`,
+  `ProviderRegistrationTest`) qui déposaient encore un circuit à l'ancien
+  format — auraient échoué silencieusement sans la relecture.
+
 ---
 
 ## Critères d'acceptation transverses

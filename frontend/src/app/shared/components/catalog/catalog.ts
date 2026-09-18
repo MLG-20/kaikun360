@@ -9,6 +9,7 @@ import { CatalogService } from '../../../core/api/catalog.service';
 import { CompareStore } from '../../../core/state/compare-store';
 import { FavoriteStore } from '../../../core/state/favorite-store';
 import { ListingCardComponent } from '../listing-card/listing-card';
+import { WhatsAppButtonComponent } from '../whatsapp-button/whatsapp-button';
 import {
   CatalogCard,
   FilterValues,
@@ -30,7 +31,7 @@ import {
  */
 @Component({
   selector: 'app-catalog',
-  imports: [ListingCardComponent],
+  imports: [ListingCardComponent, WhatsAppButtonComponent],
   templateUrl: './catalog.html',
   styleUrl: './catalog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +47,24 @@ export class CatalogComponent {
 
   /** Univers à afficher (fourni par la page hôte). */
   readonly universe = input.required<Universe>();
+
+  /**
+   * Message affiché quand le catalogue ne renvoie AUCUN résultat (F21).
+   *
+   * ⚠️ Le message générique laissait penser à une panne quand un univers tout
+   * juste ouvert (ex. Tourisme sans encore aucun circuit publié) n'a simplement
+   * rien à montrer, alors qu'aucune recherche n'a été faite — d'où la
+   * possibilité, pour la page hôte, de le personnaliser.
+   */
+  readonly emptyMessage = input('Aucun résultat ne correspond à votre recherche.');
+
+  /**
+   * Libellé d'un bouton WhatsApp optionnel sous le message vide (ex. « Demander
+   * un circuit sur mesure »). `null` (par défaut) : pas de bouton.
+   */
+  readonly emptyCtaLabel = input<string | null>(null);
+  /** Sujet prérempli du message WhatsApp de ce bouton. */
+  readonly emptyCtaSubject = input<string | null>(null);
 
   /**
    * La comparaison n'est proposée que sur l'immobilier : c'est le seul univers

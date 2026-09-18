@@ -243,6 +243,39 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Tourisme — Back-office Kaikun 360',
       },
       {
+        // F21 — Dépôt d'un circuit PAR L'ÉQUIPE elle-même (POST /experiences),
+        // pour amorcer le catalogue Tourisme quand aucun prestataire n'en a
+        // encore proposé. Réutilise le formulaire prestataire tel quel (même
+        // endpoint, même validation) : seul `returnTo` change le retour.
+        //
+        // ⚠️ Doit précéder `tourisme/circuit/:id` : sinon « nouveau » serait
+        // capturé comme un id de circuit.
+        path: 'tourisme/circuit/nouveau',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('tourisme'), returnTo: '/back-office/tourisme' },
+        loadComponent: () =>
+          import('../pro/offers/provider-experience-form-page').then(
+            (m) => m.ProviderExperienceFormPageComponent,
+          ),
+        title: 'Ajouter un circuit — Back-office Kaikun 360',
+      },
+      {
+        // F21 — Édition d'un circuit déposé par l'équipe elle-même. Même
+        // formulaire, même endpoint que l'édition prestataire : `findMyExperience`
+        // filtre par `provider_id = utilisateur connecté`, qui EST l'admin pour
+        // un circuit qu'il a lui-même créé. Un circuit d'un vrai prestataire
+        // reste hors de portée d'ici (pas demandé) : l'écran affiche alors son
+        // état « introuvable », ce qui est littéralement vrai de ce point de vue.
+        path: 'tourisme/circuit/:id/modifier',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('tourisme'), returnTo: '/back-office/tourisme' },
+        loadComponent: () =>
+          import('../pro/offers/provider-experience-form-page').then(
+            (m) => m.ProviderExperienceFormPageComponent,
+          ),
+        title: 'Modifier le circuit — Back-office Kaikun 360',
+      },
+      {
         // F8.2.c — Fiche d'un circuit : programme, prestataire, photos et la
         // liste des participants.
         path: 'tourisme/circuit/:id',

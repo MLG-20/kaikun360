@@ -2,6 +2,7 @@
 
 namespace App\Modules\Admin\Http\Resources;
 
+use App\Modules\Explore\Http\Resources\ExperienceDepartureResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -10,16 +11,18 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * back-office** (F7.2.k).
  *
  * Complète `ExperienceResource` (public) avec ce dont l'équipe a besoin pour
- * piloter l'offre : le **remplissage** du circuit (places prises / restantes —
- * les « capacités groupes » du cahier des charges) et le **prestataire**
- * opérateur.
+ * piloter l'offre : le **remplissage** du circuit (places prises / restantes)
+ * et le **prestataire** opérateur.
  *
- * ⚠️ Rappel métier (B6.3) : une expérience n'a **pas de date de départ**, sa
- * capacité est un **total par circuit** — le remplissage est donc cumulé sur
- * toutes ses réservations non annulées, pas sur une session datée.
+ * ⚠️ Revu en F21 : un circuit a maintenant plusieurs dates de départ, chacune
+ * avec ses propres places — `capacity_total`/`seats_taken` ci-dessous sont
+ * des CUMULS toutes dates confondues (utiles pour un coup d'œil sur la
+ * liste), le détail par date vit dans `departures`.
  *
- * `seats_taken` est agrégé par le contrôleur (`withSum`) et déposé sur le
- * modèle ; on ne le recalcule pas ici pour éviter une requête par ligne.
+ * `capacity_total` est agrégé par le contrôleur (`withSum('departures as
+ * capacity_total', 'seats_total')`), `seats_taken` par (`withSum('bookings as
+ * seats_taken', 'guests')`) — on ne les recalcule pas ici pour éviter une
+ * requête par ligne.
  *
  * @mixin \App\Modules\Explore\Models\TourismExperience
  */
@@ -31,7 +34,7 @@ class AdminExperienceResource extends JsonResource
     public function toArray(Request $request): array
     {
         $taken = (int) ($this->seats_taken ?? 0);
-        $capacity = (int) $this->capacity;
+        $capacity = (int) ($this->capacity_total ?? 0);
 
         return [
             // --- Socle identique au catalogue public (l'écran Catalogues
@@ -41,17 +44,21 @@ class AdminExperienceResource extends JsonResource
             'title' => $this->title,
             'destination' => $this->destination,
             'description' => $this->description,
+            'itinerary' => $this->itinerary ?? [],
             'duration_days' => $this->duration_days,
             'price_xof' => $this->price_xof,
-            'capacity' => $capacity,
-            // Le « programme » du circuit au sens du cahier des charges :
-            // ce que la prestation inclut (restauration, guide, transport…).
-            'inclusions' => $this->inclusions ?? [],
+            'included' => $this->included,
+            'excluded' => $this->excluded,
             'status' => $this->status?->value,
             'status_label' => $this->status?->label(),
             'published_at' => $this->published_at?->toIso8601String(),
 
-            // --- Remplissage (supervision).
+            // --- Dates de départ, détaillées (chargées à la demande — pas sur
+            // la liste, pour éviter un N+1 sur chaque ligne).
+            'departures' => ExperienceDepartureResource::collection($this->whenLoaded('departures')),
+
+            // --- Remplissage (supervision), cumulé toutes dates confondues.
+            'capacity_total' => $capacity,
             'seats_taken' => $taken,
             'seats_left' => max(0, $capacity - $taken),
 

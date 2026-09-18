@@ -44,21 +44,12 @@
     }
   </div>
 
-  <div class="xf-row">
-    <div class="xf-field">
-      <label for="xf-duration">Durée (jours)</label>
-      <input id="xf-duration" type="number" min="1" formControlName="duration_days" />
-      @if (form.controls.duration_days.touched && form.controls.duration_days.invalid) {
-        <p class="xf-hint xf-hint--error">Indiquez au moins 1 jour.</p>
-      }
-    </div>
-    <div class="xf-field">
-      <label for="xf-capacity">Capacité (participants)</label>
-      <input id="xf-capacity" type="number" min="1" formControlName="capacity" />
-      @if (form.controls.capacity.touched && form.controls.capacity.invalid) {
-        <p class="xf-hint xf-hint--error">Indiquez au moins 1 place.</p>
-      }
-    </div>
+  <div class="xf-field">
+    <label for="xf-duration">Durée (jours)</label>
+    <input id="xf-duration" type="number" min="1" formControlName="duration_days" />
+    @if (form.controls.duration_days.touched && form.controls.duration_days.invalid) {
+      <p class="xf-hint xf-hint--error">Indiquez au moins 1 jour.</p>
+    }
   </div>
 
   <div class="xf-field">
@@ -70,9 +61,75 @@
   </div>
 
   <div class="xf-field">
-    <label for="xf-desc">Programme &amp; description <span class="xf-opt">(facultatif)</span></label>
-    <textarea id="xf-desc" rows="5" formControlName="description"
-              placeholder="Déroulé, points d'intérêt, niveau, matériel fourni…"></textarea>
+    <label for="xf-desc">Description <span class="xf-opt">(facultatif)</span></label>
+    <textarea id="xf-desc" rows="4" formControlName="description"
+              placeholder="Présentation générale, niveau, matériel fourni…"></textarea>
+  </div>
+
+  <!-- Programme jour par jour (F21). -->
+  <fieldset class="xf-inclusions" formArrayName="itinerary">
+    <legend>Programme <span class="xf-opt">(facultatif)</span></legend>
+    <p class="xf-hint">Un jour = un point d'étape. Le numéro du jour suit l'ordre de la liste.</p>
+
+    @for (jour of itinerary.controls; track $index) {
+      <div class="xf-departure-row" [formGroupName]="$index">
+        <span class="xf-departure-day">Jour {{ $index + 1 }}</span>
+        <input class="k-input" type="text" formControlName="title" maxlength="255"
+               placeholder="Titre du jour (ex. Arrivée, transfert hôtel)" />
+        <textarea class="k-input" rows="2" formControlName="description"
+                  placeholder="Détail du jour (facultatif)"></textarea>
+        <button type="button" class="xf-remove" (click)="removeItineraryDay($index)" aria-label="Retirer ce jour">
+          ✕
+        </button>
+      </div>
+    }
+    <button type="button" class="k-btn k-btn--ghost xf-add" (click)="addItineraryDay()">
+      + Ajouter un jour
+    </button>
+  </fieldset>
+
+  <!-- Dates de départ (F21) : chacune avec ses propres places. -->
+  <fieldset class="xf-inclusions" formArrayName="departures">
+    <legend>Dates de départ</legend>
+    <p class="xf-hint">
+      Au moins une date est obligatoire : un circuit sans date n'est jamais réservable.
+      Chaque date a ses propres places — une date pleine n'empêche pas les autres.
+    </p>
+
+    @for (depart of departures.controls; track $index) {
+      <div class="xf-departure-row" [formGroupName]="$index">
+        <div class="xf-field">
+          <label [for]="'xf-depart-date-' + $index">Date de départ</label>
+          <input [id]="'xf-depart-date-' + $index" type="date" formControlName="start_date" />
+        </div>
+        <div class="xf-field">
+          <label [for]="'xf-depart-seats-' + $index">Places</label>
+          <input [id]="'xf-depart-seats-' + $index" type="number" min="1" formControlName="seats_total" />
+        </div>
+        <button type="button" class="xf-remove" (click)="removeDeparture($index)"
+                [disabled]="departures.length === 1" aria-label="Retirer cette date">
+          ✕
+        </button>
+      </div>
+    }
+    @if (departures.touched && departures.invalid) {
+      <p class="xf-hint xf-hint--error">Ajoutez au moins une date de départ.</p>
+    }
+    <button type="button" class="k-btn k-btn--ghost xf-add" (click)="addDeparture()">
+      + Ajouter une date
+    </button>
+  </fieldset>
+
+  <div class="xf-field">
+    <label for="xf-included">Ce qui est compris <span class="xf-opt">(facultatif)</span></label>
+    <textarea id="xf-included" rows="3" formControlName="included"
+              placeholder="Ex. Transport, guide francophone, déjeuner"></textarea>
+  </div>
+
+  <div class="xf-field">
+    <label for="xf-excluded">Ce qui n'est pas compris <span class="xf-opt">(facultatif)</span></label>
+    <textarea id="xf-excluded" rows="3" formControlName="excluded"
+              placeholder="Ex. Boissons, dépenses personnelles, pourboires"></textarea>
   </div>
 
   <div class="xf-field">
@@ -86,19 +143,6 @@
     </p>
   </div>
 
-  <fieldset class="xf-inclusions" formGroupName="inclusions">
-    <legend>Inclusions</legend>
-    <p class="xf-hint">Cochez ce qui est compris dans le prix.</p>
-    <div class="xf-inclusions-grid">
-      @for (inc of inclusions; track inc.key) {
-        <label class="xf-check">
-          <input type="checkbox" [formControlName]="inc.key" />
-          <span>{{ inc.label }}</span>
-        </label>
-      }
-    </div>
-  </fieldset>
-
   <!-- Photos du circuit (F8.18) : l'univers où l'image vend le plus. -->
   <fieldset class="xf-inclusions">
     <legend>Photos du circuit</legend>
@@ -107,7 +151,7 @@
       subject="circuit"
       [resourceId]="editId()"
       [initial]="existingPhotos()"
-      hint="Montrez les paysages, l'hébergement et le transport tels qu'ils sont : un client déçu à l'arrivée est un avis négatif et un remboursement. La première photo sert de couverture dans le catalogue."
+      hint="Montrez les paysages, l'hébergement et le transport tels qu'ils sont : un client déçu à l'arrivée est un avis négatif et un remboursement. La première photo sert de couverture dans le catalogue. Comptez 5 à 8 photos pour une fiche convaincante."
     />
   </fieldset>
 

@@ -86,6 +86,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -232,11 +233,39 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
         $this->configureAuthorization();
         $this->configureEvents();
+        $this->configureUrlGeneration();
 
         // Canal de notification « sms » (B16.1) branché sur le SmsProviderInterface.
         Notification::resolved(function ($service) {
             $service->extend('sms', fn ($app) => $app->make(SmsChannel::class));
         });
+    }
+
+    /**
+     * Force les URL générées (liens de pagination, `route()`/`url()`…) à
+     * toujours porter l'origine PUBLIQUE (`APP_URL`), jamais celle vue par
+     * PHP sur la requête entrante (F21 — signalé par le client : les liens de
+     * pagination des nuitées renvoyaient `http://nginx/…`).
+     *
+     * ⚠️ En production, le rendu SSR Angular (`frontend/src/server.ts`)
+     * appelle l'API **depuis le conteneur Node, en direct sur le réseau
+     * Docker** (`API_ORIGIN=http://nginx`), sans passer par le domaine public
+     * ni Cloudflare. Sans ce réglage, `LengthAwarePaginator` construit ses
+     * liens à partir de CETTE requête interne — l'hébergement change, le bug
+     * changerait de nom (`http://backend`, une IP…), mais reviendrait tant que
+     * les URL ne sont pas ancrées sur `APP_URL` plutôt que sur la requête.
+     */
+    protected function configureUrlGeneration(): void
+    {
+        $appUrl = config('app.url');
+        if (! $appUrl) {
+            return;
+        }
+
+        URL::forceRootUrl($appUrl);
+        if (str_starts_with($appUrl, 'https://')) {
+            URL::forceScheme('https');
+        }
     }
 
     /**

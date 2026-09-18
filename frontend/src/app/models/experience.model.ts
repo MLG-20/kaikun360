@@ -1,8 +1,26 @@
 import { PropertyPhoto } from './property.model';
 
+/** Un jour du programme d'un circuit (F21). */
+export interface ExperienceItineraryDay {
+  day: number;
+  title: string | null;
+  description: string | null;
+}
+
+/**
+ * Une date de départ d'un circuit, avec ses propres places (F21) — miroir de
+ * `ExperienceDepartureResource`. `seats_left` n'est présent que lorsque le
+ * contrôleur l'a calculé (fiche détail, disponibilité, supervision).
+ */
+export interface ExperienceDeparture {
+  id: number;
+  start_date: string;
+  seats_total: number;
+  seats_left?: number;
+}
+
 /**
  * Expérience touristique — miroir de `ExperienceResource` (module Explore).
- * `seats_left` n'est présent que sur l'endpoint de disponibilité.
  */
 export interface Experience {
   id: number;
@@ -10,21 +28,21 @@ export interface Experience {
   title: string;
   destination: string;
   description: string | null;
+  /** Programme jour par jour (F21). */
+  itinerary: ExperienceItineraryDay[];
   duration_days: number;
   price_xof: number;
-  capacity: number;
-  /**
-   * Inclusions structurées : clé d'inclusion → incluse ou non
-   * (ex. `{ restauration: true, guide: true, transport: false }`). Le backend
-   * renvoie `[]` (tableau vide) lorsqu'aucune inclusion n'est renseignée.
-   */
-  inclusions: Record<string, boolean> | never[];
+  /** Ce qui est compris dans le prix, en texte libre (F21). */
+  included: string | null;
+  /** Ce qui n'est PAS compris, en texte libre (F21). */
+  excluded: string | null;
   /** Lien Google Maps collé par le prestataire (F5.10), ou `null`. */
   maps_link: string | null;
   status: string | null;
   status_label: string | null;
   published_at: string | null;
-  seats_left?: number;
+  /** Dates de départ du circuit (F21). */
+  departures: ExperienceDeparture[];
   /**
    * Compteurs de médias (F8.1), fournis par les listes back-office uniquement.
    *
@@ -55,11 +73,12 @@ export interface Experience {
  * « capacités groupes » du cahier des charges) et le prestataire opérateur.
  * Servi uniquement par `GET /admin/experiences`.
  *
- * ⚠️ Un circuit n'a **pas de date de départ** : sa capacité est un total, et
- * `seats_taken` cumule toutes ses réservations non annulées — ce n'est pas le
- * remplissage d'une session datée (contrairement à `AdminMobilityService`).
+ * ⚠️ Revu en F21 : `capacity_total`/`seats_taken` sont des CUMULS toutes
+ * dates de départ confondues (repère rapide sur la liste) ; le détail par
+ * date vit dans `departures`.
  */
 export interface AdminExperience extends Experience {
+  capacity_total: number;
   seats_taken: number;
   seats_left: number;
   provider?: { id: number; name: string; email: string | null; phone: string | null } | null;
@@ -68,10 +87,9 @@ export interface AdminExperience extends Experience {
 
 /**
  * Disponibilité d'une expérience — miroir de `GET /experiences/{id}/availability`.
- * Alimente l'affichage des places restantes sur la fiche (F2.4).
+ * Une entrée par date de départ à venir, avec ses places restantes (F21).
  */
 export interface ExperienceAvailability {
   experience_id: number;
-  capacity: number;
-  seats_left: number;
+  departures: ExperienceDeparture[];
 }

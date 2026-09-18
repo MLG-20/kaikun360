@@ -31,10 +31,12 @@ export interface CreateVehicleBookingPayload {
 
 /**
  * Corps de `POST /experiences/{id}/bookings`. Un circuit n'a **pas de date de
- * fin** : sa durée lui appartient, le client ne choisit que son jour de départ.
+ * fin** : sa durée lui appartient. Le client choisit une DATE DE DÉPART parmi
+ * celles proposées par le circuit (F21) — pas une date libre : `departure_id`
+ * remplace l'ancien `start_date`, dont la fin était déduite côté serveur.
  */
 export interface CreateExperienceBookingPayload {
-  start_date: string;
+  departure_id: number;
   guests: number;
 }
 

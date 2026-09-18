@@ -223,7 +223,7 @@
                 <p class="of-card-meta">
                   <span>{{ x.destination }}</span>
                   <span>· {{ x.duration_days }} jour{{ x.duration_days > 1 ? 's' : '' }}</span>
-                  <span>· {{ x.capacity }} place{{ x.capacity > 1 ? 's' : '' }}</span>
+                  <span>· {{ x.departures.length }} date{{ x.departures.length > 1 ? 's' : '' }} de départ</span>
                   @if (fcfa(x.price_xof); as price) {
                     <span>· {{ price }}</span>
                   }

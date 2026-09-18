@@ -15,3 +15,17 @@
   align-items: flex-end;
   gap: 12px;
 }
+
+// Mobile (remonté par un client) : les deux bulles (52px chacune, F2.6/F10.1)
+// empilées, avec la marge desktop (16-28px), pouvaient masquer le bas d'une
+// carte ou d'un bouton sous elles sur un petit écran. Marge et espacement
+// resserrés — la taille des bulles elles-mêmes reste celle que chaque
+// composant gère déjà pour son propre cas mobile (`assistant-launcher.scss`
+// se replie en rond sous 420px).
+@media (max-width: 640px) {
+  .floating-dock {
+    right: 10px;
+    bottom: 10px;
+    gap: 8px;
+  }
+}

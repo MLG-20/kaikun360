@@ -37,20 +37,41 @@
 
         @if (e.description) {
           <section class="uni-detail-block">
-            <h2>Le programme</h2>
+            <h2>Présentation</h2>
             <p class="uni-detail-desc">{{ e.description }}</p>
           </section>
         }
 
-        <!-- Ce qui est inclus. -->
-        @if (inclusionList().length) {
+        <!-- Programme jour par jour (F21). -->
+        @if (e.itinerary.length) {
           <section class="uni-detail-block">
-            <h2>Ce qui est inclus</h2>
-            <ul class="uni-chips">
-              @for (item of inclusionList(); track item) {
-                <li class="uni-chip">{{ item }}</li>
+            <h2>Le programme</h2>
+            <ol class="uni-itinerary">
+              @for (jour of e.itinerary; track $index) {
+                <li>
+                  <span class="uni-itinerary-day">Jour {{ jour.day }}</span>
+                  @if (jour.title) {
+                    <strong>{{ jour.title }}</strong>
+                  }
+                  @if (jour.description) {
+                    <p>{{ jour.description }}</p>
+                  }
+                </li>
               }
-            </ul>
+            </ol>
+          </section>
+        }
+
+        <!-- Ce qui est inclus / non inclus (F21). -->
+        @if (e.included || e.excluded) {
+          <section class="uni-detail-block">
+            <h2>Compris / non compris</h2>
+            @if (e.included) {
+              <p class="uni-detail-desc"><strong>Compris :</strong> {{ e.included }}</p>
+            }
+            @if (e.excluded) {
+              <p class="uni-detail-desc"><strong>Non compris :</strong> {{ e.excluded }}</p>
+            }
           </section>
         }
 
@@ -60,7 +81,6 @@
           <dl class="uni-detail-facts">
             <div><dt>Destination</dt><dd>{{ e.destination }}</dd></div>
             <div><dt>Durée</dt><dd>{{ e.duration_days }} jour{{ e.duration_days > 1 ? 's' : '' }}</dd></div>
-            <div><dt>Groupe</dt><dd>Jusqu'à {{ e.capacity }} personne{{ e.capacity > 1 ? 's' : '' }}</dd></div>
             @if (priceLabel(); as price) {
               <div><dt>Tarif</dt><dd>{{ price }} / pers.</dd></div>
             }
@@ -79,26 +99,18 @@
               <p class="uni-detail-price"><b>{{ price }}</b> <span class="unit">/ pers.</span></p>
             }
 
-            <!-- Places restantes (si l'endpoint de disponibilité a répondu). -->
-            @if (availability(); as a) {
-              @if (soldOut()) {
-                <p><span class="uni-avail uni-avail--out">Complet pour l'instant</span></p>
-              } @else {
-                <p>
-                  <span class="uni-avail">
-                    {{ a.seats_left }} place{{ a.seats_left > 1 ? 's' : '' }} restante{{ a.seats_left > 1 ? 's' : '' }}
-                  </span>
-                </p>
-              }
-            }
-
             <h2 class="uni-detail-card-title">Réserver</h2>
 
-            @if (soldOut()) {
+            @if (!availability()?.departures?.length) {
+              <p class="k-muted uni-detail-authnote">
+                Aucune date de départ programmée pour l'instant. Écrivez-nous pour
+                être prévenu du prochain départ.
+              </p>
+            } @else if (soldOut()) {
               <!-- Complet : on ne présente pas un formulaire condamné à échouer. -->
               <p class="k-muted uni-detail-authnote">
-                Ce circuit est complet. Écrivez-nous pour être prévenu d'un
-                prochain départ.
+                Ce circuit est complet sur toutes ses dates. Écrivez-nous pour être
+                prévenu d'un prochain départ.
               </p>
             } @else {
             <!--
@@ -118,9 +130,15 @@
                     <input type="number" min="1" class="k-input" formControlName="seats" />
                   </label>
                   <label class="k-field">
-                    <!-- Un circuit n'a pas de date de fin : sa durée lui appartient. -->
                     <span class="k-label">Date de départ</span>
-                    <input type="date" class="k-input" formControlName="start_date" [min]="today" />
+                    <select class="k-input" formControlName="departure_id">
+                      <option [ngValue]="null">Choisir une date</option>
+                      @for (d of availability()?.departures; track d.id) {
+                        <option [ngValue]="d.id" [disabled]="d.seats_left === 0">
+                          {{ d.start_date }} — {{ d.seats_left === 0 ? 'complet' : d.seats_left + ' place(s)' }}
+                        </option>
+                      }
+                    </select>
                   </label>
                 </div>
 

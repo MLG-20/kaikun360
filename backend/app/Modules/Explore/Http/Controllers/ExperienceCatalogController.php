@@ -5,6 +5,8 @@ namespace App\Modules\Explore\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Explore\Http\Resources\ExperienceResource;
 use App\Modules\Explore\Models\TourismExperience;
+use App\Modules\Explore\Models\TourismExperienceDeparture;
+use App\Modules\Explore\Services\ExperienceBookingService;
 use App\Support\Cache\CatalogCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -65,11 +67,22 @@ class ExperienceCatalogController extends Controller
 
     /**
      * Détail d'une expérience publiée. GET /api/v1/experiences/{id}
+     *
+     * Les dates de départ à venir sont chargées avec leurs places restantes
+     * (F21) : la fiche peut proposer un sélecteur de date sans appel séparé.
      */
-    public function show(string $id): ExperienceResource
+    public function show(string $id, ExperienceBookingService $capacity): ExperienceResource
     {
         // La fiche affiche la galerie entière du circuit.
-        $experience = TourismExperience::query()->published()->with('media')->findOrFail($id);
+        $experience = TourismExperience::query()->published()->with(['media', 'departures'])->findOrFail($id);
+
+        $experience->setRelation(
+            'departures',
+            $experience->departures
+                ->filter(fn (TourismExperienceDeparture $d) => ! $d->start_date->isPast())
+                ->values()
+                ->each(fn (TourismExperienceDeparture $d) => $d->seats_left = $capacity->seatsLeft($d)),
+        );
 
         return ExperienceResource::make($experience);
     }

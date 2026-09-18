@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AdminService, CircuitDossier } from '../../../../core/api/admin.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { MediaReviewComponent } from '../../shared/media-review/media-review';
 import { programmeOf } from '../circuit-programme';
 
@@ -14,12 +15,14 @@ import { programmeOf } from '../circuit-programme';
  * auprès de douze personnes nommées, joignables, dont certaines n'ont pas fini
  * de payer.
  *
- * ⚠️ Un circuit n'a **pas de date de départ** (B6.3) : sa capacité est un total
- * et le remplissage cumule toutes ses réservations. La fiche parle donc de
- * « participants », pas de « passagers d'un départ » — contrairement à la fiche
- * de trajet, dont elle partage pourtant la mise en page.
+ * ⚠️ Revu en F21 : un circuit a désormais plusieurs dates de départ, chacune
+ * avec ses propres places. Le remplissage affiché ici reste un CUMUL toutes
+ * dates confondues (vue d'ensemble) ; le détail par date est listé à part.
  *
- * Lecture seule : l'approbation reste à la file de validation.
+ * Lecture seule pour un circuit d'un vrai prestataire : l'approbation reste à
+ * la file de validation. Un circuit déposé PAR L'ÉQUIPE (F21) peut en plus
+ * être modifié d'ici même (lien conditionnel, `canEdit`) : le back-office n'a
+ * pas de second formulaire, il réutilise celui du prestataire.
  */
 @Component({
   selector: 'app-backoffice-circuit-detail-page',
@@ -32,6 +35,7 @@ import { programmeOf } from '../circuit-programme';
 })
 export class BackofficeCircuitDetailPageComponent {
   private readonly admin = inject(AdminService);
+  private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
 
   private readonly id = Number(this.route.snapshot.paramMap.get('id'));
@@ -49,9 +53,18 @@ export class BackofficeCircuitDetailPageComponent {
   /** Taux de remplissage borné, pour la jauge. */
   protected readonly fillRate = computed(() => {
     const e = this.dossier()?.experience;
-    if (!e?.capacity) return 0;
-    return Math.min(100, Math.round((e.seats_taken / e.capacity) * 100));
+    if (!e?.capacity_total) return 0;
+    return Math.min(100, Math.round((e.seats_taken / e.capacity_total) * 100));
   });
+
+  /**
+   * L'agent connecté peut-il modifier CE circuit ? Seulement s'il en est le
+   * prestataire (F21) — un circuit déposé par un vrai prestataire se modifie
+   * depuis SON espace, pas depuis ici.
+   */
+  protected readonly canEdit = computed(
+    () => this.dossier()?.experience.provider?.id === this.auth.user()?.id,
+  );
 
   /** Participants réellement attendus (les annulés sont listés à part). */
   protected readonly expected = computed(

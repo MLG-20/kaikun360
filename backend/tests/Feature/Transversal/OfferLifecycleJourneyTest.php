@@ -111,7 +111,9 @@ class OfferLifecycleJourneyTest extends TestCase
             'destination' => 'Saint-Louis',
             'duration_days' => 3,
             'price_xof' => 150_000,
-            'capacity' => 12,
+            'departures' => [
+                ['start_date' => now()->addWeek()->toDateString(), 'seats_total' => 12],
+            ],
         ])->assertCreated()->json('data.experience.id');
 
         // 2. Le prestataire corrige son annonce ET l'illustre.

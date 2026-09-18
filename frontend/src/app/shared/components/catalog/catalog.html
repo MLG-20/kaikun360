@@ -94,7 +94,12 @@
       Impossible de charger le catalogue. Vérifiez votre connexion puis réessayez.
     </p>
   } @else if (empty()) {
-    <p class="catalog-status">Aucun résultat ne correspond à votre recherche.</p>
+    <p class="catalog-status">{{ emptyMessage() }}</p>
+    @if (emptyCtaLabel(); as label) {
+      <p class="catalog-status-cta">
+        <app-whatsapp-button [label]="label" [subject]="emptyCtaSubject()" />
+      </p>
+    }
   } @else {
     <!-- Compteur + grille de cartes. -->
     @if (meta(); as m) {

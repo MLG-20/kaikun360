@@ -74,8 +74,9 @@ La toute première brique de l'application (`App`) ne fait qu'une chose : affich
   **fiche d'une nuitée** `/nuitees/:id` (équipements, règlement, **calendrier de
   disponibilité**, avis clients, demande de réservation).
 - **`explore/`** — l'**univers Tourisme** (F2.4) : la page vitrine `/tourisme`
-  et la **fiche d'une expérience** `/tourisme/:id` (programme, inclusions,
-  **places restantes**, avis, demande de réservation).
+  et la **fiche d'une expérience** `/tourisme/:id` (programme jour par jour,
+  compris/non compris, **dates de départ avec leurs places restantes**, F21,
+  avis, réservation).
 - **`mobility/`** — les **univers Transport & Mobilité** (F2.4) : la vitrine
   `/transport` + la **fiche d'un véhicule** `/transport/:id` (caractéristiques,
   chauffeur, caution, avis, demande) ; et la vitrine `/mobilite` (navettes/

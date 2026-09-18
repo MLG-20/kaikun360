@@ -6,16 +6,12 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import {
-  EXPERIENCE_INCLUSIONS,
-  NewExperiencePayload,
-  OfferService,
-} from '../../../core/api/offer.service';
+import { NewExperiencePayload, OfferService } from '../../../core/api/offer.service';
 import { Experience } from '../../../models/experience.model';
 import { PropertyPhoto } from '../../../models/property.model';
 import { extractGoogleMapsEmbedUrl } from '../../../shared/format/google-maps';
@@ -27,9 +23,20 @@ import { PhotoManagerComponent } from '../../../shared/components/photo-manager/
  * Formulaire de dépôt d'une **expérience touristique** (F5.6), monté sous
  * `/espace-prestataire/offres/experience/nouvelle`.
  *
- * Miroir de `StoreExperienceRequest` / `UpdateExperienceRequest`. Les
- * **inclusions** (restauration, guide, transport, hébergement) sont cochées et
- * envoyées en `{ cle: booléen }`.
+ * Le back-office réutilise CE MÊME composant (F21) sous `/back-office/...` :
+ * un super_admin peut ainsi déposer un circuit exactement comme un
+ * prestataire, sans un second formulaire qui divergerait avec le temps. Le
+ * seul comportement piloté par la route est la destination du retour après
+ * enregistrement (`data: { returnTo }`, cf. `app.routes.ts`).
+ *
+ * Miroir de `StoreExperienceRequest` / `UpdateExperienceRequest` (F21) :
+ * - le **programme** (`itinerary`) est un jour par jour libre, le numéro du
+ *   jour étant simplement la position dans la liste ;
+ * - les **dates de départ** (`departures`) portent chacune leurs propres
+ *   places — au moins une est exigée, un circuit sans date n'étant jamais
+ *   réservable ;
+ * - « inclus »/« non inclus » sont du texte libre, plus proches de ce qu'un
+ *   circuit promet réellement que les 4 cases à cocher qu'ils remplacent.
  *
  * ⚠️ **L'édition n'existait pas** (F8.19) : le backend n'exposait aucun `PATCH`,
  * un circuit déposé était donc définitif — et, les photos n'étant déposables
@@ -50,9 +57,6 @@ export class ProviderExperienceFormPageComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
-  /** Inclusions proposées (miroir de `EXPERIENCE_INCLUSIONS`). */
-  protected readonly inclusions = EXPERIENCE_INCLUSIONS;
-
   protected readonly submitting = signal(false);
   protected readonly formError = signal<string | null>(null);
 
@@ -61,14 +65,21 @@ export class ProviderExperienceFormPageComponent {
   protected readonly isEdit = computed(() => this.editId() !== null);
   protected readonly state = signal<'loading' | 'form' | 'not-found' | 'error'>('form');
 
+  /**
+   * Après enregistrement, où revenir ? Le prestataire retrouve ses offres ;
+   * le back-office (F21) retrouve l'onglet Circuits — piloté par la route
+   * plutôt que codé en dur, pour que ce composant reste réutilisable tel quel.
+   */
+  private readonly returnTo =
+    (this.route.snapshot.data['returnTo'] as string | undefined) ?? '/espace-prestataire/offres';
+
   /** Photos déjà en ligne du circuit (mode édition). */
   protected readonly existingPhotos = signal<PropertyPhoto[]>([]);
 
   /**
    * Bloc photos (F8.18). Un circuit est ce qui se vend le plus par l'image, et
    * c'était l'univers le plus démuni : ni dépôt, ni photo sur la carte, ni
-   * galerie sur la fiche. ⚠️ Écran de **création seule** (le backend n'expose
-   * pas d'édition de circuit) : les photos partent donc juste après le POST.
+   * galerie sur la fiche.
    */
   private readonly photoManager = viewChild(PhotoManagerComponent);
 
@@ -78,15 +89,29 @@ export class ProviderExperienceFormPageComponent {
     description: [''],
     duration_days: [1, [Validators.required, Validators.min(1)]],
     price_xof: [0, [Validators.required, Validators.min(0)]],
-    capacity: [1, [Validators.required, Validators.min(1)]],
+    included: [''],
+    excluded: [''],
     maps_link: [''],
-    // Une case par inclusion, ajoutée dynamiquement ci-dessous.
-    inclusions: this.fb.nonNullable.group(
-      Object.fromEntries(EXPERIENCE_INCLUSIONS.map((i) => [i.key, this.fb.nonNullable.control(false)])),
-    ),
+    itinerary: this.fb.array<ReturnType<typeof this.newItineraryDay>>([]),
+    departures: this.fb.array<ReturnType<typeof this.newDeparture>>([], Validators.minLength(1)),
   });
 
+  /** Accès typé au programme jour par jour. */
+  protected get itinerary(): FormArray<ReturnType<typeof this.newItineraryDay>> {
+    return this.form.controls.itinerary;
+  }
+
+  /** Accès typé aux dates de départ. */
+  protected get departures(): FormArray<ReturnType<typeof this.newDeparture>> {
+    return this.form.controls.departures;
+  }
+
   constructor() {
+    // Un circuit qui démarre sans aucune date pousserait un prestataire à
+    // publier une offre non réservable sans même s'en apercevoir : on en
+    // propose une d'emblée, comme la première ligne d'un formulaire répétable.
+    this.departures.push(this.newDeparture());
+
     const idParam = this.route.snapshot.paramMap.get('id');
     if (!idParam) {
       return;
@@ -111,6 +136,54 @@ export class ProviderExperienceFormPageComponent {
     });
   }
 
+  /** Fabrique une ligne de programme (titre + description du jour, facultatifs). */
+  private newItineraryDay() {
+    return this.fb.nonNullable.group({
+      title: [''],
+      description: [''],
+    });
+  }
+
+  /** Ajoute un jour au programme. */
+  addItineraryDay(): void {
+    this.itinerary.push(this.newItineraryDay());
+  }
+
+  /** Retire le jour de programme à l'index donné. */
+  removeItineraryDay(index: number): void {
+    this.itinerary.removeAt(index);
+  }
+
+  /**
+   * Fabrique une ligne de date de départ. `id` reste caché : présent en
+   * édition, il dit au serveur qu'il s'agit d'une date EXISTANTE à corriger
+   * plutôt qu'à recréer.
+   */
+  private newDeparture(id: number | null = null) {
+    return this.fb.nonNullable.group({
+      id: this.fb.control<number | null>(id),
+      start_date: ['', [Validators.required]],
+      seats_total: [1, [Validators.required, Validators.min(1)]],
+    });
+  }
+
+  /** Ajoute une date de départ. */
+  addDeparture(): void {
+    this.departures.push(this.newDeparture());
+  }
+
+  /**
+   * Retire la date de départ à l'index donné.
+   *
+   * ⚠️ Le serveur refuse de retirer une date qui porte déjà des réservations
+   * (F21) : l'erreur revient à l'enregistrement, pas ici — on ne peut pas le
+   * savoir sans interroger le serveur, et bloquer localement empêcherait de
+   * corriger une erreur de saisie sur une date qui, elle, n'a rien.
+   */
+  removeDeparture(index: number): void {
+    this.departures.removeAt(index);
+  }
+
   /** Pré-remplit le formulaire à partir d'un circuit existant. */
   private patch(x: Experience): void {
     this.form.patchValue({
@@ -119,15 +192,31 @@ export class ProviderExperienceFormPageComponent {
       description: x.description ?? '',
       duration_days: x.duration_days ?? 1,
       price_xof: x.price_xof,
-      capacity: x.capacity,
+      included: x.included ?? '',
+      excluded: x.excluded ?? '',
       maps_link: x.maps_link ?? '',
     });
 
-    // Les inclusions arrivent en `{ cle: booléen }` ; les cases absentes de la
-    // réponse restent décochées.
-    const inclusions = (x.inclusions ?? {}) as Record<string, boolean>;
-    for (const option of EXPERIENCE_INCLUSIONS) {
-      this.form.controls.inclusions.controls[option.key]?.setValue(!!inclusions[option.key]);
+    this.itinerary.clear();
+    for (const day of x.itinerary ?? []) {
+      this.itinerary.push(
+        this.fb.nonNullable.group({
+          title: [day.title ?? ''],
+          description: [day.description ?? ''],
+        }),
+      );
+    }
+
+    this.departures.clear();
+    for (const departure of x.departures ?? []) {
+      this.departures.push(this.newDeparture(departure.id));
+      this.departures.at(-1).patchValue({
+        start_date: departure.start_date,
+        seats_total: departure.seats_total,
+      });
+    }
+    if (this.departures.length === 0) {
+      this.departures.push(this.newDeparture());
     }
 
     this.existingPhotos.set(x.photos ?? []);
@@ -147,9 +236,19 @@ export class ProviderExperienceFormPageComponent {
       description: raw.description || null,
       duration_days: raw.duration_days,
       price_xof: raw.price_xof,
-      capacity: raw.capacity,
-      inclusions: raw.inclusions as Record<string, boolean>,
+      included: raw.included || null,
+      excluded: raw.excluded || null,
       maps_link: raw.maps_link ? extractGoogleMapsEmbedUrl(raw.maps_link) : null,
+      itinerary: raw.itinerary.map((day, index) => ({
+        day: index + 1,
+        title: day.title || null,
+        description: day.description || null,
+      })),
+      departures: raw.departures.map((d) => ({
+        id: d.id ?? undefined,
+        start_date: d.start_date,
+        seats_total: d.seats_total,
+      })),
     };
 
     this.submitting.set(true);
@@ -165,7 +264,7 @@ export class ProviderExperienceFormPageComponent {
       .subscribe({
       next: () => {
         this.submitting.set(false);
-        this.router.navigate(['/espace-prestataire/offres']);
+        this.router.navigateByUrl(this.returnTo);
       },
       error: (err: { status?: number; error?: ValidationErrorBody }) => {
         this.submitting.set(false);

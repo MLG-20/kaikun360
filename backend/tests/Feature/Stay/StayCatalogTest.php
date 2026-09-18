@@ -58,6 +58,30 @@ class StayCatalogTest extends TestCase
             ->assertJsonPath('data.property.id', $stay->property_id);
     }
 
+    /**
+     * F21 — signalé par le client : les liens de pagination renvoyaient
+     * `http://nginx/…` en production. Cause : le rendu SSR Angular appelle
+     * l'API **en direct sur le réseau Docker** (`http://nginx/api/...`), et
+     * `LengthAwarePaginator` construisait ses liens à partir de CETTE requête
+     * interne, pas de l'origine publique — `AppServiceProvider::
+     * configureUrlGeneration()` force désormais `APP_URL`, quel que soit le
+     * `Host` vu par PHP. On simule ici la requête interne (en-tête `Host:
+     * nginx`, comme le ferait le serveur SSR) pour vérifier que le lien
+     * généré n'y est plus sensible.
+     */
+    public function test_les_liens_de_pagination_utilisent_toujours_l_url_publique(): void
+    {
+        Stay::factory()->count(20)->create(); // > 15/page : un lien "next" existe.
+
+        $lien = $this->getJson('/api/v1/stays', ['Host' => 'nginx'])
+            ->assertOk()
+            ->json('links.next');
+
+        $this->assertNotNull($lien);
+        $this->assertStringStartsWith((string) config('app.url'), $lien);
+        $this->assertStringNotContainsString('nginx', $lien);
+    }
+
     public function test_detail_d_une_nuitee_non_reservable_renvoie_404(): void
     {
         $stay = Stay::factory()->inactive()->create();

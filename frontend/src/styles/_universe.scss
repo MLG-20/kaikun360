@@ -200,6 +200,32 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
+// Mobile (F21, remonté par un client) : les 3 encadrés empilés en pleine
+// largeur, sous le titre et le texte d'accroche, prenaient l'écran entier —
+// aucun résultat du catalogue n'était visible sans défiler. Bande horizontale
+// défilante à la place d'un empilement vertical : même contenu, une seule
+// ligne de hauteur.
+@media (max-width: 640px) {
+  .uni-hero {
+    padding: 1.75rem 0 2rem;
+  }
+
+  .uni-hero-points {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.2rem; // évite que la barre de défilement ne touche le texte.
+  }
+
+  .uni-hero-point {
+    flex: 0 0 auto;
+    width: 78vw;
+    max-width: 260px;
+    scroll-snap-align: start;
+  }
+}
+
 .uni-catalog {
   padding-top: 2rem;
   padding-bottom: 3rem;
@@ -515,6 +541,35 @@
   border-radius: 999px;
   padding: 0.3rem 0.85rem;
   font-size: 0.88rem;
+}
+
+// Programme jour par jour d'un circuit (F21).
+.uni-itinerary {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+
+  li {
+    padding-left: 1rem;
+    border-left: 2px solid var(--k-line);
+  }
+
+  p {
+    margin: 0.25rem 0 0;
+    color: var(--k-muted);
+  }
+}
+
+.uni-itinerary-day {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--k-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .uni-rating {

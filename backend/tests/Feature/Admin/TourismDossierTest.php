@@ -73,10 +73,10 @@ class TourismDossierTest extends TestCase
 
     public function test_la_fiche_circuit_donne_le_programme_et_les_participants(): void
     {
-        $experience = TourismExperience::factory()->create([
-            'capacity' => 15,
-            'inclusions' => ['guide', 'restauration'],
+        $experience = TourismExperience::factory()->withDepartures(1)->create([
+            'included' => 'Guide, restauration',
         ]);
+        $experience->departures()->update(['seats_total' => 15]);
 
         $client = User::factory()->create(['name' => 'Ndeye Ba']);
         $this->booking($experience->id, ['user_id' => $client->id, 'guests' => 3]);
@@ -97,7 +97,7 @@ class TourismDossierTest extends TestCase
 
     public function test_un_participant_annule_reste_liste_mais_ne_compte_pas(): void
     {
-        $experience = TourismExperience::factory()->create(['capacity' => 15]);
+        $experience = TourismExperience::factory()->withDepartures(1)->create();
 
         $this->booking($experience->id, ['guests' => 2]);
         $this->booking($experience->id, ['guests' => 6, 'status' => 'annulee_client']);

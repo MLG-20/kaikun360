@@ -23,7 +23,11 @@ class ExperienceCancellationTest extends TestCase
      */
     private function booking(User $user, int $daysAhead, int $guests = 2, string $status = 'confirmee'): Booking
     {
-        $experience = TourismExperience::factory()->published()->create(['capacity' => 10]);
+        $experience = TourismExperience::factory()->published()->create();
+        $experience->departures()->create([
+            'start_date' => now()->addDays($daysAhead)->toDateString(),
+            'seats_total' => 10,
+        ]);
 
         return Booking::create([
             'reference' => 'BK-'.uniqid(),
@@ -91,13 +95,13 @@ class ExperienceCancellationTest extends TestCase
     {
         $client = User::factory()->create();
         $booking = $this->booking($client, daysAhead: 10, guests: 4);
-        $experience = $booking->bookable;
+        $departure = $booking->bookable->departures->first();
 
-        $this->assertSame(6, app(ExperienceBookingService::class)->seatsLeft($experience));
+        $this->assertSame(6, app(ExperienceBookingService::class)->seatsLeft($departure));
 
         Sanctum::actingAs($client);
         $this->patchJson("/api/v1/experiences/bookings/{$booking->id}/cancel")->assertOk();
 
-        $this->assertSame(10, app(ExperienceBookingService::class)->seatsLeft($experience->fresh()));
+        $this->assertSame(10, app(ExperienceBookingService::class)->seatsLeft($departure->fresh()));
     }
 }

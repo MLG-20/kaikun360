@@ -68,7 +68,7 @@ class ExperienceValidator implements ResourceValidator
     public function toDetail(Model $model): array
     {
         /** @var TourismExperience $model */
-        $model->loadMissing(['provider', 'allMedia']);
+        $model->loadMissing(['provider', 'allMedia', 'departures']);
 
         return [
             ...$this->toEntry($model),
@@ -79,12 +79,12 @@ class ExperienceValidator implements ResourceValidator
                 'Destination' => $model->destination,
                 'Durée (jours)' => $model->duration_days,
                 'Prix' => $model->price_xof,
-                'Capacité' => $model->capacity,
+                'Dates de départ' => $model->departures
+                    ->map(fn ($d) => $d->start_date->format('d/m/Y')." ({$d->seats_total} places)")
+                    ->implode(' · '),
                 'Description' => $model->description,
-                // `inclusions` est casté en tableau : on l'aplatit pour l'affichage.
-                'Inclusions' => is_array($model->inclusions)
-                    ? implode(' · ', $model->inclusions)
-                    : $model->inclusions,
+                'Inclus' => $model->included,
+                'Non inclus' => $model->excluded,
             ],
         ];
     }

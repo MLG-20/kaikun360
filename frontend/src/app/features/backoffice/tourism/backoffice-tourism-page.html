@@ -3,9 +3,14 @@
     <h1 class="tou-title">Tourisme</h1>
     <p class="tou-sub">
       Les circuits et leur remplissage, la couverture par destination, et les partenaires guides et
-      restaurants. Supervision en lecture seule — l’approbation se fait dans l’écran Validation.
+      restaurants. L’approbation d’un circuit déposé se fait dans l’écran Validation.
     </p>
   </div>
+  @if (selected() === 'circuits') {
+    <a class="k-btn k-btn--primary" routerLink="/back-office/tourisme/circuit/nouveau">
+      + Ajouter un circuit
+    </a>
+  }
 </header>
 
 <nav class="tou-tabs" aria-label="Tourisme">
@@ -146,15 +151,15 @@
                 <span class="tou-muted">{{ c.destination }}</span>
               </td>
               <td>
-                <span class="tou-seats">{{ c.seats_taken }} / {{ c.capacity }}</span>
+                <span class="tou-seats">{{ c.seats_taken }} / {{ c.capacity_total }}</span>
                 <span
                   class="tou-gauge"
-                  [attr.aria-label]="fillRate(c.capacity, c.seats_taken) + ' % de remplissage'"
+                  [attr.aria-label]="fillRate(c.capacity_total, c.seats_taken) + ' % de remplissage'"
                 >
                   <span
                     class="tou-gauge__fill"
-                    [class]="fillClass(c.capacity, c.seats_taken)"
-                    [style.width.%]="fillRate(c.capacity, c.seats_taken)"
+                    [class]="fillClass(c.capacity_total, c.seats_taken)"
+                    [style.width.%]="fillRate(c.capacity_total, c.seats_taken)"
                   ></span>
                 </span>
                 @if (c.seats_left === 0) {

@@ -8,6 +8,7 @@ use App\Http\Resources\BookingResource;
 use App\Models\Booking;
 use App\Modules\Explore\Http\Requests\StoreExperienceBookingRequest;
 use App\Modules\Explore\Models\TourismExperience;
+use App\Modules\Explore\Models\TourismExperienceDeparture;
 use App\Modules\Explore\Services\ExperienceBookingService;
 use App\Modules\Explore\Services\ExperienceCancellationService;
 use App\Support\ApiResponse;
@@ -19,10 +20,10 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Disponibilité et réservation d'une expérience (phase B6.3).
+ * Disponibilité et réservation d'une expérience (phase B6.3, revue en F21).
  *
- * La capacité borne le nombre total de participants (panier groupe) ; on refuse
- * toute réservation dépassant les places restantes.
+ * Chaque DATE DE DÉPART a ses propres places (F21) ; on refuse toute
+ * réservation dépassant les places restantes de la date choisie.
  */
 class ExperienceBookingController extends Controller
 {
@@ -33,21 +34,30 @@ class ExperienceBookingController extends Controller
     }
 
     /**
-     * Places restantes. GET /api/v1/experiences/{id}/availability
+     * Dates de départ à venir, avec leurs places restantes. GET /api/v1/experiences/{id}/availability
      */
     public function availability(string $id): JsonResponse
     {
-        $experience = TourismExperience::query()->published()->findOrFail($id);
+        $experience = TourismExperience::query()->published()->with('departures')->findOrFail($id);
+
+        $departures = $experience->departures
+            ->filter(fn (TourismExperienceDeparture $d) => ! $d->start_date->isPast())
+            ->values()
+            ->map(fn (TourismExperienceDeparture $d) => [
+                'id' => $d->id,
+                'start_date' => $d->start_date->toDateString(),
+                'seats_total' => $d->seats_total,
+                'seats_left' => $this->capacity->seatsLeft($d),
+            ]);
 
         return ApiResponse::success([
             'experience_id' => $experience->id,
-            'capacity' => $experience->capacity,
-            'seats_left' => $this->capacity->seatsLeft($experience),
+            'departures' => $departures,
         ]);
     }
 
     /**
-     * Réservation de places (groupe). POST /api/v1/experiences/{id}/bookings
+     * Réservation de places (groupe) sur une date de départ. POST /api/v1/experiences/{id}/bookings
      */
     public function store(StoreExperienceBookingRequest $request, string $id): JsonResponse
     {
@@ -55,16 +65,19 @@ class ExperienceBookingController extends Controller
         $data = $request->validated();
         $guests = (int) $data['guests'];
 
-        // Contrôle de capacité (places restantes).
-        if (! $this->capacity->canAccommodate($experience, $guests)) {
-            $left = $this->capacity->seatsLeft($experience);
+        // La validation a déjà vérifié que ce départ appartient bien à ce circuit.
+        $departure = $experience->departures()->findOrFail($data['departure_id']);
+
+        // Contrôle de capacité (places restantes de CETTE date).
+        if (! $this->capacity->canAccommodate($departure, $guests)) {
+            $left = $this->capacity->seatsLeft($departure);
             throw ValidationException::withMessages([
-                'guests' => ["Il ne reste que {$left} place(s) disponible(s)."],
+                'guests' => ["Il ne reste que {$left} place(s) disponible(s) pour cette date."],
             ]);
         }
 
         // Date de départ choisie ; fin déduite de la durée du circuit.
-        $start = Carbon::parse($data['start_date']);
+        $start = Carbon::parse($departure->start_date);
         $end = $start->copy()->addDays(max(0, $experience->duration_days - 1));
 
         $montant = $guests * $experience->price_xof;
