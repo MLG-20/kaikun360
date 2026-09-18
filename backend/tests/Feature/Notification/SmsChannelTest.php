@@ -83,12 +83,19 @@ class SmsChannelTest extends TestCase
     {
         // On relit le fichier de configuration, seule source de vérité de la
         // valeur par défaut, en faisant varier le fournisseur.
-        // ⚠️ `putenv()` ne suffit pas : le dépôt d'environnement de Laravel
-        // interroge d'abord $_SERVER / $_ENV, qui masqueraient notre valeur.
+        // ⚠️ Le dépôt d'environnement de Laravel (Env::getRepository()) est
+        // construit IMMUTABLE (`Illuminate\Support\Env::getRepository()` fait
+        // `->immutable()->make()`) : son ->set() n'écrit QUE si la clé n'existe
+        // pas déjà — ici SMS_PROVIDER existe depuis .env.testing, donc ->set()
+        // serait un no-op silencieux. Il faut écrire directement dans $_ENV et
+        // putenv() (les deux adaptateurs par défaut que le dépôt lit), qui
+        // eux ne sont pas protégés par cette immutabilité.
         $original = Env::getRepository()->get('SMS_PROVIDER');
 
         $verificationViaMail = function (string $provider): bool {
-            Env::getRepository()->set('SMS_PROVIDER', $provider);
+            putenv("SMS_PROVIDER={$provider}");
+            $_ENV['SMS_PROVIDER'] = $provider;
+            $_SERVER['SMS_PROVIDER'] = $provider;
             $config = require config_path('services.php');
 
             return $config['sms']['verification_via_mail'];
@@ -104,9 +111,12 @@ class SmsChannelTest extends TestCase
         // On rend l'environnement tel qu'on l'a trouvé : les tests suivants
         // partagent le même processus.
         if ($original === null) {
-            Env::getRepository()->clear('SMS_PROVIDER');
+            putenv('SMS_PROVIDER');
+            unset($_ENV['SMS_PROVIDER'], $_SERVER['SMS_PROVIDER']);
         } else {
-            Env::getRepository()->set('SMS_PROVIDER', $original);
+            putenv("SMS_PROVIDER={$original}");
+            $_ENV['SMS_PROVIDER'] = $original;
+            $_SERVER['SMS_PROVIDER'] = $original;
         }
     }
 

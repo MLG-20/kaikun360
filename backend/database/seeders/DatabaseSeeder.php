@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             SenegalGeographySeeder::class,
             CommunesSeeder::class,
+            ProviderCategorySeeder::class,
         ]);
     }
 }

@@ -1,0 +1,29 @@
+# MySQL dédié à la suite de tests backend, séparé du docker-compose.yml
+# racine (celui-là sert aussi en prod sur le VPS — on ne touche pas à ses
+# réglages de durabilité). Cette base est jetable : données en tmpfs (RAM,
+# jamais écrites sur disque) et fsync désactivé, ce qui est sans risque
+# puisque `kaikun360_test` ne contient jamais rien qu'on veuille garder.
+#
+# Démarrage : docker compose -f docker-compose.testing.yml up -d
+# Arrêt     : docker compose -f docker-compose.testing.yml down
+services:
+  mysql-testing:
+    image: mysql:8.0
+    command:
+      - "--skip-ssl"
+      - "--default-authentication-plugin=mysql_native_password"
+      - "--innodb-flush-log-at-trx-commit=0"
+      - "--sync-binlog=0"
+      - "--innodb-doublewrite=0"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: kaikun360_test
+    ports:
+      - "3308:3306"
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
