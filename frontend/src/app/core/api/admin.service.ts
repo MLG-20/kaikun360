@@ -477,12 +477,6 @@ export interface TourismDestination {
 export type HousekeepingStatus = 'a_faire' | 'en_cours' | 'fait';
 
 /** Une réservation de nuitée dans le calendrier d'exploitation. */
-/**
- * Sort de la caution d'une réservation (miroir de `CautionStatus`) — F7.3.f.
- * Transversal : la location de véhicule l'utilise depuis B7.4.
- */
-export type CautionStatus = 'retenue' | 'restituee' | 'perdue';
-
 export interface StayBooking {
   booking_id: number;
   reference: string;
@@ -495,13 +489,9 @@ export interface StayBooking {
   checked_in_at: string | null;
   checked_out_at: string | null;
   housekeeping_status: HousekeepingStatus | null;
-  /** Montant de la caution demandée par le logement (0 si aucune). */
-  caution_xof: number | null;
-  /** `null` = pas de caution ; sinon retenue → restituée | perdue (F7.3.f). */
-  caution_status: CautionStatus | null;
 }
 
-/** Résumé renvoyé après une transition (check-in/out, ménage, caution) — partiel. */
+/** Résumé renvoyé après une transition (check-in/out, ménage) — partiel. */
 export interface StayBookingSummary {
   booking_id: number;
   reference: string;
@@ -509,8 +499,6 @@ export interface StayBookingSummary {
   checked_in_at: string | null;
   checked_out_at: string | null;
   housekeeping_status: HousekeepingStatus | null;
-  caution_xof: number | null;
-  caution_status: CautionStatus | null;
 }
 
 /**
@@ -554,8 +542,6 @@ export interface StayDossierBooking {
   checked_in_at: string | null;
   checked_out_at: string | null;
   housekeeping_status: HousekeepingStatus | null;
-  caution_xof: number | null;
-  caution_status: CautionStatus | null;
 }
 
 /** Le logement réservé et son hôte, dans la fiche de séjour (F8.2.a). */
@@ -604,7 +590,7 @@ export interface StayDossier {
   client: QueueOwner | null;
   stay: StayDossierStay | null;
   payments: StayDossierPayment[];
-  /** Journal d'audit du séjour (motif d'une caution conservée, notamment). */
+  /** Journal d'audit du séjour. */
   activity: AccountActivity[];
 }
 
@@ -2408,25 +2394,6 @@ export class AdminService {
       .pipe(map((response) => response.data.booking));
   }
 
-  /**
-   * Tranche le sort de la caution après le départ.
-   * PATCH /admin/stay-bookings/{id}/caution
-   *
-   * Le serveur exige un départ enregistré, une caution encore retenue, et un
-   * **motif** pour la conserver (une caution perdue se justifie).
-   */
-  stayCaution(
-    bookingId: number,
-    status: 'restituee' | 'perdue',
-    reason?: string,
-  ): Observable<StayBookingSummary> {
-    return this.http
-      .patch<ApiEnvelope<{ booking: StayBookingSummary }>>(
-        `${this.api}/admin/stay-bookings/${bookingId}/caution`,
-        { status, reason },
-      )
-      .pipe(map((response) => response.data.booking));
-  }
 
   // --- Paiements (F7.2.d) ----------------------------------------------------
 
@@ -2581,6 +2548,37 @@ export class AdminService {
     return this.http
       .post<ApiEnvelope<{ mandate: MandateDossier }>>(`${this.api}/manage/mandates`, payload)
       .pipe(map((res) => res.data.mandate));
+  }
+
+
+  /**
+   * PATCH /manage/mandates/{id} — corrige les termes d'un mandat (F21.1).
+   *
+   * Réservé au propriétaire du bien : le serveur refuse (403) le mandat d'un
+   * propriétaire externe, super administrateur compris.
+   */
+  updateMandate(
+    id: number,
+    payload: {
+      commission_rate?: number;
+      start_date?: string;
+      end_date?: string | null;
+      terms?: string | null;
+    },
+  ): Observable<MandateDossier> {
+    return this.http
+      .patch<ApiEnvelope<{ mandate: MandateDossier }>>(`${this.api}/manage/mandates/${id}`, payload)
+      .pipe(map((res) => res.data.mandate));
+  }
+
+  /**
+   * DELETE /manage/mandates/{id} — supprime un mandat encore vierge (F21.1).
+   *
+   * Refusé (422) dès qu'il porte un loyer, un incident, une dépense ou un
+   * reversement : il faut alors le terminer, pas l'effacer.
+   */
+  deleteMandate(id: number): Observable<unknown> {
+    return this.http.delete(`${this.api}/manage/mandates/${id}`);
   }
 
 

@@ -2504,6 +2504,19 @@ sans aucun moyen de l'amorcer.
 - **Vérifié** : build de production sans erreur (`ng build`), vérification de
   types stricte (`tsc --noEmit`, app et specs) sans erreur.
 
+### F21.1 — Publication directe, étiquette Kaikun 360, corbeille du back-office
+
+- `app-own-offer-actions` : « Modifier » / « Supprimer » affichés **au seul déposant**
+  (fiches véhicule, circuit, bien ; lignes de Catalogues). Le serveur applique la
+  même règle (403).
+- `app-kaikun-badge` : étiquette « Kaikun 360 » sur `app-listing-card` et les fiches.
+- Boutons « + Ajouter » (Catalogues, Mobilité, Nuitées) qui ouvrent les formulaires
+  prestataire/propriétaire avec `data.returnTo` ; textes adaptés au back-office.
+- `BackofficeTrashPageComponent` : Corbeille en dernière position du menu.
+- `GalleryComponent` : défilement automatique (4 s), en pause au survol et en plein écran.
+- Vitrine véhicules : lien vers `/transport?type=…` déduit de la catégorie.
+- Caution retirée des nuitées et des fiches véhicule. **143 tests vitest**.
+
 ### Commandes utiles
 
 ```bash

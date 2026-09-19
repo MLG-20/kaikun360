@@ -35,6 +35,9 @@
 
         <!-- Informations clés sous le titre. -->
         <ng-container meta>
+          @if (p.published_by_kaikun) {
+            <app-kaikun-badge />
+          }
           @if (locationLabel(); as loc) {
             <span class="uni-detail-loc">{{ loc }}</span>
           }

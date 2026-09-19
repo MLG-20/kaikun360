@@ -1,10 +1,16 @@
 <section class="account-head">
-  <app-back-link class="account-back" fallback="/espace-prestataire/offres" />
-  <p class="account-eyebrow">Espace prestataire</p>
-  <h1 class="account-title">{{ isEdit() ? 'Modifier le circuit' : 'Déposer un circuit' }}</h1>
+  <app-back-link class="account-back" [fallback]="returnTo" />
+  <p class="account-eyebrow">{{ isBackoffice() ? 'Back-office Kaikun 360' : 'Espace prestataire' }}</p>
+  <h1 class="account-title">
+    {{ isEdit() ? 'Modifier le circuit' : isBackoffice() ? 'Ajouter un circuit' : 'Déposer un circuit' }}
+  </h1>
   <p class="account-lead">
-    Composez une expérience touristique (excursion, circuit, activité). Elle
-    sera proposée aux voyageurs une fois validée par Kaikun.
+    @if (isBackoffice()) {
+      Ce circuit est publié directement au nom de Kaikun 360, sans passer par la validation.
+    } @else {
+      Composez une expérience touristique (excursion, circuit, activité). Elle
+      sera proposée aux voyageurs une fois validée par Kaikun.
+    }
   </p>
 </section>
 

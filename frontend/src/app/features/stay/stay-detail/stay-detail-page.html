@@ -35,6 +35,9 @@
         </ng-container>
 
         <ng-container meta>
+          @if (property()?.published_by_kaikun) {
+            <app-kaikun-badge />
+          }
           @if (locationLabel(); as loc) {
             <span class="uni-detail-loc">{{ loc }}</span>
           }
@@ -94,9 +97,6 @@
               @if (s.check_out_time) {
                 <div><dt>Départ avant</dt><dd>{{ s.check_out_time }}</dd></div>
               }
-              @if (cautionLabel(); as caution) {
-                <div><dt>Caution</dt><dd>{{ caution }}</dd></div>
-              }
             </dl>
           </section>
 
@@ -155,9 +155,6 @@
             @if (priceLabel(); as price) {
               <p class="uni-detail-price"><b>{{ price }}</b> <span class="unit">/ nuit</span></p>
             }
-            @if (cautionLabel(); as caution) {
-              <p class="k-muted stay-caution">Caution : {{ caution }}</p>
-            }
 
             <h2 class="uni-detail-card-title">Réserver</h2>
 
@@ -191,8 +188,7 @@
                 <!--
                   Le devis se compose sous les yeux du client : découvrir le
                   montant seulement à l'étape du paiement est le meilleur moyen
-                  de le perdre là. La caution est annoncée à part — c'est un
-                  dépôt rendu, pas un prix.
+                  de le perdre là.
                 -->
                 @if (canQuote()) {
                   <dl class="stay-quote">
@@ -200,12 +196,6 @@
                       <dt>{{ nights() }} nuit(s) × {{ priceLabel() }}</dt>
                       <dd>{{ totalLabel() }}</dd>
                     </div>
-                    @if (cautionLabel(); as caution) {
-                      <div class="stay-quote__caution">
-                        <dt>Caution (restituée au départ)</dt>
-                        <dd>{{ caution }}</dd>
-                      </div>
-                    }
                   </dl>
                 } @else if (bookingHint(); as hint) {
                   <!-- La règle est dite AVANT le clic, pas renvoyée en erreur après. -->

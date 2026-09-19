@@ -1,8 +1,8 @@
+import { OwnOfferActionsComponent } from '../../shared/own-offer-actions/own-offer-actions';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AdminService, CircuitDossier } from '../../../../core/api/admin.service';
-import { AuthService } from '../../../../core/auth/auth.service';
 import { MediaReviewComponent } from '../../shared/media-review/media-review';
 import { programmeOf } from '../circuit-programme';
 
@@ -21,12 +21,13 @@ import { programmeOf } from '../circuit-programme';
  *
  * Lecture seule pour un circuit d'un vrai prestataire : l'approbation reste à
  * la file de validation. Un circuit déposé PAR L'ÉQUIPE (F21) peut en plus
- * être modifié d'ici même (lien conditionnel, `canEdit`) : le back-office n'a
- * pas de second formulaire, il réutilise celui du prestataire.
+ * être modifié ou supprimé d'ici même (`app-own-offer-actions`, affiché à son
+ * seul déposant) : le back-office n'a pas de second formulaire, il réutilise
+ * celui du prestataire.
  */
 @Component({
   selector: 'app-backoffice-circuit-detail-page',
-  imports: [RouterLink, MediaReviewComponent],
+  imports: [RouterLink, MediaReviewComponent, OwnOfferActionsComponent],
   templateUrl: './backoffice-circuit-detail-page.html',
   // Feuille COMMUNE à toutes les fiches du back-office (F8.2) : une fiche en
   // appelle une autre, elles doivent se ressembler.
@@ -35,7 +36,6 @@ import { programmeOf } from '../circuit-programme';
 })
 export class BackofficeCircuitDetailPageComponent {
   private readonly admin = inject(AdminService);
-  private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
 
   private readonly id = Number(this.route.snapshot.paramMap.get('id'));
@@ -56,15 +56,6 @@ export class BackofficeCircuitDetailPageComponent {
     if (!e?.capacity_total) return 0;
     return Math.min(100, Math.round((e.seats_taken / e.capacity_total) * 100));
   });
-
-  /**
-   * L'agent connecté peut-il modifier CE circuit ? Seulement s'il en est le
-   * prestataire (F21) — un circuit déposé par un vrai prestataire se modifie
-   * depuis SON espace, pas depuis ici.
-   */
-  protected readonly canEdit = computed(
-    () => this.dossier()?.experience.provider?.id === this.auth.user()?.id,
-  );
 
   /** Participants réellement attendus (les annulés sont listés à part). */
   protected readonly expected = computed(

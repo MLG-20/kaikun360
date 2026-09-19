@@ -5,7 +5,6 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import {
   AdminService,
-  CautionStatus,
   HousekeepingStatus,
   StayBookingSummary,
   StayDossier,
@@ -30,9 +29,9 @@ interface HousekeepingOption {
  * Cette page rassemble les quatre faces d'un séjour : **le séjour** (dates,
  * nuits, phase), **le logement** et son hôte joignable, **le client et
  * l'argent** (encaissé / reste à payer, paiements un par un), et **la trace** —
- * le journal d'audit, où figure le motif d'une caution conservée.
+ * le journal d'audit.
  *
- * Les gestes d'exploitation (arrivée, départ, ménage, caution) sont pilotables
+ * Les gestes d'exploitation (arrivée, départ, ménage) sont pilotables
  * ici comme depuis la liste : c'est la même API, aux mêmes règles serveur.
  * L'agent qui ouvre un dossier pour comprendre n'a pas à revenir en arrière
  * pour agir.
@@ -61,10 +60,6 @@ export class BackofficeStayDetailPageComponent {
   protected readonly processing = signal(false);
   protected readonly actionError = signal<string | null>(null);
 
-  /** Saisie du motif de retenue de la caution (panneau déplié). */
-  protected readonly keepingCaution = signal(false);
-  protected cautionReason = '';
-
   protected readonly housekeepingOptions: readonly HousekeepingOption[] = [
     { value: 'a_faire', label: 'À faire' },
     { value: 'en_cours', label: 'En cours' },
@@ -77,12 +72,6 @@ export class BackofficeStayDetailPageComponent {
     if (b?.checked_out_at) return 'parti';
     if (b?.checked_in_at) return 'sur_place';
     return 'a_venir';
-  });
-
-  /** La caution ne se tranche qu'après le départ, et une seule fois. */
-  protected readonly canSettleCaution = computed(() => {
-    const b = this.dossier()?.booking;
-    return b?.caution_status === 'retenue' && b.checked_out_at !== null;
   });
 
   /** Localisation lisible du logement (les niveaux vides sont écartés). */
@@ -128,43 +117,10 @@ export class BackofficeStayDetailPageComponent {
     this.run(this.admin.stayHousekeeping(this.id, status));
   }
 
-  protected restoreCaution(): void {
-    this.closeCautionPanel();
-    this.run(this.admin.stayCaution(this.id, 'restituee'));
-  }
-
-  protected toggleCautionPanel(): void {
-    this.actionError.set(null);
-    this.cautionReason = '';
-    this.keepingCaution.update((open) => !open);
-  }
-
-  protected closeCautionPanel(): void {
-    this.keepingCaution.set(false);
-    this.cautionReason = '';
-  }
-
-  /** Conserve la caution — motif exigé (le serveur le refuse sinon). */
-  protected keepCaution(): void {
-    const reason = this.cautionReason.trim();
-    if (!reason) {
-      this.actionError.set('Indiquez le motif de la retenue de la caution.');
-      return;
-    }
-    this.run(this.admin.stayCaution(this.id, 'perdue', reason), true);
-  }
-
   /**
    * Exécute une transition, fusionne le résumé serveur dans le dossier ouvert.
-   *
-   * `reloadAfter` sert aux gestes **tracés au journal** (la caution) : le résumé
-   * ne transporte pas l'entrée d'audit, il faut la relire pour que le motif que
-   * l'agent vient d'écrire apparaisse dans l'historique sous ses yeux.
    */
-  private run(
-    request$: ReturnType<AdminService['stayCheckIn']>,
-    reloadAfter = false,
-  ): void {
+  private run(request$: ReturnType<AdminService['stayCheckIn']>): void {
     if (this.processing()) return;
 
     this.processing.set(true);
@@ -174,8 +130,6 @@ export class BackofficeStayDetailPageComponent {
       next: (summary) => {
         this.processing.set(false);
         this.mergeSummary(summary);
-        this.closeCautionPanel();
-        if (reloadAfter) this.load();
       },
       error: (error: HttpErrorResponse) => {
         this.processing.set(false);
@@ -197,40 +151,12 @@ export class BackofficeStayDetailPageComponent {
               checked_in_at: summary.checked_in_at,
               checked_out_at: summary.checked_out_at,
               housekeeping_status: summary.housekeeping_status,
-              caution_xof: summary.caution_xof,
-              caution_status: summary.caution_status,
             },
           },
     );
   }
 
   // --- Libellés ---------------------------------------------------------------
-
-  protected cautionLabel(status: CautionStatus | null): string {
-    switch (status) {
-      case 'retenue':
-        return 'Retenue';
-      case 'restituee':
-        return 'Restituée';
-      case 'perdue':
-        return 'Conservée';
-      default:
-        return '—';
-    }
-  }
-
-  protected cautionClass(status: CautionStatus | null): string {
-    switch (status) {
-      case 'restituee':
-        return 'is-ok';
-      case 'perdue':
-        return 'is-off';
-      case 'retenue':
-        return 'is-pending';
-      default:
-        return '';
-    }
-  }
 
   protected statusLabel(status: string): string {
     switch (status) {

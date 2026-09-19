@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 import { RouterLink } from '@angular/router';
 
 import { FavoritableRef } from '../../../models/favorite.model';
+import { KaikunBadgeComponent } from '../kaikun-badge/kaikun-badge';
 import { VerificationBadgeComponent } from '../verification-badge/verification-badge';
 
 /**
@@ -18,7 +19,7 @@ import { VerificationBadgeComponent } from '../verification-badge/verification-b
  */
 @Component({
   selector: 'app-listing-card',
-  imports: [VerificationBadgeComponent, RouterLink],
+  imports: [VerificationBadgeComponent, KaikunBadgeComponent, RouterLink],
   templateUrl: './listing-card.html',
   styleUrl: './listing-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +33,8 @@ export class ListingCardComponent {
   readonly priceUnit = input<string | null>(null);
   /** Libellé de badge de vérification (masqué si null). */
   readonly badge = input<string | null>(null);
+  /** Offre publiée par l'équipe Kaikun 360 (étiquette en bas à gauche de la vignette). */
+  readonly kaikun = input(false);
   readonly cta = input('Découvrir');
   /** URL d'image ; si absente, une vignette dégradée est utilisée. */
   readonly image = input<string | null>(null);

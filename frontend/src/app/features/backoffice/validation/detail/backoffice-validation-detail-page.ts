@@ -10,6 +10,9 @@ import {
   ValidationType,
 } from '../../../../core/api/admin.service';
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
+import { BackLinkComponent } from '../../../../shared/components/back-link/back-link';
+import { formatFcfa } from '../../../../shared/format/fcfa';
+import { OwnOfferActionsComponent } from '../../shared/own-offer-actions/own-offer-actions';
 import { MediaReviewComponent } from '../../shared/media-review/media-review';
 
 /** Libellé lisible de chaque type validable. */
@@ -37,7 +40,7 @@ const TYPE_LABELS: Record<ValidationType, string> = {
  */
 @Component({
   selector: 'app-backoffice-validation-detail-page',
-  imports: [FormsModule, RouterLink, MediaReviewComponent],
+  imports: [FormsModule, RouterLink, BackLinkComponent, MediaReviewComponent, OwnOfferActionsComponent],
   templateUrl: './backoffice-validation-detail-page.html',
   styleUrl: './backoffice-validation-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +53,9 @@ export class BackofficeValidationDetailPageComponent {
   /** Type et identifiant lus dans l'URL. */
   private readonly type = this.route.snapshot.paramMap.get('type') as ValidationType;
   private readonly id = Number(this.route.snapshot.paramMap.get('id'));
+
+  /** Un bien peut être modifié/supprimé par son déposant depuis son dossier. */
+  protected readonly isProperty = this.type === 'property';
 
   protected readonly entry = signal<QueueEntryDetail | null>(null);
   /** Faux si l'élément a déjà été tranché : on affiche sans permettre d'agir. */
@@ -78,7 +84,14 @@ export class BackofficeValidationDetailPageComponent {
     const raw = this.entry()?.fields ?? {};
     return Object.entries(raw)
       .filter(([, value]) => value !== null && value !== '' && value !== undefined)
-      .map(([label, value]) => ({ label, value: String(value) }));
+      .map(([label, value]) => {
+        // Les montants arrivent bruts (45000) : on les lit comme « 45 000 F ».
+        const isMoney = /^(Prix|Caution|Tarif)/.test(label) && typeof value === 'number';
+        const text = isMoney ? (formatFcfa(value) ?? String(value)) : String(value);
+        // Un texte long (description, programme, règles…) prend toute la largeur
+        // de la carte ; les valeurs courtes se rangent en grille.
+        return { label, value: text, wide: text.length > 48 || text.includes('\n') };
+      });
   });
 
   constructor() {

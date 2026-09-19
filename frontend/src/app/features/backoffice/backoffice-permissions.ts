@@ -114,6 +114,10 @@ export const BO_PERMISSIONS: Readonly<Record<string, readonly string[]>> = {
   // Pointeuse : périmètre PERSONNEL (on pointe pour soi). Toute l'équipe y a
   // droit — la feuille d'équipe, elle, est filtrée dans l'écran.
   pointeuse: [],
+
+  // Corbeille (F21.1) : périmètre PERSONNEL, comme la pointeuse — chacun n'y voit
+  // que ce qu'il a lui-même supprimé (le serveur cloisonne par déposant).
+  corbeille: [],
 };
 
 /**

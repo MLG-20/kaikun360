@@ -99,4 +99,19 @@ export class TrashService {
       {},
     );
   }
+
+  /**
+   * DELETE /me/trash/{type}/{id} — supprime DÉFINITIVEMENT une annonce (F21.1).
+   *
+   * Irréversible : les photos partent avec. Réservé aux annonces — un dossier
+   * masqué du client n'est jamais supprimé.
+   */
+  purge(type: TrashListingType, id: string): Observable<ApiEnvelope<{ deleted: number }>> {
+    return this.http.delete<ApiEnvelope<{ deleted: number }>>(`${this.api}/me/trash/${type}/${id}`);
+  }
+
+  /** DELETE /me/trash — vide la corbeille : toutes MES annonces, définitivement (F21.1). */
+  empty(): Observable<ApiEnvelope<{ deleted: number }>> {
+    return this.http.delete<ApiEnvelope<{ deleted: number }>>(`${this.api}/me/trash`);
+  }
 }

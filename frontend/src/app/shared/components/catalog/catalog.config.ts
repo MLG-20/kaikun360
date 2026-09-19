@@ -47,6 +47,8 @@ export interface CatalogCard {
   price: string | null;
   priceUnit: string | null;
   badge: string | null;
+  /** Offre publiée par l'équipe Kaikun 360 : la carte affiche l'étiquette. */
+  kaikun: boolean;
   image: string | null;
   /**
    * Cible `routerLink` de la fiche détaillée (ex. `['/immobilier', 12]`).
@@ -165,6 +167,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         price: formatFcfa(p.price_xof),
         priceUnit: null,
         badge: verifiedBadge(p.verification_level),
+        kaikun: p.published_by_kaikun ?? false,
         // Photo de couverture du bien (principale). `null` → vignette dégradée.
         image: p.photo_url ?? null,
         link: ['/immobilier', p.id],
@@ -193,6 +196,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         price: formatFcfa(s.price_per_night_xof),
         priceUnit: '/ nuit',
         badge: verifiedBadge(s.property?.verification_level),
+        kaikun: s.property?.published_by_kaikun ?? false,
         // Une nuitée est illustrée par les photos de SON bien.
         image: s.property?.photo_url ?? null,
         link: ['/nuitees', s.id],
@@ -223,6 +227,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         price: formatFcfa(v.price_per_day_xof),
         priceUnit: '/ jour',
         badge: v.has_driver ? 'Avec chauffeur' : null,
+        kaikun: v.published_by_kaikun ?? false,
         // F8.18 — la photo de couverture déposée par le loueur. Cette ligne
         // valait `null` en dur : même illustré, un véhicule s'affichait en
         // vignette dégradée, sur l'univers où l'image décide presque seule.
@@ -254,6 +259,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         price: formatFcfa(e.price_xof),
         priceUnit: '/ pers.',
         badge: null,
+        kaikun: e.published_by_kaikun ?? false,
         // F8.18 — photo de couverture du circuit (même dette qu'au transport).
         image: e.photo_url ?? null,
         link: ['/tourisme', e.id],
@@ -282,6 +288,7 @@ export const UNIVERSES: Record<Universe, UniverseConfig> = {
         price: formatFcfa(m.price_xof),
         priceUnit: '/ trajet',
         badge: null,
+        kaikun: false,
         // F8.18 — un trajet est illustré par le VÉHICULE qui l'opère : le
         // prestataire photographie son minibus une fois, tous ses départs sont
         // illustrés. `null` reste légitime pour un trajet sans véhicule attaché.

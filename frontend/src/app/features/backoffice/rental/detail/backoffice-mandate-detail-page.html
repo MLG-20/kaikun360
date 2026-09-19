@@ -21,8 +21,50 @@
         · Propriétaire : {{ m.property.owner.name || '—' }}
       </p>
     </div>
-    <span class="mn-badge" [class]="mandateStatusClass(m.status)">{{ m.status_label || m.status }}</span>
+    <div class="mn-head-side">
+      <span class="mn-badge" [class]="mandateStatusClass(m.status)">{{ m.status_label || m.status }}</span>
+      @if (isMine()) {
+        <div class="mn-own">
+          <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="editMandate()">
+            {{ openForm() === 'mandate' ? 'Annuler' : 'Modifier' }}
+          </button>
+          @if (confirmingDelete()) {
+            <span class="mn-confirm" role="alert">
+              Supprimer ce mandat ?
+              <button type="button" class="k-btn k-btn--sm mn-danger" [disabled]="saving()" (click)="deleteMandate()">Oui, supprimer</button>
+              <button type="button" class="k-btn k-btn--sm k-btn--ghost" (click)="confirmingDelete.set(false)">Annuler</button>
+            </span>
+          } @else {
+            <button type="button" class="k-btn k-btn--sm k-btn--ghost mn-danger-ghost" (click)="confirmingDelete.set(true)">
+              Supprimer
+            </button>
+          }
+        </div>
+      }
+    </div>
   </header>
+
+  @if (openForm() === 'mandate') {
+    <div class="mn-form">
+      <label class="mn-field">
+        <span>Commission (%)</span>
+        <input class="k-input" type="number" min="0" max="100" step="0.5" name="mCommission" [(ngModel)]="mandateForm.commission_rate" />
+      </label>
+      <label class="mn-field">
+        <span>Début</span>
+        <input class="k-input" type="date" name="mStart" [(ngModel)]="mandateForm.start_date" />
+      </label>
+      <label class="mn-field">
+        <span>Fin <em class="mn-muted">(facultatif)</em></span>
+        <input class="k-input" type="date" name="mEnd" [(ngModel)]="mandateForm.end_date" />
+      </label>
+      <label class="mn-field mn-field--wide">
+        <span>Clauses du mandat</span>
+        <textarea class="k-input" rows="4" name="mTerms" [(ngModel)]="mandateForm.terms"></textarea>
+      </label>
+      <button type="button" class="k-btn k-btn--primary" [disabled]="saving()" (click)="saveMandate()">Enregistrer</button>
+    </div>
+  }
 
   @if (actionError()) {
     <p class="mn-state mn-state--error" role="alert">{{ actionError() }}</p>

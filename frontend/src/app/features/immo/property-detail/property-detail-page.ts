@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { KaikunBadgeComponent } from '../../../shared/components/kaikun-badge/kaikun-badge';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { CatalogService } from '../../../core/api/catalog.service';
@@ -33,6 +34,7 @@ type LoadState = 'loading' | 'ready' | 'notfound' | 'failed';
 @Component({
   selector: 'app-property-detail-page',
   imports: [
+    KaikunBadgeComponent,
     ReactiveFormsModule,
     RouterLink,
     WhatsAppButtonComponent,

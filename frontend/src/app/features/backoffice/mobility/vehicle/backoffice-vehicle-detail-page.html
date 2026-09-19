@@ -24,6 +24,13 @@
       <span class="bo-badge" [class]="statusClass(d.vehicle.status)">
         {{ d.vehicle.status_label ?? '—' }}
       </span>
+      <app-own-offer-actions
+        kind="vehicle"
+        [id]="d.vehicle.id"
+        [ownerId]="d.vehicle.provider?.id"
+        [editLink]="['/back-office', 'mobilite', 'vehicule', d.vehicle.id, 'modifier']"
+        backLink="/back-office/mobilite"
+      />
     </div>
   </header>
 
@@ -90,7 +97,6 @@
       <h3 class="bo-block__title">Conditions</h3>
       <dl class="bo-facts">
         <div><dt>Tarif</dt><dd>{{ xof(d.vehicle.price_per_day_xof) }} / jour</dd></div>
-        <div><dt>Caution</dt><dd>{{ xof(d.vehicle.caution_xof) }}</dd></div>
         <div><dt>Mis en ligne le</dt><dd>{{ shortDate(d.vehicle.published_at) }}</dd></div>
       </dl>
 

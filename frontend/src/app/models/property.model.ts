@@ -43,6 +43,9 @@ export interface Property {
    */
   photo_url?: string | null;
 
+  /** Offre déposée par l'équipe Kaikun 360 (et non par un prestataire) : affiche l'étiquette. */
+  published_by_kaikun?: boolean;
+
   /**
    * Compteurs de médias (F8.1), fournis par les listes back-office uniquement.
    *

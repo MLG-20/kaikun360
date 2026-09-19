@@ -24,6 +24,10 @@
       </span>
     }
 
+    @if (kaikun()) {
+      <span class="kaikun-slot"><app-kaikun-badge /></span>
+    }
+
     <!-- Cœur de favori (au-dessus du lien étiré). Affiché seulement si la carte
          est favorisable. -->
     @if (favoritable()) {

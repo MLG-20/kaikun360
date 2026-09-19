@@ -42,7 +42,8 @@ type BoIcon =
   | 'inbox'
   | 'chat'
   | 'megaphone'
-  | 'steering';
+  | 'steering'
+  | 'trash';
 
 /** Une rubrique de navigation du poste de commandement. */
 interface BoNavItem {
@@ -223,6 +224,8 @@ export class BackofficeLayoutComponent {
     { label: 'Équipe', path: 'equipe', icon: 'users', ready: true },
     { label: 'Permissions', path: 'permissions', icon: 'shield', ready: true },
     { label: 'Pointeuse', path: 'pointeuse', icon: 'clock', ready: true },
+    // F21.1 — toujours en dernière position : ce qu'on a supprimé, à récupérer ou à vider.
+    { label: 'Corbeille', path: 'corbeille', icon: 'trash', ready: true },
   ];
 
   /**

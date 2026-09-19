@@ -7,7 +7,6 @@ import { Property } from './property.model';
 export interface Stay {
   id: number;
   price_per_night_xof: number;
-  caution_xof: number | null;
   capacity: number;
   min_nights: number | null;
   max_nights: number | null;

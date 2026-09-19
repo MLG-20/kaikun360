@@ -1,0 +1,28 @@
+@if (mine()) {
+  <div class="ooa">
+    @if (editLink(); as link) {
+      <a class="k-btn k-btn--ghost ooa-btn" [routerLink]="link">Modifier</a>
+    }
+
+    @if (confirming()) {
+      <span class="ooa-confirm" role="alert">
+        Mettre cette offre à la corbeille ?
+        <button type="button" class="k-btn ooa-btn ooa-btn--danger" [disabled]="busy()" (click)="confirmDelete()">
+          {{ busy() ? '…' : 'Oui, supprimer' }}
+        </button>
+        <button type="button" class="k-btn k-btn--ghost ooa-btn" [disabled]="busy()" (click)="cancel()">Annuler</button>
+      </span>
+    } @else {
+      <button type="button" class="k-btn k-btn--ghost ooa-btn ooa-btn--danger-ghost" (click)="askDelete()">
+        Supprimer
+      </button>
+    }
+
+    @if (error(); as e) {
+      <p class="ooa-msg ooa-msg--error" role="alert">{{ e }}</p>
+    }
+    @if (message(); as m) {
+      <p class="ooa-msg" role="status">{{ m }}</p>
+    }
+  </div>
+}

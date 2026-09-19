@@ -1,0 +1,86 @@
+<header class="tr-head">
+  <div>
+    <h1 class="tr-title">Corbeille</h1>
+    <p class="tr-sub">
+      Ce que vous avez supprimé (biens, nuitées, véhicules, circuits, départs). Vous pouvez le
+      restaurer, le supprimer définitivement ou vider toute la corbeille. Sans geste de votre part,
+      chaque élément est effacé pour de bon au bout de {{ retentionDays() }} jours.
+    </p>
+  </div>
+
+  @if (items().length > 0) {
+    @if (confirmingEmpty()) {
+      <span class="tr-confirm" role="alert">
+        Supprimer définitivement les {{ items().length }} élément(s) ?
+        <button type="button" class="k-btn tr-danger" [disabled]="emptying()" (click)="emptyTrash()">
+          {{ emptying() ? '…' : 'Oui, vider' }}
+        </button>
+        <button type="button" class="k-btn k-btn--ghost" [disabled]="emptying()" (click)="confirmingEmpty.set(false)">
+          Annuler
+        </button>
+      </span>
+    } @else {
+      <button type="button" class="k-btn k-btn--ghost tr-danger-ghost" (click)="confirmingEmpty.set(true)">
+        Vider la corbeille
+      </button>
+    }
+  }
+</header>
+
+@if (done(); as message) {
+  <p class="tr-msg" role="status">{{ message }}</p>
+}
+@if (error(); as message) {
+  <p class="tr-msg tr-msg--error" role="alert">
+    {{ message }}
+    <button type="button" class="k-btn k-btn--ghost" (click)="load()">Réessayer</button>
+  </p>
+}
+
+@if (loading()) {
+  <p class="tr-state" role="status">Chargement de la corbeille…</p>
+} @else if (items().length === 0) {
+  <div class="tr-empty">
+    <p><strong>La corbeille est vide.</strong></p>
+    <p class="tr-muted">Ce que vous supprimez depuis le back-office atterrit ici, le temps de changer d’avis.</p>
+  </div>
+} @else {
+  <ul class="tr-list">
+    @for (item of items(); track key(item)) {
+      <li class="tr-item">
+        <div class="tr-item__main">
+          <span class="tr-item__type">{{ typeLabel(item.type) }}</span>
+          <span class="tr-item__label">{{ item.label }}</span>
+          <span class="tr-item__meta">
+            Supprimé le {{ shortDate(item.removed_at) }} ·
+            <span [class.is-urgent]="urgent(item)">{{ countdown(item) }}</span>
+          </span>
+        </div>
+
+        <div class="tr-item__actions">
+          <button
+            type="button"
+            class="k-btn k-btn--primary tr-btn"
+            [disabled]="busy() === key(item)"
+            (click)="restore(item)">
+            {{ busy() === key(item) ? '…' : 'Restaurer' }}
+          </button>
+
+          @if (confirmingKey() === key(item)) {
+            <span class="tr-confirm" role="alert">
+              Irréversible.
+              <button type="button" class="k-btn tr-btn tr-danger" [disabled]="busy() === key(item)" (click)="purge(item)">
+                Oui, supprimer
+              </button>
+              <button type="button" class="k-btn k-btn--ghost tr-btn" (click)="confirmingKey.set(null)">Annuler</button>
+            </span>
+          } @else {
+            <button type="button" class="k-btn k-btn--ghost tr-btn tr-danger-ghost" (click)="confirmingKey.set(key(item))">
+              Supprimer définitivement
+            </button>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+}

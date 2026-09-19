@@ -183,6 +183,19 @@ export class PropertyManagementService {
   }
 
   /**
+   * DELETE /properties/{id} — met le bien à la corbeille (restaurable 30 jours).
+   *
+   * Réservé au déposant du bien : le serveur refuse (403) tout autre compte, super
+   * administrateur compris. Un bien bloqué (réservation en cours…) répond 422 avec
+   * la raison.
+   */
+  delete(id: number | string): Observable<ApiEnvelope<{ deleted: boolean; message: string }>> {
+    return this.http.delete<ApiEnvelope<{ deleted: boolean; message: string }>>(
+      `${this.api}/properties/${id}`,
+    );
+  }
+
+  /**
    * DELETE /properties/{id}/stay — retire le mode « nuitées » (F4.3).
    *
    * Supprime la config, ou la désactive si des réservations existent (le serveur

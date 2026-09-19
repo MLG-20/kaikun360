@@ -353,3 +353,37 @@
   color: var(--k-brand);
   text-decoration: underline;
 }
+
+// --- Modifier / supprimer son propre mandat (F21.1) ---------------------------
+.mn-head-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.mn-own {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mn-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.mn-danger {
+  background: var(--k-danger);
+  color: #fff;
+  border-color: transparent;
+}
+
+.mn-danger-ghost {
+  color: var(--k-danger);
+}

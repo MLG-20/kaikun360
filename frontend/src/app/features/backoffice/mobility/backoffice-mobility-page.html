@@ -2,10 +2,16 @@
   <div>
     <h1 class="mob-title">Mobilité</h1>
     <p class="mob-sub">
-      La flotte (véhicules, chauffeurs, pirogues, bus) et les départs programmés. Supervision en
-      lecture seule — l’approbation se fait dans l’écran Validation.
+      La flotte (véhicules, chauffeurs, pirogues, bus) et les départs programmés. Un véhicule
+      déposé par un prestataire s’approuve dans l’écran Validation ; celui que vous ajoutez ici est
+      publié directement.
     </p>
   </div>
+  @if (selected() === 'fleet') {
+    <a class="k-btn k-btn--primary" routerLink="/back-office/mobilite/vehicule/nouveau">
+      + Ajouter un véhicule
+    </a>
+  }
 </header>
 
 <!-- Onglets : deux réalités distinctes (moyens de transport / départs datés) -->

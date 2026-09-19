@@ -62,6 +62,9 @@ export interface Experience {
    */
   photo_url?: string | null;
 
+  /** Offre déposée par l'équipe Kaikun 360 (et non par un prestataire) : affiche l'étiquette. */
+  published_by_kaikun?: boolean;
+
   media_hidden_count?: number;
 }
 

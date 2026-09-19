@@ -1,0 +1,138 @@
+:host {
+  display: block;
+  max-width: 980px;
+}
+
+.tr-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.tr-title {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--k-ink);
+  margin: 0 0 4px;
+}
+
+.tr-sub,
+.tr-muted {
+  color: var(--k-muted);
+  margin: 0;
+  max-width: 68ch;
+}
+
+.tr-msg {
+  padding: 10px 14px;
+  border-radius: var(--k-radius);
+  background: rgba(31, 138, 91, 0.08);
+  border: 1px solid rgba(31, 138, 91, 0.25);
+  margin: 0 0 14px;
+
+  &--error {
+    background: rgba(199, 59, 77, 0.06);
+    border-color: rgba(199, 59, 77, 0.3);
+    color: var(--k-danger);
+  }
+}
+
+.tr-state,
+.tr-empty {
+  padding: 22px;
+  border-radius: var(--k-radius);
+  background: #fff;
+  border: 1px solid var(--k-line);
+  color: var(--k-muted);
+}
+
+.tr-empty p {
+  margin: 0 0 4px;
+  color: var(--k-ink);
+}
+
+.tr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tr-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-radius);
+  box-shadow: var(--k-shadow);
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__type {
+    font-family: var(--k-font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--k-muted);
+  }
+
+  &__label {
+    font-weight: 700;
+    color: var(--k-ink);
+  }
+
+  &__meta {
+    font-size: 0.8rem;
+    color: var(--k-muted);
+
+    .is-urgent {
+      color: var(--k-danger);
+      font-weight: 600;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.tr-btn {
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
+
+.tr-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.tr-danger {
+  background: var(--k-danger);
+  color: #fff;
+  border-color: transparent;
+}
+
+.tr-danger-ghost {
+  color: var(--k-danger);
+}

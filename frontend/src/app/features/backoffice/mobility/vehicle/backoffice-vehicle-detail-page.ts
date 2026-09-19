@@ -1,3 +1,4 @@
+import { OwnOfferActionsComponent } from '../../shared/own-offer-actions/own-offer-actions';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -29,7 +30,7 @@ import {
  */
 @Component({
   selector: 'app-backoffice-vehicle-detail-page',
-  imports: [RouterLink, MediaReviewComponent],
+  imports: [RouterLink, MediaReviewComponent, OwnOfferActionsComponent],
   templateUrl: './backoffice-vehicle-detail-page.html',
   // Feuille COMMUNE à toutes les fiches du back-office (F8.2) : une fiche en
   // appelle une autre, elles doivent se ressembler.

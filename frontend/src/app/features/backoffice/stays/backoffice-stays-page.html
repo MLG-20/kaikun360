@@ -5,6 +5,7 @@
       Calendrier des séjours. Enregistrez les arrivées et départs, et suivez le ménage.
     </p>
   </div>
+  <a class="k-btn k-btn--primary" routerLink="/back-office/nuitees/nouveau">+ Ajouter une nuitée</a>
 </header>
 
 <!-- Filtres de dates (bornes sur la date d'arrivée) -->
@@ -34,10 +35,10 @@
     <table class="st-table">
       <!--
         F8.2.a — Quatre colonnes, pas sept. La liste répond à « qui arrive
-        quand, et que dois-je faire maintenant » ; le ménage, la caution et
+        quand, et que dois-je faire maintenant » ; le ménage et
         l'argent vivent désormais dans la fiche du séjour, où ils se pilotent
-        avec leur contexte. Le ménage et la caution restent visibles ici en
-        pastilles : les VOIR d'un coup d'œil est le rôle d'un calendrier, les
+        avec leur contexte. Le ménage reste visible ici en
+        pastille : les VOIR d'un coup d'œil est le rôle d'un calendrier, les
         TRANCHER est celui du dossier.
       -->
       <thead>
@@ -81,11 +82,6 @@
               <span class="st-tags">
                 @if (b.checked_out_at) {
                   <span class="st-tag">Ménage&nbsp;: {{ housekeepingLabel(b.housekeeping_status) }}</span>
-                }
-                @if (b.caution_xof) {
-                  <span class="st-tag" [class]="cautionClass(b.caution_status)">
-                    Caution&nbsp;: {{ cautionLabel(b.caution_status) }}
-                  </span>
                 }
               </span>
             </td>

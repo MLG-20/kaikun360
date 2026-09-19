@@ -21,7 +21,7 @@ export class StayListPageComponent {
   /** Points de réassurance affichés dans le bandeau d'introduction. */
   protected readonly highlights = [
     { title: 'Disponibilités en temps réel', text: 'Un calendrier à jour pour chaque logement.' },
-    { title: 'Caution encadrée', text: 'Montant affiché et sécurisé, restitué après le séjour.' },
+    { title: 'Paiement sécurisé', text: 'Réservation confirmée dès le règlement en ligne.' },
     { title: 'Ménage & check-in suivis', text: 'Arrivée et départ tracés par nos équipes.' },
   ];
 }

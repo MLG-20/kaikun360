@@ -35,6 +35,9 @@
         </ng-container>
 
         <ng-container meta>
+          @if (v.published_by_kaikun) {
+            <app-kaikun-badge />
+          }
           <span class="uni-detail-loc">{{ v.capacity }} place{{ v.capacity > 1 ? 's' : '' }}</span>
           @if (v.has_driver) {
             <span class="uni-detail-verified">Avec chauffeur</span>

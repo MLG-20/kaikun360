@@ -5,7 +5,6 @@ import { RouterLink } from '@angular/router';
 
 import {
   AdminService,
-  CautionStatus,
   HousekeepingStatus,
   StayBooking,
   StayBookingSummary,
@@ -126,34 +125,6 @@ export class BackofficeStaysPageComponent {
     this.run(b, this.admin.stayCheckOut(b.booking_id));
   }
 
-  /** Libellé du sort de la caution. */
-  protected cautionLabel(status: CautionStatus | null): string {
-    switch (status) {
-      case 'retenue':
-        return 'Retenue';
-      case 'restituee':
-        return 'Restituée';
-      case 'perdue':
-        return 'Conservée';
-      default:
-        return '—';
-    }
-  }
-
-  /** Classe CSS du badge de caution. */
-  protected cautionClass(status: CautionStatus | null): string {
-    switch (status) {
-      case 'restituee':
-        return 'is-ok';
-      case 'perdue':
-        return 'is-off';
-      case 'retenue':
-        return 'is-pending';
-      default:
-        return '';
-    }
-  }
-
   /** Exécute une transition puis fusionne le résumé dans la ligne. */
   private run(b: StayBooking, request$: ReturnType<AdminService['stayCheckIn']>): void {
     if (this.processingId() !== null) return;
@@ -187,8 +158,6 @@ export class BackofficeStaysPageComponent {
               checked_in_at: summary.checked_in_at,
               checked_out_at: summary.checked_out_at,
               housekeeping_status: summary.housekeeping_status,
-              caution_xof: summary.caution_xof,
-              caution_status: summary.caution_status,
             }
           : b,
       ),

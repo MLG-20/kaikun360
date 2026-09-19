@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
@@ -17,6 +17,53 @@ import { Vehicle } from '../../../models/vehicle.model';
 import { extractGoogleMapsEmbedUrl } from '../../../shared/format/google-maps';
 import { BackLinkComponent } from '../../../shared/components/back-link/back-link';
 import { PhotoManagerComponent } from '../../../shared/components/photo-manager/photo-manager';
+
+/**
+ * Libellés du formulaire propres à chaque type (F21.1) : une pirogue, un minibus
+ * et une navette aéroportuaire ne se décrivent pas avec les mêmes mots. Aucun
+ * champ n'est ajouté ni retiré côté serveur — seuls l'intitulé, l'aide et la
+ * pertinence de la marque/modèle changent.
+ */
+interface TypeProfile {
+  capacityLabel: string;
+  priceLabel: string;
+  driverLabel: string;
+  descriptionHint: string;
+  /** Marque/modèle n'ont pas de sens pour une pirogue. */
+  showBrandModel: boolean;
+}
+
+const DEFAULT_PROFILE: TypeProfile = {
+  capacityLabel: 'Capacité (nombre de places)',
+  priceLabel: 'Prix par jour (FCFA)',
+  driverLabel: 'Véhicule proposé avec chauffeur',
+  descriptionHint: "État, options, conditions d'utilisation…",
+  showBrandModel: true,
+};
+
+const TYPE_PROFILES: Partial<Record<VehicleTypeValue, TypeProfile>> = {
+  pirogue: {
+    capacityLabel: 'Passagers maximum (gilets compris)',
+    priceLabel: 'Prix par sortie ou par jour (FCFA)',
+    driverLabel: 'Avec piroguier / capitaine',
+    descriptionHint: 'Embarcadère, durée de la sortie, zones navigables, conditions météo…',
+    showBrandModel: false,
+  },
+  minibus: {
+    capacityLabel: 'Places assises (chauffeur exclu)',
+    priceLabel: 'Prix par jour (FCFA)',
+    driverLabel: 'Minibus proposé avec chauffeur',
+    descriptionHint: 'Climatisation, bagages, trajets et zones couverts…',
+    showBrandModel: true,
+  },
+  navette_aibd: {
+    capacityLabel: 'Places passagers',
+    priceLabel: 'Tarif par jour (FCFA)',
+    driverLabel: 'Navette avec chauffeur',
+    descriptionHint: 'Aéroport AIBD ↔ zones desservies, horaires, bagages acceptés, accueil à l’arrivée…',
+    showBrandModel: true,
+  },
+};
 
 /** État d'affichage de l'écran (création prête d'emblée ; édition attend le chargement). */
 type FormState = 'loading' | 'form' | 'not-found' | 'error';
@@ -43,7 +90,7 @@ type FormState = 'loading' | 'form' | 'not-found' | 'error';
  */
 @Component({
   selector: 'app-provider-vehicle-form-page',
-  imports: [ReactiveFormsModule, BackLinkComponent, PhotoManagerComponent],
+  imports: [ReactiveFormsModule, RouterLink, BackLinkComponent, PhotoManagerComponent],
   templateUrl: './provider-vehicle-form-page.html',
   styleUrl: './offer-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,6 +100,14 @@ export class ProviderVehicleFormPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+
+  /**
+   * Où revenir après l'enregistrement : l'espace prestataire par défaut, ou le
+   * back-office quand la route le précise (`data.returnTo`) — même patron que le
+   * formulaire de circuit, pour ne pas dupliquer l'écran.
+   */
+  protected readonly returnTo =
+    (this.route.snapshot.data['returnTo'] as string | undefined) ?? '/espace-prestataire/offres';
 
   /** Catalogue des types proposés (miroir de l'enum `VehicleType`). */
   protected readonly types = VEHICLE_TYPES;
@@ -97,6 +152,14 @@ export class ProviderVehicleFormPageComponent {
 
   /** Famille du type courant (motorisé / pirogue) — pilote les champs de conformité. */
   protected readonly family = computed(() => vehicleFamily(this.typeValue()));
+
+  /** Libellés adaptés au type choisi (pirogue, minibus, navette AIBD…). */
+  protected readonly profile = computed<TypeProfile>(
+    () => TYPE_PROFILES[this.typeValue() as VehicleTypeValue] ?? DEFAULT_PROFILE,
+  );
+
+  /** Vrai quand le formulaire est ouvert depuis le back-office (dépôt par l'équipe). */
+  protected readonly isBackoffice = computed(() => this.returnTo.startsWith('/back-office'));
 
   /** Vrai en mode édition (pour les libellés). */
   protected readonly isEdit = computed(() => this.editId() !== null);
@@ -177,7 +240,7 @@ export class ProviderVehicleFormPageComponent {
       .subscribe({
       next: () => {
         this.submitting.set(false);
-        this.router.navigate(['/espace-prestataire/offres']);
+        this.router.navigateByUrl(this.returnTo);
       },
       error: (err: { status?: number; error?: ValidationErrorBody }) => {
         this.submitting.set(false);

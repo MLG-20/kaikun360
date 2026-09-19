@@ -1,11 +1,19 @@
+import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   HostListener,
+  OnDestroy,
+  PLATFORM_ID,
   computed,
+  effect,
+  inject,
   input,
   signal,
 } from '@angular/core';
+
+/** Délai entre deux images en défilement automatique (F21.1, retour client). */
+const DELAI_DEFILEMENT_MS = 4000;
 
 /**
  * Galerie photo (F0.4, enrichie en F2.6) — image principale + bande de
@@ -15,6 +23,9 @@ import {
  * - on voit une grande photo et, dessous, des vignettes ; cliquer une vignette
  *   change la grande photo ;
  * - des flèches ‹ › (et les touches ←/→ du clavier) permettent de feuilleter ;
+ * - les photos défilent aussi TOUTES SEULES (F21.1), en pause dès que la
+ *   souris survole la galerie ou qu'on ouvre le plein écran — un visiteur qui
+ *   regarde une photo ne doit pas la voir changer sous ses yeux ;
  * - cliquer la grande photo l'ouvre en PLEIN ÉCRAN (fond assombri) ; on y
  *   navigue au clavier et on ferme avec Échap ou la croix ;
  * - si aucune photo n'est fournie, un encart neutre « Aucune photo disponible »
@@ -30,7 +41,8 @@ import {
   styleUrl: './gallery.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GalleryComponent {
+export class GalleryComponent implements OnDestroy {
+  private readonly estNavigateur = isPlatformBrowser(inject(PLATFORM_ID));
   /** Liste des URLs d'images à afficher (peut être vide). */
   readonly images = input.required<string[]>();
 
@@ -53,6 +65,62 @@ export class GalleryComponent {
 
   /** Vrai s'il y a plus d'une image (affiche flèches, compteur, miniatures). */
   protected readonly hasMany = computed(() => this.count() > 1);
+
+  /** Vrai tant que la souris survole la galerie (met le défilement en pause). */
+  private readonly survolee = signal(false);
+
+  private minuteur: ReturnType<typeof setInterval> | null = null;
+
+  constructor() {
+    // Démarre le défilement au premier rendu, puis le recale dès que la liste
+    // de photos, l'état du plein écran ou le survol changent.
+    effect(() => {
+      this.count();
+      this.survolee();
+      this.lightboxOpen();
+      this.planifierDefilement();
+    });
+  }
+
+  /**
+   * Défilement automatique (F21.1) : un `setInterval`, jamais côté serveur (le
+   * SSR n'a pas de souris pour le mettre en pause, et un minuteur qui tourne
+   * sans jamais être nettoyé fuirait à chaque rendu). Redémarré à chaque
+   * bascule de `images()` (miniatures cliquées, plein écran ouvert/fermé, ou
+   * survol) plutôt que planifié une fois pour toutes.
+   */
+  private planifierDefilement(): void {
+    this.arreterDefilement();
+    if (!this.estNavigateur || !this.hasMany() || this.survolee() || this.lightboxOpen()) {
+      return;
+    }
+    this.minuteur = setInterval(() => this.next(), DELAI_DEFILEMENT_MS);
+  }
+
+  private arreterDefilement(): void {
+    if (this.minuteur) {
+      clearInterval(this.minuteur);
+      this.minuteur = null;
+    }
+  }
+
+  /** Met le défilement en pause : le visiteur regarde une photo précise. */
+  @HostListener('mouseenter')
+  @HostListener('focusin')
+  protected pauseDefilement(): void {
+    this.survolee.set(true);
+  }
+
+  /** Reprend le défilement quand la souris (ou le focus) quitte la galerie. */
+  @HostListener('mouseleave')
+  @HostListener('focusout')
+  protected reprendreDefilement(): void {
+    this.survolee.set(false);
+  }
+
+  ngOnDestroy(): void {
+    this.arreterDefilement();
+  }
 
   /** Sélectionne une image par son index (utilisé par les miniatures). */
   protected select(index: number): void {

@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { KaikunBadgeComponent } from '../../../shared/components/kaikun-badge/kaikun-badge';
 
 import { AuthService } from '../../../core/auth/auth.service';
 import { CatalogService } from '../../../core/api/catalog.service';
@@ -47,6 +48,7 @@ interface CalendarCell {
 @Component({
   selector: 'app-stay-detail-page',
   imports: [
+    KaikunBadgeComponent,
     ReactiveFormsModule,
     RouterLink,
     ReviewsComponent,
@@ -151,7 +153,6 @@ export class StayDetailPageComponent {
   });
 
   readonly priceLabel = computed(() => formatFcfa(this.stay()?.price_per_night_xof));
-  readonly cautionLabel = computed(() => formatFcfa(this.stay()?.caution_xof));
 
   readonly locationLabel = computed(() => {
     const loc = this.property()?.location;

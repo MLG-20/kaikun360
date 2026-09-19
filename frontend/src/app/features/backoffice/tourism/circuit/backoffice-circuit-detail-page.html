@@ -23,11 +23,13 @@
       <span class="bo-badge" [class]="statusClass(d.experience.status)">
         {{ d.experience.status_label ?? '—' }}
       </span>
-      @if (canEdit()) {
-        <a class="k-btn k-btn--ghost" [routerLink]="['/back-office', 'tourisme', 'circuit', d.experience.id, 'modifier']">
-          Modifier
-        </a>
-      }
+      <app-own-offer-actions
+        kind="experience"
+        [id]="d.experience.id"
+        [ownerId]="d.experience.provider?.id"
+        [editLink]="['/back-office', 'tourisme', 'circuit', d.experience.id, 'modifier']"
+        backLink="/back-office/tourisme"
+      />
     </div>
   </header>
 

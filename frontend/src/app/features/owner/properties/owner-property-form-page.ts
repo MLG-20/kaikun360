@@ -71,6 +71,9 @@ export class OwnerPropertyFormPageComponent {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
+  /** Retour après enregistrement : la fiche propriétaire, ou le back-office (`data.returnTo`). */
+  protected readonly returnTo = this.route.snapshot.data['returnTo'] as string | undefined;
+
   /**
    * Bloc photos, désormais mutualisé (F8.18) : la même mécanique sert les
    * véhicules et les circuits, qui n'avaient aucun moyen d'être illustrés.
@@ -187,7 +190,9 @@ export class OwnerPropertyFormPageComponent {
       return;
     }
 
-    this.applyMode('mensuelle');
+    // Le back-office ouvre ce formulaire directement en mode « nuitées » depuis
+    // l'écran Nuitées (`data.rentalMode`).
+    this.applyMode((this.route.snapshot.data['rentalMode'] as RentalMode | undefined) ?? 'mensuelle');
     this.loadRegions();
     this.wireCascade();
 
@@ -473,8 +478,13 @@ export class OwnerPropertyFormPageComponent {
       .subscribe({
         next: (propertyId) => {
           this.submitting.set(false);
-          // On mène le propriétaire à la fiche du bien (statut de validation visible).
-          this.router.navigate(['/espace-proprietaire/biens', propertyId]);
+          // On mène le propriétaire à la fiche du bien (statut de validation
+          // visible) ; le back-office, lui, revient à sa liste (`data.returnTo`).
+          if (this.returnTo) {
+            this.router.navigateByUrl(this.returnTo);
+          } else {
+            this.router.navigate(['/espace-proprietaire/biens', propertyId]);
+          }
         },
         error: (err: { status?: number; error?: ValidationErrorBody }) => {
           this.submitting.set(false);

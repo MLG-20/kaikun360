@@ -70,8 +70,11 @@ export class ProviderExperienceFormPageComponent {
    * le back-office (F21) retrouve l'onglet Circuits — piloté par la route
    * plutôt que codé en dur, pour que ce composant reste réutilisable tel quel.
    */
-  private readonly returnTo =
+  protected readonly returnTo =
     (this.route.snapshot.data['returnTo'] as string | undefined) ?? '/espace-prestataire/offres';
+
+  /** Vrai quand le formulaire est ouvert depuis le back-office (dépôt par l'équipe). */
+  protected readonly isBackoffice = computed(() => this.returnTo.startsWith('/back-office'));
 
   /** Photos déjà en ligne du circuit (mode édition). */
   protected readonly existingPhotos = signal<PropertyPhoto[]>([]);

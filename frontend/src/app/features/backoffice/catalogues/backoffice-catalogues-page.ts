@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { OwnOfferActionsComponent } from '../shared/own-offer-actions/own-offer-actions';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
@@ -33,6 +34,8 @@ interface CatalogRow {
   status: string | null;
   statusLabel: string;
   ownerName: string | null;
+  /** Déposant du bien : sert à ne proposer « Modifier / Supprimer » qu'à lui. */
+  ownerId: number | null;
   priceXof: number | null;
   priceSuffix: string;
   date: string | null;
@@ -77,7 +80,7 @@ interface StatusOption {
  */
 @Component({
   selector: 'app-backoffice-catalogues-page',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, OwnOfferActionsComponent],
   templateUrl: './backoffice-catalogues-page.html',
   styleUrl: './backoffice-catalogues-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -94,6 +97,19 @@ export class BackofficeCataloguesPageComponent {
 
   /** Onglet courant. */
   protected readonly selected = signal<CatalogType>('property');
+
+  /**
+   * Bouton « Ajouter » de l'onglet courant (F21.1) : chaque univers a son
+   * formulaire, déjà monté ailleurs dans le back-office ; cet écran n'en fait
+   * que le point d'entrée. Ce que l'équipe dépose est publié d'emblée.
+   */
+  private static readonly ADD: Record<CatalogType, { link: string; label: string }> = {
+    property: { link: '/back-office/catalogues/bien/nouveau', label: '+ Ajouter un bien' },
+    vehicle: { link: '/back-office/mobilite/vehicule/nouveau', label: '+ Ajouter un véhicule' },
+    experience: { link: '/back-office/tourisme/circuit/nouveau', label: '+ Ajouter un circuit' },
+  };
+  protected readonly addLink = computed(() => BackofficeCataloguesPageComponent.ADD[this.selected()].link);
+  protected readonly addLabel = computed(() => BackofficeCataloguesPageComponent.ADD[this.selected()].label);
 
   /** Lignes de la page courante (normalisées). */
   protected readonly rows = signal<CatalogRow[]>([]);
@@ -313,6 +329,7 @@ export class BackofficeCataloguesPageComponent {
         status: p.status,
         statusLabel: this.statusLabel(p.status),
         ownerName: p.owner?.name ?? null,
+        ownerId: p.owner?.id ?? null,
         priceXof: p.price_xof,
         priceSuffix: '',
         date: p.published_at ?? p.created_at,
@@ -329,6 +346,7 @@ export class BackofficeCataloguesPageComponent {
         status: v.status,
         statusLabel: v.status_label ?? this.statusLabel(v.status),
         ownerName: null,
+        ownerId: null,
         priceXof: v.price_per_day_xof,
         priceSuffix: '/ jour',
         date: v.published_at,
@@ -344,6 +362,7 @@ export class BackofficeCataloguesPageComponent {
       status: e.status,
       statusLabel: e.status_label ?? this.statusLabel(e.status),
       ownerName: null,
+      ownerId: null,
       priceXof: e.price_xof,
       priceSuffix: '',
       date: e.published_at,
@@ -361,6 +380,23 @@ export class BackofficeCataloguesPageComponent {
    */
   protected mediaLink(row: CatalogRow): unknown[] {
     return ['/back-office', 'validation', this.selected(), row.id];
+  }
+
+  /**
+   * Fiche complète d'une ligne. Véhicule et circuit ont leur propre fiche
+   * back-office (conformité, locations, participants…) ; un bien n'en a pas :
+   * son dossier complet (galerie entière, caractéristiques, déposant) est celui
+   * de l'écran Validation, consultable quel que soit le statut.
+   */
+  protected ficheLink(row: CatalogRow): unknown[] {
+    switch (this.selected()) {
+      case 'vehicle':
+        return ['/back-office', 'mobilite', 'vehicule', row.id];
+      case 'experience':
+        return ['/back-office', 'tourisme', 'circuit', row.id];
+      default:
+        return this.mediaLink(row);
+    }
   }
 
   /** Libellé lisible d'un statut (repli quand la Resource n'en fournit pas). */

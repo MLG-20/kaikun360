@@ -1,10 +1,14 @@
 <section class="account-head">
-  <app-back-link class="account-back" fallback="/espace-prestataire/offres" />
-  <p class="account-eyebrow">Espace prestataire</p>
-  <h1 class="account-title">{{ isEdit() ? 'Modifier le véhicule' : 'Déposer un véhicule' }}</h1>
+  <app-back-link class="account-back" [fallback]="returnTo" />
+  <p class="account-eyebrow">{{ isBackoffice() ? 'Back-office Kaikun 360' : 'Espace prestataire' }}</p>
+  <h1 class="account-title">{{ isEdit() ? 'Modifier le véhicule' : (isBackoffice() ? 'Ajouter un véhicule' : 'Déposer un véhicule') }}</h1>
   <p class="account-lead">
-    Renseignez les caractéristiques de votre véhicule. Il sera proposé à la
-    location une fois votre dossier vérifié par Kaikun.
+    @if (isBackoffice()) {
+      Ce véhicule est publié directement au nom de Kaikun 360, sans passer par la validation.
+    } @else {
+      Renseignez les caractéristiques de votre véhicule. Il sera proposé à la
+      location une fois votre dossier vérifié par Kaikun.
+    }
   </p>
 </section>
 
@@ -15,13 +19,13 @@
   @case ('not-found') {
     <div class="vf-error">
       <p>Ce véhicule est introuvable ou ne fait pas partie de vos offres.</p>
-      <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Retour à mes offres</a>
+      <a class="k-btn k-btn--ghost" [routerLink]="returnTo">Retour</a>
     </div>
   }
   @case ('error') {
     <div class="vf-error">
       <p>Impossible de charger ce véhicule pour le moment.</p>
-      <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Retour à mes offres</a>
+      <a class="k-btn k-btn--ghost" [routerLink]="returnTo">Retour</a>
     </div>
   }
   @default {
@@ -40,6 +44,7 @@
         }
       </div>
 
+      @if (profile().showBrandModel) {
       <div class="vf-row">
         <div class="vf-field">
           <label for="vf-brand">Marque <span class="vf-opt">(facultatif)</span></label>
@@ -50,17 +55,18 @@
           <input id="vf-model" type="text" formControlName="model" maxlength="255" />
         </div>
       </div>
+      }
 
       <div class="vf-row">
         <div class="vf-field">
-          <label for="vf-capacity">Capacité (nombre de places)</label>
+          <label for="vf-capacity">{{ profile().capacityLabel }}</label>
           <input id="vf-capacity" type="number" min="1" formControlName="capacity" />
           @if (form.controls.capacity.touched && form.controls.capacity.invalid) {
             <p class="vf-hint vf-hint--error">Indiquez une capacité d'au moins 1.</p>
           }
         </div>
         <div class="vf-field">
-          <label for="vf-price">Prix par jour (FCFA)</label>
+          <label for="vf-price">{{ profile().priceLabel }}</label>
           <input id="vf-price" type="number" min="0" formControlName="price_per_day_xof" />
           @if (form.controls.price_per_day_xof.touched && form.controls.price_per_day_xof.invalid) {
             <p class="vf-hint vf-hint--error">Indiquez un prix (0 ou plus).</p>
@@ -70,13 +76,13 @@
 
       <label class="vf-check">
         <input type="checkbox" formControlName="has_driver" />
-        <span>Véhicule proposé avec chauffeur</span>
+        <span>{{ profile().driverLabel }}</span>
       </label>
 
       <div class="vf-field">
         <label for="vf-desc">Description <span class="vf-opt">(facultatif)</span></label>
         <textarea id="vf-desc" rows="4" formControlName="description"
-                  placeholder="État, options, conditions d'utilisation…"></textarea>
+                  [placeholder]="profile().descriptionHint"></textarea>
       </div>
 
       <div class="vf-field">
@@ -151,7 +157,7 @@
         <button type="submit" class="k-btn k-btn--primary" [disabled]="submitting()">
           {{ submitting() ? 'Enregistrement…' : isEdit() ? 'Enregistrer les modifications' : 'Déposer le véhicule' }}
         </button>
-        <a class="k-btn k-btn--ghost" routerLink="/espace-prestataire/offres">Annuler</a>
+        <a class="k-btn k-btn--ghost" [routerLink]="returnTo">Annuler</a>
       </div>
     </form>
   }

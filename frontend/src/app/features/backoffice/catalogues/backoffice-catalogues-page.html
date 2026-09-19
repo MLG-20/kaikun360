@@ -2,10 +2,11 @@
   <div>
     <h1 class="cat-title">Catalogues</h1>
     <p class="cat-sub">
-      Toute l’offre, tous statuts confondus. Supervision en lecture seule —
-      l’approbation se fait dans l’écran Validation.
+      Toute l’offre, tous statuts confondus. L’approbation d’une offre déposée par un prestataire
+      se fait dans l’écran Validation ; ce que vous ajoutez ici est publié directement.
     </p>
   </div>
+  <a class="k-btn k-btn--primary" [routerLink]="addLink()">{{ addLabel() }}</a>
 </header>
 
 <!-- Onglets par univers -->
@@ -62,9 +63,7 @@
           <th>Propriétaire</th>
           <th>Prix</th>
           <th>Date</th>
-          @if (canEdit()) {
-            <th>Action</th>
-          }
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -111,10 +110,20 @@
             </td>
             <td><span class="cat-muted">{{ shortDate(row.date) }}</span></td>
 
-            <!-- F7.3.g : correction et archivage, réservés aux biens. -->
-            @if (canEdit()) {
-              <td>
-                <div class="cat-actions">
+            <!-- Fiche complète pour tous les univers ; correction et archivage (F7.3.g), réservés aux biens. -->
+            <td>
+              <div class="cat-actions">
+                <a class="k-btn k-btn--ghost cat-btn" [routerLink]="ficheLink(row)">Voir la fiche</a>
+                @if (canEdit()) {
+                  <app-own-offer-actions
+                    kind="property"
+                    [id]="row.id"
+                    [ownerId]="row.ownerId"
+                    [editLink]="['/back-office', 'catalogues', 'bien', row.id, 'modifier']"
+                    (removed)="load()"
+                  />
+                }
+                @if (canEdit()) {
                   <button
                     type="button"
                     class="k-btn k-btn--ghost cat-btn"
@@ -139,15 +148,15 @@
                       Archiver
                     </button>
                   }
-                </div>
-              </td>
-            }
+                }
+              </div>
+            </td>
           </tr>
 
           <!-- Panneau déplié sous la ligne concernée -->
           @if (openRowId() === row.id) {
             <tr class="cat-panel-row">
-              <td [attr.colspan]="canEdit() ? 7 : 6">
+              <td colspan="7">
                 <div class="cat-panel">
                   @if (actionError()) {
                     <p class="k-form-error" role="alert">{{ actionError() }}</p>

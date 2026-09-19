@@ -196,6 +196,31 @@ export const BACKOFFICE_ROUTES: Routes = [
         title: 'Catalogues — Back-office Kaikun 360',
       },
       {
+        // F21.1 — Dépôt d'un bien (villa, appartement, nuitées…) PAR L'ÉQUIPE :
+        // publié d'emblée, sans passer par l'écran Validation. Réutilise le
+        // formulaire propriétaire (mode de location, nuitées, photos).
+        path: 'catalogues/bien/nouveau',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('catalogues'), returnTo: '/back-office/catalogues' },
+        loadComponent: () =>
+          import('../owner/properties/owner-property-form-page').then(
+            (m) => m.OwnerPropertyFormPageComponent,
+          ),
+        title: 'Ajouter un bien — Back-office Kaikun 360',
+      },
+      {
+        // F21.1 — Modification d'un bien déposé par l'équipe elle-même (le serveur
+        // refuse le bien d'un propriétaire externe : 403).
+        path: 'catalogues/bien/:id/modifier',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('catalogues'), returnTo: '/back-office/catalogues' },
+        loadComponent: () =>
+          import('../owner/properties/owner-property-form-page').then(
+            (m) => m.OwnerPropertyFormPageComponent,
+          ),
+        title: 'Modifier le bien — Back-office Kaikun 360',
+      },
+      {
         // F7.2.j — Mobilité : flotte (conformité assurance/chauffeur/pirogue)
         // + départs programmés et leur remplissage.
         path: 'mobilite',
@@ -206,6 +231,34 @@ export const BACKOFFICE_ROUTES: Routes = [
             (m) => m.BackofficeMobilityPageComponent,
           ),
         title: 'Mobilité — Back-office Kaikun 360',
+      },
+      {
+        // F21.1 — Dépôt d'un véhicule PAR L'ÉQUIPE (POST /vehicles) : publié
+        // d'emblée, sans passer par l'écran Validation. Même formulaire que le
+        // prestataire ; seul `returnTo` change le retour.
+        //
+        // ⚠️ Doit précéder `mobilite/vehicule/:id`, sinon « nouveau » serait
+        // capturé comme un id de véhicule.
+        path: 'mobilite/vehicule/nouveau',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('mobilite'), returnTo: '/back-office/mobilite' },
+        loadComponent: () =>
+          import('../pro/offers/provider-vehicle-form-page').then(
+            (m) => m.ProviderVehicleFormPageComponent,
+          ),
+        title: 'Ajouter un véhicule — Back-office Kaikun 360',
+      },
+      {
+        // F21.1 — Modification d'un véhicule déposé par l'équipe elle-même
+        // (`findMyVehicle` filtre par déposant : un véhicule externe reste hors de portée).
+        path: 'mobilite/vehicule/:id/modifier',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('mobilite'), returnTo: '/back-office/mobilite' },
+        loadComponent: () =>
+          import('../pro/offers/provider-vehicle-form-page').then(
+            (m) => m.ProviderVehicleFormPageComponent,
+          ),
+        title: 'Modifier le véhicule — Back-office Kaikun 360',
       },
       {
         // F8.2.b — Fiche d'un véhicule : conformité pièce à pièce, photos,
@@ -304,6 +357,24 @@ export const BACKOFFICE_ROUTES: Routes = [
             (m) => m.BackofficePartnerDetailPageComponent,
           ),
         title: 'Prestataire — Back-office Kaikun 360',
+      },
+      {
+        // F21.1 — Ajout d'une nuitée PAR L'ÉQUIPE : le même formulaire de bien,
+        // ouvert en mode « nuitées » ; publié d'emblée, sans passer par Validation.
+        //
+        // ⚠️ Doit précéder `nuitees/:id`, sinon « nouveau » serait pris pour un id.
+        path: 'nuitees/nouveau',
+        canActivate: [permissionGuard],
+        data: {
+          permissions: permissionsFor('nuitees'),
+          returnTo: '/back-office/nuitees',
+          rentalMode: 'nuitees',
+        },
+        loadComponent: () =>
+          import('../owner/properties/owner-property-form-page').then(
+            (m) => m.OwnerPropertyFormPageComponent,
+          ),
+        title: 'Ajouter une nuitée — Back-office Kaikun 360',
       },
       {
         // F7.2.c — Nuitées : calendrier des séjours + check-in/out + ménage.
@@ -565,6 +636,16 @@ export const BACKOFFICE_ROUTES: Routes = [
             (m) => m.BackofficeAttendancePageComponent,
           ),
         title: 'Pointeuse — Back-office Kaikun 360',
+      },
+      {
+        // F21.1 — Corbeille : ce que l'utilisateur a supprimé de SES offres, à
+        // restaurer ou à supprimer définitivement. Périmètre personnel.
+        path: 'corbeille',
+        canActivate: [permissionGuard],
+        data: { permissions: permissionsFor('corbeille') },
+        loadComponent: () =>
+          import('./trash/backoffice-trash-page').then((m) => m.BackofficeTrashPageComponent),
+        title: 'Corbeille — Back-office Kaikun 360',
       },
     ],
   },

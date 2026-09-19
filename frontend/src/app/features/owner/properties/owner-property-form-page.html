@@ -1,13 +1,22 @@
 <!-- Dépôt / édition d'un bien depuis l'espace propriétaire (F4.3). -->
 <section class="account-head">
-  <app-back-link class="account-back" label="Mes biens" fallback="/espace-proprietaire/biens" direct />
-  <p class="account-eyebrow">Espace propriétaire</p>
-  <h1 class="account-title">{{ isEdit() ? 'Modifier le bien' : 'Déposer un bien' }}</h1>
+  <app-back-link
+    class="account-back"
+    [label]="returnTo ? 'Retour' : 'Mes biens'"
+    [fallback]="returnTo ?? '/espace-proprietaire/biens'"
+    direct
+  />
+  <p class="account-eyebrow">{{ returnTo ? 'Back-office Kaikun 360' : 'Espace propriétaire' }}</p>
+  <h1 class="account-title">
+    {{ isEdit() ? 'Modifier le bien' : returnTo ? 'Ajouter un bien' : 'Déposer un bien' }}
+  </h1>
   <p class="account-lead">
     {{
       isEdit()
         ? 'Mettez à jour les informations de votre bien et son mode de location.'
-        : 'Renseignez votre bien et choisissez son mode de location. Il sera vérifié par un agent Kaikun 360 avant sa mise en ligne.'
+        : returnTo
+          ? 'Renseignez le bien et choisissez son mode de location. Il est publié directement au nom de Kaikun 360, sans passer par la validation.'
+          : 'Renseignez votre bien et choisissez son mode de location. Il sera vérifié par un agent Kaikun 360 avant sa mise en ligne.'
     }}
   </p>
 </section>
@@ -355,7 +364,7 @@
     <button class="k-btn k-btn--primary k-btn--block" type="submit" [disabled]="submitting()">
       {{ submitting() ? 'Enregistrement…' : isEdit() ? 'Enregistrer les modifications' : 'Déposer le bien' }}
     </button>
-    @if (!isEdit()) {
+    @if (!isEdit() && !returnTo) {
       <p class="opf-note k-muted">
         Votre bien sera vérifié avant publication (documents et photos à ajouter ensuite).
       </p>

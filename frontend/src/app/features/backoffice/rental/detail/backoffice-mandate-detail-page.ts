@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import {
   AdminService,
@@ -11,11 +11,12 @@ import {
   MandateRent,
   MandateReport,
 } from '../../../../core/api/admin.service';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { ValidationErrorBody } from '../../../../core/api/api-response.model';
 import { FicheFlag, FicheSignalsComponent } from '../../shared/fiche-signals/fiche-signals';
 
 /** Formulaire actuellement déplié dans la fiche (un seul à la fois). */
-type OpenForm = 'rent' | 'incident' | 'expense' | 'payout' | null;
+type OpenForm = 'rent' | 'incident' | 'expense' | 'payout' | 'mandate' | null;
 
 /**
  * Fiche **mandat de gestion locative** pilotable du back-office (F7.3.a) —
@@ -54,6 +55,8 @@ type OpenForm = 'rent' | 'incident' | 'expense' | 'payout' | null;
 export class BackofficeMandateDetailPageComponent {
   private readonly admin = inject(AdminService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
   /** Identifiant du mandat, lu une fois depuis la route (fiche non réutilisée). */
   private readonly mandateId = Number(this.route.snapshot.paramMap.get('id'));
@@ -71,6 +74,19 @@ export class BackofficeMandateDetailPageComponent {
 
   /** Formulaire déplié (un seul à la fois, pour ne pas noyer la fiche). */
   protected readonly openForm = signal<OpenForm>(null);
+
+  /**
+   * Ce mandat porte-t-il sur un bien de l'utilisateur connecté ? Seul le
+   * déposant du bien peut corriger ou supprimer son mandat (F21.1) : un
+   * mandat d'un propriétaire externe reste hors de portée, super admin compris.
+   */
+  protected readonly isMine = computed(() => {
+    const owner = this.mandate()?.property?.owner?.id;
+    return owner != null && owner === this.auth.user()?.id;
+  });
+
+  protected readonly confirmingDelete = signal(false);
+  protected mandateForm = { commission_rate: 10, start_date: '', end_date: '', terms: '' };
 
   protected rentForm = { due_date: '', amount_xof: 0, tenant_name: '', period_label: '' };
   protected incidentForm = { title: '', description: '', priority: 'p3' };
@@ -292,6 +308,54 @@ export class BackofficeMandateDetailPageComponent {
     this.actionError.set(null);
     this.actionMessage.set(null);
     this.openForm.update((current) => (current === form ? null : form));
+  }
+
+  // --- Modifier / supprimer le mandat (F21.1) ---------------------------------
+
+  protected editMandate(): void {
+    const m = this.mandate();
+    if (!m) return;
+    this.mandateForm = {
+      commission_rate: Number(m.commission_rate ?? 0),
+      start_date: m.start_date ?? '',
+      end_date: m.end_date ?? '',
+      terms: m.terms ?? '',
+    };
+    this.confirmingDelete.set(false);
+    this.toggleForm('mandate');
+  }
+
+  protected saveMandate(): void {
+    const f = this.mandateForm;
+    if (!f.start_date || Number.isNaN(Number(f.commission_rate))) {
+      this.actionError.set('Un mandat demande une commission et une date de début.');
+      return;
+    }
+    this.run(
+      this.admin.updateMandate(this.mandateId, {
+        commission_rate: Number(f.commission_rate),
+        start_date: f.start_date,
+        end_date: f.end_date || null,
+        terms: f.terms.trim() || null,
+      }),
+      'Mandat mis à jour.',
+    );
+  }
+
+  protected deleteMandate(): void {
+    this.saving.set(true);
+    this.actionError.set(null);
+    this.admin.deleteMandate(this.mandateId).subscribe({
+      next: () => {
+        this.saving.set(false);
+        void this.router.navigate(['/back-office', 'gestion-locative']);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.saving.set(false);
+        this.confirmingDelete.set(false);
+        this.actionError.set(this.messageFor(error));
+      },
+    });
   }
 
   // --- Loyers -----------------------------------------------------------------

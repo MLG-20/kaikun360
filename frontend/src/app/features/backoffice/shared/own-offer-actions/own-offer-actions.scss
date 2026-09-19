@@ -1,0 +1,45 @@
+:host {
+  display: inline-block;
+}
+
+.ooa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ooa-btn {
+  font-size: 0.8rem;
+  padding: 6px 12px;
+
+  &--danger {
+    background: var(--k-danger);
+    color: #fff;
+    border-color: transparent;
+  }
+
+  &--danger-ghost {
+    color: var(--k-danger);
+  }
+}
+
+.ooa-confirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--k-ink);
+}
+
+.ooa-msg {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--k-muted);
+
+  &--error {
+    color: var(--k-danger);
+  }
+}
