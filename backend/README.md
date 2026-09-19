@@ -8,10 +8,10 @@
 API backend du projet **Kaikun 360**. Ce dépôt contient l'application serveur
 (Laravel). Le frontend (Angular) fait l'objet d'un chantier séparé.
 
-- **296 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
+- **305 endpoints** REST versionnés (`/api/v1`) — voir [`API.md`](API.md)
 - **12 modules** métier isolés (dont `Assistant`, hors CDC)
 - **66 tables**, référentiel géographique du Sénégal inclus
-- **1168 tests** automatisés, tous verts ✅
+- **1188 tests** automatisés, tous verts ✅
 
 ---
 
@@ -1285,3 +1285,20 @@ Projet propriétaire — Kaikun 360. Tous droits réservés.
   publiées uniquement, dans l'ordre de `position`). Upload d'image via
   `ImageProcessor::storeCompressed` (mêmes constantes que les actualités),
   suppression du fichier physique au remplacement/à la suppression.
+
+### F21.1 — Publication directe de l'équipe, modification réservée au déposant, corbeille
+
+- `App\Support\Offers\KaikunPublisher` : un déposant `super_admin` publie d'emblée
+  (statut `publie`, `approved_by`, `published_at`) et n'émet pas les événements
+  « à valider ». Exposé par `published_by_kaikun` (biens, véhicules, circuits).
+- `AppServiceProvider::configureAuthorization()` : `Gate::before` ne donne plus le
+  passe-droit au super_admin pour `update` sur `Property`, `Vehicle`,
+  `TourismExperience`, `MobilityService`, `ManagementMandate` — la policy tranche
+  (déposant = utilisateur connecté). Nouveaux : `PATCH|DELETE /manage/mandates/{id}`.
+- `TrashController` : `DELETE /me/trash` (vider) et `DELETE /me/trash/{type}/{id}`
+  (supprimer définitivement) — mêmes étapes que `corbeille:purger`.
+- Caution : retirée des nuitées (plus de recopie à la réservation, endpoint
+  `PATCH /admin/stay-bookings/{id}/caution` supprimé).
+- `MediaController` : une image illisible répond 422 au lieu de 500.
+- Tests : `Security/OfferAttacksTest` (18 attaques simulées). **1188 tests**.
+

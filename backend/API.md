@@ -1,7 +1,7 @@
 # Référence des endpoints — API Kaikun 360
 
 Documentation technique de l'API REST (backend Laravel). Ce document recense
-**les 278 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
+**les 305 endpoints** exposés sous le préfixe `/api/v1`, groupés par domaine, avec
 leur niveau d'accès et le contrôleur responsable.
 
 Il complète :
@@ -272,6 +272,8 @@ TypeScript miroir côté frontend Angular (phase F0).
 | POST | `/manage/mandates` | auth + `can:gerer:gestion-locative` | `MandateManagementController@storeMandate` |
 | GET | `/manage/mandates/mine` | auth | `ManageController@mine` |
 | GET | `/manage/mandates/{mandate}` | auth | `ManageController@show` |
+| PATCH | `/manage/mandates/{mandate}` | auth + `can:gerer:gestion-locative` | `MandateManagementController@updateMandate` |
+| DELETE | `/manage/mandates/{mandate}` | auth + `can:gerer:gestion-locative` | `MandateManagementController@destroyMandate` |
 | POST | `/manage/mandates/{mandate}/expenses` | auth + `can:gerer:gestion-locative` | `MandateManagementController@storeExpense` |
 | POST | `/manage/mandates/{mandate}/incidents` | auth + `can:gerer:gestion-locative` | `MandateManagementController@storeIncident` |
 | POST | `/manage/mandates/{mandate}/payouts` | auth + `can:gerer:gestion-locative` | `MandateManagementController@storePayout` |
@@ -410,6 +412,8 @@ TypeScript miroir côté frontend Angular (phase F0).
 | Méthode | URI | Accès | Contrôleur |
 | --- | --- | --- | --- |
 | GET | `/me/trash` | auth | `TrashController@index` |
+| DELETE | `/me/trash` | auth | `TrashController@empty` |
+| DELETE | `/me/trash/{type}/{id}` | auth | `TrashController@purge` |
 | POST | `/me/trash/{type}/{id}/restore` | auth | `TrashController@restore` |
 
 > Ce qu'un utilisateur retire de ses listes n'est plus effacé : l'annonce part à

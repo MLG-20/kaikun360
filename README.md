@@ -1205,6 +1205,52 @@ de dates de départ, une capacité globale sans lien avec une session datée.
 
 ---
 
+### F21.1 — L'équipe publie sans se valider elle-même, gère ce qu'elle a déposé, et retrouve ce qu'elle supprime
+
+Retours du client (2026-09-19) sur le dépôt de circuit livré en F21 : le formulaire
+répondait « réservé aux prestataires » au super administrateur, et tout ce qu'il
+déposait repartait dans l'écran Validation, où il n'y avait personne d'autre que
+lui pour l'approuver.
+
+- [x] **Publication directe par le super administrateur** pour les **circuits, véhicules
+  et biens** (villas, nuitées comprises : une nuitée est la config d'un bien). Un
+  dépôt de prestataire ou de propriétaire reste « en attente de validation »,
+  inchangé ; aucune alerte « à valider » n'est envoyée pour ce que l'équipe
+  publie elle-même. ⚠️ Le 403 du client n'était pas reproductible côté serveur
+  (`Gate::before` autorisait déjà le dépôt) : le vrai défaut était le statut, forcé à
+  « en attente » pour tout le monde.
+- [x] **Étiquette « Kaikun 360 »** sur les cartes du catalogue, les favoris, l'accueil
+  et les fiches, pour toute offre déposée par l'équipe. Aucune colonne dédiée : le
+  déposant est le signal (`KaikunPublisher`, liste des super_admin mémorisée par
+  requête pour ne pas coûter une requête par carte).
+- [x] **Modifier ou supprimer : uniquement ce qu'on a soi-même déposé.** Le
+  `super_admin` gère ses propres biens, véhicules, circuits, départs et mandats,
+  **jamais** ceux d'un prestataire ou d'un propriétaire externe. Le passe-droit
+  global de `Gate::before` est écarté pour `update` sur ces modèles ; l'écran ne
+  propose les boutons qu'au déposant. Nouveaux : `PATCH`/`DELETE
+  /manage/mandates/{id}` (un mandat avec loyers, incidents, dépenses ou
+  reversements se termine, il ne s'efface pas).
+- [x] **Corbeille dans le back-office**, en dernière position du menu : restaurer,
+  supprimer définitivement, vider. La corbeille F11.4 existait côté serveur ;
+  `DELETE /me/trash` et `DELETE /me/trash/{type}/{id}` s'ajoutent (photos
+  détruites avec la ligne, comme la purge nocturne). Les mandats n'y passent pas.
+- [x] **Fiches complètes** : « Voir la fiche » dans Catalogues, dossier de validation
+  enrichi (mode de location, config nuitées, programme, conformité…) et présenté
+  en grille ; retour à la page d'origine.
+- [x] **Caution : seule la gestion locative en porte.** Retirée des fiches véhicule et
+  nuitée, et côté serveur des nuitées (plus de recopie dans la réservation, plus
+  d'action « restituer / conserver »).
+- [x] **Accueil** : les trois cartes « Location de véhicules » mènent au catalogue
+  filtré par type (`?type=minibus`…) ; galerie photo à défilement automatique.
+- [x] **Vérifié par des attaques simulées** (`OfferAttacksTest`, 18 tests) : injection
+  de champs (`status`, `provider_id`…), offre et corbeille d'autrui, injection SQL,
+  faux fichier image. ⚠️ Elles ont trouvé un vrai défaut : une image illisible
+  qui passait la validation de type faisait planter le dépôt en **500** — refus 422
+  désormais.
+- **Tests** : 1188 backend, 143 frontend, tous verts.
+
+---
+
 ## Critères d'acceptation transverses
 
 - [ ] Un visiteur comprend Kaikun 360 en moins de 5 secondes sur la page d'accueil et voit les CTA clients/offreurs.

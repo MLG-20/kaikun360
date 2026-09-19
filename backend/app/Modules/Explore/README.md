@@ -174,9 +174,11 @@ prestataire, via `AdminExperienceResource`) et `GET /admin/tourism/destinations`
   se confirme.
 - **Le dépôt n'est plus réservé aux prestataires (F21)** : un `super_admin` peut
   déposer un circuit depuis `/back-office/tourisme/circuit/nouveau` (même
-  formulaire, même endpoint que le prestataire). Il ne peut ensuite le MODIFIER
-  depuis le back-office que s'il en est lui-même le `provider_id` — un circuit
-  d'un vrai prestataire se modifie depuis l'espace de ce dernier.
+  formulaire, même endpoint que le prestataire). **Il est publié d'emblée (F21.1)**,
+  sans passer par Validation. Il ne peut ensuite le MODIFIER ou le SUPPRIMER que
+  s'il en est lui-même le `provider_id` (le serveur refuse le circuit d'un vrai
+  prestataire, super_admin compris) ; un circuit externe se gère depuis l'espace
+  de ce dernier.
 
 ## Commission plateforme (F8.4)
 
