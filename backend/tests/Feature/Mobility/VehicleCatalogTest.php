@@ -86,6 +86,52 @@ class VehicleCatalogTest extends TestCase
         Notification::assertSentTo($agent, NewVehicleToValidateNotification::class);
     }
 
+    public function test_un_super_admin_publie_directement_un_vehicule_sans_alerte_de_validation(): void
+    {
+        Notification::fake();
+        $agent = $this->agent();
+        $admin = User::factory()->create();
+        $admin->assignRole(UserRole::SUPER_ADMIN->value);
+
+        Sanctum::actingAs($admin);
+
+        $this->postJson('/api/v1/vehicles', [
+            'type' => VehicleType::PIROGUE->value,
+            'capacity' => 12,
+            'price_per_day_xof' => 80_000,
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.vehicle.status', 'publie')
+            ->assertJsonPath('data.vehicle.published_by_kaikun', true);
+
+        $this->assertDatabaseHas('vehicles', ['provider_id' => $admin->id, 'status' => 'publie', 'approved_by' => $admin->id]);
+        Notification::assertNotSentTo($agent, NewVehicleToValidateNotification::class);
+    }
+
+    public function test_un_vehicule_de_prestataire_n_a_pas_l_etiquette_kaikun(): void
+    {
+        $vehicle = Vehicle::factory()->published()->create(['provider_id' => $this->verifiedProvider()->id]);
+
+        $this->getJson('/api/v1/vehicles/'.$vehicle->id)
+            ->assertOk()
+            ->assertJsonPath('data.published_by_kaikun', false);
+    }
+
+    public function test_un_super_admin_modifie_et_supprime_son_vehicule_mais_pas_celui_d_un_prestataire(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(UserRole::SUPER_ADMIN->value);
+        $mien = Vehicle::factory()->published()->create(['provider_id' => $admin->id]);
+        $externe = Vehicle::factory()->published()->create(['provider_id' => $this->verifiedProvider()->id]);
+
+        Sanctum::actingAs($admin);
+
+        $this->patchJson('/api/v1/vehicles/'.$mien->id, ['capacity' => 20])->assertOk();
+        $this->patchJson('/api/v1/vehicles/'.$externe->id, ['capacity' => 99])->assertForbidden();
+        $this->deleteJson('/api/v1/vehicles/'.$externe->id)->assertForbidden();
+        $this->deleteJson('/api/v1/vehicles/'.$mien->id)->assertOk();
+    }
+
     public function test_un_non_prestataire_verifie_ne_peut_pas_publier(): void
     {
         Sanctum::actingAs(User::factory()->create()); // simple client

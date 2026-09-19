@@ -85,8 +85,9 @@ class VehicleValidator implements ResourceValidator
             'media' => MediaEntry::summary($model, null),
             'fields' => [
                 'Type' => $model->type?->label() ?? $model->type,
+                'Marque' => $model->brand,
+                'Modèle' => $model->model,
                 'Prix par jour' => $model->price_per_day_xof,
-                'Caution' => $model->caution_xof,
                 'Capacité' => $model->capacity,
                 'Avec chauffeur' => $model->has_driver ? 'Oui' : 'Non',
                 'Description' => $model->description,
@@ -95,6 +96,9 @@ class VehicleValidator implements ResourceValidator
                 'Assurance' => $model->insurance_ref,
                 'Identité du chauffeur' => $model->driver_identity,
                 'Gilets de sauvetage' => $model->life_jackets_count,
+                'Conforme météo' => $model->type?->isMotorized() === false ? ($model->weather_compliant ? 'Oui' : 'Non') : null,
+                'Prestataire conforme' => $model->type?->isMotorized() === false ? ($model->provider_compliant ? 'Oui' : 'Non') : null,
+                'Lien Google Maps' => $model->maps_link,
             ],
         ];
     }

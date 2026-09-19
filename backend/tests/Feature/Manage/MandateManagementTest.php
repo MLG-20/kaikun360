@@ -79,6 +79,42 @@ class MandateManagementTest extends TestCase
      * reversements au même propriétaire et un rapport mensuel faux, sans rien à
      * l'écran pour comprendre l'écart.
      */
+    public function test_un_super_admin_modifie_et_supprime_ses_mandats_mais_pas_ceux_d_un_proprietaire_externe(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(UserRole::SUPER_ADMIN->value);
+        $mien = ManagementMandate::factory()->create([
+            'property_id' => Property::factory()->create(['owner_id' => $admin->id])->id,
+            'owner_id' => $admin->id,
+        ]);
+        $externe = ManagementMandate::factory()->create();
+
+        Sanctum::actingAs($admin);
+
+        $this->patchJson('/api/v1/manage/mandates/'.$mien->id, ['commission_rate' => 15])->assertOk();
+        $this->assertEquals(15, $mien->fresh()->commission_rate);
+        $this->patchJson('/api/v1/manage/mandates/'.$externe->id, ['commission_rate' => 1])->assertForbidden();
+        $this->deleteJson('/api/v1/manage/mandates/'.$externe->id)->assertForbidden();
+        $this->deleteJson('/api/v1/manage/mandates/'.$mien->id)->assertOk();
+        $this->assertDatabaseMissing('management_mandates', ['id' => $mien->id]);
+    }
+
+    public function test_un_mandat_qui_a_deja_un_historique_ne_se_supprime_pas(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(UserRole::SUPER_ADMIN->value);
+        $mandat = ManagementMandate::factory()->create([
+            'property_id' => Property::factory()->create(['owner_id' => $admin->id])->id,
+            'owner_id' => $admin->id,
+        ]);
+        Rent::factory()->create(['mandate_id' => $mandat->id]);
+
+        Sanctum::actingAs($admin);
+
+        $this->deleteJson('/api/v1/manage/mandates/'.$mandat->id)->assertStatus(422);
+        $this->assertDatabaseHas('management_mandates', ['id' => $mandat->id]);
+    }
+
     public function test_un_bien_deja_sous_mandat_est_refuse(): void
     {
         $property = Property::factory()->create();

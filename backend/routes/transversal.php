@@ -210,6 +210,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // identifiant non numérique pour les cinq types d'annonces.
     Route::post('me/trash/{type}/{id}/restore', [TrashController::class, 'restore'])
         ->where('id', '[0-9a-fA-F-]+');
+    // F21.1 — supprimer définitivement une annonce de SA corbeille, ou la vider.
+    Route::delete('me/trash/{type}/{id}', [TrashController::class, 'purge'])
+        ->where('id', '[0-9a-fA-F-]+');
+    Route::delete('me/trash', [TrashController::class, 'empty']);
 
     // --- Paiement : initiation (B14.2) ---------------------------------------
     // Crée l'intention côté PSP et renvoie l'URL de redirection. La confirmation

@@ -19,7 +19,7 @@ use Tests\TestCase;
  *
  * Le calendrier dit qui arrive quand ; la fiche rassemble le séjour d'un seul
  * tenant — logement + hôte, client, argent (encaissé / reste à payer, paiements
- * un par un) et journal d'audit, où figure le motif d'une caution conservée.
+ * un par un) et journal d'audit.
  *
  * Deux exigences tenues ici : la fiche est réservée à `gerer:nuitees` comme le
  * reste du module, et elle **survit à la disparition du bien** — le séjour a eu
@@ -58,8 +58,6 @@ class StayDossierTest extends TestCase
             'guests' => 2,
             'amount_xof' => 90_000,
             'commission_xof' => 9_000,
-            'caution_xof' => 50_000,
-            'caution_status' => 'retenue',
             'status' => 'confirmee',
         ]);
     }
@@ -100,7 +98,6 @@ class StayDossierTest extends TestCase
             ->assertJsonPath('data.booking.amount_xof', 90_000)
             ->assertJsonPath('data.booking.paid_xof', 30_000)
             ->assertJsonPath('data.booking.remaining_xof', 60_000)
-            ->assertJsonPath('data.booking.caution_status', 'retenue')
             ->assertJsonPath('data.client.name', 'Awa Diop')
             ->assertJsonPath('data.stay.stay_id', $stay->id)
             ->assertJsonPath('data.stay.capacity', 4)
@@ -112,28 +109,6 @@ class StayDossierTest extends TestCase
         $response->assertJsonPath('data.payments.0.amount_xof', 30_000)
             ->assertJsonPath('data.payments.0.kind_label', 'Acompte')
             ->assertJsonPath('data.payments.0.status_label', 'Complété');
-    }
-
-    public function test_le_journal_porte_le_motif_de_la_caution_conservee(): void
-    {
-        $booking = $this->stayBooking();
-        $booking->update([
-            'checked_in_at' => now()->subDays(2),
-            'checked_out_at' => now()->subDay(),
-        ]);
-
-        Sanctum::actingAs($this->agent());
-
-        $this->patchJson("/api/v1/admin/stay-bookings/{$booking->id}/caution", [
-            'status' => 'perdue',
-            'reason' => 'Vitre brisée dans le salon',
-        ])->assertOk();
-
-        $this->getJson("/api/v1/admin/stay-bookings/{$booking->id}")
-            ->assertOk()
-            ->assertJsonPath('data.booking.caution_status', 'perdue')
-            ->assertJsonPath('data.activity.0.description', 'Caution conservée')
-            ->assertJsonPath('data.activity.0.properties.reason', 'Vitre brisée dans le salon');
     }
 
     public function test_la_fiche_survit_a_la_disparition_du_bien(): void

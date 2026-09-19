@@ -83,6 +83,10 @@ class ExperienceValidator implements ResourceValidator
                     ->map(fn ($d) => $d->start_date->format('d/m/Y')." ({$d->seats_total} places)")
                     ->implode(' · '),
                 'Description' => $model->description,
+                'Programme' => collect($model->itinerary ?? [])
+                    ->map(fn ($j) => 'Jour '.($j['day'] ?? '?').' : '.trim(($j['title'] ?? '').' '.($j['description'] ?? '')))
+                    ->implode("\n"),
+                'Lien Google Maps' => $model->maps_link,
                 'Inclus' => $model->included,
                 'Non inclus' => $model->excluded,
             ],

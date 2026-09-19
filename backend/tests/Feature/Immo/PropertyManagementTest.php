@@ -62,6 +62,45 @@ class PropertyManagementTest extends TestCase
         ], $surcharge);
     }
 
+    public function test_un_super_admin_publie_directement_une_villa(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(UserRole::SUPER_ADMIN->value);
+        Sanctum::actingAs($admin);
+
+        $this->postJson('/api/v1/properties', $this->donnees())
+            ->assertCreated()
+            ->assertJsonPath('data.property.status', 'publie')
+            ->assertJsonPath('data.property.published_by_kaikun', true);
+
+        $this->assertDatabaseHas('properties', ['owner_id' => $admin->id, 'status' => 'publie', 'approved_by' => $admin->id]);
+    }
+
+    public function test_un_bien_de_proprietaire_reste_en_attente_et_sans_etiquette_kaikun(): void
+    {
+        Sanctum::actingAs($this->proprietaire());
+
+        $this->postJson('/api/v1/properties', $this->donnees())
+            ->assertCreated()
+            ->assertJsonPath('data.property.status', 'en_attente_validation')
+            ->assertJsonPath('data.property.published_by_kaikun', false);
+    }
+
+    public function test_un_super_admin_modifie_et_supprime_son_bien_mais_pas_celui_d_un_proprietaire(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(UserRole::SUPER_ADMIN->value);
+        $mien = Property::factory()->create(['owner_id' => $admin->id]);
+        $externe = Property::factory()->create(['owner_id' => $this->proprietaire()->id]);
+
+        Sanctum::actingAs($admin);
+
+        $this->patchJson('/api/v1/properties/'.$mien->id, ['title' => 'Nouveau titre'])->assertOk();
+        $this->patchJson('/api/v1/properties/'.$externe->id, ['title' => 'Piraté'])->assertForbidden();
+        $this->deleteJson('/api/v1/properties/'.$externe->id)->assertForbidden();
+        $this->deleteJson('/api/v1/properties/'.$mien->id)->assertOk();
+    }
+
     public function test_un_proprietaire_peut_deposer_un_bien(): void
     {
         $owner = $this->proprietaire();

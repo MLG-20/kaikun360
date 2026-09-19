@@ -10,6 +10,7 @@ use App\Modules\Explore\Http\Resources\ExperienceResource;
 use App\Modules\Explore\Models\TourismExperience;
 use App\Modules\Explore\Services\ExperienceDepartureSyncer;
 use App\Support\ApiResponse;
+use App\Support\Offers\KaikunPublisher;
 use App\Support\Offers\OfferRetirementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,14 +24,16 @@ use Illuminate\Support\Str;
  * La publication est réservée aux prestataires vérifiés (policy `create`) — le
  * `super_admin` y accède aussi via `Gate::before` (F21) : le back-office peut
  * ainsi déposer un circuit lui-même quand aucun prestataire n'en a encore
- * proposé, au lieu de rester en pure supervision. Toute expérience créée part
- * « en attente de validation » : elle n'apparaît au catalogue qu'après
- * approbation d'un agent (y compris quand c'est un admin qui l'a déposée).
+ * proposé, au lieu de rester en pure supervision. Une expérience déposée par
+ * un prestataire part « en attente de validation », comme avant ; un circuit
+ * déposé par le `super_admin` depuis le back-office est publié D'EMBLÉE — il
+ * n'y a personne d'autre à qui le faire valider (F21, retour client).
  */
 class ExperienceManagementController extends Controller
 {
     /**
-     * Publie une expérience (en attente de validation). POST /api/v1/experiences
+     * Publie une expérience (en attente de validation, sauf super_admin — voir
+     * plus haut). POST /api/v1/experiences
      */
     public function store(StoreExperienceRequest $request): JsonResponse
     {
@@ -38,10 +41,13 @@ class ExperienceManagementController extends Controller
         $departures = $data['departures'];
         unset($data['departures']);
 
-        $experience = TourismExperience::create($data + [
+        $publication = KaikunPublisher::isKaikunUser($request->user())
+            ? KaikunPublisher::directPublication($request->user(), ExperienceStatus::PUBLIE->value)
+            : ['status' => ExperienceStatus::EN_ATTENTE_VALIDATION->value];
+
+        $experience = TourismExperience::create($data + $publication + [
             'reference' => 'EXP-'.Str::upper(Str::random(8)),
             'provider_id' => $request->user()->id,
-            'status' => ExperienceStatus::EN_ATTENTE_VALIDATION->value,
         ]);
 
         $experience->departures()->createMany($departures);

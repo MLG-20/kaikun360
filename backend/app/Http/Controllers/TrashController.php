@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Support\ApiResponse;
+use App\Support\Offers\OfferRetirementService;
 use App\Support\Trash\ListingTrash;
 use App\Support\Trash\PersonalHiding;
 use Illuminate\Database\Eloquent\Model;
@@ -51,6 +52,7 @@ class TrashController extends Controller
     public function __construct(
         private readonly ListingTrash $corbeille,
         private readonly PersonalHiding $masquage,
+        private readonly OfferRetirementService $medias,
     ) {}
 
     /**
@@ -168,6 +170,59 @@ class TrashController extends Controller
             'item' => $this->presenterAnnonce($type, $annonce->fresh()),
             'message' => 'Élément restauré. Il est de nouveau dans votre liste, hors ligne : republiez-le quand vous le souhaitez.',
         ]);
+    }
+
+    /**
+     * Supprime DÉFINITIVEMENT une annonce de sa corbeille (F21.1).
+     * DELETE /api/v1/me/trash/{type}/{id}
+     *
+     * Le geste que la purge nocturne accomplit au bout de 30 jours, offert à
+     * l'utilisateur qui n'a pas envie d'attendre. Mêmes étapes que
+     * `PurgeTrashCommand` — les fichiers d'abord, la ligne ensuite — et même
+     * cloisonnement que la restauration : on ne purge que SA corbeille.
+     *
+     * ⚠️ Réservé aux annonces : un dossier masqué (demande, réservation…) est
+     * partagé avec Kaikun et un partenaire, rien ne s'efface jamais de son côté.
+     */
+    public function purge(Request $request, string $type, string $id): JsonResponse
+    {
+        $requete = ctype_digit($id) ? $this->corbeille->corbeilleDe($type, $request->user()->id) : null;
+        $annonce = $requete?->whereKey((int) $id)->first();
+
+        // Même réponse pour « n'existe pas » et « n'est pas à vous » (voir restore).
+        if ($annonce === null) {
+            return ApiResponse::error('Cet élément n’est pas dans votre corbeille.', 404);
+        }
+
+        $this->medias->supprimerLesMedias($annonce);
+        $annonce->forceDelete();
+
+        return ApiResponse::success(['deleted' => 1]);
+    }
+
+    /**
+     * Vide la corbeille : supprime définitivement TOUTES les annonces rangées par
+     * l'utilisateur (F21.1). DELETE /api/v1/me/trash
+     *
+     * Les dossiers masqués du client ne sont pas concernés (jamais supprimés).
+     */
+    public function empty(Request $request): JsonResponse
+    {
+        $supprimes = 0;
+
+        foreach (array_keys(ListingTrash::TYPES) as $slug) {
+            $requete = $this->corbeille->corbeilleDe($slug, $request->user()->id);
+
+            // Un par un, comme la purge : les fichiers et les événements du
+            // modèle ne survivraient pas à une suppression en masse.
+            foreach ($requete?->get() ?? [] as $annonce) {
+                $this->medias->supprimerLesMedias($annonce);
+                $annonce->forceDelete();
+                $supprimes++;
+            }
+        }
+
+        return ApiResponse::success(['deleted' => $supprimes]);
     }
 
     /**

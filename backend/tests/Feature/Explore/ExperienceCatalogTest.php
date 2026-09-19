@@ -105,7 +105,7 @@ class ExperienceCatalogTest extends TestCase
      * (`Gate::before`), pour amorcer le catalogue Tourisme quand aucun
      * prestataire n'en a encore proposé.
      */
-    public function test_un_super_admin_peut_publier_un_circuit(): void
+    public function test_un_super_admin_publie_directement_un_circuit(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole(UserRole::SUPER_ADMIN->value);
@@ -122,12 +122,29 @@ class ExperienceCatalogTest extends TestCase
             ],
         ])
             ->assertCreated()
-            ->assertJsonPath('data.experience.status', 'en_attente_validation');
+            ->assertJsonPath('data.experience.status', 'publie');
 
         $this->assertDatabaseHas('tourism_experiences', [
             'title' => 'Île de Gorée',
             'provider_id' => $admin->id,
+            'approved_by' => $admin->id,
+            'status' => 'publie',
         ]);
+    }
+
+    public function test_un_super_admin_modifie_et_supprime_son_circuit_mais_pas_celui_d_un_prestataire(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(UserRole::SUPER_ADMIN->value);
+        $mien = TourismExperience::factory()->published()->create(['provider_id' => $admin->id]);
+        $externe = TourismExperience::factory()->published()->create(['provider_id' => $this->verifiedProvider()->id]);
+
+        Sanctum::actingAs($admin);
+
+        $this->patchJson('/api/v1/experiences/'.$mien->id, ['title' => 'Nouveau titre'])->assertOk();
+        $this->patchJson('/api/v1/experiences/'.$externe->id, ['title' => 'Piraté'])->assertForbidden();
+        $this->deleteJson('/api/v1/experiences/'.$externe->id)->assertForbidden();
+        $this->deleteJson('/api/v1/experiences/'.$mien->id)->assertOk();
     }
 
     public function test_un_prestataire_non_verifie_ne_peut_pas_publier(): void

@@ -27,6 +27,8 @@ Route::middleware('auth:sanctum')->prefix('manage')->group(function () {
 // --- Gestion par les agents (permission gerer:gestion-locative) ---------------
 Route::middleware(['auth:sanctum', 'can:gerer:gestion-locative'])->prefix('manage')->group(function () {
     Route::post('/mandates', [MandateManagementController::class, 'storeMandate']);
+    Route::patch('/mandates/{mandate}', [MandateManagementController::class, 'updateMandate'])->whereNumber('mandate');
+    Route::delete('/mandates/{mandate}', [MandateManagementController::class, 'destroyMandate'])->whereNumber('mandate');
 
     Route::post('/mandates/{mandate}/rents', [MandateManagementController::class, 'storeRent'])->whereNumber('mandate');
     Route::patch('/rents/{rent}/pay', [MandateManagementController::class, 'markRentPaid'])->whereNumber('rent');

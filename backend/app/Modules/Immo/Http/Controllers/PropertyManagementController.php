@@ -13,6 +13,7 @@ use App\Modules\Immo\Http\Resources\PropertyResource;
 use App\Modules\Immo\Models\Property;
 use App\Modules\Immo\Models\PropertyDocument;
 use App\Support\ApiResponse;
+use App\Support\Offers\KaikunPublisher;
 use App\Support\Trash\ListingTrash;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -67,21 +68,29 @@ class PropertyManagementController extends Controller
     /**
      * Dépôt d'un nouveau bien. POST /api/v1/properties
      *
-     * Le bien est rattaché au propriétaire connecté et démarre en
-     * `en_attente_validation` (jamais publié directement).
+     * Le bien est rattaché au déposant et démarre en `en_attente_validation`,
+     * sauf s'il est déposé par le super_admin (l'équipe Kaikun 360) : publié
+     * d'emblée, sans passer par la file de validation.
      */
     public function store(StorePropertyRequest $request): JsonResponse
     {
+        $direct = KaikunPublisher::isKaikunUser($request->user());
+
         $property = Property::create([
             ...$request->validated(),
             'owner_id' => $request->user()->id,
-            'status' => PropertyStatus::EN_ATTENTE_VALIDATION->value,
+            ...($direct
+                ? KaikunPublisher::directPublication($request->user(), PropertyStatus::PUBLIE->value, withApprovedAt: true)
+                : ['status' => PropertyStatus::EN_ATTENTE_VALIDATION->value]),
         ]);
 
         activity()->causedBy($request->user())->performedOn($property)->log('Dépôt de bien');
 
-        // Met le bien en file de validation (notifie les agents habilités).
-        PropertyCreated::dispatch($property);
+        // Met le bien en file de validation (notifie les agents habilités) —
+        // sauf publication directe : rien à valider.
+        if (! $direct) {
+            PropertyCreated::dispatch($property);
+        }
 
         return ApiResponse::created([
             'property' => PropertyResource::make($property->load(['region', 'department', 'commune', 'owner', 'stay', 'media'])),

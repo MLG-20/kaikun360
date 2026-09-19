@@ -3,7 +3,6 @@
 namespace App\Modules\Admin\Http\Controllers;
 
 use App\Enums\BookingStatus;
-use App\Enums\CautionStatus;
 use App\Enums\HousekeepingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
@@ -66,10 +65,6 @@ class StayOperationsController extends Controller
             'checked_in_at' => $b->checked_in_at,
             'checked_out_at' => $b->checked_out_at,
             'housekeeping_status' => $b->housekeeping_status?->value,
-            // F7.3.f — sans ces deux clés, l'écran ne peut ni afficher la caution
-            // ni savoir si elle reste à trancher.
-            'caution_xof' => $b->caution_xof,
-            'caution_status' => $b->caution_status?->value,
         ]);
 
         return ApiResponse::paginated($bookings);
@@ -89,10 +84,10 @@ class StayOperationsController extends Controller
      *      **hôte**, joignable ;
      *   3. **le client** et **l'argent** (montant, encaissé, reste à payer, les
      *      paiements un par un) ;
-     *   4. **la trace** : le journal d'audit du séjour — c'est là qu'apparaît le
-     *      motif d'une caution conservée, qui fait foi en cas de contestation.
+     *   4. **la trace** : le journal d'audit du séjour — c'est là qu'apparaissent
+     *      les décisions tracées sur la réservation, qui font foi en cas de contestation.
      *
-     * Lecture seule : les gestes (arrivée, départ, ménage, caution) restent aux
+     * Lecture seule : les gestes (arrivée, départ, ménage) restent aux
      * routes PATCH déjà en place, que la fiche appelle comme le fait la liste.
      */
     public function show(Booking $booking): JsonResponse
@@ -120,8 +115,7 @@ class StayOperationsController extends Controller
             'created_at' => $payment->created_at,
         ]);
 
-        // Journal d'audit du séjour : décisions de caution (avec leur motif) et
-        // toute autre action tracée sur la réservation. 30 dernières entrées.
+        // Journal d'audit du séjour : toute action tracée sur la réservation. 30 dernières entrées.
         $activity = Activity::query()
             ->where('subject_type', $booking->getMorphClass())
             ->where('subject_id', $booking->id)
@@ -159,8 +153,6 @@ class StayOperationsController extends Controller
                 'checked_in_at' => $booking->checked_in_at,
                 'checked_out_at' => $booking->checked_out_at,
                 'housekeeping_status' => $booking->housekeeping_status?->value,
-                'caution_xof' => $booking->caution_xof,
-                'caution_status' => $booking->caution_status?->value,
             ],
             'client' => OwnerEntry::from($booking->user),
             // Un bien peut avoir été retiré depuis la réservation : la fiche doit
@@ -256,73 +248,6 @@ class StayOperationsController extends Controller
     }
 
     /**
-     * Tranche le sort de la caution après le départ.
-     * PATCH /api/v1/admin/stay-bookings/{booking}/caution
-     *
-     * Comble le dernier manque du module *Nuitées* du CDC §6 (F7.3.f) : la caution
-     * était recopiée sur la réservation mais **jamais suivie** — ni retenue, ni
-     * restitution. Elle est désormais `retenue` dès la réservation (module Stay) ;
-     * il reste à la **restituer** ou à la **conserver** en fin de séjour.
-     *
-     * Trois garde-fous :
-     *  - **départ enregistré exigé.** Restituer avant le départ n'a pas de sens, et
-     *    conserver une caution alors que le client est encore sur place, c'est
-     *    trancher avant d'avoir vu l'état des lieux. Le ménage, lui, n'est pas
-     *    exigé : une caution peut se rendre sans attendre la fin du nettoyage.
-     *  - **caution encore retenue exigée** : on ne rejoue pas une décision prise.
-     *  - **motif obligatoire pour la conserver** — une caution perdue se justifie
-     *    (litige possible). La restitution, elle, n'a rien à justifier.
-     *
-     * La décision est tracée au journal d'audit avec son motif et son montant.
-     */
-    public function caution(Request $request, Booking $booking): JsonResponse
-    {
-        $this->assertStay($booking);
-
-        $data = $request->validate([
-            'status' => ['required', 'string', 'in:'.CautionStatus::RESTITUEE->value.','.CautionStatus::PERDUE->value],
-            'reason' => ['nullable', 'string', 'max:500'],
-        ]);
-
-        if ($booking->checked_out_at === null) {
-            throw ValidationException::withMessages([
-                'caution' => ['Le sort de la caution se décide après le départ du client.'],
-            ]);
-        }
-
-        if ($booking->caution_status !== CautionStatus::RETENUE) {
-            throw ValidationException::withMessages([
-                'caution' => [$booking->caution_status === null
-                    ? "Cette réservation n'a pas de caution."
-                    : 'La caution a déjà été tranchée.'],
-            ]);
-        }
-
-        $status = CautionStatus::from($data['status']);
-        $reason = trim((string) ($data['reason'] ?? ''));
-
-        if ($status === CautionStatus::PERDUE && $reason === '') {
-            throw ValidationException::withMessages([
-                'reason' => ['Indiquez le motif de la retenue de la caution.'],
-            ]);
-        }
-
-        $booking->update(['caution_status' => $status->value]);
-
-        activity()
-            ->causedBy($request->user())
-            ->performedOn($booking)
-            ->withProperties([
-                'caution_status' => $status->value,
-                'caution_xof' => (int) $booking->caution_xof,
-                'reason' => $reason !== '' ? $reason : null,
-            ])
-            ->log($status === CautionStatus::RESTITUEE ? 'Caution restituée' : 'Caution conservée');
-
-        return ApiResponse::success(['booking' => $this->summary($booking->fresh())]);
-    }
-
-    /**
      * Rejette (422) toute réservation qui n'est pas une nuitée.
      */
     private function assertStay(Booking $booking): void
@@ -348,8 +273,6 @@ class StayOperationsController extends Controller
             'checked_in_at' => $booking->checked_in_at,
             'checked_out_at' => $booking->checked_out_at,
             'housekeeping_status' => $booking->housekeeping_status?->value,
-            'caution_xof' => $booking->caution_xof,
-            'caution_status' => $booking->caution_status?->value,
         ];
     }
 }

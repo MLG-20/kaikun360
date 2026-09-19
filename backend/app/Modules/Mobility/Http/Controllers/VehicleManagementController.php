@@ -10,6 +10,7 @@ use App\Modules\Mobility\Http\Requests\UpdateVehicleRequest;
 use App\Modules\Mobility\Http\Resources\VehicleResource;
 use App\Modules\Mobility\Models\Vehicle;
 use App\Support\ApiResponse;
+use App\Support\Offers\KaikunPublisher;
 use App\Support\Offers\OfferRetirementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,9 +21,10 @@ use Illuminate\Support\Str;
 /**
  * Publication et gestion des véhicules par les PRESTATAIRES (phase B7.3).
  *
- * La publication est réservée aux prestataires vérifiés (policy `create`). Tout
- * véhicule créé part « en attente de validation » et émet `VehicleCreated`
- * (mise en file de validation). La modification est réservée au propriétaire.
+ * La publication est réservée aux prestataires vérifiés (policy `create`), et au
+ * `super_admin` via `Gate::before`. Un véhicule de prestataire part « en attente
+ * de validation » et émet `VehicleCreated` (mise en file de validation) ; celui
+ * du super_admin est publié d'emblée. La modification est réservée au propriétaire.
  */
 class VehicleManagementController extends Controller
 {
@@ -31,13 +33,20 @@ class VehicleManagementController extends Controller
      */
     public function store(StoreVehicleRequest $request): JsonResponse
     {
+        // Déposé par l'équipe (super_admin) : publié d'emblée, et aucune alerte
+        // « à valider » — il n'y a personne d'autre pour le valider.
+        $direct = KaikunPublisher::isKaikunUser($request->user());
+
         $vehicle = Vehicle::create($request->validated() + [
             'reference' => 'VEH-'.Str::upper(Str::random(8)),
             'provider_id' => $request->user()->id,
-            'status' => VehicleStatus::EN_ATTENTE_VALIDATION->value,
-        ]);
+        ] + ($direct
+            ? KaikunPublisher::directPublication($request->user(), VehicleStatus::PUBLIE->value)
+            : ['status' => VehicleStatus::EN_ATTENTE_VALIDATION->value]));
 
-        VehicleCreated::dispatch($vehicle);
+        if (! $direct) {
+            VehicleCreated::dispatch($vehicle);
+        }
 
         return ApiResponse::created(['vehicle' => VehicleResource::make($vehicle)]);
     }

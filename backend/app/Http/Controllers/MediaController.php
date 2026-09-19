@@ -12,6 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Intervention\Image\Exceptions\DecoderException;
 
 /**
  * Médias polymorphes — couche transversale (phase B12.1).
@@ -50,7 +52,16 @@ class MediaController extends Controller
 
         if ($request->hasFile('file')) {
             $file = $request->file('file');
-            $stored = $images->storeCompressed($file);
+            // Un fichier qui passe la validation de type mais que le décodeur ne sait
+            // pas lire (image corrompue, contenu piégé sous une extension d'image)
+            // doit être REFUSÉ proprement, pas faire planter la requête en 500.
+            try {
+                $stored = $images->storeCompressed($file);
+            } catch (DecoderException) {
+                throw ValidationException::withMessages([
+                    'file' => ['Ce fichier n’est pas une image valide (JPEG, PNG ou WebP).'],
+                ]);
+            }
 
             $attributes += [
                 'type' => MediaType::IMAGE->value,

@@ -38,7 +38,6 @@ class UpsertStayRequest extends FormRequest
     {
         return [
             'price_per_night_xof' => ['required', 'integer', 'min:0'],
-            'caution_xof' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'capacity' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'min_nights' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'max_nights' => ['sometimes', 'nullable', 'integer', 'min:1'],

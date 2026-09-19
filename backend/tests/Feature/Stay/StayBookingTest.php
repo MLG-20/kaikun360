@@ -65,10 +65,11 @@ class StayBookingTest extends TestCase
         ])
             ->assertCreated()
             ->assertJsonPath('data.booking.status', 'en_attente')
-            ->assertJsonPath('data.booking.amount_xof', 60_000)   // 3 × 20 000
-            ->assertJsonPath('data.booking.caution_xof', 50_000);
+            ->assertJsonPath('data.booking.amount_xof', 60_000);   // 3 × 20 000
 
         $this->assertDatabaseCount('bookings', 1);
+        // Une nuitée ne retient aucune caution, même si la config en garde une trace.
+        $this->assertDatabaseHas('bookings', ['caution_xof' => 0, 'caution_status' => null]);
     }
 
     public function test_impossible_de_reserver_un_creneau_qui_chevauche(): void

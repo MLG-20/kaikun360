@@ -22,4 +22,16 @@ class ManagementMandatePolicy
                 UserRole::ADMIN->value,
             ]);
     }
+
+    /**
+     * Modifier ou supprimer un mandat : son propriétaire seulement (F21.1).
+     *
+     * Le super_admin ne gère ainsi que les mandats de SES propres biens, jamais
+     * ceux d'un propriétaire externe (le passe-droit global de `Gate::before`
+     * est écarté pour `update`, cf. AppServiceProvider).
+     */
+    public function update(User $user, ManagementMandate $mandate): bool
+    {
+        return $user->id === $mandate->owner_id;
+    }
 }

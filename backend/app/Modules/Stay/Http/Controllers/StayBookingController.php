@@ -3,7 +3,6 @@
 namespace App\Modules\Stay\Http\Controllers;
 
 use App\Enums\BookingStatus;
-use App\Enums\CautionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\BookingResource;
 use App\Modules\Stay\Http\Requests\StoreStayBookingRequest;
@@ -94,8 +93,7 @@ class StayBookingController extends Controller
             ]);
         }
 
-        // La caution n'entre PAS dans l'assiette de commission : c'est un dépôt
-        // rendu au client, pas un revenu.
+        // Une nuitée n'a pas de caution : seule la gestion locative en porte une.
         $montant = $nights * $stay->price_per_night_xof;
 
         $booking = $stay->bookings()->create([
@@ -111,13 +109,6 @@ class StayBookingController extends Controller
             // taux paramétrable que les autres univers (`commission.default_rate`),
             // figé ici et jamais recalculé ensuite.
             'commission_xof' => $this->commissions->commissionFor($montant),
-            'caution_xof' => $stay->caution_xof,
-            // F7.3.f — la caution était RECOPIÉE sans jamais être suivie : son
-            // statut restait `null` pour une nuitée, là où la location de véhicule
-            // le renseigne depuis B7.4. Sans cet état, impossible de savoir au
-            // départ si la caution est encore due au client. Elle est retenue dès
-            // la réservation (et `null` si le logement n'en demande pas).
-            'caution_status' => $stay->caution_xof > 0 ? CautionStatus::RETENUE->value : null,
             'status' => BookingStatus::EN_ATTENTE->value, // en attente de paiement (B14)
         ]);
 

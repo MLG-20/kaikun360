@@ -70,7 +70,8 @@ class PropertyValidator implements ResourceValidator
     public function toDetail(Model $model): array
     {
         /** @var Property $model */
-        $model->loadMissing(['owner', 'allMedia', 'region', 'department', 'commune']);
+        $model->loadMissing(['owner', 'allMedia', 'region', 'department', 'commune', 'stay']);
+        $stay = $model->stay;
 
         return [
             ...$this->toEntry($model),
@@ -89,8 +90,39 @@ class PropertyValidator implements ResourceValidator
                 'Commune' => $model->commune?->name,
                 'Adresse' => $model->address,
                 'Zone touristique' => $model->tourist_zone ? 'Oui' : 'Non',
+                'Lien Google Maps' => $model->maps_link,
+                // Mode de location : sans lui, un bien uniquement loué à la
+                // nuitée montrait un dossier sans aucun prix.
+                'Mode de location' => match (true) {
+                    $stay !== null && $model->price_xof => 'Mensuelle et nuitées',
+                    $stay !== null => 'Nuitées',
+                    default => 'Mensuelle / vente',
+                },
+                // Configuration nuitées (Stay) : tout ce que le formulaire demande.
+                'Prix par nuit' => $stay?->price_per_night_xof,
+                'Voyageurs (capacité)' => $stay?->capacity,
+                'Séjour minimum (nuits)' => $stay?->min_nights,
+                'Séjour maximum (nuits)' => $stay?->max_nights,
+                'Arrivée à partir de' => $stay?->check_in_time ? substr((string) $stay->check_in_time, 0, 5) : null,
+                'Départ avant' => $stay?->check_out_time ? substr((string) $stay->check_out_time, 0, 5) : null,
+                'Équipements' => self::asText($stay?->amenities),
+                'Règles du séjour' => self::asText($stay?->rules),
+                'Nuitées actives' => $stay === null ? null : ($stay->is_active ? 'Oui' : 'Non'),
             ],
         ];
+    }
+
+    /** @param  array<int|string, mixed>|null  $value */
+    private static function asText(?array $value): ?string
+    {
+        if ($value === null || $value === []) {
+            return null;
+        }
+
+        return implode(' · ', array_map(
+            fn ($item) => is_scalar($item) ? (string) $item : json_encode($item, JSON_UNESCAPED_UNICODE),
+            array_values($value),
+        ));
     }
 
     public function approve(Model $model, User $actor): array

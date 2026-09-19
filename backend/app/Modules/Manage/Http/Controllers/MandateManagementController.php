@@ -12,6 +12,7 @@ use App\Modules\Manage\Http\Requests\StoreIncidentRequest;
 use App\Modules\Manage\Http\Requests\StoreMandateRequest;
 use App\Modules\Manage\Http\Requests\StorePayoutRequest;
 use App\Modules\Manage\Http\Requests\StoreRentRequest;
+use App\Modules\Manage\Http\Requests\UpdateMandateRequest;
 use App\Modules\Manage\Http\Resources\ExpenseResource;
 use App\Modules\Manage\Http\Resources\IncidentResource;
 use App\Modules\Manage\Http\Resources\MandateResource;
@@ -86,6 +87,52 @@ class MandateManagementController extends Controller
         ]);
 
         return ApiResponse::created(['mandate' => MandateResource::make($mandate)]);
+    }
+
+    /**
+     * Modifie un mandat. PATCH /api/v1/manage/mandates/{mandate}
+     *
+     * Réservé au propriétaire du bien (policy `update`, sans passe-droit
+     * super_admin) : l'équipe corrige ses propres mandats, pas ceux d'un
+     * propriétaire externe.
+     */
+    public function updateMandate(UpdateMandateRequest $request, ManagementMandate $mandate): JsonResponse
+    {
+        $mandate->update($request->validated());
+
+        activity()->causedBy($request->user())->performedOn($mandate)->log('Modification de mandat');
+
+        return ApiResponse::success(['mandate' => MandateResource::make($mandate->fresh())]);
+    }
+
+    /**
+     * Supprime un mandat. DELETE /api/v1/manage/mandates/{mandate}
+     *
+     * ⚠️ Seulement tant qu'il n'a produit aucune écriture : un loyer, un incident,
+     * une dépense ou un reversement est de l'historique comptable — on TERMINE
+     * alors le mandat, on ne l'efface pas.
+     */
+    public function destroyMandate(Request $request, ManagementMandate $mandate): JsonResponse
+    {
+        abort_unless($request->user()?->can('update', $mandate) ?? false, 403);
+
+        $historique = $mandate->rents()->exists()
+            || $mandate->payouts()->exists()
+            || $mandate->incidents()->exists()
+            || $mandate->expenses()->exists();
+
+        if ($historique) {
+            return ApiResponse::error(
+                'Ce mandat a déjà des loyers, incidents, dépenses ou reversements : terminez-le plutôt que de le supprimer.',
+                422,
+            );
+        }
+
+        $mandate->delete();
+
+        activity()->causedBy($request->user())->performedOn($mandate)->log('Suppression de mandat');
+
+        return ApiResponse::success(['deleted' => true]);
     }
 
     /**

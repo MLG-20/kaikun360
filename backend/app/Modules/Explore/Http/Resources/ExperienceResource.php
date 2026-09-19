@@ -2,6 +2,7 @@
 
 namespace App\Modules\Explore\Http\Resources;
 
+use App\Support\Offers\KaikunPublisher;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -20,6 +21,9 @@ class ExperienceResource extends JsonResource
         return [
             'id' => $this->id,
             'reference' => $this->reference,
+            // Étiquette « Kaikun 360 » : offre déposée par l'équipe, pas par un
+            // prestataire (voir KaikunPublisher).
+            'published_by_kaikun' => KaikunPublisher::isKaikun($this->provider_id),
             'title' => $this->title,
             'destination' => $this->destination,
             'description' => $this->description,

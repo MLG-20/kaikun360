@@ -317,11 +317,11 @@ class MoneyJourneyTest extends TestCase
      * par une indirection (`Stay` → `Property` → `owner_id`), et le séjour est
      * clos par un agent au comptoir plutôt que par la tâche planifiée.
      *
-     * ⚠️ Ce test existe parce que la **caution** est le piège du circuit : elle
-     * est retenue au client, elle n'a jamais appartenu à l'hôte, et la reverser
-     * serait donner l'argent du client à quelqu'un d'autre.
+     * ⚠️ Une nuitée ne retient AUCUNE caution (seule la gestion locative en porte
+     * une) : même si la config du logement en garde une trace, la réservation la
+     * ignore et le virement à l'hôte ne porte que le loyer net.
      */
-    public function test_la_caution_retenue_au_client_n_est_jamais_reversee_a_l_hote(): void
+    public function test_une_nuitee_ne_retient_aucune_caution_et_le_virement_ne_porte_que_le_loyer_net(): void
     {
         Storage::fake('local');
 
@@ -351,7 +351,7 @@ class MoneyJourneyTest extends TestCase
         // 2 nuits × 80 000 = 160 000 ; commission 12 % = 19 200 ; caution à part.
         $this->assertSame(160_000, (int) $booking->amount_xof);
         $this->assertSame(19_200, (int) $booking->commission_xof);
-        $this->assertSame(100_000, (int) $booking->caution_xof);
+        $this->assertSame(0, (int) $booking->caution_xof);
 
         // Règlement, puis confirmation par le PSP.
         $this->postJson('/api/v1/payments/initiate', ['booking_id' => $booking->id])->assertCreated();

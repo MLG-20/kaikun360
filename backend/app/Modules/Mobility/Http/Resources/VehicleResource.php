@@ -4,6 +4,7 @@ namespace App\Modules\Mobility\Http\Resources;
 
 use App\Http\Resources\MediaResource;
 use App\Modules\Mobility\Models\Vehicle;
+use App\Support\Offers\KaikunPublisher;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -22,6 +23,9 @@ class VehicleResource extends JsonResource
         return [
             'id' => $this->id,
             'reference' => $this->reference,
+            // Étiquette « Kaikun 360 » : offre déposée par l'équipe, pas par un
+            // prestataire (voir KaikunPublisher).
+            'published_by_kaikun' => KaikunPublisher::isKaikun($this->provider_id),
             'type' => $this->type?->value,
             'type_label' => $this->type?->label(),
             'brand' => $this->brand,

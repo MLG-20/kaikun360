@@ -83,6 +83,7 @@ use App\Support\Payments\PaytechWebhookVerifier;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
@@ -91,6 +92,15 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /** Offres dont la modification est réservée à leur déposant, super_admin compris. */
+    private const OWNED_OFFER_MODELS = [
+        Property::class,
+        Vehicle::class,
+        TourismExperience::class,
+        MobilityService::class,
+        ManagementMandate::class,
+    ];
+
     /**
      * Enregistrement de services dans le conteneur (rien pour l'instant).
      */
@@ -307,8 +317,22 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function configureAuthorization(): void
     {
-        Gate::before(function ($user, string $ability) {
-            return $user->hasRole(UserRole::SUPER_ADMIN->value) ? true : null;
+        Gate::before(function ($user, string $ability, array $arguments = []) {
+            if (! $user->hasRole(UserRole::SUPER_ADMIN->value)) {
+                return null;
+            }
+
+            // Exception (F21.1) : MODIFIER ou SUPPRIMER une offre reste l'affaire de
+            // son déposant. Le super_admin gère ce qu'il a lui-même ajouté, pas les
+            // biens, véhicules, circuits et départs des prestataires ou propriétaires
+            // externes : pour ces quatre modèles, `update` est tranché par la policy
+            // (déposant = utilisateur connecté), sans le passe-droit global.
+            if ($ability === 'update' && ($arguments[0] ?? null) instanceof Model
+                && in_array(get_class($arguments[0]), self::OWNED_OFFER_MODELS, true)) {
+                return null;
+            }
+
+            return true;
         });
 
         // Policies des modules.

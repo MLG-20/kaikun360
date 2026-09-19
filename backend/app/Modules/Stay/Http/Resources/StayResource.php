@@ -21,7 +21,6 @@ class StayResource extends JsonResource
         return [
             'id' => $this->id,
             'price_per_night_xof' => $this->price_per_night_xof,
-            'caution_xof' => $this->caution_xof,
             'capacity' => $this->capacity,
             'min_nights' => $this->min_nights,
             'max_nights' => $this->max_nights,

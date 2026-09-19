@@ -57,6 +57,52 @@ class TrashTest extends TestCase
     // 1. Le geste : ranger sans détruire
     // =========================================================================
 
+    // F21.1 — supprimer définitivement, ou vider la corbeille.
+
+    public function test_on_supprime_definitivement_une_annonce_de_sa_corbeille(): void
+    {
+        $owner = $this->proprietaire();
+        $bien = Property::factory()->create(['owner_id' => $owner->id]);
+        $bien->delete();
+
+        Sanctum::actingAs($owner);
+
+        $this->deleteJson("/api/v1/me/trash/property/{$bien->id}")->assertOk()->assertJsonPath('data.deleted', 1);
+        $this->assertDatabaseMissing('properties', ['id' => $bien->id]);
+    }
+
+    public function test_on_ne_purge_pas_la_corbeille_d_un_autre(): void
+    {
+        $autre = Property::factory()->create(['owner_id' => $this->proprietaire()->id]);
+        $autre->delete();
+
+        Sanctum::actingAs($this->proprietaire());
+
+        $this->deleteJson("/api/v1/me/trash/property/{$autre->id}")->assertNotFound();
+        $this->assertSoftDeleted('properties', ['id' => $autre->id]);
+    }
+
+    public function test_vider_la_corbeille_ne_supprime_que_les_annonces_de_l_utilisateur(): void
+    {
+        $owner = $this->proprietaire();
+        $mien1 = Property::factory()->create(['owner_id' => $owner->id]);
+        $mien2 = Property::factory()->create(['owner_id' => $owner->id]);
+        $mien1->delete();
+        $mien2->delete();
+        $vivant = Property::factory()->create(['owner_id' => $owner->id]);
+        $autre = Property::factory()->create(['owner_id' => $this->proprietaire()->id]);
+        $autre->delete();
+
+        Sanctum::actingAs($owner);
+
+        $this->deleteJson('/api/v1/me/trash')->assertOk()->assertJsonPath('data.deleted', 2);
+
+        $this->assertDatabaseMissing('properties', ['id' => $mien1->id]);
+        $this->assertDatabaseMissing('properties', ['id' => $mien2->id]);
+        $this->assertDatabaseHas('properties', ['id' => $vivant->id]);
+        $this->assertSoftDeleted('properties', ['id' => $autre->id]);
+    }
+
     public function test_un_bien_mis_a_la_corbeille_quitte_la_liste_et_y_apparait(): void
     {
         $owner = $this->proprietaire();

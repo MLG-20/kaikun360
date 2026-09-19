@@ -2,6 +2,7 @@
 
 namespace App\Modules\Immo\Http\Resources;
 
+use App\Support\Offers\KaikunPublisher;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -59,6 +60,9 @@ class PropertyResource extends JsonResource
                 'id' => $this->owner_id,
                 'name' => $this->owner?->name,
             ],
+            // Étiquette « Kaikun 360 » : bien déposé par l'équipe, pas par un
+            // propriétaire (voir KaikunPublisher).
+            'published_by_kaikun' => KaikunPublisher::isKaikun($this->owner_id),
             // Photos du bien (relation triée : principale d'abord). Exposées dès
             // que la relation est chargée — catalogue public, fiche publique et
             // gestion privée la chargent toutes. `photo_url` est le raccourci

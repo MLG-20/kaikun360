@@ -4,6 +4,7 @@ namespace Tests\Feature\Performance;
 
 use App\Modules\Immo\Models\Property;
 use App\Support\Cache\CatalogCache;
+use App\Support\Offers\KaikunPublisher;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,11 @@ class CatalogLoadTest extends TestCase
         // second (identique) non — un coût qui n'a rien à voir avec le
         // CATALOGUE, mais que ce test mesurerait par erreur comme tel.
         Settings::get('platform.gate_enabled', false);
+
+        // Idem pour la liste des super_admin (étiquette « Kaikun 360 ») : une
+        // requête par REQUÊTE HTTP en production, mais mémorisée dans le
+        // conteneur, qui ici survit d'un appel à l'autre.
+        KaikunPublisher::isKaikun(0);
     }
 
     public function test_le_nombre_de_requetes_sql_du_catalogue_est_independant_du_volume(): void
